@@ -146,7 +146,7 @@ typedef enum notification_data_type {
 } notification_data_type_e;
 
 void notification_call_changed_cb_for_uid(notification_op *op_list, int op_num, uid_t uid);
-
+void notification_call_dnd_changed_cb_for_uid(int do_not_disturb, uid_t uid);
 char *notification_get_pkgname_by_pid(void);
 
 #endif /* __NOTIFICATION_PRIVATE_H__ */

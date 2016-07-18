@@ -510,4 +510,61 @@ return_close_db:
 }
 /* LCOV_EXCL_STOP */
 
+EXPORT_API int notification_system_setting_get_dnd_schedule_enabled_uid(uid_t **uids, int *count)
+{
+	int ret, i;
+	int row_count = 0;
+	int column_count = 0;
+	int column_index = 0;
+	char *query = NULL;
+	char **query_result = NULL;
+	sqlite3 *db = NULL;
+	uid_t *result_uids;
 
+	db = notification_db_open(DBPATH);
+	if (db == NULL)
+		return get_last_result();
+
+	query = sqlite3_mprintf("SELECT uid FROM %s WHERE dnd_schedule_enabled = 1",
+				NOTIFICATION_SYSTEM_SETTING_DB_TABLE);
+	if (query == NULL) {
+		ret = NOTIFICATION_ERROR_OUT_OF_MEMORY;
+		goto err;
+	}
+
+	ret = sqlite3_get_table(db, query, &query_result, &row_count, &column_count, NULL);
+	if (ret != SQLITE_OK && ret != -1) {
+		NOTIFICATION_ERR("NOTIFICATION_ERROR_FROM_DB failed [%d][%s]", ret, query);	/* LCOV_EXCL_LINE */
+		ret = NOTIFICATION_ERROR_FROM_DB;
+		goto err;
+	}
+
+	if (row_count == 0) {
+		NOTIFICATION_DBG("No enabled do_not_disturb user");
+		ret = NOTIFICATION_ERROR_NONE;
+		goto err;
+	}
+
+	if (!(result_uids = (uid_t *)malloc(sizeof(int) * row_count))) {
+		NOTIFICATION_ERR("Memory allocation fail");
+		ret = NOTIFICATION_ERROR_OUT_OF_MEMORY;
+		goto err;
+	}
+
+	column_index = column_count;
+	for (i = 0; i < row_count; i++)
+		_get_table_field_data_int(query_result, (int *)&(result_uids[i]), column_index++);
+
+	*uids = result_uids;
+	*count = row_count;
+
+err:
+	if (query_result)
+		sqlite3_free_table(query_result);
+	if (query)
+		sqlite3_free(query);
+	if (db)
+		notification_db_close(&db);
+
+	return ret;
+}

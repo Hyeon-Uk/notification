@@ -470,6 +470,19 @@ static void _delete_multiple_notify(GVariant *parameters)
 /* LCOV_EXCL_STOP */
 
 /* LCOV_EXCL_START */
+static void _change_dnd_notify(GVariant *parameters)
+{
+	int do_not_disturb;
+	uid_t uid;
+
+	g_variant_get(parameters, "(ii)", &do_not_disturb, &uid);
+	NOTIFICATION_DBG("do_not_disturb[%d], uid[%d]", do_not_disturb, uid);
+
+	notification_call_dnd_changed_cb_for_uid(do_not_disturb, uid);
+}
+/* LCOV_EXCL_STOP */
+
+/* LCOV_EXCL_START */
 static void _handle_noti_notify(GDBusConnection *connection,
 		const gchar     *sender_name,
 		const gchar     *object_path,
@@ -491,6 +504,8 @@ static void _handle_noti_notify(GDBusConnection *connection,
 		_delete_multiple_notify(parameters);
 	else if (g_strcmp0(signal_name, "refresh_noti_notify") == 0)
 		_refresh_noti_notify(parameters);
+	else if (g_strcmp0(signal_name, "change_dnd_notify") == 0)
+		_change_dnd_notify(parameters);
 }
 /* LCOV_EXCL_STOP */
 

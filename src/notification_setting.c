@@ -35,10 +35,19 @@
 
 #define NOTIFICATION_PRIVILEGE "http://tizen.org/privilege/notification"
 
+typedef struct _noti_dnd_cb_info noti_dnd_cb_info_s;
+
 typedef struct {
 	uid_t uid;
 	sqlite3 *db;
 } setting_local_info;
+
+struct _noti_dnd_cb_info {
+	dnd_changed_cb callback;
+	void *user_data;
+};
+
+static GHashTable *_noti_dnd_cb_hash = NULL;
 
 EXPORT_API int notification_setting_get_setting_array_for_uid(notification_setting_h *setting_array, int *count, uid_t uid)
 {
@@ -54,7 +63,6 @@ EXPORT_API int notification_setting_get_setting_array(notification_setting_h *se
 {
 	return notification_setting_get_setting_array_for_uid(setting_array, count, getuid());
 }
-
 EXPORT_API int notification_setting_get_setting_by_package_name_for_uid(const char *package_name, notification_setting_h *setting, uid_t uid)
 {
 	if (package_name == NULL || setting == NULL) {
@@ -683,4 +691,136 @@ EXPORT_API int notification_system_setting_set_lock_screen_content(notification_
 	system_setting->lock_screen_content_level = level;
 
 	return NOTIFICATION_ERROR_NONE;
+}
+
+static gint _noti_dnd_cb_compare(gconstpointer a, gconstpointer b)
+{
+	noti_dnd_cb_info_s *info = NULL;
+
+	if (a == NULL)
+		return -1;
+
+	info = (noti_dnd_cb_info_s *)a;
+	if (info->callback == b)
+		return 0;
+
+	return 1;
+}
+
+void notification_call_dnd_changed_cb_for_uid(int do_not_disturb, uid_t uid)
+{
+	GList *noti_dnd_cb_list = NULL;
+	noti_dnd_cb_info_s *dnd_data = NULL;
+
+	if (_noti_dnd_cb_hash == NULL)
+		return;
+
+	noti_dnd_cb_list = (GList *)g_hash_table_lookup(_noti_dnd_cb_hash, GUINT_TO_POINTER(uid));
+	if (noti_dnd_cb_list == NULL) {
+		NOTIFICATION_ERR("Invalide data");
+		return;
+	}
+
+	noti_dnd_cb_list = g_list_first(noti_dnd_cb_list);
+
+	for (; noti_dnd_cb_list != NULL; noti_dnd_cb_list = noti_dnd_cb_list->next) {
+		dnd_data = noti_dnd_cb_list->data;
+
+		if (dnd_data != NULL && dnd_data->callback != NULL)
+			dnd_data->callback(dnd_data->user_data, do_not_disturb);
+	}
+}
+
+EXPORT_API int notification_register_system_setting_dnd_changed_cb_for_uid(dnd_changed_cb callback, void *user_data, uid_t uid)
+{
+	GList *noti_dnd_list = NULL;
+	GList *noti_dnd_found_list = NULL;
+	noti_dnd_cb_info_s *dnd_data = NULL;
+
+	if (callback == NULL)
+		return NOTIFICATION_ERROR_INVALID_PARAMETER;
+
+	if (notification_ipc_monitor_init(uid) != NOTIFICATION_ERROR_NONE) {
+		NOTIFICATION_ERR("notification_ipc_monitor_init error");
+		return NOTIFICATION_ERROR_IO_ERROR;
+	}
+	if (_noti_dnd_cb_hash == NULL)
+		_noti_dnd_cb_hash = g_hash_table_new(g_direct_hash, g_direct_equal);
+
+	dnd_data = (noti_dnd_cb_info_s *)malloc(sizeof(noti_dnd_cb_info_s));
+	if (dnd_data == NULL)
+		return NOTIFICATION_ERROR_OUT_OF_MEMORY;
+
+	dnd_data->callback = callback;
+	dnd_data->user_data = user_data;
+
+	noti_dnd_list = (GList *)g_hash_table_lookup(_noti_dnd_cb_hash, GUINT_TO_POINTER(uid));
+
+	if (noti_dnd_list == NULL) {
+		noti_dnd_list = g_list_append(noti_dnd_list, dnd_data);
+		g_hash_table_insert(_noti_dnd_cb_hash, GUINT_TO_POINTER(uid), noti_dnd_list);
+	} else {
+		noti_dnd_found_list = g_list_find_custom(noti_dnd_list, (gconstpointer)callback,
+							 _noti_dnd_cb_compare);
+		if (noti_dnd_found_list) {
+			NOTIFICATION_ERR("Already existing callback");
+			free(dnd_data);
+			return NOTIFICATION_ERROR_INVALID_PARAMETER;
+		} else {
+			noti_dnd_list = g_list_append(noti_dnd_list, dnd_data);
+		}
+	}
+
+	return NOTIFICATION_ERROR_NONE;
+}
+
+EXPORT_API int notification_register_system_setting_dnd_changed_cb(dnd_changed_cb callback, void *user_data)
+{
+	return notification_register_system_setting_dnd_changed_cb_for_uid(callback, user_data, getuid());
+}
+
+EXPORT_API int notification_unregister_system_setting_dnd_changed_cb_for_uid(dnd_changed_cb callback, uid_t uid)
+{
+	GList *noti_dnd_cb_list = NULL;
+	GList *noti_dnd_del_list = NULL;
+	noti_dnd_cb_info_s *dnd_data = NULL;
+
+	if (callback == NULL)
+		return NOTIFICATION_ERROR_INVALID_PARAMETER;
+
+	if (_noti_dnd_cb_hash == NULL)
+		return NOTIFICATION_ERROR_INVALID_PARAMETER;
+
+	noti_dnd_cb_list = (GList *)g_hash_table_lookup(_noti_dnd_cb_hash, GUINT_TO_POINTER(uid));
+
+	if (noti_dnd_cb_list == NULL)
+		return NOTIFICATION_ERROR_INVALID_PARAMETER;
+
+	noti_dnd_del_list = g_list_find_custom(noti_dnd_cb_list, (gconstpointer)callback,
+					       _noti_dnd_cb_compare);
+
+	if (noti_dnd_del_list) {
+		dnd_data = g_list_nth_data(noti_dnd_del_list, 0);
+		noti_dnd_cb_list = g_list_delete_link(noti_dnd_cb_list, noti_dnd_del_list);
+		free(dnd_data);
+	} else {
+		return NOTIFICATION_ERROR_INVALID_PARAMETER;
+	}
+
+	if (noti_dnd_cb_list == NULL) {
+		g_hash_table_steal(_noti_dnd_cb_hash, GUINT_TO_POINTER(uid));
+	} else {
+		noti_dnd_cb_list = g_list_first(noti_dnd_cb_list);
+		g_hash_table_replace(_noti_dnd_cb_hash, GUINT_TO_POINTER(uid), noti_dnd_cb_list);
+	}
+
+	if (g_hash_table_size(_noti_dnd_cb_hash) == 0)
+		notification_ipc_monitor_fini();
+
+	return NOTIFICATION_ERROR_NONE;
+}
+
+EXPORT_API int notification_unregister_system_setting_dnd_changed_cb(dnd_changed_cb callback)
+{
+	return notification_unregister_system_setting_dnd_changed_cb_for_uid(callback, getuid());
 }

@@ -26,6 +26,11 @@
 extern "C" {
 #endif
 
+/*
+ * The prototype of handler that 'Do not disturb' mode set schdule changed alarm.
+ */
+typedef void (*dnd_changed_cb)(void *user_data, int do_not_disturb);
+
 /**
 * @brief Enumeration for Week Flag, the days of the week.
 * @since_tizen 3.0
@@ -121,6 +126,88 @@ int notification_system_setting_dnd_schedule_set_end_time(notification_system_se
 
 int notification_system_setting_set_lock_screen_content(notification_system_setting_h system_setting, lock_screen_content_level_e level);
 int notification_system_setting_get_lock_screen_content(notification_system_setting_h system_setting, lock_screen_content_level_e *level);
+
+
+
+/*
+ * @internal
+ * @brief Registers a callback for 'Do not disturb' mode setting schedule is start or end.
+ * @since_tizen 3.0
+ * @param[in] callback 	The callback function
+ * @param[in] user_data	The user data
+ * @return #NOTIFICATION_ERROR_NONE on success,
+ *         otherwise any other value on failure
+ * @retval #NOTIFICATION_ERROR_NONE Success
+ * @retval #NOTIFICATION_ERROR_INVALID_PARAMETER Invalid parameter
+ * @retval #NOTIFICATION_ERROR_IO_ERROR I/O Error
+ * @retval #NOTIFICATION_ERROR_OUT_OF_MEMORY out of memory
+ * @par sample code:
+ * @code
+#include <notification_setting_internal.h>
+...
+
+static void changed_cb(void *user_data, int do_not_disturb)
+{
+	...
+}
+
+...
+{
+	int noti_err = 0;
+
+	...
+
+	noti_err = notification_register_system_setting_dnd_changed_cb(changed_cb, NULL);
+	if(noti_err != NOTIFICATION_ERROR_NONE) {
+		return;
+	}
+
+	return 0;
+
+}
+ * @endcode
+ */
+int notification_register_system_setting_dnd_changed_cb(dnd_changed_cb callback, void *user_data);
+int notification_register_system_setting_dnd_changed_cb_for_uid(dnd_changed_cb callback, void *user_data, uid_t uid);
+
+/*
+ * @internal
+ * @brief Unregisters a callback for 'Do not disturb' mode setting schedule is start or end.
+ * @since_tizen 3.0
+ * @param[in] callback The callback function
+ * @return #NOTIFICATION_ERROR_NONE on success,
+ *         otherwise any other value on failure
+ * @retval #NOTIFICATION_ERROR_NONE Success
+ * @retval #NOTIFICATION_ERROR_INVALID_PARAMETER Invalid parameter
+ * @par sample code:
+ * @code
+#include <notification_setting_internal.h>
+...
+
+static void changed_cb(void *user_data, int do_not_disturb)
+{
+	...
+}
+
+...
+{
+	int noti_err = 0;
+
+	...
+
+	noti_err = notification_unregister_system_setting_dnd_changed_cb(changed_cb);
+	if(noti_err != NOTIFICATION_ERROR_NONE) {
+		return;
+	}
+
+	return 0;
+
+}
+ * @endcode
+ */
+int notification_unregister_system_setting_dnd_changed_cb(dnd_changed_cb callback);
+int notification_unregister_system_setting_dnd_changed_cb_for_uid(dnd_changed_cb callback, uid_t uid);
+
 
 /* OLD IMPLEMENTATION */
 int notification_setting_property_set(const char *pkgname, const char *property, const char *value) NOTIFICATION_DEPRECATED_API;
