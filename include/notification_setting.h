@@ -30,11 +30,144 @@ typedef struct notification_setting *notification_setting_h;
 
 int notification_setting_get_setting(notification_setting_h *setting);
 
+/*
+ * @internal
+ * @brief Gets value which whether information on the notification view is visible.
+ * @since_tizen @if wearable 2.3.1 @elseif mobile 2.3 @endif
+ * @param[in] setting	The notification setting handle
+ * @param[out] value	The visibility_class value
+ * @return #NOTIFICATION_ERROR_NONE on success,
+ *         otherwise any other value on failure
+ * @retval #NOTIFICATION_ERROR_NONE         Success
+ * @retval #NOTIFICATION_ERROR_INVALID_PARAMETER Invalid parameter
+ * @par sample code:
+ * @code
+#include <notification_setting_internal.h>
+...
+{
+	int noti_err = 0;
+	bool value;
+	notification_setting_h setting = NULL;
+
+	...
+
+	noti_err = notifiacation_setting_get_visibility_class(setting, &value);
+	if(noti_err != NOTIFICATION_ERROR_NONE) {
+		return;
+	}
+
+	notification_setting_free_notification(setting);
+
+	return 0;
+
+}
+ * @endcode
+ */
 int notification_setting_get_visibility_class(notification_setting_h setting, int *value);
+
+/*
+ * @internal
+ * @brief Sets value which whether information on the notification view is visible.
+ * @details After notification_setting_update_setting() call, the visibility_class value is not updated.
+ * @since_tizen @if wearable 2.3.1 @elseif mobile 2.3 @endif
+ * @param[in] setting	The notification setting handle
+ * @param[in] value	The visibility_class value
+ * @return #NOTIFICATION_ERROR_NONE on success,
+ *         otherwise any other value on failure
+ * @retval #NOTIFICATION_ERROR_NONE         Success
+ * @retval #NOTIFICATION_ERROR_INVALID_PARAMETER Invalid parameter
+ * @par sample code:
+ * @code
+#include <notification_setting_internal.h>
+...
+{
+	int noti_err = 0;
+	bool value;
+	notification_setting_h setting = NULL;
+
+	...
+
+	value = true;	// or false
+
+	noti_err = notifiacation_setting_set_visibility_class(setting, value);
+	if(noti_err != NOTIFICATION_ERROR_NONE) {
+		return;
+	}
+
+	notification_setting_free_notification(setting);
+
+	return 0;
+
+}
+ * @endcode
+ */
 int notification_setting_set_visibility_class(notification_setting_h setting, int value);
 
+/*
+ * @internal
+ * @brief Update the notification setting handle.
+ * @since_tizen @if wearable 2.3.1 @elseif mobile 2.3 @endif
+ * @privlevel public
+ * @privilege %http://tizen.org/privilege/notification
+ * @param[in] setting	The notification setting handle
+ * @return #NOTIFICATION_ERROR_NONE on success,
+ *         otherwise any other value on failure
+ * @retval #NOTIFICATION_ERROR_NONE         Success
+ * @retval #NOTIFICATION_ERROR_INVALID_PARAMETER Invalid parameter
+ * @par sample code:
+ * @code
+#include <notification_setting_internal.h>
+...
+{
+	int noti_err = 0;
+	bool value;
+	notification_setting_h setting = NULL;
+
+	...
+
+	noti_err = notifiacation_setting_update_setting(setting);
+	if(noti_err != NOTIFICATION_ERROR_NONE) {
+		return;
+	}
+
+	notification_setting_free_notification(setting);
+
+	return 0;
+
+}
+ * @endcode
+ */
 int notification_setting_update_setting(notification_setting_h setting);
 
+/*
+ * @internal
+ * @brief Frees the internal structure data of a notification setting handle.
+ * @since_tizen @if wearable 2.3.1 @elseif mobile 2.3 @endif
+ * @param[in] setting	The notification setting handle
+ * @return #NOTIFICATION_ERROR_NONE on success,
+ *         otherwise any other value on failure
+ * @retval #NOTIFICATION_ERROR_NONE         Success
+ * @retval #NOTIFICATION_ERROR_INVALID_PARAMETER Invalid parameter
+ * @par sample code:
+ * @code
+#include <notification_setting_internal.h>
+...
+{
+	int noti_err = 0;
+	notification_setting_h setting = NULL;
+
+	...
+
+	noti_err = notifiacation_setting_free_notification(setting);
+	if(noti_err != NOTIFICATION_ERROR_NONE) {
+		return;
+	}
+
+	return 0;
+
+}
+ * @endcode
+ */
 int notification_setting_free_notification(notification_setting_h setting);
 
 int notification_setting_refresh_setting_table(uid_t uid);
