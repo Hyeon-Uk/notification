@@ -139,6 +139,28 @@ EXPORT_API notification_h notification_list_get_data(notification_list_h list)
 	return cur_list->noti;
 }
 
+EXPORT_API int notification_list_get_count(notification_list_h list)
+{
+	int count = 0;
+	notification_list_h cur_list = NULL;
+
+	if (list == NULL) {
+		NOTIFICATION_ERR("INVALID DATA : list == NULL");
+		set_last_result(NOTIFICATION_ERROR_INVALID_PARAMETER);
+		return 0;
+	}
+
+	cur_list = notification_list_get_head(list);
+
+	while (cur_list != NULL) {
+		count++;
+		cur_list = cur_list->next;
+	}
+
+	set_last_result(NOTIFICATION_ERROR_NONE);
+	return count;
+}
+
 EXPORT_API notification_list_h notification_list_append(notification_list_h list,
 		notification_h noti)
 {

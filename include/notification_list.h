@@ -310,6 +310,36 @@ notification_list_h notification_list_get_next(notification_list_h list);
  */
 notification_h notification_list_get_data(notification_list_h list);
 
+
+/**
+ * @brief Gets a number of the notification list.
+ * @since_tizen 3.0
+ * @param[in] list Notification list handle
+ * @return A number of notification list handle on success, 0 on failure
+ * @exception #NOTIFICATION_ERROR_NONE Success
+ * @exception #NOTIFICATION_ERROR_INVALID_PARAMETER Invalid input value
+ * @see #notification_list_h
+ * @see #notification_h
+ * @par Sample code:
+ * @code
+include <notification.h>
+...
+{
+	int count = 0;
+	notification_list_h noti_list = NULL;
+	int noti_err = NOTIFICATION_ERROR_NONE;
+
+	noti_err = notification_get_detail_list(pkgname, group_id, priv_id, -1, &noti_list);
+	if(noti_err != NOTIFICATION_ERROR_NONE) {
+		return;
+	}
+
+	count = notification_list_get_count(noti_list);
+}
+ * @endcode
+ */
+int notification_list_get_count(notification_list_h list);
+
 /**
  * @brief Appends notification data to the notification list.
  * @since_tizen @if WEARABLE 2.3.1 @elseif MOBILE 2.3 @endif
