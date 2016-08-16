@@ -423,6 +423,16 @@ typedef enum notification_permission_type {
 } notification_permission_type_e;
 
 /**
+ * @brief Enumeration for notification block state.
+ * @since_tizen 3.0
+ */
+typedef enum notification_block_state {
+	NOTIFICATION_BLOCK_STATE_ALLOWED = 0,	/**< The app is allowed to post notifications */
+	NOTIFICATION_BLOCK_STATE_BLOCKED,	/**< The app is not allowed to post any notifications */
+	NOTIFICATION_BLOCK_STATE_DO_NOT_DISTURB	/**< User set do not disturb mode */
+} notification_block_state_e;
+
+/**
  * @}
  */
 

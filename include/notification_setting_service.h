@@ -39,6 +39,7 @@ int noti_setting_service_get_setting_by_package_name(const char *package_name, n
 int noti_setting_get_setting_array(notification_setting_h *setting_array, int *count, uid_t uid);
 int noti_system_setting_load_system_setting(notification_system_setting_h *system_setting, uid_t uid);
 int notification_system_setting_get_dnd_schedule_enabled_uid(uid_t **uids, int *count);
+int notification_get_dnd_and_allow_to_notify(const char *pkgname, int *do_not_disturb, int *do_not_disturb_except, int *allow_to_notify, uid_t uid);
 #ifdef __cplusplus
 }
 #endif

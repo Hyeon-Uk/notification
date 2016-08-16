@@ -1231,10 +1231,6 @@ out:
 	return err;
 }
 
-
-
-
-
 EXPORT_API int notification_set_property(notification_h noti,
 							  int flags)
 {
@@ -1866,4 +1862,39 @@ EXPORT_API notification_h notification_create_from_template(const char *template
 	}
 
 	return noti;
+}
+
+EXPORT_API int notification_get_noti_block_state(notification_block_state_e *state)
+{
+	int ret;
+	char *pkgname;
+	int do_not_disturb;
+	int do_not_disturb_except;
+	int allow_to_notify;
+
+	if (state == NULL)
+		return NOTIFICATION_ERROR_INVALID_PARAMETER;
+
+	pkgname = notification_get_pkgname_by_pid();
+
+	ret = notification_ipc_get_noti_block_state(pkgname, &do_not_disturb, &do_not_disturb_except, &allow_to_notify, getuid());
+
+	if (ret != NOTIFICATION_ERROR_NONE) {
+		if (pkgname)
+			free(pkgname);
+		return ret;
+	}
+
+	if (allow_to_notify) {
+		*state = NOTIFICATION_BLOCK_STATE_ALLOWED;
+		if (do_not_disturb && !do_not_disturb_except)
+			*state = NOTIFICATION_BLOCK_STATE_DO_NOT_DISTURB;
+	} else {
+		*state = NOTIFICATION_BLOCK_STATE_BLOCKED;
+	}
+
+	if (pkgname)
+		free(pkgname);
+
+	return ret;
 }

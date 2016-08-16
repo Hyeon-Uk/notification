@@ -1423,6 +1423,50 @@ int notification_ipc_request_create_from_package_template(notification_h noti, c
 	return result;
 }
 
+int notification_ipc_get_noti_block_state(const char *pkgname, int *do_not_disturb,
+					  int *do_not_disturb_except, int *allow_to_notify,
+					  uid_t uid)
+{
+	int ret;
+	int dnd;
+	int dnd_except;
+	int allow;
+	GDBusMessage *reply = NULL;
+	GVariant *body;
+	GVariant *reply_body;
+	GVariant *result_body;
+
+	if (pkgname == NULL)
+		return NOTIFICATION_ERROR_INVALID_PARAMETER;
+
+	ret = _dbus_init();
+	if (ret != NOTIFICATION_ERROR_NONE) {
+		NOTIFICATION_ERR("Can't init dbus %d", ret);
+		return ret;
+	}
+
+	body = g_variant_new("(si)", pkgname, uid);
+
+	ret = _send_sync_noti(body, &reply, "get_noti_block_state");
+
+	if (ret == NOTIFICATION_ERROR_NONE) {
+		reply_body = g_dbus_message_get_body(reply);
+		g_variant_get(reply_body, "(v)", &result_body);
+		g_variant_get(result_body, "(iii)", &dnd, &dnd_except, &allow);
+		*do_not_disturb = dnd;
+		*do_not_disturb_except = dnd_except;
+		*allow_to_notify = allow;
+		g_variant_unref(result_body);
+	}
+
+	if (reply)
+		g_object_unref(reply);
+
+	NOTIFICATION_DBG("notification_ipc_get_noti_block_state done");
+
+	return ret;
+}
+
 EXPORT_API GVariant *notification_ipc_make_gvariant_from_noti(notification_h noti, bool translate)
 {
 	NOTIFICATION_DBG("make gvariant from noti");

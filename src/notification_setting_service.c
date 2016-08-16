@@ -568,3 +568,81 @@ err:
 
 	return ret;
 }
+
+EXPORT_API int notification_get_dnd_and_allow_to_notify(const char *pkgname,
+							int *do_not_disturb,
+							int *do_not_disturb_except,
+							int *allow_to_notify,
+							uid_t uid)
+{
+	int ret = NOTIFICATION_ERROR_NONE;
+	int sql_ret;
+	int row_count;
+	int col_count;
+	int col_index;
+	sqlite3 *db;
+	char *query_setting = NULL;
+	char **query_setting_result = NULL;
+	char *query_system_setting = NULL;
+	char **query_system_setting_result = NULL;
+
+	if (pkgname == NULL)
+		return NOTIFICATION_ERROR_INVALID_PARAMETER;
+
+	db = notification_db_open(DBPATH);
+	if (db == NULL)
+		return get_last_result();
+
+	query_setting = sqlite3_mprintf("SELECT allow_to_notify, do_not_disturb_except "
+					"FROM %s WHERE package_name = %Q AND uid = %d",
+					NOTIFICATION_SETTING_DB_TABLE, pkgname, uid);
+	if (query_setting == NULL) {
+		NOTIFICATION_ERR("fail to alloc query");
+		ret = NOTIFICATION_ERROR_OUT_OF_MEMORY;
+		goto out;
+	}
+
+	query_system_setting = sqlite3_mprintf("SELECT do_not_disturb FROM %s WHERE uid = %d",
+					       NOTIFICATION_SYSTEM_SETTING_DB_TABLE, uid);
+
+	if (query_system_setting == NULL) {
+		NOTIFICATION_ERR("fail to alloc query");
+		ret = NOTIFICATION_ERROR_OUT_OF_MEMORY;
+		goto out;
+	}
+
+	sql_ret = sqlite3_get_table(db, query_setting, &query_setting_result, &row_count, &col_count, NULL);
+	if (sql_ret != SQLITE_OK && sql_ret != -1) {
+		NOTIFICATION_ERR("NOTIFICATION_ERROR_FROM_DB failed [%d][%s]", sql_ret, query_setting);
+		ret = NOTIFICATION_ERROR_FROM_DB;
+		goto out;
+	}
+
+	col_index = col_count;
+	_get_table_field_data_int(query_setting_result, (int *)allow_to_notify, col_index++);
+	_get_table_field_data_int(query_setting_result, (int *)do_not_disturb_except, col_index++);
+
+	sql_ret = sqlite3_get_table(db, query_system_setting, &query_system_setting_result, &row_count, &col_count, NULL);
+	if (sql_ret != SQLITE_OK && sql_ret != -1) {
+		NOTIFICATION_ERR("NOTIFICATION_ERROR_FROM_DB failed [%d][%s]", sql_ret, query_setting);
+		ret = NOTIFICATION_ERROR_FROM_DB;
+		goto out;
+	}
+
+	col_index = col_count;
+	_get_table_field_data_int(query_system_setting_result, (int *)do_not_disturb, col_index++);
+
+out:
+	if (query_setting_result)
+		sqlite3_free_table(query_setting_result);
+	if (query_system_setting_result)
+		sqlite3_free_table(query_system_setting_result);
+	if (query_setting)
+		sqlite3_free(query_setting);
+	if (query_system_setting)
+		sqlite3_free(query_system_setting);
+	if (db)
+		notification_db_close(&db);
+
+	return ret;
+}

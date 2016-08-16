@@ -87,8 +87,8 @@ int notification_ipc_request_save_as_template(notification_h noti, const char *t
 int notification_ipc_request_create_from_template(notification_h noti, const char *template_name);
 int notification_ipc_request_create_from_package_template(notification_h noti,
 		const char *pkgname, const char *template_name);
-
-
+int notification_ipc_get_noti_block_state(const char *pkgname, int *do_not_disturb, int *do_not_disturb_except,
+					  int *allow_to_notify, uid_t uid);
 
 #ifdef __cplusplus
 }

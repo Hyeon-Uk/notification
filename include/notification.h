@@ -1519,6 +1519,44 @@ int notification_save_as_template(notification_h noti, const char *template_name
 notification_h notification_create_from_template(const char *template_name);
 
 /**
+ * @brief Gets notification block state.
+ * @details	The user can set the notification block state in settings.
+ *		The block state indicates whether or not notifications can be posted.
+ *		Additionally only notifications to the notification panel are
+ *		allowed in "Do not disturb mode". Sound, Vibrate and
+ *		Active/Instant notifications are blocked.
+ * @since_tizen 3.0
+ * @privlevel public
+ * @privilege %http://tizen.org/privilege/notification
+ * @param[out] state Notification block state
+ * @return #NOTIFICATION_ERROR_NONE On success, other value on failure
+ * @retval #NOTIFICATION_ERROR_NONE Success
+ * @retval #NOTIFICATION_ERROR_INVALID_PARAMETER Invalid parameter
+ * @retval #NOTIFICATION_ERROR_OUT_OF_MEMORY out of memory
+ * @retval #NOTIFICATION_ERROR_IO_ERROR I/O Error
+ * @retval #NOTIFICATION_ERROR_PERMISSION_DENIED Permission denied
+ * @retval #NOTIFICATION_ERROR_SERVICE_NOT_READY No response from notification service
+ * @see #notification_block_state_e
+ * @par Sample code:
+ * @code
+#include <notification.h>
+...
+{
+	int noti_err = NOTIFICATION_ERROR_NONE;
+	notification_block_state_e state;
+
+	...
+
+	noti_err = notification_get_noti_block_state(&state);
+	if(noti_err != NOTIFICATION_ERROR_NONE) {
+		return;
+	}
+}
+ * @endcode
+ */
+int notification_get_noti_block_state(notification_block_state_e *state);
+
+/**
  * @}
  */
 
