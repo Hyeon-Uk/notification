@@ -138,7 +138,60 @@ create	table if not exists noti_list ( \
 			dnd_end_min INTEGER DEFAULT 0, \
 			lock_screen_content_level INTEGER DEFAULT 0, \
 			UNIQUE (uid) \
+		);\
+		CREATE TABLE IF NOT EXISTS noti_template ( \
+			type INTEGER NOT NULL, \
+			layout INTEGER NOT NULL default 0, \
+			caller_pkgname TEXT NOT NULL, \
+			launch_pkgname TEXT, \
+			image_path TEXT, \
+			group_id INTEGER default 0,  \
+			internal_group_id INTEGER default 0,  \
+			priv_id INTEGER PRIMARY KEY AUTOINCREMENT,  \
+			title_key TEXT, \
+			b_text TEXT, \
+			b_key TEXT, \
+			tag TEXT, \
+			b_format_args TEXT, \
+			num_format_args INTEGER default 0, \
+			text_domain TEXT, \
+			text_dir TEXT, \
+			time INTEGER default 0, \
+			insert_time INTEGER default 0, \
+			args TEXT, \
+			group_args TEXT, \
+			b_execute_option TEXT, \
+			b_service_responding TEXT, \
+			b_service_single_launch TEXT, \
+			b_service_multi_launch TEXT, \
+			b_event_handler_click_on_button_1 TEXT, \
+			b_event_handler_click_on_button_2 TEXT, \
+			b_event_handler_click_on_button_3 TEXT, \
+			b_event_handler_click_on_button_4 TEXT, \
+			b_event_handler_click_on_button_5 TEXT, \
+			b_event_handler_click_on_button_6 TEXT, \
+			b_event_handler_click_on_icon TEXT, \
+			b_event_handler_click_on_thumbnail TEXT, \
+			sound_type INTEGER default 0, \
+			sound_path TEXT, \
+			vibration_type INTEGER default 0, \
+			vibration_path TEXT, \
+			led_operation INTEGER default 0, \
+			led_argb INTEGER default 0, \
+			led_on_ms INTEGER default -1, \
+			led_off_ms INTEGER default -1, \
+			flags_for_property INTEGER default 0, \
+			flag_simmode INTEGER default 0, \
+			display_applist INTEGER, \
+			progress_size DOUBLE default 0, \
+			progress_percentage DOUBLE default 0, \
+			ongoing_flag INTEGER default 0, \
+			auto_remove INTEGER default 1, \
+			uid INTEGER, \
+			template_name TEXT, \
+			UNIQUE (caller_pkgname, template_name) \
 		);"
+
 
 EXPORT_API int notification_db_init()
 {

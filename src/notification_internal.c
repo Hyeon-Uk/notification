@@ -1281,3 +1281,32 @@ EXPORT_API notification_h notification_load_by_tag_for_uid(const char *tag, uid_
 
 	return noti;
 }
+
+EXPORT_API notification_h notification_create_from_package_template(const char *pkgname, const char *template_name)
+{
+	int ret = 0;
+	notification_h noti = NULL;
+
+	if (pkgname == NULL || template_name == NULL) {
+		NOTIFICATION_ERR("Invalid parameter");
+		set_last_result(NOTIFICATION_ERROR_INVALID_PARAMETER);
+		return NULL;
+	}
+
+	noti = (notification_h)calloc(1, sizeof(struct _notification));
+	if (noti == NULL) {
+		NOTIFICATION_ERR("Failed to alloc a new notification");
+		set_last_result(NOTIFICATION_ERROR_OUT_OF_MEMORY);
+		return NULL;
+	}
+
+	ret = notification_ipc_request_create_from_package_template(noti, pkgname, template_name);
+
+	set_last_result(ret);
+	if (ret != NOTIFICATION_ERROR_NONE) {
+		notification_free(noti);
+		return NULL;
+	}
+
+	return noti;
+}

@@ -83,6 +83,12 @@ int notification_ipc_request_load_noti_by_priv_id(notification_h noti,
 int notification_ipc_request_load_noti_detail_list(const char *pkgname,
 		int group_id, int priv_id, int count,
 		notification_list_h *list, uid_t uid);
+int notification_ipc_request_save_as_template(notification_h noti, const char *template_name);
+int notification_ipc_request_create_from_template(notification_h noti, const char *template_name);
+int notification_ipc_request_create_from_package_template(notification_h noti,
+		const char *pkgname, const char *template_name);
+
+
 
 #ifdef __cplusplus
 }

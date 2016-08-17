@@ -1443,6 +1443,82 @@ int notification_set_auto_remove(notification_h noti, bool auto_remove);
 int notification_get_auto_remove(notification_h noti, bool *auto_remove);
 
 /**
+ * @brief Saves a notification template to the notification database.
+ * @details An application can save the created notification as a template for later reuse.
+ *          If the template has the same name as an saved one, the saved template will be overwritten.
+ *          A saved template can be loaded only by the application which saved it.
+ *          All templates are removed when the application package is uninstalled.
+ * @since_tizen 3.0
+ * @privlevel public
+ * @privilege %http://tizen.org/privilege/notification
+ * @remarks The number of templates is limited to 10.
+ *          When you try to add more than 10 templates, #NOTIFICATION_ERROR_MAX_EXCEEDED will be returned.
+ * @param[in] noti Notification handle
+ * @param[in] template_name Template name
+ * @return #NOTIFICATION_ERROR_NONE On success, other value on failure
+ * @retval #NOTIFICATION_ERROR_INVALID_PARAMETER Invalid parameter
+ * @retval #NOTIFICATION_ERROR_IO_ERROR I/O error
+ * @retval #NOTIFICATION_ERROR_OUT_OF_MEMORY Out of memory
+ * @retval #NOTIFICATION_ERROR_PERMISSION_DENIED The Permission denied
+ * @retval #NOTIFICATION_ERROR_MAX_EXCEEDED Max notification count exceeded
+ * @see #notification_h
+ * @see notification_create_from_template()
+ * @par Sample code:
+ * @code
+#include <notification.h>
+...
+{
+	int noti_err = NOTIFICATION_ERROR_NONE;
+
+	...
+
+	noti_err = notification_save_as_template(noti, "CALL_ACCEPT");
+	if(noti_err != NOTIFICATION_ERROR_NONE) {
+		return;
+	}
+}
+ * @endcode
+ */
+int notification_save_as_template(notification_h noti, const char *template_name);
+
+/**
+ * @brief Loads a notification template from the notification database.
+ * @details An application can load a saved template and post it.
+ *          An application can load only templates that it has saved.
+ * @since_tizen 3.0
+ * @privlevel public
+ * @privilege %http://tizen.org/privilege/notification
+ * @remarks The returned handle should be destroyed using notification_free().
+ *          The specific error code can be obtained using get_last_result().
+ *          Error codes are described in the Exception section.
+ *          If an invalid template name is given, the result will be set to #NOTIFICATION_ERROR_FROM_DB.
+ * @param[in] template_name Template name
+ * @return Notification handle on success, NULL on failure
+ * @exception #NOTIFICATION_ERROR_NONE Success
+ * @exception #NOTIFICATION_ERROR_INVALID_PARAMETER Invalid input value
+ * @exception #NOTIFICATION_ERROR_OUT_OF_MEMORY Out of memory
+ * @exception #NOTIFICATION_ERROR_PERMISSION_DENIED The application does not have the privilege to call this method
+ * @exception #NOTIFICATION_ERROR_FROM_DB Error from DB query
+ * @see #notification_h
+ * @see notification_save_as_template()
+ * @par Sample code:
+ * @code
+#include <notification.h>
+...
+{
+	notification_h noti = NULL;
+
+	noti = notification_create_from_template("CALL_ACCEPT");
+	if(noti == NULL) {
+		return;
+	}
+	...
+}
+ * @endcode
+ */
+notification_h notification_create_from_template(const char *template_name);
+
+/**
  * @}
  */
 

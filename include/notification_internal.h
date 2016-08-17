@@ -739,6 +739,8 @@ int notification_update_for_uid(notification_h noti, uid_t uid);
 int notification_delete_for_uid(notification_h noti, uid_t uid);
 int notification_delete_all_for_uid(notification_type_e type, uid_t uid);
 notification_h notification_load_by_tag_for_uid(const char *tag, uid_t uid);
+notification_h notification_create_from_package_template(const char *pkgname,
+					const char *template_name);
 
 /**
  * @}

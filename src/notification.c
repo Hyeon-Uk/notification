@@ -1502,7 +1502,7 @@ EXPORT_API notification_h notification_create(notification_type_e type)
 	return _notification_create(type);
 }
 
-EXPORT_API notification_h  notification_load_by_tag(const char *tag)
+EXPORT_API notification_h notification_load_by_tag(const char *tag)
 {
 	return notification_load_by_tag_for_uid(tag, getuid());
 }
@@ -1829,3 +1829,41 @@ EXPORT_API int notification_get_auto_remove(notification_h noti, bool *auto_remo
 	return NOTIFICATION_ERROR_NONE;
 }
 
+EXPORT_API int notification_save_as_template(notification_h noti, const char *template_name)
+{
+	if (noti == NULL || template_name == NULL) {
+		NOTIFICATION_ERR("Invalid parameter");
+		return NOTIFICATION_ERROR_INVALID_PARAMETER;
+	}
+
+	return notification_ipc_request_save_as_template(noti, template_name);
+}
+
+EXPORT_API notification_h notification_create_from_template(const char *template_name)
+{
+	int ret = 0;
+	notification_h noti = NULL;
+
+	if (template_name == NULL) {
+		NOTIFICATION_ERR("Invalid parameter");
+		set_last_result(NOTIFICATION_ERROR_INVALID_PARAMETER);
+		return NULL;
+	}
+
+	noti = (notification_h)calloc(1, sizeof(struct _notification));
+	if (noti == NULL) {
+		NOTIFICATION_ERR("Failed to alloc a new notification");
+		set_last_result(NOTIFICATION_ERROR_OUT_OF_MEMORY);
+		return NULL;
+	}
+
+	ret = notification_ipc_request_create_from_template(noti, template_name);
+
+	set_last_result(ret);
+	if (ret != NOTIFICATION_ERROR_NONE) {
+		notification_free(noti);
+		return NULL;
+	}
+
+	return noti;
+}

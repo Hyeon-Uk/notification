@@ -61,6 +61,11 @@ int notification_noti_get_detail_list(const char *pkgname,
 		uid_t uid);
 
 int notification_noti_check_tag(notification_h noti);
+int notification_noti_check_count_for_template(notification_h noti, int *count);
+
+int notification_noti_add_template(notification_h noti, char *template_name);
+int notification_noti_get_package_template(notification_h noti, char *pkgname, char *template_name);
+int notification_noti_delete_template(const char *pkgname);
 
 #endif /* __NOTIFICATION_NOTI_H__ */
 

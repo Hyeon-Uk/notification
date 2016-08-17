@@ -1321,6 +1321,108 @@ int notification_ipc_update_system_setting(notification_system_setting_h system_
 	return result;
 }
 
+int notification_ipc_request_save_as_template(notification_h noti, const char *template_name)
+{
+	int result;
+	GDBusMessage *reply = NULL;
+	GVariant *body;
+
+	result = _dbus_init();
+	if (result != NOTIFICATION_ERROR_NONE) {
+		NOTIFICATION_ERR("Can't init dbus %d", result);
+		return result;
+	}
+
+	body = notification_ipc_make_gvariant_from_noti(noti, false);
+	if (body == NULL) {
+		NOTIFICATION_ERR("cannot make gvariant");
+		return NOTIFICATION_ERROR_OUT_OF_MEMORY;
+	}
+
+	result = _send_sync_noti(g_variant_new("(vs)", body, template_name), &reply, "save_as_template");
+
+	if (reply)
+		g_object_unref(reply);
+
+	NOTIFICATION_DBG("notification_ipc_request_save_as_template [result: %d]", result);
+	return result;
+}
+
+int notification_ipc_request_create_from_template(notification_h noti, const char *template_name)
+{
+	int result;
+	GDBusMessage *reply = NULL;
+	GVariant *body;
+	GVariant *reply_body;
+	GVariant *noti_body;
+
+	if (!template_name)
+		return NOTIFICATION_ERROR_INVALID_PARAMETER;
+
+	result = _dbus_init();
+	if (result != NOTIFICATION_ERROR_NONE) {
+		NOTIFICATION_ERR("Can't init dbus %d", result);
+		return result;
+	}
+
+	body = g_variant_new("(s)", template_name);
+
+	result = _send_sync_noti(body, &reply, "create_from_template");
+	if (result == NOTIFICATION_ERROR_NONE) {
+		reply_body = g_dbus_message_get_body(reply);
+		g_variant_get(reply_body, "(v)", &noti_body);
+
+		notification_ipc_make_noti_from_gvariant(noti, noti_body);
+		g_variant_unref(noti_body);
+		_print_noti(noti);
+
+	}
+
+	if (reply)
+		g_object_unref(reply);
+
+	NOTIFICATION_DBG("notification_ipc_request_create_from_template done [result: %d]", result);
+
+	return result;
+}
+
+int notification_ipc_request_create_from_package_template(notification_h noti, const char *pkgname, const char *template_name)
+{
+	int result;
+	GDBusMessage *reply = NULL;
+	GVariant *body;
+	GVariant *reply_body;
+	GVariant *noti_body;
+
+	if (pkgname == NULL || template_name == NULL)
+		return NOTIFICATION_ERROR_INVALID_PARAMETER;
+
+	result = _dbus_init();
+	if (result != NOTIFICATION_ERROR_NONE) {
+		NOTIFICATION_ERR("Can't init dbus %d", result);
+		return result;
+	}
+
+	body = g_variant_new("(ss)", pkgname, template_name);
+
+	result = _send_sync_noti(body, &reply, "create_from_package_template");
+	if (result == NOTIFICATION_ERROR_NONE) {
+		reply_body = g_dbus_message_get_body(reply);
+		g_variant_get(reply_body, "(v)", &noti_body);
+
+		notification_ipc_make_noti_from_gvariant(noti, noti_body);
+		g_variant_unref(noti_body);
+		_print_noti(noti);
+	}
+
+	if (reply)
+		g_object_unref(reply);
+
+	NOTIFICATION_DBG("notification_ipc_request_create_from_package_template [result: %d]", result);
+
+	return result;
+}
+
 EXPORT_API GVariant *notification_ipc_make_gvariant_from_noti(notification_h noti, bool translate)
 {
 	NOTIFICATION_DBG("make gvariant from noti");
