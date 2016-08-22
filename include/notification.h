@@ -1445,7 +1445,7 @@ int notification_get_auto_remove(notification_h noti, bool *auto_remove);
 /**
  * @brief Saves a notification template to the notification database.
  * @details An application can save the created notification as a template for later reuse.
- *          If the template has the same name as an saved one, the saved template will be overwritten.
+ *          If the template has the same name as a saved one, the saved template will be overwritten.
  *          A saved template can be loaded only by the application which saved it.
  *          All templates are removed when the application package is uninstalled.
  * @since_tizen 3.0
