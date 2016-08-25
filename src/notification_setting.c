@@ -333,7 +333,7 @@ EXPORT_API int notification_setting_refresh_setting_table(uid_t uid)
 	pkgmgrinfo_pkginfo_filter_h filter;
 	setting_local_info info;
 
-	NOTIFICATION_INFO("refresh seeting table [%d]", uid);
+	NOTIFICATION_INFO("refresh setting table [%d]", uid);
 	sqlite3_ret = sqlite3_open_v2(DBPATH, &db, SQLITE_OPEN_READWRITE, NULL);
 	if (sqlite3_ret != SQLITE_OK || db == NULL) {
 		NOTIFICATION_ERR("db_util_open failed [%s][%d]", DBPATH, sqlite3_ret);
