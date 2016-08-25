@@ -64,5 +64,16 @@ int main(int argc, char *argv[])
 	if (argc > 2)
 		uid = (uid_t)atoi(argv[2]);
 	ret = notification_setting_refresh_setting_table(uid);
+	if (ret != NOTIFICATION_ERROR_NONE) {
+		_E("notification setting table refresh fail.");
+		return ret;
+	}
+
+	ret = notification_system_setting_init_system_setting_table(uid);
+	if (ret != NOTIFICATION_ERROR_NONE) {
+		_E("notification system setting table init fail.");
+		return ret;
+	}
+
 	return ret;
 }

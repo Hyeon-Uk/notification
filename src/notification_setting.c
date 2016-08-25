@@ -824,3 +824,90 @@ EXPORT_API int notification_unregister_system_setting_dnd_changed_cb(dnd_changed
 {
 	return notification_unregister_system_setting_dnd_changed_cb_for_uid(callback, getuid());
 }
+
+static bool _is_uid_in_system_setting_table(sqlite3 *db, uid_t uid)
+{
+	bool err = true;
+	sqlite3_stmt *db_statement = NULL;
+	int sqlite3_ret = SQLITE_OK;
+	int field_index = 1;
+
+	sqlite3_ret = sqlite3_prepare_v2(db, "SELECT uid FROM notification_system_setting WHERE uid = ?", -1, &db_statement, NULL);
+	if (sqlite3_ret != SQLITE_OK) {
+		NOTIFICATION_ERR("sqlite3_prepare_v2 failed [%d][%s]", sqlite3_ret, sqlite3_errmsg(db));
+		err = false;
+		goto out;
+	}
+
+	sqlite3_bind_int(db_statement, field_index++, uid);
+
+	sqlite3_ret = sqlite3_step(db_statement);
+	if (sqlite3_ret == SQLITE_DONE) {
+		NOTIFICATION_INFO("no matched uid found[%d][%d]", uid, sqlite3_ret);
+		err = false;
+		goto out;
+	}
+
+	if (sqlite3_ret != SQLITE_OK && sqlite3_ret != SQLITE_ROW) {
+		NOTIFICATION_ERR("sqlite3_step failed [%d][%s]", sqlite3_ret, sqlite3_errmsg(db));
+		err = false;
+		goto out;
+	}
+
+out:
+	if (db_statement)
+		sqlite3_finalize(db_statement);
+
+	return err;
+}
+
+EXPORT_API int notification_system_setting_init_system_setting_table(uid_t uid)
+{
+	int err = NOTIFICATION_ERROR_NONE;
+	int sqlite3_ret = SQLITE_OK;
+	int field_index = 1;
+	sqlite3 *db = NULL;
+	sqlite3_stmt *db_statement = NULL;
+
+	NOTIFICATION_INFO("init system setting table [%d]", uid);
+	db = notification_db_open(DBPATH);
+	if (db == NULL)
+		return get_last_result();
+
+	/* if notification system setting don't init. */
+	if (_is_uid_in_system_setting_table(db, uid) == true) {
+		NOTIFICATION_DBG("Notification system setting table is already initialized.");
+	} else {
+		NOTIFICATION_DBG("Notification system setting table is not initialized yet");
+		sqlite3_ret = sqlite3_prepare_v2(db, "INSERT INTO notification_system_setting (uid) VALUES (?) ", -1, &db_statement, NULL);
+		if (sqlite3_ret != SQLITE_OK) {
+			NOTIFICATION_ERR("sqlite3_prepare_v2 failed [%d][%s]", sqlite3_ret, sqlite3_errmsg(db));
+			err = NOTIFICATION_ERROR_FROM_DB;
+			goto out;
+		}
+
+		sqlite3_bind_int(db_statement, field_index++, uid);
+
+		sqlite3_ret = sqlite3_step(db_statement);
+		if (sqlite3_ret != SQLITE_OK && sqlite3_ret != SQLITE_DONE) {
+			NOTIFICATION_ERR("sqlite3_step failed [%d][%s]", sqlite3_ret, sqlite3_errmsg(db));
+			err = NOTIFICATION_ERROR_FROM_DB;
+			goto out;
+		}
+	}
+
+	NOTIFICATION_DBG("Notification system setting tables initialization is success.");
+
+out:
+	if (db) {
+		if (err == NOTIFICATION_ERROR_NONE)
+			sqlite3_exec(db, "END;", NULL, NULL, NULL);
+		else
+			sqlite3_exec(db, "ROLLBACK;", NULL, NULL, NULL);
+		notification_db_close(&db);
+	}
+	if (db_statement)
+		sqlite3_finalize(db_statement);
+
+	return err;
+}
