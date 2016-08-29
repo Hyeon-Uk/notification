@@ -205,6 +205,50 @@ EXPORT_API int notification_setting_set_visibility_class(notification_setting_h 
 	return NOTIFICATION_ERROR_NONE;
 }
 
+EXPORT_API int notification_setting_get_pop_up_notification(notification_setting_h setting, bool *value)
+{
+	if (setting == NULL || value == NULL) {
+		NOTIFICATION_ERR("Invalid parameter");
+		return NOTIFICATION_ERROR_INVALID_PARAMETER;
+	}
+
+	*value = setting->pop_up_notification;
+	return NOTIFICATION_ERROR_NONE;
+}
+
+EXPORT_API int notification_setting_set_pop_up_notification(notification_setting_h setting, bool value)
+{
+	if (setting == NULL) {
+		NOTIFICATION_ERR("Invalid parameter");
+		return NOTIFICATION_ERROR_INVALID_PARAMETER;
+	}
+
+	setting->pop_up_notification = value;
+	return NOTIFICATION_ERROR_NONE;
+}
+
+EXPORT_API int notification_setting_get_lock_screen_content(notification_setting_h setting, lock_screen_content_level_e *level)
+{
+	if (setting == NULL || level == NULL) {
+		NOTIFICATION_ERR("Invalid parameter");
+		return NOTIFICATION_ERROR_INVALID_PARAMETER;
+	}
+
+	*level = setting->lock_screen_content_level;
+	return NOTIFICATION_ERROR_NONE;
+}
+
+EXPORT_API int notification_setting_set_lock_screen_content(notification_setting_h setting, lock_screen_content_level_e level)
+{
+	if (setting == NULL) {
+		NOTIFICATION_ERR("Invalid parameter");
+		return NOTIFICATION_ERROR_INVALID_PARAMETER;
+	}
+
+	setting->lock_screen_content_level = level;
+	return NOTIFICATION_ERROR_NONE;
+}
+
 EXPORT_API int notification_setting_update_setting_for_uid(notification_setting_h setting, uid_t uid)
 {
 	if (setting == NULL) {

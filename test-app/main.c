@@ -674,6 +674,8 @@ static int testapp_test_get_setting_list()
 	bool allow_to_notify = false;
 	bool do_not_disturb_except = false;
 	int visibility_class = false;
+	bool pop_up_notification = false;
+	lock_screen_content_level_e level = 0;
 	notification_setting_h setting_array = NULL;
 
 	notification_setting_get_setting_array(&setting_array, &count);
@@ -685,9 +687,10 @@ static int testapp_test_get_setting_list()
 		notification_setting_get_allow_to_notify(setting_array + i, &allow_to_notify);
 		notification_setting_get_do_not_disturb_except(setting_array + i, &do_not_disturb_except);
 		notification_setting_get_visibility_class(setting_array + i, &visibility_class);
-
-		testapp_print("[%d] : package_name[%s], allow_to_notify[%d], do_not_disturb_except[%d], visibility_class[%d]\n"
-				, i, package_name, allow_to_notify, do_not_disturb_except, visibility_class);
+		notification_setting_get_pop_up_notification(setting_array + i, &pop_up_notification);
+		notification_setting_get_lock_screen_content(setting_array + i, &level);
+		testapp_print("[%d] : package_name[%s], allow_to_notify[%d], do_not_disturb_except[%d], visibility_class[%d], notification_pop_up[%d], lock_content_level[%d]\n"
+				, i, package_name, allow_to_notify, do_not_disturb_except, visibility_class, pop_up_notification, level);
 		free(package_name);
 	}
 

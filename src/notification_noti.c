@@ -849,6 +849,37 @@ out:
 	return err;
 }
 
+static bool _is_pop_up_notification(const char *caller_package_name, uid_t uid)
+{
+	int err;
+	char *package_id = NULL;
+	bool ret = true;
+	notification_setting_h setting = NULL;
+
+	err = noti_setting_service_get_setting_by_package_name(caller_package_name, &setting, uid);
+	if (err != NOTIFICATION_ERROR_NONE) {
+		NOTIFICATION_ERR("noti_setting_service_get_setting_by_package_name failed [%d]", err);
+		goto out;
+	}
+
+	err = notification_setting_get_pop_up_notification(setting, &ret);
+	if (err != NOTIFICATION_ERROR_NONE) {
+		NOTIFICATION_ERR("notification_setting_get_pop_up_notification failed");
+		goto out;
+	}
+
+	if (ret != true)
+		NOTIFICATION_DBG("[%s] is not allowed Pop-up notification", caller_package_name);
+
+out:
+	if (package_id)
+		free(package_id);
+	if (setting)
+		notification_setting_free_notification(setting);
+
+	return ret;
+}
+
 EXPORT_API int notification_noti_insert(notification_h noti)
 {
 	int ret = 0;
@@ -871,6 +902,10 @@ EXPORT_API int notification_noti_insert(notification_h noti)
 	if (_handle_do_not_disturb_option(noti) != NOTIFICATION_ERROR_NONE)
 		NOTIFICATION_WARN("_handle_do_not_disturb_option failed");
 
+	if (_is_pop_up_notification((const char *)noti->caller_pkgname, noti->uid) == false) {
+		noti->display_applist = (noti->display_applist & (~NOTIFICATION_DISPLAY_APP_ACTIVE));
+		NOTIFICATION_DBG("notification display applist - pkgname [%s], applist [%d]", noti->caller_pkgname, noti->display_applist);
+	}
 
 	db = notification_db_open(DBPATH);
 	if (!db)
@@ -1146,6 +1181,11 @@ EXPORT_API int notification_noti_update(notification_h noti)
 
 	if (_handle_do_not_disturb_option(noti) != NOTIFICATION_ERROR_NONE)
 		NOTIFICATION_WARN("_handle_do_not_disturb_option failed");
+
+	if (_is_pop_up_notification((const char *)noti->caller_pkgname, noti->uid) == false) {
+		noti->display_applist = (noti->display_applist & (~NOTIFICATION_DISPLAY_APP_ACTIVE));
+		NOTIFICATION_DBG("notification display applist - pkgname [%s], applist [%d]", noti->caller_pkgname, noti->display_applist);
+	}
 
 	/* Check private ID is exist */
 	ret = _notification_noti_check_priv_id(noti, db);

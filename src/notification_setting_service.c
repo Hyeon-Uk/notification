@@ -116,9 +116,9 @@ int noti_setting_service_get_setting_by_package_name(const char *package_name, n
 		goto out;
 	}
 
-	sql_query = sqlite3_mprintf("SELECT package_name, allow_to_notify, do_not_disturb_except, visibility_class "
-			"FROM %s "
-			"WHERE package_name = %Q AND uid = %d", NOTIFICATION_SETTING_DB_TABLE, package_name, uid);
+	sql_query = sqlite3_mprintf("SELECT package_name, allow_to_notify, do_not_disturb_except, visibility_class, "
+				    "pop_up_notification, lock_screen_content_level FROM %s "
+				    "WHERE package_name = %Q AND uid = %d", NOTIFICATION_SETTING_DB_TABLE, package_name, uid);
 
 	if (!sql_query) {
 		NOTIFICATION_ERR("fail to alloc query"); /* LCOV_EXCL_LINE */
@@ -156,6 +156,8 @@ int noti_setting_service_get_setting_by_package_name(const char *package_name, n
 	_get_table_field_data_int(query_result, (int *)&(result_setting_array[i].allow_to_notify), col_index++);
 	_get_table_field_data_int(query_result, (int *)&(result_setting_array[i].do_not_disturb_except), col_index++);
 	_get_table_field_data_int(query_result, &(result_setting_array[i].visibility_class), col_index++);
+	_get_table_field_data_int(query_result, (int *)&(result_setting_array[i].pop_up_notification), col_index++);
+	_get_table_field_data_int(query_result, (int *)&(result_setting_array[i].lock_screen_content_level), col_index++);
 
 	*setting = result_setting_array;
 
@@ -203,9 +205,9 @@ int noti_setting_get_setting_array(notification_setting_h *setting_array, int *c
 		goto out;
 	}
 
-	sql_query = sqlite3_mprintf("SELECT package_name, allow_to_notify, do_not_disturb_except, visibility_class "
-			"FROM %s WHERE uid = %d "
-			"ORDER BY package_name", NOTIFICATION_SETTING_DB_TABLE, uid);
+	sql_query = sqlite3_mprintf("SELECT package_name, allow_to_notify, do_not_disturb_except, visibility_class, "
+				    "pop_up_notification, lock_screen_content_level FROM %s WHERE uid = %d "
+				    "ORDER BY package_name", NOTIFICATION_SETTING_DB_TABLE, uid);
 
 	if (!sql_query) {
 		NOTIFICATION_ERR("fail to alloc query"); /* LCOV_EXCL_LINE */
@@ -241,6 +243,8 @@ int noti_setting_get_setting_array(notification_setting_h *setting_array, int *c
 		_get_table_field_data_int(query_result, (int *)&(result_setting_array[i].allow_to_notify), col_index++);
 		_get_table_field_data_int(query_result, (int *)&(result_setting_array[i].do_not_disturb_except), col_index++);
 		_get_table_field_data_int(query_result, &(result_setting_array[i].visibility_class), col_index++);
+		_get_table_field_data_int(query_result, (int *)&(result_setting_array[i].pop_up_notification), col_index++);
+		_get_table_field_data_int(query_result, (int *)&(result_setting_array[i].lock_screen_content_level), col_index++);
 	}
 
 	*setting_array = result_setting_array;
@@ -248,7 +252,7 @@ int noti_setting_get_setting_array(notification_setting_h *setting_array, int *c
 
 out:
 	if (query_result)
-			sqlite3_free_table(query_result);
+		sqlite3_free_table(query_result);
 
 	if (sql_query)
 		sqlite3_free(sql_query);
@@ -362,7 +366,10 @@ out:
 }
 
 EXPORT_API
-int notification_setting_db_update(const char *package_name, int allow_to_notify, int do_not_disturb_except, int visibility_class, uid_t uid)
+int notification_setting_db_update(const char *package_name, int allow_to_notify,
+				   int do_not_disturb_except, int visibility_class,
+				   int pop_up_notification, int lock_screen_content_level,
+				   uid_t uid)
 {
 	int err = NOTIFICATION_ERROR_NONE;
 	sqlite3 *db = NULL;
@@ -378,9 +385,11 @@ int notification_setting_db_update(const char *package_name, int allow_to_notify
 		return NOTIFICATION_ERROR_FROM_DB;
 	}
 
-	sqlbuf = sqlite3_mprintf("UPDATE %s SET allow_to_notify = %d, do_not_disturb_except = %d, visibility_class = %d " \
+	sqlbuf = sqlite3_mprintf("UPDATE %s SET allow_to_notify = %d, do_not_disturb_except = %d, visibility_class = %d, " \
+				 "pop_up_notification = %d, lock_screen_content_level = %d " \
 			"WHERE package_name = %Q AND uid = %d",
-			NOTIFICATION_SETTING_DB_TABLE, allow_to_notify, do_not_disturb_except, visibility_class, package_name, uid);
+			NOTIFICATION_SETTING_DB_TABLE, allow_to_notify, do_not_disturb_except, visibility_class,
+			pop_up_notification, lock_screen_content_level, package_name, uid);
 	if (!sqlbuf) {
 		NOTIFICATION_ERR("fail to alloc query");
 		err = NOTIFICATION_ERROR_OUT_OF_MEMORY;

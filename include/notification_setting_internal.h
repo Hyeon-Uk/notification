@@ -62,7 +62,9 @@ struct notification_setting {
 	char *package_name;
 	bool  allow_to_notify;
 	bool  do_not_disturb_except;
+	bool  pop_up_notification;
 	int   visibility_class;
+	lock_screen_content_level_e lock_screen_content_level;
 };
 
 /* System setting */
@@ -266,7 +268,7 @@ int notification_setting_get_allow_to_notify(notification_setting_h setting, boo
 /*
  * @internal
  * @brief Sets value which whether allow notification from individual applications.
- * @details After notification_setting_update_setting() call, the allow_to_notify is not updated.
+ * @details After notification_setting_update_setting() call, the allow_to_notify is updated.
  * @since_tizen @if wearable 2.3.1 @elseif mobile 2.3 @endif
  * @param[in] setting	The notification setting handle
  * @param[in] value	The value whether allow to notification
@@ -340,11 +342,10 @@ int notification_setting_get_do_not_disturb_except(notification_setting_h settin
 /*
  * @internal
  * @brief Sets value which whether do not disturb notification or not.
- * @details After notification_setting_update_setting() call, the do_not_disturb value is not updated.
+ * @details After notification_setting_update_setting() call, the do_not_disturb value is updated.
  * @since_tizen @if wearable 2.3.1 @elseif mobile 2.3 @endif
  * @param[in] setting	The notification setting handle
  * @param[in] value	The value which do not disturb notification or not
- *
  * @return #NOTIFICATION_ERROR_NONE on success,
  *         otherwise any other value on failure
  * @retval #NOTIFICATION_ERROR_NONE         Success
@@ -375,6 +376,156 @@ int notification_setting_get_do_not_disturb_except(notification_setting_h settin
  * @endcode
  */
 int notification_setting_set_do_not_disturb_except(notification_setting_h setting, bool value);
+
+/*
+ * @internal
+ * @brief Gets value whether Pop up notification is allowed or not.
+ * @since_tizen 3.0
+ * @param[in] setting	The notification setting handle
+ * @param[in] value	The value
+ * @return #NOTIFICATION_ERROR_NONE on success,
+ *         otherwise any other value on failure
+ * @retval #NOTIFICATION_ERROR_NONE         Success
+ * @retval #NOTIFICATION_ERROR_INVALID_PARAMETER Invalid parameter
+ * @par sample code:
+ * @code
+#include <notification_setting_internal.h>
+...
+{
+	int noti_err = 0;
+	bool value;
+	notification_setting_h setting = NULL;
+
+	...
+
+	value = true;	// or false
+
+	noti_err = notifiacation_setting_get_pop_up_notification(setting, value);
+	if(noti_err != NOTIFICATION_ERROR_NONE) {
+		return;
+	}
+
+	notification_setting_free_notification(setting);
+
+	return 0;
+
+}
+ * @endcode
+ */
+int notification_setting_get_pop_up_notification(notification_setting_h setting, bool *value);
+
+/*
+ * @internal
+ * @brief Sets value which Pop up notification allow or block.
+ * @details After notification_setting_update_setting() call, the pop_up_notification value is updated.
+ * @since_tizen 3.0
+ * @param[in] setting	The notification setting handle
+ * @param[in] value	The value
+ * @return #NOTIFICATION_ERROR_NONE on success,
+ *         otherwise any other value on failure
+ * @retval #NOTIFICATION_ERROR_NONE         Success
+ * @retval #NOTIFICATION_ERROR_INVALID_PARAMETER Invalid parameter
+ * @par sample code:
+ * @code
+#include <notification_setting_internal.h>
+...
+{
+	int noti_err = 0;
+	bool value;
+	notification_setting_h setting = NULL;
+
+	...
+
+	value = true;	// or false
+
+	noti_err = notifiacation_setting_get_pop_up_notification(setting, value);
+	if(noti_err != NOTIFICATION_ERROR_NONE) {
+		return;
+	}
+
+	notification_setting_free_notification(setting);
+
+	return 0;
+
+}
+ * @endcode
+ */
+int notification_setting_set_pop_up_notification(notification_setting_h setting, bool value);
+
+/*
+ * @internal
+ * @brief Gets displaying level that notification's information on lock screen from individual application.
+ * @since_tizen 3.0
+ * @param[in] setting	The notification setting handle
+ * @param[out] level	The displaying level of notification's information on lock screen
+ * @return #NOTIFICATION_ERROR_NONE on success,
+ *         otherwise any other value on failure
+ * @retval #NOTIFICATION_ERROR_NONE         Success
+ * @retval #NOTIFICATION_ERROR_INVALID_PARAMETER Invalid parameter
+ * @see #lock_screen_content_level_e
+ * @par sample code:
+ * @code
+#include <notification_setting_internal.h>
+...
+{
+	int noti_err = 0;
+	notification_setting_h setting = NULL;
+	lock_screen_content_level_e level;
+
+	...
+
+	noti_err = notifiacation_setting_get_lock_screen_content(setting, &level);
+	if(noti_err != NOTIFICATION_ERROR_NONE) {
+		return;
+	}
+
+	notification_setting_free_notification(setting);
+
+	return 0;
+
+}
+ * @endcode
+ */
+int notification_setting_get_lock_screen_content(notification_setting_h setting, lock_screen_content_level_e *level);
+
+/*
+ * @internal
+ * @brief Sets displaying level that notification's information on lock screen from individual application.
+ * @details After notification_setting_update_setting() call, the lock_screen_content_level value is updated.
+ * @since_tizen 3.0
+ * @param[in] setting	The notification setting handle
+ * @param[out] level	The displaying level of notification's information on lock screen
+ * @return #NOTIFICATION_ERROR_NONE on success,
+ *         otherwise any other value on failure
+ * @retval #NOTIFICATION_ERROR_NONE         Success
+ * @retval #NOTIFICATION_ERROR_INVALID_PARAMETER Invalid parameter
+ * @see #lock_screen_content_level_e
+ * @par sample code:
+ * @code
+#include <notification_setting_internal.h>
+...
+{
+	int noti_err = 0;
+	notification_setting_h setting = NULL;
+	lock_screen_content_level_e level;
+
+	...
+
+	level = SHOW_ALL_CONTENT;	// or HIDE_SENSITIVE_CONTENT or DO_NOT_SHOW_NOTIFICATIONS;
+
+	noti_err = notifiacation_setting_get_lock_screen_content(setting, level);
+	if(noti_err != NOTIFICATION_ERROR_NONE) {
+		return;
+	}
+
+	notification_setting_free_notification(setting);
+
+	return 0;
+
+}
+ * @endcode
+ */
+int notification_setting_set_lock_screen_content(notification_setting_h setting, lock_screen_content_level_e level);
 
 /*
  * @internal

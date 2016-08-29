@@ -124,6 +124,8 @@ create	table if not exists noti_list ( \
 			allow_to_notify INTEGER DEFAULT 1, \
 			do_not_disturb_except INTEGER DEFAULT 0, \
 			visibility_class INTEGER DEFAULT 0, \
+			pop_up_notification INTEGER DEFAULT 1, \
+			lock_screen_content_level INTEGER DEFAULT 0, \
 			UNIQUE (uid, package_name) \
 		); \
 		CREATE TABLE IF NOT EXISTS notification_system_setting ( \
