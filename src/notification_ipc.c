@@ -863,6 +863,9 @@ int notification_ipc_request_delete_single(notification_type_e type, char *pkgna
 		return result;
 	}
 
+	if (!pkgname)
+		pkgname = "";
+
 	body = g_variant_new("(sii)", pkgname, priv_id, uid);
 	result = _send_sync_noti(body, &reply, "del_noti_single");
 

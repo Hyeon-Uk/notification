@@ -1367,17 +1367,18 @@ EXPORT_API int notification_noti_delete_by_priv_id_get_changes(const char *pkgna
 	char query[NOTIFICATION_QUERY_MAX] = {0, };
 	int ret;
 
-	if (pkgname == NULL || strlen(pkgname) == 0)
-		return NOTIFICATION_ERROR_INVALID_PARAMETER;
-
 	db = notification_db_open(DBPATH);
 	if (!db)
 		return get_last_result();
 
-	snprintf(query, sizeof(query), "delete from noti_list "
-		 "where caller_pkgname = '%s' and priv_id = %d and uid = %d", pkgname,
-		 priv_id, uid);
-	NOTIFICATION_DBG("%s", query);
+	if (pkgname == NULL || strlen(pkgname) == 0) {
+		snprintf(query, sizeof(query), "delete from noti_list "
+			"where priv_id = %d and uid = %d", priv_id, uid);
+	} else {
+		snprintf(query, sizeof(query), "delete from noti_list "
+			"where caller_pkgname = '%s' and priv_id = %d and uid = %d",
+			pkgname, priv_id, uid);
+	}
 
 	ret = notification_db_exec(db, query, num_changes);
 
