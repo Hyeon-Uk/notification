@@ -726,6 +726,82 @@ int notification_unregister_detailed_changed_cb_for_uid(
 		void *user_data, uid_t uid);
 
 /**
+ * @brief Sets the default button to display highlight on the notification.
+ * @since_tizen 3.0
+ * @remarks If you want to default button is off, you set that index is zero
+ * @param[in] noti       The notification handle
+ * @param[in] index      The notification button index
+ * @return #NOTIFICATION_ERROR_NONE on success,
+ *         otherwise any other value on failure
+ * @retval #NOTIFICATION_ERROR_NONE         Success
+ * @retval #NOTIFICATION_ERROR_INVALID_PARAMETER Invalid parameter
+ * @pre Notification handle should be created by notification_create().
+ * @see #notification_button_index_e
+ * @par Sample code:
+ * @code
+#include <notification.h>
+...
+{
+	notification_h noti = NULL;
+	int noti_err = NOTIFICATION_ERROR_NONE;
+
+	noti = notification_create(NOTIFICATION_TYPE_NOTI);
+	if(noti == NULL) {
+		return;
+	}
+
+	noti_err  = notification_set_default_button(noti, NOTIFICATION_BUTTON_1);
+	if(noti_err != NOTIFICATION_ERROR_NONE) {
+		notification_free(noti);
+		return;
+	}
+
+	...
+
+}
+ * @endcode
+ */
+int notification_set_default_button(notification_h noti, notification_button_index_e index);
+
+/**
+ * @brief Gets the default button to display highlight on the notification.
+ * @since_tizen 3.0
+ * @param[in] noti       The notification handle
+ * @param[out] index     The notification button index
+ * @return #NOTIFICATION_ERROR_NONE on success,
+ *         otherwise any other value on failure
+ * @retval #NOTIFICATION_ERROR_NONE         Success
+ * @retval #NOTIFICATION_ERROR_INVALID_PARAMETER Invalid parameter
+ * @pre Notification handle should be created by notification_create().
+ * @see #notification_button_index_e
+ * @par Sample code:
+ * @code
+#include <notification.h>
+...
+{
+	notification_h noti = NULL;
+	notification_button_index_e index;
+	int noti_err = NOTIFICATION_ERROR_NONE;
+
+	noti = notification_create(NOTIFICATION_TYPE_NOTI);
+	if(noti == NULL) {
+		return;
+	}
+
+	noti_err  = notification_set_default_button(noti, &index);
+	if(noti_err != NOTIFICATION_ERROR_NONE) {
+		notification_free(noti);
+		return;
+	}
+
+	...
+
+}
+ * @endcode
+ */
+int notification_get_default_button(notification_h noti, notification_button_index_e *index);
+
+/**
  * @brief This function translate localized texts
  * @param[in] noti The notification handle that is created by notification_create()
  * @return #NOTIFICATION_ERROR_NONE if success, other value if failure

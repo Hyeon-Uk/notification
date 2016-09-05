@@ -1428,6 +1428,7 @@ static notification_h _notification_create(notification_type_e type)
 	noti->display_applist = NOTIFICATION_DISPLAY_APP_NOTIFICATION_TRAY | NOTIFICATION_DISPLAY_APP_TICKER | NOTIFICATION_DISPLAY_APP_INDICATOR;
 	noti->auto_remove = true;
 	noti->ongoing_flag = false;
+	noti->default_button_index = 0;
 
 	if (getuid() >= REGULAR_UID_MIN) {
 		noti->caller_pkgname = notification_get_pkgname_by_pid();
@@ -1638,6 +1639,7 @@ EXPORT_API int notification_clone(notification_h noti, notification_h *clone)
 
 	new_noti->ongoing_flag = noti->ongoing_flag;
 	new_noti->auto_remove = noti->auto_remove;
+	new_noti->default_button_index = noti->default_button_index;
 	new_noti->uid = noti->uid;
 
 	new_noti->app_icon_path = NULL;

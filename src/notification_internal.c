@@ -1310,3 +1310,26 @@ EXPORT_API notification_h notification_create_from_package_template(const char *
 
 	return noti;
 }
+
+int notification_set_default_button(notification_h noti, notification_button_index_e index)
+{
+	if (noti == NULL)
+		return NOTIFICATION_ERROR_INVALID_PARAMETER;
+
+	if (index < 0 && index > NOTIFICATION_BUTTON_6)
+		return NOTIFICATION_ERROR_INVALID_PARAMETER;
+
+	noti->default_button_index = index;
+
+	return NOTIFICATION_ERROR_NONE;
+}
+
+int notification_get_default_button(notification_h noti, notification_button_index_e *index)
+{
+	if (noti == NULL || index == NULL)
+		return NOTIFICATION_ERROR_INVALID_PARAMETER;
+
+	*index = noti->default_button_index;
+
+	return NOTIFICATION_ERROR_NONE;
+}

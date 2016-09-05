@@ -80,6 +80,7 @@ create	table if not exists noti_list ( \
 			progress_percentage DOUBLE default 0, \
 			ongoing_flag INTEGER default 0, \
 			auto_remove INTEGER default 1, \
+			default_button_index INTEGER default 0, \
 			uid INTEGER \
 		); \
 		create table if not exists noti_group_data ( \
@@ -189,6 +190,7 @@ create	table if not exists noti_list ( \
 			progress_percentage DOUBLE default 0, \
 			ongoing_flag INTEGER default 0, \
 			auto_remove INTEGER default 1, \
+			default_button_index INTEGER default 0, \
 			uid INTEGER, \
 			template_name TEXT, \
 			UNIQUE (caller_pkgname, template_name) \
