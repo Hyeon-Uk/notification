@@ -29,6 +29,8 @@ Requires(post): /sbin/ldconfig
 Requires(post): %{TZ_SYS_BIN}/sqlite3
 Requires(postun): /sbin/ldconfig
 
+%define upgrade_script_path /usr/share/upgrade/scripts
+
 %description
 Client/Server library for sending notifications.
 
@@ -60,6 +62,9 @@ rm -rf %{buildroot}
 mkdir -p %{buildroot}%{TZ_SYS_SHARE}/license
 cp -f LICENSE %{buildroot}%{TZ_SYS_SHARE}/license/%{name}
 
+mkdir -p %{buildroot}%{upgrade_script_path}
+cp -f scripts/105.notification_upgrade.sh %{buildroot}%{upgrade_script_path}
+
 %clean
 rm -rf %{buildroot}
 
@@ -80,6 +85,7 @@ fi
 %{TZ_SYS_SHARE}/license/%{name}
 %attr(755,root,root) %{_sysconfdir}/gumd/useradd.d/11_notification-add.post
 %{_bindir}/notification_init
+%{upgrade_script_path}/105.notification_upgrade.sh
 #%{_bindir}/notification-test-app
 
 %files devel
