@@ -28,6 +28,15 @@ extern "C" {
 #endif
 
 /**
+ * @brief Enumeration for notification ongoing value type
+ * @since_tizen 3.0
+ */
+typedef enum _notification_ongoing_value_type {
+	NOTIFICATION_ONGOING_VALUE_TYPE_PERCENT = 0,
+	NOTIFICATION_ONGOING_VALUE_TYPE_TIME,
+} notification_ongoing_value_type_e;
+
+/**
  * @addtogroup NOTIFICATION_INTERNAL
  * @{
  */
@@ -724,7 +733,6 @@ int notification_unregister_detailed_changed_cb(
 int notification_unregister_detailed_changed_cb_for_uid(
 		void (*detailed_changed_cb)(void *data, notification_type_e type, notification_op *op_list, int num_op),
 		void *user_data, uid_t uid);
-
 /**
  * @brief Sets the default button to display highlight on the notification.
  * @since_tizen 3.0
@@ -802,6 +810,155 @@ int notification_set_default_button(notification_h noti, notification_button_ind
 int notification_get_default_button(notification_h noti, notification_button_index_e *index);
 
 /**
+ * @brief Gets the notification ongoing value type.
+ * @since_tizen 3.0
+ * @param[in] noti	The notification handle
+ * @param[out] type	The notification ongoing value type
+ * @return #NOTIFICATION_ERROR_NONE on success,
+ *         otherwise any other value on failure
+ * @retval #NOTIFICATION_ERROR_NONE         Success
+ * @retval #NOTIFICATION_ERROR_INVALID_PARAMETER Invalid parameter
+ * @pre Notification handle should be created by notification_create().
+ * @see #notification_ongoing_value_type_e
+ * @par Sample code:
+ * @code
+#include <notification.h>
+...
+{
+	notification_h noti = NULL;
+	notification_ongoing_value_type_e type;
+	int noti_err = NOTIFICATION_ERROR_NONE;
+
+	noti = notification_create(NOTIFICATION_TYPE_NOTI);
+	if (noti == NULL) {
+		return;
+	}
+
+	noti_err  = notification_get_ongoing_value_type(noti, &type);
+	if (noti_err != NOTIFICATION_ERROR_NONE) {
+		notification_free(noti);
+		return;
+	}
+}
+ * @endcode
+ */
+int notification_get_ongoing_value_type(notification_h noti, notification_ongoing_value_type_e *type);
+
+/**
+ * @brief Sets the notification ongoing value type.
+ * @since_tizen 3.0
+ * @param[in] noti	The notification handle
+ * @param[in] type	The notification ongoing value type
+ * @return #NOTIFICATION_ERROR_NONE on success,
+ *         otherwise any other value on failure
+ * @retval #NOTIFICATION_ERROR_NONE         Success
+ * @retval #NOTIFICATION_ERROR_INVALID_PARAMETER Invalid parameter
+ * @pre Notification handle should be created by notification_create().
+ * @see #notification_ongoing_value_type_e
+ * @par Sample code:
+ * @code
+#include <notification.h>
+...
+{
+	notification_h noti = NULL;
+	notification_ongoing_value_type_e type;
+	int noti_err = NOTIFICATION_ERROR_NONE;
+
+	noti = notification_create(NOTIFICATION_TYPE_NOTI);
+	if (noti == NULL) {
+		return;
+	}
+
+	type = NOTIFICATION_ONGOING_VALUE_TYPE_TIME;
+
+	noti_err  = notification_set_ongoing_value_type(noti, type);
+	if (noti_err != NOTIFICATION_ERROR_NONE) {
+		notification_free(noti);
+		return;
+	}
+}
+ * @endcode
+ */
+int notification_set_ongoing_value_type(notification_h noti, notification_ongoing_value_type_e type);
+
+/**
+ * @brief Gets the notification ongoing time when ongoint type value is set NOTIFICATION_ONGOING_VALUE_TYPE_TIME.
+ * @since_tizen 3.0
+ * @param[in] noti	The notification handle
+ * @param[out] current	The ongoing current time
+ * @param[out] duration	The ongoing duration time
+ * @return #NOTIFICATION_ERROR_NONE on success,
+ *         otherwise any other value on failure
+ * @retval #NOTIFICATION_ERROR_NONE         Success
+ * @retval #NOTIFICATION_ERROR_INVALID_PARAMETER Invalid parameter
+ * @pre Notification handle should be created by notification_create().
+ * @see #notification_ongoing_value_type_e
+ * @par Sample code:
+ * @code
+#include <notification.h>
+...
+{
+	notification_h noti = NULL;
+	int noti_err = NOTIFICATION_ERROR_NONE;
+	int current;
+	int duration;
+
+	noti = notification_create(NOTIFICATION_TYPE_NOTI);
+	if (noti == NULL) {
+		return;
+	}
+
+	noti_err  = notification_get_ongoing_time(noti, &current, &duration);
+	if (noti_err != NOTIFICATION_ERROR_NONE) {
+		notification_free(noti);
+		return;
+	}
+}
+ * @endcode
+ */
+EXPORT_API int nofication_get_ongoing_time(notification_h noti, int *current, int *duration);
+
+/**
+ * @brief Sets the notification ongoing time when ongoint type value is set NOTIFICATION_ONGOING_VALUE_TYPE_TIME.
+ * @since_tizen 3.0
+ * @param[in] noti	The notification handle
+ * @param[in] current	The ongoing current time
+ * @param[in] duration	The ongoing duration time
+ * @return #NOTIFICATION_ERROR_NONE on success,
+ *         otherwise any other value on failure
+ * @retval #NOTIFICATION_ERROR_NONE         Success
+ * @retval #NOTIFICATION_ERROR_INVALID_PARAMETER Invalid parameter
+ * @pre Notification handle should be created by notification_create().
+ * @see #notification_ongoing_value_type_e
+ * @par Sample code:
+ * @code
+#include <notification.h>
+...
+{
+	notification_h noti = NULL;
+	int noti_err = NOTIFICATION_ERROR_NONE;
+	int current;
+	int duration;
+
+	noti = notification_create(NOTIFICATION_TYPE_NOTI);
+	if (noti == NULL) {
+		return;
+	}
+
+	current = 0;
+	duration = 30;
+
+	noti_err  = notification_set_ongoing_time(noti, current, duration)
+	if (noti_err != NOTIFICATION_ERROR_NONE) {
+		notification_free(noti);
+		return;
+	}
+}
+ * @endcode
+ */
+EXPORT_API int nofication_set_ongoing_time(notification_h noti, int current, int duration);
+
+/**
  * @brief This function translate localized texts
  * @param[in] noti The notification handle that is created by notification_create()
  * @return #NOTIFICATION_ERROR_NONE if success, other value if failure
@@ -825,4 +982,3 @@ notification_h notification_create_from_package_template(const char *pkgname,
 }
 #endif
 #endif
-

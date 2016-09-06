@@ -1311,7 +1311,7 @@ EXPORT_API notification_h notification_create_from_package_template(const char *
 	return noti;
 }
 
-int notification_set_default_button(notification_h noti, notification_button_index_e index)
+EXPORT_API int notification_set_default_button(notification_h noti, notification_button_index_e index)
 {
 	if (noti == NULL)
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
@@ -1324,12 +1324,54 @@ int notification_set_default_button(notification_h noti, notification_button_ind
 	return NOTIFICATION_ERROR_NONE;
 }
 
-int notification_get_default_button(notification_h noti, notification_button_index_e *index)
+EXPORT_API int notification_get_default_button(notification_h noti, notification_button_index_e *index)
 {
 	if (noti == NULL || index == NULL)
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 
 	*index = noti->default_button_index;
+
+	return NOTIFICATION_ERROR_NONE;
+}
+
+EXPORT_API int notification_get_ongoing_value_type(notification_h noti, notification_ongoing_value_type_e *type)
+{
+	if (noti == NULL || type == NULL)
+		return NOTIFICATION_ERROR_INVALID_PARAMETER;
+
+	*type = noti->ongoing_value_type;
+
+	return NOTIFICATION_ERROR_NONE;
+}
+
+EXPORT_API int notification_set_ongoing_value_type(notification_h noti, notification_ongoing_value_type_e type)
+{
+	if (type < NOTIFICATION_ONGOING_VALUE_TYPE_PERCENT && type > NOTIFICATION_ONGOING_VALUE_TYPE_TIME)
+		return NOTIFICATION_ERROR_INVALID_PARAMETER;
+
+	noti->ongoing_value_type = type;
+
+	return NOTIFICATION_ERROR_NONE;
+}
+
+EXPORT_API int nofication_get_ongoing_time(notification_h noti, int *current, int *duration)
+{
+	if (noti == NULL || current == NULL || duration == NULL)
+		return NOTIFICATION_ERROR_INVALID_PARAMETER;
+
+	*current = noti->ongoing_current;
+	*duration = noti->ongoing_duration;
+
+	return NOTIFICATION_ERROR_NONE;
+}
+
+EXPORT_API int notification_set_ongoing_time(notification_h noti, int current, int duration)
+{
+	if (noti == NULL)
+		return NOTIFICATION_ERROR_INVALID_PARAMETER;
+
+	noti->ongoing_current = current;
+	noti->ongoing_duration = duration;
 
 	return NOTIFICATION_ERROR_NONE;
 }

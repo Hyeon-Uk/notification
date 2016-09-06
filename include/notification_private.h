@@ -88,6 +88,9 @@ struct _notification {
 	char *temp_content;
 	char *tag;
 	bool ongoing_flag;
+	int ongoing_value_type;
+	int ongoing_current;		/* Ongoing current time */
+	int ongoing_duration;		/* Ongoing duration time */
 	bool auto_remove;
 	notification_button_index_e default_button_index;
 	uid_t uid;
@@ -142,6 +145,9 @@ typedef enum notification_data_type {
 	NOTIFICATION_DATA_TYPE_TEMP_CONTENT,
 	NOTIFICATION_DATA_TYPE_TAG,
 	NOTIFICATION_DATA_TYPE_ONGOING_FLAG,
+	NOTIFICATION_DATA_TYPE_ONGOING_VALUE_TYPE,
+	NOTIFICATION_DATA_TYPE_ONGOING_CURRENT,
+	NOTIFICATION_DATA_TYPE_ONGOING_DURATION,
 	NOTIFICATION_DATA_TYPE_AUTO_REMOVE,
 	NOTIFICATION_DATA_TYPE_DEFAULT_BUTTON,
 	NOTIFICATION_DATA_TYPE_UID,

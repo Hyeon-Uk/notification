@@ -79,6 +79,9 @@ create	table if not exists noti_list ( \
 			progress_size DOUBLE default 0, \
 			progress_percentage DOUBLE default 0, \
 			ongoing_flag INTEGER default 0, \
+			ongoing_value_type INTEGER default 0, \
+			ongoing_current INTEGER default 0, \
+			ongoing_duration INTEGER default 0, \
 			auto_remove INTEGER default 1, \
 			default_button_index INTEGER default 0, \
 			uid INTEGER \
@@ -189,6 +192,9 @@ create	table if not exists noti_list ( \
 			progress_size DOUBLE default 0, \
 			progress_percentage DOUBLE default 0, \
 			ongoing_flag INTEGER default 0, \
+			ongoing_value_type INTEGER default 0, \
+			ongoing_current INTEGER default 0, \
+			ongoing_duration INTEGER default 0, \
 			auto_remove INTEGER default 1, \
 			default_button_index INTEGER default 0, \
 			uid INTEGER, \
