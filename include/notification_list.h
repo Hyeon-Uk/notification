@@ -66,7 +66,7 @@ typedef struct _notification_list *notification_list_h;
 	int noti_err = NOTIFICATION_ERROR_NONE;
 
 	noti_err = notification_get_list(NOTIFICATION_TYPE_NONE, -1, &noti_list);
-	if(noti_err != NOTIFICATION_ERROR_NONE) {
+	if (noti_err != NOTIFICATION_ERROR_NONE) {
 		return;
 	}
 }
@@ -106,7 +106,7 @@ int notification_get_list_for_uid(notification_type_e type,
 	int noti_err = NOTIFICATION_ERROR_NONE;
 
 	noti_err = notification_get_detail_list(pkgname, group_id, priv_id, -1, &noti_list);
-	if(noti_err != NOTIFICATION_ERROR_NONE) {
+	if (noti_err != NOTIFICATION_ERROR_NONE) {
 		return;
 	}
 }
@@ -149,7 +149,7 @@ int notification_get_detail_list_for_uid(const char *pkgname,
 	...
 
 	noti_err = notification_free_list(noti_list);
-	if(noti_err != NOTIFICATION_ERROR_NONE) {
+	if (noti_err != NOTIFICATION_ERROR_NONE) {
 		return;
 	}
 }
@@ -178,7 +178,7 @@ int notification_free_list(notification_list_h list);
 	int noti_err = NOTIFICATION_ERROR_NONE;
 
 	noti_err  = notification_get_grouping_list(NOTIFICATION_TYPE_NONE, -1, &noti_list);
-	if(noti_err != NOTIFICATION_ERROR_NONE) {
+	if (noti_err != NOTIFICATION_ERROR_NONE) {
 		return;
 	}
 
@@ -208,7 +208,7 @@ notification_list_h notification_list_get_head(notification_list_h list);
 	int noti_err = NOTIFICATION_ERROR_NONE;
 
 	noti_err  = notification_get_grouping_list(NOTIFICATION_TYPE_NONE, -1, &noti_list);
-	if(noti_err != NOTIFICATION_ERROR_NONE) {
+	if (noti_err != NOTIFICATION_ERROR_NONE) {
 		return;
 	}
 
@@ -238,7 +238,7 @@ notification_list_h notification_list_get_tail(notification_list_h list);
 	int noti_err = NOTIFICATION_ERROR_NONE;
 
 	noti_err  = notification_get_grouping_list(NOTIFICATION_TYPE_NONE, -1, &noti_list);
-	if(noti_err != NOTIFICATION_ERROR_NONE) {
+	if (noti_err != NOTIFICATION_ERROR_NONE) {
 		return;
 	}
 
@@ -268,7 +268,7 @@ notification_list_h notification_list_get_prev(notification_list_h list);
 	int noti_err = NOTIFICATION_ERROR_NONE;
 
 	noti_err  = notification_get_grouping_list(NOTIFICATION_TYPE_NONE, -1, &noti_list);
-	if(noti_err != NOTIFICATION_ERROR_NONE) {
+	if (noti_err != NOTIFICATION_ERROR_NONE) {
 		return;
 	}
 
@@ -300,7 +300,7 @@ notification_list_h notification_list_get_next(notification_list_h list);
 	int noti_err = NOTIFICATION_ERROR_NONE;
 
 	noti_err  = notification_get_grouping_list(NOTIFICATION_TYPE_NONE, -1, &noti_list);
-	if(noti_err != NOTIFICATION_ERROR_NONE) {
+	if (noti_err != NOTIFICATION_ERROR_NONE) {
 		return;
 	}
 
@@ -330,7 +330,7 @@ include <notification.h>
 	int noti_err = NOTIFICATION_ERROR_NONE;
 
 	noti_err = notification_get_detail_list(pkgname, group_id, priv_id, -1, &noti_list);
-	if(noti_err != NOTIFICATION_ERROR_NONE) {
+	if (noti_err != NOTIFICATION_ERROR_NONE) {
 		return;
 	}
 
@@ -364,7 +364,7 @@ int notification_list_get_count(notification_list_h list);
 	int noti_err = NOTIFICATION_ERROR_NONE;
 
 	noti = notification_new(NOTIFICATION_TYPE_NOTI, NOTIFICATION_GROUP_ID_NONE, NOTIFICATION_PRIV_ID_NONE);
-	if(noti == NULL) {
+	if (noti == NULL) {
 		return;
 	}
 

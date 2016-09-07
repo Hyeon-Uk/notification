@@ -49,7 +49,7 @@ extern "C" {
 ...
 {
 	noti_err = notification_register_detailed_changed_cb(app_changed_cb, user_data);
-	if(noti_err != NOTIFICATION_ERROR_NONE) {
+	if (noti_err != NOTIFICATION_ERROR_NONE) {
 		return;
 	}
 }

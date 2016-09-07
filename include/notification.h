@@ -61,12 +61,12 @@ extern "C" {
 	int noti_err = NOTIFICATION_ERROR_NONE;
 
 	noti = notification_create(NOTIFICATION_TYPE_NOTI);
-	if(noti == NULL) {
+	if (noti == NULL) {
 		return;
 	}
 
 	noti_err  = notification_set_image(noti, NOTIFICATION_IMAGE_TYPE_ICON, APP_IMAGE_FULL_PATH);
-	if(noti_err != NOTIFICATION_ERROR_NONE) {
+	if (noti_err != NOTIFICATION_ERROR_NONE) {
 		notification_free(noti);
 		return;
 	}
@@ -191,7 +191,7 @@ int notification_get_time(notification_h noti, time_t *ret_time);
 	int noti_err = NOTIFICATION_ERROR_NONE;
 
 	noti_err  = notification_get_insert_time(noti, &ret_time);
-	if(noti_err != NOTIFICATION_ERROR_NONE) {
+	if (noti_err != NOTIFICATION_ERROR_NONE) {
 		return;
 	}
  }
@@ -230,12 +230,12 @@ int notification_get_insert_time(notification_h noti, time_t *ret_time);
 	int noti_err = NOTIFICATION_ERROR_NONE;
 
 	noti = notification_create(NOTIFICATION_TYPE_NOTI);
-	if(noti == NULL) {
+	if (noti == NULL) {
 		return;
 	}
 
 	noti_err  = notification_set_text(noti, NOTIFICATION_TEXT_TYPE_TITLE, "I'm Title", "IDS_APP_BODY_IM_TITLE", NOTIFICATION_VARIABLE_TYPE_NONE);
-	if(noti_err != NOTIFICATION_ERROR_NONE) {
+	if (noti_err != NOTIFICATION_ERROR_NONE) {
 		notification_free(noti);
 		return;
 	}
@@ -265,7 +265,7 @@ int notification_set_text(notification_h noti, notification_text_type_e type,
 	char *text = NULL;
 
 	noti_err  = notification_get_text(noti, NOTIFICATION_TEXT_TYPE_TITLE, &text);
-	if(noti_err != NOTIFICATION_ERROR_NONE) {
+	if (noti_err != NOTIFICATION_ERROR_NONE) {
 		return;
 	}
 }
@@ -324,7 +324,7 @@ int notification_get_time_from_text(notification_h noti,
 	int noti_err = NOTIFICATION_ERROR_NONE;
 
 	noti_err  = notification_set_sound(noti, NOTIFICATION_SOUND_TYPE_DEFAULT, NULL);
-	if(noti_err != NOTIFICATION_ERROR_NONE) {
+	if (noti_err != NOTIFICATION_ERROR_NONE) {
 		return;
 	}
 }
@@ -353,7 +353,7 @@ int notification_set_sound(notification_h noti,
 	notification_sound_type_e type = NOTIFICATION_SOUND_TYPE_NONE;
 
 	noti_err  = notification_get_sound(noti, &type, NULL);
-	if(noti_err != NOTIFICATION_ERROR_NONE) {
+	if (noti_err != NOTIFICATION_ERROR_NONE) {
 		return;
 	}
 }
@@ -381,7 +381,7 @@ int notification_get_sound(notification_h noti,
 	int noti_err = NOTIFICATION_ERROR_NONE;
 
 	noti_err  = notification_set_vibration(noti, NOTIFICATION_VIBRATION_TYPE_DEFAULT, NULL);
-	if(noti_err != NOTIFICATION_ERROR_NONE) {
+	if (noti_err != NOTIFICATION_ERROR_NONE) {
 		return;
 	}
 }
@@ -410,7 +410,7 @@ int notification_set_vibration(notification_h noti,
 	notification_vibration_type_e type = NOTIFICATION_VIBRATION_TYPE_NONE;
 
 	noti_err  = notification_get_vibration(noti, &type, NULL);
-	if(noti_err != NOTIFICATION_ERROR_NONE) {
+	if (noti_err != NOTIFICATION_ERROR_NONE) {
 		return;
 	}
 }
@@ -438,7 +438,7 @@ int notification_get_vibration(notification_h noti,
 	int noti_err = NOTIFICATION_ERROR_NONE;
 
 	noti_err  = notification_set_led(noti, NOTIFICATION_LED_OP_ON, NULL);
-	if(noti_err != NOTIFICATION_ERROR_NONE) {
+	if (noti_err != NOTIFICATION_ERROR_NONE) {
 		return;
 	}
 }
@@ -467,7 +467,7 @@ int notification_set_led(notification_h noti, notification_led_op_e operation,
 	notification_led_type_e type = NOTIFICATION_LED_OP_OFF;
 
 	noti_err  = notification_get_led(noti, &type, NULL);
-	if(noti_err != NOTIFICATION_ERROR_NONE) {
+	if (noti_err != NOTIFICATION_ERROR_NONE) {
 		return;
 	}
 }
@@ -495,7 +495,7 @@ int notification_get_led(notification_h noti, notification_led_op_e *operation,
 	int noti_err = NOTIFICATION_ERROR_NONE;
 
 	noti_err  = notification_set_led_time_period(noti, 100, 100);
-	if(noti_err != NOTIFICATION_ERROR_NONE) {
+	if (noti_err != NOTIFICATION_ERROR_NONE) {
 		return;
 	}
 }
@@ -525,7 +525,7 @@ int notification_set_led_time_period(notification_h noti, int on_ms,
 	int led_off_ms = 0;
 
 	noti_err  = notification_get_led_time_period(noti, &led_on_ms, &led_off_ms);
-	if(noti_err != NOTIFICATION_ERROR_NONE) {
+	if (noti_err != NOTIFICATION_ERROR_NONE) {
 		return;
 	}
 }
@@ -562,7 +562,7 @@ int notification_get_led_time_period(notification_h noti, int *on_ms,
 	...
 
 	noti_err  = notification_set_launch_option(noti, NOTIFICATION_LAUNCH_OPTION_APP_CONTROL, (void *)app_control);
-	if(noti_err != NOTIFICATION_ERROR_NONE) {
+	if (noti_err != NOTIFICATION_ERROR_NONE) {
 		notification_free(noti);
 		return;
 	}
@@ -596,7 +596,7 @@ int notification_set_launch_option(notification_h noti,
 	...
 
 	noti_err = notification_get_launch_option(noti, NOTIFICATION_LAUNCH_OPTION_APP_CONTROL, (void *)&app_control);
-	if(noti_err != NOTIFICATION_ERROR_NONE) {
+	if (noti_err != NOTIFICATION_ERROR_NONE) {
 		notification_free(noti);
 		return;
 	}
@@ -636,7 +636,7 @@ int notification_get_launch_option(notification_h noti,
 	...
 
 	noti_err  = notification_set_event_handler(noti, NOTIFICATION_EVENT_TYPE_CLICK_ON_BUTTON_1, app_control);
-	if(noti_err != NOTIFICATION_ERROR_NONE) {
+	if (noti_err != NOTIFICATION_ERROR_NONE) {
 		notification_free(noti);
 		return;
 	}
@@ -672,7 +672,7 @@ int notification_set_event_handler(notification_h noti,
 	...
 
 	noti_err = notification_get_event_handler(noti, NOTIFICATION_EVENT_TYPE_CLICK_ON_BUTTON_1, &app_control);
-	if(noti_err != NOTIFICATION_ERROR_NONE) {
+	if (noti_err != NOTIFICATION_ERROR_NONE) {
 		notification_free(noti);
 		return;
 	}
@@ -702,12 +702,12 @@ int notification_get_event_handler(notification_h noti,
 	bundle *b = NULL;
 
 	noti = notification_create(NOTIFICATION_TYPE_NOTI);
-	if(noti == NULL) {
+	if (noti == NULL) {
 		return;
 	}
 
 	noti_err  = notification_set_property(noti, NOTIFICATION_PROP_DISPLAY_ONLY_SIMMODE | NOTIFICATION_PROP_DISABLE_APP_LAUNCH);
-	if(noti_err != NOTIFICATION_ERROR_NONE) {
+	if (noti_err != NOTIFICATION_ERROR_NONE) {
 		notification_free(noti);
 		return;
 	}
@@ -735,7 +735,7 @@ int notification_set_property(notification_h noti, int flags);
 	int flags = 0;
 
 	noti_err  = notification_get_property(noti, &flags);
-	if(noti_err != NOTIFICATION_ERROR_NONE) {
+	if (noti_err != NOTIFICATION_ERROR_NONE) {
 		return;
 	}
 }
@@ -763,12 +763,12 @@ int notification_get_property(notification_h noti, int *flags);
 	bundle *b = NULL;
 
 	noti = notification_create(NOTIFICATION_TYPE_NOTI);
-	if(noti == NULL) {
+	if (noti == NULL) {
 		return;
 	}
 
 	noti_err  = notification_set_display_applist(noti, NOTIFICATION_DISPLAY_APP_NOTIFICATION_TRAY | NOTIFICATION_DISPLAY_APP_TICKER | NOTIFICATION_DISPLAY_APP_INDICATOR);
-	if(noti_err != NOTIFICATION_ERROR_NONE) {
+	if (noti_err != NOTIFICATION_ERROR_NONE) {
 		notification_free(noti);
 		return;
 	}
@@ -797,7 +797,7 @@ int notification_set_display_applist(notification_h noti, int applist);
 	int applist = 0;
 
 	noti_err  = notification_get_display_applist(noti, &applist);
-	if(noti_err != NOTIFICATION_ERROR_NONE) {
+	if (noti_err != NOTIFICATION_ERROR_NONE) {
 		return;
 	}
 }
@@ -824,12 +824,12 @@ int notification_get_display_applist(notification_h noti, int *applist);
 	int noti_err = NOTIFICATION_ERROR_NONE;
 
 	noti = notification_create(NOTIFICATION_TYPE_NOTI);
-	if(noti == NULL) {
+	if (noti == NULL) {
 		return;
 	}
 
 	noti_err  = notification_set_size(noti, 0.0);
-	if(noti_err != NOTIFICATION_ERROR_NONE) {
+	if (noti_err != NOTIFICATION_ERROR_NONE) {
 		notification_free(noti);
 		return;
 	}
@@ -857,7 +857,7 @@ int notification_set_size(notification_h noti, double size);
 	double size = 0.0;
 
 	noti_err  = notification_get_size(noti, &size);
-	if(noti_err != NOTIFICATION_ERROR_NONE) {
+	if (noti_err != NOTIFICATION_ERROR_NONE) {
 		return;
 	}
 }
@@ -884,12 +884,12 @@ int notification_get_size(notification_h noti, double *size);
 	int noti_err = NOTIFICATION_ERROR_NONE;
 
 	noti = notification_create(NOTIFICATION_TYPE_NOTI);
-	if(noti == NULL) {
+	if (noti == NULL) {
 		return;
 	}
 
 	noti_err  = notification_set_progress(noti, 0.0);
-	if(noti_err != NOTIFICATION_ERROR_NONE) {
+	if (noti_err != NOTIFICATION_ERROR_NONE) {
 		notification_free(noti);
 		return;
 	}
@@ -918,7 +918,7 @@ int notification_set_progress(notification_h noti, double percentage);
 	double percentage = 0.0;
 
 	noti_err  = notification_get_progress(noti, &percentage);
-	if(noti_err != NOTIFICATION_ERROR_NONE) {
+	if (noti_err != NOTIFICATION_ERROR_NONE) {
 		return;
 	}
 }
@@ -972,7 +972,7 @@ int notification_get_layout(notification_h noti,
 	notification_type_e type;
 
 	noti_err  = notification_get_type(noti, &type);
-	if(noti_err != NOTIFICATION_ERROR_NONE) {
+	if (noti_err != NOTIFICATION_ERROR_NONE) {
 		return;
 	}
 }
@@ -1000,7 +1000,7 @@ int notification_get_type(notification_h noti, notification_type_e *type);
 	int noti_err = NOTIFICATION_ERROR_NONE;
 
 	noti_err  = notification_update(NULL);
-	if(noti_err != NOTIFICATION_ERROR_NONE) {
+	if (noti_err != NOTIFICATION_ERROR_NONE) {
 		return;
 	}
 }
@@ -1031,7 +1031,7 @@ int notification_update(notification_h noti);
 	...
 
 	noti_err  = notification_delete(noti);
-	if(noti_err != NOTIFICATION_ERROR_NONE) {
+	if (noti_err != NOTIFICATION_ERROR_NONE) {
 		return;
 	}
 
@@ -1064,7 +1064,7 @@ int notification_delete(notification_h noti);
 	notification_h noti = NULL;
 
 	noti = notification_create(NOTIFICATION_TYPE_NOTI);
-	if(noti == NULL) {
+	if (noti == NULL) {
 		return;
 	}
 	...
@@ -1119,13 +1119,13 @@ int notification_clone(notification_h noti, notification_h *clone);
 	int noti_err = NOTIFICATION_ERROR_NONE;
 
 	noti = notification_create(NOTIFICATION_TYPE_NOTI);
-	if(noti == NULL) {
+	if (noti == NULL) {
 		return;
 	}
 	...
 
 	noti_err = notification_free(noti);
-	if(noti_err != NOTIFICATION_ERROR_NONE) {
+	if (noti_err != NOTIFICATION_ERROR_NONE) {
 		return;
 	}
 }
@@ -1161,13 +1161,13 @@ int notification_free(notification_h noti);
 	int noti_err = NOTIFICATION_ERROR_NONE;
 
 	noti = notification_create(NOTIFICATION_TYPE_NOTI);
-	if(noti == NULL) {
+	if (noti == NULL) {
 		return;
 	}
 	...
 
 	noti_err = notification_set_tag(noti, tag);
-	if(noti_err != NOTIFICATION_ERROR_NONE) {
+	if (noti_err != NOTIFICATION_ERROR_NONE) {
 		return;
 	}
 }
@@ -1196,7 +1196,7 @@ int notification_set_tag(notification_h noti, const char *tag);
 	...
 
 	noti_err = notification_get_tag(noti, &tag);
-	if(noti_err != NOTIFICATION_ERROR_NONE) {
+	if (noti_err != NOTIFICATION_ERROR_NONE) {
 		return;
 	}
 }
@@ -1227,7 +1227,7 @@ int notification_get_tag(notification_h noti, const char **tag);
 	notification_h noti = NULL;
 
 	noti = notification_load_by_tag(tag);
-	if(noti == NULL) {
+	if (noti == NULL) {
 		return;
 	}
 	...
@@ -1254,7 +1254,7 @@ notification_h notification_load_by_tag(const char *tag);
 	int noti_err = NOTIFICATION_ERROR_NONE;
 
 	noti_err  = notification_delete_all(NOTIFICATION_TYPE_NOTI);
-	if(noti_err != NOTIFICATION_ERROR_NONE) {
+	if (noti_err != NOTIFICATION_ERROR_NONE) {
 		return;
 	}
 }
@@ -1282,7 +1282,7 @@ int notification_delete_all(notification_type_e type);
 	int noti_err = NOTIFICATION_ERROR_NONE;
 
 	noti_err  = notification_post(noti);
-	if(noti_err != NOTIFICATION_ERROR_NONE) {
+	if (noti_err != NOTIFICATION_ERROR_NONE) {
 		return;
 	}
 }
@@ -1311,7 +1311,7 @@ int notification_post(notification_h noti);
 
 	noti_err  = notification_get_pkgname(noti, &pkgname);
 
-	if(noti_err != NOTIFICATION_ERROR_NONE) {
+	if (noti_err != NOTIFICATION_ERROR_NONE) {
 		notification_free(noti);
 		return;
 	}
@@ -1341,7 +1341,7 @@ int notification_get_pkgname(notification_h noti, char **pkgname);
 
 	noti_err  = notification_add_button(noti, NOTIFICATION_BUTTON_1);
 
-	if(noti_err != NOTIFICATION_ERROR_NONE) {
+	if (noti_err != NOTIFICATION_ERROR_NONE) {
 		notification_free(noti);
 		return;
 	}
@@ -1372,7 +1372,7 @@ int notification_add_button(notification_h noti,
 
 	noti_err  = notification_remove_button(noti, NOTIFICATION_BUTTON_1);
 
-	if(noti_err != NOTIFICATION_ERROR_NONE) {
+	if (noti_err != NOTIFICATION_ERROR_NONE) {
 		notification_free(noti);
 		return;
 	}
@@ -1405,7 +1405,7 @@ int notification_remove_button(notification_h noti,
 	...
 
 	noti_err = notification_set_auto_remove(noti, false);
-	if(noti_err != NOTIFICATION_ERROR_NONE) {
+	if (noti_err != NOTIFICATION_ERROR_NONE) {
 		return;
 	}
 }
@@ -1434,7 +1434,7 @@ int notification_set_auto_remove(notification_h noti, bool auto_remove);
 	...
 
 	noti_err = notification_get_auto_remove(noti, &auto_remove);
-	if(noti_err != NOTIFICATION_ERROR_NONE) {
+	if (noti_err != NOTIFICATION_ERROR_NONE) {
 		return;
 	}
 }
@@ -1473,7 +1473,7 @@ int notification_get_auto_remove(notification_h noti, bool *auto_remove);
 	...
 
 	noti_err = notification_save_as_template(noti, "CALL_ACCEPT");
-	if(noti_err != NOTIFICATION_ERROR_NONE) {
+	if (noti_err != NOTIFICATION_ERROR_NONE) {
 		return;
 	}
 }
@@ -1509,7 +1509,7 @@ int notification_save_as_template(notification_h noti, const char *template_name
 	notification_h noti = NULL;
 
 	noti = notification_create_from_template("CALL_ACCEPT");
-	if(noti == NULL) {
+	if (noti == NULL) {
 		return;
 	}
 	...
@@ -1548,7 +1548,7 @@ notification_h notification_create_from_template(const char *template_name);
 	...
 
 	noti_err = notification_get_noti_block_state(&state);
-	if(noti_err != NOTIFICATION_ERROR_NONE) {
+	if (noti_err != NOTIFICATION_ERROR_NONE) {
 		return;
 	}
 }

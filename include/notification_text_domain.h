@@ -40,12 +40,12 @@ extern "C" {
 	int noti_err = NOTIFICATION_ERROR_NONE;
 
 	noti = notification_create(NOTIFICATION_TYPE_NOTI);
-	if(noti == NULL) {
+	if (noti == NULL) {
 		return;
 	}
 
 	noti_err  = notification_set_text_domain(noti, PACKAGE, LOCALEDIR);
-	if(noti_err != NOTIFICATION_ERROR_NONE) {
+	if (noti_err != NOTIFICATION_ERROR_NONE) {
 		notification_free(noti);
 		return;
 	}
@@ -78,7 +78,7 @@ int notification_set_text_domain(notification_h noti,
 	char *dir = NULL;
 
 	noti_err  = notification_get_text_domain(noti, &domain, &dir);
-	if(noti_err != NOTIFICATION_ERROR_NONE) {
+	if (noti_err != NOTIFICATION_ERROR_NONE) {
 		return;
 	}
 }

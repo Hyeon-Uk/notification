@@ -38,12 +38,12 @@
 	bundle *b = NULL;
 
 	noti = notification_create(NOTIFICATION_TYPE_NOTI);
-	if(noti == NULL) {
+	if (noti == NULL) {
 		return;
 	}
 
 	noti_err  = notification_set_ongoing_flag(noti, true);
-	if(noti_err != NOTIFICATION_ERROR_NONE) {
+	if (noti_err != NOTIFICATION_ERROR_NONE) {
 		notification_free(noti);
 		return;
 	}
@@ -71,7 +71,7 @@ int notification_set_ongoing_flag(notification_h noti, bool ongoing_flag);
 	bool ongoing_flag = 0;
 
 	noti_err  = notification_get_ongoing_flag(noti, &ongoing_flag);
-	if(noti_err != NOTIFICATION_ERROR_NONE) {
+	if (noti_err != NOTIFICATION_ERROR_NONE) {
 		return;
 	}
 }

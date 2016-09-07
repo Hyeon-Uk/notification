@@ -106,7 +106,7 @@ struct notification_system_setting {
 	notification_setting_h setting;
 
 	noti_err = notification_setting_get_setting_array(&setting, &count);
-	if(noti_err != NOTIFICATION_ERROR_NONE) {
+	if (noti_err != NOTIFICATION_ERROR_NONE) {
 		return;
 	}
 
@@ -145,7 +145,7 @@ int notification_setting_get_setting_array_for_uid(notification_setting_h *setti
 	notification_setting_h setting = NULL;
 
 	noti_err = notifiacation_setting_get_setting_by_package_name(PACKAGE_NAME, &setting);
-	if(noti_err != NOTIFICATION_ERROR_NONE) {
+	if (noti_err != NOTIFICATION_ERROR_NONE) {
 		return;
 	}
 
@@ -182,7 +182,7 @@ int notification_setting_get_setting_by_package_name_for_uid(const char *package
 	...
 
 	noti_err = notifiacation_setting_get_package_name(setting, &package_name);
-	if(noti_err != NOTIFICATION_ERROR_NONE) {
+	if (noti_err != NOTIFICATION_ERROR_NONE) {
 		return;
 	}
 
@@ -217,7 +217,7 @@ int notification_setting_get_package_name(notification_setting_h setting, char *
 	...
 
 	noti_err = notifiacation_setting_set_package_name(setting, package_name);
-	if(noti_err != NOTIFICATION_ERROR_NONE) {
+	if (noti_err != NOTIFICATION_ERROR_NONE) {
 		return;
 	}
 
@@ -252,7 +252,7 @@ int notification_setting_set_package_name(notification_setting_h setting, char *
 	...
 
 	noti_err = notifiacation_setting_get_allow_to_notify(setting, &value);
-	if(noti_err != NOTIFICATION_ERROR_NONE) {
+	if (noti_err != NOTIFICATION_ERROR_NONE) {
 		return;
 	}
 
@@ -290,7 +290,7 @@ int notification_setting_get_allow_to_notify(notification_setting_h setting, boo
 	value = true;	// or false
 
 	noti_err = notifiacation_setting_set_allow_to_notify(setting, value);
-	if(noti_err != NOTIFICATION_ERROR_NONE) {
+	if (noti_err != NOTIFICATION_ERROR_NONE) {
 		return;
 	}
 
@@ -326,7 +326,7 @@ int notification_setting_set_allow_to_notify(notification_setting_h setting, boo
 	...
 
 	noti_err = notifiacation_setting_get_do_not_disturb_except(setting, &value);
-	if(noti_err != NOTIFICATION_ERROR_NONE) {
+	if (noti_err != NOTIFICATION_ERROR_NONE) {
 		return;
 	}
 
@@ -364,7 +364,7 @@ int notification_setting_get_do_not_disturb_except(notification_setting_h settin
 	value = true;	// or false
 
 	noti_err = notifiacation_setting_set_do_not_disturb_except(setting, value);
-	if(noti_err != NOTIFICATION_ERROR_NONE) {
+	if (noti_err != NOTIFICATION_ERROR_NONE) {
 		return;
 	}
 
@@ -401,7 +401,7 @@ int notification_setting_set_do_not_disturb_except(notification_setting_h settin
 	value = true;	// or false
 
 	noti_err = notifiacation_setting_get_pop_up_notification(setting, value);
-	if(noti_err != NOTIFICATION_ERROR_NONE) {
+	if (noti_err != NOTIFICATION_ERROR_NONE) {
 		return;
 	}
 
@@ -439,7 +439,7 @@ int notification_setting_get_pop_up_notification(notification_setting_h setting,
 	value = true;	// or false
 
 	noti_err = notifiacation_setting_get_pop_up_notification(setting, value);
-	if(noti_err != NOTIFICATION_ERROR_NONE) {
+	if (noti_err != NOTIFICATION_ERROR_NONE) {
 		return;
 	}
 
@@ -475,7 +475,7 @@ int notification_setting_set_pop_up_notification(notification_setting_h setting,
 	...
 
 	noti_err = notifiacation_setting_get_lock_screen_content(setting, &level);
-	if(noti_err != NOTIFICATION_ERROR_NONE) {
+	if (noti_err != NOTIFICATION_ERROR_NONE) {
 		return;
 	}
 
@@ -514,7 +514,7 @@ int notification_setting_get_lock_screen_content(notification_setting_h setting,
 	level = SHOW_ALL_CONTENT;	// or HIDE_SENSITIVE_CONTENT or DO_NOT_SHOW_NOTIFICATIONS;
 
 	noti_err = notifiacation_setting_get_lock_screen_content(setting, level);
-	if(noti_err != NOTIFICATION_ERROR_NONE) {
+	if (noti_err != NOTIFICATION_ERROR_NONE) {
 		return;
 	}
 
@@ -549,7 +549,7 @@ int notification_setting_set_lock_screen_content(notification_setting_h setting,
 	...
 
 	noti_err = notifiacation_system_setting_load_system_setting(setting);
-	if(noti_err != NOTIFICATION_ERROR_NONE) {
+	if (noti_err != NOTIFICATION_ERROR_NONE) {
 		return;
 	}
 
@@ -585,7 +585,7 @@ int notification_system_setting_load_system_setting_for_uid(notification_system_
 	...
 
 	noti_err = notifiacation_system_setting_update_system_setting(setting);
-	if(noti_err != NOTIFICATION_ERROR_NONE) {
+	if (noti_err != NOTIFICATION_ERROR_NONE) {
 		return;
 	}
 
@@ -619,7 +619,7 @@ int notification_system_setting_update_system_setting_for_uid(notification_syste
 	...
 
 	noti_err = notifiacation_system_setting_free_system_setting(setting);
-	if(noti_err != NOTIFICATION_ERROR_NONE) {
+	if (noti_err != NOTIFICATION_ERROR_NONE) {
 		return;
 	}
 
@@ -653,7 +653,7 @@ int notification_system_setting_free_system_setting(notification_system_setting_
 	...
 
 	noti_err = notifiacation_system_setting_get_do_not_disturb_except(setting, &value);
-	if(noti_err != NOTIFICATION_ERROR_NONE) {
+	if (noti_err != NOTIFICATION_ERROR_NONE) {
 		return;
 	}
 
@@ -692,7 +692,7 @@ int notification_system_setting_get_do_not_disturb(notification_system_setting_h
 	value = true;	// or false
 
 	noti_err = notifiacation_setting_set_do_not_disturb_except(setting, value);
-	if(noti_err != NOTIFICATION_ERROR_NONE) {
+	if (noti_err != NOTIFICATION_ERROR_NONE) {
 		return;
 	}
 
@@ -727,7 +727,7 @@ int notification_system_setting_set_do_not_disturb(notification_system_setting_h
 	...
 
 	noti_err = notifiacation_system_setting_get_visibility_class(setting, &value);
-	if(noti_err != NOTIFICATION_ERROR_NONE) {
+	if (noti_err != NOTIFICATION_ERROR_NONE) {
 		return;
 	}
 
@@ -765,7 +765,7 @@ int notification_system_setting_get_visibility_class(notification_system_setting
 	value = true;	// or false
 
 	noti_err = notifiacation_setting_set_visibility_class(setting, value);
-	if(noti_err != NOTIFICATION_ERROR_NONE) {
+	if (noti_err != NOTIFICATION_ERROR_NONE) {
 		return;
 	}
 
@@ -800,7 +800,7 @@ int notification_system_setting_set_visibility_class(notification_system_setting
 	...
 
 	noti_err = notifiacation_system_setting_dnd_schedule_get_enabled(setting, &value);
-	if(noti_err != NOTIFICATION_ERROR_NONE) {
+	if (noti_err != NOTIFICATION_ERROR_NONE) {
 		return;
 	}
 
@@ -838,7 +838,7 @@ int notification_system_setting_dnd_schedule_get_enabled(notification_system_set
 	value = true;	// or false
 
 	noti_err = notifiacation_system_setting_dnd_schedule_set_enabled(setting, &value);
-	if(noti_err != NOTIFICATION_ERROR_NONE) {
+	if (noti_err != NOTIFICATION_ERROR_NONE) {
 		return;
 	}
 
@@ -874,7 +874,7 @@ int notification_system_setting_dnd_schedule_set_enabled(notification_system_set
 	...
 
 	noti_err = notifiacation_system_setting_dnd_schedule_get_day(setting, &day);
-	if(noti_err != NOTIFICATION_ERROR_NONE) {
+	if (noti_err != NOTIFICATION_ERROR_NONE) {
 		return;
 	}
 
@@ -913,7 +913,7 @@ int notification_system_setting_dnd_schedule_get_day(notification_system_setting
 	day = DND_SCHEDULE_WEEK_FLAG_SUNDAY;
 
 	noti_err = notifiacation_system_setting_dnd_schedule_set_day(setting, day);
-	if(noti_err != NOTIFICATION_ERROR_NONE) {
+	if (noti_err != NOTIFICATION_ERROR_NONE) {
 		return;
 	}
 
@@ -950,7 +950,7 @@ int notification_system_setting_dnd_schedule_set_day(notification_system_setting
 	...
 
 	noti_err = notifiacation_system_setting_dnd_schedule_get_start_time(setting, &hour, &min);
-	if(noti_err != NOTIFICATION_ERROR_NONE) {
+	if (noti_err != NOTIFICATION_ERROR_NONE) {
 		return;
 	}
 
@@ -990,7 +990,7 @@ int notification_system_setting_dnd_schedule_get_start_time(notification_system_
 	min = START_MIN		// 0 ~ 59
 
 	noti_err = notifiacation_system_setting_dnd_schedule_set_start_time(setting, hour, min);
-	if(noti_err != NOTIFICATION_ERROR_NONE) {
+	if (noti_err != NOTIFICATION_ERROR_NONE) {
 		return;
 	}
 
@@ -1027,7 +1027,7 @@ int notification_system_setting_dnd_schedule_set_start_time(notification_system_
 	...
 
 	noti_err = notifiacation_system_setting_dnd_schedule_get_end_time(setting, &hour, &min);
-	if(noti_err != NOTIFICATION_ERROR_NONE) {
+	if (noti_err != NOTIFICATION_ERROR_NONE) {
 		return;
 	}
 
@@ -1067,7 +1067,7 @@ int notification_system_setting_dnd_schedule_get_end_time(notification_system_se
 	min = START_MIN		// 0 ~ 59
 
 	noti_err = notifiacation_system_setting_dnd_schedule_set_end_time(setting, hour, min);
-	if(noti_err != NOTIFICATION_ERROR_NONE) {
+	if (noti_err != NOTIFICATION_ERROR_NONE) {
 		return;
 	}
 
@@ -1103,7 +1103,7 @@ int notification_system_setting_dnd_schedule_set_end_time(notification_system_se
 	...
 
 	noti_err = notifiacation_system_setting_get_lock_screen_content(setting, &level);
-	if(noti_err != NOTIFICATION_ERROR_NONE) {
+	if (noti_err != NOTIFICATION_ERROR_NONE) {
 		return;
 	}
 
@@ -1141,7 +1141,7 @@ int notification_system_setting_get_lock_screen_content(notification_system_sett
 	level = SHOW_ALL_CONTENT;	// or HIDE_SENSITIVE_CONTENT or DO_NOT_SHOW_NOTIFICATIONS;
 
 	noti_err = notifiacation_system_setting_set_lock_screen_content(setting, &level);
-	if(noti_err != NOTIFICATION_ERROR_NONE) {
+	if (noti_err != NOTIFICATION_ERROR_NONE) {
 		return;
 	}
 
@@ -1185,7 +1185,7 @@ static void changed_cb(void *user_data, int do_not_disturb)
 	...
 
 	noti_err = notification_register_system_setting_dnd_changed_cb(changed_cb, NULL);
-	if(noti_err != NOTIFICATION_ERROR_NONE) {
+	if (noti_err != NOTIFICATION_ERROR_NONE) {
 		return;
 	}
 
@@ -1225,7 +1225,7 @@ static void changed_cb(void *user_data, int do_not_disturb)
 	...
 
 	noti_err = notification_unregister_system_setting_dnd_changed_cb(changed_cb);
-	if(noti_err != NOTIFICATION_ERROR_NONE) {
+	if (noti_err != NOTIFICATION_ERROR_NONE) {
 		return;
 	}
 

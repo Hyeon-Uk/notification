@@ -99,7 +99,7 @@ notification_unresister_changed_cb_for_uid(
 	int noti_err = NOTIFICATION_ERROR_NONE;
 
 	noti_err  = notification_update_progress(NULL, APP_NOTI_PRIV_ID, 0.6);
-	if(noti_err != NOTIFICATION_ERROR_NONE) {
+	if (noti_err != NOTIFICATION_ERROR_NONE) {
 		return;
 	}
 }
@@ -126,7 +126,7 @@ int notification_update_progress(notification_h noti,
 	int noti_err = NOTIFICATION_ERROR_NONE;
 
 	noti_err  = notification_update_size(NULL, APP_NOTI_PRIV_ID, 3000000);
-	if(noti_err != NOTIFICATION_ERROR_NONE) {
+	if (noti_err != NOTIFICATION_ERROR_NONE) {
 		return;
 	}
 }
@@ -152,7 +152,7 @@ int notification_update_size(notification_h noti,
 	int noti_err = NOTIFICATION_ERROR_NONE;
 
 	noti_err  = notification_update_content(NULL, APP_NOTI_PRIV_ID, "updated string");
-	if(noti_err != NOTIFICATION_ERROR_NONE) {
+	if (noti_err != NOTIFICATION_ERROR_NONE) {
 		return;
 	}
 }
@@ -300,7 +300,7 @@ NOTIFICATION_DEPRECATED_API int notifiation_clear(notification_type_e type);
 	int noti_err = NOTIFICATION_ERROR_NONE;
 
 	noti_err  = notification_clear(NOTIFICATION_TYPE_NOTI);
-	if(noti_err != NOTIFICATION_ERROR_NONE) {
+	if (noti_err != NOTIFICATION_ERROR_NONE) {
 		return;
 	}
 }
@@ -347,12 +347,12 @@ NOTIFICATION_DEPRECATED_API int notification_op_get_data(notification_op *noti_o
 	int noti_err = NOTIFICATION_ERROR_NONE;
 
 	noti = notification_new(NOTIFICATION_TYPE_NOTI, APP_GROUP_ID, NOTIFICATION_PRIV_ID_NONE);
-	if(noti == NULL) {
+	if (noti == NULL) {
 		return;
 	}
 
 	noti_err  = notification_set_pkgname(noti, "org.tizen.phone");
-	if(noti_err != NOTIFICATION_ERROR_NONE) {
+	if (noti_err != NOTIFICATION_ERROR_NONE) {
 		notification_free(noti);
 		return;
 	}
@@ -379,7 +379,7 @@ NOTIFICATION_DEPRECATED_API int notification_set_pkgname(notification_h noti,
 	int noti_err = NOTIFICATION_ERROR_NONE;
 
 	noti_err  = notification_delete_all_by_type(NULL, NOTIFICATION_TYPE_NOTI);
-	if(noti_err != NOTIFICATION_ERROR_NONE) {
+	if (noti_err != NOTIFICATION_ERROR_NONE) {
 		return;
 	}
 }
@@ -406,7 +406,7 @@ NOTIFICATION_DEPRECATED_API int notification_delete_all_by_type(const char *pkgn
 	int noti_err = NOTIFICATION_ERROR_NONE;
 
 	noti_err  = notification_delete_by_priv_id(NULL, NOTIFICATION_TYPE_NOTI, APP_PRIV_ID);
-	if(noti_err != NOTIFICATION_ERROR_NONE) {
+	if (noti_err != NOTIFICATION_ERROR_NONE) {
 		return;
 	}
 }
@@ -444,7 +444,7 @@ NOTIFICATION_DEPRECATED_API int notification_delete_by_priv_id(const char *pkgna
 	appsvc_set_uri(b,"http://www.samsung.com");
 
 	noti_err  = notification_set_execute_option(noti, NOTIFICATION_EXECUTE_TYPE_SINGLE_LAUNCH, NULL, NULL, b);
-	if(noti_err != NOTIFICATION_ERROR_NONE) {
+	if (noti_err != NOTIFICATION_ERROR_NONE) {
 		notification_free(noti);
 		return;
 	}
@@ -478,7 +478,7 @@ NOTIFICATION_DEPRECATED_API int notification_set_execute_option(notification_h n
 	 int group_id, priv_id;
 
 	 noti_err  = notification_get_id(noti, &group_id, &priv_id);
-	 if(noti_err != NOTIFICATION_ERROR_NONE) {
+	 if (noti_err != NOTIFICATION_ERROR_NONE) {
 		 return;
 	 }
  }
@@ -506,7 +506,7 @@ NOTIFICATION_DEPRECATED_API int notification_get_id(notification_h noti,
 	notification_h noti = NULL;
 
 	noti = notification_load("org.tizen.app", priv_id);
-	if(noti == NULL) {
+	if (noti == NULL) {
 		return;
 	}
 	...
@@ -542,7 +542,7 @@ NOTIFICATION_DEPRECATED_API notification_h notification_load(char *pkgname,
 	notification_h noti = NULL;
 
 	noti = notification_new(NOTIFICATION_TYPE_NOTI, APP_GROUP_ID, NOTIFICATION_PRIV_ID_NONE);
-	if(noti == NULL) {
+	if (noti == NULL) {
 		return;
 	}
 	...
@@ -574,7 +574,7 @@ NOTIFICATION_DEPRECATED_API notification_h notification_new(notification_type_e 
 	...
 
 	noti_err  = notification_get_execute_option(noti, NOTIFICATION_EXECUTE_TYPE_SINGLE_LAUNCH, NULL, NULL, &b);
-	if(noti_err != NOTIFICATION_ERROR_NONE) {
+	if (noti_err != NOTIFICATION_ERROR_NONE) {
 		notification_free(noti);
 		return;
 	}
@@ -611,7 +611,7 @@ NOTIFICATION_DEPRECATED_API int notification_get_execute_option(notification_h n
 	int noti_err = NOTIFICATION_ERROR_NONE;
 
 	noti_err  = notification_insert(noti, NULL);
-	if(noti_err != NOTIFICATION_ERROR_NONE) {
+	if (noti_err != NOTIFICATION_ERROR_NONE) {
 		return;
 	}
 }
@@ -648,7 +648,7 @@ int notification_insert_for_uid(notification_h noti,
 	int noti_err = NOTIFICATION_ERROR_NONE;
 
 	noti_err  = notification_update_async(NULL, result_cb, data);
-	if(noti_err != NOTIFICATION_ERROR_NONE) {
+	if (noti_err != NOTIFICATION_ERROR_NONE) {
 		return;
 	}
 }
@@ -680,7 +680,7 @@ int notification_update_async_for_uid(notification_h noti,
 ...
 {
 	noti_err = notification_register_detailed_changed_cb(app_changed_cb, user_data);
-	if(noti_err != NOTIFICATION_ERROR_NONE) {
+	if (noti_err != NOTIFICATION_ERROR_NONE) {
 		return;
 	}
 }
@@ -712,7 +712,7 @@ int notification_register_detailed_changed_cb_for_uid(
 ...
 {
 	noti_err = notification_register_detailed_changed_cb(app_changed_cb, user_data);
-	if(noti_err != NOTIFICATION_ERROR_NONE) {
+	if (noti_err != NOTIFICATION_ERROR_NONE) {
 		return;
 	}
 }
