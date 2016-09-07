@@ -1375,3 +1375,23 @@ EXPORT_API int notification_set_ongoing_time(notification_h noti, int current, i
 
 	return NOTIFICATION_ERROR_NONE;
 }
+
+EXPORT_API int nofication_get_hide_timeout(notification_h noti, int *timeout)
+{
+	if (noti == NULL || timeout == NULL)
+		return NOTIFICATION_ERROR_INVALID_PARAMETER;
+
+	*timeout = noti->timeout;
+
+	return NOTIFICATION_ERROR_NONE;
+}
+
+EXPORT_API int nofication_set_hide_timeout(notification_h noti, int timeout)
+{
+	if (noti == NULL)
+		return NOTIFICATION_ERROR_INVALID_PARAMETER;
+
+	noti->timeout = timeout;
+
+	return NOTIFICATION_ERROR_NONE;
+}

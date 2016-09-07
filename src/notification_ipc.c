@@ -1669,6 +1669,7 @@ EXPORT_API GVariant *notification_ipc_make_gvariant_from_noti(notification_h not
 	g_variant_builder_add(&builder, "{iv}", NOTIFICATION_DATA_TYPE_ONGOING_DURATION, g_variant_new_int32(noti->ongoing_duration));
 	g_variant_builder_add(&builder, "{iv}", NOTIFICATION_DATA_TYPE_AUTO_REMOVE, g_variant_new_int32(noti->auto_remove));
 	g_variant_builder_add(&builder, "{iv}", NOTIFICATION_DATA_TYPE_DEFAULT_BUTTON, g_variant_new_int32(noti->default_button_index));
+	g_variant_builder_add(&builder, "{iv}", NOTIFICATION_DATA_TYPE_TIMEOUT, g_variant_new_int32(noti->timeout));
 	g_variant_builder_add(&builder, "{iv}", NOTIFICATION_DATA_TYPE_UID, g_variant_new_int32(noti->uid));
 
 	result_body = g_variant_builder_end(&builder);
@@ -1820,6 +1821,7 @@ EXPORT_API int notification_ipc_make_noti_from_gvariant(notification_h noti,
 	_variant_dict_lookup(dict, NOTIFICATION_DATA_TYPE_ONGOING_DURATION, "i", &noti->ongoing_duration);
 	_variant_dict_lookup(dict, NOTIFICATION_DATA_TYPE_AUTO_REMOVE, "i", &noti->auto_remove);
 	_variant_dict_lookup(dict, NOTIFICATION_DATA_TYPE_DEFAULT_BUTTON, "i", &noti->default_button_index);
+	_variant_dict_lookup(dict, NOTIFICATION_DATA_TYPE_TIMEOUT, "i", &noti->timeout);
 	_variant_dict_lookup(dict, NOTIFICATION_DATA_TYPE_UID, "i", &noti->uid);
 
 	noti->caller_pkgname = _dup_string(caller_pkgname);

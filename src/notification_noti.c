@@ -263,7 +263,7 @@ static int _insertion_query_create(notification_h noti, char **query)
 		"flags_for_property, flag_simmode, display_applist, "
 		"progress_size, progress_percentage, "
 		"ongoing_flag, ongoing_value_type, ongoing_current, ongoing_duration, "
-		"auto_remove, default_button_index, uid) values ("
+		"auto_remove, default_button_index, timeout, uid) values ("
 		"%d, "
 		"%d, "
 		"'%s', '%s', "
@@ -282,7 +282,7 @@ static int _insertion_query_create(notification_h noti, char **query)
 		"%d, '%s', %d, '%s', %d, %d, %d, %d,"
 		"%d, %d, %d, "
 		"$progress_size, $progress_percentage, "
-		"%d, %d, %d, %d, %d, %d, %d)",
+		"%d, %d, %d, %d, %d, %d, %d, %d)",
 		noti->type,
 		noti->layout,
 		NOTIFICATION_CHECK_STR(noti->caller_pkgname),
@@ -321,6 +321,7 @@ static int _insertion_query_create(notification_h noti, char **query)
 		noti->ongoing_duration,
 		noti->auto_remove,
 		noti->default_button_index,
+		noti->timeout,
 		noti->uid);
 
 	/* Free decoded data */
@@ -458,7 +459,7 @@ static int _update_query_create(notification_h noti, char **query)
 		"display_applist = %d, "
 		"progress_size = $progress_size, progress_percentage = $progress_percentage, "
 		"ongoing_flag = %d, ongoing_value_type = %d, ongoing_current = %d, ongoing_duration = %d, "
-		"auto_remove = %d, default_button_index = %d "
+		"auto_remove = %d, default_button_index = %d, timeout = %d "
 		"where priv_id = %d ",
 		noti->type,
 		noti->layout,
@@ -492,7 +493,8 @@ static int _update_query_create(notification_h noti, char **query)
 		noti->flags_for_property, flag_simmode, noti->display_applist,
 		noti->ongoing_flag, noti->ongoing_value_type,
 		noti->ongoing_current, noti->ongoing_duration,
-		noti->auto_remove, noti->default_button_index, noti->priv_id);
+		noti->auto_remove, noti->default_button_index,
+		noti->timeout, noti->priv_id);
 
 	/* Free decoded data */
 	if (args)
@@ -592,6 +594,7 @@ static void _notification_noti_populate_from_stmt(sqlite3_stmt *stmt, notificati
 	noti->ongoing_duration = sqlite3_column_int(stmt, col++);
 	noti->auto_remove = sqlite3_column_int(stmt, col++);
 	noti->default_button_index = sqlite3_column_int(stmt, col++);
+	noti->timeout = sqlite3_column_int(stmt, col++);
 
 	noti->app_icon_path = NULL;
 	noti->app_name = NULL;
