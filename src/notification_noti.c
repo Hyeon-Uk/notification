@@ -868,7 +868,6 @@ out:
 static bool _is_pop_up_notification(const char *caller_package_name, uid_t uid)
 {
 	int err;
-	char *package_id = NULL;
 	bool ret = true;
 	notification_setting_h setting = NULL;
 
@@ -888,8 +887,6 @@ static bool _is_pop_up_notification(const char *caller_package_name, uid_t uid)
 		NOTIFICATION_DBG("[%s] is not allowed Pop-up notification", caller_package_name);
 
 out:
-	if (package_id)
-		free(package_id);
 	if (setting)
 		notification_setting_free_notification(setting);
 
