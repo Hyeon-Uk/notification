@@ -1316,7 +1316,7 @@ EXPORT_API int notification_set_default_button(notification_h noti, notification
 	if (noti == NULL)
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 
-	if (index < 0 && index > NOTIFICATION_BUTTON_6)
+	if (index < 0 || index > NOTIFICATION_BUTTON_6)
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 
 	noti->default_button_index = index;
@@ -1346,7 +1346,7 @@ EXPORT_API int notification_get_ongoing_value_type(notification_h noti, notifica
 
 EXPORT_API int notification_set_ongoing_value_type(notification_h noti, notification_ongoing_value_type_e type)
 {
-	if (type < NOTIFICATION_ONGOING_VALUE_TYPE_PERCENT && type > NOTIFICATION_ONGOING_VALUE_TYPE_TIME)
+	if (type < NOTIFICATION_ONGOING_VALUE_TYPE_PERCENT || type > NOTIFICATION_ONGOING_VALUE_TYPE_TIME)
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 
 	noti->ongoing_value_type = type;
