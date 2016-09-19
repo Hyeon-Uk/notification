@@ -333,6 +333,7 @@ int noti_system_setting_load_system_setting(notification_system_setting_h *syste
 		result_system_setting->dnd_end_hour = 0;
 		result_system_setting->dnd_end_min = 0;
 		result_system_setting->lock_screen_content_level = 0;
+		result_system_setting->dnd_allow_exceptions = NULL;
 	} else {
 		/* LCOV_EXCL_START */
 		col_index = column_count;
@@ -345,6 +346,7 @@ int noti_system_setting_load_system_setting(notification_system_setting_h *syste
 		_get_table_field_data_int(query_result, &(result_system_setting->dnd_end_hour), col_index++);
 		_get_table_field_data_int(query_result, &(result_system_setting->dnd_end_min), col_index++);
 		_get_table_field_data_int(query_result, (int *)&(result_system_setting->lock_screen_content_level), col_index++);
+		result_system_setting->dnd_allow_exceptions = NULL;
 		/* LCOV_EXCL_STOP */
 	}
 
@@ -652,6 +654,117 @@ out:
 		sqlite3_free(query_system_setting);
 	if (db)
 		notification_db_close(&db);
+
+	return ret;
+}
+
+EXPORT_API int notification_system_setting_load_dnd_allow_exception(dnd_allow_exception_h *dnd_allow_exception, int *count, uid_t uid)
+{
+	int err = NOTIFICATION_ERROR_NONE;
+	int sql_return;
+	int row_count = 0;
+	int column_count = 0;
+	int col_index = 0;
+	int i;
+	char *sql_query = NULL;
+	char **query_result = NULL;
+	sqlite3 *local_db_handle = NULL;
+	dnd_allow_exception_h dnd_allow_exception_data = NULL;
+
+	if (dnd_allow_exception == NULL) {
+		NOTIFICATION_ERR("NOTIFICATION_ERROR_INVALID_PARAMETER"); /* LCOV_EXCL_LINE */
+		err =  NOTIFICATION_ERROR_INVALID_PARAMETER;
+		goto out;
+	}
+
+	sql_return = db_util_open(DBPATH, &local_db_handle, 0);
+	if (sql_return != SQLITE_OK || local_db_handle == NULL) {
+		NOTIFICATION_ERR("db_util_open failed [%d]", sql_return); /* LCOV_EXCL_LINE */
+		err = NOTIFICATION_ERROR_FROM_DB;
+		goto out;
+	}
+
+	sql_query = sqlite3_mprintf("SELECT type, value FROM %s WHERE uid = %d",
+			NOTIFICATION_DND_ALLOW_EXCEPTION, uid);
+	if (!sql_query) {
+		NOTIFICATION_ERR("fail to alloc query"); /* LCOV_EXCL_LINE */
+		err = NOTIFICATION_ERROR_OUT_OF_MEMORY;
+		goto out;
+	}
+
+	sql_return = sqlite3_get_table(local_db_handle, sql_query, &query_result, &row_count, &column_count, NULL);
+	if (sql_return != SQLITE_OK && sql_return != -1) {
+		NOTIFICATION_ERR("sqlite3_get_table failed [%d][%s]", sql_return, sql_query); /* LCOV_EXCL_LINE */
+		err = NOTIFICATION_ERROR_FROM_DB;
+		goto out;
+	}
+
+	if (!row_count) {
+		NOTIFICATION_DBG("No setting found..."); /* LCOV_EXCL_LINE */
+		goto out;
+	} else {
+		dnd_allow_exception_data = (dnd_allow_exception_h)malloc(sizeof(struct notification_system_setting_dnd_allow_exception) * row_count);
+		if (dnd_allow_exception_data == NULL) {
+			NOTIFICATION_ERR("failed to malloc");
+			return NOTIFICATION_ERROR_OUT_OF_MEMORY;
+		}
+
+		col_index = column_count;
+
+		for (i = 0; i < row_count; i++) {
+			_get_table_field_data_int(query_result, (int *)&(dnd_allow_exception_data[i].type), col_index++);
+			_get_table_field_data_int(query_result, (int *)&(dnd_allow_exception_data[i].value), col_index++);
+		}
+	}
+
+	*dnd_allow_exception = dnd_allow_exception_data;
+	*count = row_count;
+
+out:
+	if (query_result)
+		sqlite3_free_table(query_result);
+
+	if (sql_query)
+		sqlite3_free(sql_query);
+
+	if (local_db_handle) {
+		sql_return = db_util_close(local_db_handle);
+		if (sql_return != SQLITE_OK)
+			NOTIFICATION_WARN("fail to db_util_close - [%d]", sql_return); /* LCOV_EXCL_LINE */
+	}
+
+	return err;
+}
+
+EXPORT_API int notification_system_setting_update_dnd_allow_exception(int type, int value, uid_t uid)
+{
+	int ret = NOTIFICATION_ERROR_NONE;
+	int sqlret;
+	sqlite3 *db = NULL;
+	char *sqlbuf = NULL;
+
+	sqlret = db_util_open(DBPATH, &db, 0);
+	if (sqlret != SQLITE_OK || db == NULL) {
+		NOTIFICATION_ERR("db_util_open failed [%s][%d]", DBPATH, sqlret);
+		return NOTIFICATION_ERROR_FROM_DB;
+	}
+
+	sqlbuf = sqlite3_mprintf("UPDATE dnd_allow_exception SET value = %d WHERE type = %d AND uid = %d", value, type, uid);
+	if (!sqlbuf) {
+		NOTIFICATION_ERR("fail to alloc query");
+		ret = NOTIFICATION_ERROR_OUT_OF_MEMORY;
+		goto return_close_db;
+	}
+
+	ret = notification_db_exec(db, sqlbuf, NULL);
+
+return_close_db:
+	if (sqlbuf)
+		sqlite3_free(sqlbuf);
+
+	sqlret = db_util_close(db);
+	if (sqlret != SQLITE_OK)
+		NOTIFICATION_WARN("fail to db_util_close - [%d]", sqlret);
 
 	return ret;
 }

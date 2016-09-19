@@ -1227,10 +1227,16 @@ int notification_ipc_request_get_setting_by_package_name(
 int notification_ipc_request_load_system_setting(notification_system_setting_h *setting, uid_t uid)
 {
 	int result;
+	int count;
+	int index = 0;
 	GDBusMessage *reply = NULL;
 	GVariant *setting_body;
 	GVariant *reply_body;
+	GVariant *iter_body;
+	GVariantIter *iter;
 	notification_system_setting_h result_setting;
+	dnd_allow_exception_h dnd_allow_exception;
+	dnd_allow_exception_h temp;
 
 	result = _dbus_init();
 	if (result != NOTIFICATION_ERROR_NONE) {
@@ -1239,7 +1245,6 @@ int notification_ipc_request_load_system_setting(notification_system_setting_h *
 	}
 
 	result = _send_sync_noti(g_variant_new("(i)", uid), &reply, "load_system_setting");
-
 	if (result == NOTIFICATION_ERROR_NONE) {
 		reply_body = g_dbus_message_get_body(reply);
 		g_variant_get(reply_body, "(v)", &setting_body);
@@ -1250,10 +1255,34 @@ int notification_ipc_request_load_system_setting(notification_system_setting_h *
 			g_object_unref(reply);
 			return NOTIFICATION_ERROR_OUT_OF_MEMORY;
 		}
+
 		notification_ipc_make_system_setting_from_gvariant(result_setting, setting_body);
+		result_setting->dnd_allow_exceptions = NULL;
+
+		result = _send_sync_noti(g_variant_new("(i)", uid), &reply, "load_dnd_allow_exception");
+		if (result == NOTIFICATION_ERROR_NONE) {
+			reply_body = g_dbus_message_get_body(reply);
+			g_variant_get(reply_body, "(ia(v))", &count, &iter);
+
+			dnd_allow_exception = (dnd_allow_exception_h)malloc(sizeof(struct notification_system_setting_dnd_allow_exception) * count);
+			if (dnd_allow_exception == NULL) {
+				g_object_unref(reply);
+				g_variant_iter_free(iter);
+				return NOTIFICATION_ERROR_OUT_OF_MEMORY;
+			}
+
+			while (g_variant_iter_loop(iter, "(v)", &iter_body)) {
+				temp = dnd_allow_exception + index;
+
+				notification_ipc_make_dnd_allow_exception_from_gvariant(temp, iter_body);
+				result_setting->dnd_allow_exceptions = g_list_append(result_setting->dnd_allow_exceptions, temp);
+				index++;
+			}
+		}
 
 		*setting = result_setting;
 		g_variant_unref(setting_body);
+		g_variant_iter_free(iter);
 	}
 
 	if (reply)
@@ -1298,6 +1327,8 @@ int notification_ipc_update_system_setting(notification_system_setting_h system_
 	int result;
 	GDBusMessage *reply = NULL;
 	GVariant *body;
+	GList *list;
+	dnd_allow_exception_h dnd_allow_exception;
 
 	result = _dbus_init();
 	if (result != NOTIFICATION_ERROR_NONE) {
@@ -1318,6 +1349,19 @@ int notification_ipc_update_system_setting(notification_system_setting_h system_
 			uid);
 
 	result = _send_sync_noti(body, &reply, "update_noti_sys_setting");
+
+	/* update dnd_allow_exceptions */
+	list = g_list_first(system_setting->dnd_allow_exceptions);
+
+	for (; list != NULL; list = list->next) {
+		dnd_allow_exception = list->data;
+
+		body = g_variant_new("(iii)",
+			(int)(dnd_allow_exception->type),
+			(int)(dnd_allow_exception->value),
+			uid);
+		result = _send_sync_noti(body, &reply, "update_dnd_allow_exception");
+	}
 
 	if (reply)
 		g_object_unref(reply);
@@ -1972,6 +2016,35 @@ EXPORT_API int notification_ipc_make_setting_from_gvariant(struct notification_s
 
 	NOTIFICATION_DBG("setting from variant %s, %s",
 			noti_setting->package_name, pkgname);
+
+	return NOTIFICATION_ERROR_NONE;
+}
+
+EXPORT_API GVariant *notification_ipc_make_gvariant_from_dnd_allow_exception(struct notification_system_setting_dnd_allow_exception *dnd_allow_exception)
+{
+	GVariant *body = NULL;
+
+	body = g_variant_new("(ii)",
+		dnd_allow_exception->type,
+		dnd_allow_exception->value);
+
+	return body;
+}
+
+int notification_ipc_make_dnd_allow_exception_from_gvariant(struct notification_system_setting_dnd_allow_exception *dnd_allow_exception, GVariant *variant)
+{
+	int type;
+	int value;
+
+	if (dnd_allow_exception == NULL) {
+		NOTIFICATION_ERR("invalid data");
+		return NOTIFICATION_ERROR_INVALID_PARAMETER;
+	}
+
+	g_variant_get(variant, "(ii)", &type, &value);
+
+	dnd_allow_exception->type = type;
+	dnd_allow_exception->value = value;
 
 	return NOTIFICATION_ERROR_NONE;
 }

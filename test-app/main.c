@@ -727,6 +727,8 @@ static int testapp_test_update_system_setting()
 	bool dnd_schedule_enabled;
 	lock_screen_content_level_e lock_screen_content_level = SHOW_ALL_CONTENT;
 	notification_system_setting_h system_setting = NULL;
+	dnd_allow_exception_type_e dnd_allow_exception_type = NOTIFICATION_DND_ALLOWED_CALLS;
+	int dnd_allowed_calls_value;
 
 	err = notification_system_setting_load_system_setting(&system_setting);
 
@@ -754,8 +756,13 @@ static int testapp_test_update_system_setting()
 	testapp_print("lock_screen_content_level [%d]\n", lock_screen_content_level);
 	lock_screen_content_level = !lock_screen_content_level;
 	notification_system_setting_set_lock_screen_content(system_setting, lock_screen_content_level);
-	err = notification_system_setting_update_system_setting(system_setting);
 
+	notification_system_setting_get_dnd_allow_exceptions(system_setting, dnd_allow_exception_type, &dnd_allowed_calls_value);
+	testapp_print("dnd_allowed_calls_value [%d]\n", dnd_allowed_calls_value);
+	dnd_allowed_calls_value = !dnd_allowed_calls_value;
+	notification_system_setting_set_dnd_allow_exceptions(system_setting, dnd_allow_exception_type, dnd_allowed_calls_value);
+
+	err = notification_system_setting_update_system_setting(system_setting);
 	if (err != NOTIFICATION_ERROR_NONE || system_setting == NULL) {
 		testapp_print("notification_system_setting_update_system_setting failed [%d]\n", err);
 		goto out;

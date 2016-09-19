@@ -560,6 +560,9 @@ EXPORT_API int notification_system_setting_free_system_setting(notification_syst
 
 	/* add codes to free all properties */
 
+	if (system_setting->dnd_allow_exceptions != NULL)
+		g_list_free(system_setting->dnd_allow_exceptions);
+
 	SAFE_FREE(system_setting);
 
 	return NOTIFICATION_ERROR_NONE;
@@ -733,6 +736,75 @@ EXPORT_API int notification_system_setting_set_lock_screen_content(notification_
 	}
 
 	system_setting->lock_screen_content_level = level;
+
+	return NOTIFICATION_ERROR_NONE;
+}
+
+static gint _dnd_allow_exception_compare(gconstpointer a, gconstpointer b)
+{
+	dnd_allow_exception_h dnd_allow_exception_data_a;
+
+	if (a == NULL)
+		return -1;
+
+	dnd_allow_exception_data_a = (dnd_allow_exception_h)a;
+
+	if (dnd_allow_exception_data_a->type == (int)b)
+		return 0;
+
+	return -1;
+}
+
+EXPORT_API int notification_system_setting_get_dnd_allow_exceptions(notification_system_setting_h system_setting, dnd_allow_exception_type_e type, int *value)
+{
+	dnd_allow_exception_h dnd_allow_exception_data;
+	GList *list;
+
+	if (system_setting == NULL) {
+		NOTIFICATION_ERR("Invalid parameter");
+		return NOTIFICATION_ERROR_INVALID_PARAMETER;
+	}
+
+	list = g_list_find_custom(system_setting->dnd_allow_exceptions, (gconstpointer)type, _dnd_allow_exception_compare);
+	if (list) {
+		dnd_allow_exception_data = (dnd_allow_exception_h)list->data;
+		*value = dnd_allow_exception_data->value;
+	} else {
+		NOTIFICATION_ERR("Invalid parameter - type");
+		return NOTIFICATION_ERROR_INVALID_PARAMETER;
+	}
+
+	return NOTIFICATION_ERROR_NONE;
+}
+
+EXPORT_API int notification_system_setting_set_dnd_allow_exceptions(notification_system_setting_h system_setting, dnd_allow_exception_type_e type, int value)
+{
+	dnd_allow_exception_h dnd_allow_exception_data;
+	GList *list;
+
+	if (system_setting == NULL) {
+		NOTIFICATION_ERR("Invalid parameter");
+		return NOTIFICATION_ERROR_INVALID_PARAMETER;
+	}
+
+	list = g_list_first(system_setting->dnd_allow_exceptions);
+
+	for (; list != NULL; list = list->next) {
+		dnd_allow_exception_data = (dnd_allow_exception_h)list->data;
+		if (dnd_allow_exception_data->type == type) {
+			dnd_allow_exception_data->value = value;
+			return NOTIFICATION_ERROR_NONE;
+		}
+	}
+
+	dnd_allow_exception_data = (dnd_allow_exception_h)malloc(sizeof(struct notification_system_setting_dnd_allow_exception));
+	if (dnd_allow_exception_data == NULL)
+		return NOTIFICATION_ERROR_OUT_OF_MEMORY;
+
+	dnd_allow_exception_data->type = type;
+	dnd_allow_exception_data->value = value;
+
+	system_setting->dnd_allow_exceptions = g_list_append(system_setting->dnd_allow_exceptions, dnd_allow_exception_data);
 
 	return NOTIFICATION_ERROR_NONE;
 }

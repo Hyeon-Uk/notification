@@ -145,7 +145,13 @@ create	table if not exists noti_list ( \
 			dnd_end_min INTEGER DEFAULT 0, \
 			lock_screen_content_level INTEGER DEFAULT 0, \
 			UNIQUE (uid) \
-		);\
+		); \
+		CREATE TABLE IF NOT EXISTS dnd_allow_exception ( \
+			uid INTEGER, \
+			type INTEGER DEFAULT 0, \
+			value INTEGER DEFAULT 0, \
+			UNIQUE (uid, type) \
+		); \
 		CREATE TABLE IF NOT EXISTS noti_template ( \
 			type INTEGER NOT NULL, \
 			layout INTEGER NOT NULL default 0, \

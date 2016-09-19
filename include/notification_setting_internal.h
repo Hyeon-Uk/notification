@@ -19,6 +19,7 @@
 
 #include <sys/types.h>
 #include <stdbool.h>
+#include <glib.h>
 #include "notification.h"
 #include "notification_setting.h"
 
@@ -27,6 +28,7 @@ extern "C" {
 #endif
 
 typedef struct notification_system_setting *notification_system_setting_h;
+typedef struct notification_system_setting_dnd_allow_exception *dnd_allow_exception_h;
 
 /*
  * The prototype of handler that 'Do not disturb' mode set schdule changed alarm.
@@ -57,6 +59,26 @@ typedef enum lock_screen_content_level {
 	DO_NOT_SHOW_NOTIFICATIONS,
 } lock_screen_content_level_e;
 
+/**
+ * @brief Enumeration for do_not_disturb allow exception type.
+ * @since_tizen 3.0
+ */
+typedef enum dnd_allow_exception_type {
+	NOTIFICATION_DND_ALLOWED_CALLS = 0,
+	/* possible to add */
+} dnd_allow_exception_type_e;
+
+/**
+ * @brief Enumeration for allowed_calls.
+ * @since_tizen 3.0
+ */
+typedef enum notification_dnd_allowed_calls {
+	NOTIFICATION_DND_ALLOWED_CALLS_EVERYONE = 0,
+	NOTIFICATION_DND_ALLOWED_CALLS_CONTACT,
+	NOTIFICATION_DND_ALLOWED_CALLS_FAVORITE,
+	NOTIFICATION_DND_ALLOWED_CALLS_NOBODY,
+} notification_dnd_allowed_calls_e;
+
 /* Application setting */
 struct notification_setting {
 	char *package_name;
@@ -78,6 +100,13 @@ struct notification_system_setting {
 	int dnd_end_hour;
 	int dnd_end_min;
 	lock_screen_content_level_e lock_screen_content_level;
+	GList *dnd_allow_exceptions;
+};
+
+/* dnd_allow_exception */
+struct notification_system_setting_dnd_allow_exception {
+	int type;
+	int value;
 };
 
 /**
@@ -1153,6 +1182,89 @@ int notification_system_setting_get_lock_screen_content(notification_system_sett
  *
  */
 int notification_system_setting_set_lock_screen_content(notification_system_setting_h system_setting, lock_screen_content_level_e level);
+
+/*
+ * @internal
+ * @brief Gets a value of the do_not_disturb allow exceptions.
+ * @since_tizen 3.0
+ * @privlevel public
+ * @privilege %http://tizen.org/privilege/notification
+ * @param[in] setting The notification system setting handle
+ * @param[in] dnd_allow_exception_type_e The exceptional item of do_not_distrub
+ * @param[out] value The value of the exceptional item
+ * @return #NOTIFICATION_ERROR_NONE on success,
+ *         otherwise any other value on failure
+ * @retval #NOTIFICATION_ERROR_NONE Success
+ * @retval #NOTIFICATION_ERROR_INVALID_PARAMETER Invalid parameter
+ * @par sample code:
+ * @code
+#include <notification_setting_internal.h>
+...
+{
+	int noti_err = 0;
+	int value;
+	notification_system_setting_h setting = NULL;
+	...
+	noti_err = notifiacation_system_setting_load_system_setting(&setting);
+	if (noti_err != NOTIFICATION_ERROR_NONE) {
+		return;
+	}
+
+	noti_err = notification_system_setting_get_dnd_allow_exceptions(setting, ALLOWED_CALLS, &value);
+	if (noti_err != NOTIFICATION_ERROR_NONE) {
+		return;
+	}
+	...
+	notification_system_setting_free_system_setting(setting);
+
+	return 0;
+
+}
+ * @endcode
+ */
+int notification_system_setting_get_dnd_allow_exceptions(notification_system_setting_h system_setting, dnd_allow_exception_type_e type, int *value);
+
+/*
+ * @internal
+ * @brief Sets a value of the do_not_disturb allow exceptions.
+ * @since_tizen 3.0
+ * @privlevel public
+ * @privilege %http://tizen.org/privilege/notification
+ * @param[in] setting The notification system setting handle
+ * @param[in] dnd_allow_exception_type_e The exceptional item of do_not_distrub
+ * @param[in] value The value of the exceptional item
+ * @return #NOTIFICATION_ERROR_NONE on success,
+ *         otherwise any other value on failure
+ * @retval #NOTIFICATION_ERROR_NONE Success
+ * @retval #NOTIFICATION_ERROR_INVALID_PARAMETER Invalid parameter
+ * @retval #NOTIFICATION_ERROR_OUT_OF_MEMORY out of memory
+ * @par sample code:
+ * @code
+#include <notification_setting_internal.h>
+...
+{
+	int noti_err = 0;
+	int value = 0;
+	notification_system_setting_h setting = NULL;
+	...
+	noti_err = notifiacation_system_setting_load_system_setting(&setting);
+	if (noti_err != NOTIFICATION_ERROR_NONE) {
+		return;
+	}
+
+	noti_err = notification_system_setting_set_dnd_allow_exceptions(setting, ALLOWED_CALLS, value);
+	if (noti_err != NOTIFICATION_ERROR_NONE) {
+		return;
+	}
+	...
+	notification_system_setting_free_system_setting(setting);
+
+	return 0;
+
+}
+ * @endcode
+ */
+int notification_system_setting_set_dnd_allow_exceptions(notification_system_setting_h system_setting, dnd_allow_exception_type_e type, int value);
 
 /*
  * @internal
