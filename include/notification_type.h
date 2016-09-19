@@ -64,12 +64,11 @@ typedef enum _notification_ly_type {
 } notification_ly_type_e;
 
 /**
- * @brief Enumeration for notification lauch option type.
+ * @brief Enumeration for notification launch option type.
  * @since_tizen @if WEARABLE 2.3.1 @elseif MOBILE 2.3 @endif
  */
 typedef enum  _notification_launch_option_type {
-	NOTIFICATION_LAUNCH_OPTION_APP_CONTROL = 1,
-	/**< launching with app control */
+	NOTIFICATION_LAUNCH_OPTION_APP_CONTROL = 1,   /**< Launching with app control */
 } notification_launch_option_type;
 
 /**
