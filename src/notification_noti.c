@@ -1032,7 +1032,8 @@ EXPORT_API int notification_noti_get_by_priv_id(notification_h noti, char *pkgna
 			 "b_event_handler_click_on_button_4, b_event_handler_click_on_button_5, b_event_handler_click_on_button_6, "
 			 "b_event_handler_click_on_icon, b_event_handler_click_on_thumbnail, "
 			 "sound_type, sound_path, vibration_type, vibration_path, led_operation, led_argb, led_on_ms, led_off_ms, "
-			 "flags_for_property, display_applist, progress_size, progress_percentage, ongoing_flag, auto_remove "
+			 "flags_for_property, display_applist, progress_size, progress_percentage, ongoing_flag, ongoing_value_type, "
+			 "ongoing_current, ongoing_duration, auto_remove, default_button_index, timeout "
 			 "from noti_list ";
 
 	if (pkgname != NULL && strlen(pkgname) != 0)
@@ -1102,7 +1103,8 @@ EXPORT_API int notification_noti_get_by_tag(notification_h noti, char *pkgname, 
 			 "b_event_handler_click_on_button_4, b_event_handler_click_on_button_5, b_event_handler_click_on_button_6, "
 			 "b_event_handler_click_on_icon, b_event_handler_click_on_thumbnail, "
 			 "sound_type, sound_path, vibration_type, vibration_path, led_operation, led_argb, led_on_ms, led_off_ms, "
-			 "flags_for_property, display_applist, progress_size, progress_percentage, ongoing_flag, auto_remove "
+			 "flags_for_property, display_applist, progress_size, progress_percentage, ongoing_flag, ongoing_value_type, "
+			 "ongoing_current, ongoing_duration, auto_remove, default_button_index, timeout "
 			 "from noti_list where caller_pkgname = ? and tag = ? and uid = ?", -1, &stmt, NULL);
 		if (ret != SQLITE_OK) {
 			NOTIFICATION_ERR("Error: %s\n", sqlite3_errmsg(db));
@@ -1137,7 +1139,8 @@ EXPORT_API int notification_noti_get_by_tag(notification_h noti, char *pkgname, 
 			 "b_event_handler_click_on_button_4, b_event_handler_click_on_button_5, b_event_handler_click_on_button_6, "
 			 "b_event_handler_click_on_icon, b_event_handler_click_on_thumbnail, "
 			 "sound_type, sound_path, vibration_type, vibration_path, led_operation, led_argb, led_on_ms, led_off_ms, "
-			 "flags_for_property, display_applist, progress_size, progress_percentage, ongoing_flag, auto_remove "
+			 "flags_for_property, display_applist, progress_size, progress_percentage, ongoing_flag, ongoing_value_type, "
+			 "ongoing_current, ongoing_duration, auto_remove, default_button_index, timeout "
 			 "from noti_list where  tag = ? and uid = ?", -1, &stmt, NULL);
 		if (ret != SQLITE_OK) {
 			NOTIFICATION_ERR("Error: %s\n", sqlite3_errmsg(db));
@@ -1595,7 +1598,8 @@ EXPORT_API int notification_noti_get_grouping_list(notification_type_e type,
 		 "b_event_handler_click_on_button_4, b_event_handler_click_on_button_5, b_event_handler_click_on_button_6, "
 		 "b_event_handler_click_on_icon, b_event_handler_click_on_thumbnail, "
 		 "sound_type, sound_path, vibration_type, vibration_path, led_operation, led_argb, led_on_ms, led_off_ms, "
-		 "flags_for_property, display_applist, progress_size, progress_percentage, ongoing_flag, auto_remove "
+		 "flags_for_property, display_applist, progress_size, progress_percentage, ongoing_flag, ongoing_value_type, "
+		 "ongoing_current, ongoing_duration, auto_remove, default_button_index, timeout "
 		 "from noti_list where 1 > 0 ");
 
 	if (status == VCONFKEY_TELEPHONY_SIM_INSERTED) {
@@ -1696,7 +1700,8 @@ EXPORT_API int notification_noti_get_detail_list(const char *pkgname,
 		 "b_event_handler_click_on_button_4, b_event_handler_click_on_button_5, b_event_handler_click_on_button_6, "
 		 "b_event_handler_click_on_icon, b_event_handler_click_on_thumbnail, "
 		 "sound_type, sound_path, vibration_type, vibration_path, led_operation, led_argb, led_on_ms, led_off_ms, "
-		 "flags_for_property, display_applist, progress_size, progress_percentage, ongoing_flag, auto_remove "
+		 "flags_for_property, display_applist, progress_size, progress_percentage, ongoing_flag, ongoing_value_type, "
+		 "ongoing_current, ongoing_duration, auto_remove, default_button_index, timeout "
 		 "from noti_list ");
 
 	if (priv_id == NOTIFICATION_PRIV_ID_NONE && group_id == NOTIFICATION_GROUP_ID_NONE) {
@@ -1955,8 +1960,8 @@ static int _template_query_create(notification_h noti, char *template_name, char
 		"b_event_handler_click_on_button_4, b_event_handler_click_on_button_5, b_event_handler_click_on_button_6, "
 		"b_event_handler_click_on_icon, b_event_handler_click_on_thumbnail, "
 		"sound_type, sound_path, vibration_type, vibration_path, led_operation, led_argb, led_on_ms, led_off_ms, "
-		"flags_for_property, flag_simmode, display_applist, "
-		"progress_size, progress_percentage, ongoing_flag, auto_remove, uid, template_name) values ("
+		"flags_for_property, flag_simmode, display_applist, progress_size, progress_percentage, ongoing_flag, ongoing_value_type, "
+		"ongoing_current, ongoing_duration, auto_remove, default_button_index, timeout, uid, template_name) values ("
 		"%d, "
 		"%d, "
 		"'%s', '%s', "
@@ -1972,9 +1977,10 @@ static int _template_query_create(notification_h noti, char *template_name, char
 		"'%s', '%s', '%s', "
 		"'%s', '%s', '%s', "
 		"'%s', '%s', "
-		"%d, '%s', %d, '%s', %d, %d, %d, %d,"
+		"%d, '%s', %d, '%s', %d, %d, %d, %d, "
 		"%d, %d, %d, "
-		"$progress_size, $progress_percentage, %d, %d, %d, '%s')",
+		"$progress_size, $progress_percentage, "
+		"%d, %d, %d, %d, %d, %d, %d, %d, '%s')",
 		noti->type,
 		noti->layout,
 		NOTIFICATION_CHECK_STR(noti->caller_pkgname),
@@ -2008,7 +2014,12 @@ static int _template_query_create(notification_h noti, char *template_name, char
 		noti->led_off_ms,
 		noti->flags_for_property, flag_simmode, noti->display_applist,
 		noti->ongoing_flag,
+		noti->ongoing_value_type,
+		noti->ongoing_current,
+		noti->ongoing_duration,
 		noti->auto_remove,
+		noti->default_button_index,
+		noti->timeout,
 		noti->uid,
 		template_name);
 
@@ -2173,7 +2184,8 @@ EXPORT_API int notification_noti_get_package_template(notification_h noti, char 
 		"b_event_handler_click_on_button_4, b_event_handler_click_on_button_5, b_event_handler_click_on_button_6, "
 		"b_event_handler_click_on_icon, b_event_handler_click_on_thumbnail, "
 		"sound_type, sound_path, vibration_type, vibration_path, led_operation, led_argb, led_on_ms, led_off_ms, "
-		"flags_for_property, display_applist, progress_size, progress_percentage, ongoing_flag, auto_remove "
+		"flags_for_property, display_applist, progress_size, progress_percentage, ongoing_flag, ongoing_value_type, "
+		"ongoing_current, ongoing_duration, auto_remove, default_button_index, timeout "
 		"from noti_template where caller_pkgname = ? and template_name = ?", -1, &stmt, NULL);
 	if (ret != SQLITE_OK) {
 		NOTIFICATION_ERR("Error: %s\n", sqlite3_errmsg(db));
