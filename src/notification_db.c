@@ -86,6 +86,7 @@ create	table if not exists noti_list ( \
 			default_button_index INTEGER default 0, \
 			timeout INTEGER default 0, \
 			text_input_max_length INTEGER default 0, \
+			event_flag INTEGER default 0, \
 			uid INTEGER \
 		); \
 		create table if not exists noti_group_data ( \
@@ -207,6 +208,7 @@ create	table if not exists noti_list ( \
 			default_button_index INTEGER default 0, \
 			timeout INTEGER default 0, \
 			text_input_max_length INTEGER default 0, \
+			event_flag INTEGER default 0, \
 			uid INTEGER, \
 			template_name TEXT, \
 			UNIQUE (caller_pkgname, template_name) \

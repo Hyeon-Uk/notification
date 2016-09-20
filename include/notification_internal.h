@@ -1038,6 +1038,143 @@ int notification_get_hide_timeout(notification_h noti, int *timeout);
  */
 int notification_set_hide_timeout(notification_h noti, int timeout);
 
+typedef void (*event_handler_cb)(notification_h noti, int event_type, void *userdata);
+
+/**
+ * @brief Posts a notification with event handler callback.
+ * @details The registered callback could be called when take notification event
+ *	    and the callback is automatically deleted when notification you posted is deleted.
+ * @since_tizen 3.0
+ * @privlevel public
+ * @privilege %http://tizen.org/privilege/notification
+ * @remarks Providing one event callback for each notification handle and distinguish the event by parameter.
+ * @param[in] noti	The notification handle
+ * @param[in] cb	The event handler callback function
+ * @param[in] userdata	The user data
+ * @return #NOTIFICATION_ERROR_NONE on success,
+ *         otherwise any other value on failure
+ * @retval #NOTIFICATION_ERROR_NONE         Success
+ * @retval #NOTIFICATION_ERROR_INVALID_PARAMETER Invalid parameter
+ * @retval #NOTIFICATION_ERROR_IO_ERROR I/O Error
+ * @retval #NOTIFICATION_PERMISSION_DENIED Permission denied
+ * @pre Notification handle should be created by notification_create().
+ * @par Sample code:
+ * @code
+#include <notification.h>
+
+static void event_callback(notification noti, int event_type, void *userdata)
+{
+	...
+}
+
+...
+{
+	notification_h noti = NULL;
+	int noti_err = NOTIFICATION_ERROR_NONE;
+
+	noti = notification_create(NOTIFICATION_TYPE_NOTI);
+	if (noti == NULL) {
+		return;
+	}
+
+	noti_err  = notification_post_with_event_cb(noti, event_callback, NULL);
+	if (noti_err != NOTIFICATION_ERROR_NONE) {
+		notification_free(noti);
+		return;
+	}
+
+	...
+
+	notification_free(noti);
+}
+ * @endcode
+ */
+int notification_post_with_event_cb(notification_h noti, event_handler_cb cb, void *userdata);
+int notification_post_with_event_cb_for_uid(notification_h noti, event_handler_cb cb,
+					    void *userdata, uid_t uid);
+
+/**
+ * @brief Sends a event type to an application that posted notification.
+ * @details Sends occured event from viewer application to an application.
+ * @since_tizen 3.0
+ * @privlevel public
+ * @privilege %http://tizen.org/privilege/notification
+ * @param[in] noti		The notification handle
+ * @param[in] event_type	The event type
+ * @return #NOTIFICATION_ERROR_NONE on success,
+ *         otherwise any other value on failure
+ * @retval #NOTIFICATION_ERROR_NONE         Success
+ * @retval #NOTIFICATION_ERROR_INVALID_PARAMETER Invalid parameter
+ * @retval #NOTIFICATION_ERROR_IO_ERROR I/O Error
+ * @retval #NOTIFICATION_PERMISSION_DENIED Permission denied
+ * @see #notification_event_type_e
+ * @see #notification_event_type_extension_e
+ * @par Sample code:
+ * @code
+#include <notification.h>
+...
+{
+	int noti_err;
+	int event_type;
+
+	...
+
+	event_type = NOTIFICATION_EVENT_TYPE_HIDDEN_BY_USER;
+
+	noti_err  = notification_send_event(noti, event_type);
+	if (noti_err != NOTIFICATION_ERROR_NONE) {
+		notification_free(noti);
+		return;
+	}
+}
+ * @endcode
+ */
+int notification_send_event(notification_h noti, int event_type);
+
+/**
+ * @brief Gets the event flag.
+ * @details When you create a notification handle, a default value of event flag is false.
+ *	    The flag automatically set true when post a notification using notification_post_with_event_cb().
+ *	    The viewer application for showing the notifications can use this API to check if it needs to call
+ *	    notification_send_event() to sends event of notification for making the callback of the processes
+ *	    that have posted notification to be called. Call notification_send_event()
+ *	    when the notification_get_event_flag() tells that the @event_flag is true.
+ * @since_tizen 3.0
+ * @param[in] noti	The notification handle
+ * @param[out] event_flag	The event flag
+ * @return #NOTIFICATION_ERROR_NONE on success,
+ *         otherwise any other value on failure
+ * @retval #NOTIFICATION_ERROR_NONE         Success
+ * @retval #NOTIFICATION_ERROR_INVALID_PARAMETER Invalid parameter
+ * @pre Notification handle should be created by notification_create().
+ * @par Sample code:
+ * @code
+#include <notification.h>
+...
+{
+	notification_h noti = NULL;
+	int noti_err;
+	bool event_flag;
+
+	noti = notification_create(NOTIFICATION_TYPE_NOTI);
+	if (noti == NULL) {
+		return;
+	}
+
+	noti_err  = notification_get_event_flag(noti, &event_flag);
+	if (noti_err != NOTIFICATION_ERROR_NONE) {
+		notification_free(noti);
+		return;
+	}
+
+	...
+
+	notification_free(noti);
+}
+ * @endcode
+ */
+int notification_get_event_flag(notification_h noti, bool *event_flag);
+
 /**
  * @brief This function translate localized texts
  * @param[in] noti The notification handle that is created by notification_create()

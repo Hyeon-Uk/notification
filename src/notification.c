@@ -1431,6 +1431,7 @@ static notification_h _notification_create(notification_type_e type)
 	noti->default_button_index = 0;
 	noti->type = NOTIFICATION_ONGOING_VALUE_TYPE_PERCENT;
 	noti->timeout = 0;
+	noti->event_flag = false;
 
 	if (getuid() >= REGULAR_UID_MIN) {
 		noti->caller_pkgname = notification_get_pkgname_by_pid();
@@ -1646,6 +1647,7 @@ EXPORT_API int notification_clone(notification_h noti, notification_h *clone)
 	new_noti->default_button_index = noti->default_button_index;
 	new_noti->timeout = noti->timeout;
 	new_noti->text_input_max_length = noti->text_input_max_length;
+	new_noti->event_flag = noti->event_flag;
 	new_noti->uid = noti->uid;
 
 	new_noti->app_icon_path = NULL;

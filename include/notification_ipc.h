@@ -47,6 +47,7 @@ int notification_ipc_make_system_setting_from_gvariant(
 int notification_dbus_init();
 int notification_ipc_monitor_init(uid_t uid);
 int notification_ipc_monitor_fini(void);
+void notification_ipc_event_monitor_fini(void);
 
 int notification_ipc_is_master_ready(void);
 int notification_ipc_add_deffered_task(void (*deferred_task_cb)(void *data),
@@ -94,7 +95,7 @@ GVariant *notification_ipc_make_gvariant_from_dnd_allow_exception(
 int notification_ipc_make_dnd_allow_exception_from_gvariant(
 		struct notification_system_setting_dnd_allow_exception *dnd_allow_exception,
 		GVariant *variant);
-
+int notification_ipc_send_event(notification_h noti, int event_type);
 #ifdef __cplusplus
 }
 #endif

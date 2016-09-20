@@ -43,6 +43,7 @@
 #include <notification_internal.h>
 
 typedef struct _notification_cb_info notification_cb_info_s;
+typedef struct _notification_event_cb_info notification_event_cb_info_s;
 
 typedef enum __notification_cb_type {
 	NOTIFICATION_CB_NORMAL = 1,
@@ -56,7 +57,14 @@ struct _notification_cb_info {
 	void *data;
 };
 
+struct _notification_event_cb_info {
+	int priv_id;
+	event_handler_cb cb;
+	void *userdata;
+};
+
 static GHashTable *_noti_cb_hash = NULL;
+static GList *__noti_event_cb_list = NULL;
 
 /* LCOV_EXCL_START */
 static void __free_changed_cb_info(gpointer data)
@@ -109,6 +117,70 @@ void notification_call_changed_cb_for_uid(notification_op *op_list, int op_num, 
 					type, op_list, op_num);
 		}
 	}
+}
+
+static gint __priv_id_compare(gconstpointer a, gconstpointer b)
+{
+	const notification_event_cb_info_s *info = NULL;
+
+	if (!a)
+		return -1;
+
+	info = (notification_event_cb_info_s *)a;
+
+	if (info->priv_id == GPOINTER_TO_UINT(b))
+		return 0;
+
+	return 1;
+}
+
+void notification_call_event_handler_cb(notification_h noti, int event_type)
+{
+	int ret;
+	int priv_id;
+	GList *find_list;
+	notification_event_cb_info_s *info;
+
+	if (__noti_event_cb_list == NULL)
+		return;
+
+	ret = notification_get_id(noti, NULL, &priv_id);
+	if (ret != NOTIFICATION_ERROR_NONE)
+		return;
+
+	__noti_event_cb_list = g_list_first(__noti_event_cb_list);
+	find_list = g_list_find_custom(__noti_event_cb_list, GUINT_TO_POINTER(priv_id),
+				       (GCompareFunc)__priv_id_compare);
+	if (find_list == NULL)
+		return;
+
+	info = g_list_nth_data(find_list, 0);
+	info->cb(noti, event_type, info->userdata);
+}
+
+void notification_delete_event_handler_cb(int priv_id)
+{
+	GList *delete_list;
+	notification_event_cb_info_s *info = NULL;
+
+	if (__noti_event_cb_list == NULL)
+		return;
+
+	__noti_event_cb_list = g_list_first(__noti_event_cb_list);
+	delete_list = g_list_find_custom(__noti_event_cb_list, GUINT_TO_POINTER(priv_id),
+					 (GCompareFunc)__priv_id_compare);
+
+	if (delete_list == NULL)
+		return;
+
+	info = g_list_nth_data(delete_list, 0);
+	__noti_event_cb_list = g_list_remove(g_list_first(__noti_event_cb_list), info);
+
+	if (info)
+		free(info);
+
+	if (__noti_event_cb_list == NULL)
+		notification_ipc_event_monitor_fini();
 }
 
 EXPORT_API int notification_add_deferred_task(
@@ -1408,6 +1480,91 @@ EXPORT_API int notification_get_text_input_max_length(notification_h noti, int *
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 
 	*text_input_max_length = noti->text_input_max_length;
+
+	return NOTIFICATION_ERROR_NONE;
+}
+
+EXPORT_API int notification_post_with_event_cb_for_uid(notification_h noti, event_handler_cb cb,
+							void *userdata, uid_t uid)
+{
+	int ret;
+	int priv_id;
+	notification_event_cb_info_s *info = NULL;
+	GList *find_list;
+
+	if (noti == NULL || cb == NULL)
+		return NOTIFICATION_ERROR_INVALID_PARAMETER;
+
+	if (noti->type <= NOTIFICATION_TYPE_NONE || noti->type >= NOTIFICATION_TYPE_MAX)
+		return NOTIFICATION_ERROR_INVALID_PARAMETER;
+
+	noti->insert_time = time(NULL);
+	noti->event_flag = true;
+	noti->uid = uid;
+
+	ret = notification_ipc_request_insert(noti, &priv_id);
+	if (ret != NOTIFICATION_ERROR_NONE)
+		return ret;
+
+	noti->priv_id = priv_id;
+
+	__noti_event_cb_list = g_list_first(__noti_event_cb_list);
+	find_list = g_list_find_custom(__noti_event_cb_list, GUINT_TO_POINTER(priv_id),
+				       (GCompareFunc)__priv_id_compare);
+
+	if (find_list) {
+		info = g_list_nth_data(find_list, 0);
+		info->cb = cb;
+		info->userdata = userdata;
+	} else {
+		info = (notification_event_cb_info_s *)malloc(sizeof(notification_cb_info_s));
+		if (info == NULL) {
+			NOTIFICATION_ERR("malloc failed");
+			return NOTIFICATION_ERROR_OUT_OF_MEMORY;
+		}
+		info->priv_id = priv_id;
+		info->cb = cb;
+		info->userdata = userdata;
+		__noti_event_cb_list = g_list_append(__noti_event_cb_list, info);
+	}
+
+	return ret;
+}
+
+EXPORT_API int notification_post_with_event_cb(notification_h noti, event_handler_cb cb, void *userdata)
+{
+	return notification_post_with_event_cb_for_uid(noti, cb, userdata, getuid());
+}
+
+EXPORT_API int notification_send_event(notification_h noti, int event_type)
+{
+	int ret;
+	bool event_flag;
+
+	if (noti == NULL)
+		return NOTIFICATION_ERROR_INVALID_PARAMETER;
+
+	if (!((event_type >= NOTIFICATION_EVENT_TYPE_CLICK_ON_BUTTON_1
+	     && event_type < NOTIFICATION_EVENT_TYPE_MAX)
+	     || (event_type >= NOTIFICATION_EVENT_TYPE_HIDDEN_BY_USER
+	     && event_type <= NOTIFICATION_EVENT_TYPE_HIDDEN_BY_TIMEOUT)))
+		return NOTIFICATION_ERROR_INVALID_PARAMETER;
+
+	ret = notification_get_event_flag(noti, &event_flag);
+	if (ret != NOTIFICATION_ERROR_NONE || event_flag == false)
+		return NOTIFICATION_ERROR_INVALID_PARAMETER;
+
+	ret = notification_ipc_send_event(noti, event_type);
+
+	return ret;
+}
+
+EXPORT_API int notification_get_event_flag(notification_h noti, bool *flag)
+{
+	if (noti == NULL || flag == NULL)
+		return NOTIFICATION_ERROR_INVALID_PARAMETER;
+
+	*flag = noti->event_flag;
 
 	return NOTIFICATION_ERROR_NONE;
 }

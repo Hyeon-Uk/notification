@@ -35,6 +35,7 @@
 #define PROVIDER_BUS_NAME "org.tizen.data_provider_service"
 #define PROVIDER_OBJECT_PATH "/org/tizen/data_provider_service"
 #define PROVIDER_NOTI_INTERFACE_NAME "org.tizen.data_provider_noti_service"
+#define PROVIDER_NOTI_EVENT_INTERFACE_NAME "org.tizen.data_provider_noti_event_service"
 
 #define DBUS_SERVICE_DBUS "org.freedesktop.DBus"
 #define DBUS_PATH_DBUS "/org/freedesktop/DBus"
@@ -44,6 +45,7 @@
 static const gchar *_bus_name = NULL;
 static GDBusConnection *_gdbus_conn = NULL;
 static int monitor_id = 0;
+static int event_monitor_id = 0;
 static int provider_monitor_id = 0;
 static int is_master_started = 0;
 
@@ -509,6 +511,88 @@ static void _handle_noti_notify(GDBusConnection *connection,
 }
 /* LCOV_EXCL_STOP */
 
+static void _send_event(GVariant *parameters)
+{
+	int ret;
+	int event_type;
+	notification_h noti;
+	GVariant *coupled_body;
+	GVariant *body;
+
+	noti = notification_create(NOTIFICATION_TYPE_NOTI);
+	if (noti == NULL) {
+		NOTIFICATION_ERR("failed to create a notification");
+		return;
+	}
+
+	g_variant_get(parameters, "(vi)", &coupled_body, &event_type);
+	g_variant_get(coupled_body, "(v)", &body);
+
+	ret = notification_ipc_make_noti_from_gvariant(noti, body);
+	g_variant_unref(coupled_body);
+	g_variant_unref(body);
+	if (ret != NOTIFICATION_ERROR_NONE) {
+		NOTIFICATION_ERR("failed to make notification handle from gvariant");
+		return;
+	}
+
+	notification_call_event_handler_cb(noti, event_type);
+}
+
+static void _delete_event(GVariant *parameters)
+{
+	int priv_id;
+
+	g_variant_get(parameters, "(i)", &priv_id);
+	notification_delete_event_handler_cb(priv_id);
+}
+
+static void _handle_noti_event_handler_notify(GDBusConnection *connection,
+		const gchar     *sender_name,
+		const gchar     *object_path,
+		const gchar     *interface_name,
+		const gchar     *signal_name,
+		GVariant        *parameters,
+		gpointer         user_data)
+{
+	NOTIFICATION_DBG("own_name : %s signal_name: %s",
+			 g_dbus_connection_get_unique_name(connection), signal_name);
+
+	if (g_strcmp0(signal_name, "send_event") == 0)
+		_send_event(parameters);
+	else if (g_strcmp0(signal_name, "delete_noti") == 0)
+		_delete_event(parameters);
+}
+
+static int _dbus_event_handler_signal_init(void)
+{
+	int id;
+	int ret = NOTIFICATION_ERROR_NONE;
+
+	if (event_monitor_id == 0) {
+		id = g_dbus_connection_signal_subscribe(_gdbus_conn,
+				PROVIDER_BUS_NAME,
+				PROVIDER_NOTI_EVENT_INTERFACE_NAME,	/*	interface */
+				NULL,					/*	member */
+				PROVIDER_OBJECT_PATH,			/*	path */
+				NULL,					/*	arg0 */
+				G_DBUS_SIGNAL_FLAGS_NONE,
+				_handle_noti_event_handler_notify,
+				NULL,
+				NULL);
+
+		NOTIFICATION_DBG("subscribe id : %d", id);
+		if (id == 0) {
+			ret = NOTIFICATION_ERROR_IO_ERROR;
+			NOTIFICATION_ERR("Failed to subscribe _dbus_event_handler_signal");
+		} else {
+			event_monitor_id = id;
+		}
+	}
+
+	return ret;
+}
+
 static int _dbus_signal_init()
 {
 	int id;
@@ -702,6 +786,7 @@ int notification_ipc_request_insert(notification_h noti, int *priv_id)
 {
 	int result;
 	int id = NOTIFICATION_PRIV_ID_NONE;
+	bool event_flag;
 	GDBusMessage *reply = NULL;
 	GVariant *body;
 	GVariant *reply_body;
@@ -710,6 +795,16 @@ int notification_ipc_request_insert(notification_h noti, int *priv_id)
 	if (result != NOTIFICATION_ERROR_NONE) {
 		NOTIFICATION_ERR("Can't init dbus %d", result);
 		return result;
+	}
+
+	result = notification_get_event_flag(noti, &event_flag);
+	if (result != NOTIFICATION_ERROR_NONE)
+		return result;
+
+	if (event_flag == true && event_monitor_id == 0) {
+		result = _dbus_event_handler_signal_init();
+		if (result != NOTIFICATION_ERROR_NONE)
+			return result;
 	}
 
 	/* Initialize private ID */
@@ -1516,6 +1611,32 @@ int notification_ipc_get_noti_block_state(const char *pkgname, int *do_not_distu
 	return ret;
 }
 
+int notification_ipc_send_event(notification_h noti, int event_type)
+{
+	int ret;
+	GVariant *body = NULL;
+	GDBusMessage *reply = NULL;
+
+	ret = _dbus_init();
+	if (ret != NOTIFICATION_ERROR_NONE) {
+		NOTIFICATION_ERR("Can't init dbus %d", ret);
+		return ret;
+	}
+
+	body = notification_ipc_make_gvariant_from_noti(noti, false);
+	if (body == NULL) {
+		NOTIFICATION_ERR("Can't make gvariant to noti");
+		return NOTIFICATION_ERROR_OUT_OF_MEMORY;
+	}
+
+	ret = _send_sync_noti(g_variant_new("(vi)", body, event_type), &reply, "send_noti_event");
+
+	if (reply)
+		g_object_unref(reply);
+
+	return ret;
+}
+
 EXPORT_API GVariant *notification_ipc_make_gvariant_from_noti(notification_h noti, bool translate)
 {
 	NOTIFICATION_DBG("make gvariant from noti");
@@ -1714,6 +1835,7 @@ EXPORT_API GVariant *notification_ipc_make_gvariant_from_noti(notification_h not
 	g_variant_builder_add(&builder, "{iv}", NOTIFICATION_DATA_TYPE_AUTO_REMOVE, g_variant_new_int32(noti->auto_remove));
 	g_variant_builder_add(&builder, "{iv}", NOTIFICATION_DATA_TYPE_DEFAULT_BUTTON, g_variant_new_int32(noti->default_button_index));
 	g_variant_builder_add(&builder, "{iv}", NOTIFICATION_DATA_TYPE_TIMEOUT, g_variant_new_int32(noti->timeout));
+	g_variant_builder_add(&builder, "{iv}", NOTIFICATION_DATA_TYPE_EVENT_FLAG, g_variant_new_int32(noti->event_flag));
 	g_variant_builder_add(&builder, "{iv}", NOTIFICATION_DATA_TYPE_UID, g_variant_new_int32(noti->uid));
 
 	result_body = g_variant_builder_end(&builder);
@@ -1866,6 +1988,7 @@ EXPORT_API int notification_ipc_make_noti_from_gvariant(notification_h noti,
 	_variant_dict_lookup(dict, NOTIFICATION_DATA_TYPE_AUTO_REMOVE, "i", &noti->auto_remove);
 	_variant_dict_lookup(dict, NOTIFICATION_DATA_TYPE_DEFAULT_BUTTON, "i", &noti->default_button_index);
 	_variant_dict_lookup(dict, NOTIFICATION_DATA_TYPE_TIMEOUT, "i", &noti->timeout);
+	_variant_dict_lookup(dict, NOTIFICATION_DATA_TYPE_EVENT_FLAG, "i", &noti->event_flag);
 	_variant_dict_lookup(dict, NOTIFICATION_DATA_TYPE_UID, "i", &noti->uid);
 
 	noti->caller_pkgname = _dup_string(caller_pkgname);
@@ -2175,3 +2298,11 @@ int notification_ipc_monitor_fini(void)
 	return  _ipc_monitor_deregister();
 }
 
+void notification_ipc_event_monitor_fini(void)
+{
+	if (event_monitor_id == 0)
+		return;
+
+	g_dbus_connection_signal_unsubscribe(_gdbus_conn, event_monitor_id);
+	event_monitor_id = 0;
+}

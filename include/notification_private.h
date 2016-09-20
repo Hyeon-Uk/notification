@@ -96,6 +96,7 @@ struct _notification {
 	notification_button_index_e default_button_index;
 	int timeout;
 	int text_input_max_length;
+	bool event_flag;
 	uid_t uid;
 };
 
@@ -155,11 +156,14 @@ typedef enum notification_data_type {
 	NOTIFICATION_DATA_TYPE_DEFAULT_BUTTON,
 	NOTIFICATION_DATA_TYPE_TIMEOUT,
 	NOTIFICATION_DATA_TYPE_TEXT_INPUT_MAX_LENGTH,
+	NOTIFICATION_DATA_TYPE_EVENT_FLAG,
 	NOTIFICATION_DATA_TYPE_UID,
 } notification_data_type_e;
 
 void notification_call_changed_cb_for_uid(notification_op *op_list, int op_num, uid_t uid);
 void notification_call_dnd_changed_cb_for_uid(int do_not_disturb, uid_t uid);
+void notification_call_event_handler_cb(notification_h noti, int event_type);
+void notification_delete_event_handler_cb(int priv_id);
 char *notification_get_pkgname_by_pid(void);
 
 #endif /* __NOTIFICATION_PRIVATE_H__ */
