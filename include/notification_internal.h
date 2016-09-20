@@ -921,7 +921,7 @@ int notification_set_ongoing_value_type(notification_h noti, notification_ongoin
 }
  * @endcode
  */
-int nofication_get_ongoing_time(notification_h noti, int *current, int *duration);
+int notification_get_ongoing_time(notification_h noti, int *current, int *duration);
 
 /**
  * @brief Sets the notification ongoing time when ongoint type value is set NOTIFICATION_ONGOING_VALUE_TYPE_TIME.
@@ -961,7 +961,7 @@ int nofication_get_ongoing_time(notification_h noti, int *current, int *duration
 }
  * @endcode
  */
-int nofication_set_ongoing_time(notification_h noti, int current, int duration);
+int notification_set_ongoing_time(notification_h noti, int current, int duration);
 
 /**
  * @brief Gets the time that notification is hidden.
@@ -996,7 +996,7 @@ int nofication_set_ongoing_time(notification_h noti, int current, int duration);
 }
  * @endcode
  */
-int nofication_get_hide_timeout(notification_h noti, int *timeout);
+int notification_get_hide_timeout(notification_h noti, int *timeout);
 
 /**
  * @brief Sets the time that notification is hidden.
@@ -1030,7 +1030,7 @@ int nofication_get_hide_timeout(notification_h noti, int *timeout);
 }
  * @endcode
  */
-int nofication_set_hide_timeout(notification_h noti, int timeout);
+int notification_set_hide_timeout(notification_h noti, int timeout);
 
 /**
  * @brief This function translate localized texts

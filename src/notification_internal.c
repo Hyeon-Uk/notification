@@ -1354,7 +1354,7 @@ EXPORT_API int notification_set_ongoing_value_type(notification_h noti, notifica
 	return NOTIFICATION_ERROR_NONE;
 }
 
-EXPORT_API int nofication_get_ongoing_time(notification_h noti, int *current, int *duration)
+EXPORT_API int notification_get_ongoing_time(notification_h noti, int *current, int *duration)
 {
 	if (noti == NULL || current == NULL || duration == NULL)
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
@@ -1376,7 +1376,7 @@ EXPORT_API int notification_set_ongoing_time(notification_h noti, int current, i
 	return NOTIFICATION_ERROR_NONE;
 }
 
-EXPORT_API int nofication_get_hide_timeout(notification_h noti, int *timeout)
+EXPORT_API int notification_get_hide_timeout(notification_h noti, int *timeout)
 {
 	if (noti == NULL || timeout == NULL)
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
@@ -1386,7 +1386,7 @@ EXPORT_API int nofication_get_hide_timeout(notification_h noti, int *timeout)
 	return NOTIFICATION_ERROR_NONE;
 }
 
-EXPORT_API int nofication_set_hide_timeout(notification_h noti, int timeout)
+EXPORT_API int notification_set_hide_timeout(notification_h noti, int timeout)
 {
 	if (noti == NULL)
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
