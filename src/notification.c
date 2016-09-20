@@ -1407,7 +1407,7 @@ static notification_h _notification_create(notification_type_e type)
 		return NULL;
 	}
 
-	noti = (notification_h) calloc(1, sizeof(struct _notification));
+	noti = (notification_h)calloc(1, sizeof(struct _notification));
 	if (noti == NULL) {
 		NOTIFICATION_ERR("NO MEMORY : noti == NULL");
 		set_last_result(NOTIFICATION_ERROR_OUT_OF_MEMORY);
@@ -1451,7 +1451,6 @@ static notification_h _notification_create(notification_type_e type)
 					err_app_manager, domain_name);
 			goto out;
 		}
-
 
 		err_app_manager = package_info_create(noti->caller_pkgname, &package_info);
 
