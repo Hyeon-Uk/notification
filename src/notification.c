@@ -1645,7 +1645,7 @@ EXPORT_API int notification_clone(notification_h noti, notification_h *clone)
 	new_noti->auto_remove = noti->auto_remove;
 	new_noti->default_button_index = noti->default_button_index;
 	new_noti->timeout = noti->timeout;
-
+	new_noti->text_input_max_length = noti->text_input_max_length;
 	new_noti->uid = noti->uid;
 
 	new_noti->app_icon_path = NULL;
@@ -1905,4 +1905,24 @@ EXPORT_API int notification_get_noti_block_state(notification_block_state_e *sta
 		free(pkgname);
 
 	return ret;
+}
+
+EXPORT_API int notification_set_text_input(notification_h noti, int text_input_max_length)
+{
+	if (noti == NULL)
+		return NOTIFICATION_ERROR_INVALID_PARAMETER;
+
+	noti->text_input_max_length = text_input_max_length;
+
+	return NOTIFICATION_ERROR_NONE;
+}
+
+EXPORT_API int notification_get_text_input_max_length(notification_h noti, int *text_input_max_length)
+{
+	if (noti == NULL || text_input_max_length == NULL)
+		return NOTIFICATION_ERROR_INVALID_PARAMETER;
+
+	*text_input_max_length = noti->text_input_max_length;
+
+	return NOTIFICATION_ERROR_NONE;
 }

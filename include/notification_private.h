@@ -95,6 +95,7 @@ struct _notification {
 	bool auto_remove;
 	notification_button_index_e default_button_index;
 	int timeout;
+	int text_input_max_length;
 	uid_t uid;
 };
 
@@ -153,6 +154,7 @@ typedef enum notification_data_type {
 	NOTIFICATION_DATA_TYPE_AUTO_REMOVE,
 	NOTIFICATION_DATA_TYPE_DEFAULT_BUTTON,
 	NOTIFICATION_DATA_TYPE_TIMEOUT,
+	NOTIFICATION_DATA_TYPE_TEXT_INPUT_MAX_LENGTH,
 	NOTIFICATION_DATA_TYPE_UID,
 } notification_data_type_e;
 

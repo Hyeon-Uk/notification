@@ -84,6 +84,7 @@ typedef enum _notification_event_type {
 	NOTIFICATION_EVENT_TYPE_CLICK_ON_BUTTON_6  = 5,  /**< Event type : Click on button 6 */
 	NOTIFICATION_EVENT_TYPE_CLICK_ON_ICON      = 6,  /**< Event type : Click on icon */
 	NOTIFICATION_EVENT_TYPE_CLICK_ON_THUMBNAIL = 7,  /**< Event type : Click on thumbnail */
+	NOTIFICATION_EVENT_TYPE_CLICK_ON_TEXT_INPUT_BUTTON = 8, /**< Event type : Click on text_input button(Since 3.0) */
 	NOTIFICATION_EVENT_TYPE_MAX,
 } notification_event_type_e;
 
@@ -197,6 +198,11 @@ typedef enum _notification_text_type {
 								/**< Text on button 5 */
 	NOTIFICATION_TEXT_TYPE_BUTTON_6,
 								/**< Text on button 6 */
+	NOTIFICATION_TEXT_TYPE_TEXT_INPUT_PLACEHOLDER,
+								/**< Guide text on the message reply box(Since 3.0) */
+	NOTIFICATION_TEXT_TYPE_TEXT_INPUT_BUTTON,
+								/**< Text on button the on message reply box(Since 3.0) */
+
 	NOTIFICATION_TEXT_TYPE_MAX,
 } notification_text_type_e;
 
@@ -242,6 +248,8 @@ typedef enum _notification_image_type {
 						/**< Image for button 5 */
 	NOTIFICATION_IMAGE_TYPE_BUTTON_6,
 						/**< Image for button 6 */
+	NOTIFICATION_IMAGE_TYPE_TEXT_INPUT_BUTTON,
+						/**< Image for message reply(Since 3.0) */
 	NOTIFICATION_IMAGE_TYPE_MAX,
 } notification_image_type_e;
 

@@ -1054,6 +1054,30 @@ int notification_delete_all_for_uid(notification_type_e type, uid_t uid);
 notification_h notification_load_by_tag_for_uid(const char *tag, uid_t uid);
 notification_h notification_create_from_package_template(const char *pkgname,
 					const char *template_name);
+/**
+ * @brief Gets a max length of text input.
+ * @since_tizen 3.0
+ * @return #NOTIFICATION_ERROR_NONE on success,
+ *         otherwise any other value on failure
+ * @retval #NOTIFICATION_ERROR_NONE	Success
+ * @retval #NOTIFICATION_ERROR_INVALID_PARAMETER	Invalid parameter
+ * @par Sample code:
+ * @code
+#include <notification.h>
+...
+{
+	int noti_err = NOTIFICATION_ERROR_NONE;
+	int text_input_max_length;
+
+	noti_err = notification_get_text_input_max_length(noti, &text_input_max_length);
+	if (noti_err != NOTIFICATION_ERROR_NONE) {
+		return;
+	}
+	...
+ }
+ * @endcode
+ */
+int notification_get_text_input_max_length(notification_h noti, int *text_input_max_length);
 
 /**
  * @}

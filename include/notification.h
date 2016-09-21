@@ -1557,6 +1557,110 @@ notification_h notification_create_from_template(const char *template_name);
 int notification_get_noti_block_state(notification_block_state_e *state);
 
 /**
+ * @brief Sets a text input box to reply directly on the notification.
+ * @details When you add a text input to the active notification, the notification UI will show a text input with a button.
+ *          So, the user can enter any text and press the button to confirm the text as a input.
+ *          You can edit some UI component that is related to the text input.
+ *          First, you can add placeholder text to guide the user using notification_set_text() with #NOTIFICATION_TEXT_TYPE_TEXT_INPUT_PLACEHOLDER type.
+ *          You also can edit button for the text input.
+ *          For setting just a text to the button, you can set the text using notification_set_text() with #NOTIFICATION_TEXT_TYPE_TEXT_INPUT_BUTTON type.
+ *          If you want to show image button, you can set an image for the button using notification_set_image() with #NOTIFICATION_IMAGE_TYPE_TEXT_INPUT_BUTTON type.
+ *
+ *          Note that You should set an app_control for handling the event for user input using notification_set_event_handler().
+ *          #NOTIFICATION_EVENT_TYPE_CLICK_ON_TEXT_INPUT_BUTTON is the event type for the text input.
+ *          You can get the text the user enters in the app_control handle that is passed as a result of the event.
+ *          The app_control will contain APP_CONTROL_DATA_TEXT key, so you can get the text using app_control_get_extra_data() using APP_CONTROL_DATA_TEXT key.
+ *          The value will contain the text user enters.
+ * @since_tizen 3.0
+ * @return #NOTIFICATION_ERROR_NONE on success,
+ *         otherwise any other value on failure
+ * @retval #NOTIFICATION_ERROR_NONE         Success
+ * @retval #NOTIFICATION_ERROR_INVALID_PARAMETER Invalid parameter
+ * @par Sample code:
+ * @code
+#include <notification.h>
+...
+{
+	notification_h noti = NULL;
+	int noti_err = NOTIFICATION_ERROR_NONE;
+	app_control = NULL;
+
+	noti = notification_create(NOTIFICATION_TYPE_NOTI);
+	if (noti == NULL) {
+		return;
+	}
+	...
+
+	noti_err = notification_set_text_input(noti, 160);
+	if (noti_err != NOTIFICATION_ERROR_NONE) {
+		return;
+	}
+
+	noti_err = notification_set_text(noti,
+			NOTIFICATION_TEXT_TYPE_TEXT_INPUT_PLACEHOLDER,
+			"Text message",
+			NULL,
+			NOTIFICATION_VARIABLE_TYPE_NONE);
+	if (noti_err != NOTIFICATION_ERROR_NONE) {
+		return;
+	}
+
+	noti_err = notification_set_text(noti,
+			NOTIFICATION_TEXT_TYPE_TEXT_INPUT_BUTTON,
+			"SEND",
+			NULL,
+			NOTIFICATION_VARIABLE_TYPE_NONE);
+	if (noti_err != NOTIFICATION_ERROR_NONE) {
+		return;
+	}
+
+	noti_err = notification_set_image(noti,
+			NOTIFICATION_IMAGE_TYPE_TEXT_INPUT_BUTTON,
+			TEXT_INPUT_BUTTON_PATH);
+	if (noti_err != NOTIFICATION_ERROR_NONE) {
+		return;
+	}
+	...
+
+
+	noti_err = app_control_create(&app_control);
+	if (noti_err != APP_CONTROL_ERROR_NONE) {
+		return;
+	}
+
+	noti_err = app_control_set_app_id(app_contorl, appid);
+	if (noti_err != APP_CONTROL_ERROR_NONE) {
+		return;
+	}
+
+	noti_err = app_control_set_operation(app_contorl, APP_CONTROL_OPERATION_DEFAULT);
+	if (noti_err != APP_CONTROL_ERROR_NONE) {
+		return;
+	}
+
+	noti_err = notification_set_event_handler(noti,
+			NOTIFICATION_EVENT_TYPE_CLICK_ON_TEXT_INPUT_BUTTON,
+			app_control);
+	if (noti_err != NOTIFICATION_ERROR_NONE) {
+		return;
+	}
+
+	noti_err = app_control_destroy(app_control);
+	if (noti_err != APP_CONTROL_ERROR_NONE) {
+		return;
+	}
+
+	noti_err  = notification_post(noti);
+	if(noti_err != NOTIFICATION_ERROR_NONE) {
+		return;
+	}
+
+}
+ * @endcode
+ */
+int notification_set_text_input(notification_h noti, int text_input_max_length);
+
+/**
  * @}
  */
 
