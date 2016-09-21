@@ -28,7 +28,15 @@ extern "C" {
 #endif
 
 /**
- * @brief Enumeration for notification ongoing value type
+ * @addtogroup NOTIFICATION_INTERNAL
+ * @{
+ */
+#define NOTIFICATION_GLOBAL_UID -1
+#define NOTIFICATION_DISPLAY_APP_HEADS_UP NOTIFICATION_DISPLAY_APP_ACTIVE /* To avoid build error */
+#define NOTIFICATION_ERROR (notification_error_quark())
+
+/**
+ * @brief Enumeration for notification ongoing value type.
  * @since_tizen 3.0
  */
 typedef enum _notification_ongoing_value_type {
@@ -36,18 +44,16 @@ typedef enum _notification_ongoing_value_type {
 	NOTIFICATION_ONGOING_VALUE_TYPE_TIME,
 } notification_ongoing_value_type_e;
 
+/**
+ * @brief Enumeration for extension event type on notification.
+ * @since_tizen 3.0
+ * @see #notification_event_type_e
+ */
 typedef enum _notification_event_type_extension {
 	NOTIFICATION_EVENT_TYPE_HIDDEN_BY_USER = 100,
 	NOTIFICATION_EVENT_TYPE_HIDDEN_BY_TIMEOUT = 101,
 } notification_event_type_extension_e;
 
-/**
- * @addtogroup NOTIFICATION_INTERNAL
- * @{
- */
-#define NOTIFICATION_GLOBAL_UID -1
-#define NOTIFICATION_DISPLAY_APP_HEADS_UP NOTIFICATION_DISPLAY_APP_ACTIVE /* To avoid build error */
-#define NOTIFICATION_ERROR (notification_error_quark())
 GQuark notification_error_quark(void);
 
 /**
