@@ -139,10 +139,10 @@ create	table if not exists noti_list ( \
 			do_not_disturb INTEGER DEFAULT 0, \
 			visibility_class INTEGER DEFAULT 0, \
 			dnd_schedule_enabled INTEGER DEFAULT 0, \
-			dnd_schedule_day INTEGER DEFAULT 0, \
-			dnd_start_hour INTEGER DEFAULT 0, \
+			dnd_schedule_day INTEGER DEFAULT 62, \
+			dnd_start_hour INTEGER DEFAULT 22, \
 			dnd_start_min INTEGER DEFAULT 0, \
-			dnd_end_hour INTEGER DEFAULT 0, \
+			dnd_end_hour INTEGER DEFAULT 8, \
 			dnd_end_min INTEGER DEFAULT 0, \
 			lock_screen_content_level INTEGER DEFAULT 0, \
 			UNIQUE (uid) \
