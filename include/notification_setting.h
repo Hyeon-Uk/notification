@@ -51,7 +51,7 @@ int notification_setting_get_setting(notification_setting_h *setting);
 
 	...
 
-	noti_err = notifiacation_setting_get_visibility_class(setting, &value);
+	noti_err = notification_setting_get_visibility_class(setting, &value);
 	if (noti_err != NOTIFICATION_ERROR_NONE) {
 		return;
 	}
@@ -89,7 +89,7 @@ int notification_setting_get_visibility_class(notification_setting_h setting, in
 
 	value = true;	// or false
 
-	noti_err = notifiacation_setting_set_visibility_class(setting, value);
+	noti_err = notification_setting_set_visibility_class(setting, value);
 	if (noti_err != NOTIFICATION_ERROR_NONE) {
 		return;
 	}
@@ -125,7 +125,7 @@ int notification_setting_set_visibility_class(notification_setting_h setting, in
 
 	...
 
-	noti_err = notifiacation_setting_update_setting(setting);
+	noti_err = notification_setting_update_setting(setting);
 	if (noti_err != NOTIFICATION_ERROR_NONE) {
 		return;
 	}
@@ -158,7 +158,7 @@ int notification_setting_update_setting(notification_setting_h setting);
 
 	...
 
-	noti_err = notifiacation_setting_free_notification(setting);
+	noti_err = notification_setting_free_notification(setting);
 	if (noti_err != NOTIFICATION_ERROR_NONE) {
 		return;
 	}
