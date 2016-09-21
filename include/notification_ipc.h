@@ -89,7 +89,7 @@ int notification_ipc_request_create_from_package_template(notification_h noti,
 		const char *pkgname, const char *template_name);
 int notification_ipc_get_noti_block_state(const char *pkgname, int *do_not_disturb, int *do_not_disturb_except,
 					  int *allow_to_notify, uid_t uid);
-GVariant * notification_ipc_make_gvariant_from_dnd_allow_exception(
+GVariant *notification_ipc_make_gvariant_from_dnd_allow_exception(
 		struct notification_system_setting_dnd_allow_exception *dnd_allow_exception);
 int notification_ipc_make_dnd_allow_exception_from_gvariant(
 		struct notification_system_setting_dnd_allow_exception *dnd_allow_exception,

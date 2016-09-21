@@ -577,7 +577,7 @@ int notification_setting_set_lock_screen_content(notification_setting_h setting,
 
 	...
 
-	noti_err = notifiacation_system_setting_load_system_setting(setting);
+	noti_err = notification_system_setting_load_system_setting(&setting);
 	if (noti_err != NOTIFICATION_ERROR_NONE) {
 		return;
 	}
@@ -1205,7 +1205,7 @@ int notification_system_setting_set_lock_screen_content(notification_system_sett
 	int value;
 	notification_system_setting_h setting = NULL;
 	...
-	noti_err = notifiacation_system_setting_load_system_setting(&setting);
+	noti_err = notification_system_setting_load_system_setting(&setting);
 	if (noti_err != NOTIFICATION_ERROR_NONE) {
 		return;
 	}
@@ -1247,7 +1247,7 @@ int notification_system_setting_get_dnd_allow_exceptions(notification_system_set
 	int value = 0;
 	notification_system_setting_h setting = NULL;
 	...
-	noti_err = notifiacation_system_setting_load_system_setting(&setting);
+	noti_err = notification_system_setting_load_system_setting(&setting);
 	if (noti_err != NOTIFICATION_ERROR_NONE) {
 		return;
 	}
