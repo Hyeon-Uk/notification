@@ -1401,3 +1401,13 @@ EXPORT_API int notification_set_hide_timeout(notification_h noti, int timeout)
 
 	return NOTIFICATION_ERROR_NONE;
 }
+
+EXPORT_API int notification_get_text_input_max_length(notification_h noti, int *text_input_max_length)
+{
+	if (noti == NULL || text_input_max_length == NULL)
+		return NOTIFICATION_ERROR_INVALID_PARAMETER;
+
+	*text_input_max_length = noti->text_input_max_length;
+
+	return NOTIFICATION_ERROR_NONE;
+}

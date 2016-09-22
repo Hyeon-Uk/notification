@@ -1154,7 +1154,7 @@ EXPORT_API int notification_set_event_handler(notification_h noti, notification_
 	}
 
 	if (event_type < NOTIFICATION_EVENT_TYPE_CLICK_ON_BUTTON_1
-		|| event_type > NOTIFICATION_EVENT_TYPE_CLICK_ON_THUMBNAIL) {
+		|| event_type >= NOTIFICATION_EVENT_TYPE_MAX) {
 		NOTIFICATION_ERR("NOTIFICATION_ERROR_INVALID_PARAMETER");
 		err = NOTIFICATION_ERROR_INVALID_PARAMETER;
 		goto out;
@@ -1193,7 +1193,7 @@ EXPORT_API int notification_get_event_handler(notification_h noti, notification_
 	}
 
 	if (event_type < NOTIFICATION_EVENT_TYPE_CLICK_ON_BUTTON_1
-		|| event_type > NOTIFICATION_EVENT_TYPE_CLICK_ON_THUMBNAIL) {
+		|| event_type >= NOTIFICATION_EVENT_TYPE_MAX) {
 		NOTIFICATION_ERR("NOTIFICATION_ERROR_INVALID_PARAMETER");
 		err = NOTIFICATION_ERROR_INVALID_PARAMETER;
 		goto out;
@@ -1913,16 +1913,6 @@ EXPORT_API int notification_set_text_input(notification_h noti, int text_input_m
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 
 	noti->text_input_max_length = text_input_max_length;
-
-	return NOTIFICATION_ERROR_NONE;
-}
-
-EXPORT_API int notification_get_text_input_max_length(notification_h noti, int *text_input_max_length)
-{
-	if (noti == NULL || text_input_max_length == NULL)
-		return NOTIFICATION_ERROR_INVALID_PARAMETER;
-
-	*text_input_max_length = noti->text_input_max_length;
 
 	return NOTIFICATION_ERROR_NONE;
 }

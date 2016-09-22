@@ -1628,12 +1628,12 @@ int notification_get_noti_block_state(notification_block_state_e *state);
 		return;
 	}
 
-	noti_err = app_control_set_app_id(app_contorl, appid);
+	noti_err = app_control_set_app_id(app_control, appid);
 	if (noti_err != APP_CONTROL_ERROR_NONE) {
 		return;
 	}
 
-	noti_err = app_control_set_operation(app_contorl, APP_CONTROL_OPERATION_DEFAULT);
+	noti_err = app_control_set_operation(app_control, APP_CONTROL_OPERATION_DEFAULT);
 	if (noti_err != APP_CONTROL_ERROR_NONE) {
 		return;
 	}
