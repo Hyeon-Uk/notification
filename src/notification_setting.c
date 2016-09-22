@@ -995,6 +995,8 @@ EXPORT_API int notification_system_setting_init_system_setting_table(uid_t uid)
 		NOTIFICATION_DBG("Notification system setting table is already initialized.");
 	} else {
 		NOTIFICATION_DBG("Notification system setting table is not initialized yet");
+
+		/* notification_system_setting */
 		sqlite3_ret = sqlite3_prepare_v2(db, "INSERT INTO notification_system_setting (uid) VALUES (?) ", -1, &db_statement, NULL);
 		if (sqlite3_ret != SQLITE_OK) {
 			NOTIFICATION_ERR("sqlite3_prepare_v2 failed [%d][%s]", sqlite3_ret, sqlite3_errmsg(db));
@@ -1002,7 +1004,24 @@ EXPORT_API int notification_system_setting_init_system_setting_table(uid_t uid)
 			goto out;
 		}
 
-		sqlite3_bind_int(db_statement, field_index++, uid);
+		sqlite3_bind_int(db_statement, field_index, uid);
+
+		sqlite3_ret = sqlite3_step(db_statement);
+		if (sqlite3_ret != SQLITE_OK && sqlite3_ret != SQLITE_DONE) {
+			NOTIFICATION_ERR("sqlite3_step failed [%d][%s]", sqlite3_ret, sqlite3_errmsg(db));
+			err = NOTIFICATION_ERROR_FROM_DB;
+			goto out;
+		}
+
+		/* dnd_allow_exception */
+		sqlite3_ret = sqlite3_prepare_v2(db, "INSERT INTO dnd_allow_exception (uid) VALUES (?) ", -1, &db_statement, NULL);
+		if (sqlite3_ret != SQLITE_OK) {
+			NOTIFICATION_ERR("sqlite3_prepare_v2 failed [%d][%s]", sqlite3_ret, sqlite3_errmsg(db));
+			err = NOTIFICATION_ERROR_FROM_DB;
+			goto out;
+		}
+
+		sqlite3_bind_int(db_statement, field_index, uid);
 
 		sqlite3_ret = sqlite3_step(db_statement);
 		if (sqlite3_ret != SQLITE_OK && sqlite3_ret != SQLITE_DONE) {
