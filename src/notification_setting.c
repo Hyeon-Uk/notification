@@ -760,7 +760,7 @@ EXPORT_API int notification_system_setting_get_dnd_allow_exceptions(notification
 	dnd_allow_exception_h dnd_allow_exception_data;
 	GList *list;
 
-	if (system_setting == NULL) {
+	if (system_setting == NULL || value == NULL) {
 		NOTIFICATION_ERR("Invalid parameter");
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 	}
