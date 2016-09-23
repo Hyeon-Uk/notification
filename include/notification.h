@@ -612,8 +612,8 @@ int notification_get_launch_option(notification_h noti,
  *          Setting event handler of a button means that the notification will show the button.
  * @since_tizen @if MOBILE 2.4 @elseif WEARABLE 3.0 @endif
  * @param[in] noti The notification handle
- * @param[in] event_type event type
- * @param[in] event_handler app control handle
+ * @param[in] event_type Launching option type
+ * @param[in] event_handler App control handle
  * @return #NOTIFICATION_ERROR_NONE on success,
  *         otherwise any other value on failure
  * @retval #NOTIFICATION_ERROR_NONE         Success
@@ -653,9 +653,9 @@ int notification_set_event_handler(notification_h noti,
  * @brief Gets the event handler of a specific event.
  * @remarks You must release @a app_control using app_control_destroy().
  * @since_tizen @if MOBILE 2.4 @elseif WEARABLE 3.0 @endif
- * @param[in]  noti        The notification handle
+ * @param[in] noti The notification handle
  * @param[in] event_type Launching option type
- * @param[out] option The pointer of App Control handler
+ * @param[out] event_handler App control handle
  * @return #NOTIFICATION_ERROR_NONE on success,
  *         otherwise any other value on failure
  * @retval #NOTIFICATION_ERROR_NONE         Success
