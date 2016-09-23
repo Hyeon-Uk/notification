@@ -1429,7 +1429,7 @@ static notification_h _notification_create(notification_type_e type)
 	noti->auto_remove = true;
 	noti->ongoing_flag = false;
 	noti->default_button_index = 0;
-	noti->type = NOTIFICATION_ONGOING_VALUE_TYPE_PERCENT;
+	noti->ongoing_value_type = NOTIFICATION_ONGOING_VALUE_TYPE_PERCENT;
 	noti->timeout = 0;
 	noti->event_flag = false;
 
