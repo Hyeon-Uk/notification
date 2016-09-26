@@ -1835,6 +1835,7 @@ EXPORT_API GVariant *notification_ipc_make_gvariant_from_noti(notification_h not
 	g_variant_builder_add(&builder, "{iv}", NOTIFICATION_DATA_TYPE_AUTO_REMOVE, g_variant_new_int32(noti->auto_remove));
 	g_variant_builder_add(&builder, "{iv}", NOTIFICATION_DATA_TYPE_DEFAULT_BUTTON, g_variant_new_int32(noti->default_button_index));
 	g_variant_builder_add(&builder, "{iv}", NOTIFICATION_DATA_TYPE_TIMEOUT, g_variant_new_int32(noti->timeout));
+	g_variant_builder_add(&builder, "{iv}", NOTIFICATION_DATA_TYPE_TEXT_INPUT_MAX_LENGTH, g_variant_new_int32(noti->text_input_max_length));
 	g_variant_builder_add(&builder, "{iv}", NOTIFICATION_DATA_TYPE_EVENT_FLAG, g_variant_new_int32(noti->event_flag));
 	g_variant_builder_add(&builder, "{iv}", NOTIFICATION_DATA_TYPE_UID, g_variant_new_int32(noti->uid));
 
@@ -1955,6 +1956,7 @@ EXPORT_API int notification_ipc_make_noti_from_gvariant(notification_h noti,
 	_variant_dict_lookup(dict, NOTIFICATION_DATA_TYPE_BUTTON6_EVENT, "&s", &b_event_handler[NOTIFICATION_EVENT_TYPE_CLICK_ON_BUTTON_6]);
 	_variant_dict_lookup(dict, NOTIFICATION_DATA_TYPE_ICON_EVENT, "&s", &b_event_handler[NOTIFICATION_EVENT_TYPE_CLICK_ON_ICON]);
 	_variant_dict_lookup(dict, NOTIFICATION_DATA_TYPE_THUMBNAIL_EVENT, "&s", &b_event_handler[NOTIFICATION_EVENT_TYPE_CLICK_ON_THUMBNAIL]);
+	_variant_dict_lookup(dict, NOTIFICATION_DATA_TYPE_TEXT_INPUT_BUTTON_EVENT, "&s", &b_event_handler[NOTIFICATION_EVENT_TYPE_CLICK_ON_TEXT_INPUT_BUTTON]);
 	_variant_dict_lookup(dict, NOTIFICATION_DATA_TYPE_DOMAIN, "&s", &domain);
 	_variant_dict_lookup(dict, NOTIFICATION_DATA_TYPE_DIR, "&s", &dir);
 	_variant_dict_lookup(dict, NOTIFICATION_DATA_TYPE_TEXT, "&s", &b_text);
@@ -1988,6 +1990,7 @@ EXPORT_API int notification_ipc_make_noti_from_gvariant(notification_h noti,
 	_variant_dict_lookup(dict, NOTIFICATION_DATA_TYPE_AUTO_REMOVE, "i", &noti->auto_remove);
 	_variant_dict_lookup(dict, NOTIFICATION_DATA_TYPE_DEFAULT_BUTTON, "i", &noti->default_button_index);
 	_variant_dict_lookup(dict, NOTIFICATION_DATA_TYPE_TIMEOUT, "i", &noti->timeout);
+	_variant_dict_lookup(dict, NOTIFICATION_DATA_TYPE_TEXT_INPUT_MAX_LENGTH, "i", &noti->text_input_max_length);
 	_variant_dict_lookup(dict, NOTIFICATION_DATA_TYPE_EVENT_FLAG, "i", &noti->event_flag);
 	_variant_dict_lookup(dict, NOTIFICATION_DATA_TYPE_UID, "i", &noti->uid);
 

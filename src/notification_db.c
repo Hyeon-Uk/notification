@@ -65,6 +65,7 @@ create	table if not exists noti_list ( \
 			b_event_handler_click_on_button_6 TEXT, \
 			b_event_handler_click_on_icon TEXT, \
 			b_event_handler_click_on_thumbnail TEXT, \
+			b_event_handler_click_on_text_input_button TEXT, \
 			sound_type INTEGER default 0, \
 			sound_path TEXT, \
 			vibration_type INTEGER default 0, \
@@ -187,6 +188,7 @@ create	table if not exists noti_list ( \
 			b_event_handler_click_on_button_6 TEXT, \
 			b_event_handler_click_on_icon TEXT, \
 			b_event_handler_click_on_thumbnail TEXT, \
+			b_event_handler_click_on_text_input_button TEXT, \
 			sound_type INTEGER default 0, \
 			sound_path TEXT, \
 			vibration_type INTEGER default 0, \

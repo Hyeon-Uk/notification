@@ -258,7 +258,7 @@ static int _insertion_query_create(notification_h noti, char **query)
 		"b_service_responding, b_service_single_launch, b_service_multi_launch, "
 		"b_event_handler_click_on_button_1, b_event_handler_click_on_button_2, b_event_handler_click_on_button_3, "
 		"b_event_handler_click_on_button_4, b_event_handler_click_on_button_5, b_event_handler_click_on_button_6, "
-		"b_event_handler_click_on_icon, b_event_handler_click_on_thumbnail, "
+		"b_event_handler_click_on_icon, b_event_handler_click_on_thumbnail, b_event_handler_click_on_text_input_button, "
 		"sound_type, sound_path, vibration_type, vibration_path, led_operation, led_argb, led_on_ms, led_off_ms, "
 		"flags_for_property, flag_simmode, display_applist, "
 		"progress_size, progress_percentage, "
@@ -278,11 +278,12 @@ static int _insertion_query_create(notification_h noti, char **query)
 		"'%s', '%s', '%s', "
 		"'%s', '%s', '%s', "
 		"'%s', '%s', '%s', "
-		"'%s', '%s', "
+		"'%s', '%s', '%s', "
 		"%d, '%s', %d, '%s', %d, %d, %d, %d,"
 		"%d, %d, %d, "
 		"$progress_size, $progress_percentage, "
-		"%d, %d, %d, %d, %d, %d, %d, %d, %d, %d)",
+		"%d, %d, %d, %d, "
+		"%d, %d, %d, %d, %d, %d)",
 		noti->type,
 		noti->layout,
 		NOTIFICATION_CHECK_STR(noti->caller_pkgname),
@@ -307,6 +308,7 @@ static int _insertion_query_create(notification_h noti, char **query)
 		NOTIFICATION_CHECK_STR(b_event_handler[NOTIFICATION_EVENT_TYPE_CLICK_ON_BUTTON_6]),
 		NOTIFICATION_CHECK_STR(b_event_handler[NOTIFICATION_EVENT_TYPE_CLICK_ON_ICON]),
 		NOTIFICATION_CHECK_STR(b_event_handler[NOTIFICATION_EVENT_TYPE_CLICK_ON_THUMBNAIL]),
+		NOTIFICATION_CHECK_STR(b_event_handler[NOTIFICATION_EVENT_TYPE_CLICK_ON_TEXT_INPUT_BUTTON]),
 		noti->sound_type, NOTIFICATION_CHECK_STR(noti->sound_path),
 		noti->vibration_type,
 		NOTIFICATION_CHECK_STR(noti->vibration_path),
@@ -453,6 +455,7 @@ static int _update_query_create(notification_h noti, char **query)
 		"b_event_handler_click_on_button_6= '%s', "
 		"b_event_handler_click_on_icon= '%s', "
 		"b_event_handler_click_on_thumbnail= '%s', "
+		"b_event_handler_click_on_text_input_button= '%s', "
 		"sound_type = %d, sound_path = '%s', "
 		"vibration_type = %d, vibration_path = '%s', "
 		"led_operation = %d, led_argb = %d, "
@@ -485,6 +488,7 @@ static int _update_query_create(notification_h noti, char **query)
 		NOTIFICATION_CHECK_STR(b_event_handler[NOTIFICATION_EVENT_TYPE_CLICK_ON_BUTTON_6]),
 		NOTIFICATION_CHECK_STR(b_event_handler[NOTIFICATION_EVENT_TYPE_CLICK_ON_ICON]),
 		NOTIFICATION_CHECK_STR(b_event_handler[NOTIFICATION_EVENT_TYPE_CLICK_ON_THUMBNAIL]),
+		NOTIFICATION_CHECK_STR(b_event_handler[NOTIFICATION_EVENT_TYPE_CLICK_ON_TEXT_INPUT_BUTTON]),
 		noti->sound_type, NOTIFICATION_CHECK_STR(noti->sound_path),
 		noti->vibration_type,
 		NOTIFICATION_CHECK_STR(noti->vibration_path),
@@ -1057,7 +1061,7 @@ EXPORT_API int notification_noti_get_by_priv_id(notification_h noti, char *pkgna
 			 "b_execute_option, b_service_responding, b_service_single_launch, b_service_multi_launch, "
 			 "b_event_handler_click_on_button_1, b_event_handler_click_on_button_2, b_event_handler_click_on_button_3, "
 			 "b_event_handler_click_on_button_4, b_event_handler_click_on_button_5, b_event_handler_click_on_button_6, "
-			 "b_event_handler_click_on_icon, b_event_handler_click_on_thumbnail, "
+			 "b_event_handler_click_on_icon, b_event_handler_click_on_thumbnail, b_event_handler_click_on_text_input_button, "
 			 "sound_type, sound_path, vibration_type, vibration_path, led_operation, led_argb, led_on_ms, led_off_ms, "
 			 "flags_for_property, display_applist, progress_size, progress_percentage, ongoing_flag, ongoing_value_type, "
 			 "ongoing_current, ongoing_duration, auto_remove, default_button_index, timeout, text_input_max_length, event_flag "
@@ -1128,7 +1132,7 @@ EXPORT_API int notification_noti_get_by_tag(notification_h noti, char *pkgname, 
 			 "b_execute_option, b_service_responding, b_service_single_launch, b_service_multi_launch, "
 			 "b_event_handler_click_on_button_1, b_event_handler_click_on_button_2, b_event_handler_click_on_button_3, "
 			 "b_event_handler_click_on_button_4, b_event_handler_click_on_button_5, b_event_handler_click_on_button_6, "
-			 "b_event_handler_click_on_icon, b_event_handler_click_on_thumbnail, "
+			 "b_event_handler_click_on_icon, b_event_handler_click_on_thumbnail, b_event_handler_click_on_text_input_button, "
 			 "sound_type, sound_path, vibration_type, vibration_path, led_operation, led_argb, led_on_ms, led_off_ms, "
 			 "flags_for_property, display_applist, progress_size, progress_percentage, ongoing_flag, ongoing_value_type, "
 			 "ongoing_current, ongoing_duration, auto_remove, default_button_index, timeout, text_input_max_length, event_flag "
@@ -1164,7 +1168,7 @@ EXPORT_API int notification_noti_get_by_tag(notification_h noti, char *pkgname, 
 			 "b_execute_option, b_service_responding, b_service_single_launch, b_service_multi_launch, "
 			 "b_event_handler_click_on_button_1, b_event_handler_click_on_button_2, b_event_handler_click_on_button_3, "
 			 "b_event_handler_click_on_button_4, b_event_handler_click_on_button_5, b_event_handler_click_on_button_6, "
-			 "b_event_handler_click_on_icon, b_event_handler_click_on_thumbnail, "
+			 "b_event_handler_click_on_icon, b_event_handler_click_on_thumbnail, b_event_handler_click_on_text_input_button, "
 			 "sound_type, sound_path, vibration_type, vibration_path, led_operation, led_argb, led_on_ms, led_off_ms, "
 			 "flags_for_property, display_applist, progress_size, progress_percentage, ongoing_flag, ongoing_value_type, "
 			 "ongoing_current, ongoing_duration, auto_remove, default_button_index, timeout, text_input_max_length, event_flag "
@@ -1623,7 +1627,7 @@ EXPORT_API int notification_noti_get_grouping_list(notification_type_e type,
 		 "b_execute_option, b_service_responding, b_service_single_launch, b_service_multi_launch, "
 		 "b_event_handler_click_on_button_1, b_event_handler_click_on_button_2, b_event_handler_click_on_button_3, "
 		 "b_event_handler_click_on_button_4, b_event_handler_click_on_button_5, b_event_handler_click_on_button_6, "
-		 "b_event_handler_click_on_icon, b_event_handler_click_on_thumbnail, "
+		 "b_event_handler_click_on_icon, b_event_handler_click_on_thumbnail, b_event_handler_click_on_text_input_button, "
 		 "sound_type, sound_path, vibration_type, vibration_path, led_operation, led_argb, led_on_ms, led_off_ms, "
 		 "flags_for_property, display_applist, progress_size, progress_percentage, ongoing_flag, ongoing_value_type, "
 		 "ongoing_current, ongoing_duration, auto_remove, default_button_index, timeout, text_input_max_length, event_flag "
@@ -1725,7 +1729,7 @@ EXPORT_API int notification_noti_get_detail_list(const char *pkgname,
 		 "b_execute_option, b_service_responding, b_service_single_launch, b_service_multi_launch, "
 		 "b_event_handler_click_on_button_1, b_event_handler_click_on_button_2, b_event_handler_click_on_button_3, "
 		 "b_event_handler_click_on_button_4, b_event_handler_click_on_button_5, b_event_handler_click_on_button_6, "
-		 "b_event_handler_click_on_icon, b_event_handler_click_on_thumbnail, "
+		 "b_event_handler_click_on_icon, b_event_handler_click_on_thumbnail, b_event_handler_click_on_text_input_button, "
 		 "sound_type, sound_path, vibration_type, vibration_path, led_operation, led_argb, led_on_ms, led_off_ms, "
 		 "flags_for_property, display_applist, progress_size, progress_percentage, ongoing_flag, ongoing_value_type, "
 		 "ongoing_current, ongoing_duration, auto_remove, default_button_index, timeout, text_input_max_length, event_flag "
@@ -1985,10 +1989,11 @@ static int _template_query_create(notification_h noti, char *template_name, char
 		"b_service_responding, b_service_single_launch, b_service_multi_launch, "
 		"b_event_handler_click_on_button_1, b_event_handler_click_on_button_2, b_event_handler_click_on_button_3, "
 		"b_event_handler_click_on_button_4, b_event_handler_click_on_button_5, b_event_handler_click_on_button_6, "
-		"b_event_handler_click_on_icon, b_event_handler_click_on_thumbnail, "
+		"b_event_handler_click_on_icon, b_event_handler_click_on_thumbnail, b_event_handler_click_on_text_input_button, "
 		"sound_type, sound_path, vibration_type, vibration_path, led_operation, led_argb, led_on_ms, led_off_ms, "
-		"flags_for_property, flag_simmode, display_applist, progress_size, progress_percentage, ongoing_flag, ongoing_value_type, "
-		"ongoing_current, ongoing_duration, auto_remove, default_button_index, timeout, text_input_max_length, "
+		"flags_for_property, flag_simmode, display_applist, progress_size, progress_percentage, "
+		"ongoing_flag, ongoing_value_type, ongoing_current, ongoing_duration, "
+		"auto_remove, default_button_index, timeout, text_input_max_length, "
 		"event_flag, uid, template_name) values ("
 		"%d, "
 		"%d, "
@@ -2004,11 +2009,12 @@ static int _template_query_create(notification_h noti, char *template_name, char
 		"'%s', '%s', '%s', "
 		"'%s', '%s', '%s', "
 		"'%s', '%s', '%s', "
-		"'%s', '%s', "
+		"'%s', '%s', '%s', "
 		"%d, '%s', %d, '%s', %d, %d, %d, %d, "
-		"%d, %d, %d, "
-		"$progress_size, $progress_percentage, "
-		"%d, %d, %d, %d, %d, %d, %d, %d, %d, '%s')",
+		"%d, %d, %d, $progress_size, $progress_percentage, "
+		"%d, %d, %d, %d, "
+		"%d, %d, %d, %d, "
+		"%d, %d, '%s')",
 		noti->type,
 		noti->layout,
 		NOTIFICATION_CHECK_STR(noti->caller_pkgname),
@@ -2033,6 +2039,7 @@ static int _template_query_create(notification_h noti, char *template_name, char
 		NOTIFICATION_CHECK_STR(b_event_handler[NOTIFICATION_EVENT_TYPE_CLICK_ON_BUTTON_6]),
 		NOTIFICATION_CHECK_STR(b_event_handler[NOTIFICATION_EVENT_TYPE_CLICK_ON_ICON]),
 		NOTIFICATION_CHECK_STR(b_event_handler[NOTIFICATION_EVENT_TYPE_CLICK_ON_THUMBNAIL]),
+		NOTIFICATION_CHECK_STR(b_event_handler[NOTIFICATION_EVENT_TYPE_CLICK_ON_TEXT_INPUT_BUTTON]),
 		noti->sound_type, NOTIFICATION_CHECK_STR(noti->sound_path),
 		noti->vibration_type,
 		NOTIFICATION_CHECK_STR(noti->vibration_path),
@@ -2212,7 +2219,7 @@ EXPORT_API int notification_noti_get_package_template(notification_h noti, char 
 		"b_execute_option, b_service_responding, b_service_single_launch, b_service_multi_launch, "
 		"b_event_handler_click_on_button_1, b_event_handler_click_on_button_2, b_event_handler_click_on_button_3, "
 		"b_event_handler_click_on_button_4, b_event_handler_click_on_button_5, b_event_handler_click_on_button_6, "
-		"b_event_handler_click_on_icon, b_event_handler_click_on_thumbnail, "
+		"b_event_handler_click_on_icon, b_event_handler_click_on_thumbnail, b_event_handler_click_on_text_input_button, "
 		"sound_type, sound_path, vibration_type, vibration_path, led_operation, led_argb, led_on_ms, led_off_ms, "
 		"flags_for_property, display_applist, progress_size, progress_percentage, ongoing_flag, ongoing_value_type, "
 		"ongoing_current, ongoing_duration, auto_remove, default_button_index, timeout, text_input_max_length, event_flag "
