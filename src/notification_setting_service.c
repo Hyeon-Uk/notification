@@ -740,31 +740,47 @@ EXPORT_API int notification_system_setting_update_dnd_allow_exception(int type, 
 {
 	int ret = NOTIFICATION_ERROR_NONE;
 	int sqlret;
+	int field_index = 1;
 	sqlite3 *db = NULL;
-	char *sqlbuf = NULL;
+	sqlite3_stmt *db_statement = NULL;
 
-	sqlret = db_util_open(DBPATH, &db, 0);
-	if (sqlret != SQLITE_OK || db == NULL) {
-		NOTIFICATION_ERR("db_util_open failed [%s][%d]", DBPATH, sqlret);
-		return NOTIFICATION_ERROR_FROM_DB;
+	db = notification_db_open(DBPATH);
+	if (db == NULL)
+		return get_last_result();
+
+	sqlite3_exec(db, "BEGIN immediate;", NULL, NULL, NULL);
+
+	sqlret = sqlite3_prepare_v2(db, "INSERT OR REPLACE INTO dnd_allow_exception (uid, type, value) VALUES(?, ?, ?) ", -1, &db_statement, NULL);
+
+	if (sqlret != SQLITE_OK) {
+		NOTIFICATION_ERR("sqlite3_prepare_v2 failed [%d][%s]", sqlret, sqlite3_errmsg(db));
+		ret = NOTIFICATION_ERROR_FROM_DB;
+		goto out;
 	}
 
-	sqlbuf = sqlite3_mprintf("UPDATE dnd_allow_exception SET value = %d WHERE type = %d AND uid = %d", value, type, uid);
-	if (!sqlbuf) {
-		NOTIFICATION_ERR("fail to alloc query");
-		ret = NOTIFICATION_ERROR_OUT_OF_MEMORY;
-		goto return_close_db;
+	sqlite3_bind_int(db_statement, field_index++, uid);
+	sqlite3_bind_int(db_statement, field_index++, type);
+	sqlite3_bind_int(db_statement, field_index++, value);
+
+	sqlret = sqlite3_step(db_statement);
+	if (sqlret != SQLITE_OK && sqlret != SQLITE_DONE) {
+		NOTIFICATION_ERR("sqlite3_step failed [%d][%s]", sqlret, sqlite3_errmsg(db));
+		ret = NOTIFICATION_ERROR_FROM_DB;
+		goto out;
 	}
 
-	ret = notification_db_exec(db, sqlbuf, NULL);
+	sqlret = sqlite3_changes(db);
 
-return_close_db:
-	if (sqlbuf)
-		sqlite3_free(sqlbuf);
-
-	sqlret = db_util_close(db);
-	if (sqlret != SQLITE_OK)
-		NOTIFICATION_WARN("fail to db_util_close - [%d]", sqlret);
+	if (sqlret == 0)
+		NOTIFICATION_WARN("No changes on DB");
+out:
+	if (db_statement)
+		sqlite3_finalize(db_statement);
+	if (ret == NOTIFICATION_ERROR_NONE)
+		sqlite3_exec(db, "END;", NULL, NULL, NULL);
+	else
+		sqlite3_exec(db, "ROLLBACK;", NULL, NULL, NULL);
+	notification_db_close(&db);
 
 	return ret;
 }

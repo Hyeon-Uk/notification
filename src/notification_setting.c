@@ -765,7 +765,7 @@ EXPORT_API int notification_system_setting_get_dnd_allow_exceptions(notification
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 	}
 
-	list = g_list_find_custom(system_setting->dnd_allow_exceptions, (gconstpointer)type, _dnd_allow_exception_compare);
+	list = g_list_find_custom(system_setting->dnd_allow_exceptions, (gconstpointer)type, (GCompareFunc)_dnd_allow_exception_compare);
 	if (list) {
 		dnd_allow_exception_data = (dnd_allow_exception_h)list->data;
 		*value = dnd_allow_exception_data->value;
@@ -780,7 +780,7 @@ EXPORT_API int notification_system_setting_get_dnd_allow_exceptions(notification
 EXPORT_API int notification_system_setting_set_dnd_allow_exceptions(notification_system_setting_h system_setting, dnd_allow_exception_type_e type, int value)
 {
 	dnd_allow_exception_h dnd_allow_exception_data;
-	GList *list;
+	GList *list = NULL;
 
 	if (system_setting == NULL) {
 		NOTIFICATION_ERR("Invalid parameter");
@@ -788,23 +788,20 @@ EXPORT_API int notification_system_setting_set_dnd_allow_exceptions(notification
 	}
 
 	list = g_list_first(system_setting->dnd_allow_exceptions);
+	list = g_list_find_custom(list, (gconstpointer)type, (GCompareFunc)_dnd_allow_exception_compare);
 
-	for (; list != NULL; list = list->next) {
+	if (list) {
 		dnd_allow_exception_data = (dnd_allow_exception_h)list->data;
-		if (dnd_allow_exception_data->type == type) {
-			dnd_allow_exception_data->value = value;
-			return NOTIFICATION_ERROR_NONE;
-		}
+		dnd_allow_exception_data->value = value;
+	} else {
+		dnd_allow_exception_data = (dnd_allow_exception_h)malloc(sizeof(struct notification_system_setting_dnd_allow_exception));
+		if (dnd_allow_exception_data == NULL)
+			return NOTIFICATION_ERROR_OUT_OF_MEMORY;
+
+		dnd_allow_exception_data->type = type;
+		dnd_allow_exception_data->value = value;
+		system_setting->dnd_allow_exceptions = g_list_append(list, dnd_allow_exception_data);
 	}
-
-	dnd_allow_exception_data = (dnd_allow_exception_h)malloc(sizeof(struct notification_system_setting_dnd_allow_exception));
-	if (dnd_allow_exception_data == NULL)
-		return NOTIFICATION_ERROR_OUT_OF_MEMORY;
-
-	dnd_allow_exception_data->type = type;
-	dnd_allow_exception_data->value = value;
-
-	system_setting->dnd_allow_exceptions = g_list_append(system_setting->dnd_allow_exceptions, dnd_allow_exception_data);
 
 	return NOTIFICATION_ERROR_NONE;
 }
