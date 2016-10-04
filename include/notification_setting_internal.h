@@ -1268,7 +1268,8 @@ int notification_system_setting_set_dnd_allow_exceptions(notification_system_set
 
 /*
  * @internal
- * @brief Registers a callback for 'Do not disturb' mode setting schedule is start or end.
+ * @brief Registers a callback for turn on/off 'Do not disturb' mode by user_data
+ *        or 'Do not disturb' mode setting schedule is start or end.
  * @since_tizen 3.0
  * @privlevel public
  * @privilege %http://tizen.org/privilege/notification
@@ -1311,7 +1312,8 @@ int notification_register_system_setting_dnd_changed_cb_for_uid(dnd_changed_cb c
 
 /*
  * @internal
- * @brief Unregisters a callback for 'Do not disturb' mode setting schedule is start or end.
+ * @brief Unregisters a callback for turn on/off 'Do not disturb' mode by user_data
+ *        or 'Do not disturb' mode setting schedule is start or end.
  * @since_tizen 3.0
  * @privlevel public
  * @privilege %http://tizen.org/privilege/notification

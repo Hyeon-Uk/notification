@@ -788,3 +788,54 @@ out:
 
 	return ret;
 }
+
+EXPORT_API int noti_system_setting_get_do_not_disturb(int *do_not_disturb, uid_t uid)
+{
+	int ret = NOTIFICATION_ERROR_NONE;
+	int row_count = 0;
+	int col_count = 0;
+	int col_index = 0;
+	char *query = NULL;
+	char **query_result = NULL;
+	sqlite3 *db = NULL;
+
+	db = notification_db_open(DBPATH);
+	if (db == NULL)
+		return get_last_result();
+
+	query = sqlite3_mprintf("SELECT do_not_disturb FROM %s WHERE uid = %d",
+				NOTIFICATION_SYSTEM_SETTING_DB_TABLE, uid);
+
+	if (query == NULL) {
+		NOTIFICATION_ERR("fail to alloc query");
+		ret = NOTIFICATION_ERROR_OUT_OF_MEMORY;
+		goto out;
+	}
+
+	ret = sqlite3_get_table(db, query, &query_result, &row_count, &col_count, NULL);
+	if (ret != SQLITE_OK && ret != -1) {
+		NOTIFICATION_ERR("NOTIFICATION_ERROR_FROM_DB failed [%d][%s]", ret, query);
+		ret = NOTIFICATION_ERROR_FROM_DB;
+		goto out;
+	}
+
+	col_index = col_count;
+	if (row_count == 0) {
+		NOTIFICATION_ERR("No system setting found");
+		ret = NOTIFICATION_ERROR_INVALID_PARAMETER;
+	} else {
+		if (_get_table_field_data_int(query_result, (int *)do_not_disturb, col_index++) == false)
+			ret = NOTIFICATION_ERROR_FROM_DB;
+	}
+
+out:
+	if (query_result)
+		sqlite3_free_table(query_result);
+	if (query)
+		sqlite3_free(query);
+	if (db)
+		notification_db_close(&db);
+
+	return ret;
+}
+
