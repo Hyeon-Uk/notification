@@ -434,7 +434,11 @@ int notification_setting_db_update_system_setting(int do_not_disturb, int visibi
 
 	sqlite3_exec(db, "BEGIN immediate;", NULL, NULL, NULL);
 
-	sqlret = sqlite3_prepare_v2(db, "INSERT OR REPLACE INTO notification_system_setting (uid, do_not_disturb, visibility_class, dnd_schedule_enabled, dnd_schedule_day, dnd_start_hour, dnd_start_min, dnd_end_hour, dnd_end_min, lock_screen_content_level) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ", -1, &db_statement, NULL);
+	sqlret = sqlite3_prepare_v2(db, "INSERT OR REPLACE INTO notification_system_setting "
+			"(uid, do_not_disturb, visibility_class, dnd_schedule_enabled, "
+			"dnd_schedule_day, dnd_start_hour, dnd_start_min, "
+			"dnd_end_hour, dnd_end_min, lock_screen_content_level) "
+			"VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ", -1, &db_statement, NULL);
 
 	if (sqlret != SQLITE_OK) {
 		NOTIFICATION_ERR("sqlite3_prepare_v2 failed [%d][%s]", sqlret, sqlite3_errmsg(db));

@@ -949,8 +949,6 @@ EXPORT_API int notification_noti_insert(notification_h noti)
 	if (_check_text_input(noti) != NOTIFICATION_ERROR_NONE)
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 
-	//get_event_handler
-
 	db = notification_db_open(DBPATH);
 	if (!db)
 		return get_last_result();
