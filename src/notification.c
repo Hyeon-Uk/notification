@@ -1399,7 +1399,8 @@ static notification_h _notification_create(notification_type_e type)
 	char *domain_name = NULL;
 	char *app_root_path = NULL;
 	char locale_directory[PATH_MAX] = { 0, }; /* PATH_MAX 4096 */
-	int err_app_manager = APP_MANAGER_ERROR_NONE;
+	char pkgid[NOTI_PKGNAME_LEN + 1] = { 0, };
+	int err;
 
 	if (type <= NOTIFICATION_TYPE_NONE || type >= NOTIFICATION_TYPE_MAX) {
 		NOTIFICATION_ERR("INVALID TYPE : %d", type);
@@ -1435,37 +1436,35 @@ static notification_h _notification_create(notification_type_e type)
 
 	if (getuid() >= REGULAR_UID_MIN) {
 		noti->caller_pkgname = notification_get_pkgname_by_pid();
-
-		err_app_manager = app_manager_get_app_id(getpid(), &app_id);
-		if (err_app_manager != APP_MANAGER_ERROR_NONE || app_id == NULL) {
-			NOTIFICATION_WARN("app_manager_get_app_id failed err[%d] app_id[%p]",
-					err_app_manager, app_id);
+		if (noti->caller_pkgname == NULL) {
+			NOTIFICATION_ERR("get_pkgname_by_pid is failed");
 			goto out;
 		}
 
-		/* app name is used as domain name */
-		/* domain_name is allocated by app_get_package_app_name */
-		err_app_manager = app_get_package_app_name(app_id, &domain_name);
+		err = aul_app_get_pkgid_bypid(getpid(), pkgid, sizeof(pkgid));
+		if (err != AUL_R_OK) {
+			NOTIFICATION_ERR("get_pkgid_bypid is failed err[%d]", err);
+			goto out;
+		}
 
-		if (err_app_manager != APP_ERROR_NONE || domain_name == NULL) {
+		err = app_get_package_app_name(pkgid, &domain_name);
+		if (err != APP_ERROR_NONE || domain_name == NULL) {
 			NOTIFICATION_WARN("app_get_package_app_name failed err[%d] domain_name[%p]",
-					err_app_manager, domain_name);
+					err, domain_name);
 			goto out;
 		}
 
-		err_app_manager = package_info_create(noti->caller_pkgname, &package_info);
-
-		if (err_app_manager != PACKAGE_MANAGER_ERROR_NONE || package_info == NULL) {
-			NOTIFICATION_WARN("package_info_create failed err[%d] package_info[%p] caller_pkgname[%s]",
-					err_app_manager, package_info, noti->caller_pkgname);
+		err = package_info_create(pkgid, &package_info);
+		if (err != PACKAGE_MANAGER_ERROR_NONE || package_info == NULL) {
+			NOTIFICATION_WARN("package_info_create failed err[%d] package_info[%p] pkgid[%s]",
+					err, package_info, pkgid);
 			goto out;
 		}
 
-		err_app_manager = package_info_get_root_path(package_info, &app_root_path);
-
-		if (err_app_manager != PACKAGE_MANAGER_ERROR_NONE || app_root_path == NULL) {
+		err = package_info_get_root_path(package_info, &app_root_path);
+		if (err != PACKAGE_MANAGER_ERROR_NONE || app_root_path == NULL) {
 			NOTIFICATION_WARN("package_info_get_root_path failed err[%d] app_root_path[%p]",
-					err_app_manager, app_root_path);
+					err, app_root_path);
 			goto out;
 		}
 
