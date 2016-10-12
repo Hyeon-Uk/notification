@@ -1395,7 +1395,6 @@ static notification_h _notification_create(notification_type_e type)
 {
 	notification_h noti = NULL;
 	package_info_h package_info = NULL;
-	char *app_id = NULL;
 	char *domain_name = NULL;
 	char *app_root_path = NULL;
 	char locale_directory[PATH_MAX] = { 0, }; /* PATH_MAX 4096 */
@@ -1477,9 +1476,6 @@ static notification_h _notification_create(notification_type_e type)
 out:
 	if (domain_name)
 		free(domain_name);
-
-	if (app_id)
-		free(app_id);
 
 	if (app_root_path)
 		free(app_root_path);
