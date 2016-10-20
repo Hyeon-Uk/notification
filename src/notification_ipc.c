@@ -777,8 +777,6 @@ static int _send_async_noti(GVariant *body, result_cb_item *cb_item, char *cmd)
 			cb_item);
 
 	NOTIFICATION_DBG("_send_async_noti done !!");
-
-	g_object_unref(msg);
 	return NOTIFICATION_ERROR_NONE;
 }
 
