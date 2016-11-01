@@ -226,41 +226,6 @@ int notification_setting_get_package_name(notification_setting_h setting, char *
 
 /*
  * @internal
- * @brief Sets package name to notification setting handle.
- * @since_tizen @if wearable 2.3.1 @elseif mobile 2.3 @endif
- * @param[in] setting	The notification setting handle
- * @param[in] value	The package name
- * @return #NOTIFICATION_ERROR_NONE on success,
- *         otherwise any other value on failure
- * @retval #NOTIFICATION_ERROR_NONE			Success
- * @retval #NOTIFICATION_ERROR_INVALID_PARAMETER	Invalid parameter
- * @par sample code:
- * @code
-#include <notification_setting_internal.h>
-...
-{
-	int noti_err = 0;
-	char *package_name = "org.tizen.example";
-	notification_setting_h setting = NULL;
-
-	...
-
-	noti_err = notification_setting_set_package_name(setting, package_name);
-	if (noti_err != NOTIFICATION_ERROR_NONE) {
-		return;
-	}
-
-	notification_setting_free_notification(setting);
-
-	return 0;
-
-}
- * @endcode
- */
-int notification_setting_set_package_name(notification_setting_h setting, char *value);
-
-/*
- * @internal
  * @brief Gets value which whether allow notification from individual applications.
  * @since_tizen @if wearable 2.3.1 @elseif mobile 2.3 @endif
  * @param[in] setting	The notification setting handle
