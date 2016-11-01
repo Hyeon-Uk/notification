@@ -632,6 +632,11 @@ EXPORT_API int notification_get_dnd_and_allow_to_notify(const char *pkgname,
 		ret = NOTIFICATION_ERROR_FROM_DB;
 		goto out;
 	}
+	if (row_count == 0) {
+		NOTIFICATION_ERR("Invalid uid [%d] or package name [%s]", uid, pkgname);
+		ret = NOTIFICATION_ERROR_INVALID_PARAMETER;
+		goto out;
+	}
 
 	col_index = col_count;
 	_get_table_field_data_int(query_setting_result, (int *)allow_to_notify, col_index++);
@@ -641,6 +646,11 @@ EXPORT_API int notification_get_dnd_and_allow_to_notify(const char *pkgname,
 	if (sql_ret != SQLITE_OK && sql_ret != -1) {
 		NOTIFICATION_ERR("NOTIFICATION_ERROR_FROM_DB failed [%d][%s]", sql_ret, query_setting);
 		ret = NOTIFICATION_ERROR_FROM_DB;
+		goto out;
+	}
+	if (row_count == 0) {
+		NOTIFICATION_ERR("Invalid uid [%d]", uid);
+		ret = NOTIFICATION_ERROR_INVALID_PARAMETER;
 		goto out;
 	}
 
