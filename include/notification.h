@@ -1566,11 +1566,16 @@ int notification_get_noti_block_state(notification_block_state_e *state);
  *          For setting just a text to the button, you can set the text using notification_set_text() with #NOTIFICATION_TEXT_TYPE_TEXT_INPUT_BUTTON type.
  *          If you want to show image button, you can set an image for the button using notification_set_image() with #NOTIFICATION_IMAGE_TYPE_TEXT_INPUT_BUTTON type.
  *
- *          Note that You should set an app_control for handling the event for user input using notification_set_event_handler().
+ *          Note that you should set an app_control for handling the event for user input using notification_set_event_handler().
  *          #NOTIFICATION_EVENT_TYPE_CLICK_ON_TEXT_INPUT_BUTTON is the event type for the text input.
  *          You can get the text the user enters in the app_control handle that is passed as a result of the event.
  *          The app_control will contain APP_CONTROL_DATA_TEXT key, so you can get the text using app_control_get_extra_data() using APP_CONTROL_DATA_TEXT key.
  *          The value will contain the text user enters.
+ *
+ *          Note that you are able to make the switching button to the text input box.
+ *          You have to set the app_control which you will set in a text input box to the switching button.
+ *          Refer to the second sample code.
+
  * @since_tizen 3.0
  * @return #NOTIFICATION_ERROR_NONE on success,
  *         otherwise any other value on failure
@@ -1581,15 +1586,14 @@ int notification_get_noti_block_state(notification_block_state_e *state);
 #include <notification.h>
 ...
 {
-	notification_h noti = NULL;
 	int noti_err = NOTIFICATION_ERROR_NONE;
+	notification_h noti = NULL;
 	app_control = NULL;
 
 	noti = notification_create(NOTIFICATION_TYPE_NOTI);
 	if (noti == NULL) {
 		return;
 	}
-	...
 
 	noti_err = notification_set_text_input(noti, 160);
 	if (noti_err != NOTIFICATION_ERROR_NONE) {
@@ -1614,14 +1618,12 @@ int notification_get_noti_block_state(notification_block_state_e *state);
 		return;
 	}
 
-	noti_err = notification_set_image(noti,
-			NOTIFICATION_IMAGE_TYPE_TEXT_INPUT_BUTTON,
-			TEXT_INPUT_BUTTON_PATH);
+	noti_err = notification_set_display_applist(noti,
+			NOTIFICATION_DISPLAY_APP_NOTIFICATION_TRAY | NOTIFICATION_DISPLAY_APP_ACTIVE);
 	if (noti_err != NOTIFICATION_ERROR_NONE) {
 		return;
 	}
 	...
-
 
 	noti_err = app_control_create(&app_control);
 	if (noti_err != APP_CONTROL_ERROR_NONE) {
@@ -1654,7 +1656,102 @@ int notification_get_noti_block_state(notification_block_state_e *state);
 	if(noti_err != NOTIFICATION_ERROR_NONE) {
 		return;
 	}
+}
 
+...
+
+{
+	int noti_err = NOTIFICATION_ERROR_NONE;
+	notification_h noti = NULL;
+	app_control = NULL;
+
+	noti = notification_create(NOTIFICATION_TYPE_NOTI);
+	if (noti == NULL) {
+		return;
+	}
+
+	noti_err = notification_set_text_input(noti, 160);
+	if (noti_err != NOTIFICATION_ERROR_NONE) {
+		return;
+	}
+
+	noti_err = notification_set_text(noti,
+			NOTIFICATION_TEXT_TYPE_TEXT_INPUT_PLACEHOLDER,
+			"Text message",
+			NULL,
+			NOTIFICATION_VARIABLE_TYPE_NONE);
+	if (noti_err != NOTIFICATION_ERROR_NONE) {
+		return;
+	}
+
+	noti_err = notification_set_text(noti,
+			NOTIFICATION_TEXT_TYPE_TEXT_INPUT_BUTTON,
+			"SEND",
+			NULL,
+			NOTIFICATION_VARIABLE_TYPE_NONE);
+	if (noti_err != NOTIFICATION_ERROR_NONE) {
+		return;
+	}
+
+	noti_err = notification_add_button(notification, NOTIFICATION_BUTTON_1);
+	if (noti_err != NOTIFICATION_ERROR_NONE) {
+		return;
+	}
+
+	noti_err = notification_set_text(notification,
+			NOTIFICATION_TEXT_TYPE_BUTTON_1,
+			"reply",
+			NULL,
+			NOTIFICATION_VARIABLE_TYPE_NONE);
+	if (noti_err != NOTIFICATION_ERROR_NONE) {
+		return;
+	}
+
+	noti_err = notification_set_display_applist(noti,
+			NOTIFICATION_DISPLAY_APP_NOTIFICATION_TRAY | NOTIFICATION_DISPLAY_APP_ACTIVE);
+	if (noti_err != NOTIFICATION_ERROR_NONE) {
+		return;
+	}
+	...
+
+	noti_err = app_control_create(&app_control);
+	if (noti_err != APP_CONTROL_ERROR_NONE) {
+		return;
+	}
+
+	noti_err = app_control_set_app_id(app_control, appid);
+	if (noti_err != APP_CONTROL_ERROR_NONE) {
+		return;
+	}
+
+	noti_err = app_control_set_operation(app_control, APP_CONTROL_OPERATION_DEFAULT);
+	if (noti_err != APP_CONTROL_ERROR_NONE) {
+		return;
+	}
+
+	noti_err = notification_set_event_handler(notification,
+			NOTIFICATION_EVENT_TYPE_CLICK_ON_BUTTON_1,
+			app_control);
+	if (noti_err != NOTIFICATION_ERROR_NONE) {
+		return;
+	}
+
+	noti_err = notification_set_event_handler(noti,
+			NOTIFICATION_EVENT_TYPE_CLICK_ON_TEXT_INPUT_BUTTON,
+			app_control);
+	if (noti_err != NOTIFICATION_ERROR_NONE) {
+		return;
+	}
+
+	noti_err = app_control_destroy(app_control);
+	if (noti_err != APP_CONTROL_ERROR_NONE) {
+		return;
+	}
+
+	noti_err  = notification_post(noti);
+	if(noti_err != NOTIFICATION_ERROR_NONE) {
+		return;
+	}
 }
  * @endcode
  */
