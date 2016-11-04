@@ -89,7 +89,7 @@ out:
 }
 
 EXPORT_API
-int noti_setting_service_get_setting_by_package_name(const char *package_name, notification_setting_h *setting, uid_t uid)
+int noti_setting_service_get_setting_by_appid(const char *appid, notification_setting_h *setting, uid_t uid)
 {
 	int err = NOTIFICATION_ERROR_NONE;
 	sqlite3 *local_db_handle = NULL;
@@ -102,7 +102,7 @@ int noti_setting_service_get_setting_by_package_name(const char *package_name, n
 	int col_index = 0;
 	notification_setting_h result_setting_array = NULL;
 
-	if (package_name == NULL || setting == NULL) {
+	if (appid == NULL || setting == NULL) {
 		NOTIFICATION_ERR("NOTIFICATION_ERROR_INVALID_PARAMETER"); /* LCOV_EXCL_LINE */
 		err =  NOTIFICATION_ERROR_INVALID_PARAMETER;
 		goto out;
@@ -116,9 +116,9 @@ int noti_setting_service_get_setting_by_package_name(const char *package_name, n
 		goto out;
 	}
 
-	sql_query = sqlite3_mprintf("SELECT package_name, allow_to_notify, do_not_disturb_except, visibility_class, "
+	sql_query = sqlite3_mprintf("SELECT package_name, appid, allow_to_notify, do_not_disturb_except, visibility_class, "
 				    "pop_up_notification, lock_screen_content_level FROM %s "
-				    "WHERE package_name = %Q AND uid = %d", NOTIFICATION_SETTING_DB_TABLE, package_name, uid);
+				    "WHERE appid = %Q AND uid = %d", NOTIFICATION_SETTING_DB_TABLE, appid, uid);
 
 	if (!sql_query) {
 		NOTIFICATION_ERR("fail to alloc query"); /* LCOV_EXCL_LINE */
@@ -127,7 +127,6 @@ int noti_setting_service_get_setting_by_package_name(const char *package_name, n
 	}
 
 	sql_return = sqlite3_get_table(local_db_handle, sql_query, &query_result, &row_count, &column_count, NULL);
-
 	if (sql_return != SQLITE_OK && sql_return != -1) {
 		NOTIFICATION_ERR("sqlite3_get_table failed [%d][%s]", sql_return, sql_query); /* LCOV_EXCL_LINE */
 		err = NOTIFICATION_ERROR_FROM_DB;
@@ -135,7 +134,7 @@ int noti_setting_service_get_setting_by_package_name(const char *package_name, n
 	}
 
 	if (!row_count) {
-		NOTIFICATION_DBG("No setting found for [%s]", package_name); /* LCOV_EXCL_LINE */
+		NOTIFICATION_DBG("No setting found for [%s]", appid); /* LCOV_EXCL_LINE */
 		err = NOTIFICATION_ERROR_NOT_EXIST_ID;
 		goto out;
 	}
@@ -153,6 +152,7 @@ int noti_setting_service_get_setting_by_package_name(const char *package_name, n
 	col_index = column_count;
 
 	_get_table_field_data_string(query_result, &(result_setting_array[i].package_name), 1, col_index++);
+	_get_table_field_data_string(query_result, &(result_setting_array[i].appid), 1, col_index++);
 	_get_table_field_data_int(query_result, (int *)&(result_setting_array[i].allow_to_notify), col_index++);
 	_get_table_field_data_int(query_result, (int *)&(result_setting_array[i].do_not_disturb_except), col_index++);
 	_get_table_field_data_int(query_result, &(result_setting_array[i].visibility_class), col_index++);
@@ -205,9 +205,9 @@ int noti_setting_get_setting_array(notification_setting_h *setting_array, int *c
 		goto out;
 	}
 
-	sql_query = sqlite3_mprintf("SELECT package_name, allow_to_notify, do_not_disturb_except, visibility_class, "
+	sql_query = sqlite3_mprintf("SELECT package_name, appid, allow_to_notify, do_not_disturb_except, visibility_class, "
 				    "pop_up_notification, lock_screen_content_level FROM %s WHERE uid = %d "
-				    "ORDER BY package_name", NOTIFICATION_SETTING_DB_TABLE, uid);
+				    "ORDER BY package_name, appid ", NOTIFICATION_SETTING_DB_TABLE, uid);
 
 	if (!sql_query) {
 		NOTIFICATION_ERR("fail to alloc query"); /* LCOV_EXCL_LINE */
@@ -240,9 +240,10 @@ int noti_setting_get_setting_array(notification_setting_h *setting_array, int *c
 
 	for (i = 0; i < row_count; i++) {
 		_get_table_field_data_string(query_result, &(result_setting_array[i].package_name), 1, col_index++);
+		_get_table_field_data_string(query_result, &(result_setting_array[i].appid), 1, col_index++);
 		_get_table_field_data_int(query_result, (int *)&(result_setting_array[i].allow_to_notify), col_index++);
 		_get_table_field_data_int(query_result, (int *)&(result_setting_array[i].do_not_disturb_except), col_index++);
-		_get_table_field_data_int(query_result, &(result_setting_array[i].visibility_class), col_index++);
+		_get_table_field_data_int(query_result, (int *)&(result_setting_array[i].visibility_class), col_index++);
 		_get_table_field_data_int(query_result, (int *)&(result_setting_array[i].pop_up_notification), col_index++);
 		_get_table_field_data_int(query_result, (int *)&(result_setting_array[i].lock_screen_content_level), col_index++);
 	}
@@ -368,17 +369,18 @@ out:
 }
 
 EXPORT_API
-int notification_setting_db_update(const char *package_name, int allow_to_notify,
-				   int do_not_disturb_except, int visibility_class,
-				   int pop_up_notification, int lock_screen_content_level,
-				   uid_t uid)
+int notification_setting_db_update(const char *package_name, const char *appid,
+				int allow_to_notify, int do_not_disturb_except,
+				int visibility_class, int pop_up_notification,
+				int lock_screen_content_level, uid_t uid)
 {
 	int err = NOTIFICATION_ERROR_NONE;
 	sqlite3 *db = NULL;
 	char *sqlbuf = NULL;
 	int sqlret;
 
-	if (package_name == NULL || strlen(package_name) == 0)
+	if (package_name == NULL || strlen(package_name) == 0
+	    || appid == NULL || strlen(appid) == 0)
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 
 	sqlret = db_util_open(DBPATH, &db, 0);
@@ -389,9 +391,9 @@ int notification_setting_db_update(const char *package_name, int allow_to_notify
 
 	sqlbuf = sqlite3_mprintf("UPDATE %s SET allow_to_notify = %d, do_not_disturb_except = %d, visibility_class = %d, " \
 				 "pop_up_notification = %d, lock_screen_content_level = %d " \
-			"WHERE package_name = %Q AND uid = %d",
+				 "WHERE appid = %Q AND package_name = %Q AND uid = %d",
 			NOTIFICATION_SETTING_DB_TABLE, allow_to_notify, do_not_disturb_except, visibility_class,
-			pop_up_notification, lock_screen_content_level, package_name, uid);
+			pop_up_notification, lock_screen_content_level, appid, package_name, uid);
 	if (!sqlbuf) {
 		NOTIFICATION_ERR("fail to alloc query");
 		err = NOTIFICATION_ERROR_OUT_OF_MEMORY;
@@ -584,7 +586,7 @@ err:
 	return ret;
 }
 
-EXPORT_API int notification_get_dnd_and_allow_to_notify(const char *pkgname,
+EXPORT_API int notification_get_dnd_and_allow_to_notify(const char *appid,
 							int *do_not_disturb,
 							int *do_not_disturb_except,
 							int *allow_to_notify,
@@ -601,7 +603,7 @@ EXPORT_API int notification_get_dnd_and_allow_to_notify(const char *pkgname,
 	char *query_system_setting = NULL;
 	char **query_system_setting_result = NULL;
 
-	if (pkgname == NULL)
+	if (appid == NULL)
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 
 	db = notification_db_open(DBPATH);
@@ -609,8 +611,8 @@ EXPORT_API int notification_get_dnd_and_allow_to_notify(const char *pkgname,
 		return get_last_result();
 
 	query_setting = sqlite3_mprintf("SELECT allow_to_notify, do_not_disturb_except "
-					"FROM %s WHERE package_name = %Q AND uid = %d",
-					NOTIFICATION_SETTING_DB_TABLE, pkgname, uid);
+					"FROM %s WHERE appid = %Q AND uid = %d",
+					NOTIFICATION_SETTING_DB_TABLE, appid, uid);
 	if (query_setting == NULL) {
 		NOTIFICATION_ERR("fail to alloc query");
 		ret = NOTIFICATION_ERROR_OUT_OF_MEMORY;
@@ -633,7 +635,7 @@ EXPORT_API int notification_get_dnd_and_allow_to_notify(const char *pkgname,
 		goto out;
 	}
 	if (row_count == 0) {
-		NOTIFICATION_ERR("Invalid uid [%d] or package name [%s]", uid, pkgname);
+		NOTIFICATION_ERR("Invalid uid [%d] or app id [%s]", uid, appid);
 		ret = NOTIFICATION_ERROR_INVALID_PARAMETER;
 		goto out;
 	}

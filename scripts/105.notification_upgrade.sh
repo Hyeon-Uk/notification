@@ -69,22 +69,18 @@ UPDATE noti_list_temp SET uid=5001;
 DROP TABLE noti_list;
 ALTER TABLE noti_list_temp RENAME TO noti_list;
 
-DROP TABLE IF EXISTS notification_setting_temp;
-CREATE TABLE notification_setting_temp (
+DROP TABLE IF EXISTS notification_setting;
+CREATE TABLE notification_setting (
 	uid INTEGER,
 	package_name TEXT NOT NULL,
+	appid TEXT NOT NULL,
 	allow_to_notify INTEGER DEFAULT 1,
 	do_not_disturb_except INTEGER DEFAULT 0,
 	visibility_class INTEGER DEFAULT 0,
 	pop_up_notification INTEGER DEFAULT 1,
 	lock_screen_content_level INTEGER DEFAULT 0,
-	UNIQUE (uid, package_name)
+	UNIQUE (uid, package_name, appid)
 );
-INSERT INTO notification_setting_temp (package_name, allow_to_notify, do_not_disturb_except, visibility_class) \
-SELECT package_name, allow_to_notify, do_not_disturb_except, visibility_class FROM notification_setting;
-UPDATE notification_setting_temp SET uid=5001;
-DROP TABLE notification_setting;
-ALTER TABLE notification_setting_temp RENAME TO notification_setting;
 
 
 DROP TABLE IF EXISTS notification_system_setting_temp;

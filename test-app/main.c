@@ -671,27 +671,32 @@ static int testapp_test_get_setting_list()
 	int i = 0;
 	int count = 0;
 	char *package_name = NULL;
+	char *appid = NULL;
 	bool allow_to_notify = false;
 	bool do_not_disturb_except = false;
 	int visibility_class = false;
 	bool pop_up_notification = false;
 	lock_screen_content_level_e level = 0;
 	notification_setting_h setting_array = NULL;
+	notification_setting_h tmp = NULL;
 
 	notification_setting_get_setting_array(&setting_array, &count);
 
 	testapp_print("count [%d]\n", count);
 
 	for (i = 0; i < count; i++) {
-		notification_setting_get_package_name(setting_array + i, &package_name);
-		notification_setting_get_allow_to_notify(setting_array + i, &allow_to_notify);
-		notification_setting_get_do_not_disturb_except(setting_array + i, &do_not_disturb_except);
-		notification_setting_get_visibility_class(setting_array + i, &visibility_class);
-		notification_setting_get_pop_up_notification(setting_array + i, &pop_up_notification);
-		notification_setting_get_lock_screen_content(setting_array + i, &level);
-		testapp_print("[%d] : package_name[%s], allow_to_notify[%d], do_not_disturb_except[%d], visibility_class[%d], notification_pop_up[%d], lock_content_level[%d]\n"
-				, i, package_name, allow_to_notify, do_not_disturb_except, visibility_class, pop_up_notification, level);
+		tmp = setting_array + i;
+		notification_setting_get_package_name(tmp, &package_name);
+		notification_setting_get_appid(tmp, &appid);
+		notification_setting_get_allow_to_notify(tmp, &allow_to_notify);
+		notification_setting_get_do_not_disturb_except(tmp, &do_not_disturb_except);
+		notification_setting_get_visibility_class(tmp, &visibility_class);
+		notification_setting_get_pop_up_notification(tmp, &pop_up_notification);
+		notification_setting_get_lock_screen_content(tmp, &level);
+		testapp_print("[%d] : package_name[%s], appid [%s], allow_to_notify[%d], do_not_disturb_except[%d] visibility_class[%d] pop_up_notification[%d] level[%d]\n",
+			      i, package_name, appid, allow_to_notify, do_not_disturb_except, visibility_class, pop_up_notification, level);
 		free(package_name);
+		free(appid);
 	}
 
 	notification_setting_free_notification(setting_array);

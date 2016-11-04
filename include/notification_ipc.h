@@ -73,8 +73,8 @@ int notification_ipc_request_load_noti_grouping_list(notification_type_e type,
 		notification_list_h *list, uid_t uid);
 int notification_ipc_request_get_setting_array(
 		notification_setting_h *setting_array, int *count, uid_t uid);
-int notification_ipc_request_get_setting_by_package_name(
-		const char *package_name, notification_setting_h *setting, uid_t uid);
+int notification_ipc_request_get_setting_by_appid(
+		const char *appid, notification_setting_h *setting, uid_t uid);
 int notification_ipc_request_load_system_setting(
 		notification_system_setting_h *setting, uid_t uid);
 int notification_ipc_request_get_count(notification_type_e type,

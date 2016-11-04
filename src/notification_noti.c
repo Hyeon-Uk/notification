@@ -706,71 +706,16 @@ err:
 	return ret;
 }
 
-
-static int _get_package_id_by_app_id(const char *app_id, char **package_id)
-{
-	int err = NOTIFICATION_ERROR_NONE;
-	int retval;
-	char *pkg_id = NULL;
-	char *pkg_id_dup = NULL;
-	pkgmgrinfo_appinfo_h pkgmgrinfo_appinfo = NULL;
-
-	if (app_id == NULL || package_id == NULL) {
-		NOTIFICATION_ERR("NOTIFICATION_ERROR_INVALID_PARAMETER");
-		return NOTIFICATION_ERROR_INVALID_PARAMETER;
-	}
-
-	if ((retval = pkgmgrinfo_appinfo_get_appinfo(app_id, &pkgmgrinfo_appinfo)) != PMINFO_R_OK) {
-		NOTIFICATION_ERR("pkgmgrinfo_appinfo_get_appinfo failed [%d]", retval);
-		err = NOTIFICATION_ERROR_INVALID_OPERATION;
-		goto out;
-	}
-
-	if ((retval = pkgmgrinfo_appinfo_get_pkgname(pkgmgrinfo_appinfo, &pkg_id)) != PMINFO_R_OK || pkg_id == NULL) {
-		NOTIFICATION_ERR("pkgmgrinfo_appinfo_get_pkgname failed [%d]", retval);
-		err = NOTIFICATION_ERROR_INVALID_OPERATION;
-		goto out;
-	}
-
-	pkg_id_dup = strdup(pkg_id);
-
-	if (pkg_id_dup == NULL) {
-		NOTIFICATION_ERR("strdup failed");
-		err = NOTIFICATION_ERROR_OUT_OF_MEMORY;
-		goto out;
-	}
-
-	*package_id = pkg_id_dup;
-
-out:
-	if (pkgmgrinfo_appinfo)
-		pkgmgrinfo_appinfo_destroy_appinfo(pkgmgrinfo_appinfo);
-
-	return err;
-}
-
-static bool _is_allowed_to_notify(const char *caller_package_name, uid_t uid)
+static bool _is_allowed_to_notify(const char *appid, uid_t uid)
 {
 	notification_setting_h setting = NULL;
 	int err;
-	char *package_id = NULL;
 	bool ret = true;
 
-	err = noti_setting_service_get_setting_by_package_name(caller_package_name, &setting, uid);
+	err = noti_setting_service_get_setting_by_appid(appid, &setting, uid);
 	if (err != NOTIFICATION_ERROR_NONE) {
-		/* Retry with package id */
-		err = _get_package_id_by_app_id(caller_package_name, &package_id);
-
-		if (err != NOTIFICATION_ERROR_NONE || package_id == NULL) {
-			NOTIFICATION_ERR("_get_package_id_by_app_id failed [%d]", err);
-			goto out;
-		} else {
-			err = noti_setting_service_get_setting_by_package_name(package_id, &setting, uid);
-			if (err != NOTIFICATION_ERROR_NONE) {
-				NOTIFICATION_ERR("noti_setting_service_get_setting_by_package_name failed [%d]", err);
-				goto out;
-			}
-		}
+		NOTIFICATION_ERR("noti_setting_service_get_setting_by_appid failed [%d]", err);
+		goto out;
 	}
 
 	err = notification_setting_get_allow_to_notify(setting, &ret);
@@ -780,12 +725,9 @@ static bool _is_allowed_to_notify(const char *caller_package_name, uid_t uid)
 	}
 
 	if (ret != true)
-		NOTIFICATION_DBG("[%s] is not allowed to notify", caller_package_name);
+		NOTIFICATION_DBG("[%s] is not allowed to notify", appid);
 
 out:
-	if (package_id)
-		free(package_id);
-
 	if (setting)
 		notification_setting_free_notification(setting);
 
@@ -797,7 +739,6 @@ static int _handle_do_not_disturb_option(notification_h noti)
 	int err = NOTIFICATION_ERROR_NONE;
 	bool do_not_disturb = false;
 	bool do_not_disturb_exception = false;
-	char *package_id = NULL;
 	notification_setting_h setting = NULL;
 	notification_system_setting_h system_setting = NULL;
 
@@ -823,20 +764,10 @@ static int _handle_do_not_disturb_option(notification_h noti)
 
 	if (do_not_disturb) {
 		/* Check exception option of the caller package */
-		err = noti_setting_service_get_setting_by_package_name(noti->caller_pkgname, &setting, noti->uid);
+		err = noti_setting_service_get_setting_by_appid(noti->caller_pkgname, &setting, noti->uid);
 		if (err != NOTIFICATION_ERROR_NONE) {
-			/* Retry with package id */
-			err = _get_package_id_by_app_id(noti->caller_pkgname, &package_id);
-			if (err != NOTIFICATION_ERROR_NONE || package_id == NULL) {
-				NOTIFICATION_ERR("_get_package_id_by_app_id failed [%d]", err);
-				goto out;
-			} else {
-				err = noti_setting_service_get_setting_by_package_name(package_id, &setting, noti->uid);
-				if (err != NOTIFICATION_ERROR_NONE) {
-					NOTIFICATION_ERR("_get_setting_by_package_name failed [%d]", err);
-					goto out;
-				}
-			}
+			NOTIFICATION_ERR("_get_setting_by_package_name failed [%d]", err);
+			goto out;
 		}
 
 		err = notification_setting_get_do_not_disturb_except(setting, &do_not_disturb_exception);
@@ -862,8 +793,6 @@ static int _handle_do_not_disturb_option(notification_h noti)
 	}
 
 out:
-	SAFE_FREE(package_id);
-
 	if (system_setting)
 		notification_system_setting_free_system_setting(system_setting);
 
@@ -873,15 +802,15 @@ out:
 	return err;
 }
 
-static bool _is_pop_up_notification(const char *caller_package_name, uid_t uid)
+static bool _is_pop_up_notification(const char *appid, uid_t uid)
 {
 	int err;
 	bool ret = true;
 	notification_setting_h setting = NULL;
 
-	err = noti_setting_service_get_setting_by_package_name(caller_package_name, &setting, uid);
+	err = noti_setting_service_get_setting_by_appid(appid, &setting, uid);
 	if (err != NOTIFICATION_ERROR_NONE) {
-		NOTIFICATION_ERR("noti_setting_service_get_setting_by_package_name failed [%d]", err);
+		NOTIFICATION_ERR("noti_setting_service_get_setting_by_appid failed [%d]", err);
 		goto out;
 	}
 
@@ -892,7 +821,7 @@ static bool _is_pop_up_notification(const char *caller_package_name, uid_t uid)
 	}
 
 	if (ret != true)
-		NOTIFICATION_DBG("[%s] is not allowed Pop-up notification", caller_package_name);
+		NOTIFICATION_DBG("[%s] is not allowed Pop-up notification", appid);
 
 out:
 	if (setting)

@@ -1274,8 +1274,8 @@ int notification_ipc_request_get_setting_array(
 	return result;
 }
 
-int notification_ipc_request_get_setting_by_package_name(
-		const char *package_name, notification_setting_h *setting, uid_t uid)
+int notification_ipc_request_get_setting_by_appid(
+		const char *appid, notification_setting_h *setting, uid_t uid)
 {
 	int result;
 	GDBusMessage *reply = NULL;
@@ -1290,8 +1290,8 @@ int notification_ipc_request_get_setting_by_package_name(
 		return result;
 	}
 
-	body = g_variant_new("(si)", package_name, uid);
-	result = _send_sync_noti(body, &reply, "get_setting_by_package_name");
+	body = g_variant_new("(si)", appid, uid);
+	result = _send_sync_noti(body, &reply, "get_setting_by_appid");
 
 	if (result == NOTIFICATION_ERROR_NONE) {
 		reply_body = g_dbus_message_get_body(reply);
@@ -1397,8 +1397,9 @@ int notification_ipc_update_setting(notification_setting_h setting, uid_t uid)
 		return result;
 	}
 
-	body = g_variant_new("(siiiiii)",
+	body = g_variant_new("(ssiiiiii)",
 			setting->package_name,
+			setting->appid,
 			(int)(setting->allow_to_notify),
 			(int)(setting->do_not_disturb_except),
 			(int)(setting->visibility_class),
@@ -2094,8 +2095,9 @@ EXPORT_API GVariant *notification_ipc_make_gvariant_from_setting(struct notifica
 {
 	GVariant *body = NULL;
 
-	body = g_variant_new("(siiiii)",
+	body = g_variant_new("(ssiiiii)",
 			noti_setting->package_name,
+			noti_setting->appid,
 			noti_setting->allow_to_notify,
 			noti_setting->do_not_disturb_except,
 			noti_setting->visibility_class,
@@ -2110,6 +2112,7 @@ EXPORT_API int notification_ipc_make_setting_from_gvariant(struct notification_s
 {
 	NOTIFICATION_DBG("notification_ipc_make_setting_from_gvariant !!!!");
 	char *pkgname;
+	char *appid;
 	int allow_to_notify;
 	int do_not_disturb_except;
 	int visibility_class;
@@ -2121,8 +2124,9 @@ EXPORT_API int notification_ipc_make_setting_from_gvariant(struct notification_s
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 	}
 	g_variant_get(variant,
-			"(&siiiii)",
+			"(&s&siiiii)",
 			&pkgname,
+			&appid,
 			&allow_to_notify,
 			&do_not_disturb_except,
 			&visibility_class,
@@ -2132,6 +2136,7 @@ EXPORT_API int notification_ipc_make_setting_from_gvariant(struct notification_s
 	NOTIFICATION_DBG("setting from variant %s !!", pkgname);
 
 	noti_setting->package_name = _dup_string(pkgname);
+	noti_setting->appid = _dup_string(appid);
 	noti_setting->allow_to_notify = allow_to_notify;
 	noti_setting->do_not_disturb_except = do_not_disturb_except;
 	noti_setting->visibility_class = visibility_class;

@@ -82,6 +82,7 @@ typedef enum notification_dnd_allowed_calls {
 /* Application setting */
 struct notification_setting {
 	char *package_name;
+	char *appid;
 	bool  allow_to_notify;
 	bool  do_not_disturb_except;
 	bool  pop_up_notification;
@@ -186,7 +187,7 @@ int notification_setting_get_setting_array_for_uid(notification_setting_h *setti
  * @endcode
  */
 int notification_setting_get_setting_by_package_name(const char *package_name, notification_setting_h *setting);
-int notification_setting_get_setting_by_package_name_for_uid(const char *package_name, notification_setting_h *setting, uid_t uid);
+int notification_setting_get_setting_by_appid_for_uid(const char *package_name, notification_setting_h *setting, uid_t uid);
 
 /*
  * @internal
@@ -223,6 +224,42 @@ int notification_setting_get_setting_by_package_name_for_uid(const char *package
  * @endcode
  */
 int notification_setting_get_package_name(notification_setting_h setting, char **value);
+
+/*
+ * @internal
+ * @brief Gets application id from notification setting handle.
+ * @since_tizen 3.0
+ * @param[in] setting	The notification setting handle
+ * @param[out] appid	The application id
+ * @return #NOTIFICATION_ERROR_NONE on success,
+ *         otherwise any other value on failure
+ * @retval #NOTIFICATION_ERROR_NONE         Success
+ * @retval #NOTIFICATION_ERROR_INVALID_PARAMETER Invalid parameter
+ * @retval #NOTIFICATION_ERROR_NOT_EXIST_ID Already exist private ID
+ * @par sample code:
+ * @code
+#include <notification_setting_internal.h>
+...
+{
+	int noti_err = 0;
+	char *appid = NULL;
+	notification_setting_h setting = NULL;
+
+	...
+
+	noti_err = notification_setting_get_appid(setting, &appid);
+	if (noti_err != NOTIFICATION_ERROR_NONE) {
+		return;
+	}
+
+	notification_setting_free_notification(setting);
+
+	return 0;
+
+}
+ * @endcode
+ */
+int notification_setting_get_appid(notification_setting_h setting, char **appid);
 
 /*
  * @internal
@@ -1315,8 +1352,8 @@ static void changed_cb(void *user_data, int do_not_disturb)
 int notification_unregister_system_setting_dnd_changed_cb(dnd_changed_cb callback);
 int notification_unregister_system_setting_dnd_changed_cb_for_uid(dnd_changed_cb callback, uid_t uid);
 
-int notification_setting_insert_package_for_uid(const char *package_id, uid_t uid);
-int notification_setting_delete_package_for_uid(const char *package_id, uid_t uid);
+int notification_setting_insert_package_for_uid(const char *package_name, uid_t uid);
+int notification_setting_delete_package_for_uid(const char *package_name, uid_t uid);
 int notification_setting_update_setting_for_uid(notification_setting_h setting, uid_t uid);
 
 /* OLD IMPLEMENTATION */
