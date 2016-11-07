@@ -117,22 +117,6 @@ EXPORT_API int notification_setting_get_package_name(notification_setting_h sett
 	return NOTIFICATION_ERROR_NONE;
 }
 
-EXPORT_API int notification_setting_set_package_name(notification_setting_h setting, char *value)
-{
-
-	if (setting == NULL || value == NULL) {
-		NOTIFICATION_ERR("Invalid parameter");
-		return NOTIFICATION_ERROR_INVALID_PARAMETER;
-	}
-
-	if (setting->package_name != NULL)
-		free(setting->package_name);
-
-	setting->package_name = SAFE_STRDUP(value);
-
-	return NOTIFICATION_ERROR_NONE;
-}
-
 EXPORT_API int notification_setting_get_allow_to_notify(notification_setting_h setting, bool *value)
 {
 	if (setting == NULL || value == NULL) {
