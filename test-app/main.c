@@ -317,12 +317,12 @@ static int testapp_test_post_notification_on_indicator()
 		goto FINISH_OFF;
 	}
 
-	snprintf(image_path, TIZEN_PATH_MAX, "%s/org.tizen.indicator/res/icons/Shealth/B03_shealth.png", PATH_FMT_RO_APP_ROOT);
-	noti_err  = notification_set_image(noti_handle, NOTIFICATION_IMAGE_TYPE_ICON_FOR_INDICATOR, image_path);
-	/*
 	noti_err  = notification_set_text(noti_handle, NOTIFICATION_TEXT_TYPE_TITLE, "I'm Title", "TITLE", NOTIFICATION_VARIABLE_TYPE_NONE);
-	noti_err  = notification_set_text(noti_handle, NOTIFICATION_TEXT_TYPE_CONTENT, "I'm Content", "This is very long message", NOTIFICATION_VARIABLE_TYPE_NONE);
-	*/
+	noti_err  = notification_set_text(noti_handle, NOTIFICATION_TEXT_TYPE_CONTENT, "I'm Content", "CONTENT", NOTIFICATION_VARIABLE_TYPE_NONE);
+
+	snprintf(image_path, TIZEN_PATH_MAX, "%s/org.tizen.indicator/res/resource/icons/Notify/b03_notify_more.png", PATH_FMT_RO_APP_ROOT);
+	noti_err  = notification_set_image(noti_handle, NOTIFICATION_IMAGE_TYPE_ICON_FOR_INDICATOR, image_path);
+
 	noti_err  = notification_set_display_applist(noti_handle, NOTIFICATION_DISPLAY_APP_TICKER | NOTIFICATION_DISPLAY_APP_INDICATOR);
 
 	if (noti_err != NOTIFICATION_ERROR_NONE) {
