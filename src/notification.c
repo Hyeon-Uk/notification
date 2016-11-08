@@ -95,14 +95,14 @@ char *notification_get_pkgname_by_pid(void)
 }
 
 EXPORT_API int notification_set_image(notification_h noti,
-						       notification_image_type_e type,
-						       const char *image_path)
+						notification_image_type_e type,
+						const char *image_path)
 {
 	bundle *b = NULL;
 	char buf_key[32] = { 0, };
 	char *ret_val = NULL;
 
-	if (noti == NULL || image_path == NULL)
+	if (noti == NULL)
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 
 	if (type <= NOTIFICATION_IMAGE_TYPE_NONE
@@ -118,8 +118,12 @@ EXPORT_API int notification_set_image(notification_h noti,
 		if (ret_val != NULL)
 			bundle_del(b, buf_key);
 
-		bundle_add_str(b, buf_key, image_path);
+		if (image_path != NULL)
+			bundle_add_str(b, buf_key, image_path);
 	} else {
+		if (image_path == NULL)
+			return NOTIFICATION_ERROR_NONE;
+
 		b = bundle_create();
 
 		snprintf(buf_key, sizeof(buf_key), "%d", type);
