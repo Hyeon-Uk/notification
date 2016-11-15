@@ -75,15 +75,6 @@ static void __free_changed_cb_info(gpointer data)
 }
 /* LCOV_EXCL_STOP */
 
-/* LCOV_EXCL_START */
-static void __free_changed_cb_hash(gpointer data)
-{
-	GList *changed_cb_list = (GList *)data;
-	if (changed_cb_list)
-		g_list_free_full(changed_cb_list, __free_changed_cb_info);
-}
-/* LCOV_EXCL_STOP */
-
 void notification_call_changed_cb_for_uid(notification_op *op_list, int op_num, uid_t uid)
 {
 	notification_type_e type = 0;
@@ -215,7 +206,7 @@ EXPORT_API int notification_resister_changed_cb_for_uid(
 		return NOTIFICATION_ERROR_IO_ERROR;
 
 	if (_noti_cb_hash == NULL)
-		_noti_cb_hash = g_hash_table_new_full(g_direct_hash, g_direct_equal, NULL, __free_changed_cb_hash);
+		_noti_cb_hash = g_hash_table_new(g_direct_hash, g_direct_equal);
 
 	noti_cb_info_new = (notification_cb_info_s *)malloc(sizeof(notification_cb_info_s));
 	if (noti_cb_info_new == NULL) {
@@ -247,11 +238,26 @@ EXPORT_API int notification_resister_changed_cb(
 	return notification_resister_changed_cb_for_uid(changed_cb, user_data, getuid());
 }
 
+static gint _noti_changed_compare(gconstpointer a, gconstpointer b)
+{
+	const struct _notification_cb_info *info = NULL;
+
+	if (!a)
+		return -1;
+	info = (notification_cb_info_s *)a;
+
+	if (info->changed_cb == b)
+		return 0;
+
+	return 1;
+}
+
 EXPORT_API int notification_unresister_changed_cb_for_uid(
 		void (*changed_cb)(void *data, notification_type_e type), uid_t uid)
 {
 	notification_cb_info_s *noti_cb_info = NULL;
 	GList *noti_cb_list = NULL;
+	GList *delete_cb_list = NULL;
 
 	if (changed_cb == NULL)
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
@@ -265,23 +271,29 @@ EXPORT_API int notification_unresister_changed_cb_for_uid(
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 
 	noti_cb_list = g_list_first(noti_cb_list);
+	delete_cb_list = g_list_find_custom(noti_cb_list, (gconstpointer)changed_cb,
+					      _noti_changed_compare);
 
-	for (; noti_cb_list != NULL; noti_cb_list = noti_cb_list->next) {
-		noti_cb_info = noti_cb_list->data;
-		if (noti_cb_info->changed_cb == changed_cb) {
-			noti_cb_list = g_list_remove(g_list_first(noti_cb_list), noti_cb_info);
+	if (delete_cb_list) {
+		noti_cb_info = g_list_nth_data(delete_cb_list, 0);
+		noti_cb_list = g_list_delete_link(noti_cb_list, delete_cb_list);
+		__free_changed_cb_info(noti_cb_info);
 
-			if (noti_cb_list == NULL)
-				g_hash_table_steal(_noti_cb_hash, GUINT_TO_POINTER(uid));
-
-			if (g_hash_table_size(_noti_cb_hash) == 0)
-				notification_ipc_monitor_fini();
-
-			return NOTIFICATION_ERROR_NONE;
+		if (noti_cb_list == NULL) {
+			g_hash_table_steal(_noti_cb_hash, GUINT_TO_POINTER(uid));
+		} else {
+			noti_cb_list = g_list_first(noti_cb_list);
+			g_hash_table_replace(_noti_cb_hash, GUINT_TO_POINTER(uid), noti_cb_list);
 		}
+
+	} else {
+		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 	}
 
-	return NOTIFICATION_ERROR_INVALID_PARAMETER;
+	if (g_hash_table_size(_noti_cb_hash) == 0)
+		notification_ipc_monitor_fini();
+
+	return NOTIFICATION_ERROR_NONE;
 }
 
 EXPORT_API int notification_unresister_changed_cb(
@@ -1138,7 +1150,7 @@ EXPORT_API int notification_register_detailed_changed_cb_for_uid(
 		return NOTIFICATION_ERROR_IO_ERROR;
 
 	if (_noti_cb_hash == NULL)
-		_noti_cb_hash = g_hash_table_new_full(g_direct_hash, g_direct_equal, NULL, __free_changed_cb_hash);
+		_noti_cb_hash = g_hash_table_new(g_direct_hash, g_direct_equal);
 
 	noti_cb_info_new = (notification_cb_info_s *)malloc(sizeof(notification_cb_info_s));
 	if (noti_cb_info_new == NULL) {
@@ -1170,12 +1182,27 @@ EXPORT_API int notification_register_detailed_changed_cb(
 	return notification_register_detailed_changed_cb_for_uid(detailed_changed_cb, user_data, getuid());
 }
 
+static gint _noti_detailed_changed_compare(gconstpointer a, gconstpointer b)
+{
+	const struct _notification_cb_info *info = NULL;
+
+	if (!a)
+		return -1;
+	info = (notification_cb_info_s *)a;
+
+	if (info->detailed_changed_cb == b)
+		return 0;
+
+	return 1;
+}
+
 EXPORT_API int notification_unregister_detailed_changed_cb_for_uid(
 		void (*detailed_changed_cb)(void *data, notification_type_e type, notification_op *op_list, int num_op),
 		void *user_data, uid_t uid)
 {
 	notification_cb_info_s *noti_cb_info = NULL;
 	GList *noti_cb_list = NULL;
+	GList *delete_cb_list = NULL;
 
 	if (detailed_changed_cb == NULL)
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
@@ -1189,23 +1216,29 @@ EXPORT_API int notification_unregister_detailed_changed_cb_for_uid(
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 
 	noti_cb_list = g_list_first(noti_cb_list);
+	delete_cb_list = g_list_find_custom(noti_cb_list, (gconstpointer)detailed_changed_cb,
+					    _noti_detailed_changed_compare);
 
-	for (; noti_cb_list != NULL; noti_cb_list = noti_cb_list->next) {
-		noti_cb_info = noti_cb_list->data;
-		if (noti_cb_info->detailed_changed_cb == detailed_changed_cb) {
-			noti_cb_list = g_list_remove(g_list_first(noti_cb_list), noti_cb_info);
-
-			if (noti_cb_list == NULL)
-				g_hash_table_steal(_noti_cb_hash, GUINT_TO_POINTER(uid));
-
-			if (g_hash_table_size(_noti_cb_hash) == 0)
-				notification_ipc_monitor_fini();
-
-			return NOTIFICATION_ERROR_NONE;
+	if (delete_cb_list) {
+		noti_cb_info = (notification_cb_info_s *)g_list_nth_data(delete_cb_list, 0);
+		noti_cb_list = g_list_delete_link(noti_cb_list, delete_cb_list);
+		__free_changed_cb_info(noti_cb_info);
+		if (noti_cb_list == NULL) {
+			g_hash_table_steal(_noti_cb_hash, GUINT_TO_POINTER(uid));
+		} else {
+			noti_cb_list = g_list_first(noti_cb_list);
+			g_hash_table_replace(_noti_cb_hash, GUINT_TO_POINTER(uid), noti_cb_list);
 		}
+
+	} else {
+		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 	}
 
-	return NOTIFICATION_ERROR_INVALID_PARAMETER;
+	if (g_hash_table_size(_noti_cb_hash) == 0)
+		notification_ipc_monitor_fini();
+
+	return NOTIFICATION_ERROR_NONE;
+
 }
 
 EXPORT_API int notification_unregister_detailed_changed_cb(
