@@ -38,9 +38,9 @@ EXPORT_API GQuark notification_error_quark(void)
 	static volatile gsize quark_volatile = 0;
 	static const char *domain_name = NULL;
 
-	/* This is for preventing crash when notification api is used in ui-gadget     */
+	/* This is for preventing crash when notification api is used in ui-gadget */
 	/* ui-gadget libraries can be unloaded when it is needed and the static string */
-	/* parameter to g_dbus_error_register_error_domain may cause crash.             */
+	/* parameter to g_dbus_error_register_error_domain may cause crash. */
 	GQuark quark = g_quark_try_string(NOTIFICATION_ERROR_QUARK);
 
 	if (quark == 0) {

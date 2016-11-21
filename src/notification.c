@@ -44,7 +44,7 @@
 #include <notification_ipc.h>
 #include <notification_internal.h>
 
-static void (*posted_toast_message_cb) (void *data);
+static void (*posted_toast_message_cb)(void *data);
 
 #define NOTI_TEXT_RESULT_LEN 2048
 #define NOTI_PKGNAME_LEN	512
@@ -56,7 +56,7 @@ char *notification_get_pkgname_by_pid(void)
 	char pkgname[NOTI_PKGNAME_LEN + 1] = { 0, };
 	int pid = 0, ret = AUL_R_OK;
 	int fd;
-	char  *dup_pkgname;
+	char *dup_pkgname;
 	char buf[NOTI_PKGNAME_LEN + 1] = { 0, };
 
 	pid = getpid();

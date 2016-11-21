@@ -392,7 +392,6 @@ EXPORT_API int notification_update_content(notification_h noti,
 			return NOTIFICATION_ERROR_INVALID_PARAMETER;
 		else
 			input_priv_id = noti->priv_id;
-
 	} else {
 		input_priv_id = priv_id;
 	}
@@ -425,22 +424,22 @@ EXPORT_API int notification_set_icon(notification_h noti,
 EXPORT_API int notification_get_icon(notification_h noti,
 		char **icon_path)
 {
-	int ret_err = NOTIFICATION_ERROR_NONE;
+	int ret = NOTIFICATION_ERROR_NONE;
 	char *ret_image_path = NULL;
 
-	ret_err = notification_get_image(noti, NOTIFICATION_IMAGE_TYPE_ICON,
+	ret = notification_get_image(noti, NOTIFICATION_IMAGE_TYPE_ICON,
 				&ret_image_path);
 
-	if (ret_err == NOTIFICATION_ERROR_NONE && icon_path != NULL)
+	if (ret == NOTIFICATION_ERROR_NONE && icon_path != NULL)
 		*icon_path = ret_image_path;
 
-	return ret_err;
+	return ret;
 }
 /* LCOV_EXCL_STOP */
 
 EXPORT_API int notification_translate_localized_text(notification_h noti)
 {
-	int noti_err = NOTIFICATION_ERROR_NONE;
+	int ret = NOTIFICATION_ERROR_NONE;
 	char *ret_text = NULL;
 	char buf_key[32];
 	char *bundle_val = NULL;
@@ -449,8 +448,8 @@ EXPORT_API int notification_translate_localized_text(notification_h noti)
 	notification_text_type_e type = NOTIFICATION_TEXT_TYPE_TITLE;
 
 	for (; type < NOTIFICATION_TEXT_TYPE_MAX; type++) {
-		noti_err = notification_get_text(noti, type, &ret_text);
-		if (noti_err == NOTIFICATION_ERROR_NONE && ret_text) {
+		ret = notification_get_text(noti, type, &ret_text);
+		if (ret == NOTIFICATION_ERROR_NONE && ret_text) {
 			if (noti->b_text == NULL) {
 				noti->b_text = bundle_create();
 				if (noti->b_text == NULL)
@@ -475,7 +474,7 @@ EXPORT_API int notification_translate_localized_text(notification_h noti)
 		}
 	}
 
-	return noti_err;
+	return ret;
 }
 
 /* LCOV_EXCL_START */
@@ -494,10 +493,10 @@ EXPORT_API int notification_get_title(notification_h noti,
 		char **title,
 		char **loc_title)
 {
-	int noti_err = NOTIFICATION_ERROR_NONE;
+	int ret;
 	char *ret_text = NULL;
 
-	noti_err = notification_get_text(noti, NOTIFICATION_TEXT_TYPE_TITLE,
+	ret = notification_get_text(noti, NOTIFICATION_TEXT_TYPE_TITLE,
 				&ret_text);
 
 	if (title != NULL)
@@ -506,7 +505,7 @@ EXPORT_API int notification_get_title(notification_h noti,
 	if (loc_title != NULL)
 		*loc_title = NULL;
 
-	return noti_err;
+	return ret;
 }
 /* LCOV_EXCL_STOP */
 
@@ -526,10 +525,10 @@ EXPORT_API int notification_get_content(notification_h noti,
 		char **content,
 		char **loc_content)
 {
-	int noti_err = NOTIFICATION_ERROR_NONE;
+	int ret;
 	char *ret_text = NULL;
 
-	noti_err = notification_get_text(noti, NOTIFICATION_TEXT_TYPE_CONTENT,
+	ret = notification_get_text(noti, NOTIFICATION_TEXT_TYPE_CONTENT,
 				&ret_text);
 
 	if (content != NULL)
@@ -538,7 +537,7 @@ EXPORT_API int notification_get_content(notification_h noti,
 	if (loc_content != NULL)
 		*loc_content = NULL;
 
-	return noti_err;
+	return ret;
 }
 /* LCOV_EXCL_STOP */
 
