@@ -1577,6 +1577,8 @@ int notification_get_noti_block_state(notification_block_state_e *state);
  *          Refer to the second sample code.
 
  * @since_tizen 3.0
+ * @param[in] noti Notification handle
+ * @param[in] text_input_max_length The maximum value which can be inputted
  * @return #NOTIFICATION_ERROR_NONE on success,
  *         otherwise any other value on failure
  * @retval #NOTIFICATION_ERROR_NONE         Success
