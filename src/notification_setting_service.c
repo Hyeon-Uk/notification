@@ -475,7 +475,6 @@ return_close_db:
 	if (db_statement)
 		sqlite3_finalize(db_statement);
 
-
 	if (db) {
 		if (err == NOTIFICATION_ERROR_NONE)
 			sqlite3_exec(db, "END;", NULL, NULL, NULL);
@@ -792,10 +791,12 @@ EXPORT_API int notification_system_setting_update_dnd_allow_exception(int type, 
 out:
 	if (db_statement)
 		sqlite3_finalize(db_statement);
+
 	if (ret == NOTIFICATION_ERROR_NONE)
 		sqlite3_exec(db, "END;", NULL, NULL, NULL);
 	else
 		sqlite3_exec(db, "ROLLBACK;", NULL, NULL, NULL);
+
 	notification_db_close(&db);
 
 	return ret;
@@ -843,8 +844,10 @@ EXPORT_API int noti_system_setting_get_do_not_disturb(int *do_not_disturb, uid_t
 out:
 	if (query_result)
 		sqlite3_free_table(query_result);
+
 	if (query)
 		sqlite3_free(query);
+
 	if (db)
 		notification_db_close(&db);
 

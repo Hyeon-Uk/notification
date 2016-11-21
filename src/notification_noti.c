@@ -778,9 +778,9 @@ static int _handle_do_not_disturb_option(notification_h noti)
 
 		if (do_not_disturb_exception == false) {
 			/* do_not_disturb is ON and do_not_disturb_exception is OFF */
-			/* Then add this notification only on quick panel and indicator*/
+			/* Then add this notification only on quick panel and indicator */
 			noti->display_applist = noti->display_applist & (NOTIFICATION_DISPLAY_APP_NOTIFICATION_TRAY | NOTIFICATION_DISPLAY_APP_INDICATOR);
-			/* and reset all sound and vibration and led options*/
+			/* and reset all sound and vibration and led options */
 			noti->sound_type = NOTIFICATION_SOUND_TYPE_NONE;
 			SAFE_FREE(noti->sound_path);
 			noti->vibration_type = NOTIFICATION_VIBRATION_TYPE_NONE;
@@ -1223,7 +1223,8 @@ EXPORT_API int notification_noti_delete_all(notification_type_e type, const char
 {
 	int ret = NOTIFICATION_ERROR_NONE;
 	int ret_tmp = NOTIFICATION_ERROR_NONE;
-	int i = 0, data_cnt = 0;
+	int i = 0;
+	int data_cnt = 0;
 	sqlite3 *db = NULL;
 	sqlite3_stmt *stmt = NULL;
 	char buf[128] = { 0, };
@@ -1240,7 +1241,6 @@ EXPORT_API int notification_noti_delete_all(notification_type_e type, const char
 		if (type != NOTIFICATION_TYPE_NONE)
 			snprintf(query_where, sizeof(query_where),
 				 "where type = %d and uid = %d", type, uid);
-
 	} else {
 		if (type == NOTIFICATION_TYPE_NONE)
 			snprintf(query_where, sizeof(query_where),
@@ -1307,7 +1307,6 @@ EXPORT_API int notification_noti_delete_all(notification_type_e type, const char
 					query_where[0] = '\0';
 					if (ret == NOTIFICATION_ERROR_NONE)
 						ret = ret_tmp;
-
 				}
 				snprintf(buf, sizeof(buf) - 1, "%s%d", (i % NOTI_BURST_DELETE_UNIT == 0) ? "" : ",", *((*list_deleted_rowid) + i));
 				strncat(query_where, buf, sizeof(query_where) - strlen(query_where) - 1);
@@ -1325,7 +1324,6 @@ EXPORT_API int notification_noti_delete_all(notification_type_e type, const char
 
 		if (num_deleted != NULL)
 			*num_deleted = data_cnt;
-
 	} else {
 		/* Make main query */
 		snprintf(query_base, sizeof(query_base), "delete from noti_list ");
@@ -1335,7 +1333,6 @@ EXPORT_API int notification_noti_delete_all(notification_type_e type, const char
 
 		if (num_deleted != NULL)
 			*num_deleted = sqlite3_changes(db);
-
 	}
 
 err:
@@ -1378,7 +1375,7 @@ EXPORT_API int notification_noti_delete_by_priv_id(const char *pkgname, int priv
 EXPORT_API int notification_noti_delete_by_priv_id_get_changes(const char *pkgname, int priv_id, int *num_changes, uid_t uid)
 {
 	sqlite3 *db = NULL;
-	char query[NOTIFICATION_QUERY_MAX] = {0, };
+	char query[NOTIFICATION_QUERY_MAX] = { 0, };
 	int ret;
 
 	db = notification_db_open(DBPATH);
@@ -1511,7 +1508,6 @@ EXPORT_API int notification_noti_get_count(notification_type_e type,
 err:
 	if (stmt)
 		sqlite3_finalize(stmt);
-
 
 	if (db)
 		notification_db_close(&db);

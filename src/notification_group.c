@@ -28,7 +28,8 @@ static int _notification_group_check_data_inserted(const char *pkgname,
 {
 	sqlite3_stmt *stmt = NULL;
 	char query[NOTIFICATION_QUERY_MAX] = { 0, };
-	int ret = NOTIFICATION_ERROR_NONE, result = 0;
+	int ret;
+	int result;
 
 	snprintf(query, sizeof(query),
 		 "select count(*) from noti_group_data where caller_pkgname = '%s' and group_id = %d",
@@ -67,8 +68,8 @@ int notification_group_set_badge(const char *pkgname,
 	sqlite3 *db;
 	sqlite3_stmt *stmt = NULL;
 	char query[NOTIFICATION_QUERY_MAX] = { 0, };
-	int ret = 0;
-	int result = NOTIFICATION_ERROR_NONE;
+	int ret;
+	int result;
 
 	db = notification_db_open(DBPATH);
 	if (!db)
@@ -127,7 +128,7 @@ int notification_group_get_badge(const char *pkgname,
 	sqlite3 *db;
 	sqlite3_stmt *stmt = NULL;
 	char query[NOTIFICATION_QUERY_MAX] = { 0, };
-	int ret = 0;
+	int ret;
 	int col = 0;
 
 	db = notification_db_open(DBPATH);
