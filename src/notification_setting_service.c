@@ -609,9 +609,11 @@ EXPORT_API int notification_get_dnd_and_allow_to_notify(const char *appid,
 	if (db == NULL)
 		return get_last_result();
 
-	query_setting = sqlite3_mprintf("SELECT allow_to_notify, do_not_disturb_except "
-					"FROM %s WHERE appid = %Q AND uid = %d",
-					NOTIFICATION_SETTING_DB_TABLE, appid, uid);
+	query_setting = sqlite3_mprintf("SELECT allow_to_notify, do_not_disturb_except " \
+					"FROM %s WHERE appid = %Q AND (uid = %d OR uid = %d) " \
+					"ORDER BY uid DESC;",
+					NOTIFICATION_SETTING_DB_TABLE, appid,
+					uid, tzplatform_getuid(TZ_SYS_GLOBALAPP_USER));
 	if (query_setting == NULL) {
 		NOTIFICATION_ERR("fail to alloc query");
 		ret = NOTIFICATION_ERROR_OUT_OF_MEMORY;
