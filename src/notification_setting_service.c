@@ -34,7 +34,7 @@
 
 static int _get_table_field_data_int(char  **table, int *buf, int index)
 {
-	if ((table == NULL) || (buf == NULL) || (index < 0))  {
+	if (table == NULL || buf == NULL || index < 0) {
 		/* LCOV_EXCL_START */
 		NOTIFICATION_ERR("table[%p], buf[%p], index[%d]", table, buf, index);
 		return false;
@@ -55,22 +55,24 @@ static int _get_table_field_data_int(char  **table, int *buf, int index)
 static int _get_table_field_data_string(char **table, char **buf, int ucs2, int index)
 {
 	int ret = false;
+	int sLen = 0;
+	char *pTemp;
 
-	if ((table == NULL) || (buf == NULL) || (index < 0))  {
+	if (table == NULL || buf == NULL || index < 0) {
 		/* LCOV_EXCL_START */
 		NOTIFICATION_ERR("table[%p], buf[%p], index[%d]", table, buf, index);
 		return false;
 		/* LCOV_EXCL_STOP */
 	}
 
-	char *pTemp = table[index];
-	int sLen = 0;
+	pTemp = table[index];
+
 	if (pTemp == NULL) {
 		*buf = NULL; /* LCOV_EXCL_LINE */
 	} else {
 		sLen = strlen(pTemp);
 		if (sLen) {
-			*buf = (char *) malloc(sLen + 1);
+			*buf = (char *)malloc(sLen + 1);
 			if (*buf == NULL) {
 				NOTIFICATION_ERR("malloc is failed"); /* LCOV_EXCL_LINE */
 				goto out;
