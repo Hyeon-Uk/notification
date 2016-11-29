@@ -1499,9 +1499,6 @@ int notification_ipc_request_create_from_template(notification_h noti, const cha
 	GVariant *reply_body;
 	GVariant *noti_body;
 
-	if (!template_name)
-		return NOTIFICATION_ERROR_INVALID_PARAMETER;
-
 	result = _dbus_init();
 	if (result != NOTIFICATION_ERROR_NONE) {
 		NOTIFICATION_ERR("Can't init dbus %d", result);
@@ -1536,9 +1533,6 @@ int notification_ipc_request_create_from_package_template(notification_h noti, c
 	GVariant *body;
 	GVariant *reply_body;
 	GVariant *noti_body;
-
-	if (pkgname == NULL || template_name == NULL)
-		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 
 	result = _dbus_init();
 	if (result != NOTIFICATION_ERROR_NONE) {
