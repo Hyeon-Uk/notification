@@ -977,7 +977,7 @@ EXPORT_API int notification_register_system_setting_dnd_changed_cb_for_uid(dnd_c
 		g_hash_table_insert(_noti_dnd_cb_hash, GUINT_TO_POINTER(uid), noti_dnd_list);
 	} else {
 		noti_dnd_found_list = g_list_find_custom(noti_dnd_list, (gconstpointer)callback,
-							 _noti_dnd_cb_compare);
+							 (GCompareFunc)_noti_dnd_cb_compare);
 		if (noti_dnd_found_list) {
 			NOTIFICATION_ERR("Already existing callback");
 			free(dnd_data);
@@ -1013,7 +1013,7 @@ EXPORT_API int notification_unregister_system_setting_dnd_changed_cb_for_uid(dnd
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 
 	noti_dnd_del_list = g_list_find_custom(noti_dnd_cb_list, (gconstpointer)callback,
-					       _noti_dnd_cb_compare);
+					       (GCompareFunc)_noti_dnd_cb_compare);
 
 	if (noti_dnd_del_list) {
 		dnd_data = g_list_nth_data(noti_dnd_del_list, 0);

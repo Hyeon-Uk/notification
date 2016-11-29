@@ -272,7 +272,7 @@ EXPORT_API int notification_unresister_changed_cb_for_uid(
 
 	noti_cb_list = g_list_first(noti_cb_list);
 	delete_cb_list = g_list_find_custom(noti_cb_list, (gconstpointer)changed_cb,
-					      _noti_changed_compare);
+					    (GCompareFunc)_noti_changed_compare);
 
 	if (delete_cb_list) {
 		noti_cb_info = g_list_nth_data(delete_cb_list, 0);
@@ -1216,7 +1216,7 @@ EXPORT_API int notification_unregister_detailed_changed_cb_for_uid(
 
 	noti_cb_list = g_list_first(noti_cb_list);
 	delete_cb_list = g_list_find_custom(noti_cb_list, (gconstpointer)detailed_changed_cb,
-					    _noti_detailed_changed_compare);
+					    (GCompareFunc)_noti_detailed_changed_compare);
 
 	if (delete_cb_list) {
 		noti_cb_info = (notification_cb_info_s *)g_list_nth_data(delete_cb_list, 0);
