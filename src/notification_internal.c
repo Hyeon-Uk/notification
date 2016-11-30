@@ -447,6 +447,8 @@ EXPORT_API int notification_translate_localized_text(notification_h noti)
 	bundle *b;
 	notification_text_type_e type = NOTIFICATION_TEXT_TYPE_TITLE;
 
+	noti->is_translation = false;
+
 	for (; type < NOTIFICATION_TEXT_TYPE_MAX; type++) {
 		ret = notification_get_text(noti, type, &ret_text);
 		if (ret == NOTIFICATION_ERROR_NONE && ret_text) {
@@ -473,6 +475,8 @@ EXPORT_API int notification_translate_localized_text(notification_h noti)
 			bundle_val = NULL;
 		}
 	}
+
+	noti->is_translation = true;
 
 	return ret;
 }

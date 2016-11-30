@@ -462,21 +462,24 @@ EXPORT_API int notification_get_text(notification_h noti,
 		snprintf(buf_key, sizeof(buf_key), "%d", type);
 
 		bundle_get_str(b, buf_key, &ret_val);
-		if (ret_val != NULL && noti->domain != NULL
-		    && noti->dir != NULL) {
-			/* Get application string */
-			bindtextdomain(noti->domain, noti->dir);
 
-			get_str = dgettext(noti->domain, ret_val);
-			if (get_str == ret_val) /* not found */
+		if (noti->is_translation == false) {
+			if (ret_val != NULL && noti->domain != NULL
+			    && noti->dir != NULL) {
+				/* Get application string */
+				bindtextdomain(noti->domain, noti->dir);
+
+				get_str = dgettext(noti->domain, ret_val);
+				if (get_str == ret_val) /* not found */
+					get_str = NULL;
+			} else if (ret_val != NULL) {
+				/* Get system string */
+				get_str = dgettext("sys_string", ret_val);
+				if (get_str == ret_val) /* not found */
+					get_str = NULL;
+			} else {
 				get_str = NULL;
-		} else if (ret_val != NULL) {
-			/* Get system string */
-			get_str = dgettext("sys_string", ret_val);
-			if (get_str == ret_val) /* not found */
-				get_str = NULL;
-		} else {
-			get_str = NULL;
+			}
 		}
 	}
 
@@ -505,7 +508,7 @@ EXPORT_API int notification_get_text(notification_h noti,
 				noti->num_format_args = atoi(ret_val);
 		}
 
-		if (noti->num_format_args == 0) {
+		if (noti->num_format_args == 0 || noti->is_translation == true) {
 			*text = (char *)get_str;
 		} else {
 			/* Check first variable is count, LEFT pos */
@@ -1436,6 +1439,7 @@ static notification_h _notification_create(notification_type_e type)
 	noti->ongoing_value_type = NOTIFICATION_ONGOING_VALUE_TYPE_PERCENT;
 	noti->timeout = 0;
 	noti->event_flag = false;
+	noti->is_translation = false;
 
 	if (getuid() >= REGULAR_UID_MIN) {
 		noti->caller_pkgname = notification_get_pkgname_by_pid();
@@ -1653,6 +1657,8 @@ EXPORT_API int notification_clone(notification_h noti, notification_h *clone)
 	new_noti->app_name = NULL;
 	new_noti->temp_title = NULL;
 	new_noti->temp_content = NULL;
+
+	new_noti->is_translation = noti->is_translation;
 
 	*clone = new_noti;
 

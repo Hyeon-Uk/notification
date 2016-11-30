@@ -97,6 +97,7 @@ struct _notification {
 	int timeout;
 	int text_input_max_length;
 	bool event_flag;
+	bool is_translation;
 	uid_t uid;
 };
 
@@ -158,6 +159,7 @@ typedef enum notification_data_type {
 	NOTIFICATION_DATA_TYPE_TIMEOUT,
 	NOTIFICATION_DATA_TYPE_TEXT_INPUT_MAX_LENGTH,
 	NOTIFICATION_DATA_TYPE_EVENT_FLAG,
+	NOTIFICATION_DATA_TYPE_TRANSLATION,
 	NOTIFICATION_DATA_TYPE_UID,
 } notification_data_type_e;
 
