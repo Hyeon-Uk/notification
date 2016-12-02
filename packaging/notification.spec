@@ -63,7 +63,7 @@ mkdir -p %{buildroot}%{TZ_SYS_SHARE}/license
 cp -f LICENSE %{buildroot}%{TZ_SYS_SHARE}/license/%{name}
 
 mkdir -p %{buildroot}%{upgrade_script_path}
-cp -f scripts/105.notification_upgrade.sh %{buildroot}%{upgrade_script_path}
+cp -f scripts/505.notification_upgrade.sh %{buildroot}%{upgrade_script_path}
 
 %clean
 rm -rf %{buildroot}
@@ -85,7 +85,7 @@ fi
 %{TZ_SYS_SHARE}/license/%{name}
 %attr(755,root,root) %{_sysconfdir}/gumd/useradd.d/11_notification-add.post
 %{_bindir}/notification_init
-%{upgrade_script_path}/105.notification_upgrade.sh
+%{upgrade_script_path}/505.notification_upgrade.sh
 #%{_bindir}/notification-test-app
 
 %files devel
