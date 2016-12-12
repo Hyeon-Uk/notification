@@ -970,7 +970,7 @@ int notification_ipc_request_delete_single(notification_type_e type, char *pkgna
 	if (reply)
 		g_object_unref(reply);
 
-	NOTIFICATION_ERR("notification_ipc_request_delete_single done [result: %d]", result);
+	NOTIFICATION_DBG("notification_ipc_request_delete_single done [result: %d]", result);
 	return result;
 }
 
