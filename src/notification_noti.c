@@ -21,6 +21,7 @@
 #include <vconf.h>
 #include <pkgmgr-info.h>
 #include <package_manager.h>
+#include <app_control_internal.h>
 
 #include <notification.h>
 #include <notification_internal.h>
@@ -706,26 +707,88 @@ err:
 	return ret;
 }
 
-static bool _is_allowed_to_notify(const char *appid, uid_t uid)
+static int __get_setting_from_app_control(notification_h noti, notification_setting_h *setting)
+{
+	notification_setting_h setting_new = NULL;
+	app_control_h app_control = NULL;
+	bundle *b = NULL;
+	char *app_id = NULL;
+	int ret;
+
+	ret = notification_get_execute_option(noti,
+				NOTIFICATION_EXECUTE_TYPE_SINGLE_LAUNCH,
+				NULL,
+				&b);
+	if (ret != NOTIFICATION_ERROR_NONE || b == NULL) {
+		NOTIFICATION_ERR("notification_get_execute_option failed [%x]", ret);
+		return ret;
+	}
+
+	ret = app_control_create(&app_control);
+	if (ret != APP_CONTROL_ERROR_NONE) {
+		NOTIFICATION_ERR("app_control_create failed [%x]", ret);
+		goto out;
+	}
+
+	ret = app_control_import_from_bundle(app_control, b);
+	if (ret != APP_CONTROL_ERROR_NONE) {
+		NOTIFICATION_ERR("app_control_import_from_bundle failed [%x]", ret);
+		goto out;
+	}
+
+	ret = app_control_get_app_id(app_control, &app_id);
+	if (ret != APP_CONTROL_ERROR_NONE || app_id == NULL) {
+		NOTIFICATION_ERR("app_control_get_app_id failed [%x]", ret);
+		goto out;
+	}
+
+	ret = noti_setting_service_get_setting_by_appid(app_id, &setting_new, noti->uid);
+	if (ret != APP_CONTROL_ERROR_NONE || setting == NULL) {
+		NOTIFICATION_ERR("noti_setting_service_get_setting_by_appid failed [%x]", ret);
+		goto out;
+	}
+
+	*setting = setting_new;
+
+out:
+	if (app_id)
+		free(app_id);
+
+	if (app_control)
+		app_control_destroy(app_control);
+
+	return ret;
+}
+
+static bool _is_allowed_to_notify(notification_h noti)
 {
 	notification_setting_h setting = NULL;
-	int err;
+	bool allow_to_notify = true;
+	bool app_disabled = false;
 	bool ret = true;
+	int err;
 
-	err = noti_setting_service_get_setting_by_appid(appid, &setting, uid);
+	err = noti_setting_service_get_setting_by_appid(noti->caller_pkgname, &setting, noti->uid);
 	if (err != NOTIFICATION_ERROR_NONE) {
-		NOTIFICATION_ERR("noti_setting_service_get_setting_by_appid failed [%d]", err);
+		err = __get_setting_from_app_control(noti, &setting);
+		if (err != NOTIFICATION_ERROR_NONE)
+			return ret;
+	}
+
+	err = notification_setting_get_allow_to_notify(setting, &allow_to_notify);
+	if (err != NOTIFICATION_ERROR_NONE) {
+		NOTIFICATION_ERR("get_allow_to_notify failed [%x]", err);
 		goto out;
 	}
 
-	err = notification_setting_get_allow_to_notify(setting, &ret);
+	err = notification_setting_get_app_disabled(setting, &app_disabled);
 	if (err != NOTIFICATION_ERROR_NONE) {
-		NOTIFICATION_ERR("notification_setting_get_allow_to_notify failed [%d]", err);
+		NOTIFICATION_ERR("get_app_disabled failed [%x]", err);
 		goto out;
 	}
 
-	if (ret != true)
-		NOTIFICATION_DBG("[%s] is not allowed to notify", appid);
+	if (!allow_to_notify || app_disabled)
+		ret = false;
 
 out:
 	if (setting)
@@ -862,7 +925,7 @@ EXPORT_API int notification_noti_insert(notification_h noti)
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 	}
 
-	if (_is_allowed_to_notify((const char *)noti->caller_pkgname, noti->uid) == false) {
+	if (_is_allowed_to_notify(noti) == false) {
 		NOTIFICATION_DBG("[%s] is not allowed to notify", noti->caller_pkgname);
 		return NOTIFICATION_ERROR_PERMISSION_DENIED;
 	}
@@ -1144,11 +1207,16 @@ EXPORT_API int notification_noti_update(notification_h noti)
 	sqlite3_stmt *stmt = NULL;
 	char *query = NULL;
 
+	if (noti == NULL) {
+		NOTIFICATION_ERR("NOTIFICATION_ERROR_INVALID_PARAMETER");
+		return NOTIFICATION_ERROR_INVALID_PARAMETER;
+	}
+
 	db = notification_db_open(DBPATH);
 	if (!db)
 		return get_last_result();
 
-	if (_is_allowed_to_notify((const char *)noti->caller_pkgname, noti->uid) == false) {
+	if (_is_allowed_to_notify(noti) == false) {
 		NOTIFICATION_DBG("[%s] is not allowed to notify", noti->caller_pkgname);
 		return NOTIFICATION_ERROR_PERMISSION_DENIED;
 	}

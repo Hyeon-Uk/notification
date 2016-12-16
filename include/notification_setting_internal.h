@@ -83,11 +83,12 @@ typedef enum notification_dnd_allowed_calls {
 struct notification_setting {
 	char *package_name;
 	char *appid;
-	bool  allow_to_notify;
-	bool  do_not_disturb_except;
-	bool  pop_up_notification;
-	int   visibility_class;
+	bool allow_to_notify;
+	bool do_not_disturb_except;
+	bool pop_up_notification;
+	int visibility_class;
 	lock_screen_content_level_e lock_screen_content_level;
+	bool app_disabled;
 };
 
 /* System setting */
@@ -557,6 +558,40 @@ int notification_setting_get_lock_screen_content(notification_setting_h setting,
  * @endcode
  */
 int notification_setting_set_lock_screen_content(notification_setting_h setting, lock_screen_content_level_e level);
+
+/*
+ * @internal
+ * @brief Gets The value that determines whether the app is disabled
+ * @since_tizen 3.0
+ * @privlevel public
+ * @privilege %http://tizen.org/privilege/notification
+ * @param[in] setting   The notification system setting handle
+ * @param[out] value    The value that determines whether the app is disabled
+ * @return #NOTIFICATION_ERROR_NONE on success,
+ *         otherwise any other value on failure
+ * @retval #NOTIFICATION_ERROR_NONE         Success
+ * @retval #NOTIFICATION_ERROR_INVALID_PARAMETER Invalid parameter
+ * @par sample code:
+ * @code
+#include <notification_setting_internal.h>
+{
+	int err = 0;
+	bool value = true;
+	notification_system_setting_h setting = NULL;
+
+	err = notification_setting_get_setting(&setting);
+	if (err != NOTIFICATION_ERROR_NONE)
+		return;
+
+	err = notification_setting_get_app_disabled(setting, &value);
+	if (err != NOTIFICATION_ERROR_NONE)
+		return;
+
+	return 0;
+}
+ * @endcode
+ */
+int notification_setting_get_app_disabled(notification_setting_h setting, bool *value);
 
 /*
  * @internal

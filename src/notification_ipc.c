@@ -1397,7 +1397,7 @@ int notification_ipc_update_setting(notification_setting_h setting, uid_t uid)
 		return result;
 	}
 
-	body = g_variant_new("(ssiiiiii)",
+	body = g_variant_new("(ssiiiiiii)",
 			setting->package_name,
 			setting->appid,
 			(int)(setting->allow_to_notify),
@@ -1405,6 +1405,7 @@ int notification_ipc_update_setting(notification_setting_h setting, uid_t uid)
 			(int)(setting->visibility_class),
 			(int)(setting->pop_up_notification),
 			(int)(setting->lock_screen_content_level),
+			(int)(setting->app_disabled),
 			uid);
 
 	result = _send_sync_noti(body, &reply, "update_noti_setting");
@@ -2091,14 +2092,15 @@ EXPORT_API GVariant *notification_ipc_make_gvariant_from_setting(struct notifica
 {
 	GVariant *body = NULL;
 
-	body = g_variant_new("(ssiiiii)",
+	body = g_variant_new("(ssiiiiii)",
 			noti_setting->package_name,
 			noti_setting->appid,
 			noti_setting->allow_to_notify,
 			noti_setting->do_not_disturb_except,
 			noti_setting->visibility_class,
 			noti_setting->pop_up_notification,
-			noti_setting->lock_screen_content_level);
+			noti_setting->lock_screen_content_level,
+			noti_setting->app_disabled);
 
 	return body;
 }
@@ -2114,20 +2116,22 @@ EXPORT_API int notification_ipc_make_setting_from_gvariant(struct notification_s
 	int visibility_class;
 	int pop_up_notification;
 	int lock_screen_content_level;
+	int app_disabled;
 
 	if (noti_setting == NULL || variant == NULL) {
 		NOTIFICATION_ERR("invalid data");
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 	}
 	g_variant_get(variant,
-			"(&s&siiiii)",
+			"(&s&siiiiii)",
 			&pkgname,
 			&appid,
 			&allow_to_notify,
 			&do_not_disturb_except,
 			&visibility_class,
 			&pop_up_notification,
-			&lock_screen_content_level);
+			&lock_screen_content_level,
+			&app_disabled);
 
 	NOTIFICATION_DBG("setting from variant %s !!", pkgname);
 
@@ -2138,6 +2142,7 @@ EXPORT_API int notification_ipc_make_setting_from_gvariant(struct notification_s
 	noti_setting->visibility_class = visibility_class;
 	noti_setting->pop_up_notification = pop_up_notification;
 	noti_setting->lock_screen_content_level = lock_screen_content_level;
+	noti_setting->app_disabled = app_disabled;
 
 	NOTIFICATION_DBG("setting from variant %s, %s",
 			noti_setting->package_name, pkgname);

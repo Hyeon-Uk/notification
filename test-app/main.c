@@ -709,7 +709,7 @@ static int testapp_test_update_setting()
 	int err = NOTIFICATION_ERROR_NONE;
 	notification_setting_h setting = NULL;
 
-	err = notification_setting_get_setting_by_package_name("org.tizen.internet", &setting);
+	err = notification_setting_get_setting_by_package_name("org.tizen.browser", &setting);
 
 	if (err != NOTIFICATION_ERROR_NONE || setting == NULL) {
 		testapp_print("notification_setting_get_setting_by_package_name failed [%d]", err);

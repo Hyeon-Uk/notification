@@ -236,6 +236,7 @@ EXPORT_API int notification_setting_get_lock_screen_content(notification_setting
 	}
 
 	*level = setting->lock_screen_content_level;
+
 	return NOTIFICATION_ERROR_NONE;
 }
 
@@ -247,6 +248,19 @@ EXPORT_API int notification_setting_set_lock_screen_content(notification_setting
 	}
 
 	setting->lock_screen_content_level = level;
+
+	return NOTIFICATION_ERROR_NONE;
+}
+
+EXPORT_API int notification_setting_get_app_disabled(notification_setting_h setting, bool *value)
+{
+	if (setting == NULL || value == NULL) {
+		NOTIFICATION_ERR("Invalid parameter");
+		return NOTIFICATION_ERROR_INVALID_PARAMETER;
+	}
+
+	*value = setting->app_disabled;
+
 	return NOTIFICATION_ERROR_NONE;
 }
 

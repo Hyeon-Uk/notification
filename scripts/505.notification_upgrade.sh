@@ -79,6 +79,7 @@ CREATE TABLE notification_setting (
 	visibility_class INTEGER DEFAULT 0,
 	pop_up_notification INTEGER DEFAULT 1,
 	lock_screen_content_level INTEGER DEFAULT 0,
+	app_disabled INTEGER DEFAULT 0,
 	UNIQUE (uid, package_name, appid)
 );
 

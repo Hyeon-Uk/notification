@@ -119,7 +119,7 @@ int noti_setting_service_get_setting_by_appid(const char *appid, notification_se
 	}
 
 	sql_query = sqlite3_mprintf("SELECT package_name, appid, allow_to_notify, do_not_disturb_except, visibility_class, "
-				    "pop_up_notification, lock_screen_content_level FROM %s "
+				    "pop_up_notification, lock_screen_content_level, app_disabled FROM %s "
 				    "WHERE appid = %Q AND uid = %d", NOTIFICATION_SETTING_DB_TABLE, appid, uid);
 
 	if (!sql_query) {
@@ -160,6 +160,7 @@ int noti_setting_service_get_setting_by_appid(const char *appid, notification_se
 	_get_table_field_data_int(query_result, &(result_setting_array[i].visibility_class), col_index++);
 	_get_table_field_data_int(query_result, (int *)&(result_setting_array[i].pop_up_notification), col_index++);
 	_get_table_field_data_int(query_result, (int *)&(result_setting_array[i].lock_screen_content_level), col_index++);
+	_get_table_field_data_int(query_result, (int *)&(result_setting_array[i].app_disabled), col_index++);
 
 	*setting = result_setting_array;
 
@@ -208,8 +209,8 @@ int noti_setting_get_setting_array(notification_setting_h *setting_array, int *c
 	}
 
 	sql_query = sqlite3_mprintf("SELECT package_name, appid, allow_to_notify, do_not_disturb_except, visibility_class, "
-				    "pop_up_notification, lock_screen_content_level FROM %s WHERE uid = %d "
-				    "ORDER BY package_name, appid ", NOTIFICATION_SETTING_DB_TABLE, uid);
+				    "pop_up_notification, lock_screen_content_level, app_disabled FROM %s WHERE uid = %d AND app_disabled = %d "
+				    "ORDER BY package_name, appid ", NOTIFICATION_SETTING_DB_TABLE, uid, 0);
 
 	if (!sql_query) {
 		NOTIFICATION_ERR("fail to alloc query"); /* LCOV_EXCL_LINE */
@@ -248,6 +249,7 @@ int noti_setting_get_setting_array(notification_setting_h *setting_array, int *c
 		_get_table_field_data_int(query_result, (int *)&(result_setting_array[i].visibility_class), col_index++);
 		_get_table_field_data_int(query_result, (int *)&(result_setting_array[i].pop_up_notification), col_index++);
 		_get_table_field_data_int(query_result, (int *)&(result_setting_array[i].lock_screen_content_level), col_index++);
+		_get_table_field_data_int(query_result, (int *)&(result_setting_array[i].app_disabled), col_index++);
 	}
 
 	*setting_array = result_setting_array;
@@ -858,3 +860,40 @@ out:
 	return ret;
 }
 
+EXPORT_API int notification_setting_db_update_app_disabled(const char *appid, bool value, uid_t uid)
+{
+	int err = NOTIFICATION_ERROR_NONE;
+	int sqlret;
+	sqlite3 *db = NULL;
+	char *sqlbuf = NULL;
+
+	if (appid == NULL)
+		return NOTIFICATION_ERROR_INVALID_PARAMETER;
+
+	sqlret = db_util_open(DBPATH, &db, 0);
+	if (sqlret != SQLITE_OK || db == NULL) {
+		NOTIFICATION_ERR("db_util_open failed [%s][%d]", DBPATH, sqlret);
+		return NOTIFICATION_ERROR_FROM_DB;
+	}
+
+	sqlbuf = sqlite3_mprintf("UPDATE notification_setting SET " \
+			"app_disabled = %d WHERE appid = %Q AND uid = %d",
+			value, appid, uid);
+	if (!sqlbuf) {
+		NOTIFICATION_ERR("fail to alloc query");
+		err = NOTIFICATION_ERROR_OUT_OF_MEMORY;
+		goto return_close_db;
+	}
+
+	err = notification_db_exec(db, sqlbuf, NULL);
+
+return_close_db:
+	if (sqlbuf)
+		sqlite3_free(sqlbuf);
+
+	sqlret = db_util_close(db);
+	if (sqlret != SQLITE_OK)
+		NOTIFICATION_WARN("fail to db_util_close - [%d]", sqlret);
+
+	return err;
+}
