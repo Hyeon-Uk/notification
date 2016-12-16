@@ -14,37 +14,44 @@
  * limitations under the License.
  */
 
+
 #ifndef __NOTIFICATION_STATUS_DEF_H__
 #define __NOTIFICATION_STATUS_DEF_H__
+
 
 #ifdef __cplusplus
 extern "C" {
 #endif /* __cplusplus */
 
+
 /**
  * @file notification_status.h
  */
+
 
 /**
  * @addtogroup NOTIFICATION_STATUS
  * @{
  */
 
+
 /**
- * @brief Shows a toast popup window with given message
+ * @brief Shows a toast popup window with given message.
  * @since_tizen @if WEARABLE 2.3.1 @elseif MOBILE 2.3 @endif
  * @param[in] message The messages to be posted
- * @return  #NOTIFICATION_ERROR_NONE on success,
- *          otherwise any other value on failure
+ * @return #NOTIFICATION_ERROR_NONE on success,
+ *         otherwise any other value on failure
  * @retval #NOTIFICATION_ERROR_INVALID_PARAMETER Invalid parameter
  * @retval #NOTIFICATION_ERROR_FROM_DBUS Error from DBus
  * @see #notification_error_e
  */
 int notification_status_message_post(const char *message);
 
+
 /**
  * @}
  */
+
 
 #ifdef __cplusplus
 }

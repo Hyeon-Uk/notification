@@ -14,42 +14,42 @@
  * limitations under the License.
  */
 
+
 /**
- *
- * @defgroup NOTIFICATION_MODULE Notification
  * @ingroup CAPI_APPLICATION_FRAMEWORK
- * @brief Notification APIs
- *
+ * @defgroup NOTIFICATION_MODULE Notification
+ * @brief Notification APIs.
  * @section NOTIFICATION_MODULE_HEADER Required Header
  *   \#include <notification.h>
- * @section NOTIFICATION_MODULE_OVERVIEW Overview
- * A notification is a message that is displayed on the notification area or the on-going area.
- * It is created to notify information to the user through the application.
- * This API provides functions for creating and inserting and updating notification.
  *
+ * @section NOTIFICATION_MODULE_OVERVIEW Overview
+ * A notification is a message that is displayed on the notification area or the ongoing area.
+ * It is created to notify information to the user through the application.
+ * This API provides functions for creating, inserting and updating notification.
  */
+
 
 /**
  * @internal
- * @defgroup NOTIFICATION_LIST Notification List
  * @ingroup NOTIFICATION_MODULE
- * @brief linked list of notification data
- *
+ * @defgroup NOTIFICATION_LIST Notification List
+ * @brief Linked list of notification data.
  * @section NOTIFICATION_LIST_MODULE_HEADER Required Header
  *   \#include <notification.h>
+ *
  * @section NOTIFICATION_LIST_MODULE_OVERVIEW Overview
  * It provides functions for handling notification list.
  *
  */
 
+
 /**
- * @defgroup NOTIFICATION_STATUS Notification Status
  * @ingroup NOTIFICATION_MODULE
- * @brief APIs displaying plain text message on the indicator area
- *
+ * @defgroup NOTIFICATION_STATUS Notification Status
+ * @brief APIs displaying plain text message on the indicator area.
  * @section NOTIFICATION_STATUS_MODULE_HEADER Required Header
  *   \#include <notification.h>
- * @section NOTIFICATION_STATUS_MODULE_OVERVIEW Overview
- * Notification status APIs
  *
+ * @section NOTIFICATION_STATUS_MODULE_OVERVIEW Overview
+ * Notification status APIs.
  */
