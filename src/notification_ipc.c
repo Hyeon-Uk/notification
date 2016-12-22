@@ -1397,7 +1397,7 @@ int notification_ipc_update_setting(notification_setting_h setting, uid_t uid)
 		return result;
 	}
 
-	body = g_variant_new("(ssiiiiiii)",
+	body = g_variant_new("(ssiiiiii)",
 			setting->package_name,
 			setting->appid,
 			(int)(setting->allow_to_notify),
@@ -1405,7 +1405,6 @@ int notification_ipc_update_setting(notification_setting_h setting, uid_t uid)
 			(int)(setting->visibility_class),
 			(int)(setting->pop_up_notification),
 			(int)(setting->lock_screen_content_level),
-			(int)(setting->app_disabled),
 			uid);
 
 	result = _send_sync_noti(body, &reply, "update_noti_setting");
