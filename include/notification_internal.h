@@ -52,6 +52,8 @@ typedef enum _notification_ongoing_value_type {
 typedef enum _notification_event_type_extension {
 	NOTIFICATION_EVENT_TYPE_HIDDEN_BY_USER = 100,
 	NOTIFICATION_EVENT_TYPE_HIDDEN_BY_TIMEOUT = 101,
+	NOTIFICATION_EVENT_TYPE_PRESSED = 200,
+	NOTIFICATION_EVENT_TYPE_DELETED = 201,
 } notification_event_type_extension_e;
 
 GQuark notification_error_quark(void);

@@ -1581,9 +1581,11 @@ EXPORT_API int notification_send_event(notification_h noti, int event_type)
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 
 	if (!((event_type >= NOTIFICATION_EVENT_TYPE_CLICK_ON_BUTTON_1
-	     && event_type < NOTIFICATION_EVENT_TYPE_MAX)
-	     || (event_type >= NOTIFICATION_EVENT_TYPE_HIDDEN_BY_USER
-	     && event_type <= NOTIFICATION_EVENT_TYPE_HIDDEN_BY_TIMEOUT)))
+		&& event_type < NOTIFICATION_EVENT_TYPE_MAX) ||
+		(event_type >= NOTIFICATION_EVENT_TYPE_HIDDEN_BY_USER
+		&& event_type <= NOTIFICATION_EVENT_TYPE_HIDDEN_BY_TIMEOUT) ||
+		(event_type >= NOTIFICATION_EVENT_TYPE_PRESSED
+		&& event_type <= NOTIFICATION_EVENT_TYPE_DELETED)))
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 
 	ret = notification_get_event_flag(noti, &event_flag);
