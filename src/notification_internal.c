@@ -66,6 +66,23 @@ struct _notification_event_cb_info {
 static GHashTable *_noti_cb_hash = NULL;
 static GList *__noti_event_cb_list = NULL;
 
+void notification_reset_event_handler_list(void)
+{
+	GList *iter;
+	notification_event_cb_info_s *info = NULL;
+
+	if (!__noti_event_cb_list)
+		return;
+
+	iter = g_list_first(__noti_event_cb_list);
+	while (iter) {
+		info = g_list_nth_data(iter, 0);
+		if (info)
+			notification_ipc_reset_event_handler(info->priv_id);
+		iter = g_list_next(iter);
+	}
+}
+
 /* LCOV_EXCL_START */
 static void __free_changed_cb_info(gpointer data)
 {
@@ -1605,4 +1622,23 @@ EXPORT_API int notification_get_event_flag(notification_h noti, bool *flag)
 	*flag = noti->event_flag;
 
 	return NOTIFICATION_ERROR_NONE;
+}
+
+EXPORT_API int notification_check_event_receiver_available(notification_h noti, bool *available)
+{
+	int ret;
+	int priv_id;
+
+	if (noti == NULL || available == NULL)
+		return NOTIFICATION_ERROR_INVALID_PARAMETER;
+
+	ret = notification_get_id(noti, NULL, &priv_id);
+	if (ret != NOTIFICATION_ERROR_NONE) {
+		NOTIFICATION_ERR("failed notification_get_id");
+		return ret;
+	}
+
+	ret = notification_ipc_check_event_receiver(priv_id, available);
+
+	return ret;
 }

@@ -44,6 +44,7 @@
 
 static const gchar *_bus_name = NULL;
 static GDBusConnection *_gdbus_conn = NULL;
+static guint provider_watcher_id = 0;
 static int monitor_id = 0;
 static int event_monitor_id = 0;
 static int provider_monitor_id = 0;
@@ -103,6 +104,22 @@ static inline char *_string_get(char *string)
 	return string;
 }
 
+static void __provider_appeared_cb(GDBusConnection *connection,
+				   const gchar *name,
+				   const gchar *name_owner,
+				   gpointer user_data)
+{
+	NOTIFICATION_DBG("provider_appeared_cb name : %s, name_owner : %s", name, name_owner);
+	notification_reset_event_handler_list();
+}
+
+static void __provider_vanished_cb(GDBusConnection *connection,
+				   const gchar *name,
+				   gpointer user_data)
+{
+	NOTIFICATION_DBG("provider_vanished_cb name : %s", name);
+}
+
 static int _dbus_init()
 {
 	GError *error = NULL;
@@ -121,8 +138,20 @@ static int _dbus_init()
 		NOTIFICATION_DBG("bus name : %s", _bus_name);
 
 		notification_error_quark();
-
 	}
+
+	if (provider_watcher_id == 0) {
+		provider_watcher_id = g_bus_watch_name(G_BUS_TYPE_SYSTEM,
+					      PROVIDER_BUS_NAME,
+					      G_BUS_NAME_WATCHER_FLAGS_NONE,
+					      __provider_appeared_cb,
+					      __provider_vanished_cb,
+					      NULL,
+					      NULL);
+		NOTIFICATION_DBG("Watching data-provider-master is %s, watcher_id : %d",
+				 provider_watcher_id ? "success" : "fail", provider_watcher_id);
+	}
+
 	return NOTIFICATION_ERROR_NONE;
 }
 
@@ -1627,7 +1656,53 @@ int notification_ipc_send_event(notification_h noti, int event_type)
 	if (reply)
 		g_object_unref(reply);
 
+	NOTIFICATION_DBG("notification_ipc_send_event done [%d]", ret);
+
 	return ret;
+}
+
+int notification_ipc_check_event_receiver(int priv_id, bool *available)
+{
+	int ret;
+	int ret_available;
+	GVariant *reply_body = NULL;
+	GDBusMessage *reply = NULL;
+
+	ret = _dbus_init();
+	if (ret != NOTIFICATION_ERROR_NONE) {
+		NOTIFICATION_ERR("Can't init dbus %d", ret);
+		return ret;
+	}
+
+	ret = _send_sync_noti(g_variant_new("(i)", priv_id), &reply, "check_event_receiver");
+	if (ret == NOTIFICATION_ERROR_NONE) {
+		reply_body = g_dbus_message_get_body(reply);
+		g_variant_get(reply_body, "(i)", &ret_available);
+		*available = (bool)ret_available;
+	}
+
+	if (reply)
+		g_object_unref(reply);
+
+	NOTIFICATION_DBG("notification_ipc_check_event_receiver done");
+	return ret;
+}
+
+void notification_ipc_reset_event_handler(int priv_id)
+{
+	int ret;
+	GDBusMessage *reply = NULL;
+
+	ret = _dbus_init();
+	if (ret != NOTIFICATION_ERROR_NONE) {
+		NOTIFICATION_ERR("Can't init dbus %d", ret);
+		return;
+	}
+
+	_send_sync_noti(g_variant_new("(i)", priv_id), &reply, "reset_event_handler");
+
+	if (reply)
+		g_object_unref(reply);
 }
 
 EXPORT_API GVariant *notification_ipc_make_gvariant_from_noti(notification_h noti, bool translate)

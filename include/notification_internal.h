@@ -1178,12 +1178,55 @@ int notification_send_event(notification_h noti, int event_type);
 int notification_get_event_flag(notification_h noti, bool *event_flag);
 
 /**
+ * @brief Gets whether sending event is available.
+ * @details If the application is terminated, registered callback isn't called
+ *          for event sent by other process. So you need to check whether the
+ *          callback can be called before sending event.
+ * @since_tizen 3.0
+ * @param[in] noti The notification handle
+ * @param[out] available The value whether sending event is available
+ * @return #NOTIFICATION_ERROR_NONE on success,
+ *         otherwise any other value on failure
+ * @retval #NOTIFICATION_ERROR_NONE Success
+ * @retval #NOTIFICATION_ERROR_INVALID_PARAMETER Invalid parameter
+ * @retval #NOTIFICATION_ERROR_IO_ERROR I/O Error
+ * @retval #NOTIFICATION_ERROR_PERMISSION_DENIED Permission denied
+ * @retval #NOTIFICATION_ERROR_OUT_OF_MEMORY Out of memory
+ * @retval #NOTIFICATION_ERROR_SERVICE_NOT_READY No response from notification service
+ * @see #notification_send_event()
+ * @par Sample code:
+ * @code
+#include <notification.h>
+...
+{
+	notification_h noti = NULL;
+	int noti_err;
+	bool available;
+
+	...
+
+	noti_err  = notification_check_event_receiver_available(noti, &available);
+	if (noti_err != NOTIFICATION_ERROR_NONE) {
+		notification_free(noti);
+		return;
+	}
+
+	...
+
+	notification_free(noti);
+}
+ * @endcode
+ */
+int notification_check_event_receiver_available(notification_h noti, bool *available);
+
+/**
  * @brief This function translate localized texts
  * @param[in] noti The notification handle that is created by notification_create()
  * @return #NOTIFICATION_ERROR_NONE if success, other value if failure
  * @see notification_create()
  */
 int notification_translate_localized_text(notification_h noti);
+void notification_reset_event_handler_list(void);
 int notification_set_uid(notification_h noti, uid_t uid);
 int notification_get_uid(notification_h noti, uid_t *uid);
 int notification_post_for_uid(notification_h noti, uid_t uid);
