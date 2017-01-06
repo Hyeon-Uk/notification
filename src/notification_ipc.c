@@ -1772,8 +1772,7 @@ EXPORT_API GVariant *notification_ipc_make_gvariant_from_noti(notification_h not
 			bundle_free_encoded_rawdata(&b_image_path);
 	}
 
-	if (noti->sound_type != NOTIFICATION_SOUND_TYPE_NONE)
-		g_variant_builder_add(&builder, "{iv}", NOTIFICATION_DATA_TYPE_SOUND_TYPE, g_variant_new_int32(noti->sound_type));
+	g_variant_builder_add(&builder, "{iv}", NOTIFICATION_DATA_TYPE_SOUND_TYPE, g_variant_new_int32(noti->sound_type));
 
 	if (noti->sound_path)
 		g_variant_builder_add(&builder, "{iv}", NOTIFICATION_DATA_TYPE_SOUND_PATH, g_variant_new_string((const gchar *)noti->sound_path));
@@ -1783,8 +1782,7 @@ EXPORT_API GVariant *notification_ipc_make_gvariant_from_noti(notification_h not
 	if (noti->vibration_path)
 		g_variant_builder_add(&builder, "{iv}", NOTIFICATION_DATA_TYPE_VIBRATION_PATH, g_variant_new_string((const gchar *)noti->vibration_path));
 
-	if (noti->led_operation != NOTIFICATION_LED_OP_OFF)
-		g_variant_builder_add(&builder, "{iv}", NOTIFICATION_DATA_TYPE_LED_OPERATION, g_variant_new_int32(noti->led_operation));
+	g_variant_builder_add(&builder, "{iv}", NOTIFICATION_DATA_TYPE_LED_OPERATION, g_variant_new_int32(noti->led_operation));
 
 	if (noti->led_argb != 0)
 		g_variant_builder_add(&builder, "{iv}", NOTIFICATION_DATA_TYPE_LED_ARGB, g_variant_new_int32(noti->led_argb));
