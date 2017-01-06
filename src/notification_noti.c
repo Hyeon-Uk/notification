@@ -604,6 +604,7 @@ static void _notification_noti_populate_from_stmt(sqlite3_stmt *stmt, notificati
 	noti->timeout = sqlite3_column_int(stmt, col++);
 	noti->text_input_max_length = sqlite3_column_int(stmt, col++);
 	noti->event_flag = sqlite3_column_int(stmt, col++);
+	noti->uid = sqlite3_column_int(stmt, col++);
 
 	noti->app_icon_path = NULL;
 	noti->app_name = NULL;
@@ -1054,7 +1055,7 @@ EXPORT_API int notification_noti_get_by_priv_id(notification_h noti, char *pkgna
 			 "b_event_handler_click_on_icon, b_event_handler_click_on_thumbnail, b_event_handler_click_on_text_input_button, "
 			 "sound_type, sound_path, vibration_type, vibration_path, led_operation, led_argb, led_on_ms, led_off_ms, "
 			 "flags_for_property, display_applist, progress_size, progress_percentage, ongoing_flag, ongoing_value_type, "
-			 "ongoing_current, ongoing_duration, auto_remove, default_button_index, timeout, text_input_max_length, event_flag "
+			 "ongoing_current, ongoing_duration, auto_remove, default_button_index, timeout, text_input_max_length, event_flag, uid "
 			 "from noti_list ";
 
 	if (pkgname != NULL && strlen(pkgname) != 0)
@@ -1161,7 +1162,7 @@ EXPORT_API int notification_noti_get_by_tag(notification_h noti, char *pkgname, 
 			 "b_event_handler_click_on_icon, b_event_handler_click_on_thumbnail, b_event_handler_click_on_text_input_button, "
 			 "sound_type, sound_path, vibration_type, vibration_path, led_operation, led_argb, led_on_ms, led_off_ms, "
 			 "flags_for_property, display_applist, progress_size, progress_percentage, ongoing_flag, ongoing_value_type, "
-			 "ongoing_current, ongoing_duration, auto_remove, default_button_index, timeout, text_input_max_length, event_flag "
+			 "ongoing_current, ongoing_duration, auto_remove, default_button_index, timeout, text_input_max_length, event_flag, uid "
 			 "from noti_list where  tag = ? and uid = ?", -1, &stmt, NULL);
 		if (ret != SQLITE_OK) {
 			NOTIFICATION_ERR("Error: %s\n", sqlite3_errmsg(db));
@@ -1621,7 +1622,7 @@ EXPORT_API int notification_noti_get_grouping_list(notification_type_e type,
 		 "b_event_handler_click_on_icon, b_event_handler_click_on_thumbnail, b_event_handler_click_on_text_input_button, "
 		 "sound_type, sound_path, vibration_type, vibration_path, led_operation, led_argb, led_on_ms, led_off_ms, "
 		 "flags_for_property, display_applist, progress_size, progress_percentage, ongoing_flag, ongoing_value_type, "
-		 "ongoing_current, ongoing_duration, auto_remove, default_button_index, timeout, text_input_max_length, event_flag "
+		 "ongoing_current, ongoing_duration, auto_remove, default_button_index, timeout, text_input_max_length, event_flag, uid "
 		 "from noti_list where 1 > 0 ");
 
 	if (status == VCONFKEY_TELEPHONY_SIM_INSERTED) {
@@ -1723,7 +1724,7 @@ EXPORT_API int notification_noti_get_detail_list(const char *pkgname,
 		 "b_event_handler_click_on_icon, b_event_handler_click_on_thumbnail, b_event_handler_click_on_text_input_button, "
 		 "sound_type, sound_path, vibration_type, vibration_path, led_operation, led_argb, led_on_ms, led_off_ms, "
 		 "flags_for_property, display_applist, progress_size, progress_percentage, ongoing_flag, ongoing_value_type, "
-		 "ongoing_current, ongoing_duration, auto_remove, default_button_index, timeout, text_input_max_length, event_flag "
+		 "ongoing_current, ongoing_duration, auto_remove, default_button_index, timeout, text_input_max_length, event_flag, uid "
 		 "from noti_list ");
 
 	if (priv_id == NOTIFICATION_PRIV_ID_NONE && group_id == NOTIFICATION_GROUP_ID_NONE) {
@@ -2213,7 +2214,7 @@ EXPORT_API int notification_noti_get_package_template(notification_h noti, char 
 		"b_event_handler_click_on_icon, b_event_handler_click_on_thumbnail, b_event_handler_click_on_text_input_button, "
 		"sound_type, sound_path, vibration_type, vibration_path, led_operation, led_argb, led_on_ms, led_off_ms, "
 		"flags_for_property, display_applist, progress_size, progress_percentage, ongoing_flag, ongoing_value_type, "
-		"ongoing_current, ongoing_duration, auto_remove, default_button_index, timeout, text_input_max_length, event_flag "
+		"ongoing_current, ongoing_duration, auto_remove, default_button_index, timeout, text_input_max_length, event_flag, uid "
 		"from noti_template where caller_pkgname = ? and template_name = ?", -1, &stmt, NULL);
 	if (ret != SQLITE_OK) {
 		NOTIFICATION_ERR("Error: %s\n", sqlite3_errmsg(db));
