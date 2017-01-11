@@ -136,7 +136,7 @@ static gint __priv_id_compare(gconstpointer a, gconstpointer b)
 
 	info = (notification_event_cb_info_s *)a;
 
-	if (info->priv_id == GPOINTER_TO_UINT(b))
+	if (info->priv_id == GPOINTER_TO_INT(b))
 		return 0;
 
 	return 1;
@@ -157,7 +157,7 @@ void notification_call_event_handler_cb(notification_h noti, int event_type)
 		return;
 
 	__noti_event_cb_list = g_list_first(__noti_event_cb_list);
-	find_list = g_list_find_custom(__noti_event_cb_list, GUINT_TO_POINTER(priv_id),
+	find_list = g_list_find_custom(__noti_event_cb_list, GINT_TO_POINTER(priv_id),
 				       (GCompareFunc)__priv_id_compare);
 	if (find_list == NULL)
 		return;
@@ -175,7 +175,7 @@ void notification_delete_event_handler_cb(int priv_id)
 		return;
 
 	__noti_event_cb_list = g_list_first(__noti_event_cb_list);
-	delete_list = g_list_find_custom(__noti_event_cb_list, GUINT_TO_POINTER(priv_id),
+	delete_list = g_list_find_custom(__noti_event_cb_list, GINT_TO_POINTER(priv_id),
 					 (GCompareFunc)__priv_id_compare);
 
 	if (delete_list == NULL)
@@ -1562,7 +1562,7 @@ EXPORT_API int notification_post_with_event_cb_for_uid(notification_h noti, even
 	noti->priv_id = priv_id;
 
 	__noti_event_cb_list = g_list_first(__noti_event_cb_list);
-	find_list = g_list_find_custom(__noti_event_cb_list, GUINT_TO_POINTER(priv_id),
+	find_list = g_list_find_custom(__noti_event_cb_list, GINT_TO_POINTER(priv_id),
 				       (GCompareFunc)__priv_id_compare);
 
 	if (find_list) {
