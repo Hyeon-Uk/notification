@@ -1026,7 +1026,7 @@ int notification_ipc_request_delete_multiple(notification_type_e type, char *pkg
 	if (result == NOTIFICATION_ERROR_NONE) {
 		reply_body = g_dbus_message_get_body(reply);
 		g_variant_get(reply_body, "(i)", &num_deleted);
-		NOTIFICATION_ERR("num deleted:%d", num_deleted);
+		NOTIFICATION_DBG("num deleted:%d", num_deleted);
 	}
 
 	if (reply)
