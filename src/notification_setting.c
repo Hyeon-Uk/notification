@@ -866,7 +866,7 @@ static gint _dnd_allow_exception_compare(gconstpointer a, gconstpointer b)
 
 	dnd_allow_exception_data_a = (dnd_allow_exception_h)a;
 
-	if (dnd_allow_exception_data_a->type == (int)b)
+	if (dnd_allow_exception_data_a->type == GPOINTER_TO_INT(b))
 		return 0;
 
 	return -1;
@@ -882,7 +882,7 @@ EXPORT_API int notification_system_setting_get_dnd_allow_exceptions(notification
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 	}
 
-	list = g_list_find_custom(system_setting->dnd_allow_exceptions, (gconstpointer)type, (GCompareFunc)_dnd_allow_exception_compare);
+	list = g_list_find_custom(system_setting->dnd_allow_exceptions, GINT_TO_POINTER(type), (GCompareFunc)_dnd_allow_exception_compare);
 	if (list) {
 		dnd_allow_exception_data = (dnd_allow_exception_h)list->data;
 		*value = dnd_allow_exception_data->value;
@@ -905,7 +905,7 @@ EXPORT_API int notification_system_setting_set_dnd_allow_exceptions(notification
 	}
 
 	list = g_list_first(system_setting->dnd_allow_exceptions);
-	list = g_list_find_custom(list, (gconstpointer)type, (GCompareFunc)_dnd_allow_exception_compare);
+	list = g_list_find_custom(list, GINT_TO_POINTER(type), (GCompareFunc)_dnd_allow_exception_compare);
 
 	if (list) {
 		dnd_allow_exception_data = (dnd_allow_exception_h)list->data;
