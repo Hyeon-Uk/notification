@@ -860,6 +860,7 @@ out:
 	return ret;
 }
 
+/* LCOV_EXCL_START */
 EXPORT_API int notification_setting_db_update_app_disabled(const char *appid, bool value, uid_t uid)
 {
 	int err = NOTIFICATION_ERROR_NONE;
@@ -897,3 +898,4 @@ return_close_db:
 
 	return err;
 }
+/* LCOV_EXCL_STOP */

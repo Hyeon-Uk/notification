@@ -708,6 +708,7 @@ err:
 	return ret;
 }
 
+/* LCOV_EXCL_START */
 static int __get_setting_from_app_control(notification_h noti, notification_setting_h *setting)
 {
 	notification_setting_h setting_new = NULL;
@@ -760,6 +761,7 @@ out:
 
 	return ret;
 }
+/* LCOV_EXCL_STOP */
 
 static bool _is_allowed_to_notify(notification_h noti)
 {
