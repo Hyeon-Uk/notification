@@ -722,8 +722,8 @@ static int __get_setting_from_app_control(notification_h noti, notification_sett
 				NULL,
 				&b);
 	if (ret != NOTIFICATION_ERROR_NONE || b == NULL) {
-		NOTIFICATION_ERR("notification_get_execute_option failed [%x]", ret);
-		return ret;
+		NOTIFICATION_WARN("Can't get or no the excute option [%x]", ret);
+		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 	}
 
 	ret = app_control_create(&app_control);
@@ -876,7 +876,7 @@ static bool _is_pop_up_notification(const char *appid, uid_t uid)
 
 	err = noti_setting_service_get_setting_by_appid(appid, &setting, uid);
 	if (err != NOTIFICATION_ERROR_NONE) {
-		NOTIFICATION_ERR("noti_setting_service_get_setting_by_appid failed [%d]", err);
+		NOTIFICATION_WARN("Can't get the setting for %s [%x]", appid, err);
 		goto out;
 	}
 
