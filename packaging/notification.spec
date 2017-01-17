@@ -46,12 +46,17 @@ Requires:   %{name} = %{version}-%{release}
 Development files needed to build software that needs to system a system notification.
 
 %build
+MAJORVER=`echo %{version} | awk 'BEGIN {FS="."}{print $1}'`
 export LDFLAGS+="-Wl,--rpath=%{_prefix}/lib -Wl,--as-needed"
 LDFLAGS="$LDFLAGS"
 %if %{with wayland}
-%cmake . -DCMAKE_INSTALL_PREFIX=%{_prefix} -DHAVE_WAYLAND=On
+%cmake . \
+	-DCMAKE_INSTALL_PREFIX=%{_prefix} -DHAVE_WAYLAND=On \
+	-DMAJORVER=${MAJORVER} -DFULLVER=%{version}
 %else
-%cmake . -DCMAKE_INSTALL_PREFIX=%{_prefix} -DHAVE_X11=On
+%cmake . \
+	-DCMAKE_INSTALL_PREFIX=%{_prefix} -DHAVE_X11=On \
+	-DMAJORVER=${MAJORVER} -DFULLVER=%{version}
 %endif
 make %{?jobs:-j%jobs}
 
