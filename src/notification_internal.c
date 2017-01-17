@@ -1512,7 +1512,7 @@ EXPORT_API int notification_get_hide_timeout(notification_h noti, int *timeout)
 	if (noti == NULL || timeout == NULL)
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 
-	*timeout = noti->timeout;
+	*timeout = noti->hide_timeout;
 
 	return NOTIFICATION_ERROR_NONE;
 }
@@ -1522,7 +1522,27 @@ EXPORT_API int notification_set_hide_timeout(notification_h noti, int timeout)
 	if (noti == NULL || timeout < 0)
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 
-	noti->timeout = timeout;
+	noti->hide_timeout = timeout;
+
+	return NOTIFICATION_ERROR_NONE;
+}
+
+EXPORT_API int notification_get_delete_timeout(notification_h noti, int *timeout)
+{
+	if (noti == NULL || timeout == NULL)
+		return NOTIFICATION_ERROR_INVALID_PARAMETER;
+
+	*timeout = noti->delete_timeout;
+
+	return NOTIFICATION_ERROR_NONE;
+}
+
+EXPORT_API int notification_set_delete_timeout(notification_h noti, int timeout)
+{
+	if (noti == NULL || timeout < 0)
+		return NOTIFICATION_ERROR_INVALID_PARAMETER;
+
+	noti->delete_timeout = timeout;
 
 	return NOTIFICATION_ERROR_NONE;
 }

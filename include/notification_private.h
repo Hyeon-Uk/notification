@@ -94,7 +94,8 @@ struct _notification {
 	int ongoing_duration;		/* Ongoing duration time */
 	bool auto_remove;
 	notification_button_index_e default_button_index;
-	int timeout;
+	int hide_timeout;		/* Time for hide in banner */
+	int delete_timeout;		/* Time for delete in view notification */
 	int text_input_max_length;
 	bool event_flag;
 	bool is_translation;
@@ -156,7 +157,8 @@ typedef enum notification_data_type {
 	NOTIFICATION_DATA_TYPE_ONGOING_DURATION,
 	NOTIFICATION_DATA_TYPE_AUTO_REMOVE,
 	NOTIFICATION_DATA_TYPE_DEFAULT_BUTTON,
-	NOTIFICATION_DATA_TYPE_TIMEOUT,
+	NOTIFICATION_DATA_TYPE_HIDE_TIMEOUT,
+	NOTIFICATION_DATA_TYPE_DELETE_TIMEOUT,
 	NOTIFICATION_DATA_TYPE_TEXT_INPUT_MAX_LENGTH,
 	NOTIFICATION_DATA_TYPE_EVENT_FLAG,
 	NOTIFICATION_DATA_TYPE_TRANSLATION,

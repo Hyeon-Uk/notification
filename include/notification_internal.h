@@ -972,10 +972,10 @@ int notification_get_ongoing_time(notification_h noti, int *current, int *durati
 int notification_set_ongoing_time(notification_h noti, int current, int duration);
 
 /**
- * @brief Gets the time that notification is hidden.
+ * @brief Gets timeout value in second when the notification can be hidden from the viewer.
  * @since_tizen 3.0
  * @param[in] noti	The notification handle
- * @param[out] timeout	The timeout time
+ * @param[out] timeout	The timeout time(sec)
  * @return #NOTIFICATION_ERROR_NONE on success,
  *         otherwise any other value on failure
  * @retval #NOTIFICATION_ERROR_NONE         Success
@@ -1007,10 +1007,10 @@ int notification_set_ongoing_time(notification_h noti, int current, int duration
 int notification_get_hide_timeout(notification_h noti, int *timeout);
 
 /**
- * @brief Sets the time that notification is hidden.
+ * @brief Sets timeout value in second when the notification can be hidden from the viewer.
  * @since_tizen 3.0
  * @param[in] noti	The notification handle
- * @param[in] timeout	The timeout time
+ * @param[in] timeout	The timeout time(sec)
  * @return #NOTIFICATION_ERROR_NONE on success,
  *         otherwise any other value on failure
  * @retval #NOTIFICATION_ERROR_NONE         Success
@@ -1039,6 +1039,73 @@ int notification_get_hide_timeout(notification_h noti, int *timeout);
  * @endcode
  */
 int notification_set_hide_timeout(notification_h noti, int timeout);
+
+/**
+ * @brief Gets timeout value in second when the notification can be deleted from the viewer.
+ * @since_tizen 3.0
+ * @param[in] noti	The notification handle
+ * @param[out] timeout	The timeout time(sec)
+ * @return #NOTIFICATION_ERROR_NONE on success,
+ *         otherwise any other value on failure
+ * @retval #NOTIFICATION_ERROR_NONE         Success
+ * @retval #NOTIFICATION_ERROR_INVALID_PARAMETER Invalid parameter
+ * @pre Notification handle should be created by notification_create().
+ * @par Sample code:
+ * @code
+#include <notification.h>
+...
+{
+	notification_h noti = NULL;
+	int noti_err = NOTIFICATION_ERROR_NONE;
+	int timeout;
+
+	noti = notification_create(NOTIFICATION_TYPE_NOTI);
+	if (noti == NULL) {
+		return;
+	}
+
+	noti_err  = notification_get_delete_timeout(noti, &timeout)
+	if (noti_err != NOTIFICATION_ERROR_NONE) {
+		notification_free(noti);
+		return;
+	}
+}
+ * @endcode
+ */
+int notification_get_delete_timeout(notification_h noti, int *timeout);
+
+/**
+ * @brief Sets timeout value in second when the notification can be deleted from the viewer.
+ * @since_tizen 3.0
+ * @param[in] noti	The notification handle
+ * @param[in] timeout	The timeout time(sec)
+ * @return #NOTIFICATION_ERROR_NONE on success,
+ *         otherwise any other value on failure
+ * @retval #NOTIFICATION_ERROR_NONE         Success
+ * @retval #NOTIFICATION_ERROR_INVALID_PARAMETER Invalid parameter
+ * @pre Notification handle should be created by notification_create().
+ * @par Sample code:
+ * @code
+#include <notification.h>
+...
+{
+	notification_h noti = NULL;
+	int noti_err = NOTIFICATION_ERROR_NONE;
+
+	noti = notification_create(NOTIFICATION_TYPE_NOTI);
+	if (noti == NULL) {
+		return;
+	}
+
+	noti_err  = notification_set_delete_timeout(noti, 10)
+	if (noti_err != NOTIFICATION_ERROR_NONE) {
+		notification_free(noti);
+		return;
+	}
+}
+ * @endcode
+ */
+int notification_set_delete_timeout(notification_h noti, int timeout);
 
 typedef void (*event_handler_cb)(notification_h noti, int event_type, void *userdata);
 

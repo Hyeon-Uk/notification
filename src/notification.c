@@ -1437,7 +1437,8 @@ static notification_h _notification_create(notification_type_e type)
 	noti->ongoing_flag = false;
 	noti->default_button_index = 0;
 	noti->ongoing_value_type = NOTIFICATION_ONGOING_VALUE_TYPE_PERCENT;
-	noti->timeout = 0;
+	noti->hide_timeout = 0;
+	noti->delete_timeout = 0;
 	noti->event_flag = false;
 	noti->is_translation = false;
 
@@ -1648,7 +1649,8 @@ EXPORT_API int notification_clone(notification_h noti, notification_h *clone)
 	new_noti->ongoing_duration = noti->ongoing_duration;
 	new_noti->auto_remove = noti->auto_remove;
 	new_noti->default_button_index = noti->default_button_index;
-	new_noti->timeout = noti->timeout;
+	new_noti->hide_timeout = noti->hide_timeout;
+	new_noti->delete_timeout = noti->delete_timeout;
 	new_noti->text_input_max_length = noti->text_input_max_length;
 	new_noti->event_flag = noti->event_flag;
 	new_noti->uid = noti->uid;
