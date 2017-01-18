@@ -733,7 +733,11 @@ EXPORT_API int notification_get_text(notification_h noti,
 							strncat(result_str, buf_str, max_len);
 
 							temp_str += 3;
+						} else {
+							strncat(result_str, temp_str, 1);
 						}
+					} else {
+						strncat(result_str, temp_str, 1);
 					}
 				}
 
