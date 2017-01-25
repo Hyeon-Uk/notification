@@ -792,6 +792,9 @@ static int _send_async_noti(GVariant *body, result_cb_item *cb_item, char *cmd)
 		/* LCOV_EXCL_STOP */
 	}
 
+	if (g_variant_is_floating(body))
+		g_variant_ref(body);
+
 	if (body != NULL)
 		g_dbus_message_set_body(msg, body);
 
@@ -804,6 +807,9 @@ static int _send_async_noti(GVariant *body, result_cb_item *cb_item, char *cmd)
 			NULL,
 			(GAsyncReadyCallback)_send_message_with_reply_async_cb,
 			cb_item);
+
+	if (msg)
+		g_object_unref(msg);
 
 	NOTIFICATION_DBG("_send_async_noti done !!");
 	return NOTIFICATION_ERROR_NONE;
