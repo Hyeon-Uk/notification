@@ -562,10 +562,12 @@ static void _send_event(GVariant *parameters)
 	g_variant_unref(body);
 	if (ret != NOTIFICATION_ERROR_NONE) {
 		NOTIFICATION_ERR("failed to make notification handle from gvariant");
+		notification_free(noti);
 		return;
 	}
 
 	notification_call_event_handler_cb(noti, event_type);
+	notification_free(noti);
 }
 
 static void _delete_event(GVariant *parameters)
@@ -1396,6 +1398,7 @@ int notification_ipc_request_load_system_setting(notification_system_setting_h *
 			if (dnd_allow_exception == NULL) {
 				g_object_unref(reply);
 				g_variant_iter_free(iter);
+				free(result_setting);
 				return NOTIFICATION_ERROR_OUT_OF_MEMORY;
 			}
 
