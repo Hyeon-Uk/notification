@@ -29,6 +29,7 @@ static const GDBusErrorEntry dbus_error_entries[] = {
 	{NOTIFICATION_ERROR_NOT_EXIST_ID,      "org.freedesktop.Notification.Error.NOT_EXIST_ID"},
 	{NOTIFICATION_ERROR_SERVICE_NOT_READY, "org.freedesktop.Notification.Error.SERVICE_NOT_READY"},
 	{NOTIFICATION_ERROR_INVALID_OPERATION, "org.freedesktop.Notification.Error.INVALID_OPERATION"},
+	{NOTIFICATION_ERROR_MAX_EXCEEDED,      "org.freedesktop.Notification.Error.MAX_EXCEEDED"},
 };
 
 #define NOTIFICATION_ERROR_QUARK "notification-error-quark"
