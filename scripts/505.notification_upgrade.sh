@@ -66,6 +66,7 @@ CREATE TABLE noti_list_temp (
 	delete_timeout INTEGER default 0,
 	text_input_max_length INTEGER default 0,
 	event_flag INTEGER default 0,
+	extension_image_size INTEGER default 0,
 	uid INTEGER
 );
 INSERT INTO noti_list_temp (type, layout, caller_pkgname, launch_pkgname, image_path, group_id, internal_group_id, priv_id, title_key, b_text, b_key, tag, b_format_args, num_format_args, text_domain, text_dir, time, insert_time, args, group_args, b_execute_option, b_service_responding, b_service_single_launch, b_service_multi_launch, b_event_handler_click_on_button_1, b_event_handler_click_on_button_2, b_event_handler_click_on_button_3, b_event_handler_click_on_button_4, b_event_handler_click_on_button_5, b_event_handler_click_on_button_6, b_event_handler_click_on_icon, b_event_handler_click_on_thumbnail, sound_type, sound_path, vibration_type, vibration_path, led_operation, led_argb, led_on_ms, led_off_ms, flags_for_property, flag_simmode, display_applist, progress_size, progress_percentage, ongoing_flag, auto_remove) \
@@ -163,6 +164,7 @@ CREATE TABLE noti_template (
 	delete_timeout INTEGER default 0,
 	text_input_max_length INTEGER default 0,
 	event_flag INTEGER default 0,
+	extension_image_size INTEGER default 0,
 	uid INTEGER,
 	template_name TEXT,
 	UNIQUE (caller_pkgname, template_name)

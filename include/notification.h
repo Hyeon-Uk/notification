@@ -1775,6 +1775,88 @@ int notification_set_text_input(notification_h noti, int text_input_max_length);
 
 
 /**
+ * @brief Sets the image height for the extended notification.
+ * @details The image is shown under the notification's text. The application can set the image height.
+ *          The image is modified to fit into the height set by this function.
+ *          The image can be scaled down and/or cropped.
+ *          If @a height is 0, the default value is used. The default height depends on the screen size.
+ * @since_tizen 4.0
+ * @param[in] noti   The notification handle
+ * @param[in] height The image height
+ * @return #NOTIFICATION_ERROR_NONE On success,
+ *         otherwise a negative error value
+ * @retval #NOTIFICATION_ERROR_NONE Success
+ * @retval #NOTIFICATION_ERROR_INVALID_PARAMETER Invalid parameter
+ * @see notification_get_extension_image_size()
+ * @par Sample code:
+ * @code
+#include <notification.h>
+
+{
+	notification_h noti = NULL;
+	int noti_err = NOTIFICATION_ERROR_NONE;
+
+	noti = notification_create(NOTIFICATION_TYPE_NOTI);
+	if (noti == NULL)
+		return;
+
+	noti_err = notification_set_text(noti,
+			NOTIFICATION_TEXT_TYPE_CONTENT_EXTENTION,
+			"message",
+			NULL,
+			NOTIFICATION_VARIABLE_TYPE_NONE);
+	if (noti_err != NOTIFICATION_ERROR_NONE)
+		return;
+
+	noti_err = notification_set_image(noti,
+			NOTIFICATION_IMAGE_TYPE_EXTENTION,
+			image_path);
+	if (noti_err != NOTIFICATION_ERROR_NONE)
+		return;
+
+	noti_err = notification_set_layout(noti, NOTIFICATION_LY_EXTENTION);
+	if (noti_err != NOTIFICATION_ERROR_NONE)
+		return;
+
+	noti_err = notification_set_extension_image_size(noti, 20);
+	if (noti_err != NOTIFICATION_ERROR_NONE)
+		return;
+
+	// Do something
+}
+ * @endcode
+ */
+int notification_set_extension_image_size(notification_h noti, int height);
+
+
+/**
+ * @brief Gets the image height for the extended notification.
+ * @since_tizen 4.0
+ * @param[in] noti The notification handle
+ * @param[out] height The image height
+ * @return #NOTIFICATION_ERROR_NONE On success, otherwise a negative error value
+ * @retval #NOTIFICATION_ERROR_NONE Success
+ * @retval #NOTIFICATION_ERROR_INVALID_PARAMETER Invalid parameter
+ * @see notification_set_extension_image_size()
+ * @par Sample code:
+ * @code
+#include <notification.h>
+
+{
+	int noti_err = NOTIFICATION_ERROR_NONE;
+	int height;
+
+	// Do something
+
+	noti_err = notification_get_extension_image_size(noti, &height);
+	if (noti_err != NOTIFICATION_ERROR_NONE)
+		return;
+}
+ * @endcode
+ */
+int notification_get_extension_image_size(notification_h noti, int *height);
+
+/**
  * @}
  */
 

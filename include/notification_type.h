@@ -52,13 +52,14 @@ extern "C" {
  */
 typedef enum _notification_ly_type {
 	NOTIFICATION_LY_NONE = 0, /**< Default */
-	NOTIFICATION_LY_NOTI_EVENT_SINGLE, /**< Layout for notification. Used to inform single event*/
-	NOTIFICATION_LY_NOTI_EVENT_MULTIPLE, /**< Layout for notification. Used to inform multiple event*/
-	NOTIFICATION_LY_NOTI_THUMBNAIL, /**< Layout for notification. Used to display images*/
+	NOTIFICATION_LY_NOTI_EVENT_SINGLE, /**< Layout for notification. Used to inform single event */
+	NOTIFICATION_LY_NOTI_EVENT_MULTIPLE, /**< Layout for notification. Used to inform multiple event */
+	NOTIFICATION_LY_NOTI_THUMBNAIL, /**< Layout for notification. Used to display images */
 	NOTIFICATION_LY_ONGOING_EVENT, /**< Layout for ongoing notification. Used to display text message.
 					* notifications with NOTIFICATION_LY_ONGOING_EVENT can not be protected from
 					* removing by user since tizen @if MOBILE 2.4 @elseif WEARABLE 3.0 @endif */
-	NOTIFICATION_LY_ONGOING_PROGRESS, /**< Layout for ongoing notification. Used to display progress*/
+	NOTIFICATION_LY_ONGOING_PROGRESS, /**< Layout for ongoing notification. Used to display progress */
+	NOTIFICATION_LY_EXTENSION, /**< Layout for extended notification (Since 4.0) */
 	NOTIFICATION_LY_MAX, /**< TBD */
 } notification_ly_type_e;
 
@@ -182,6 +183,7 @@ typedef enum _notification_text_type {
 	NOTIFICATION_TEXT_TYPE_BUTTON_6, /**< Text on button 6 */
 	NOTIFICATION_TEXT_TYPE_TEXT_INPUT_PLACEHOLDER, /**< Guide text on the message reply box(Since 3.0) */
 	NOTIFICATION_TEXT_TYPE_TEXT_INPUT_BUTTON, /**< Text on button the on message reply box(Since 3.0) */
+	NOTIFICATION_TEXT_TYPE_CONTENT_EXTENSION, /**< Content for extended notification (Since 4.0) */
 	NOTIFICATION_TEXT_TYPE_MAX,
 } notification_text_type_e;
 
@@ -211,6 +213,7 @@ typedef enum _notification_image_type {
 	NOTIFICATION_IMAGE_TYPE_BUTTON_5, /**< Image for button 5 */
 	NOTIFICATION_IMAGE_TYPE_BUTTON_6, /**< Image for button 6 */
 	NOTIFICATION_IMAGE_TYPE_TEXT_INPUT_BUTTON, /**< Image for message reply(Since 3.0) */
+	NOTIFICATION_IMAGE_TYPE_EXTENSION, /**< Image for extended notification (Since 4.0) */
 	NOTIFICATION_IMAGE_TYPE_MAX,
 } notification_image_type_e;
 

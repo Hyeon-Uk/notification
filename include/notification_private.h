@@ -99,6 +99,7 @@ struct _notification {
 	int text_input_max_length;
 	bool event_flag;
 	bool is_translation;
+	int extension_image_size;
 	uid_t uid;
 };
 
@@ -162,6 +163,7 @@ typedef enum notification_data_type {
 	NOTIFICATION_DATA_TYPE_TEXT_INPUT_MAX_LENGTH,
 	NOTIFICATION_DATA_TYPE_EVENT_FLAG,
 	NOTIFICATION_DATA_TYPE_TRANSLATION,
+	NOTIFICATION_DATA_TYPE_EXTENSION_IMAGE_SIZE,
 	NOTIFICATION_DATA_TYPE_UID,
 } notification_data_type_e;
 

@@ -265,7 +265,7 @@ static int _insertion_query_create(notification_h noti, char **query)
 		"progress_size, progress_percentage, "
 		"ongoing_flag, ongoing_value_type, ongoing_current, ongoing_duration, "
 		"auto_remove, default_button_index, hide_timeout, delete_timeout, "
-		"text_input_max_length, event_flag, uid) values ("
+		"text_input_max_length, event_flag, extension_image_size, uid) values ("
 		"%d, "
 		"%d, "
 		"'%s', '%s', "
@@ -285,7 +285,7 @@ static int _insertion_query_create(notification_h noti, char **query)
 		"%d, %d, %d, "
 		"$progress_size, $progress_percentage, "
 		"%d, %d, %d, %d, %d,"
-		"%d, %d, %d, %d, %d, %d)",
+		"%d, %d, %d, %d, %d, %d, %d)",
 		noti->type,
 		noti->layout,
 		NOTIFICATION_CHECK_STR(noti->caller_pkgname),
@@ -329,6 +329,7 @@ static int _insertion_query_create(notification_h noti, char **query)
 		noti->delete_timeout,
 		noti->text_input_max_length,
 		noti->event_flag,
+		noti->extension_image_size,
 		noti->uid);
 
 	/* Free decoded data */
@@ -468,7 +469,7 @@ static int _update_query_create(notification_h noti, char **query)
 		"progress_size = $progress_size, progress_percentage = $progress_percentage, "
 		"ongoing_flag = %d, ongoing_value_type = %d, ongoing_current = %d, ongoing_duration = %d, "
 		"auto_remove = %d, default_button_index = %d, hide_timeout = %d, "
-		"delete_timeout = %d, text_input_max_length = %d, event_flag = %d "
+		"delete_timeout = %d, text_input_max_length = %d, event_flag = %d, extension_image_size = %d "
 		"where priv_id = %d ",
 		noti->type,
 		noti->layout,
@@ -505,7 +506,7 @@ static int _update_query_create(notification_h noti, char **query)
 		noti->ongoing_current, noti->ongoing_duration,
 		noti->auto_remove, noti->default_button_index, noti->hide_timeout,
 		noti->delete_timeout, noti->text_input_max_length, noti->event_flag,
-		noti->priv_id);
+		noti->extension_image_size, noti->priv_id);
 
 	/* Free decoded data */
 	if (args)
@@ -609,6 +610,7 @@ static void _notification_noti_populate_from_stmt(sqlite3_stmt *stmt, notificati
 	noti->delete_timeout = sqlite3_column_int(stmt, col++);
 	noti->text_input_max_length = sqlite3_column_int(stmt, col++);
 	noti->event_flag = sqlite3_column_int(stmt, col++);
+	noti->extension_image_size = sqlite3_column_int(stmt, col++);
 	noti->uid = sqlite3_column_int(stmt, col++);
 
 	noti->app_icon_path = NULL;
@@ -1063,7 +1065,7 @@ EXPORT_API int notification_noti_get_by_priv_id(notification_h noti, char *pkgna
 			 "sound_type, sound_path, vibration_type, vibration_path, led_operation, led_argb, led_on_ms, led_off_ms, "
 			 "flags_for_property, display_applist, progress_size, progress_percentage, ongoing_flag, ongoing_value_type, "
 			 "ongoing_current, ongoing_duration, auto_remove, default_button_index, hide_timeout, delete_timeout, "
-			 "text_input_max_length, event_flag, uid "
+			 "text_input_max_length, event_flag, extension_image_size, uid "
 			 "from noti_list ";
 
 	if (pkgname != NULL && strlen(pkgname) != 0)
@@ -1135,7 +1137,7 @@ EXPORT_API int notification_noti_get_by_tag(notification_h noti, char *pkgname, 
 			 "sound_type, sound_path, vibration_type, vibration_path, led_operation, led_argb, led_on_ms, led_off_ms, "
 			 "flags_for_property, display_applist, progress_size, progress_percentage, ongoing_flag, ongoing_value_type, "
 			 "ongoing_current, ongoing_duration, auto_remove, default_button_index, hide_timeout, delete_timeout, "
-			 "text_input_max_length, event_flag, uid "
+			 "text_input_max_length, event_flag, extension_image_size, uid "
 			 "from noti_list where caller_pkgname = ? and tag = ? and uid = ?", -1, &stmt, NULL);
 		if (ret != SQLITE_OK) {
 			NOTIFICATION_ERR("Error: %s\n", sqlite3_errmsg(db));
@@ -1172,7 +1174,7 @@ EXPORT_API int notification_noti_get_by_tag(notification_h noti, char *pkgname, 
 			 "sound_type, sound_path, vibration_type, vibration_path, led_operation, led_argb, led_on_ms, led_off_ms, "
 			 "flags_for_property, display_applist, progress_size, progress_percentage, ongoing_flag, ongoing_value_type, "
 			 "ongoing_current, ongoing_duration, auto_remove, default_button_index, hide_timeout, delete_timeout, "
-			 "text_input_max_length, event_flag, uid "
+			 "text_input_max_length, event_flag, extension_image_size, uid "
 			 "from noti_list where  tag = ? and uid = ?", -1, &stmt, NULL);
 		if (ret != SQLITE_OK) {
 			NOTIFICATION_ERR("Error: %s\n", sqlite3_errmsg(db));
@@ -1633,7 +1635,7 @@ EXPORT_API int notification_noti_get_grouping_list(notification_type_e type,
 		 "sound_type, sound_path, vibration_type, vibration_path, led_operation, led_argb, led_on_ms, led_off_ms, "
 		 "flags_for_property, display_applist, progress_size, progress_percentage, ongoing_flag, ongoing_value_type, "
 		 "ongoing_current, ongoing_duration, auto_remove, default_button_index, hide_timeout, delete_timeout, "
-		 "text_input_max_length, event_flag, uid "
+		 "text_input_max_length, event_flag, extension_image_size, uid "
 		 "from noti_list where 1 > 0 ");
 
 	if (status == VCONFKEY_TELEPHONY_SIM_INSERTED) {
@@ -1736,7 +1738,7 @@ EXPORT_API int notification_noti_get_detail_list(const char *pkgname,
 		 "sound_type, sound_path, vibration_type, vibration_path, led_operation, led_argb, led_on_ms, led_off_ms, "
 		 "flags_for_property, display_applist, progress_size, progress_percentage, ongoing_flag, ongoing_value_type, "
 		 "ongoing_current, ongoing_duration, auto_remove, default_button_index, hide_timeout, delete_timeout, "
-		 "text_input_max_length, event_flag, uid "
+		 "text_input_max_length, event_flag, extension_image_size, uid "
 		 "from noti_list ");
 
 	if (priv_id == NOTIFICATION_PRIV_ID_NONE && group_id == NOTIFICATION_GROUP_ID_NONE) {
@@ -1998,7 +2000,7 @@ static int _template_query_create(notification_h noti, char *template_name, char
 		"flags_for_property, flag_simmode, display_applist, progress_size, progress_percentage, "
 		"ongoing_flag, ongoing_value_type, ongoing_current, ongoing_duration, "
 		"auto_remove, default_button_index, hide_timeout, delete_timeout, text_input_max_length, "
-		"event_flag, uid, template_name) values ("
+		"event_flag, extension_image_size, uid, template_name) values ("
 		"%d, "
 		"%d, "
 		"'%s', '%s', "
@@ -2018,7 +2020,7 @@ static int _template_query_create(notification_h noti, char *template_name, char
 		"%d, %d, %d, $progress_size, $progress_percentage, "
 		"%d, %d, %d, %d, "
 		"%d, %d, %d, %d, %d, "
-		"%d, %d, '%s')",
+		"%d, %d, %d, '%s')",
 		noti->type,
 		noti->layout,
 		NOTIFICATION_CHECK_STR(noti->caller_pkgname),
@@ -2062,6 +2064,7 @@ static int _template_query_create(notification_h noti, char *template_name, char
 		noti->delete_timeout,
 		noti->text_input_max_length,
 		noti->event_flag,
+		noti->extension_image_size,
 		noti->uid,
 		template_name);
 
@@ -2228,7 +2231,7 @@ EXPORT_API int notification_noti_get_package_template(notification_h noti, char 
 		"sound_type, sound_path, vibration_type, vibration_path, led_operation, led_argb, led_on_ms, led_off_ms, "
 		"flags_for_property, display_applist, progress_size, progress_percentage, ongoing_flag, ongoing_value_type, "
 		"ongoing_current, ongoing_duration, auto_remove, default_button_index, hide_timeout, delete_timeout, "
-		"text_input_max_length, event_flag, uid "
+		"text_input_max_length, event_flag, extension_image_size, uid "
 		"from noti_template where caller_pkgname = ? and template_name = ?", -1, &stmt, NULL);
 	if (ret != SQLITE_OK) {
 		NOTIFICATION_ERR("Error: %s\n", sqlite3_errmsg(db));

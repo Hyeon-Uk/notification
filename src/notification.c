@@ -1929,3 +1929,23 @@ EXPORT_API int notification_set_text_input(notification_h noti, int text_input_m
 
 	return NOTIFICATION_ERROR_NONE;
 }
+
+EXPORT_API int notification_set_extension_image_size(notification_h noti, int height)
+{
+	if (noti == NULL || height <= 0)
+		return NOTIFICATION_ERROR_INVALID_PARAMETER;
+
+	noti->extension_image_size = height;
+
+	return NOTIFICATION_ERROR_NONE;
+}
+
+EXPORT_API int notification_get_extension_image_size(notification_h noti, int *height)
+{
+	if (noti == NULL || height == NULL)
+		return NOTIFICATION_ERROR_INVALID_PARAMETER;
+
+	*height = noti->extension_image_size;
+
+	return NOTIFICATION_ERROR_NONE;
+}
