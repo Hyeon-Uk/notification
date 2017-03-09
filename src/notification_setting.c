@@ -428,13 +428,6 @@ static int foreach_package_info_callback(const pkgmgrinfo_pkginfo_h package_info
 		goto out;
 	}
 
-	pkgmgr_ret = pkgmgrinfo_appinfo_filter_add_bool(handle, PMINFO_APPINFO_PROP_APP_NODISPLAY, false);
-	if (pkgmgr_ret != PMINFO_R_OK) {
-		NOTIFICATION_ERR("pkgmgrinfo_appinfo_filter_add_bool failed [%d]", pkgmgr_ret);
-		err = false;
-		goto out;
-	}
-
 	pkgmgr_ret = pkgmgrinfo_appinfo_usr_filter_foreach_appinfo(handle, foreach_app_info_callback, info, info->uid);
 	if (pkgmgr_ret != PMINFO_R_OK) {
 		NOTIFICATION_ERR("pkgmgrinfo_pkginfo_filter_foreach_appinfo failed [%d]", pkgmgr_ret);
