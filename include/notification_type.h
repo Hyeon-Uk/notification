@@ -273,7 +273,7 @@ enum _notification_property {
  * @brief Enumeration for display application list.
  * @since_tizen @if WEARABLE 2.3.1 @elseif MOBILE 2.3 @endif
  */
-enum _notificaton_display_applist {
+enum _notification_display_applist {
 	NOTIFICATION_DISPLAY_APP_NOTIFICATION_TRAY = 0x00000001, /**< Notification Tray(Quickpanel) */
 	NOTIFICATION_DISPLAY_APP_TICKER = 0x00000002, /**< Ticker notification */
 	NOTIFICATION_DISPLAY_APP_LOCK = 0x00000004, /**< Lock screen */
