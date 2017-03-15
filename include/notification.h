@@ -1035,7 +1035,7 @@ int notification_update(notification_h noti);
 #include <notification.h>
 
 {
-	notificaton_h noti = NULL;
+	notification_h noti = NULL;
 	int noti_err = NOTIFICATION_ERROR_NONE;
 
 	// Do something
