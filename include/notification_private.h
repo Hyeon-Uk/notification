@@ -17,6 +17,7 @@
 #ifndef __NOTIFICATION_PRIVATE_H__
 #define __NOTIFICATION_PRIVATE_H__
 #include <sys/types.h>
+#include <notification_internal.h>
 
 #ifndef EXPORT_API
 #define EXPORT_API __attribute__ ((visibility("default")))
@@ -53,7 +54,7 @@ struct _notification {
 	bundle *b_service_single_launch;
 	bundle *b_service_multi_launch;
 
-	bundle *b_event_handler[NOTIFICATION_EVENT_TYPE_MAX];
+	bundle *b_event_handler[NOTIFICATION_EVENT_TYPE_MAX+1];
 
 	char *domain;		/* Text domain for localization */
 	char *dir;		/* Text dir for localization */

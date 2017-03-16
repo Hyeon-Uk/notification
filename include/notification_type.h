@@ -60,7 +60,6 @@ typedef enum _notification_ly_type {
 					* removing by user since tizen @if MOBILE 2.4 @elseif WEARABLE 3.0 @endif */
 	NOTIFICATION_LY_ONGOING_PROGRESS, /**< Layout for ongoing notification. Used to display progress */
 	NOTIFICATION_LY_EXTENSION, /**< Layout for extended notification (Since 4.0) */
-	NOTIFICATION_LY_MAX, /**< TBD */
 } notification_ly_type_e;
 
 
@@ -88,7 +87,6 @@ typedef enum _notification_event_type {
 	NOTIFICATION_EVENT_TYPE_CLICK_ON_ICON = 6, /**< Event type : Click on icon */
 	NOTIFICATION_EVENT_TYPE_CLICK_ON_THUMBNAIL = 7, /**< Event type : Click on thumbnail */
 	NOTIFICATION_EVENT_TYPE_CLICK_ON_TEXT_INPUT_BUTTON = 8, /**< Event type : Click on text_input button(Since 3.0) */
-	NOTIFICATION_EVENT_TYPE_MAX,
 } notification_event_type_e;
 
 
@@ -100,7 +98,6 @@ typedef enum _notification_sound_type {
 	NOTIFICATION_SOUND_TYPE_NONE = -1, /**< Default value. no sound */
 	NOTIFICATION_SOUND_TYPE_DEFAULT = 0, /**< Default sound */
 	NOTIFICATION_SOUND_TYPE_USER_DATA, /**< User sound data */
-	NOTIFICATION_SOUND_TYPE_MAX,
 } notification_sound_type_e;
 
 
@@ -112,7 +109,6 @@ typedef enum _notification_vibration_type {
 	NOTIFICATION_VIBRATION_TYPE_NONE = -1, /**< Default value. No vibration */
 	NOTIFICATION_VIBRATION_TYPE_DEFAULT = 0, /**< Default vibrate pattern */
 	NOTIFICATION_VIBRATION_TYPE_USER_DATA, /**< User vibration data */
-	NOTIFICATION_VIBRATION_TYPE_MAX,
 } notification_vibration_type_e;
 
 
@@ -124,7 +120,6 @@ typedef enum _notification_led_op {
 	NOTIFICATION_LED_OP_OFF = -1, /**< Default value. Disable the LED notification */
 	NOTIFICATION_LED_OP_ON = 0, /**< Turn on the LED with default color */
 	NOTIFICATION_LED_OP_ON_CUSTOM_COLOR, /**< Turn on the LED with custom color */
-	NOTIFICATION_LED_OP_MAX,
 } notification_led_op_e;
 
 
@@ -138,7 +133,6 @@ typedef enum _notification_count_display_type {
 	NOTIFICATION_COUNT_DISPLAY_TYPE_LEFT = 0, /**< The number is placed to left */
 	NOTIFICATION_COUNT_DISPLAY_TYPE_IN, /**< The number is placed to center */
 	NOTIFICATION_COUNT_DISPLAY_TYPE_RIGHT, /**< The number is placed to right */
-	NOTIFICATION_COUNT_DISPLAY_TYPE_MAX,
 } notification_count_display_type_e;
 
 
@@ -184,7 +178,6 @@ typedef enum _notification_text_type {
 	NOTIFICATION_TEXT_TYPE_TEXT_INPUT_PLACEHOLDER, /**< Guide text on the message reply box(Since 3.0) */
 	NOTIFICATION_TEXT_TYPE_TEXT_INPUT_BUTTON, /**< Text on button the on message reply box(Since 3.0) */
 	NOTIFICATION_TEXT_TYPE_CONTENT_EXTENSION, /**< Content for extended notification (Since 4.0) */
-	NOTIFICATION_TEXT_TYPE_MAX,
 } notification_text_type_e;
 
 
@@ -214,7 +207,6 @@ typedef enum _notification_image_type {
 	NOTIFICATION_IMAGE_TYPE_BUTTON_6, /**< Image for button 6 */
 	NOTIFICATION_IMAGE_TYPE_TEXT_INPUT_BUTTON, /**< Image for message reply(Since 3.0) */
 	NOTIFICATION_IMAGE_TYPE_EXTENSION, /**< Image for extended notification (Since 4.0) */
-	NOTIFICATION_IMAGE_TYPE_MAX,
 } notification_image_type_e;
 
 
@@ -227,7 +219,6 @@ typedef enum _notification_execute_type {
 	NOTIFICATION_EXECUTE_TYPE_RESPONDING = 0, /**< Responding action*/
 	NOTIFICATION_EXECUTE_TYPE_SINGLE_LAUNCH, /**< Launching when notification data is single */
 	NOTIFICATION_EXECUTE_TYPE_MULTI_LAUNCH, /**< Launching when notification data is grouping(multi) */
-	NOTIFICATION_EXECUTE_TYPE_MAX, /**< Max flag */
 } notification_execute_type_e;
 
 
@@ -239,7 +230,6 @@ typedef enum _notification_type {
 	NOTIFICATION_TYPE_NONE = -1, /**< None */
 	NOTIFICATION_TYPE_NOTI = 0, /**< Notification type */
 	NOTIFICATION_TYPE_ONGOING, /**< Ongoing type */
-	NOTIFICATION_TYPE_MAX, /**< Max flag */
 } notification_type_e;
 
 
@@ -319,7 +309,6 @@ typedef enum _notification_op_data_type {
 	NOTIFICATION_OP_DATA_NOTI, /**< Notification handler */
 	NOTIFICATION_OP_DATA_EXTRA_INFO_1, /**< Reserved */
 	NOTIFICATION_OP_DATA_EXTRA_INFO_2, /**< Reserved */
-	NOTIFICATION_OP_DATA_MAX, /**< Max flag */
 } notification_op_data_type_e;
 
 
@@ -332,7 +321,6 @@ typedef enum _notifcation_count_pos_type {
 	NOTIFICATION_COUNT_POS_LEFT = 0, /**< Count data is displaying at the left of the text */
 	NOTIFICATION_COUNT_POS_IN, /**< Count data is displaying in the text */
 	NOTIFICATION_COUNT_POS_RIGHT, /**< Count data is displaying at the right of the text */
-	NOTIFICATION_COUNT_POS_MAX, /**< Max flag */
 } notification_count_pos_type_e;
 
 
@@ -346,7 +334,6 @@ typedef enum _notification_variable_type {
 	NOTIFICATION_VARIABLE_TYPE_DOUBLE, /**< Variable parameter type is double */
 	NOTIFICATION_VARIABLE_TYPE_STRING, /**< Variable parameter type is string */
 	NOTIFICATION_VARIABLE_TYPE_COUNT, /**< Variable parameter type is count */
-	NOTIFICATION_VARIABLE_TYPE_MAX, /**< Max flag */
 } notification_variable_type_e;
 
 

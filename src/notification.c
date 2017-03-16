@@ -1165,7 +1165,7 @@ EXPORT_API int notification_set_event_handler(notification_h noti, notification_
 	}
 
 	if (event_type < NOTIFICATION_EVENT_TYPE_CLICK_ON_BUTTON_1
-		|| event_type >= NOTIFICATION_EVENT_TYPE_MAX) {
+		|| event_type > NOTIFICATION_EVENT_TYPE_MAX) {
 		NOTIFICATION_ERR("NOTIFICATION_ERROR_INVALID_PARAMETER");
 		err = NOTIFICATION_ERROR_INVALID_PARAMETER;
 		goto out;
@@ -1204,7 +1204,7 @@ EXPORT_API int notification_get_event_handler(notification_h noti, notification_
 	}
 
 	if (event_type < NOTIFICATION_EVENT_TYPE_CLICK_ON_BUTTON_1
-		|| event_type >= NOTIFICATION_EVENT_TYPE_MAX) {
+		|| event_type > NOTIFICATION_EVENT_TYPE_MAX) {
 		NOTIFICATION_ERR("NOTIFICATION_ERROR_INVALID_PARAMETER");
 		err = NOTIFICATION_ERROR_INVALID_PARAMETER;
 		goto out;
@@ -1577,7 +1577,7 @@ EXPORT_API int notification_clone(notification_h noti, notification_h *clone)
 	else
 		new_noti->b_service_multi_launch = NULL;
 
-	for (i = 0; i < NOTIFICATION_EVENT_TYPE_MAX; i++) {
+	for (i = 0; i <= NOTIFICATION_EVENT_TYPE_MAX; i++) {
 		if (noti->b_event_handler[i] != NULL)
 			new_noti->b_event_handler[i] = bundle_dup(noti->b_event_handler[i]);
 		else
@@ -1702,7 +1702,7 @@ EXPORT_API int notification_free(notification_h noti)
 	if (noti->b_service_multi_launch)
 		bundle_free(noti->b_service_multi_launch);
 
-	for (i = 0; i < NOTIFICATION_EVENT_TYPE_MAX; i++) {
+	for (i = 0; i <= NOTIFICATION_EVENT_TYPE_MAX; i++) {
 		if (noti->b_event_handler[i] != NULL)
 			bundle_free(noti->b_event_handler[i]);
 	}

@@ -1726,7 +1726,7 @@ EXPORT_API GVariant *notification_ipc_make_gvariant_from_noti(notification_h not
 	bundle_raw *b_service_responding = NULL;
 	bundle_raw *b_service_single_launch = NULL;
 	bundle_raw *b_service_multi_launch = NULL;
-	bundle_raw *b_event_handler[NOTIFICATION_EVENT_TYPE_MAX] = {NULL, };
+	bundle_raw *b_event_handler[NOTIFICATION_EVENT_TYPE_MAX+1] = {NULL, };
 	bundle_raw *b_text = NULL;
 	bundle_raw *b_key = NULL;
 	bundle_raw *b_format_args = NULL;
@@ -1799,7 +1799,7 @@ EXPORT_API GVariant *notification_ipc_make_gvariant_from_noti(notification_h not
 			bundle_free_encoded_rawdata(&b_service_multi_launch);
 	}
 
-	for (i = 0; i < NOTIFICATION_EVENT_TYPE_MAX; i++) {
+	for (i = 0; i <= NOTIFICATION_EVENT_TYPE_MAX; i++) {
 		if (noti->b_event_handler[i]) {
 			bundle_encode(noti->b_event_handler[i],
 					(bundle_raw **)&b_event_handler[i], &b_encode_len);
@@ -1985,7 +1985,7 @@ EXPORT_API int notification_ipc_make_noti_from_gvariant(notification_h noti,
 	bundle_raw *b_service_responding = NULL;
 	bundle_raw *b_service_single_launch = NULL;
 	bundle_raw *b_service_multi_launch = NULL;
-	bundle_raw *b_event_handler[NOTIFICATION_EVENT_TYPE_MAX] = { NULL, };
+	bundle_raw *b_event_handler[NOTIFICATION_EVENT_TYPE_MAX+1] = { NULL, };
 	char *domain = NULL;
 	char *dir = NULL;
 	bundle_raw *b_text = NULL;
@@ -2086,7 +2086,7 @@ EXPORT_API int notification_ipc_make_noti_from_gvariant(notification_h noti,
 			b_service_single_launch);
 	noti->b_service_multi_launch = _create_bundle_from_bundle_raw(
 			b_service_multi_launch);
-	for (i = 0; i < NOTIFICATION_EVENT_TYPE_MAX; i++) {
+	for (i = 0; i <= NOTIFICATION_EVENT_TYPE_MAX; i++) {
 		noti->b_event_handler[i] = _create_bundle_from_bundle_raw(
 				b_event_handler[i]);
 	}

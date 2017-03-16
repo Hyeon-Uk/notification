@@ -186,7 +186,7 @@ static int _insertion_query_create(notification_h noti, char **query)
 	char *b_service_responding = NULL;
 	char *b_service_single_launch = NULL;
 	char *b_service_multi_launch = NULL;
-	char *b_event_handler[NOTIFICATION_EVENT_TYPE_MAX] = { NULL , };
+	char *b_event_handler[NOTIFICATION_EVENT_TYPE_MAX+1] = { NULL , };
 	char *b_text = NULL;
 	char *b_key = NULL;
 	char *b_format_args = NULL;
@@ -220,7 +220,7 @@ static int _insertion_query_create(notification_h noti, char **query)
 			      (bundle_raw **)&b_service_multi_launch, &b_encode_len);
 
 
-	for (i = 0; i < NOTIFICATION_EVENT_TYPE_MAX; i++) {
+	for (i = 0; i <= NOTIFICATION_EVENT_TYPE_MAX; i++) {
 		if (noti->b_event_handler[i])
 			bundle_encode(noti->b_event_handler[i],
 					(bundle_raw **)&b_event_handler[i], &b_encode_len);
@@ -380,7 +380,7 @@ static int _update_query_create(notification_h noti, char **query)
 	char *b_service_responding = NULL;
 	char *b_service_single_launch = NULL;
 	char *b_service_multi_launch = NULL;
-	char *b_event_handler[NOTIFICATION_EVENT_TYPE_MAX] = { NULL , };
+	char *b_event_handler[NOTIFICATION_EVENT_TYPE_MAX+1] = { NULL , };
 	char *b_text = NULL;
 	char *b_key = NULL;
 	char *b_format_args = NULL;
@@ -413,7 +413,7 @@ static int _update_query_create(notification_h noti, char **query)
 		bundle_encode(noti->b_service_multi_launch,
 			      (bundle_raw **)&b_service_multi_launch, &b_encode_len);
 
-	for (i = 0; i < NOTIFICATION_EVENT_TYPE_MAX; i++) {
+	for (i = 0; i <= NOTIFICATION_EVENT_TYPE_MAX; i++) {
 		if (noti->b_event_handler[i])
 			bundle_encode(noti->b_event_handler[i],
 					(bundle_raw **)&b_event_handler[i], &b_encode_len);
@@ -582,7 +582,7 @@ static void _notification_noti_populate_from_stmt(sqlite3_stmt *stmt, notificati
 	noti->b_service_multi_launch =
 	    notification_db_column_bundle(stmt, col++);
 
-	for (i = 0; i < NOTIFICATION_EVENT_TYPE_MAX; i++)
+	for (i = 0; i <= NOTIFICATION_EVENT_TYPE_MAX; i++)
 		noti->b_event_handler[i] = notification_db_column_bundle(stmt, col++);
 
 
@@ -1922,7 +1922,7 @@ static int _template_query_create(notification_h noti, char *template_name, char
 	char *b_service_responding = NULL;
 	char *b_service_single_launch = NULL;
 	char *b_service_multi_launch = NULL;
-	char *b_event_handler[NOTIFICATION_EVENT_TYPE_MAX] = { NULL , };
+	char *b_event_handler[NOTIFICATION_EVENT_TYPE_MAX+1] = { NULL , };
 	char *b_text = NULL;
 	char *b_key = NULL;
 	char *b_format_args = NULL;
@@ -1956,7 +1956,7 @@ static int _template_query_create(notification_h noti, char *template_name, char
 			      (bundle_raw **)&b_service_multi_launch, &b_encode_len);
 
 
-	for (i = 0; i < NOTIFICATION_EVENT_TYPE_MAX; i++) {
+	for (i = 0; i <= NOTIFICATION_EVENT_TYPE_MAX; i++) {
 		if (noti->b_event_handler[i])
 			bundle_encode(noti->b_event_handler[i],
 					(bundle_raw **)&b_event_handler[i], &b_encode_len);
