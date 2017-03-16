@@ -89,7 +89,7 @@ create	table if not exists noti_list ( \
 			delete_timeout INTEGER default 0, \
 			text_input_max_length INTEGER default 0, \
 			event_flag INTEGER default 0, \
-			extentsion_image_size INTEGER default 0, \
+			extension_image_size INTEGER default 0, \
 			uid INTEGER \
 		); \
 		create table if not exists noti_group_data ( \
