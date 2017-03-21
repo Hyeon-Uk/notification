@@ -1642,7 +1642,7 @@ int notification_ipc_get_noti_block_state(const char *pkgname, int *do_not_distu
 	return ret;
 }
 
-int notification_ipc_send_event(notification_h noti, int event_type)
+int notification_ipc_send_event(notification_h noti, int event_type, int priv_id)
 {
 	int ret;
 	GVariant *body = NULL;
@@ -1654,13 +1654,17 @@ int notification_ipc_send_event(notification_h noti, int event_type)
 		return ret;
 	}
 
-	body = notification_ipc_make_gvariant_from_noti(noti, false);
-	if (body == NULL) {
-		NOTIFICATION_ERR("Can't make gvariant to noti");
-		return NOTIFICATION_ERROR_OUT_OF_MEMORY;
-	}
+	if (priv_id > 0) {
+		ret = _send_sync_noti(g_variant_new("(ii)", priv_id, event_type), &reply, "send_noti_event_by_priv_id");
+	} else {
+		body = notification_ipc_make_gvariant_from_noti(noti, false);
+		if (body == NULL) {
+			NOTIFICATION_ERR("Can't make gvariant to noti");
+			return NOTIFICATION_ERROR_OUT_OF_MEMORY;
+		}
 
-	ret = _send_sync_noti(g_variant_new("(vi)", body, event_type), &reply, "send_noti_event");
+		ret = _send_sync_noti(g_variant_new("(vi)", body, event_type), &reply, "send_noti_event");
+	}
 
 	if (reply)
 		g_object_unref(reply);
@@ -1747,7 +1751,7 @@ EXPORT_API GVariant *notification_ipc_make_gvariant_from_noti(notification_h not
 	g_variant_builder_add(&builder, "{iv}", NOTIFICATION_DATA_TYPE_DISPLAY_APPLIST, g_variant_new_int32(noti->display_applist));
 
 	if (noti->args) {
-		bundle_encode(noti->args, (bundle_raw **)&args, NULL);
+		bundle_encode(noti->args, (bundle_raw **)&args, &b_encode_len);
 		g_variant_builder_add(&builder, "{iv}", NOTIFICATION_DATA_TYPE_ARGS, g_variant_new_string((const gchar *)args));
 
 		if (args)

@@ -31,6 +31,8 @@
 #include <tizen.h>
 #include <vconf-keys.h>
 #include <vconf.h>
+#include <bundle.h>
+#include <bundle_internal.h>
 
 #include <notification.h>
 #include <notification_list.h>
@@ -1629,8 +1631,27 @@ EXPORT_API int notification_send_event(notification_h noti, int event_type)
 	if (ret != NOTIFICATION_ERROR_NONE || event_flag == false)
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 
-	ret = notification_ipc_send_event(noti, event_type);
+	ret = notification_ipc_send_event(noti, event_type, -1);
 
+	return ret;
+}
+
+EXPORT_API int notification_send_event_by_priv_id(int priv_id, int event_type)
+{
+	int ret;
+
+	if (priv_id <= 0)
+		return NOTIFICATION_ERROR_INVALID_PARAMETER;
+
+	if (!((event_type >= NOTIFICATION_EVENT_TYPE_CLICK_ON_BUTTON_1
+		&& event_type < NOTIFICATION_EVENT_TYPE_MAX) ||
+		(event_type >= NOTIFICATION_EVENT_TYPE_HIDDEN_BY_USER
+		&& event_type <= NOTIFICATION_EVENT_TYPE_HIDDEN_BY_TIMEOUT) ||
+		(event_type >= NOTIFICATION_EVENT_TYPE_PRESSED
+		&& event_type <= NOTIFICATION_EVENT_TYPE_DELETED)))
+		return NOTIFICATION_ERROR_INVALID_PARAMETER;
+
+	ret = notification_ipc_send_event(NULL, event_type, priv_id);
 	return ret;
 }
 
@@ -1661,4 +1682,71 @@ EXPORT_API int notification_check_event_receiver_available(notification_h noti, 
 	ret = notification_ipc_check_event_receiver(priv_id, available);
 
 	return ret;
+}
+
+static bundle *_create_bundle_from_bundle_raw(bundle_raw *string)
+{
+	if (string == NULL || string[0] == '\0')
+		return NULL;
+
+	return bundle_decode(string, strlen((char *)string));
+}
+
+EXPORT_API int notification_set_extention_data(notification_h noti, const char *key, bundle *value)
+{
+	int ret;
+	int len = 0;
+	char *del = NULL;
+	bundle_raw *raw = NULL;
+
+	if (noti == NULL || key == NULL)
+		return NOTIFICATION_ERROR_INVALID_PARAMETER;
+
+	if (noti->args == NULL)
+		noti->args = bundle_create();
+
+	if (value == NULL) {
+		ret = bundle_del(noti->args, key);
+		if (ret == BUNDLE_ERROR_NONE)
+			return NOTIFICATION_ERROR_NONE;
+		else
+			return NOTIFICATION_ERROR_INVALID_PARAMETER;
+
+	}
+
+	bundle_get_str(noti->args, key, &del);
+	if (del != NULL) {
+		bundle_del(noti->args, key);
+		del = NULL;
+	}
+
+	bundle_encode(value, &raw, &len);
+	bundle_add_str(noti->args, key, (const char *)raw);
+	bundle_free_encoded_rawdata(&raw);
+
+	return NOTIFICATION_ERROR_NONE;
+}
+
+EXPORT_API int notification_get_extention_data(notification_h noti, const char *key, bundle **value)
+{
+	char *ret_str;
+	bundle *args;
+
+	if (noti == NULL || key == NULL || value == NULL)
+		return NOTIFICATION_ERROR_INVALID_PARAMETER;
+
+	if (noti->args == NULL)
+		return NOTIFICATION_ERROR_INVALID_PARAMETER;
+
+	args = noti->args;
+
+	bundle_get_str(args, key, &ret_str);
+	if (ret_str == NULL)
+		return NOTIFICATION_ERROR_INVALID_PARAMETER;
+
+	*value = _create_bundle_from_bundle_raw((bundle_raw *)ret_str);
+	if (*value == NULL)
+		return NOTIFICATION_ERROR_IO_ERROR;
+
+	return NOTIFICATION_ERROR_NONE;
 }

@@ -38,7 +38,7 @@ int notification_noti_update(notification_h noti);
 
 int notification_noti_delete_all(notification_type_e type, const char *pkgname, int *num_deleted, int **list_deleted_rowid, uid_t uid);
 
-int notification_noti_get_by_priv_id(notification_h noti, char *pkgname, int priv_id, uid_t uid);
+int notification_noti_get_by_priv_id(notification_h noti, int priv_id);
 int notification_noti_get_by_tag(notification_h noti, char *pkgname, char* tag, uid_t uid);
 
 int notification_noti_delete_by_priv_id(const char *pkgname, int priv_id);

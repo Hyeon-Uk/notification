@@ -1038,7 +1038,7 @@ err:
 }
 
 /* LCOV_EXCL_START */
-EXPORT_API int notification_noti_get_by_priv_id(notification_h noti, char *pkgname, int priv_id, uid_t uid)
+EXPORT_API int notification_noti_get_by_priv_id(notification_h noti, int priv_id)
 {
 	int ret = 0;
 	char *query = NULL;
@@ -1066,13 +1066,9 @@ EXPORT_API int notification_noti_get_by_priv_id(notification_h noti, char *pkgna
 			 "flags_for_property, display_applist, progress_size, progress_percentage, ongoing_flag, ongoing_value_type, "
 			 "ongoing_current, ongoing_duration, auto_remove, default_button_index, hide_timeout, delete_timeout, "
 			 "text_input_max_length, event_flag, extension_image_size, uid "
-			 "from noti_list ";
+			 "from noti_list";
 
-	if (pkgname != NULL && strlen(pkgname) != 0)
-		query = sqlite3_mprintf("%s where caller_pkgname = '%s' and priv_id = %d and uid = %d",
-				base_query, pkgname, priv_id, uid);
-	else
-		query = sqlite3_mprintf("%s where priv_id = %d and uid = %d", base_query, priv_id, uid);
+	query = sqlite3_mprintf("%s where priv_id = %d", base_query, priv_id);
 
 	if (query == NULL) {
 		ret = NOTIFICATION_ERROR_OUT_OF_MEMORY;

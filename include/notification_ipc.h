@@ -95,7 +95,7 @@ GVariant *notification_ipc_make_gvariant_from_dnd_allow_exception(
 int notification_ipc_make_dnd_allow_exception_from_gvariant(
 		struct notification_system_setting_dnd_allow_exception *dnd_allow_exception,
 		GVariant *variant);
-int notification_ipc_send_event(notification_h noti, int event_type);
+int notification_ipc_send_event(notification_h noti, int event_type, int priv_id);
 int notification_ipc_check_event_receiver(int priv_id, bool *available);
 void notification_ipc_reset_event_handler(int priv_id);
 #ifdef __cplusplus

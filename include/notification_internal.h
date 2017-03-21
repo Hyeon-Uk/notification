@@ -1213,6 +1213,7 @@ int notification_post_with_event_cb_for_uid(notification_h noti, event_handler_c
  * @endcode
  */
 int notification_send_event(notification_h noti, int event_type);
+int notification_send_event_by_priv_id(int priv_id, int event_type);
 
 /**
  * @brief Gets the event flag.
@@ -1341,6 +1342,9 @@ notification_h notification_create_from_package_template(const char *pkgname,
  * @endcode
  */
 int notification_get_text_input_max_length(notification_h noti, int *text_input_max_length);
+
+int notification_set_extention_data(notification_h noti, const char *key, bundle *value);
+int notification_get_extention_data(notification_h noti, const char *key, bundle **value);
 
 /**
  * @}
