@@ -1358,15 +1358,13 @@ int notification_ipc_request_load_system_setting(notification_system_setting_h *
 {
 	int result;
 	int count;
-	int index = 0;
 	GDBusMessage *reply = NULL;
-	GVariant *setting_body;
-	GVariant *reply_body;
-	GVariant *iter_body;
-	GVariantIter *iter;
-	notification_system_setting_h result_setting;
+	GVariant *setting_body = NULL;
+	GVariant *reply_body = NULL;
+	GVariant *iter_body = NULL;
+	GVariantIter *iter = NULL;
+	notification_system_setting_h result_setting = NULL;
 	dnd_allow_exception_h dnd_allow_exception;
-	dnd_allow_exception_h temp;
 
 	result = _dbus_init();
 	if (result != NOTIFICATION_ERROR_NONE) {
@@ -1379,43 +1377,41 @@ int notification_ipc_request_load_system_setting(notification_system_setting_h *
 		reply_body = g_dbus_message_get_body(reply);
 		g_variant_get(reply_body, "(v)", &setting_body);
 
-		result_setting = (struct notification_system_setting *)malloc(sizeof(struct notification_system_setting));
+		result_setting = (struct notification_system_setting *)calloc(1, sizeof(struct notification_system_setting));
 		if (result_setting == NULL) {
 			NOTIFICATION_ERR("malloc failed");
-			g_object_unref(reply);
-			return NOTIFICATION_ERROR_OUT_OF_MEMORY;
+			result = NOTIFICATION_ERROR_OUT_OF_MEMORY;
+			goto out;
 		}
 
 		notification_ipc_make_system_setting_from_gvariant(result_setting, setting_body);
-		result_setting->dnd_allow_exceptions = NULL;
 
 		result = _send_sync_noti(g_variant_new("(i)", uid), &reply, "load_dnd_allow_exception");
 		if (result == NOTIFICATION_ERROR_NONE) {
 			reply_body = g_dbus_message_get_body(reply);
 			g_variant_get(reply_body, "(ia(v))", &count, &iter);
 
-			dnd_allow_exception = (dnd_allow_exception_h)malloc(sizeof(struct notification_system_setting_dnd_allow_exception) * count);
-			if (dnd_allow_exception == NULL) {
-				g_object_unref(reply);
-				g_variant_iter_free(iter);
-				free(result_setting);
-				return NOTIFICATION_ERROR_OUT_OF_MEMORY;
-			}
-
 			while (g_variant_iter_loop(iter, "(v)", &iter_body)) {
-				temp = dnd_allow_exception + index;
+				dnd_allow_exception = (dnd_allow_exception_h)calloc(1, sizeof(struct notification_system_setting_dnd_allow_exception));
+				if (dnd_allow_exception == NULL) {
+					result = NOTIFICATION_ERROR_OUT_OF_MEMORY;
+					goto out;
+				}
 
-				notification_ipc_make_dnd_allow_exception_from_gvariant(temp, iter_body);
-				result_setting->dnd_allow_exceptions = g_list_append(result_setting->dnd_allow_exceptions, temp);
-				index++;
+				notification_ipc_make_dnd_allow_exception_from_gvariant(dnd_allow_exception, iter_body);
+				result_setting->dnd_allow_exceptions = g_list_append(result_setting->dnd_allow_exceptions, dnd_allow_exception);
 			}
+			*setting = result_setting;
 		}
-
-		*setting = result_setting;
-		g_variant_unref(setting_body);
-		g_variant_iter_free(iter);
 	}
 
+out:
+	if (result != NOTIFICATION_ERROR_NONE && result_setting)
+		notification_system_setting_free_system_setting(result_setting);
+	if (iter)
+		g_variant_iter_free(iter);
+	if (setting_body)
+		g_variant_unref(setting_body);
 	if (reply)
 		g_object_unref(reply);
 

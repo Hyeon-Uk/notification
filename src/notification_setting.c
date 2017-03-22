@@ -671,7 +671,7 @@ EXPORT_API int notification_system_setting_free_system_setting(notification_syst
 	/* add codes to free all properties */
 
 	if (system_setting->dnd_allow_exceptions != NULL)
-		g_list_free(system_setting->dnd_allow_exceptions);
+		g_list_free_full(system_setting->dnd_allow_exceptions, free);
 
 	SAFE_FREE(system_setting);
 
