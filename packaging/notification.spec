@@ -64,9 +64,6 @@ make %{?jobs:-j%jobs}
 rm -rf %{buildroot}
 %make_install
 
-mkdir -p %{buildroot}%{TZ_SYS_SHARE}/license
-cp -f LICENSE %{buildroot}%{TZ_SYS_SHARE}/license/%{name}
-
 mkdir -p %{buildroot}%{upgrade_script_path}
 cp -f scripts/505.notification_upgrade.sh %{buildroot}%{upgrade_script_path}
 
@@ -87,7 +84,7 @@ fi
 %manifest notification.manifest
 %defattr(-,root,root,-)
 %{_libdir}/libnotification.so*
-%{TZ_SYS_SHARE}/license/%{name}
+%license LICENSE
 %attr(755,root,root) %{_sysconfdir}/gumd/useradd.d/11_notification-add.post
 %{_bindir}/notification_init
 %{upgrade_script_path}/505.notification_upgrade.sh
