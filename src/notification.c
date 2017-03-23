@@ -106,7 +106,7 @@ EXPORT_API int notification_set_image(notification_h noti,
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 
 	if (type <= NOTIFICATION_IMAGE_TYPE_NONE
-	    || type >= NOTIFICATION_IMAGE_TYPE_MAX)
+	    || type > NOTIFICATION_IMAGE_TYPE_MAX)
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 
 	if (noti->b_image_path) {
@@ -148,7 +148,7 @@ EXPORT_API int notification_get_image(notification_h noti,
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 
 	if (type <= NOTIFICATION_IMAGE_TYPE_NONE
-	    || type >= NOTIFICATION_IMAGE_TYPE_MAX)
+	    || type > NOTIFICATION_IMAGE_TYPE_MAX)
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 
 	if (noti->b_image_path) {
@@ -232,7 +232,7 @@ EXPORT_API int notification_set_text(notification_h noti,
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 
 	if (type <= NOTIFICATION_TEXT_TYPE_NONE
-	    || type >= NOTIFICATION_TEXT_TYPE_MAX)
+	    || type > NOTIFICATION_TEXT_TYPE_MAX)
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 
 	if (text != NULL) {
@@ -449,7 +449,7 @@ EXPORT_API int notification_get_text(notification_h noti,
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 
 	if (type <= NOTIFICATION_TEXT_TYPE_NONE
-	    || type >= NOTIFICATION_TEXT_TYPE_MAX)
+	    || type > NOTIFICATION_TEXT_TYPE_MAX)
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 
 
@@ -868,7 +868,7 @@ EXPORT_API int notification_set_time_to_text(notification_h noti, notification_t
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 
 	if (type <= NOTIFICATION_TEXT_TYPE_NONE
-	    || type >= NOTIFICATION_TEXT_TYPE_MAX)
+	    || type > NOTIFICATION_TEXT_TYPE_MAX)
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 
 
@@ -895,7 +895,7 @@ EXPORT_API int notification_get_time_from_text(notification_h noti, notification
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 
 	if (type <= NOTIFICATION_TEXT_TYPE_NONE
-	    || type >= NOTIFICATION_TEXT_TYPE_MAX)
+	    || type > NOTIFICATION_TEXT_TYPE_MAX)
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 
 	ret = notification_get_text(noti, type, &ret_text);
@@ -924,7 +924,7 @@ EXPORT_API int notification_set_sound(notification_h noti,
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 
 	if (type < NOTIFICATION_SOUND_TYPE_NONE
-	    || type >= NOTIFICATION_SOUND_TYPE_MAX)
+	    || type > NOTIFICATION_SOUND_TYPE_MAX)
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 
 	noti->sound_type = type;
@@ -974,7 +974,7 @@ EXPORT_API int notification_set_vibration(notification_h noti,
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 
 	if (type < NOTIFICATION_VIBRATION_TYPE_NONE
-	    || type >= NOTIFICATION_VIBRATION_TYPE_MAX)
+	    || type > NOTIFICATION_VIBRATION_TYPE_MAX)
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 
 	noti->vibration_type = type;
@@ -1025,7 +1025,7 @@ EXPORT_API int notification_set_led(notification_h noti,
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 
 	if (operation < NOTIFICATION_LED_OP_OFF
-	    || operation >= NOTIFICATION_LED_OP_MAX)
+	    || operation > NOTIFICATION_LED_OP_MAX)
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 
 	noti->led_operation = operation;
@@ -1350,7 +1350,7 @@ EXPORT_API int notification_get_pkgname(notification_h noti,
 EXPORT_API int notification_set_layout(notification_h noti,
 		notification_ly_type_e layout)
 {
-	if (noti == NULL || (layout < NOTIFICATION_LY_NONE || layout >= NOTIFICATION_LY_MAX))
+	if (noti == NULL || (layout < NOTIFICATION_LY_NONE || layout > NOTIFICATION_LY_MAX))
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 
 	noti->layout = layout;
@@ -1412,7 +1412,7 @@ static notification_h _notification_create(notification_type_e type)
 	char pkgid[NOTI_PKGNAME_LEN + 1] = { 0, };
 	int err;
 
-	if (type <= NOTIFICATION_TYPE_NONE || type >= NOTIFICATION_TYPE_MAX) {
+	if (type <= NOTIFICATION_TYPE_NONE || type > NOTIFICATION_TYPE_MAX) {
 		NOTIFICATION_ERR("INVALID TYPE : %d", type);
 		set_last_result(NOTIFICATION_ERROR_INVALID_PARAMETER);
 		return NULL;

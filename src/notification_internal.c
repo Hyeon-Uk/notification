@@ -468,7 +468,7 @@ EXPORT_API int notification_translate_localized_text(notification_h noti)
 
 	noti->is_translation = false;
 
-	for (; type < NOTIFICATION_TEXT_TYPE_MAX; type++) {
+	for (; type <= NOTIFICATION_TEXT_TYPE_MAX; type++) {
 		ret = notification_get_text(noti, type, &ret_text);
 		if (ret == NOTIFICATION_ERROR_NONE && ret_text) {
 			if (noti->b_text == NULL) {
@@ -761,7 +761,7 @@ EXPORT_API int notification_get_count(notification_type_e type,
 
 int notification_clear_for_uid(notification_type_e type, uid_t uid)
 {
-	if (type <= NOTIFICATION_TYPE_NONE || type >= NOTIFICATION_TYPE_MAX)
+	if (type <= NOTIFICATION_TYPE_NONE || type > NOTIFICATION_TYPE_MAX)
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 
 	return notification_ipc_request_delete_multiple(type, NULL, uid);
@@ -831,7 +831,7 @@ int notification_delete_all_by_type_for_uid(const char *pkgname,
 	int ret = 0;
 	char *caller_pkgname = NULL;
 
-	if (type <= NOTIFICATION_TYPE_NONE || type >= NOTIFICATION_TYPE_MAX)
+	if (type <= NOTIFICATION_TYPE_NONE || type > NOTIFICATION_TYPE_MAX)
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 
 	if (pkgname == NULL)
@@ -902,7 +902,7 @@ EXPORT_API int notification_set_execute_option(notification_h noti,
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 
 	if (type <= NOTIFICATION_EXECUTE_TYPE_NONE
-			|| type >= NOTIFICATION_EXECUTE_TYPE_MAX)
+			|| type > NOTIFICATION_EXECUTE_TYPE_MAX)
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 
 	if (noti->b_execute_option == NULL)
@@ -1048,7 +1048,7 @@ EXPORT_API int notification_get_execute_option(notification_h noti,
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 
 	if (type <= NOTIFICATION_EXECUTE_TYPE_NONE
-			|| type >= NOTIFICATION_EXECUTE_TYPE_MAX)
+			|| type > NOTIFICATION_EXECUTE_TYPE_MAX)
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 
 
@@ -1113,7 +1113,7 @@ EXPORT_API int notification_insert_for_uid(notification_h noti,
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 
 	if (noti->type <= NOTIFICATION_TYPE_NONE
-			|| noti->type >= NOTIFICATION_TYPE_MAX)
+			|| noti->type > NOTIFICATION_TYPE_MAX)
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 
 	noti->uid = uid;
@@ -1306,7 +1306,7 @@ EXPORT_API int notification_post_for_uid(notification_h noti, uid_t uid)
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 
 	if (noti->type <= NOTIFICATION_TYPE_NONE
-			|| noti->type >= NOTIFICATION_TYPE_MAX)
+			|| noti->type > NOTIFICATION_TYPE_MAX)
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 
 	/* Save insert time */
@@ -1352,7 +1352,7 @@ EXPORT_API int notification_delete_all_for_uid(notification_type_e type, uid_t u
 	int ret = 0;
 	char *caller_pkgname = NULL;
 
-	if (type <= NOTIFICATION_TYPE_NONE || type >= NOTIFICATION_TYPE_MAX)
+	if (type <= NOTIFICATION_TYPE_NONE || type > NOTIFICATION_TYPE_MAX)
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 
 	caller_pkgname = notification_get_pkgname_by_pid();
@@ -1570,7 +1570,7 @@ EXPORT_API int notification_post_with_event_cb_for_uid(notification_h noti, even
 	if (noti == NULL || cb == NULL)
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 
-	if (noti->type <= NOTIFICATION_TYPE_NONE || noti->type >= NOTIFICATION_TYPE_MAX)
+	if (noti->type <= NOTIFICATION_TYPE_NONE || noti->type > NOTIFICATION_TYPE_MAX)
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 
 	noti->insert_time = time(NULL);
@@ -1644,7 +1644,7 @@ EXPORT_API int notification_send_event_by_priv_id(int priv_id, int event_type)
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 
 	if (!((event_type >= NOTIFICATION_EVENT_TYPE_CLICK_ON_BUTTON_1
-		&& event_type < NOTIFICATION_EVENT_TYPE_MAX) ||
+		&& event_type <= NOTIFICATION_EVENT_TYPE_MAX) ||
 		(event_type >= NOTIFICATION_EVENT_TYPE_HIDDEN_BY_USER
 		&& event_type <= NOTIFICATION_EVENT_TYPE_HIDDEN_BY_TIMEOUT) ||
 		(event_type >= NOTIFICATION_EVENT_TYPE_PRESSED
