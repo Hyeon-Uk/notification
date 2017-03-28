@@ -1711,7 +1711,6 @@ EXPORT_API int notification_set_extention_data(notification_h noti, const char *
 			return NOTIFICATION_ERROR_NONE;
 		else
 			return NOTIFICATION_ERROR_INVALID_PARAMETER;
-
 	}
 
 	bundle_get_str(noti->args, key, &del);

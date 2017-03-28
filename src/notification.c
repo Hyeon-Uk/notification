@@ -452,7 +452,6 @@ EXPORT_API int notification_get_text(notification_h noti,
 	    || type > NOTIFICATION_TEXT_TYPE_MAX)
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 
-
 	if (noti->b_key != NULL) {
 		b = noti->b_key;
 
@@ -740,7 +739,6 @@ EXPORT_API int notification_get_text(notification_h noti,
 						strncat(result_str, temp_str, 1);
 					}
 				}
-
 			}
 
 			/* Check last variable is count, LEFT pos */
@@ -779,7 +777,6 @@ EXPORT_API int notification_get_text(notification_h noti,
 
 						num_args++;
 					}
-
 				}
 			}
 
@@ -808,9 +805,7 @@ EXPORT_API int notification_get_text(notification_h noti,
 			default:
 				break;
 			}
-
 		}
-
 	} else {
 		*text = NULL;
 	}
@@ -870,7 +865,6 @@ EXPORT_API int notification_set_time_to_text(notification_h noti, notification_t
 	if (type <= NOTIFICATION_TEXT_TYPE_NONE
 	    || type > NOTIFICATION_TEXT_TYPE_MAX)
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
-
 
 	snprintf(buf, sizeof(buf), "%lu", time);
 	ret = notification_noti_set_tag(TAG_TIME, buf, buf_tag, sizeof(buf_tag));
@@ -997,7 +991,6 @@ EXPORT_API int notification_set_vibration(notification_h noti,
 	}
 
 	return NOTIFICATION_ERROR_NONE;
-
 }
 
 EXPORT_API int notification_get_vibration(notification_h noti,
@@ -1124,7 +1117,6 @@ EXPORT_API int notification_get_launch_option(notification_h noti,
 
 	if (type != NOTIFICATION_LAUNCH_OPTION_APP_CONTROL)
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
-
 
 	ret = notification_get_execute_option(noti,
 				NOTIFICATION_EXECUTE_TYPE_SINGLE_LAUNCH,
@@ -1368,8 +1360,6 @@ EXPORT_API int notification_get_layout(notification_h noti,
 
 	return NOTIFICATION_ERROR_NONE;
 }
-
-
 
 EXPORT_API int notification_get_type(notification_h noti,
 						      notification_type_e *type)
@@ -1671,7 +1661,6 @@ EXPORT_API int notification_clone(notification_h noti, notification_h *clone)
 	return NOTIFICATION_ERROR_NONE;
 }
 
-
 EXPORT_API int notification_free(notification_h noti)
 {
 	int i = 0;
@@ -1764,7 +1753,6 @@ EXPORT_API int notification_set_tag(notification_h noti, const char *tag)
 	}
 
 	return NOTIFICATION_ERROR_NONE;
-
 }
 
 EXPORT_API int notification_get_tag(notification_h noti, const char **tag)
@@ -1803,7 +1791,6 @@ EXPORT_API int notification_get_ongoing_flag(notification_h noti, bool *ongoing_
 
 	return NOTIFICATION_ERROR_NONE;
 }
-
 
 EXPORT_API int notification_add_button(notification_h noti, notification_button_index_e button_index)
 {
