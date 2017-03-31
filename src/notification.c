@@ -1647,6 +1647,7 @@ EXPORT_API int notification_clone(notification_h noti, notification_h *clone)
 	new_noti->delete_timeout = noti->delete_timeout;
 	new_noti->text_input_max_length = noti->text_input_max_length;
 	new_noti->event_flag = noti->event_flag;
+	new_noti->extension_image_size = noti->extension_image_size;
 	new_noti->uid = noti->uid;
 
 	new_noti->app_icon_path = NULL;
