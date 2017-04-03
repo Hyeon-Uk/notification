@@ -1426,7 +1426,10 @@ static notification_h _notification_create(notification_type_e type)
 	noti->sound_type = NOTIFICATION_SOUND_TYPE_NONE;
 	noti->vibration_type = NOTIFICATION_VIBRATION_TYPE_NONE;
 	noti->led_operation = NOTIFICATION_LED_OP_OFF;
-	noti->display_applist = NOTIFICATION_DISPLAY_APP_NOTIFICATION_TRAY | NOTIFICATION_DISPLAY_APP_TICKER | NOTIFICATION_DISPLAY_APP_INDICATOR;
+	noti->display_applist = NOTIFICATION_DISPLAY_APP_NOTIFICATION_TRAY |
+				NOTIFICATION_DISPLAY_APP_LOCK |
+				NOTIFICATION_DISPLAY_APP_TICKER |
+				NOTIFICATION_DISPLAY_APP_INDICATOR;
 	noti->auto_remove = true;
 	noti->ongoing_flag = false;
 	noti->default_button_index = 0;
