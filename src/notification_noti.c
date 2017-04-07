@@ -688,33 +688,6 @@ int notification_noti_get_tag_type(const char *tagged_str)
 	return TAG_TYPE_INVALID;
 }
 
-static int _notification_noti_update_priv_id(sqlite3 *db, int rowid)
-{
-	int ret = NOTIFICATION_ERROR_NONE;
-	char *query = NULL;
-
-	if (db == NULL) {
-		NOTIFICATION_ERR("NOTIFICATION_ERROR_INVALID_PARAMETER");
-		return NOTIFICATION_ERROR_INVALID_PARAMETER;
-	}
-
-	query = sqlite3_mprintf("UPDATE noti_list SET "
-			"priv_id = %d, internal_group_id = %d WHERE rowid = %d",
-			rowid, rowid, rowid);
-	if (query == NULL) {
-		ret = NOTIFICATION_ERROR_OUT_OF_MEMORY;
-		goto err;
-	}
-
-	ret = notification_db_exec(db, query, NULL);
-
-err:
-	if (query)
-		sqlite3_free(query);
-
-	return ret;
-}
-
 /* LCOV_EXCL_START */
 static int __get_setting_from_app_control(notification_h noti, notification_setting_h *setting)
 {
@@ -1013,17 +986,11 @@ EXPORT_API int notification_noti_insert(notification_h noti)
 	}
 
 	ret = sqlite3_step(stmt);
-	if (ret == SQLITE_OK || ret == SQLITE_DONE) {
-		noti->priv_id = (int)sqlite3_last_insert_rowid(db);
-
-		if (_notification_noti_update_priv_id(db, noti->priv_id) == 0)
-			ret = NOTIFICATION_ERROR_NONE;
-		else
-			ret = NOTIFICATION_ERROR_FROM_DB;
-
-	} else {
+	if (ret == SQLITE_OK || ret == SQLITE_DONE)
+		ret = NOTIFICATION_ERROR_NONE;
+	else
 		ret = NOTIFICATION_ERROR_FROM_DB;
-	}
+
 err:
 	if (stmt)
 		sqlite3_finalize(stmt);
@@ -2177,17 +2144,11 @@ EXPORT_API int notification_noti_add_template(notification_h noti, char *templat
 	}
 
 	ret = sqlite3_step(stmt);
-	if (ret == SQLITE_OK || ret == SQLITE_DONE) {
-		noti->priv_id = (int)sqlite3_last_insert_rowid(db);
-
-		if (_notification_noti_update_priv_id(db, noti->priv_id) == 0)
-			ret = NOTIFICATION_ERROR_NONE;
-		else
-			ret = NOTIFICATION_ERROR_FROM_DB;
-
-	} else {
+	if (ret == SQLITE_OK || ret == SQLITE_DONE)
+		ret = NOTIFICATION_ERROR_NONE;
+	else
 		ret = NOTIFICATION_ERROR_FROM_DB;
-	}
+
 err:
 	if (stmt)
 		sqlite3_finalize(stmt);
