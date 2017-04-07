@@ -990,6 +990,16 @@ EXPORT_API int notification_get_id(notification_h noti,
 }
 /* LCOV_EXCL_STOP */
 
+EXPORT_API int notification_set_priv_id(notification_h noti, int priv_id)
+{
+	if (noti == NULL || priv_id <= 0)
+		return NOTIFICATION_ERROR_INVALID_PARAMETER;
+
+	noti->priv_id = priv_id;
+
+	return NOTIFICATION_ERROR_NONE;
+}
+
 /* LCOV_EXCL_START */
 notification_h notification_load_for_uid(char *pkgname,
 		int priv_id, uid_t uid)

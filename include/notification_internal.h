@@ -525,6 +525,17 @@ NOTIFICATION_DEPRECATED_API int notification_get_id(notification_h noti,
 
 /**
  * @internal
+ * @brief Set priv_id of the notification.
+ * @param[in] noti Notification handle
+ * @param[in] priv_id Private ID
+ * @return NOTIFICATION_ERROR_NONE on success, other value on failure
+ * @retval NOTIFICATION_ERROR_NONE Success
+ * @retval NOTIFICATION_ERROR_INVALID_PARAMETER Invalid parameter
+ */
+int notification_set_priv_id(notification_h noti, int priv_id);
+
+/**
+ * @internal
  * @brief This function will be deprecated.
  * @param[in] type Notification type
  * @param[in] group_id Group ID
