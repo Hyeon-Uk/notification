@@ -986,10 +986,12 @@ EXPORT_API int notification_noti_insert(notification_h noti)
 	}
 
 	ret = sqlite3_step(stmt);
-	if (ret == SQLITE_OK || ret == SQLITE_DONE)
+	if (ret == SQLITE_OK || ret == SQLITE_DONE) {
+		noti->priv_id = (int)sqlite3_last_insert_rowid(db);
 		ret = NOTIFICATION_ERROR_NONE;
-	else
+	} else {
 		ret = NOTIFICATION_ERROR_FROM_DB;
+	}
 
 err:
 	if (stmt)
