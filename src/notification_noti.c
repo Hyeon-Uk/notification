@@ -351,6 +351,11 @@ static int _insertion_query_create(notification_h noti, char **query)
 	if (b_service_multi_launch)
 		free(b_service_multi_launch);
 
+	for (i = 0; i <= NOTIFICATION_EVENT_TYPE_MAX; i++) {
+		if (b_event_handler[i])
+			bundle_free_encoded_rawdata(&b_event_handler[i]);
+	}
+
 	if (b_text)
 		free(b_text);
 
@@ -526,6 +531,11 @@ static int _update_query_create(notification_h noti, char **query)
 
 	if (b_service_multi_launch)
 		free(b_service_multi_launch);
+
+	for (i = 0; i <= NOTIFICATION_EVENT_TYPE_MAX; i++) {
+		if (b_event_handler[i])
+			bundle_free_encoded_rawdata(&b_event_handler[i]);
+	}
 
 	if (b_text)
 		free(b_text);
@@ -1106,7 +1116,8 @@ EXPORT_API int notification_noti_get_by_tag(notification_h noti, char *pkgname, 
 			 "from noti_list where caller_pkgname = ? and tag = ? and uid = ?", -1, &stmt, NULL);
 		if (ret != SQLITE_OK) {
 			NOTIFICATION_ERR("Error: %s\n", sqlite3_errmsg(db));
-			return NOTIFICATION_ERROR_OUT_OF_MEMORY;
+			ret = NOTIFICATION_ERROR_OUT_OF_MEMORY;
+			goto err;
 		}
 
 		ret = sqlite3_bind_text(stmt, 1, pkgname, -1, SQLITE_TRANSIENT);
@@ -1143,7 +1154,8 @@ EXPORT_API int notification_noti_get_by_tag(notification_h noti, char *pkgname, 
 			 "from noti_list where  tag = ? and uid = ?", -1, &stmt, NULL);
 		if (ret != SQLITE_OK) {
 			NOTIFICATION_ERR("Error: %s\n", sqlite3_errmsg(db));
-			return NOTIFICATION_ERROR_OUT_OF_MEMORY;
+			ret = NOTIFICATION_ERROR_OUT_OF_MEMORY;
+			goto err;
 		}
 
 		ret = sqlite3_bind_text(stmt, 1, tag, -1, SQLITE_TRANSIENT);
@@ -1190,10 +1202,6 @@ EXPORT_API int notification_noti_update(notification_h noti)
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 	}
 
-	db = notification_db_open(DBPATH);
-	if (!db)
-		return get_last_result();
-
 	if (_is_allowed_to_notify(noti) == false) {
 		NOTIFICATION_DBG("[%s] is not allowed to notify", noti->caller_pkgname);
 		return NOTIFICATION_ERROR_PERMISSION_DENIED;
@@ -1206,6 +1214,10 @@ EXPORT_API int notification_noti_update(notification_h noti)
 		noti->display_applist = (noti->display_applist & (~NOTIFICATION_DISPLAY_APP_ACTIVE));
 		NOTIFICATION_DBG("notification display applist - pkgname [%s], applist [%d]", noti->caller_pkgname, noti->display_applist);
 	}
+
+	db = notification_db_open(DBPATH);
+	if (!db)
+		return get_last_result();
 
 	/* Check private ID is exist */
 	ret = _notification_noti_check_priv_id(noti, db);
@@ -1815,7 +1827,6 @@ EXPORT_API int notification_noti_check_tag(notification_h noti)
 	else
 		result = 0;
 
-	sqlite3_finalize(stmt);
 
 	/* If result > 0, there is priv_id in DB */
 	if (result > 0) {
@@ -1826,6 +1837,8 @@ EXPORT_API int notification_noti_check_tag(notification_h noti)
 	}
 
 err:
+	if (stmt != NULL)
+		sqlite3_finalize(stmt);
 	if (db)
 		notification_db_close(&db);
 
@@ -1868,8 +1881,9 @@ EXPORT_API int notification_noti_check_count_for_template(notification_h noti, i
 
 	*count = result;
 
-	sqlite3_finalize(stmt);
 err:
+	if (stmt != NULL)
+		sqlite3_finalize(stmt);
 	if (db)
 		notification_db_close(&db);
 
@@ -2051,6 +2065,11 @@ static int _template_query_create(notification_h noti, char *template_name, char
 
 	if (b_service_multi_launch)
 		free(b_service_multi_launch);
+
+	for (i = 0; i <= NOTIFICATION_EVENT_TYPE_MAX; i++) {
+		if (b_event_handler[i])
+			bundle_free_encoded_rawdata(&b_event_handler[i]);
+	}
 
 	if (b_text)
 		free(b_text);
