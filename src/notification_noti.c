@@ -22,6 +22,7 @@
 #include <pkgmgr-info.h>
 #include <package_manager.h>
 #include <app_control_internal.h>
+#include <bundle_internal.h>
 
 #include <notification.h>
 #include <notification_internal.h>
@@ -353,7 +354,7 @@ static int _insertion_query_create(notification_h noti, char **query)
 
 	for (i = 0; i <= NOTIFICATION_EVENT_TYPE_MAX; i++) {
 		if (b_event_handler[i])
-			bundle_free_encoded_rawdata(&b_event_handler[i]);
+			bundle_free_encoded_rawdata((bundle_raw **)&b_event_handler[i]);
 	}
 
 	if (b_text)
@@ -534,7 +535,7 @@ static int _update_query_create(notification_h noti, char **query)
 
 	for (i = 0; i <= NOTIFICATION_EVENT_TYPE_MAX; i++) {
 		if (b_event_handler[i])
-			bundle_free_encoded_rawdata(&b_event_handler[i]);
+			bundle_free_encoded_rawdata((bundle_raw **)&b_event_handler[i]);
 	}
 
 	if (b_text)
@@ -2068,7 +2069,7 @@ static int _template_query_create(notification_h noti, char *template_name, char
 
 	for (i = 0; i <= NOTIFICATION_EVENT_TYPE_MAX; i++) {
 		if (b_event_handler[i])
-			bundle_free_encoded_rawdata(&b_event_handler[i]);
+			bundle_free_encoded_rawdata((bundle_raw **)&b_event_handler[i]);
 	}
 
 	if (b_text)
