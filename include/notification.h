@@ -21,7 +21,7 @@
 
 #include <time.h>
 #include <bundle.h>
-#include <app.h>
+#include <app_control.h>
 
 
 #include <notification_error.h>

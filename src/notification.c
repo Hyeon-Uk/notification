@@ -23,13 +23,10 @@
 #include <dbus/dbus.h>
 #include <dbus/dbus-glib-lowlevel.h>
 
-#include <app.h>
-#include <app_internal.h>
-#include <app_manager.h>
+#include <app_control.h>
 #include <app_control_internal.h>
 #include <package_manager.h>
 #include <aul.h>
-#include <appsvc.h>
 #include <tizen.h>
 #include <vconf-keys.h>
 #include <vconf.h>
@@ -1392,6 +1389,27 @@ EXPORT_API int notification_delete(notification_h noti)
 	return notification_delete_for_uid(noti, getuid());
 }
 
+static int _notification_get_app_name(const char *appid, char **name)
+{
+	char *name_token = NULL;
+
+	if (appid == NULL)
+		return -1;
+
+	/* com.vendor.name -> name */
+	name_token = strrchr(appid, '.');
+	if (name_token == NULL)
+		return -1;
+
+	name_token++;
+
+	*name = strdup(name_token);
+	if (*name == NULL)
+		return -1;
+
+	return 0;
+}
+
 static notification_h _notification_create(notification_type_e type)
 {
 	notification_h noti = NULL;
@@ -1452,9 +1470,9 @@ static notification_h _notification_create(notification_type_e type)
 			goto out;
 		}
 
-		err = app_get_package_app_name(pkgid, &domain_name);
-		if (err != APP_ERROR_NONE || domain_name == NULL) {
-			NOTIFICATION_WARN("app_get_package_app_name failed err[%d] domain_name[%p]",
+		err = _notification_get_app_name(pkgid, &domain_name);
+		if (err != 0 || domain_name == NULL) {
+			NOTIFICATION_WARN("_notification_get_app_name failed err[%d] domain_name[%p]",
 					err, domain_name);
 			goto out;
 		}

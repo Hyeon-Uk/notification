@@ -6,7 +6,7 @@ SET(EXEC_PREFIX "\${prefix}")
 SET(LIBDIR ${LIB_INSTALL_DIR})
 SET(INCLUDEDIR "\${prefix}/include/${PROJECT_NAME}")
 
-ADD_SUBDIRECTORY(test-app)
+#ADD_SUBDIRECTORY(test-app)
 
 SET(INIT-SRCS
 	./src/notification_init.c
@@ -54,12 +54,9 @@ pkg_check_modules(pkgs REQUIRED
 	bundle
 	dlog
 	aul
-	appsvc
 	dbus-1
 	dbus-glib-1
-	appcore-common
-	capi-appfw-application
-	capi-appfw-app-manager
+	capi-appfw-app-control
 	capi-appfw-package-manager
 	pkgmgr-info
 	libtzplatform-config
