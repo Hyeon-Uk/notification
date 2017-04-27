@@ -1456,14 +1456,13 @@ static notification_h _notification_create(notification_type_e type)
 	noti->delete_timeout = 0;
 	noti->event_flag = false;
 	noti->is_translation = false;
+	noti->caller_pkgname = notification_get_pkgname_by_pid();
+	if (noti->caller_pkgname == NULL) {
+		NOTIFICATION_ERR("get_pkgname_by_pid is failed");
+		goto out;
+	}
 
 	if (getuid() >= REGULAR_UID_MIN) {
-		noti->caller_pkgname = notification_get_pkgname_by_pid();
-		if (noti->caller_pkgname == NULL) {
-			NOTIFICATION_ERR("get_pkgname_by_pid is failed");
-			goto out;
-		}
-
 		err = aul_app_get_pkgid_bypid(getpid(), pkgid, sizeof(pkgid));
 		if (err != AUL_R_OK) {
 			NOTIFICATION_ERR("get_pkgid_bypid is failed err[%d]", err);
