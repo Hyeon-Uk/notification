@@ -1634,7 +1634,6 @@ EXPORT_API int notification_noti_get_grouping_list(notification_type_e type,
 
 	snprintf(query, sizeof(query),
 		 "%s %s %s "
-		 "group by internal_group_id "
 		 "order by rowid desc, time desc", query_base, query_where, query_uid);
 
 	ret = sqlite3_prepare(db, query, strlen(query), &stmt, NULL);
