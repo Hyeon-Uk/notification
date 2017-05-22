@@ -499,8 +499,6 @@ out:
 	return err;
 }
 
-
-
 static int _install_and_update_package(const char *package_name, uid_t uid)
 {
 	sqlite3 *db;
