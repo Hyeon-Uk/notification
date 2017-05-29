@@ -248,7 +248,7 @@ static int _insertion_query_create(notification_h noti, char **query)
 	*query = sqlite3_mprintf("INSERT INTO noti_list ("
 		"type, "
 		"layout, "
-		"caller_pkgname, launch_pkgname, "
+		"pkg_id, caller_pkgname, launch_pkgname, "
 		"image_path, "
 		"group_id, internal_group_id,"
 		"title_key, "
@@ -269,7 +269,7 @@ static int _insertion_query_create(notification_h noti, char **query)
 		"text_input_max_length, event_flag, extension_image_size, uid) values ("
 		"%d, "
 		"%d, "
-		"'%s', '%s', "
+		"'%s', '%s', '%s', "
 		"'%s', "
 		"%d, %d,"
 		"$title_key, "
@@ -289,6 +289,7 @@ static int _insertion_query_create(notification_h noti, char **query)
 		"%d, %d, %d, %d, %d, %d, %d)",
 		noti->type,
 		noti->layout,
+		NOTIFICATION_CHECK_STR(noti->pkg_id),
 		NOTIFICATION_CHECK_STR(noti->caller_pkgname),
 		NOTIFICATION_CHECK_STR(noti->launch_pkgname),
 		NOTIFICATION_CHECK_STR(b_image_path), noti->group_id,
@@ -566,6 +567,7 @@ static void _notification_noti_populate_from_stmt(sqlite3_stmt *stmt, notificati
 
 	noti->type = sqlite3_column_int(stmt, col++);
 	noti->layout = sqlite3_column_int(stmt, col++);
+	__free_and_set((void **)&(noti->pkg_id), notification_db_column_text(stmt, col++));
 	__free_and_set((void **)&(noti->caller_pkgname), notification_db_column_text(stmt, col++));
 	__free_and_set((void **)&(noti->launch_pkgname), notification_db_column_text(stmt, col++));
 	noti->b_image_path = notification_db_column_bundle(stmt, col++);
@@ -595,7 +597,6 @@ static void _notification_noti_populate_from_stmt(sqlite3_stmt *stmt, notificati
 
 	for (i = 0; i <= NOTIFICATION_EVENT_TYPE_MAX; i++)
 		noti->b_event_handler[i] = notification_db_column_bundle(stmt, col++);
-
 
 	noti->sound_type = sqlite3_column_int(stmt, col++);
 	__free_and_set((void **)&(noti->sound_path), notification_db_column_text(stmt, col++));
@@ -1035,7 +1036,7 @@ EXPORT_API int notification_noti_get_by_priv_id(notification_h noti, int priv_id
 		return get_last_result();
 
 	char *base_query = "select "
-			 "type, layout, caller_pkgname, launch_pkgname, image_path, group_id, priv_id, "
+			 "type, layout, pkg_id, caller_pkgname, launch_pkgname, image_path, group_id, priv_id, "
 			 "tag, b_text, b_key, b_format_args, num_format_args, "
 			 "text_domain, text_dir, time, insert_time, args, group_args, "
 			 "b_execute_option, b_service_responding, b_service_single_launch, b_service_multi_launch, "
@@ -1103,7 +1104,7 @@ EXPORT_API int notification_noti_get_by_tag(notification_h noti, char *pkgname, 
 
 	if (pkgname != NULL && strlen(pkgname) != 0) {
 		ret = sqlite3_prepare_v2(db, "select "
-			 "type, layout, caller_pkgname, launch_pkgname, image_path, group_id, priv_id, "
+			 "type, layout, pkg_id, caller_pkgname, launch_pkgname, image_path, group_id, priv_id, "
 			 "tag, b_text, b_key, b_format_args, num_format_args, "
 			 "text_domain, text_dir, time, insert_time, args, group_args, "
 			 "b_execute_option, b_service_responding, b_service_single_launch, b_service_multi_launch, "
@@ -1141,7 +1142,7 @@ EXPORT_API int notification_noti_get_by_tag(notification_h noti, char *pkgname, 
 
 	} else {
 		ret = sqlite3_prepare_v2(db, "select "
-			 "type, layout, caller_pkgname, launch_pkgname, image_path, group_id, priv_id, "
+			 "type, layout, pkg_id, caller_pkgname, launch_pkgname, image_path, group_id, priv_id, "
 			 "tag, b_text, b_key, b_format_args, num_format_args, "
 			 "text_domain, text_dir, time, insert_time, args, group_args, "
 			 "b_execute_option, b_service_responding, b_service_single_launch, b_service_multi_launch, "
@@ -1603,7 +1604,7 @@ EXPORT_API int notification_noti_get_grouping_list(notification_type_e type,
 	ret = vconf_get_int(VCONFKEY_TELEPHONY_SIM_SLOT, &status);
 
 	snprintf(query_base, sizeof(query_base), "select "
-		 "type, layout, caller_pkgname, launch_pkgname, image_path, group_id, priv_id, "
+		 "type, layout, pkg_id, caller_pkgname, launch_pkgname, image_path, group_id, priv_id, "
 		 "tag, b_text, b_key, b_format_args, num_format_args, "
 		 "text_domain, text_dir, time, insert_time, args, group_args, "
 		 "b_execute_option, b_service_responding, b_service_single_launch, b_service_multi_launch, "
@@ -1705,7 +1706,7 @@ EXPORT_API int notification_noti_get_detail_list(const char *pkgname,
 	ret = vconf_get_int(VCONFKEY_TELEPHONY_SIM_SLOT, &status);
 
 	snprintf(query_base, sizeof(query_base), "select "
-		 "type, layout, caller_pkgname, launch_pkgname, image_path, group_id, priv_id, "
+		 "type, layout, pkg_id, caller_pkgname, launch_pkgname, image_path, group_id, priv_id, "
 		 "tag, b_text, b_key, b_format_args, num_format_args, "
 		 "text_domain, text_dir, time, insert_time, args, group_args, "
 		 "b_execute_option, b_service_responding, b_service_single_launch, b_service_multi_launch, "
@@ -1962,7 +1963,7 @@ static int _template_query_create(notification_h noti, char *template_name, char
 	*query = sqlite3_mprintf("INSERT OR REPLACE INTO noti_template ("
 		"type, "
 		"layout, "
-		"caller_pkgname, launch_pkgname, "
+		"pkg_id, caller_pkgname, launch_pkgname, "
 		"image_path, "
 		"group_id, internal_group_id,"
 		"title_key, "
@@ -1982,7 +1983,7 @@ static int _template_query_create(notification_h noti, char *template_name, char
 		"event_flag, extension_image_size, uid, template_name) values ("
 		"%d, "
 		"%d, "
-		"'%s', '%s', "
+		"'%s', '%s', '%s', "
 		"'%s', "
 		"%d, %d,"
 		"$title_key, "
@@ -2002,6 +2003,7 @@ static int _template_query_create(notification_h noti, char *template_name, char
 		"%d, %d, %d, '%s')",
 		noti->type,
 		noti->layout,
+		NOTIFICATION_CHECK_STR(noti->pkg_id),
 		NOTIFICATION_CHECK_STR(noti->caller_pkgname),
 		NOTIFICATION_CHECK_STR(noti->launch_pkgname),
 		NOTIFICATION_CHECK_STR(b_image_path), noti->group_id,
@@ -2199,7 +2201,7 @@ EXPORT_API int notification_noti_get_package_template(notification_h noti, char 
 		return get_last_result();
 
 	ret = sqlite3_prepare_v2(db, "select "
-		"type, layout, caller_pkgname, launch_pkgname, image_path, group_id, priv_id, "
+		"type, layout, pkg_id, caller_pkgname, launch_pkgname, image_path, group_id, priv_id, "
 		"tag, b_text, b_key, b_format_args, num_format_args, "
 		"text_domain, text_dir, time, insert_time, args, group_args, "
 		"b_execute_option, b_service_responding, b_service_single_launch, b_service_multi_launch, "
@@ -2262,7 +2264,7 @@ EXPORT_API int notification_noti_delete_template(const char *pkgname)
 		return get_last_result();
 
 	snprintf(query, sizeof(query), "delete from noti_template "
-		 "where caller_pkgname = '%s'", pkgname);
+		 "where pkg_id = '%s'", pkgname);
 
 	ret = notification_db_exec(db, query, NULL);
 

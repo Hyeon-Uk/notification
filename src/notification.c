@@ -1462,12 +1462,15 @@ static notification_h _notification_create(notification_type_e type)
 		goto out;
 	}
 
-	if (getuid() >= REGULAR_UID_MIN) {
+	if (getuid() < REGULAR_UID_MIN) {
+		noti->pkg_id = strdup(noti->caller_pkgname);
+	} else {
 		err = aul_app_get_pkgid_bypid(getpid(), pkgid, sizeof(pkgid));
 		if (err != AUL_R_OK) {
 			NOTIFICATION_ERR("get_pkgid_bypid is failed err[%d]", err);
 			goto out;
 		}
+		noti->pkg_id = strdup(pkgid);
 
 		err = _notification_get_app_name(pkgid, &domain_name);
 		if (err != 0 || domain_name == NULL) {
@@ -1546,6 +1549,9 @@ EXPORT_API int notification_clone(notification_h noti, notification_h *clone)
 	new_noti->group_id = noti->group_id;
 	new_noti->internal_group_id = noti->internal_group_id;
 	new_noti->priv_id = noti->priv_id;
+
+	if (noti->pkg_id != NULL)
+		new_noti->pkg_id = strdup(noti->pkg_id);
 
 	if (noti->caller_pkgname != NULL)
 		new_noti->caller_pkgname = strdup(noti->caller_pkgname);
@@ -1687,6 +1693,9 @@ EXPORT_API int notification_free(notification_h noti)
 	int i = 0;
 	if (noti == NULL)
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
+
+	if (noti->pkg_id)
+		free(noti->pkg_id);
 
 	if (noti->caller_pkgname)
 		free(noti->caller_pkgname);

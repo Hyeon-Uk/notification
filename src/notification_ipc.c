@@ -1743,6 +1743,7 @@ EXPORT_API GVariant *notification_ipc_make_gvariant_from_noti(notification_h not
 	g_variant_builder_add(&builder, "{iv}", NOTIFICATION_DATA_TYPE_GROUP_ID, g_variant_new_int32(noti->group_id));
 	g_variant_builder_add(&builder, "{iv}", NOTIFICATION_DATA_TYPE_INTERNAL_GROUP_ID, g_variant_new_int32(noti->internal_group_id));
 	g_variant_builder_add(&builder, "{iv}", NOTIFICATION_DATA_TYPE_PRIV_ID, g_variant_new_int32(noti->priv_id));
+	g_variant_builder_add(&builder, "{iv}", NOTIFICATION_DATA_TYPE_PKG_ID, g_variant_new_string((const gchar *)noti->pkg_id));
 	g_variant_builder_add(&builder, "{iv}", NOTIFICATION_DATA_TYPE_CALLER_PKGNAME, g_variant_new_string((const gchar *)noti->caller_pkgname));
 	g_variant_builder_add(&builder, "{iv}", NOTIFICATION_DATA_TYPE_DISPLAY_APPLIST, g_variant_new_int32(noti->display_applist));
 
@@ -1977,6 +1978,7 @@ EXPORT_API int notification_ipc_make_noti_from_gvariant(notification_h noti,
 	GHashTable *dict;
 
 	int i;
+	char *pkg_id = NULL;
 	char *caller_pkgname = NULL;
 	char *launch_pkgname = NULL;
 	bundle_raw *args = NULL;
@@ -2018,6 +2020,7 @@ EXPORT_API int notification_ipc_make_noti_from_gvariant(notification_h noti,
 	_variant_dict_lookup(dict, NOTIFICATION_DATA_TYPE_GROUP_ID, "i", &noti->group_id);
 	_variant_dict_lookup(dict, NOTIFICATION_DATA_TYPE_INTERNAL_GROUP_ID, "i", &noti->internal_group_id);
 	_variant_dict_lookup(dict, NOTIFICATION_DATA_TYPE_PRIV_ID, "i", &noti->priv_id);
+	_variant_dict_lookup(dict, NOTIFICATION_DATA_TYPE_PKG_ID, "&s", &pkg_id);
 	_variant_dict_lookup(dict, NOTIFICATION_DATA_TYPE_CALLER_PKGNAME, "&s", &caller_pkgname);
 	_variant_dict_lookup(dict, NOTIFICATION_DATA_TYPE_LAUNCH_PKGNAME, "&s", &launch_pkgname);
 	_variant_dict_lookup(dict, NOTIFICATION_DATA_TYPE_ARGS, "&s", &args);
@@ -2075,6 +2078,7 @@ EXPORT_API int notification_ipc_make_noti_from_gvariant(notification_h noti,
 	_variant_dict_lookup(dict, NOTIFICATION_DATA_TYPE_EXTENSION_IMAGE_SIZE, "i", &noti->extension_image_size);
 	_variant_dict_lookup(dict, NOTIFICATION_DATA_TYPE_UID, "i", &noti->uid);
 
+	noti->pkg_id = _dup_string(pkg_id);
 	noti->caller_pkgname = _dup_string(caller_pkgname);
 	noti->launch_pkgname = _dup_string(launch_pkgname);
 	noti->args = _create_bundle_from_bundle_raw(args);

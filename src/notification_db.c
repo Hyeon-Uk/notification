@@ -35,6 +35,7 @@ PRAGMA synchronous = FULL; \
 create	table if not exists noti_list ( \
 			type INTEGER NOT NULL, \
 			layout INTEGER NOT NULL default 0, \
+			pkg_id TEXT NOT NULL, \
 			caller_pkgname TEXT NOT NULL, \
 			launch_pkgname TEXT, \
 			image_path TEXT, \
@@ -162,6 +163,7 @@ create	table if not exists noti_list ( \
 		CREATE TABLE IF NOT EXISTS noti_template ( \
 			type INTEGER NOT NULL, \
 			layout INTEGER NOT NULL default 0, \
+			pkg_id TEXT NOT NULL, \
 			caller_pkgname TEXT NOT NULL, \
 			launch_pkgname TEXT, \
 			image_path TEXT, \

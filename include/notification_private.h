@@ -44,6 +44,7 @@ struct _notification {
 	int internal_group_id;	/* Internal Group ID */
 	int priv_id;		/* Private ID */
 
+	char *pkg_id;
 	char *caller_pkgname;	/* Caller App package name */
 	char *launch_pkgname;	/* Launch App package name. It will be from appsvc_set_pkgname */
 	bundle *args;		/* Will be removed. */
@@ -110,6 +111,7 @@ typedef enum notification_data_type {
 	NOTIFICATION_DATA_TYPE_GROUP_ID,
 	NOTIFICATION_DATA_TYPE_INTERNAL_GROUP_ID,
 	NOTIFICATION_DATA_TYPE_PRIV_ID,
+	NOTIFICATION_DATA_TYPE_PKG_ID,
 	NOTIFICATION_DATA_TYPE_CALLER_PKGNAME,
 	NOTIFICATION_DATA_TYPE_LAUNCH_PKGNAME,
 	NOTIFICATION_DATA_TYPE_ARGS,
