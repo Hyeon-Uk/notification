@@ -18,7 +18,6 @@
 #include <string.h>
 #include <stdlib.h>
 #include <errno.h>
-#include <vconf.h>
 #include <bundle_internal.h>
 
 #include <notification_ipc.h>

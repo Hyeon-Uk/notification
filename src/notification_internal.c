@@ -24,12 +24,8 @@
 #include <dbus/dbus-glib-lowlevel.h>
 #include <gio/gio.h>
 
-#include <app_control.h>
-#include <app_control_internal.h>
 #include <aul.h>
 #include <tizen.h>
-#include <vconf-keys.h>
-#include <vconf.h>
 #include <bundle.h>
 #include <bundle_internal.h>
 

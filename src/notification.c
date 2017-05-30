@@ -28,8 +28,6 @@
 #include <package_manager.h>
 #include <aul.h>
 #include <tizen.h>
-#include <vconf-keys.h>
-#include <vconf.h>
 
 #include <notification.h>
 #include <notification_list.h>
