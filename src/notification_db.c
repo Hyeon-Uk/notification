@@ -36,8 +36,8 @@ create	table if not exists noti_list ( \
 			type INTEGER NOT NULL, \
 			layout INTEGER NOT NULL default 0, \
 			pkg_id TEXT NOT NULL, \
-			caller_pkgname TEXT NOT NULL, \
-			launch_pkgname TEXT, \
+			caller_app_id TEXT NOT NULL, \
+			launch_app_id TEXT, \
 			image_path TEXT, \
 			group_id INTEGER default 0,  \
 			internal_group_id INTEGER default 0,  \
@@ -94,7 +94,7 @@ create	table if not exists noti_list ( \
 			uid INTEGER \
 		); \
 		create table if not exists noti_group_data ( \
-			caller_pkgname TEXT NOT NULL, \
+			caller_app_id TEXT NOT NULL, \
 			group_id INTEGER default 0, \
 			badge INTEGER default 0, \
 			title TEXT, \
@@ -104,11 +104,11 @@ create	table if not exists noti_list ( \
 			count_display_title INTEGER, \
 			count_display_content INTEGER, \
 			rowid INTEGER PRIMARY KEY AUTOINCREMENT, \
-			UNIQUE (caller_pkgname, group_id) \
+			UNIQUE (caller_app_id, group_id) \
 		); \
 		create table if not exists ongoing_list ( \
-			caller_pkgname TEXT NOT NULL, \
-			launch_pkgname TEXT, \
+			caller_app_id TEXT NOT NULL, \
+			launch_app_id TEXT, \
 			icon_path TEXT, \
 			group_id INTEGER default 0, \
 			internal_group_id INTEGER default 0, \
@@ -127,19 +127,19 @@ create	table if not exists noti_list ( \
 			progress_size DOUBLE default 0, \
 			progress_percentage DOUBLE default 0, \
 			rowid INTEGER PRIMARY KEY AUTOINCREMENT, \
-			UNIQUE (caller_pkgname, priv_id) \
+			UNIQUE (caller_app_id, priv_id) \
 		); \
 		CREATE TABLE IF NOT EXISTS notification_setting ( \
 			uid INTEGER, \
 			package_name TEXT NOT NULL, \
-			appid TEXT NOT NULL, \
+			app_id TEXT NOT NULL, \
 			allow_to_notify INTEGER DEFAULT 1, \
 			do_not_disturb_except INTEGER DEFAULT 0, \
 			visibility_class INTEGER DEFAULT 0, \
 			pop_up_notification INTEGER DEFAULT 1, \
 			lock_screen_content_level INTEGER DEFAULT 0, \
 			app_disabled INTEGER DEFAULT 0, \
-			UNIQUE (uid, package_name, appid) \
+			UNIQUE (uid, package_name, app_id) \
 		); \
 		CREATE TABLE IF NOT EXISTS notification_system_setting ( \
 			uid INTEGER, \
@@ -164,8 +164,8 @@ create	table if not exists noti_list ( \
 			type INTEGER NOT NULL, \
 			layout INTEGER NOT NULL default 0, \
 			pkg_id TEXT NOT NULL, \
-			caller_pkgname TEXT NOT NULL, \
-			launch_pkgname TEXT, \
+			caller_app_id TEXT NOT NULL, \
+			launch_app_id TEXT, \
 			image_path TEXT, \
 			group_id INTEGER default 0,  \
 			internal_group_id INTEGER default 0,  \
@@ -221,7 +221,7 @@ create	table if not exists noti_list ( \
 			extension_image_size INTEGER default 0, \
 			uid INTEGER, \
 			template_name TEXT, \
-			UNIQUE (caller_pkgname, template_name) \
+			UNIQUE (caller_app_id, template_name) \
 		);"
 
 

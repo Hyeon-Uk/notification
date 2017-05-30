@@ -71,19 +71,19 @@ static void _do_deffered_task(void);
 
 static void _print_noti(notification_h noti)
 {
-	char *pkgname = NULL;
+	char *app_id = NULL;
 	char *text = NULL;
 	char *content = NULL;
 	const char *tag = NULL;
 	notification_vibration_type_e vib_type = NOTIFICATION_VIBRATION_TYPE_NONE;
 
-	notification_get_pkgname(noti, &pkgname);
+	notification_get_pkgname(noti, &app_id);
 	notification_get_text(noti, NOTIFICATION_TEXT_TYPE_TITLE, &text);
 	notification_get_text(noti, NOTIFICATION_TEXT_TYPE_CONTENT, &content);
 	notification_get_tag(noti, &tag);
 	notification_get_vibration(noti, &vib_type, NULL);
 
-	NOTIFICATION_DBG("client print_noti  pkgname  = %s ", pkgname);
+	NOTIFICATION_DBG("client print_noti  app_id  = %s ", app_id);
 	NOTIFICATION_DBG("client print_noti  title  = %s ", text);
 	NOTIFICATION_DBG("client print_noti  content  = %s ", content);
 	NOTIFICATION_DBG("client print_noti  tag  = %s ", tag);
@@ -978,7 +978,7 @@ int notification_ipc_request_refresh(uid_t uid)
 	return result;
 }
 
-int notification_ipc_request_delete_single(notification_type_e type, char *pkgname, int priv_id, uid_t uid)
+int notification_ipc_request_delete_single(notification_type_e type, char *app_id, int priv_id, uid_t uid)
 {
 	int result;
 	int id;
@@ -992,10 +992,10 @@ int notification_ipc_request_delete_single(notification_type_e type, char *pkgna
 		return result;
 	}
 
-	if (!pkgname)
-		pkgname = "";
+	if (!app_id)
+		app_id = "";
 
-	body = g_variant_new("(sii)", pkgname, priv_id, uid);
+	body = g_variant_new("(sii)", app_id, priv_id, uid);
 	result = _send_sync_noti(body, &reply, "del_noti_single");
 
 	if (result == NOTIFICATION_ERROR_NONE) {
@@ -1010,7 +1010,7 @@ int notification_ipc_request_delete_single(notification_type_e type, char *pkgna
 	return result;
 }
 
-int notification_ipc_request_delete_multiple(notification_type_e type, char *pkgname, uid_t uid)
+int notification_ipc_request_delete_multiple(notification_type_e type, char *app_id, uid_t uid)
 {
 	int result;
 	int num_deleted;
@@ -1024,10 +1024,10 @@ int notification_ipc_request_delete_multiple(notification_type_e type, char *pkg
 		return result;
 	}
 
-	if (!pkgname)
-		pkgname = "";
+	if (!app_id)
+		app_id = "";
 
-	body = g_variant_new("(sii)", pkgname, type, uid);
+	body = g_variant_new("(sii)", app_id, type, uid);
 	result = _send_sync_noti(body, &reply, "del_noti_multiple");
 
 	if (result == NOTIFICATION_ERROR_NONE) {
@@ -1042,7 +1042,7 @@ int notification_ipc_request_delete_multiple(notification_type_e type, char *pkg
 	return result;
 }
 
-int notification_ipc_request_load_noti_by_tag(notification_h noti, const char *pkgname, const char *tag, uid_t uid)
+int notification_ipc_request_load_noti_by_tag(notification_h noti, const char *app_id, const char *tag, uid_t uid)
 {
 	int result;
 	GDBusMessage *reply = NULL;
@@ -1056,10 +1056,10 @@ int notification_ipc_request_load_noti_by_tag(notification_h noti, const char *p
 		return result;
 	}
 
-	if (!pkgname)
-		pkgname = "";
+	if (!app_id)
+		app_id = "";
 
-	body = g_variant_new("(ssi)", pkgname, tag, uid);
+	body = g_variant_new("(ssi)", app_id, tag, uid);
 	result = _send_sync_noti(body, &reply, "load_noti_by_tag");
 
 	if (result == NOTIFICATION_ERROR_NONE) {
@@ -1080,7 +1080,7 @@ int notification_ipc_request_load_noti_by_tag(notification_h noti, const char *p
 }
 
 /* LCOV_EXCL_START */
-int notification_ipc_request_load_noti_by_priv_id(notification_h noti, const char *pkgname, int priv_id, uid_t uid)
+int notification_ipc_request_load_noti_by_priv_id(notification_h noti, const char *app_id, int priv_id, uid_t uid)
 {
 	int result;
 	GDBusMessage *reply = NULL;
@@ -1094,10 +1094,10 @@ int notification_ipc_request_load_noti_by_priv_id(notification_h noti, const cha
 		return result;
 	}
 
-	if (!pkgname)
-		pkgname = "";
+	if (!app_id)
+		app_id = "";
 
-	body = g_variant_new("(sii)", pkgname, priv_id, uid);
+	body = g_variant_new("(sii)", app_id, priv_id, uid);
 	result = _send_sync_noti(body, &reply, "load_noti_by_priv_id");
 
 	if (result == NOTIFICATION_ERROR_NONE) {
@@ -1119,7 +1119,7 @@ int notification_ipc_request_load_noti_by_priv_id(notification_h noti, const cha
 
 /* LCOV_EXCL_START */
 int notification_ipc_request_get_count(notification_type_e type,
-		    const char *pkgname, int group_id, int priv_id, int *count, uid_t uid)
+		    const char *app_id, int group_id, int priv_id, int *count, uid_t uid)
 {
 	int result;
 	GDBusMessage *reply = NULL;
@@ -1133,10 +1133,10 @@ int notification_ipc_request_get_count(notification_type_e type,
 		return result;
 	}
 
-	if (!pkgname)
-		pkgname = "";
+	if (!app_id)
+		app_id = "";
 
-	body = g_variant_new("(isiii)", type, pkgname, group_id, priv_id, uid);
+	body = g_variant_new("(isiii)", type, app_id, group_id, priv_id, uid);
 	result = _send_sync_noti(body, &reply, "get_noti_count");
 
 	if (result == NOTIFICATION_ERROR_NONE) {
@@ -1203,7 +1203,7 @@ int notification_ipc_request_load_noti_grouping_list(notification_type_e type, i
 	return result;
 }
 
-int notification_ipc_request_load_noti_detail_list(const char *pkgname,
+int notification_ipc_request_load_noti_detail_list(const char *app_id,
 		int group_id,
 		int priv_id,
 		int count,
@@ -1225,7 +1225,7 @@ int notification_ipc_request_load_noti_detail_list(const char *pkgname,
 		return result;
 	}
 
-	body = g_variant_new("(siiii)", pkgname, group_id, priv_id, count, uid);
+	body = g_variant_new("(siiii)", app_id, group_id, priv_id, count, uid);
 	result = _send_sync_noti(body, &reply, "load_noti_detail_list");
 
 	if (result == NOTIFICATION_ERROR_NONE) {
@@ -1310,8 +1310,8 @@ int notification_ipc_request_get_setting_array(
 	return result;
 }
 
-int notification_ipc_request_get_setting_by_appid(
-		const char *appid, notification_setting_h *setting, uid_t uid)
+int notification_ipc_request_get_setting_by_app_id(
+		const char *app_id, notification_setting_h *setting, uid_t uid)
 {
 	int result;
 	GDBusMessage *reply = NULL;
@@ -1326,8 +1326,8 @@ int notification_ipc_request_get_setting_by_appid(
 		return result;
 	}
 
-	body = g_variant_new("(si)", appid, uid);
-	result = _send_sync_noti(body, &reply, "get_setting_by_appid");
+	body = g_variant_new("(si)", app_id, uid);
+	result = _send_sync_noti(body, &reply, "get_setting_by_app_id");
 
 	if (result == NOTIFICATION_ERROR_NONE) {
 		reply_body = g_dbus_message_get_body(reply);
@@ -1349,7 +1349,7 @@ int notification_ipc_request_get_setting_by_appid(
 	if (reply)
 		g_object_unref(reply);
 
-	NOTIFICATION_DBG("notification_ipc_request_get_setting_by_package_name done [result: %d]", result);
+	NOTIFICATION_DBG("notification_ipc_request_get_setting_by_app_id done [result: %d]", result);
 	return result;
 }
 
@@ -1432,7 +1432,7 @@ int notification_ipc_update_setting(notification_setting_h setting, uid_t uid)
 
 	body = g_variant_new("(ssiiiiii)",
 			setting->package_name,
-			setting->appid,
+			setting->app_id,
 			(int)(setting->allow_to_notify),
 			(int)(setting->do_not_disturb_except),
 			(int)(setting->visibility_class),
@@ -1559,7 +1559,7 @@ int notification_ipc_request_create_from_template(notification_h noti, const cha
 	return result;
 }
 
-int notification_ipc_request_create_from_package_template(notification_h noti, const char *pkgname, const char *template_name)
+int notification_ipc_request_create_from_package_template(notification_h noti, const char *app_id, const char *template_name)
 {
 	int result;
 	GDBusMessage *reply = NULL;
@@ -1573,7 +1573,7 @@ int notification_ipc_request_create_from_package_template(notification_h noti, c
 		return result;
 	}
 
-	body = g_variant_new("(ss)", pkgname, template_name);
+	body = g_variant_new("(ss)", app_id, template_name);
 
 	result = _send_sync_noti(body, &reply, "create_from_package_template");
 	if (result == NOTIFICATION_ERROR_NONE) {
@@ -1593,7 +1593,7 @@ int notification_ipc_request_create_from_package_template(notification_h noti, c
 	return result;
 }
 
-int notification_ipc_get_noti_block_state(const char *pkgname, int *do_not_disturb,
+int notification_ipc_get_noti_block_state(const char *app_id, int *do_not_disturb,
 					  int *do_not_disturb_except, int *allow_to_notify,
 					  uid_t uid)
 {
@@ -1606,7 +1606,7 @@ int notification_ipc_get_noti_block_state(const char *pkgname, int *do_not_distu
 	GVariant *reply_body;
 	GVariant *result_body;
 
-	if (pkgname == NULL)
+	if (app_id == NULL)
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 
 	ret = _dbus_init();
@@ -1615,7 +1615,7 @@ int notification_ipc_get_noti_block_state(const char *pkgname, int *do_not_distu
 		return ret;
 	}
 
-	body = g_variant_new("(si)", pkgname, uid);
+	body = g_variant_new("(si)", app_id, uid);
 
 	ret = _send_sync_noti(body, &reply, "get_noti_block_state");
 
@@ -1743,7 +1743,7 @@ EXPORT_API GVariant *notification_ipc_make_gvariant_from_noti(notification_h not
 	g_variant_builder_add(&builder, "{iv}", NOTIFICATION_DATA_TYPE_INTERNAL_GROUP_ID, g_variant_new_int32(noti->internal_group_id));
 	g_variant_builder_add(&builder, "{iv}", NOTIFICATION_DATA_TYPE_PRIV_ID, g_variant_new_int32(noti->priv_id));
 	g_variant_builder_add(&builder, "{iv}", NOTIFICATION_DATA_TYPE_PKG_ID, g_variant_new_string((const gchar *)noti->pkg_id));
-	g_variant_builder_add(&builder, "{iv}", NOTIFICATION_DATA_TYPE_CALLER_PKGNAME, g_variant_new_string((const gchar *)noti->caller_pkgname));
+	g_variant_builder_add(&builder, "{iv}", NOTIFICATION_DATA_TYPE_CALLER_APP_ID, g_variant_new_string((const gchar *)noti->caller_app_id));
 	g_variant_builder_add(&builder, "{iv}", NOTIFICATION_DATA_TYPE_DISPLAY_APPLIST, g_variant_new_int32(noti->display_applist));
 
 	if (noti->args) {
@@ -1810,8 +1810,8 @@ EXPORT_API GVariant *notification_ipc_make_gvariant_from_noti(notification_h not
 		}
 	}
 
-	if (noti->launch_pkgname)
-		g_variant_builder_add(&builder, "{iv}", NOTIFICATION_DATA_TYPE_LAUNCH_PKGNAME, g_variant_new_string((const gchar *)noti->launch_pkgname));
+	if (noti->launch_app_id)
+		g_variant_builder_add(&builder, "{iv}", NOTIFICATION_DATA_TYPE_LAUNCH_APP_ID, g_variant_new_string((const gchar *)noti->launch_app_id));
 
 	if (noti->domain != NULL)
 		g_variant_builder_add(&builder, "{iv}", NOTIFICATION_DATA_TYPE_DOMAIN, g_variant_new_string((const gchar *)noti->domain));
@@ -1978,8 +1978,8 @@ EXPORT_API int notification_ipc_make_noti_from_gvariant(notification_h noti,
 
 	int i;
 	char *pkg_id = NULL;
-	char *caller_pkgname = NULL;
-	char *launch_pkgname = NULL;
+	char *caller_app_id = NULL;
+	char *launch_app_id = NULL;
 	bundle_raw *args = NULL;
 	bundle_raw *group_args = NULL;
 	bundle_raw *b_execute_option = NULL;
@@ -2020,8 +2020,8 @@ EXPORT_API int notification_ipc_make_noti_from_gvariant(notification_h noti,
 	_variant_dict_lookup(dict, NOTIFICATION_DATA_TYPE_INTERNAL_GROUP_ID, "i", &noti->internal_group_id);
 	_variant_dict_lookup(dict, NOTIFICATION_DATA_TYPE_PRIV_ID, "i", &noti->priv_id);
 	_variant_dict_lookup(dict, NOTIFICATION_DATA_TYPE_PKG_ID, "&s", &pkg_id);
-	_variant_dict_lookup(dict, NOTIFICATION_DATA_TYPE_CALLER_PKGNAME, "&s", &caller_pkgname);
-	_variant_dict_lookup(dict, NOTIFICATION_DATA_TYPE_LAUNCH_PKGNAME, "&s", &launch_pkgname);
+	_variant_dict_lookup(dict, NOTIFICATION_DATA_TYPE_CALLER_APP_ID, "&s", &caller_app_id);
+	_variant_dict_lookup(dict, NOTIFICATION_DATA_TYPE_LAUNCH_APP_ID, "&s", &launch_app_id);
 	_variant_dict_lookup(dict, NOTIFICATION_DATA_TYPE_ARGS, "&s", &args);
 	_variant_dict_lookup(dict, NOTIFICATION_DATA_TYPE_GROUP_ARGS, "&s", &group_args);
 	_variant_dict_lookup(dict, NOTIFICATION_DATA_TYPE_EXECUTE_OPTION, "&s", &b_execute_option);
@@ -2078,8 +2078,8 @@ EXPORT_API int notification_ipc_make_noti_from_gvariant(notification_h noti,
 	_variant_dict_lookup(dict, NOTIFICATION_DATA_TYPE_UID, "i", &noti->uid);
 
 	noti->pkg_id = _dup_string(pkg_id);
-	noti->caller_pkgname = _dup_string(caller_pkgname);
-	noti->launch_pkgname = _dup_string(launch_pkgname);
+	noti->caller_app_id = _dup_string(caller_app_id);
+	noti->launch_app_id = _dup_string(launch_app_id);
 	noti->args = _create_bundle_from_bundle_raw(args);
 	noti->group_args = _create_bundle_from_bundle_raw(group_args);
 	noti->b_execute_option = _create_bundle_from_bundle_raw(b_execute_option);
@@ -2182,7 +2182,7 @@ EXPORT_API GVariant *notification_ipc_make_gvariant_from_setting(struct notifica
 
 	body = g_variant_new("(ssiiiiii)",
 			noti_setting->package_name,
-			noti_setting->appid,
+			noti_setting->app_id,
 			noti_setting->allow_to_notify,
 			noti_setting->do_not_disturb_except,
 			noti_setting->visibility_class,
@@ -2198,7 +2198,7 @@ EXPORT_API int notification_ipc_make_setting_from_gvariant(struct notification_s
 {
 	NOTIFICATION_DBG("notification_ipc_make_setting_from_gvariant !!!!");
 	char *pkgname;
-	char *appid;
+	char *app_id;
 	int allow_to_notify;
 	int do_not_disturb_except;
 	int visibility_class;
@@ -2213,7 +2213,7 @@ EXPORT_API int notification_ipc_make_setting_from_gvariant(struct notification_s
 	g_variant_get(variant,
 			"(&s&siiiiii)",
 			&pkgname,
-			&appid,
+			&app_id,
 			&allow_to_notify,
 			&do_not_disturb_except,
 			&visibility_class,
@@ -2224,7 +2224,7 @@ EXPORT_API int notification_ipc_make_setting_from_gvariant(struct notification_s
 	NOTIFICATION_DBG("setting from variant %s !!", pkgname);
 
 	noti_setting->package_name = _dup_string(pkgname);
-	noti_setting->appid = _dup_string(appid);
+	noti_setting->app_id = _dup_string(app_id);
 	noti_setting->allow_to_notify = allow_to_notify;
 	noti_setting->do_not_disturb_except = do_not_disturb_except;
 	noti_setting->visibility_class = visibility_class;

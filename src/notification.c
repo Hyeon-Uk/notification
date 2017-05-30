@@ -42,21 +42,19 @@
 static void (*posted_toast_message_cb)(void *data);
 
 #define NOTI_TEXT_RESULT_LEN 2048
-#define NOTI_PKGNAME_LEN	512
-
 #define REGULAR_UID_MIN 5000
 
-char *notification_get_pkgname_by_pid(void)
+char *notification_get_app_id_by_pid(void)
 {
-	char pkgname[NOTI_PKGNAME_LEN + 1] = { 0, };
+#define NOTI_APP_ID_LEN 512
+	char app_id[NOTI_APP_ID_LEN + 1] = { 0, };
 	int pid = 0, ret = AUL_R_OK;
 	int fd;
-	char *dup_pkgname;
-	char buf[NOTI_PKGNAME_LEN + 1] = { 0, };
+	char *dup_app_id;
+	char buf[NOTI_APP_ID_LEN + 1] = { 0, };
 
 	pid = getpid();
-
-	ret = aul_app_get_pkgname_bypid(pid, pkgname, sizeof(pkgname));
+	ret = aul_app_get_appid_bypid(pid, app_id, sizeof(app_id));
 	if (ret != AUL_R_OK) {
 
 		snprintf(buf, sizeof(buf), "/proc/%d/cmdline", pid);
@@ -65,28 +63,28 @@ char *notification_get_pkgname_by_pid(void)
 		if (fd < 0)
 			return NULL;
 
-		ret = read(fd, pkgname, sizeof(pkgname) - 1);
+		ret = read(fd, app_id, sizeof(app_id) - 1);
 		close(fd);
 
 		if (ret <= 0)
 			return NULL;
 
-		pkgname[ret] = '\0';
+		app_id[ret] = '\0';
 		/*!
 		 * \NOTE
-		 * "ret" is not able to be larger than "sizeof(pkgname) - 1",
+		 * "ret" is not able to be larger than "sizeof(app_id) - 1",
 		 * if the system is not going wrong.
 		 */
 	} else {
-		if (strlen(pkgname) <= 0)
+		if (strlen(app_id) <= 0)
 			return NULL;
 	}
 
-	dup_pkgname = strdup(pkgname);
-	if (!dup_pkgname)
+	dup_app_id = strdup(app_id);
+	if (!dup_app_id)
 		NOTIFICATION_ERR("Heap: %d\n", errno);
 
-	return dup_pkgname;
+	return dup_app_id;
 }
 
 EXPORT_API int notification_set_image(notification_h noti,
@@ -160,7 +158,7 @@ EXPORT_API int notification_get_image(notification_h noti,
 	}
 
 	/* If image path is NULL and type is ICON, icon path set from AIL */
-	/* order : user icon -> launch_pkgname icon -> caller_pkgname icon -> service app icon */
+	/* order : user icon -> launch_app_id icon -> caller_app_id icon -> service app icon */
 	if (*image_path == NULL && type == NOTIFICATION_IMAGE_TYPE_ICON) {
 		if (noti->app_icon_path != NULL)
 			*image_path = noti->app_icon_path;
@@ -523,7 +521,7 @@ EXPORT_API int notification_get_text(notification_h noti,
 				if (ret_variable_int ==
 				    NOTIFICATION_COUNT_POS_LEFT) {
 					notification_get_count(noti->type,
-							noti->caller_pkgname,
+							noti->caller_app_id,
 							noti->group_id,
 							noti->priv_id,
 							&ret_variable_int);
@@ -564,7 +562,7 @@ EXPORT_API int notification_get_text(notification_h noti,
 						    NOTIFICATION_VARIABLE_TYPE_COUNT) {
 							/* Get notification count */
 							notification_get_count(noti->type,
-									noti->caller_pkgname,
+									noti->caller_app_id,
 									noti->group_id,
 									noti->priv_id,
 									&ret_variable_int);
@@ -660,7 +658,7 @@ EXPORT_API int notification_get_text(notification_h noti,
 							    NOTIFICATION_VARIABLE_TYPE_COUNT) {
 								/* Get notification count */
 								notification_get_count(noti->type,
-										noti->caller_pkgname,
+										noti->caller_app_id,
 										noti->group_id,
 										noti->priv_id,
 										&ret_variable_int);
@@ -757,7 +755,7 @@ EXPORT_API int notification_get_text(notification_h noti,
 					if (ret_variable_int ==
 					    NOTIFICATION_COUNT_POS_RIGHT) {
 						notification_get_count(noti->type,
-								noti->caller_pkgname,
+								noti->caller_app_id,
 								noti->group_id,
 								noti->priv_id,
 								&ret_variable_int);
@@ -1326,8 +1324,8 @@ EXPORT_API int notification_get_pkgname(notification_h noti,
 	if (noti == NULL || pkgname == NULL)
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 
-	if (noti->caller_pkgname)
-		*pkgname = noti->caller_pkgname;
+	if (noti->caller_app_id)
+		*pkgname = noti->caller_app_id;
 	else
 		*pkgname = NULL;
 
@@ -1387,15 +1385,15 @@ EXPORT_API int notification_delete(notification_h noti)
 	return notification_delete_for_uid(noti, getuid());
 }
 
-static int _notification_get_app_name(const char *appid, char **name)
+static int _notification_get_app_name(const char *app_id, char **name)
 {
 	char *name_token = NULL;
 
-	if (appid == NULL)
+	if (app_id == NULL)
 		return -1;
 
 	/* com.vendor.name -> name */
-	name_token = strrchr(appid, '.');
+	name_token = strrchr(app_id, '.');
 	if (name_token == NULL)
 		return -1;
 
@@ -1410,12 +1408,13 @@ static int _notification_get_app_name(const char *appid, char **name)
 
 static notification_h _notification_create(notification_type_e type)
 {
+#define NOTI_PKG_ID_LEN 512
 	notification_h noti = NULL;
 	package_info_h package_info = NULL;
 	char *domain_name = NULL;
 	char *app_root_path = NULL;
 	char locale_directory[PATH_MAX] = { 0, }; /* PATH_MAX 4096 */
-	char pkgid[NOTI_PKGNAME_LEN + 1] = { 0, };
+	char pkg_id[NOTI_PKG_ID_LEN + 1] = { 0, };
 	int err;
 
 	if (type <= NOTIFICATION_TYPE_NONE || type > NOTIFICATION_TYPE_MAX) {
@@ -1447,33 +1446,33 @@ static notification_h _notification_create(notification_type_e type)
 				NOTIFICATION_DISPLAY_APP_TICKER |
 				NOTIFICATION_DISPLAY_APP_INDICATOR;
 	noti->auto_remove = true;
-	noti->caller_pkgname = notification_get_pkgname_by_pid();
-	if (noti->caller_pkgname == NULL) {
-		NOTIFICATION_ERR("get_pkgname_by_pid is failed");
+	noti->caller_app_id = notification_get_app_id_by_pid();
+	if (noti->caller_app_id == NULL) {
+		NOTIFICATION_ERR("get_app_id_by_pid is failed");
 		goto out;
 	}
 
 	if (getuid() < REGULAR_UID_MIN) {
-		noti->pkg_id = strdup(noti->caller_pkgname);
+		noti->pkg_id = strdup(noti->caller_app_id);
 	} else {
-		err = aul_app_get_pkgid_bypid(getpid(), pkgid, sizeof(pkgid));
+		err = aul_app_get_pkgid_bypid(getpid(), pkg_id, sizeof(pkg_id));
 		if (err != AUL_R_OK) {
 			NOTIFICATION_ERR("get_pkgid_bypid is failed err[%d]", err);
 			goto out;
 		}
-		noti->pkg_id = strdup(pkgid);
+		noti->pkg_id = strdup(pkg_id);
 
-		err = _notification_get_app_name(pkgid, &domain_name);
+		err = _notification_get_app_name(pkg_id, &domain_name);
 		if (err != 0 || domain_name == NULL) {
 			NOTIFICATION_WARN("_notification_get_app_name failed err[%d] domain_name[%p]",
 					err, domain_name);
 			goto out;
 		}
 
-		err = package_info_create(pkgid, &package_info);
+		err = package_info_create(pkg_id, &package_info);
 		if (err != PACKAGE_MANAGER_ERROR_NONE || package_info == NULL) {
-			NOTIFICATION_WARN("package_info_create failed err[%d] package_info[%p] pkgid[%s]",
-					err, package_info, pkgid);
+			NOTIFICATION_WARN("package_info_create failed err[%d] package_info[%p] pkg_id[%s]",
+					err, package_info, pkg_id);
 			goto out;
 		}
 
@@ -1543,11 +1542,11 @@ EXPORT_API int notification_clone(notification_h noti, notification_h *clone)
 	if (noti->pkg_id != NULL)
 		new_noti->pkg_id = strdup(noti->pkg_id);
 
-	if (noti->caller_pkgname != NULL)
-		new_noti->caller_pkgname = strdup(noti->caller_pkgname);
+	if (noti->caller_app_id != NULL)
+		new_noti->caller_app_id = strdup(noti->caller_app_id);
 
-	if (noti->launch_pkgname != NULL)
-		new_noti->launch_pkgname = strdup(noti->launch_pkgname);
+	if (noti->launch_app_id != NULL)
+		new_noti->launch_app_id = strdup(noti->launch_app_id);
 
 	if (noti->args != NULL)
 		new_noti->args = bundle_dup(noti->args);
@@ -1644,11 +1643,11 @@ EXPORT_API int notification_free(notification_h noti)
 	if (noti->pkg_id)
 		free(noti->pkg_id);
 
-	if (noti->caller_pkgname)
-		free(noti->caller_pkgname);
+	if (noti->caller_app_id)
+		free(noti->caller_app_id);
 
-	if (noti->launch_pkgname)
-		free(noti->launch_pkgname);
+	if (noti->launch_app_id)
+		free(noti->launch_app_id);
 
 	if (noti->args)
 		bundle_free(noti->args);
@@ -1852,7 +1851,7 @@ EXPORT_API notification_h notification_create_from_template(const char *template
 EXPORT_API int notification_get_noti_block_state(notification_block_state_e *state)
 {
 	int ret;
-	char *pkgname;
+	char *app_id;
 	int do_not_disturb;
 	int do_not_disturb_except;
 	int allow_to_notify;
@@ -1860,13 +1859,13 @@ EXPORT_API int notification_get_noti_block_state(notification_block_state_e *sta
 	if (state == NULL)
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 
-	pkgname = notification_get_pkgname_by_pid();
+	app_id = notification_get_app_id_by_pid();
 
-	ret = notification_ipc_get_noti_block_state(pkgname, &do_not_disturb, &do_not_disturb_except, &allow_to_notify, getuid());
+	ret = notification_ipc_get_noti_block_state(app_id, &do_not_disturb, &do_not_disturb_except, &allow_to_notify, getuid());
 
 	if (ret != NOTIFICATION_ERROR_NONE) {
-		if (pkgname)
-			free(pkgname);
+		if (app_id)
+			free(app_id);
 		return ret;
 	}
 
@@ -1878,8 +1877,8 @@ EXPORT_API int notification_get_noti_block_state(notification_block_state_e *sta
 		*state = NOTIFICATION_BLOCK_STATE_BLOCKED;
 	}
 
-	if (pkgname)
-		free(pkgname);
+	if (app_id)
+		free(app_id);
 
 	return ret;
 }

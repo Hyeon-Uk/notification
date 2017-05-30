@@ -36,16 +36,18 @@ int notification_noti_insert(notification_h noti);
 
 int notification_noti_update(notification_h noti);
 
-int notification_noti_delete_all(notification_type_e type, const char *pkgname, int *num_deleted, int **list_deleted_rowid, uid_t uid);
+int notification_noti_delete_all(notification_type_e type, const char *app_id,
+		int *num_deleted, int **list_deleted_rowid, uid_t uid);
 
 int notification_noti_get_by_priv_id(notification_h noti, int priv_id);
-int notification_noti_get_by_tag(notification_h noti, char *pkgname, char* tag, uid_t uid);
+int notification_noti_get_by_tag(notification_h noti, char *app_id, char* tag, uid_t uid);
 
-int notification_noti_delete_by_priv_id(const char *pkgname, int priv_id);
-int notification_noti_delete_by_priv_id_get_changes(const char *pkgname, int priv_id, int *num_changes, uid_t uid);
+int notification_noti_delete_by_priv_id(const char *app_id, int priv_id);
+int notification_noti_delete_by_priv_id_get_changes(const char *app_id, int priv_id,
+						    int *num_changes, uid_t uid);
 
 int notification_noti_get_count(notification_type_e type,
-		const char *pkgname,
+		const char *app_id,
 		int group_id, int priv_id,
 		int *count, uid_t uid);
 
@@ -54,7 +56,7 @@ int notification_noti_get_grouping_list(notification_type_e type,
 		notification_list_h *list,
 		uid_t uid);
 
-int notification_noti_get_detail_list(const char *pkgname,
+int notification_noti_get_detail_list(const char *app_id,
 		int group_id,
 		int priv_id, int count,
 		notification_list_h *list,
@@ -64,8 +66,8 @@ int notification_noti_check_tag(notification_h noti);
 int notification_noti_check_count_for_template(notification_h noti, int *count);
 
 int notification_noti_add_template(notification_h noti, char *template_name);
-int notification_noti_get_package_template(notification_h noti, char *pkgname, char *template_name);
-int notification_noti_delete_template(const char *pkgname);
+int notification_noti_get_package_template(notification_h noti, char *app_id, char *template_name);
+int notification_noti_delete_template(const char *pkg_id);
 
 int notification_get_default_viewer(const char *path, char **default_viewer);
 int notification_launch_default_viewer(const char *default_viewer, int priv_id);

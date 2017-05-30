@@ -50,7 +50,7 @@ static void __notification_ongoing_update_callback(GDBusConnection *connection,
 					gpointer user_data)
 {
 	struct ongoing_info_s *info;
-	char *pkgname = NULL;
+	char *app_id = NULL;
 	int priv_id = 0;
 	double progress = 0;
 	double size = 0;
@@ -65,26 +65,25 @@ static void __notification_ongoing_update_callback(GDBusConnection *connection,
 	}
 
 	if (g_strcmp0(signal_name, MEMBER_PROGRESS) == 0) {
-		g_variant_get(parameters, "(&sid)", &pkgname, &priv_id, &progress);
+		g_variant_get(parameters, "(&sid)", &app_id, &priv_id, &progress);
 		info->type = ONGOING_TYPE_PROGRESS;
 	} else if (g_strcmp0(signal_name, MEMBER_SIZE) == 0) {
-		g_variant_get(parameters, "(&sid)", &pkgname, &priv_id, &size);
+		g_variant_get(parameters, "(&sid)", &app_id, &priv_id, &size);
 		info->type = ONGOING_TYPE_SIZE;
-
 	} else if (g_strcmp0(signal_name, MEMBER_CONTENT) == 0) {
-		g_variant_get(parameters, "(&si&s)", &pkgname, &priv_id, &content);
+		g_variant_get(parameters, "(&si&s)", &app_id, &priv_id, &content);
 		info->type = ONGOING_TYPE_CONTENT;
 	}
 
-	if (pkgname == NULL) {
+	if (app_id == NULL) {
 		/* LCOV_EXCL_START */
-		NOTIFICATION_ERR("pkgname is null");
+		NOTIFICATION_ERR("app_id is null");
 		free(info);
 		return;
 		/* LCOV_EXCL_STOP */
 	}
 
-	info->pkgname = pkgname;
+	info->pkgname = app_id;
 	info->priv_id = priv_id;
 	info->progress = progress;
 	info->size = size;
@@ -215,13 +214,13 @@ int notification_ongoing_update_cb_unset(void)
 	return NOTIFICATION_ERROR_NONE;
 }
 
-int notification_ongoing_update_progress(const char *caller_pkgname,
+int notification_ongoing_update_progress(const char *caller_app_id,
 					int priv_id, double progress)
 {
 	GVariant *param;
 	int ret;
 
-	param = g_variant_new("(sid)", caller_pkgname, priv_id, progress);
+	param = g_variant_new("(sid)", caller_app_id, priv_id, progress);
 
 	ret = __send_ongoing_update_signal(MEMBER_PROGRESS, param);
 	if (ret != NOTIFICATION_ERROR_NONE) {
@@ -235,13 +234,13 @@ int notification_ongoing_update_progress(const char *caller_pkgname,
 	return NOTIFICATION_ERROR_NONE;
 }
 
-int notification_ongoing_update_size(const char *caller_pkgname,
+int notification_ongoing_update_size(const char *caller_app_id,
 					int priv_id, double size)
 {
 	GVariant *param;
 	int ret;
 
-	param = g_variant_new("(sid)", caller_pkgname, priv_id, size);
+	param = g_variant_new("(sid)", caller_app_id, priv_id, size);
 
 	ret = __send_ongoing_update_signal(MEMBER_SIZE, param);
 	if (ret != NOTIFICATION_ERROR_NONE) {
@@ -255,13 +254,13 @@ int notification_ongoing_update_size(const char *caller_pkgname,
 	return NOTIFICATION_ERROR_NONE;
 }
 
-int notification_ongoing_update_content(const char *caller_pkgname,
+int notification_ongoing_update_content(const char *caller_app_id,
 					int priv_id, const char *content)
 {
 	GVariant *param;
 	int ret;
 
-	param = g_variant_new("(sis)", caller_pkgname, priv_id, content);
+	param = g_variant_new("(sis)", caller_app_id, priv_id, content);
 
 	ret = __send_ongoing_update_signal(MEMBER_CONTENT, param);
 	if (ret != NOTIFICATION_ERROR_NONE) {

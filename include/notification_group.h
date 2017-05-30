@@ -20,30 +20,30 @@
 #include <notification.h>
 
 NOTIFICATION_DEPRECATED_API int notification_group_set_title(
-		const char *pkgname, int group_id, const char *title,
+		const char *app_id, int group_id, const char *title,
 		const char *loc_title,
 		notification_count_display_type_e count_display);
 
 NOTIFICATION_DEPRECATED_API int notification_group_get_title(
-		const char *pkgname, int group_id, char **ret_title,
+		const char *app_id, int group_id, char **ret_title,
 		char **ret_loc_title,
 		notification_count_display_type_e *count_display);
 
 NOTIFICATION_DEPRECATED_API int notification_group_set_content(
-		const char *pkgname, int group_id, const char *content,
+		const char *app_id, int group_id, const char *content,
 		const char *loc_content,
 		notification_count_display_type_e count_display);
 
 NOTIFICATION_DEPRECATED_API int notification_group_get_content(
-		const char *pkgname, int group_id, char **ret_content,
+		const char *app_id, int group_id, char **ret_content,
 		char **ret_loc_content,
 		notification_count_display_type_e *count_display);
 
 NOTIFICATION_DEPRECATED_API int notification_group_set_badge(
-		const char *pkgname, int group_id, int count);
+		const char *app_id, int group_id, int count);
 
 NOTIFICATION_DEPRECATED_API int notification_group_get_badge(
-		const char *pkgname, int group_id, int *count);
+		const char *app_id, int group_id, int *count);
 
 #endif /* __NOTIFICATION_GROUP_H__ */
 

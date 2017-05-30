@@ -45,8 +45,8 @@ struct _notification {
 	int priv_id;		/* Private ID */
 
 	char *pkg_id;
-	char *caller_pkgname;	/* Caller App package name */
-	char *launch_pkgname;	/* Launch App package name. It will be from appsvc_set_pkgname */
+	char *caller_app_id;	/* Caller App ID */
+	char *launch_app_id;	/* Launch App ID */
 	bundle *args;		/* Will be removed. */
 	bundle *group_args;	/* Will be removed. */
 
@@ -112,8 +112,8 @@ typedef enum notification_data_type {
 	NOTIFICATION_DATA_TYPE_INTERNAL_GROUP_ID,
 	NOTIFICATION_DATA_TYPE_PRIV_ID,
 	NOTIFICATION_DATA_TYPE_PKG_ID,
-	NOTIFICATION_DATA_TYPE_CALLER_PKGNAME,
-	NOTIFICATION_DATA_TYPE_LAUNCH_PKGNAME,
+	NOTIFICATION_DATA_TYPE_CALLER_APP_ID,
+	NOTIFICATION_DATA_TYPE_LAUNCH_APP_ID,
 	NOTIFICATION_DATA_TYPE_ARGS,
 	NOTIFICATION_DATA_TYPE_GROUP_ARGS,
 	NOTIFICATION_DATA_TYPE_EXECUTE_OPTION,
@@ -174,7 +174,7 @@ void notification_call_changed_cb_for_uid(notification_op *op_list, int op_num, 
 void notification_call_dnd_changed_cb_for_uid(int do_not_disturb, uid_t uid);
 void notification_call_event_handler_cb(notification_h noti, int event_type);
 void notification_delete_event_handler_cb(int priv_id);
-char *notification_get_pkgname_by_pid(void);
+char *notification_get_app_id_by_pid(void);
 
 #endif /* __NOTIFICATION_PRIVATE_H__ */
 

@@ -255,14 +255,14 @@ NOTIFICATION_DEPRECATED_API int notification_get_content(notification_h noti,
  * @see notification_set_execute_option()
  *
  */
-NOTIFICATION_DEPRECATED_API int notification_set_application(notification_h noti, const char *pkgname);	/* Do not use this */
+NOTIFICATION_DEPRECATED_API int notification_set_application(notification_h noti, const char *app_id);	/* Do not use this */
 
 /**
  * @brief This function will be removed.
  * @see notification_get_execute_option()
  *
  */
-NOTIFICATION_DEPRECATED_API int notification_get_application(notification_h noti, char **pkgname);	/* Do not use this */
+NOTIFICATION_DEPRECATED_API int notification_get_application(notification_h noti, char **app_id);	/* Do not use this */
 
 /**
  * @brief This function will be deprecated.
@@ -292,7 +292,7 @@ NOTIFICATION_DEPRECATED_API int notification_get_grouping_list(notification_type
  * @see notification_delete_by_priv_id()
  *
  */
-NOTIFICATION_DEPRECATED_API int notification_delete_group_by_group_id(const char *pkgname,
+NOTIFICATION_DEPRECATED_API int notification_delete_group_by_group_id(const char *app_id,
 							   notification_type_e type,
 							   int group_id);
 
@@ -301,7 +301,7 @@ NOTIFICATION_DEPRECATED_API int notification_delete_group_by_group_id(const char
  * @see notification_delete_by_priv_id()
  *
  */
-NOTIFICATION_DEPRECATED_API int notification_delete_group_by_priv_id(const char *pkgname,
+NOTIFICATION_DEPRECATED_API int notification_delete_group_by_priv_id(const char *app_id,
 							  notification_type_e type,
 							  int priv_id);
 /**
@@ -309,7 +309,7 @@ NOTIFICATION_DEPRECATED_API int notification_delete_group_by_priv_id(const char 
  *
  */
 NOTIFICATION_DEPRECATED_API int notification_get_count(notification_type_e type,
-					    const char *pkgname,
+					    const char *app_id,
 					    int group_id, int priv_id,
 					    int *count);
 
@@ -365,12 +365,19 @@ NOTIFICATION_DEPRECATED_API int notification_op_get_data(notification_op *noti_o
 						       notification_op_data_type_e type,
 						       void *data);
 
+
+/**
+ * @brief This function will be deprecated.
+ * @see notification_set_app_id()
+ */
+NOTIFICATION_DEPRECATED_API int notification_set_pkgname(notification_h noti,
+					      const char *pkgname);
+
 /**
  * @internal
- * @brief This function will be deprecated.
- * @details Caller_pkgname is set automatically when notification_new() is called. We do not recommend to use this API.
+ * @details caller_app_id is set automatically when notification_create() is called. We do not recommend to use this API.
  * @param[in] noti Notification handle
- * @param[in] pkgname Caller package name
+ * @param[in] app_id Caller application id
  * @return NOTIFICATION_ERROR_NONE on success, other value on failure
  * @retval NOTIFICATION_ERROR_NONE Success
  * @retval NOTIFICATION_ERROR_INVALID_PARAMETER Invalid input value
@@ -382,12 +389,12 @@ NOTIFICATION_DEPRECATED_API int notification_op_get_data(notification_op *noti_o
 	notification_h noti = NULL;
 	int noti_err = NOTIFICATION_ERROR_NONE;
 
-	noti = notification_new(NOTIFICATION_TYPE_NOTI, APP_GROUP_ID, NOTIFICATION_PRIV_ID_NONE);
+	noti = notification_create(NOTIFICATION_TYPE_NOTI);
 	if (noti == NULL) {
 		return;
 	}
 
-	noti_err  = notification_set_pkgname(noti, "org.tizen.phone");
+	noti_err  = notification_set_app_id(noti, "org.tizen.phone");
 	if (noti_err != NOTIFICATION_ERROR_NONE) {
 		notification_free(noti);
 		return;
@@ -395,14 +402,13 @@ NOTIFICATION_DEPRECATED_API int notification_op_get_data(notification_op *noti_o
 }
  * @endcode
  */
-NOTIFICATION_DEPRECATED_API int notification_set_pkgname(notification_h noti,
-					      const char *pkgname);
+int notification_set_app_id(notification_h noti, const char *app_id);
 
 /**
  * @internal
  * @brief This function will be deprecated.
- * @details If @a pkgname is NULL, caller_pkgname is set internally.
- * @param[in] pkgname Caller application package name or NULL
+ * @details If @a app_id is NULL, caller_app_id is set internally.
+ * @param[in] app_id Caller application ID or NULL
  * @param[in] type Notification type
  * @return NOTIFICATION_ERROR_NONE if success, other value if failure
  * @retval NOTIFICATION_ERROR_NONE Success
@@ -421,14 +427,14 @@ NOTIFICATION_DEPRECATED_API int notification_set_pkgname(notification_h noti,
 }
  * @endcode
  */
-NOTIFICATION_DEPRECATED_API int notification_delete_all_by_type(const char *pkgname,
+NOTIFICATION_DEPRECATED_API int notification_delete_all_by_type(const char *app_id,
 						     notification_type_e type);
 
 /**
  * @internal
  * @brief This function will be deprecated.
- * @details If @a pkgname is NULL, caller_pkgname is set internally.
- * @param[in] pkgname Caller application package name or NULL
+ * @details If @a app_id is NULL, caller_app_id is set internally.
+ * @param[in] app_id Caller application ID or NULL
  * @param[in] type Notification type
  * @param[in] priv_id Priv ID
  * @return NOTIFICATION_ERROR_NONE if success, other value if failure
@@ -448,7 +454,7 @@ NOTIFICATION_DEPRECATED_API int notification_delete_all_by_type(const char *pkgn
 }
  * @endcode
  */
-NOTIFICATION_DEPRECATED_API int notification_delete_by_priv_id(const char *pkgname,
+NOTIFICATION_DEPRECATED_API int notification_delete_by_priv_id(const char *app_id,
 						    notification_type_e type,
 						    int priv_id);
 
@@ -560,7 +566,7 @@ int notification_set_priv_id(notification_h noti, int priv_id);
 }
  * @endcode
  */
-NOTIFICATION_DEPRECATED_API notification_h notification_load(char *pkgname,
+NOTIFICATION_DEPRECATED_API notification_h notification_load(char *app_id,
 				int priv_id);
 
 /**
@@ -1327,7 +1333,7 @@ int notification_update_for_uid(notification_h noti, uid_t uid);
 int notification_delete_for_uid(notification_h noti, uid_t uid);
 int notification_delete_all_for_uid(notification_type_e type, uid_t uid);
 notification_h notification_load_by_tag_for_uid(const char *tag, uid_t uid);
-notification_h notification_create_from_package_template(const char *pkgname,
+notification_h notification_create_from_package_template(const char *app_id,
 					const char *template_name);
 /**
  * @brief Gets a max length of text input.

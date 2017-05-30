@@ -23,7 +23,7 @@
 #include <notification_db.h>
 
 /* LCOV_EXCL_START */
-static int _notification_group_check_data_inserted(const char *pkgname,
+static int _notification_group_check_data_inserted(const char *app_id,
 						   int group_id, sqlite3 *db)
 {
 	sqlite3_stmt *stmt = NULL;
@@ -32,8 +32,8 @@ static int _notification_group_check_data_inserted(const char *pkgname,
 	int result;
 
 	snprintf(query, sizeof(query),
-		 "select count(*) from noti_group_data where caller_pkgname = '%s' and group_id = %d",
-		 pkgname, group_id);
+		 "select count(*) from noti_group_data where caller_app_id = '%s' and group_id = %d",
+		 app_id, group_id);
 
 	ret = sqlite3_prepare(db, query, strlen(query), &stmt, NULL);
 	if (ret != SQLITE_OK) {
@@ -62,7 +62,7 @@ static int _notification_group_check_data_inserted(const char *pkgname,
 /* LCOV_EXCL_STOP */
 
 /* LCOV_EXCL_START */
-int notification_group_set_badge(const char *pkgname,
+int notification_group_set_badge(const char *app_id,
 						  int group_id, int count)
 {
 	sqlite3 *db;
@@ -75,20 +75,20 @@ int notification_group_set_badge(const char *pkgname,
 	if (!db)
 		return get_last_result();
 
-	ret = _notification_group_check_data_inserted(pkgname, group_id, db);
+	ret = _notification_group_check_data_inserted(app_id, group_id, db);
 
 	if (ret == NOTIFICATION_ERROR_NONE) {
 		/* Insert if does not exist */
 		snprintf(query, sizeof(query), "insert into noti_group_data ("
-			 "caller_pkgname, group_id, badge, content, loc_content) values ("
-			 "'%s', %d, %d, '', '')", pkgname, group_id, count);
+			 "caller_app_id, group_id, badge, content, loc_content) values ("
+			 "'%s', %d, %d, '', '')", app_id, group_id, count);
 
 	} else {
 		/* Update if exist */
 		snprintf(query, sizeof(query), "update noti_group_data "
 			 "set badge = %d "
-			 "where caller_pkgname = '%s' and group_id = %d",
-			 count, pkgname, group_id);
+			 "where caller_app_id = '%s' and group_id = %d",
+			 count, app_id, group_id);
 	}
 
 	ret = sqlite3_prepare_v2(db, query, -1, &stmt, NULL);
@@ -122,7 +122,7 @@ int notification_group_set_badge(const char *pkgname,
 /* LCOV_EXCL_STOP */
 
 /* LCOV_EXCL_START */
-int notification_group_get_badge(const char *pkgname,
+int notification_group_get_badge(const char *app_id,
 						  int group_id, int *count)
 {
 	sqlite3 *db;
@@ -136,26 +136,26 @@ int notification_group_get_badge(const char *pkgname,
 		return get_last_result();
 
 	if (group_id == NOTIFICATION_GROUP_ID_NONE) {
-		ret = _notification_group_check_data_inserted(pkgname, group_id, db);
+		ret = _notification_group_check_data_inserted(app_id, group_id, db);
 		if (ret == NOTIFICATION_ERROR_NONE)
-			/* Get all of pkgname count if none group id is not exist */
+			/* Get all of app_id count if none group id is not exist */
 			snprintf(query, sizeof(query),
 				 "select sum(badge) "
 				 "from noti_group_data "
-				 "where caller_pkgname = '%s'", pkgname);
+				 "where caller_app_id = '%s'", app_id);
 		else
 			/* Get none group id count */
 			snprintf(query, sizeof(query),
 				 "select badge "
 				 "from noti_group_data "
-				 "where caller_pkgname = '%s' and group_id = %d",
-				 pkgname, group_id);
+				 "where caller_app_id = '%s' and group_id = %d",
+				 app_id, group_id);
 	} else {
 		snprintf(query, sizeof(query),
 			 "select badge "
 			 "from noti_group_data "
-			 "where caller_pkgname = '%s' and group_id = %d",
-			 pkgname, group_id);
+			 "where caller_app_id = '%s' and group_id = %d",
+			 app_id, group_id);
 	}
 
 	NOTIFICATION_INFO("Get badge : query[%s]", query);

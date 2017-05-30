@@ -64,14 +64,14 @@ EXPORT_API int notification_setting_get_setting_array(notification_setting_h *se
 	return notification_setting_get_setting_array_for_uid(setting_array, count, getuid());
 }
 
-EXPORT_API int notification_setting_get_setting_by_appid_for_uid(const char *appid, notification_setting_h *setting, uid_t uid)
+EXPORT_API int notification_setting_get_setting_by_appid_for_uid(const char *app_id, notification_setting_h *setting, uid_t uid)
 {
-	if (appid == NULL || setting == NULL) {
+	if (app_id == NULL || setting == NULL) {
 		NOTIFICATION_ERR("NOTIFICATION_ERROR_INVALID_PARAMETER");
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 	}
 
-	return notification_ipc_request_get_setting_by_appid(appid, setting, uid);
+	return notification_ipc_request_get_setting_by_app_id(app_id, setting, uid);
 }
 
 /* LCOV_EXCL_START */
@@ -87,7 +87,7 @@ EXPORT_API int notification_setting_get_setting(notification_setting_h *setting)
 	int ret;
 	char *package_name = NULL;
 
-	package_name = notification_get_pkgname_by_pid();
+	package_name = notification_get_app_id_by_pid();
 
 	if (package_name == NULL)
 		return NOTIFICATION_ERROR_NOT_EXIST_ID;
@@ -117,19 +117,19 @@ EXPORT_API int notification_setting_get_package_name(notification_setting_h sett
 	return NOTIFICATION_ERROR_NONE;
 }
 
-EXPORT_API int notification_setting_get_appid(notification_setting_h setting, char **appid)
+EXPORT_API int notification_setting_get_appid(notification_setting_h setting, char **app_id)
 {
-	if (setting == NULL || appid == NULL) {
+	if (setting == NULL || app_id == NULL) {
 		NOTIFICATION_ERR("Invalid parameter");
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 	}
 
-	if (setting->appid == NULL) {
-		NOTIFICATION_ERR("setting->appid is null");
+	if (setting->app_id == NULL) {
+		NOTIFICATION_ERR("setting->app_id is null");
 		return NOTIFICATION_ERROR_NOT_EXIST_ID;
 	}
 
-	*appid = SAFE_STRDUP(setting->appid);
+	*app_id = SAFE_STRDUP(setting->app_id);
 
 	return NOTIFICATION_ERROR_NONE;
 }
@@ -287,7 +287,7 @@ EXPORT_API int notification_setting_free_notification(notification_setting_h set
 	}
 
 	SAFE_FREE(setting->package_name);
-	SAFE_FREE(setting->appid);
+	SAFE_FREE(setting->app_id);
 
 	/* add codes to free all properties */
 
@@ -296,15 +296,15 @@ EXPORT_API int notification_setting_free_notification(notification_setting_h set
 	return NOTIFICATION_ERROR_NONE;
 }
 
-static bool _is_package_in_setting_table(sqlite3 *db, const char *package_name, const char* appid, uid_t uid)
+static bool _is_package_in_setting_table(sqlite3 *db, const char *package_name, const char* app_id, uid_t uid)
 {
 	sqlite3_stmt *db_statement = NULL;
 	int sqlite3_ret = SQLITE_OK;
 	bool err = true;
 	int field_index = 1;
 
-	if (appid != NULL)
-		sqlite3_ret = sqlite3_prepare_v2(db, "SELECT appid FROM notification_setting WHERE uid = ? AND package_name = ? AND appid = ?", -1, &db_statement, NULL);
+	if (app_id != NULL)
+		sqlite3_ret = sqlite3_prepare_v2(db, "SELECT app_id FROM notification_setting WHERE uid = ? AND package_name = ? AND app_id = ?", -1, &db_statement, NULL);
 	else
 		sqlite3_ret = sqlite3_prepare_v2(db, "SELECT package_name FROM notification_setting WHERE uid = ? AND package_name = ?", -1, &db_statement, NULL);
 
@@ -316,12 +316,12 @@ static bool _is_package_in_setting_table(sqlite3 *db, const char *package_name, 
 
 	sqlite3_bind_int(db_statement, field_index++, uid);
 	sqlite3_bind_text(db_statement, field_index++, package_name, -1, SQLITE_TRANSIENT);
-	if (appid != NULL)
-		sqlite3_bind_text(db_statement, field_index++, appid, -1, SQLITE_TRANSIENT);
+	if (app_id != NULL)
+		sqlite3_bind_text(db_statement, field_index++, app_id, -1, SQLITE_TRANSIENT);
 
 	sqlite3_ret = sqlite3_step(db_statement);
 	if (sqlite3_ret == SQLITE_DONE) {
-		NOTIFICATION_INFO("no matched appid from package_name found[%s][%s][%d]", package_name, appid, sqlite3_ret);
+		NOTIFICATION_INFO("no matched app_id from package_name found[%s][%s][%d]", package_name, app_id, sqlite3_ret);
 		err = false;
 		goto out;
 	}
@@ -347,10 +347,10 @@ static int foreach_app_info_callback(const pkgmgrinfo_appinfo_h handle, void *us
 	int err = true;
 	int field_index = 1;
 	int sqlite3_ret = SQLITE_OK;
-	char *appid = NULL;
+	char *app_id = NULL;
 	char *package_name = NULL;
 
-	pkgmgr_ret = pkgmgrinfo_appinfo_get_appid(handle, &appid);
+	pkgmgr_ret = pkgmgrinfo_appinfo_get_appid(handle, &app_id);
 	if (pkgmgr_ret != PACKAGE_MANAGER_ERROR_NONE) {
 		NOTIFICATION_ERR("pkgmgrinfo_appinfo_get_appid failed [%d]", pkgmgr_ret);
 		err = false;
@@ -363,14 +363,14 @@ static int foreach_app_info_callback(const pkgmgrinfo_appinfo_h handle, void *us
 		goto out;
 	}
 
-	if (_is_package_in_setting_table(db, package_name, appid, info->uid) == true) {
-		NOTIFICATION_INFO("uid %d [%s] is exist", info->uid, appid);
+	if (_is_package_in_setting_table(db, package_name, app_id, info->uid) == true) {
+		NOTIFICATION_INFO("uid %d [%s] is exist", info->uid, app_id);
 		err = false;
 		goto out;
 	}
 
-	NOTIFICATION_INFO("uid %d package_name %s [%s] will be inserted", info->uid, package_name, appid);
-	sqlite3_ret = sqlite3_prepare_v2(db, "INSERT INTO notification_setting (uid, package_name, appid) "
+	NOTIFICATION_INFO("uid %d package_name %s [%s] will be inserted", info->uid, package_name, app_id);
+	sqlite3_ret = sqlite3_prepare_v2(db, "INSERT INTO notification_setting (uid, package_name, app_id) "
 					 "VALUES (?, ?, ?) ", -1, &db_statement, NULL);
 
 	if (sqlite3_ret != SQLITE_OK) {
@@ -381,7 +381,7 @@ static int foreach_app_info_callback(const pkgmgrinfo_appinfo_h handle, void *us
 
 	sqlite3_bind_int(db_statement, field_index++, info->uid);
 	sqlite3_bind_text(db_statement, field_index++, package_name, -1, SQLITE_TRANSIENT);
-	sqlite3_bind_text(db_statement, field_index++, appid, -1, SQLITE_TRANSIENT);
+	sqlite3_bind_text(db_statement, field_index++, app_id, -1, SQLITE_TRANSIENT);
 
 	sqlite3_ret = sqlite3_step(db_statement);
 

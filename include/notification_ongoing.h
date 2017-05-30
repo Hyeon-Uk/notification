@@ -74,14 +74,14 @@ int notification_ongoing_update_cb_set(notification_ongoing_update_cb callback, 
  */
 int notification_ongoing_update_cb_unset(void);
 
-int notification_ongoing_update_progress(const char *caller_pkgname,
+int notification_ongoing_update_progress(const char *caller_app_id,
 							  int priv_id,
 							  double progress);
 
-int notification_ongoing_update_size(const char *caller_pkgname,
+int notification_ongoing_update_size(const char *caller_app_id,
 						      int priv_id, double size);
 
-int notification_ongoing_update_content(const char *caller_pkgname,
+int notification_ongoing_update_content(const char *caller_app_id,
 						      int priv_id, const char *content);
 
 /**

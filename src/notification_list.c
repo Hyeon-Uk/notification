@@ -275,7 +275,7 @@ EXPORT_API int notification_get_list(notification_type_e type,
 	return notification_get_list_for_uid(type, count, list, getuid());
 }
 
-EXPORT_API int notification_get_detail_list_for_uid(const char *pkgname,
+EXPORT_API int notification_get_detail_list_for_uid(const char *app_id,
 		int group_id,
 		int priv_id,
 		int count,
@@ -285,10 +285,10 @@ EXPORT_API int notification_get_detail_list_for_uid(const char *pkgname,
 	notification_list_h get_list = NULL;
 	int ret = 0;
 
-	if (list == NULL || pkgname == NULL)
+	if (list == NULL || app_id == NULL)
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 
-	ret = notification_ipc_request_load_noti_detail_list(pkgname, group_id, priv_id, count,
+	ret = notification_ipc_request_load_noti_detail_list(app_id, group_id, priv_id, count,
 			&get_list, uid);
 	if (ret != NOTIFICATION_ERROR_NONE)
 		return ret;
@@ -299,13 +299,13 @@ EXPORT_API int notification_get_detail_list_for_uid(const char *pkgname,
 	return NOTIFICATION_ERROR_NONE;
 }
 
-EXPORT_API int notification_get_detail_list(const char *pkgname,
+EXPORT_API int notification_get_detail_list(const char *app_id,
 		int group_id,
 		int priv_id,
 		int count,
 		notification_list_h *list)
 {
-	return notification_get_detail_list_for_uid(pkgname, group_id,
+	return notification_get_detail_list_for_uid(app_id, group_id,
 			priv_id, count, list, getuid());
 }
 

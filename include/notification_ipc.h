@@ -60,35 +60,35 @@ int notification_ipc_request_update_async(notification_h noti,
 		void *user_data);
 int notification_ipc_request_refresh(uid_t uid);
 int notification_ipc_request_delete_multiple(notification_type_e type,
-		char *pkgname, uid_t uid);
+		char *app_id, uid_t uid);
 int notification_ipc_request_delete_single(notification_type_e type,
-		char *pkgname, int priv_id, uid_t uid);
+		char *app_id, int priv_id, uid_t uid);
 int notification_ipc_update_setting(notification_setting_h setting, uid_t uid);
 int notification_ipc_update_system_setting(
 		notification_system_setting_h system_setting, uid_t uid);
 int notification_ipc_request_load_noti_by_tag(notification_h noti,
-		const char *pkgname, const char *tag, uid_t uid);
+		const char *app_id, const char *tag, uid_t uid);
 int notification_ipc_request_load_noti_grouping_list(notification_type_e type,
 		int count,
 		notification_list_h *list, uid_t uid);
 int notification_ipc_request_get_setting_array(
 		notification_setting_h *setting_array, int *count, uid_t uid);
-int notification_ipc_request_get_setting_by_appid(
-		const char *appid, notification_setting_h *setting, uid_t uid);
+int notification_ipc_request_get_setting_by_app_id(
+		const char *app_id, notification_setting_h *setting, uid_t uid);
 int notification_ipc_request_load_system_setting(
 		notification_system_setting_h *setting, uid_t uid);
 int notification_ipc_request_get_count(notification_type_e type,
-		const char *pkgname, int group_id, int priv_id, int *count, uid_t uid);
+		const char *app_id, int group_id, int priv_id, int *count, uid_t uid);
 int notification_ipc_request_load_noti_by_priv_id(notification_h noti,
-		const char *pkgname, int priv_id, uid_t uid);
-int notification_ipc_request_load_noti_detail_list(const char *pkgname,
+		const char *app_id, int priv_id, uid_t uid);
+int notification_ipc_request_load_noti_detail_list(const char *app_id,
 		int group_id, int priv_id, int count,
 		notification_list_h *list, uid_t uid);
 int notification_ipc_request_save_as_template(notification_h noti, const char *template_name);
 int notification_ipc_request_create_from_template(notification_h noti, const char *template_name);
 int notification_ipc_request_create_from_package_template(notification_h noti,
-		const char *pkgname, const char *template_name);
-int notification_ipc_get_noti_block_state(const char *pkgname, int *do_not_disturb, int *do_not_disturb_except,
+		const char *app_id, const char *template_name);
+int notification_ipc_get_noti_block_state(const char *app_id, int *do_not_disturb, int *do_not_disturb_except,
 					  int *allow_to_notify, uid_t uid);
 GVariant *notification_ipc_make_gvariant_from_dnd_allow_exception(
 		struct notification_system_setting_dnd_allow_exception *dnd_allow_exception);
