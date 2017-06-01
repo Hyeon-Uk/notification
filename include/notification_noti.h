@@ -67,5 +67,8 @@ int notification_noti_add_template(notification_h noti, char *template_name);
 int notification_noti_get_package_template(notification_h noti, char *pkgname, char *template_name);
 int notification_noti_delete_template(const char *pkgname);
 
+int notification_get_default_viewer(const char *path, char **default_viewer);
+int notification_launch_default_viewer(const char *default_viewer, int priv_id);
+
 #endif /* __NOTIFICATION_NOTI_H__ */
 
