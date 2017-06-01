@@ -1543,7 +1543,6 @@ EXPORT_API int notification_clone(notification_h noti, notification_h *clone)
 
 	new_noti->type = noti->type;
 	new_noti->layout = noti->layout;
-
 	new_noti->group_id = noti->group_id;
 	new_noti->internal_group_id = noti->internal_group_id;
 	new_noti->priv_id = noti->priv_id;
@@ -1553,113 +1552,76 @@ EXPORT_API int notification_clone(notification_h noti, notification_h *clone)
 
 	if (noti->caller_pkgname != NULL)
 		new_noti->caller_pkgname = strdup(noti->caller_pkgname);
-	else
-		new_noti->caller_pkgname = notification_get_pkgname_by_pid();
 
 	if (noti->launch_pkgname != NULL)
 		new_noti->launch_pkgname = strdup(noti->launch_pkgname);
-	else
-		new_noti->launch_pkgname = NULL;
 
 	if (noti->args != NULL)
 		new_noti->args = bundle_dup(noti->args);
-	else
-		new_noti->args = NULL;
 
 	if (noti->group_args != NULL)
 		new_noti->group_args = bundle_dup(noti->group_args);
-	else
-		new_noti->group_args = NULL;
 
 	if (noti->b_execute_option != NULL)
 		new_noti->b_execute_option = bundle_dup(noti->b_execute_option);
-	else
-		new_noti->b_execute_option = NULL;
 
 	if (noti->b_service_responding != NULL)
 		new_noti->b_service_responding = bundle_dup(noti->b_service_responding);
-	else
-		new_noti->b_service_responding = NULL;
 
 	if (noti->b_service_single_launch != NULL)
 		new_noti->b_service_single_launch = bundle_dup(noti->b_service_single_launch);
-	else
-		new_noti->b_service_single_launch = NULL;
 
 	if (noti->b_service_multi_launch != NULL)
 		new_noti->b_service_multi_launch = bundle_dup(noti->b_service_multi_launch);
-	else
-		new_noti->b_service_multi_launch = NULL;
 
 	for (i = 0; i <= NOTIFICATION_EVENT_TYPE_MAX; i++) {
 		if (noti->b_event_handler[i] != NULL)
 			new_noti->b_event_handler[i] = bundle_dup(noti->b_event_handler[i]);
-		else
-			new_noti->b_event_handler[i] = NULL;
 	}
-
-	new_noti->sound_type = noti->sound_type;
-	if (noti->sound_path != NULL)
-		new_noti->sound_path = strdup(noti->sound_path);
-	else
-		new_noti->sound_path = NULL;
-
-	new_noti->vibration_type = noti->vibration_type;
-	if (noti->vibration_path != NULL)
-		new_noti->vibration_path = strdup(noti->vibration_path);
-	else
-		new_noti->vibration_path = NULL;
-
-	new_noti->led_operation = noti->led_operation;
-	new_noti->led_argb = noti->led_argb;
-	new_noti->led_on_ms = noti->led_on_ms;
-	new_noti->led_off_ms = noti->led_off_ms;
 
 	if (noti->domain != NULL)
 		new_noti->domain = strdup(noti->domain);
-	else
-		new_noti->domain = NULL;
 
 	if (noti->dir != NULL)
 		new_noti->dir = strdup(noti->dir);
-	else
-		new_noti->dir = NULL;
 
 	if (noti->b_text != NULL)
 		new_noti->b_text = bundle_dup(noti->b_text);
-	else
-		new_noti->b_text = NULL;
 
 	if (noti->b_key != NULL)
 		new_noti->b_key = bundle_dup(noti->b_key);
-	else
-		new_noti->b_key = NULL;
-
-	if (noti->tag != NULL)
-		new_noti->tag = strdup(noti->tag);
-	else
-		new_noti->tag = NULL;
 
 	if (noti->b_format_args != NULL)
 		new_noti->b_format_args = bundle_dup(noti->b_format_args);
-	else
-		new_noti->b_format_args = NULL;
 
 	new_noti->num_format_args = noti->num_format_args;
 
 	if (noti->b_image_path != NULL)
 		new_noti->b_image_path = bundle_dup(noti->b_image_path);
-	else
-		new_noti->b_image_path = NULL;
 
+	new_noti->sound_type = noti->sound_type;
+
+	if (noti->sound_path != NULL)
+		new_noti->sound_path = strdup(noti->sound_path);
+
+	new_noti->vibration_type = noti->vibration_type;
+
+	if (noti->vibration_path != NULL)
+		new_noti->vibration_path = strdup(noti->vibration_path);
+
+	new_noti->led_operation = noti->led_operation;
+	new_noti->led_argb = noti->led_argb;
+	new_noti->led_on_ms = noti->led_on_ms;
+	new_noti->led_off_ms = noti->led_off_ms;
 	new_noti->time = noti->time;
 	new_noti->insert_time = noti->insert_time;
-
 	new_noti->flags_for_property = noti->flags_for_property;
 	new_noti->display_applist = noti->display_applist;
-
 	new_noti->progress_size = noti->progress_size;
 	new_noti->progress_percentage = noti->progress_percentage;
+
+	if (noti->tag != NULL)
+		new_noti->tag = strdup(noti->tag);
 
 	new_noti->ongoing_flag = noti->ongoing_flag;
 	new_noti->ongoing_value_type = noti->ongoing_value_type;
@@ -1671,15 +1633,9 @@ EXPORT_API int notification_clone(notification_h noti, notification_h *clone)
 	new_noti->delete_timeout = noti->delete_timeout;
 	new_noti->text_input_max_length = noti->text_input_max_length;
 	new_noti->event_flag = noti->event_flag;
+	new_noti->is_translation = noti->is_translation;
 	new_noti->extension_image_size = noti->extension_image_size;
 	new_noti->uid = noti->uid;
-
-	new_noti->app_icon_path = NULL;
-	new_noti->app_name = NULL;
-	new_noti->temp_title = NULL;
-	new_noti->temp_content = NULL;
-
-	new_noti->is_translation = noti->is_translation;
 
 	*clone = new_noti;
 
