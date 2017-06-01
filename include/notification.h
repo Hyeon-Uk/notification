@@ -216,6 +216,11 @@ int notification_get_insert_time(notification_h noti, time_t *ret_time);
  *          If the value is #NOTIFICATION_COUNT_POS_IN, count is displayed in the text when text has %d format.
  *          If the value is #NOTIFICATION_COUNT_POS_RIGHT, count is displayed at the right of the text.
  *          Variable parameters should be terminated #NOTIFICATION_VARIABLE_TYPE_NONE.
+ *
+ *          Note that You can display the translated contents according to the language of the system.
+ *          The application must supply a String KEY as the fourth argument to support localization.
+ *          If the language on the system changes, the contents of the notification are also translated.
+ *
  * @since_tizen @if WEARABLE 2.3.1 @elseif MOBILE 2.3 @endif
  * @param[in] noti The notification handle
  * @param[in] type The notification text type
@@ -239,8 +244,8 @@ int notification_get_insert_time(notification_h noti, time_t *ret_time);
 	if (noti == NULL)
 		return;
 
-	noti_err = notification_set_text(noti, NOTIFICATION_TEXT_TYPE_TITLE, "I'm Title",
-					"IDS_APP_BODY_IM_TITLE", NOTIFICATION_VARIABLE_TYPE_NONE);
+	noti_err = notification_set_text(noti, NOTIFICATION_TEXT_TYPE_TITLE,
+			"I'm Title", "IDS_APP_BODY_IM_TITLE", NOTIFICATION_VARIABLE_TYPE_NONE);
 	if (noti_err != NOTIFICATION_ERROR_NONE) {
 		notification_free(noti);
 		return;
@@ -1504,13 +1509,21 @@ int notification_get_auto_remove(notification_h noti, bool *auto_remove);
 
 {
 	int noti_err = NOTIFICATION_ERROR_NONE;
+	notification_h noti = NULL;
 
-	// Do something
+	noti = notification_create(NOTIFICATION_TYPE_NOTI);
+	if (noti == NULL)
+		return;
+
+	// add the content you want to use for the template.
 
 	noti_err = notification_save_as_template(noti, "CALL_ACCEPT");
 	if (noti_err != NOTIFICATION_ERROR_NONE)
 		return;
 
+	noti_err = notification_free(noti);
+	if (noti_err != NOTIFICATION_ERROR_NONE)
+		return;
 }
  * @endcode
  */
