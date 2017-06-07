@@ -1447,13 +1447,6 @@ static notification_h _notification_create(notification_type_e type)
 				NOTIFICATION_DISPLAY_APP_TICKER |
 				NOTIFICATION_DISPLAY_APP_INDICATOR;
 	noti->auto_remove = true;
-	noti->ongoing_flag = false;
-	noti->default_button_index = 0;
-	noti->ongoing_value_type = NOTIFICATION_ONGOING_VALUE_TYPE_PERCENT;
-	noti->hide_timeout = 0;
-	noti->delete_timeout = 0;
-	noti->event_flag = false;
-	noti->is_translation = false;
 	noti->caller_pkgname = notification_get_pkgname_by_pid();
 	if (noti->caller_pkgname == NULL) {
 		NOTIFICATION_ERR("get_pkgname_by_pid is failed");
