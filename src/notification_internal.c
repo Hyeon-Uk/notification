@@ -66,7 +66,7 @@ static GList *__noti_event_cb_list = NULL;
 void notification_reset_event_handler_list(void)
 {
 	GList *iter;
-	notification_event_cb_info_s *info = NULL;
+	notification_event_cb_info_s *info;
 
 	if (!__noti_event_cb_list)
 		return;
@@ -91,15 +91,14 @@ static void __free_changed_cb_info(gpointer data)
 
 void notification_call_changed_cb_for_uid(notification_op *op_list, int op_num, uid_t uid)
 {
-	notification_type_e type = 0;
-	GList *noti_cb_list = NULL;
-	notification_cb_info_s *noti_cb_info = NULL;
+	notification_type_e type = NOTIFICATION_TYPE_NOTI;
+	GList *noti_cb_list;
+	notification_cb_info_s *noti_cb_info;
 
 	if (_noti_cb_hash == NULL)
 		return;
 
 	noti_cb_list = (GList *)g_hash_table_lookup(_noti_cb_hash, GUINT_TO_POINTER(uid));
-
 	if (noti_cb_list == NULL)
 		return;
 
@@ -166,7 +165,7 @@ void notification_call_event_handler_cb(notification_h noti, int event_type)
 void notification_delete_event_handler_cb(int priv_id)
 {
 	GList *delete_list;
-	notification_event_cb_info_s *info = NULL;
+	notification_event_cb_info_s *info;
 
 	if (__noti_event_cb_list == NULL)
 		return;
@@ -210,8 +209,8 @@ EXPORT_API int notification_resister_changed_cb_for_uid(
 		void (*changed_cb)(void *data, notification_type_e type),
 		void *user_data, uid_t uid)
 {
-	GList *noti_cb_list = NULL;
-	notification_cb_info_s *noti_cb_info_new = NULL;
+	GList *noti_cb_list;
+	notification_cb_info_s *noti_cb_info_new;
 
 	if (changed_cb == NULL)
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
@@ -269,9 +268,9 @@ static gint _noti_changed_compare(gconstpointer a, gconstpointer b)
 EXPORT_API int notification_unresister_changed_cb_for_uid(
 		void (*changed_cb)(void *data, notification_type_e type), uid_t uid)
 {
-	notification_cb_info_s *noti_cb_info = NULL;
-	GList *noti_cb_list = NULL;
-	GList *delete_cb_list = NULL;
+	notification_cb_info_s *noti_cb_info;
+	GList *noti_cb_list;
+	GList *delete_cb_list;
 
 	if (changed_cb == NULL)
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
@@ -280,14 +279,12 @@ EXPORT_API int notification_unresister_changed_cb_for_uid(
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 
 	noti_cb_list = (GList *)g_hash_table_lookup(_noti_cb_hash, GUINT_TO_POINTER(uid));
-
 	if (noti_cb_list == NULL)
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 
 	noti_cb_list = g_list_first(noti_cb_list);
 	delete_cb_list = g_list_find_custom(noti_cb_list, (gconstpointer)changed_cb,
 					    (GCompareFunc)_noti_changed_compare);
-
 	if (delete_cb_list) {
 		noti_cb_info = g_list_nth_data(delete_cb_list, 0);
 		noti_cb_list = g_list_delete_link(noti_cb_list, delete_cb_list);
@@ -320,17 +317,16 @@ EXPORT_API int notification_update_progress(notification_h noti,
 		int priv_id,
 		double progress)
 {
-	char *caller_app_id = NULL;
-	int input_priv_id = 0;
-	int ret = 0;
-	double input_progress = 0.0;
+	int ret;
+	int input_priv_id;
+	char *caller_app_id;
+	double input_progress;
 
 	if (priv_id <= NOTIFICATION_PRIV_ID_NONE) {
 		if (noti == NULL)
 			return NOTIFICATION_ERROR_INVALID_PARAMETER;
 		else
 			input_priv_id = noti->priv_id;
-
 	} else {
 		input_priv_id = priv_id;
 	}
@@ -360,10 +356,10 @@ EXPORT_API int notification_update_size(notification_h noti,
 		int priv_id,
 		double size)
 {
-	char *caller_app_id = NULL;
-	int input_priv_id = 0;
-	int ret = 0;
-	double input_size = 0.0;
+	int ret;
+	int input_priv_id;
+	char *caller_app_id;
+	double input_size;
 
 	if (priv_id <= NOTIFICATION_PRIV_ID_NONE) {
 		if (noti == NULL)
@@ -397,9 +393,9 @@ EXPORT_API int notification_update_content(notification_h noti,
 		int priv_id,
 		const char *content)
 {
-	char *caller_app_id = NULL;
-	int input_priv_id = 0;
-	int ret = 0;
+	char *caller_app_id;
+	int input_priv_id;
+	int ret;
 
 	if (priv_id <= NOTIFICATION_PRIV_ID_NONE) {
 		if (noti == NULL)
@@ -666,8 +662,8 @@ EXPORT_API int notification_delete_group_by_group_id(const char *app_id,
 		notification_type_e type,
 		int group_id)
 {
-	int ret = 0;
-	char *caller_app_id = NULL;
+	int ret;
+	char *caller_app_id;
 
 	if (app_id == NULL)
 		caller_app_id = notification_get_app_id_by_pid();
@@ -688,8 +684,8 @@ int notification_delete_group_by_priv_id_for_uid(const char *app_id,
 		notification_type_e type,
 		int priv_id, uid_t uid)
 {
-	int ret = 0;
-	char *caller_app_id = NULL;
+	int ret;
+	char *caller_app_id;
 
 	if (app_id == NULL)
 		caller_app_id = notification_get_app_id_by_pid();
@@ -719,8 +715,8 @@ int notification_get_count_for_uid(notification_type_e type,
 		int priv_id, int *count,
 		uid_t uid)
 {
-	int ret = 0;
-	char *caller_app_id = NULL;
+	int ret;
+	char *caller_app_id;
 
 	if (count == NULL)
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
@@ -829,8 +825,8 @@ EXPORT_API int notification_set_app_id(notification_h noti,
 int notification_delete_all_by_type_for_uid(const char *app_id,
 		notification_type_e type, uid_t uid)
 {
-	int ret = 0;
-	char *caller_app_id = NULL;
+	int ret;
+	char *caller_app_id;
 
 	if (type <= NOTIFICATION_TYPE_NONE || type > NOTIFICATION_TYPE_MAX)
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
@@ -861,8 +857,8 @@ int notification_delete_by_priv_id_for_uid(const char *app_id,
 		int priv_id,
 		uid_t uid)
 {
-	int ret = 0;
-	char *caller_app_id = NULL;
+	int ret;
+	char *caller_app_id;
 
 	if (priv_id <= NOTIFICATION_PRIV_ID_NONE)
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
@@ -1005,8 +1001,8 @@ EXPORT_API int notification_set_priv_id(notification_h noti, int priv_id)
 notification_h notification_load_for_uid(char *app_id,
 		int priv_id, uid_t uid)
 {
-	int ret = 0;
-	notification_h noti = NULL;
+	int ret;
+	notification_h noti;
 
 	noti = (notification_h)calloc(1, sizeof(struct _notification));
 	if (noti == NULL) {
@@ -1117,8 +1113,8 @@ EXPORT_API int notification_get_execute_option(notification_h noti,
 EXPORT_API int notification_insert_for_uid(notification_h noti,
 		int *priv_id, uid_t uid)
 {
-	int ret = 0;
-	int id = 0;
+	int ret;
+	int id;
 
 	if (noti == NULL)
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
@@ -1233,9 +1229,9 @@ EXPORT_API int notification_unregister_detailed_changed_cb_for_uid(
 		void (*detailed_changed_cb)(void *data, notification_type_e type, notification_op *op_list, int num_op),
 		void *user_data, uid_t uid)
 {
-	notification_cb_info_s *noti_cb_info = NULL;
-	GList *noti_cb_list = NULL;
-	GList *delete_cb_list = NULL;
+	notification_cb_info_s *noti_cb_info;
+	GList *noti_cb_list;
+	GList *delete_cb_list;
 
 	if (detailed_changed_cb == NULL)
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
@@ -1350,7 +1346,6 @@ EXPORT_API int notification_update_for_uid(notification_h noti, uid_t uid)
 
 EXPORT_API int notification_delete_for_uid(notification_h noti, uid_t uid)
 {
-
 	if (noti == NULL)
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 
@@ -1378,9 +1373,9 @@ EXPORT_API int notification_delete_all_for_uid(notification_type_e type, uid_t u
 
 EXPORT_API notification_h notification_load_by_tag_for_uid(const char *tag, uid_t uid)
 {
-	int ret = 0;
-	notification_h noti = NULL;
-	char *caller_app_id = NULL;
+	int ret;
+	notification_h noti;
+	char *caller_app_id;
 
 	if (tag == NULL) {
 		NOTIFICATION_ERR("Invalid parameter");
@@ -1422,8 +1417,8 @@ EXPORT_API notification_h notification_load_by_tag_for_uid(const char *tag, uid_
 
 EXPORT_API notification_h notification_create_from_package_template(const char *app_id, const char *template_name)
 {
-	int ret = 0;
-	notification_h noti = NULL;
+	int ret;
+	notification_h noti;
 
 	if (app_id == NULL || template_name == NULL) {
 		NOTIFICATION_ERR("Invalid parameter");
@@ -1439,7 +1434,6 @@ EXPORT_API notification_h notification_create_from_package_template(const char *
 	}
 
 	ret = notification_ipc_request_create_from_package_template(noti, app_id, template_name);
-
 	set_last_result(ret);
 	if (ret != NOTIFICATION_ERROR_NONE) {
 		notification_free(noti);
