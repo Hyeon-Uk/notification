@@ -502,7 +502,7 @@ EXPORT_API int notification_set_title(notification_h noti,
 {
 	return notification_set_text(noti, NOTIFICATION_TEXT_TYPE_TITLE,
 				title, loc_title,
-				NOTIFICATION_VARIABLE_TYPE_NONE);;
+				NOTIFICATION_VARIABLE_TYPE_NONE);
 }
 /* LCOV_EXCL_STOP */
 
