@@ -849,10 +849,7 @@ EXPORT_API int notification_set_time_to_text(notification_h noti, notification_t
 	char buf[256] = { 0, };
 	char buf_tag[512] = { 0, };
 
-	if (noti == NULL)
-		return NOTIFICATION_ERROR_INVALID_PARAMETER;
-
-	if (time <= 0)
+	if (noti == NULL || time <= 0)
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 
 	if (type <= NOTIFICATION_TEXT_TYPE_NONE
@@ -875,10 +872,7 @@ EXPORT_API int notification_get_time_from_text(notification_h noti, notification
 	char *ret_text = NULL;
 	char *tag_value;
 
-	if (noti == NULL)
-		return NOTIFICATION_ERROR_INVALID_PARAMETER;
-
-	if (time == NULL)
+	if (noti == NULL || time == NULL)
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 
 	if (type <= NOTIFICATION_TEXT_TYPE_NONE
@@ -886,7 +880,6 @@ EXPORT_API int notification_get_time_from_text(notification_h noti, notification
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 
 	ret = notification_get_text(noti, type, &ret_text);
-
 	if (ret != NOTIFICATION_ERROR_NONE || ret_text == NULL)
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 
@@ -1102,10 +1095,7 @@ EXPORT_API int notification_get_launch_option(notification_h noti,
 	app_control_h *app_control = (app_control_h *)option;
 	app_control_h app_control_new = NULL;
 
-	if (noti == NULL)
-		return NOTIFICATION_ERROR_INVALID_PARAMETER;
-
-	if (app_control == NULL)
+	if (noti == NULL || app_control == NULL)
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 
 	if (type != NOTIFICATION_LAUNCH_OPTION_APP_CONTROL)
@@ -1176,13 +1166,7 @@ EXPORT_API int notification_get_event_handler(notification_h noti, notification_
 	bundle *b = NULL;
 	app_control_h app_control_new = NULL;
 
-	if (noti == NULL) {
-		err = NOTIFICATION_ERROR_INVALID_PARAMETER;
-		NOTIFICATION_ERR("NOTIFICATION_ERROR_INVALID_PARAMETER");
-		goto out;
-	}
-
-	if (event_handler == NULL) {
+	if (noti == NULL || event_handler == NULL) {
 		err = NOTIFICATION_ERROR_INVALID_PARAMETER;
 		NOTIFICATION_ERR("NOTIFICATION_ERROR_INVALID_PARAMETER");
 		goto out;
