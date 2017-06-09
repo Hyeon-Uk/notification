@@ -1325,6 +1325,33 @@ int notification_check_event_receiver_available(notification_h noti, bool *avail
  * @see notification_create()
  */
 int notification_translate_localized_text(notification_h noti);
+
+/**
+ * @internal
+ * @brief Loads a notification template from the applcation id.
+ * @details An application can load a saved template and post it.
+ * @since_tizen 3.0
+ * @privilege %http://tizen.org/privilege/notification
+ * @remarks The returned handle should be destroyed using notification_free().
+ *          The specific error code can be obtained using get_last_result().
+ *          Error codes are described in the Exception section.
+ *          If an invalid template name or application id is given, the result will be set to #NOTIFICATION_ERROR_FROM_DB.
+ * @param[in] app_id Application ID
+ * @param[in] template_name Template name
+ * @return Notification handle on success, NULL on failure
+ * @exception #NOTIFICATION_ERROR_NONE Success
+ * @exception #NOTIFICATION_ERROR_INVALID_PARAMETER Invalid input value
+ * @exception #NOTIFICATION_ERROR_IO_ERROR I/O Error
+ * @exception #NOTIFICATION_ERROR_OUT_OF_MEMORY Out of memory
+ * @exception #NOTIFICATION_ERROR_PERMISSION_DENIED The application does not have the privilege to call this method
+ * @exception #NOTIFICATION_ERROR_FROM_DB Error from DB query
+ * @exception #NOTIFICATION_ERROR_SERVICE_NOT_READY No response from notification service
+ * @see #notification_h
+ * @see notification_save_as_template()
+ */
+notification_h notification_create_from_package_template(const char *app_id,
+					const char *template_name);
+
 void notification_reset_event_handler_list(void);
 int notification_set_uid(notification_h noti, uid_t uid);
 int notification_get_uid(notification_h noti, uid_t *uid);
@@ -1333,8 +1360,7 @@ int notification_update_for_uid(notification_h noti, uid_t uid);
 int notification_delete_for_uid(notification_h noti, uid_t uid);
 int notification_delete_all_for_uid(notification_type_e type, uid_t uid);
 notification_h notification_load_by_tag_for_uid(const char *tag, uid_t uid);
-notification_h notification_create_from_package_template(const char *app_id,
-					const char *template_name);
+
 /**
  * @brief Gets a max length of text input.
  * @since_tizen 3.0
