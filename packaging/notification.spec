@@ -81,7 +81,7 @@ fi
 %files
 %manifest notification.manifest
 %defattr(-,root,root,-)
-%{_libdir}/libnotification.so*
+%{_libdir}/libnotification.so.*
 %license LICENSE
 %attr(755,root,root) %{_sysconfdir}/gumd/useradd.d/11_notification-add.post
 %{_bindir}/notification_init
@@ -107,3 +107,4 @@ fi
 %{_includedir}/notification/notification_noti.h
 %{_includedir}/notification/notification_setting_service.h
 %{_libdir}/pkgconfig/notification.pc
+%{_libdir}/libnotification.so
