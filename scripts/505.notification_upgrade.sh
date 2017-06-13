@@ -46,6 +46,7 @@ CREATE TABLE noti_list_temp (
 	b_event_handler_click_on_button_6 TEXT,
 	b_event_handler_click_on_icon TEXT,
 	b_event_handler_click_on_thumbnail TEXT,
+	b_event_handler_click_on_text_input_button TEXT,
 	sound_type INTEGER default 0,
 	sound_path TEXT,
 	vibration_type INTEGER default 0,
@@ -60,6 +61,9 @@ CREATE TABLE noti_list_temp (
 	progress_size DOUBLE default 0,
 	progress_percentage DOUBLE default 0,
 	ongoing_flag INTEGER default 0,
+	ongoing_value_type INTEGER default 0,
+	ongoing_current INTEGER default 0,
+	ongoing_duration INTEGER default 0,
 	auto_remove INTEGER default 1,
 	default_button_index INTEGER default 0,
 	hide_timeout INTEGER default 0,
@@ -160,71 +164,10 @@ SELECT do_not_disturb, visibility_class FROM notification_system_setting;
 UPDATE notification_system_setting_temp SET uid=5001;
 DROP TABLE notification_system_setting;
 ALTER TABLE notification_system_setting_temp RENAME TO notification_system_setting;
-
-
-DROP TABLE IF EXISTS noti_template;
-CREATE TABLE noti_template (
-	type INTEGER NOT NULL,
-	layout INTEGER NOT NULL default 0,
-	caller_app_id TEXT NOT NULL,
-	launch_app_id TEXT,
-	image_path TEXT,
-	group_id INTEGER default 0,
-	internal_group_id INTEGER default 0,
-	priv_id INTEGER PRIMARY KEY AUTOINCREMENT,
-	title_key TEXT,
-	b_text TEXT,
-	b_key TEXT,
-	tag TEXT,
-	b_format_args TEXT,
-	num_format_args INTEGER default 0,
-	text_domain TEXT,
-	text_dir TEXT,
-	time INTEGER default 0,
-	insert_time INTEGER default 0,
-	args TEXT,
-	group_args TEXT,
-	b_execute_option TEXT,
-	b_service_responding TEXT,
-	b_service_single_launch TEXT,
-	b_service_multi_launch TEXT,
-	b_event_handler_click_on_button_1 TEXT,
-	b_event_handler_click_on_button_2 TEXT,
-	b_event_handler_click_on_button_3 TEXT,
-	b_event_handler_click_on_button_4 TEXT,
-	b_event_handler_click_on_button_5 TEXT,
-	b_event_handler_click_on_button_6 TEXT,
-	b_event_handler_click_on_icon TEXT,
-	b_event_handler_click_on_thumbnail TEXT,
-	sound_type INTEGER default 0,
-	sound_path TEXT,
-	vibration_type INTEGER default 0,
-	vibration_path TEXT,
-	led_operation INTEGER default 0,
-	led_argb INTEGER default 0,
-	led_on_ms INTEGER default -1,
-	led_off_ms INTEGER default -1,
-	flags_for_property INTEGER default 0,
-	flag_simmode INTEGER default 0,
-	display_applist INTEGER,
-	progress_size DOUBLE default 0,
-	progress_percentage DOUBLE default 0,
-	ongoing_flag INTEGER default 0,
-	auto_remove INTEGER default 1,
-	default_button_index INTEGER default 0,
-	hide_timeout INTEGER default 0,
-	delete_timeout INTEGER default 0,
-	text_input_max_length INTEGER default 0,
-	event_flag INTEGER default 0,
-	extension_image_size INTEGER default 0,
-	uid INTEGER,
-	template_name TEXT,
-	UNIQUE (caller_app_id, template_name)
-);
 EOF
 
-chown owner:users $DB_NOTIFICATION
-chown owner:users $DB_NOTIFICATION-journal
+chown app_fw:app_fw $DB_NOTIFICATION
+chown app_fw:app_fw $DB_NOTIFICATION-journal
 
-chsmack -a User::Home $DB_NOTIFICATION
-chsmack -a User::Home $DB_NOTIFICATION-journal
+chsmack -a System $DB_NOTIFICATION
+chsmack -a System $DB_NOTIFICATION-journal
