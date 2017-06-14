@@ -992,9 +992,6 @@ int notification_ipc_request_delete_single(notification_type_e type, char *app_i
 		return result;
 	}
 
-	if (!app_id)
-		app_id = "";
-
 	body = g_variant_new("(sii)", app_id, priv_id, uid);
 	result = _send_sync_noti(body, &reply, "del_noti_single");
 
@@ -1055,9 +1052,6 @@ int notification_ipc_request_load_noti_by_tag(notification_h noti, const char *a
 		NOTIFICATION_ERR("Can't init dbus %d", result);
 		return result;
 	}
-
-	if (!app_id)
-		app_id = "";
 
 	body = g_variant_new("(ssi)", app_id, tag, uid);
 	result = _send_sync_noti(body, &reply, "load_noti_by_tag");
@@ -1132,9 +1126,6 @@ int notification_ipc_request_get_count(notification_type_e type,
 		NOTIFICATION_ERR("Can't init dbus %d", result);
 		return result;
 	}
-
-	if (!app_id)
-		app_id = "";
 
 	body = g_variant_new("(isiii)", type, app_id, group_id, priv_id, uid);
 	result = _send_sync_noti(body, &reply, "get_noti_count");

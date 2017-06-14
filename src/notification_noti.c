@@ -1103,75 +1103,41 @@ EXPORT_API int notification_noti_get_by_tag(notification_h noti, char *app_id, c
 	if (!db)
 		return get_last_result();
 
-	if (app_id != NULL && strlen(app_id) != 0) {
-		ret = sqlite3_prepare_v2(db, "select "
-			 "type, layout, pkg_id, caller_app_id, launch_app_id, image_path, group_id, priv_id, "
-			 "tag, b_text, b_key, b_format_args, num_format_args, "
-			 "text_domain, text_dir, time, insert_time, args, group_args, "
-			 "b_execute_option, b_service_responding, b_service_single_launch, b_service_multi_launch, "
-			 "b_event_handler_click_on_button_1, b_event_handler_click_on_button_2, b_event_handler_click_on_button_3, "
-			 "b_event_handler_click_on_button_4, b_event_handler_click_on_button_5, b_event_handler_click_on_button_6, "
-			 "b_event_handler_click_on_icon, b_event_handler_click_on_thumbnail, b_event_handler_click_on_text_input_button, "
-			 "sound_type, sound_path, vibration_type, vibration_path, led_operation, led_argb, led_on_ms, led_off_ms, "
-			 "flags_for_property, display_applist, progress_size, progress_percentage, ongoing_flag, ongoing_value_type, "
-			 "ongoing_current, ongoing_duration, auto_remove, default_button_index, hide_timeout, delete_timeout, "
-			 "text_input_max_length, event_flag, extension_image_size, uid "
-			 "from noti_list where caller_app_id = ? and tag = ? and uid = ?", -1, &stmt, NULL);
-		if (ret != SQLITE_OK) {
-			NOTIFICATION_ERR("Error: %s\n", sqlite3_errmsg(db));
-			ret = NOTIFICATION_ERROR_OUT_OF_MEMORY;
-			goto err;
-		}
+	ret = sqlite3_prepare_v2(db, "select "
+		 "type, layout, pkg_id, caller_app_id, launch_app_id, image_path, group_id, priv_id, "
+		 "tag, b_text, b_key, b_format_args, num_format_args, "
+		 "text_domain, text_dir, time, insert_time, args, group_args, "
+		 "b_execute_option, b_service_responding, b_service_single_launch, b_service_multi_launch, "
+		 "b_event_handler_click_on_button_1, b_event_handler_click_on_button_2, b_event_handler_click_on_button_3, "
+		 "b_event_handler_click_on_button_4, b_event_handler_click_on_button_5, b_event_handler_click_on_button_6, "
+		 "b_event_handler_click_on_icon, b_event_handler_click_on_thumbnail, b_event_handler_click_on_text_input_button, "
+		 "sound_type, sound_path, vibration_type, vibration_path, led_operation, led_argb, led_on_ms, led_off_ms, "
+		 "flags_for_property, display_applist, progress_size, progress_percentage, ongoing_flag, ongoing_value_type, "
+		 "ongoing_current, ongoing_duration, auto_remove, default_button_index, hide_timeout, delete_timeout, "
+		 "text_input_max_length, event_flag, extension_image_size, uid "
+		 "from noti_list where caller_app_id = ? and tag = ? and uid = ?", -1, &stmt, NULL);
+	if (ret != SQLITE_OK) {
+		NOTIFICATION_ERR("Error: %s\n", sqlite3_errmsg(db));
+		ret = NOTIFICATION_ERROR_OUT_OF_MEMORY;
+		goto err;
+	}
 
-		ret = sqlite3_bind_text(stmt, 1, app_id, -1, SQLITE_TRANSIENT);
-		if (ret != SQLITE_OK) {
-			NOTIFICATION_ERR("Error: %s\n", sqlite3_errmsg(db));
-			goto err;
-		}
+	ret = sqlite3_bind_text(stmt, 1, app_id, -1, SQLITE_TRANSIENT);
+	if (ret != SQLITE_OK) {
+		NOTIFICATION_ERR("Error: %s\n", sqlite3_errmsg(db));
+		goto err;
+	}
 
-		ret = sqlite3_bind_text(stmt, 2,  tag, -1, SQLITE_TRANSIENT);
-		if (ret != SQLITE_OK) {
-			NOTIFICATION_ERR("Error: %s\n", sqlite3_errmsg(db));
-			goto err;
-		}
+	ret = sqlite3_bind_text(stmt, 2,  tag, -1, SQLITE_TRANSIENT);
+	if (ret != SQLITE_OK) {
+		NOTIFICATION_ERR("Error: %s\n", sqlite3_errmsg(db));
+		goto err;
+	}
 
-		ret = sqlite3_bind_int(stmt, 3, uid);
-		if (ret != SQLITE_OK) {
-			NOTIFICATION_ERR("Error: %s\n", sqlite3_errmsg(db));
-			goto err;
-		}
-
-	} else {
-		ret = sqlite3_prepare_v2(db, "select "
-			 "type, layout, pkg_id, caller_app_id, launch_app_id, image_path, group_id, priv_id, "
-			 "tag, b_text, b_key, b_format_args, num_format_args, "
-			 "text_domain, text_dir, time, insert_time, args, group_args, "
-			 "b_execute_option, b_service_responding, b_service_single_launch, b_service_multi_launch, "
-			 "b_event_handler_click_on_button_1, b_event_handler_click_on_button_2, b_event_handler_click_on_button_3, "
-			 "b_event_handler_click_on_button_4, b_event_handler_click_on_button_5, b_event_handler_click_on_button_6, "
-			 "b_event_handler_click_on_icon, b_event_handler_click_on_thumbnail, b_event_handler_click_on_text_input_button, "
-			 "sound_type, sound_path, vibration_type, vibration_path, led_operation, led_argb, led_on_ms, led_off_ms, "
-			 "flags_for_property, display_applist, progress_size, progress_percentage, ongoing_flag, ongoing_value_type, "
-			 "ongoing_current, ongoing_duration, auto_remove, default_button_index, hide_timeout, delete_timeout, "
-			 "text_input_max_length, event_flag, extension_image_size, uid "
-			 "from noti_list where  tag = ? and uid = ?", -1, &stmt, NULL);
-		if (ret != SQLITE_OK) {
-			NOTIFICATION_ERR("Error: %s\n", sqlite3_errmsg(db));
-			ret = NOTIFICATION_ERROR_OUT_OF_MEMORY;
-			goto err;
-		}
-
-		ret = sqlite3_bind_text(stmt, 1, tag, -1, SQLITE_TRANSIENT);
-		if (ret != SQLITE_OK) {
-			NOTIFICATION_ERR("Error: %s\n", sqlite3_errmsg(db));
-			goto err;
-		}
-
-		ret = sqlite3_bind_int(stmt, 2, uid);
-		if (ret != SQLITE_OK) {
-			NOTIFICATION_ERR("Error: %s\n", sqlite3_errmsg(db));
-			goto err;
-		}
+	ret = sqlite3_bind_int(stmt, 3, uid);
+	if (ret != SQLITE_OK) {
+		NOTIFICATION_ERR("Error: %s\n", sqlite3_errmsg(db));
+		goto err;
 	}
 
 	ret = sqlite3_step(stmt);
@@ -1443,14 +1409,9 @@ EXPORT_API int notification_noti_delete_by_priv_id_get_changes(const char *app_i
 	if (!db)
 		return get_last_result();
 
-	if (app_id == NULL || strlen(app_id) == 0) {
-		snprintf(query, sizeof(query), "delete from noti_list "
-			"where priv_id = %d and uid = %d", priv_id, uid);
-	} else {
-		snprintf(query, sizeof(query), "delete from noti_list "
-			"where caller_app_id = '%s' and priv_id = %d and uid = %d",
-			app_id, priv_id, uid);
-	}
+	snprintf(query, sizeof(query), "delete from noti_list "
+		"where caller_app_id = '%s' and priv_id = %d and uid = %d",
+		app_id, priv_id, uid);
 
 	ret = notification_db_exec(db, query, num_changes);
 
@@ -1492,36 +1453,32 @@ EXPORT_API int notification_noti_get_count(notification_type_e type,
 	snprintf(query_base, sizeof(query_base),
 		 "select count(*) from noti_list ");
 
-	if (app_id != NULL && strlen(app_id) != 0) {
-		if (group_id == NOTIFICATION_GROUP_ID_NONE) {
-			if (priv_id == NOTIFICATION_PRIV_ID_NONE) {
-				snprintf(query_where, sizeof(query_where),
-					 "where caller_app_id = '%s' and uid = %d ",
-					 app_id, uid);
-			} else {
-				internal_group_id =
-				    _notification_noti_get_internal_group_id_by_priv_id
-				    (app_id, priv_id, db);
-				snprintf(query_where, sizeof(query_where),
-					 "where caller_app_id = '%s' and internal_group_id = %d and uid = %d ",
-					 app_id, internal_group_id, uid);
-			}
+	if (group_id == NOTIFICATION_GROUP_ID_NONE) {
+		if (priv_id == NOTIFICATION_PRIV_ID_NONE) {
+			snprintf(query_where, sizeof(query_where),
+				 "where caller_app_id = '%s' and uid = %d ",
+				 app_id, uid);
 		} else {
-			if (priv_id == NOTIFICATION_PRIV_ID_NONE) {
-				snprintf(query_where, sizeof(query_where),
-					 "where caller_app_id = '%s' and group_id = %d and uid = %d ",
-					 app_id, group_id, uid);
-			} else {
-				internal_group_id =
-				    _notification_noti_get_internal_group_id_by_priv_id
-				    (app_id, priv_id, db);
-				snprintf(query_where, sizeof(query_where),
-					 "where caller_app_id = '%s' and internal_group_id = %d and uid = %d ",
-					 app_id, internal_group_id, uid);
-			}
+			internal_group_id =
+			    _notification_noti_get_internal_group_id_by_priv_id
+			    (app_id, priv_id, db);
+			snprintf(query_where, sizeof(query_where),
+				 "where caller_app_id = '%s' and internal_group_id = %d and uid = %d ",
+				 app_id, internal_group_id, uid);
 		}
 	} else {
-		snprintf(query_where, sizeof(query_where), "where uid = %d", uid);
+		if (priv_id == NOTIFICATION_PRIV_ID_NONE) {
+			snprintf(query_where, sizeof(query_where),
+				 "where caller_app_id = '%s' and group_id = %d and uid = %d ",
+				 app_id, group_id, uid);
+		} else {
+			internal_group_id =
+			    _notification_noti_get_internal_group_id_by_priv_id
+			    (app_id, priv_id, db);
+			snprintf(query_where, sizeof(query_where),
+				 "where caller_app_id = '%s' and internal_group_id = %d and uid = %d ",
+				 app_id, internal_group_id, uid);
+		}
 	}
 
 	if (ret_vconf == 0 && status == VCONFKEY_TELEPHONY_SIM_INSERTED) {
