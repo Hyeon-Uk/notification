@@ -35,6 +35,7 @@
 #include <notification_setting.h>
 #include <notification_setting_internal.h>
 #include <notification_setting_service.h>
+#include "notification_db_query.h"
 
 #define NOTI_BURST_DELETE_UNIT 10
 #define ERR_BUFFER_SIZE		1024
@@ -49,516 +50,13 @@ static void __free_and_set(void **target_ptr, void *new_ptr)
 	}
 }
 
-static int _notification_noti_bind_query_text(sqlite3_stmt *stmt, const char *name,
-					 const char *str)
+static void __free_encoded_data(char *encoded_data)
 {
-	int ret = 0;
-	int index = 0;
-
-	index = sqlite3_bind_parameter_index(stmt, name);
-	if (index == 0) {
-		NOTIFICATION_ERR("Insert : invalid column name");
-		return NOTIFICATION_ERROR_FROM_DB;
-	}
-
-	ret = sqlite3_bind_text(stmt, index, NOTIFICATION_CHECK_STR(str), -1,
-			      SQLITE_STATIC);
-	if (ret != SQLITE_OK) {
-		NOTIFICATION_ERR("Insert text : %s",
-				 NOTIFICATION_CHECK_STR(str));
-		return NOTIFICATION_ERROR_FROM_DB;
-	}
-
-	return NOTIFICATION_ERROR_NONE;
+	if (encoded_data)
+		bundle_free_encoded_rawdata((bundle_raw **)&encoded_data);
 }
 
-static int _notification_noti_bind_query_double(sqlite3_stmt *stmt, const char *name,
-					 double val)
-{
-	int ret = 0;
-	int index = 0;
-
-	index = sqlite3_bind_parameter_index(stmt, name);
-	if (index == 0) {
-		NOTIFICATION_ERR("Insert : invalid column name");
-		return NOTIFICATION_ERROR_FROM_DB;
-	}
-
-	ret = sqlite3_bind_double(stmt, index, val);
-	if (ret != SQLITE_OK) {
-		NOTIFICATION_ERR("Insert double : %f", val);
-		return NOTIFICATION_ERROR_FROM_DB;
-	}
-
-	return NOTIFICATION_ERROR_NONE;
-}
-
-static int _notification_noti_check_priv_id(notification_h noti, sqlite3 *db)
-{
-	int result = 0;
-	int ret = NOTIFICATION_ERROR_NONE;
-	char *query = NULL;
-	sqlite3_stmt *stmt = NULL;
-
-	/* Make query to check priv_id exist */
-	query = sqlite3_mprintf("SELECT count(*) FROM noti_list WHERE caller_app_id = '%s' AND priv_id = %d",
-		 noti->caller_app_id, noti->priv_id);
-	if (query == NULL) {
-		ret = NOTIFICATION_ERROR_OUT_OF_MEMORY;
-		goto err;
-	}
-
-	ret = sqlite3_prepare(db, query, strlen(query), &stmt, NULL);
-	if (ret != SQLITE_OK) {
-		NOTIFICATION_ERR("Get count DB err(%d) : %s", ret,
-				 sqlite3_errmsg(db));
-		ret = NOTIFICATION_ERROR_FROM_DB;
-		goto err;
-	}
-
-	ret = sqlite3_step(stmt);
-	if (ret == SQLITE_ROW)
-		result = sqlite3_column_int(stmt, 0);
-	else
-		result = 0;
-
-	sqlite3_finalize(stmt);
-
-	/* If result > 0, there is priv_id in DB */
-	if (result > 0)
-		ret = NOTIFICATION_ERROR_ALREADY_EXIST_ID;
-
-err:
-	if (query)
-		sqlite3_free(query);
-
-	return ret;
-}
-
-static int _notification_noti_get_internal_group_id_by_priv_id(const char *app_id,
-							       int priv_id,
-							       sqlite3 *db)
-{
-	char *query = NULL;
-	sqlite3_stmt *stmt = NULL;
-	int ret = NOTIFICATION_ERROR_NONE, result = 0;
-
-	query = sqlite3_mprintf("SELECT internal_group_id FROM noti_list WHERE caller_app_id = '%s' AND priv_id = %d",
-		 app_id, priv_id);
-	if (query == NULL) {
-		ret = NOTIFICATION_ERROR_OUT_OF_MEMORY;
-		goto err;
-	}
-
-	ret = sqlite3_prepare(db, query, strlen(query), &stmt, NULL);
-	if (ret != SQLITE_OK) {
-		NOTIFICATION_ERR("Get count DB err(%d) : %s", ret,
-				 sqlite3_errmsg(db));
-		ret = NOTIFICATION_ERROR_FROM_DB;
-		goto err;
-	}
-
-	ret = sqlite3_step(stmt);
-	if (ret == SQLITE_ROW)
-		result = sqlite3_column_int(stmt, 0);
-	else
-		result = 0;
-
-err:
-	if (stmt)
-		sqlite3_finalize(stmt);
-
-	if (query)
-		sqlite3_free(query);
-
-	if (ret != NOTIFICATION_ERROR_NONE)
-		NOTIFICATION_ERR("failed to internal group ID:%d", ret);
-
-	return result;
-}
-
-static int _insertion_query_create(notification_h noti, char **query)
-{
-	int i = 0;
-	int b_encode_len = 0;
-	char *args = NULL;
-	char *group_args = NULL;
-	char *b_image_path = NULL;
-	char *b_execute_option = NULL;
-	char *b_service_responding = NULL;
-	char *b_service_single_launch = NULL;
-	char *b_service_multi_launch = NULL;
-	char *b_event_handler[NOTIFICATION_EVENT_TYPE_MAX+1] = { NULL , };
-	char *b_text = NULL;
-	char *b_key = NULL;
-	char *b_format_args = NULL;
-	int flag_simmode = 0;
-
-	if (query == NULL)
-		return NOTIFICATION_ERROR_INVALID_PARAMETER;
-
-	/* Decode bundle to insert DB */
-	if (noti->args)
-		bundle_encode(noti->args, (bundle_raw **)&args, &b_encode_len);
-
-	if (noti->group_args)
-		bundle_encode(noti->group_args, (bundle_raw **)&group_args,
-			      &b_encode_len);
-
-	if (noti->b_execute_option)
-		bundle_encode(noti->b_execute_option,
-			      (bundle_raw **)&b_execute_option, &b_encode_len);
-
-	if (noti->b_service_responding)
-		bundle_encode(noti->b_service_responding,
-			      (bundle_raw **)&b_service_responding, &b_encode_len);
-
-	if (noti->b_service_single_launch)
-		bundle_encode(noti->b_service_single_launch,
-			      (bundle_raw **)&b_service_single_launch, &b_encode_len);
-
-	if (noti->b_service_multi_launch)
-		bundle_encode(noti->b_service_multi_launch,
-			      (bundle_raw **)&b_service_multi_launch, &b_encode_len);
-
-
-	for (i = 0; i <= NOTIFICATION_EVENT_TYPE_MAX; i++) {
-		if (noti->b_event_handler[i])
-			bundle_encode(noti->b_event_handler[i],
-					(bundle_raw **)&b_event_handler[i], &b_encode_len);
-	}
-
-	if (noti->b_text)
-		bundle_encode(noti->b_text, (bundle_raw **)&b_text, &b_encode_len);
-
-	if (noti->b_key)
-		bundle_encode(noti->b_key, (bundle_raw **)&b_key, &b_encode_len);
-
-	if (noti->b_format_args)
-		bundle_encode(noti->b_format_args,
-			      (bundle_raw **)&b_format_args, &b_encode_len);
-
-	if (noti->b_image_path)
-		bundle_encode(noti->b_image_path,
-			      (bundle_raw **)&b_image_path, &b_encode_len);
-
-	/* Check only simmode property is enable */
-	if (noti->flags_for_property & NOTIFICATION_PROP_DISPLAY_ONLY_SIMMODE)
-		flag_simmode = 1;
-
-	*query = sqlite3_mprintf("INSERT INTO noti_list ("
-		"type, "
-		"layout, "
-		"pkg_id, caller_app_id, launch_app_id, "
-		"image_path, "
-		"group_id, internal_group_id,"
-		"title_key, "
-		"b_text, b_key, tag, b_format_args, num_format_args, "
-		"text_domain, text_dir, "
-		"time, insert_time, "
-		"args, group_args, "
-		"b_execute_option, "
-		"b_service_responding, b_service_single_launch, b_service_multi_launch, "
-		"b_event_handler_click_on_button_1, b_event_handler_click_on_button_2, b_event_handler_click_on_button_3, "
-		"b_event_handler_click_on_button_4, b_event_handler_click_on_button_5, b_event_handler_click_on_button_6, "
-		"b_event_handler_click_on_icon, b_event_handler_click_on_thumbnail, b_event_handler_click_on_text_input_button, "
-		"sound_type, sound_path, vibration_type, vibration_path, led_operation, led_argb, led_on_ms, led_off_ms, "
-		"flags_for_property, flag_simmode, display_applist, "
-		"progress_size, progress_percentage, "
-		"ongoing_flag, ongoing_value_type, ongoing_current, ongoing_duration, "
-		"auto_remove, default_button_index, hide_timeout, delete_timeout, "
-		"text_input_max_length, event_flag, extension_image_size, uid) values ("
-		"%d, "
-		"%d, "
-		"'%s', '%s', '%s', "
-		"'%s', "
-		"%d, %d,"
-		"$title_key, "
-		"'%s', '%s', $tag, '%s', %d, "
-		"'%s', '%s', "
-		"%d, %d, "
-		"'%s', '%s', "
-		"'%s', "
-		"'%s', '%s', '%s', "
-		"'%s', '%s', '%s', "
-		"'%s', '%s', '%s', "
-		"'%s', '%s', '%s', "
-		"%d, '%s', %d, '%s', %d, %d, %d, %d,"
-		"%d, %d, %d, "
-		"$progress_size, $progress_percentage, "
-		"%d, %d, %d, %d, %d,"
-		"%d, %d, %d, %d, %d, %d, %d)",
-		noti->type,
-		noti->layout,
-		NOTIFICATION_CHECK_STR(noti->pkg_id),
-		NOTIFICATION_CHECK_STR(noti->caller_app_id),
-		NOTIFICATION_CHECK_STR(noti->launch_app_id),
-		NOTIFICATION_CHECK_STR(b_image_path), noti->group_id,
-		noti->internal_group_id,
-		NOTIFICATION_CHECK_STR(b_text), NOTIFICATION_CHECK_STR(b_key),
-		NOTIFICATION_CHECK_STR(b_format_args), noti->num_format_args,
-		NOTIFICATION_CHECK_STR(noti->domain),
-		NOTIFICATION_CHECK_STR(noti->dir), (int)noti->time,
-		(int)noti->insert_time, NOTIFICATION_CHECK_STR(args),
-		NOTIFICATION_CHECK_STR(group_args),
-		NOTIFICATION_CHECK_STR(b_execute_option),
-		NOTIFICATION_CHECK_STR(b_service_responding),
-		NOTIFICATION_CHECK_STR(b_service_single_launch),
-		NOTIFICATION_CHECK_STR(b_service_multi_launch),
-		NOTIFICATION_CHECK_STR(b_event_handler[NOTIFICATION_EVENT_TYPE_CLICK_ON_BUTTON_1]),
-		NOTIFICATION_CHECK_STR(b_event_handler[NOTIFICATION_EVENT_TYPE_CLICK_ON_BUTTON_2]),
-		NOTIFICATION_CHECK_STR(b_event_handler[NOTIFICATION_EVENT_TYPE_CLICK_ON_BUTTON_3]),
-		NOTIFICATION_CHECK_STR(b_event_handler[NOTIFICATION_EVENT_TYPE_CLICK_ON_BUTTON_4]),
-		NOTIFICATION_CHECK_STR(b_event_handler[NOTIFICATION_EVENT_TYPE_CLICK_ON_BUTTON_5]),
-		NOTIFICATION_CHECK_STR(b_event_handler[NOTIFICATION_EVENT_TYPE_CLICK_ON_BUTTON_6]),
-		NOTIFICATION_CHECK_STR(b_event_handler[NOTIFICATION_EVENT_TYPE_CLICK_ON_ICON]),
-		NOTIFICATION_CHECK_STR(b_event_handler[NOTIFICATION_EVENT_TYPE_CLICK_ON_THUMBNAIL]),
-		NOTIFICATION_CHECK_STR(b_event_handler[NOTIFICATION_EVENT_TYPE_CLICK_ON_TEXT_INPUT_BUTTON]),
-		noti->sound_type, NOTIFICATION_CHECK_STR(noti->sound_path),
-		noti->vibration_type,
-		NOTIFICATION_CHECK_STR(noti->vibration_path),
-		noti->led_operation,
-		noti->led_argb,
-		noti->led_on_ms,
-		noti->led_off_ms,
-		noti->flags_for_property, flag_simmode, noti->display_applist,
-		noti->ongoing_flag,
-		noti->ongoing_value_type,
-		noti->ongoing_current,
-		noti->ongoing_duration,
-		noti->auto_remove,
-		noti->default_button_index,
-		noti->hide_timeout,
-		noti->delete_timeout,
-		noti->text_input_max_length,
-		noti->event_flag,
-		noti->extension_image_size,
-		noti->uid);
-
-	/* Free decoded data */
-	if (args)
-		free(args);
-
-	if (group_args)
-		free(group_args);
-
-	if (b_execute_option)
-		free(b_execute_option);
-
-	if (b_service_responding)
-		free(b_service_responding);
-
-	if (b_service_single_launch)
-		free(b_service_single_launch);
-
-	if (b_service_multi_launch)
-		free(b_service_multi_launch);
-
-	for (i = 0; i <= NOTIFICATION_EVENT_TYPE_MAX; i++) {
-		if (b_event_handler[i])
-			bundle_free_encoded_rawdata((bundle_raw **)&b_event_handler[i]);
-	}
-
-	if (b_text)
-		free(b_text);
-
-	if (b_key)
-		free(b_key);
-
-	if (b_format_args)
-		free(b_format_args);
-
-	if (b_image_path)
-		free(b_image_path);
-
-	if (*query == NULL)
-		return NOTIFICATION_ERROR_OUT_OF_MEMORY;
-
-	return NOTIFICATION_ERROR_NONE;
-}
-
-static int _update_query_create(notification_h noti, char **query)
-{
-	int i = 0;
-	int b_encode_len = 0;
-	char *args = NULL;
-	char *group_args = NULL;
-	char *b_image_path = NULL;
-	char *b_execute_option = NULL;
-	char *b_service_responding = NULL;
-	char *b_service_single_launch = NULL;
-	char *b_service_multi_launch = NULL;
-	char *b_event_handler[NOTIFICATION_EVENT_TYPE_MAX+1] = { NULL , };
-	char *b_text = NULL;
-	char *b_key = NULL;
-	char *b_format_args = NULL;
-	int flag_simmode = 0;
-
-	if (query == NULL)
-		return NOTIFICATION_ERROR_INVALID_PARAMETER;
-
-	/* Decode bundle to update DB */
-	if (noti->args)
-		bundle_encode(noti->args, (bundle_raw **)&args, &b_encode_len);
-
-	if (noti->group_args)
-		bundle_encode(noti->group_args, (bundle_raw **)&group_args,
-			      &b_encode_len);
-
-	if (noti->b_execute_option)
-		bundle_encode(noti->b_execute_option,
-			      (bundle_raw **)&b_execute_option, &b_encode_len);
-
-	if (noti->b_service_responding)
-		bundle_encode(noti->b_service_responding,
-			      (bundle_raw **)&b_service_responding, &b_encode_len);
-
-	if (noti->b_service_single_launch)
-		bundle_encode(noti->b_service_single_launch,
-			      (bundle_raw **)&b_service_single_launch, &b_encode_len);
-
-	if (noti->b_service_multi_launch)
-		bundle_encode(noti->b_service_multi_launch,
-			      (bundle_raw **)&b_service_multi_launch, &b_encode_len);
-
-	for (i = 0; i <= NOTIFICATION_EVENT_TYPE_MAX; i++) {
-		if (noti->b_event_handler[i])
-			bundle_encode(noti->b_event_handler[i],
-					(bundle_raw **)&b_event_handler[i], &b_encode_len);
-	}
-
-	if (noti->b_text)
-		bundle_encode(noti->b_text, (bundle_raw **)&b_text, &b_encode_len);
-
-	if (noti->b_key)
-		bundle_encode(noti->b_key, (bundle_raw **)&b_key, &b_encode_len);
-
-	if (noti->b_format_args)
-		bundle_encode(noti->b_format_args,
-			      (bundle_raw **)&b_format_args, &b_encode_len);
-
-	if (noti->b_image_path)
-		bundle_encode(noti->b_image_path,
-			      (bundle_raw **)&b_image_path, &b_encode_len);
-
-	/* Check only simmode property is enable */
-	if (noti->flags_for_property & NOTIFICATION_PROP_DISPLAY_ONLY_SIMMODE)
-		flag_simmode = 1;
-
-	*query = sqlite3_mprintf("UPDATE noti_list SET "
-		"type = %d, "
-		"layout = %d, "
-		"launch_app_id = '%s', "
-		"image_path = '%s', "
-		"b_text = '%s', b_key = '%s', tag = $tag, "
-		"b_format_args = '%s', num_format_args = %d, "
-		"text_domain = '%s', text_dir = '%s', "
-		"time = %d, insert_time = %d, "
-		"args = '%s', group_args = '%s', "
-		"b_execute_option = '%s', "
-		"b_service_responding = '%s', "
-		"b_service_single_launch = '%s', "
-		"b_service_multi_launch = '%s', "
-		"b_event_handler_click_on_button_1 = '%s', "
-		"b_event_handler_click_on_button_2= '%s', "
-		"b_event_handler_click_on_button_3= '%s', "
-		"b_event_handler_click_on_button_4= '%s', "
-		"b_event_handler_click_on_button_5= '%s', "
-		"b_event_handler_click_on_button_6= '%s', "
-		"b_event_handler_click_on_icon= '%s', "
-		"b_event_handler_click_on_thumbnail= '%s', "
-		"b_event_handler_click_on_text_input_button= '%s', "
-		"sound_type = %d, sound_path = '%s', "
-		"vibration_type = %d, vibration_path = '%s', "
-		"led_operation = %d, led_argb = %d, "
-		"led_on_ms = %d, led_off_ms = %d, "
-		"flags_for_property = %d, flag_simmode = %d, "
-		"display_applist = %d, "
-		"progress_size = $progress_size, progress_percentage = $progress_percentage, "
-		"ongoing_flag = %d, ongoing_value_type = %d, ongoing_current = %d, ongoing_duration = %d, "
-		"auto_remove = %d, default_button_index = %d, hide_timeout = %d, "
-		"delete_timeout = %d, text_input_max_length = %d, event_flag = %d, extension_image_size = %d "
-		"where priv_id = %d ",
-		noti->type,
-		noti->layout,
-		NOTIFICATION_CHECK_STR(noti->launch_app_id),
-		NOTIFICATION_CHECK_STR(b_image_path),
-		NOTIFICATION_CHECK_STR(b_text), NOTIFICATION_CHECK_STR(b_key),
-		NOTIFICATION_CHECK_STR(b_format_args), noti->num_format_args,
-		NOTIFICATION_CHECK_STR(noti->domain),
-		NOTIFICATION_CHECK_STR(noti->dir),
-		(int)noti->time, (int)noti->insert_time,
-		NOTIFICATION_CHECK_STR(args), NOTIFICATION_CHECK_STR(group_args),
-		NOTIFICATION_CHECK_STR(b_execute_option),
-		NOTIFICATION_CHECK_STR(b_service_responding),
-		NOTIFICATION_CHECK_STR(b_service_single_launch),
-		NOTIFICATION_CHECK_STR(b_service_multi_launch),
-		NOTIFICATION_CHECK_STR(b_event_handler[NOTIFICATION_EVENT_TYPE_CLICK_ON_BUTTON_1]),
-		NOTIFICATION_CHECK_STR(b_event_handler[NOTIFICATION_EVENT_TYPE_CLICK_ON_BUTTON_2]),
-		NOTIFICATION_CHECK_STR(b_event_handler[NOTIFICATION_EVENT_TYPE_CLICK_ON_BUTTON_3]),
-		NOTIFICATION_CHECK_STR(b_event_handler[NOTIFICATION_EVENT_TYPE_CLICK_ON_BUTTON_4]),
-		NOTIFICATION_CHECK_STR(b_event_handler[NOTIFICATION_EVENT_TYPE_CLICK_ON_BUTTON_5]),
-		NOTIFICATION_CHECK_STR(b_event_handler[NOTIFICATION_EVENT_TYPE_CLICK_ON_BUTTON_6]),
-		NOTIFICATION_CHECK_STR(b_event_handler[NOTIFICATION_EVENT_TYPE_CLICK_ON_ICON]),
-		NOTIFICATION_CHECK_STR(b_event_handler[NOTIFICATION_EVENT_TYPE_CLICK_ON_THUMBNAIL]),
-		NOTIFICATION_CHECK_STR(b_event_handler[NOTIFICATION_EVENT_TYPE_CLICK_ON_TEXT_INPUT_BUTTON]),
-		noti->sound_type, NOTIFICATION_CHECK_STR(noti->sound_path),
-		noti->vibration_type,
-		NOTIFICATION_CHECK_STR(noti->vibration_path),
-		noti->led_operation,
-		noti->led_argb,
-		noti->led_on_ms,
-		noti->led_off_ms,
-		noti->flags_for_property, flag_simmode, noti->display_applist,
-		noti->ongoing_flag, noti->ongoing_value_type,
-		noti->ongoing_current, noti->ongoing_duration,
-		noti->auto_remove, noti->default_button_index, noti->hide_timeout,
-		noti->delete_timeout, noti->text_input_max_length, noti->event_flag,
-		noti->extension_image_size, noti->priv_id);
-
-	/* Free decoded data */
-	if (args)
-		free(args);
-
-	if (group_args)
-		free(group_args);
-
-	if (b_execute_option)
-		free(b_execute_option);
-
-	if (b_service_responding)
-		free(b_service_responding);
-
-	if (b_service_single_launch)
-		free(b_service_single_launch);
-
-	if (b_service_multi_launch)
-		free(b_service_multi_launch);
-
-	for (i = 0; i <= NOTIFICATION_EVENT_TYPE_MAX; i++) {
-		if (b_event_handler[i])
-			bundle_free_encoded_rawdata((bundle_raw **)&b_event_handler[i]);
-	}
-
-	if (b_text)
-		free(b_text);
-
-	if (b_key)
-		free(b_key);
-
-	if (b_format_args)
-		free(b_format_args);
-
-	if (b_image_path)
-		free(b_image_path);
-
-	if (*query == NULL)
-		return NOTIFICATION_ERROR_OUT_OF_MEMORY;
-
-	return NOTIFICATION_ERROR_NONE;
-}
-
-static void _notification_noti_populate_from_stmt(sqlite3_stmt *stmt, notification_h noti)
+static void __notification_noti_populate_from_stmt(sqlite3_stmt *stmt, notification_h noti)
 {
 	int col = 0;
 	int i = 0;
@@ -575,10 +73,9 @@ static void _notification_noti_populate_from_stmt(sqlite3_stmt *stmt, notificati
 	noti->group_id = sqlite3_column_int(stmt, col++);
 	noti->internal_group_id = 0;
 	noti->priv_id = sqlite3_column_int(stmt, col++);
-	__free_and_set((void **)&(noti->tag), notification_db_column_text(stmt, col++));
-
 	noti->b_text = notification_db_column_bundle(stmt, col++);
 	noti->b_key = notification_db_column_bundle(stmt, col++);
+	__free_and_set((void **)&(noti->tag), notification_db_column_text(stmt, col++));
 	noti->b_format_args = notification_db_column_bundle(stmt, col++);
 	noti->num_format_args = sqlite3_column_int(stmt, col++);
 
@@ -632,19 +129,519 @@ static void _notification_noti_populate_from_stmt(sqlite3_stmt *stmt, notificati
 	noti->temp_content = NULL;
 }
 
-static notification_h _notification_noti_get_item(sqlite3_stmt *stmt)
+static int _notification_noti_check_priv_id(notification_h noti, sqlite3 *db)
 {
-	notification_h noti = NULL;
+	sqlite3_stmt *stmt = NULL;
+	char *query = NULL;
+	int result = 0;
+	int ret = NOTIFICATION_ERROR_NONE;
 
-	noti = (notification_h) calloc(1, sizeof(struct _notification));
-	if (noti == NULL)
-		return NULL;
+	query = sqlite3_mprintf("SELECT count(*) FROM noti_list "
+				"WHERE caller_app_id = %Q AND priv_id = %d",
+				noti->caller_app_id, noti->priv_id);
+	if (query == NULL) {
+		NOTIFICATION_ERR("fail to alloc query"); /* LCOV_EXCL_LINE */
+		ret = NOTIFICATION_ERROR_OUT_OF_MEMORY;
+		goto err;
+	}
 
-	_notification_noti_populate_from_stmt(stmt, noti);
+	ret = sqlite3_prepare_v2(db, query, strlen(query), &stmt, NULL);
+	if (ret != SQLITE_OK) {
+		NOTIFICATION_ERR("sqlite3_prepare_v2 failed [%d][%s]", ret,
+				sqlite3_errmsg(db));
+		ret = NOTIFICATION_ERROR_FROM_DB;
+		goto err;
+	}
 
-	return noti;
+	ret = sqlite3_step(stmt);
+	if (ret == SQLITE_ROW)
+		result = sqlite3_column_int(stmt, 0);
+	else
+		result = 0;
+
+	/* If result > 0, there is priv_id in DB */
+	if (result > 0)
+		ret = NOTIFICATION_ERROR_ALREADY_EXIST_ID;
+
+err:
+	if (stmt)
+		sqlite3_finalize(stmt);
+
+	if (query)
+		sqlite3_free(query);
+
+	return ret;
 }
 
+static int _notification_noti_get_internal_group_id_by_priv_id(const char *app_id,
+							int priv_id,
+							sqlite3 *db)
+{
+	sqlite3_stmt *stmt = NULL;
+	char *query = NULL;
+	int ret = NOTIFICATION_ERROR_NONE;
+	int result = 0;
+
+	query = sqlite3_mprintf("SELECT internal_group_id FROM noti_list "
+				"WHERE caller_app_id = %Q AND priv_id = %d",
+				app_id, priv_id);
+	if (query == NULL) {
+		NOTIFICATION_ERR("fail to alloc query"); /* LCOV_EXCL_LINE */
+		ret = NOTIFICATION_ERROR_OUT_OF_MEMORY;
+		goto err;
+	}
+
+	ret = sqlite3_prepare_v2(db, query, strlen(query), &stmt, NULL);
+	if (ret != SQLITE_OK) {
+		NOTIFICATION_ERR("sqlite3_prepare_v2 failed [%d][%s]", ret,
+				sqlite3_errmsg(db));
+		ret = NOTIFICATION_ERROR_FROM_DB;
+		goto err;
+	}
+
+	ret = sqlite3_step(stmt);
+	if (ret == SQLITE_ROW)
+		result = sqlite3_column_int(stmt, 0);
+	else
+		result = 0;
+
+err:
+	if (stmt)
+		sqlite3_finalize(stmt);
+
+	if (query)
+		sqlite3_free(query);
+
+	if (ret != NOTIFICATION_ERROR_NONE)
+		NOTIFICATION_ERR("failed to internal group ID:%d", ret);
+
+	return result;
+}
+
+static int _create_insertion_query(sqlite3 *db, notification_h noti, sqlite3_stmt *stmt, int *index)
+{
+	char buf_key[32] = { 0, };
+	char *title_key = NULL;
+	char *b_text = NULL;
+	char *b_key = NULL;
+	char *b_format_args = NULL;
+	char *args = NULL;
+	char *group_args = NULL;
+	char *b_image_path = NULL;
+	char *b_execute_option = NULL;
+	char *b_service_responding = NULL;
+	char *b_service_single_launch = NULL;
+	char *b_service_multi_launch = NULL;
+	char *b_event_handler[NOTIFICATION_EVENT_TYPE_MAX+1] = { NULL , };
+	int flag_simmode = 0;
+	int idx = 1;
+	int i = 0;
+	int b_encode_len = 0;
+	int ret = NOTIFICATION_ERROR_NONE;
+
+	if (noti == NULL || stmt == NULL)
+		return NOTIFICATION_ERROR_INVALID_PARAMETER;
+
+	if (noti->b_image_path)
+		bundle_encode(noti->b_image_path, (bundle_raw **)&b_image_path,
+				&b_encode_len);
+
+	/* Get title key */
+	if (noti->b_key != NULL) {
+		snprintf(buf_key, sizeof(buf_key), "%d",
+					NOTIFICATION_TEXT_TYPE_TITLE);
+
+		bundle_get_str(noti->b_key, buf_key, &title_key);
+	}
+
+	if (title_key == NULL && noti->b_text != NULL) {
+		snprintf(buf_key, sizeof(buf_key), "%d",
+					NOTIFICATION_TEXT_TYPE_TITLE);
+
+		bundle_get_str(noti->b_text, buf_key, &title_key);
+	}
+
+	if (title_key == NULL)
+		title_key = noti->caller_app_id;
+
+	if (noti->b_text)
+		bundle_encode(noti->b_text, (bundle_raw **)&b_text, &b_encode_len);
+
+	if (noti->b_key)
+		bundle_encode(noti->b_key, (bundle_raw **)&b_key, &b_encode_len);
+
+	if (noti->b_format_args)
+		bundle_encode(noti->b_format_args,
+			(bundle_raw **)&b_format_args, &b_encode_len);
+
+	if (noti->args)
+		bundle_encode(noti->args, (bundle_raw **)&args, &b_encode_len);
+
+	if (noti->group_args)
+		bundle_encode(noti->group_args, (bundle_raw **)&group_args,
+			&b_encode_len);
+
+	if (noti->b_execute_option)
+		bundle_encode(noti->b_execute_option,
+			(bundle_raw **)&b_execute_option, &b_encode_len);
+
+	if (noti->b_service_responding)
+		bundle_encode(noti->b_service_responding,
+			(bundle_raw **)&b_service_responding, &b_encode_len);
+
+	if (noti->b_service_single_launch)
+		bundle_encode(noti->b_service_single_launch,
+			(bundle_raw **)&b_service_single_launch, &b_encode_len);
+
+	if (noti->b_service_multi_launch)
+		bundle_encode(noti->b_service_multi_launch,
+			(bundle_raw **)&b_service_multi_launch, &b_encode_len);
+
+
+	for (i = 0; i <= NOTIFICATION_EVENT_TYPE_MAX; i++) {
+		if (noti->b_event_handler[i])
+			bundle_encode(noti->b_event_handler[i],
+				(bundle_raw **)&b_event_handler[i], &b_encode_len);
+	}
+
+	/* Check only simmode property is enable */
+	if (noti->flags_for_property & NOTIFICATION_PROP_DISPLAY_ONLY_SIMMODE)
+		flag_simmode = 1;
+
+	__BIND_INT(db, stmt, idx++, noti->type, ret, out);
+	__BIND_INT(db, stmt, idx++, noti->layout, ret, out);
+	__BIND_TEXT(db, stmt, idx++, NOTIFICATION_CHECK_STR(noti->pkg_id), ret, out);
+	__BIND_TEXT(db, stmt, idx++, NOTIFICATION_CHECK_STR(noti->caller_app_id), ret, out);
+	__BIND_TEXT(db, stmt, idx++, NOTIFICATION_CHECK_STR(noti->launch_app_id), ret, out);
+	__BIND_TEXT(db, stmt, idx++, NOTIFICATION_CHECK_STR(b_image_path), ret, out);
+	__BIND_INT(db, stmt, idx++, noti->group_id, ret, out);
+	__BIND_INT(db, stmt, idx++, noti->internal_group_id, ret, out);
+	__BIND_TEXT_STATIC(db, stmt, idx++, NOTIFICATION_CHECK_STR(title_key), ret, out);
+	__BIND_TEXT(db, stmt, idx++, NOTIFICATION_CHECK_STR(b_text), ret, out);
+	__BIND_TEXT(db, stmt, idx++, NOTIFICATION_CHECK_STR(b_key), ret, out);
+	__BIND_TEXT_STATIC(db, stmt, idx++, NOTIFICATION_CHECK_STR(noti->tag), ret, out);
+	__BIND_TEXT(db, stmt, idx++, NOTIFICATION_CHECK_STR(b_format_args), ret, out);
+	__BIND_INT(db, stmt, idx++, noti->num_format_args, ret, out);
+	__BIND_TEXT(db, stmt, idx++, NOTIFICATION_CHECK_STR(noti->domain), ret, out);
+	__BIND_TEXT(db, stmt, idx++, NOTIFICATION_CHECK_STR(noti->dir), ret, out);
+	__BIND_INT(db, stmt, idx++, (int)noti->time, ret, out);
+	__BIND_INT(db, stmt, idx++, (int)noti->insert_time, ret, out);
+	__BIND_TEXT(db, stmt, idx++, NOTIFICATION_CHECK_STR(args), ret, out);
+	__BIND_TEXT(db, stmt, idx++, NOTIFICATION_CHECK_STR(group_args), ret, out);
+	__BIND_TEXT(db, stmt, idx++, NOTIFICATION_CHECK_STR(b_execute_option), ret, out);
+	__BIND_TEXT(db, stmt, idx++, NOTIFICATION_CHECK_STR(b_service_responding), ret, out);
+	__BIND_TEXT(db, stmt, idx++, NOTIFICATION_CHECK_STR(b_service_single_launch), ret, out);
+	__BIND_TEXT(db, stmt, idx++, NOTIFICATION_CHECK_STR(b_service_multi_launch), ret, out);
+	__BIND_TEXT(db, stmt, idx++, NOTIFICATION_CHECK_STR(b_event_handler[NOTIFICATION_EVENT_TYPE_CLICK_ON_BUTTON_1]), ret, out);
+	__BIND_TEXT(db, stmt, idx++, NOTIFICATION_CHECK_STR(b_event_handler[NOTIFICATION_EVENT_TYPE_CLICK_ON_BUTTON_2]), ret, out);
+	__BIND_TEXT(db, stmt, idx++, NOTIFICATION_CHECK_STR(b_event_handler[NOTIFICATION_EVENT_TYPE_CLICK_ON_BUTTON_3]), ret, out);
+	__BIND_TEXT(db, stmt, idx++, NOTIFICATION_CHECK_STR(b_event_handler[NOTIFICATION_EVENT_TYPE_CLICK_ON_BUTTON_4]), ret, out);
+	__BIND_TEXT(db, stmt, idx++, NOTIFICATION_CHECK_STR(b_event_handler[NOTIFICATION_EVENT_TYPE_CLICK_ON_BUTTON_5]), ret, out);
+	__BIND_TEXT(db, stmt, idx++, NOTIFICATION_CHECK_STR(b_event_handler[NOTIFICATION_EVENT_TYPE_CLICK_ON_BUTTON_6]), ret, out);
+	__BIND_TEXT(db, stmt, idx++, NOTIFICATION_CHECK_STR(b_event_handler[NOTIFICATION_EVENT_TYPE_CLICK_ON_ICON]), ret, out);
+	__BIND_TEXT(db, stmt, idx++, NOTIFICATION_CHECK_STR(b_event_handler[NOTIFICATION_EVENT_TYPE_CLICK_ON_THUMBNAIL]), ret, out);
+	__BIND_TEXT(db, stmt, idx++, NOTIFICATION_CHECK_STR(b_event_handler[NOTIFICATION_EVENT_TYPE_CLICK_ON_TEXT_INPUT_BUTTON]), ret, out);
+	__BIND_INT(db, stmt, idx++, noti->sound_type, ret, out);
+	__BIND_TEXT(db, stmt, idx++, NOTIFICATION_CHECK_STR(noti->sound_path), ret, out);
+	__BIND_INT(db, stmt, idx++, noti->vibration_type, ret, out);
+	__BIND_TEXT(db, stmt, idx++, NOTIFICATION_CHECK_STR(noti->vibration_path), ret, out);
+	__BIND_INT(db, stmt, idx++, noti->led_operation, ret, out);
+	__BIND_INT(db, stmt, idx++, noti->led_argb, ret, out);
+	__BIND_INT(db, stmt, idx++, noti->led_on_ms, ret, out);
+	__BIND_INT(db, stmt, idx++, noti->led_off_ms, ret, out);
+	__BIND_INT(db, stmt, idx++, noti->flags_for_property, ret, out);
+	__BIND_INT(db, stmt, idx++, flag_simmode, ret, out);
+	__BIND_INT(db, stmt, idx++, noti->display_applist, ret, out);
+	__BIND_DOUBLE(db, stmt, idx++, noti->progress_size, ret, out);
+	__BIND_DOUBLE(db, stmt, idx++, noti->progress_percentage, ret, out);
+	__BIND_INT(db, stmt, idx++, noti->ongoing_flag, ret, out);
+	__BIND_INT(db, stmt, idx++, noti->ongoing_value_type, ret, out);
+	__BIND_INT(db, stmt, idx++, noti->ongoing_current, ret, out);
+	__BIND_INT(db, stmt, idx++, noti->ongoing_duration, ret, out);
+	__BIND_INT(db, stmt, idx++, noti->auto_remove, ret, out);
+	__BIND_INT(db, stmt, idx++, noti->default_button_index, ret, out);
+	__BIND_INT(db, stmt, idx++, noti->hide_timeout, ret, out);
+	__BIND_INT(db, stmt, idx++, noti->delete_timeout, ret, out);
+	__BIND_INT(db, stmt, idx++, noti->text_input_max_length, ret, out);
+	__BIND_INT(db, stmt, idx++, noti->event_flag, ret, out);
+	__BIND_INT(db, stmt, idx++, noti->extension_image_size, ret, out);
+	__BIND_INT(db, stmt, idx++, noti->uid, ret, out);
+
+out:
+	__free_encoded_data(b_image_path);
+	__free_encoded_data(b_text);
+	__free_encoded_data(b_key);
+	__free_encoded_data(b_format_args);
+	__free_encoded_data(args);
+	__free_encoded_data(group_args);
+	__free_encoded_data(b_execute_option);
+	__free_encoded_data(b_service_responding);
+	__free_encoded_data(b_service_single_launch);
+	__free_encoded_data(b_service_multi_launch);
+
+	for (i = 0; i <= NOTIFICATION_EVENT_TYPE_MAX; i++)
+		__free_encoded_data(b_event_handler[i]);
+
+	if (index != NULL && ret == NOTIFICATION_ERROR_NONE)
+		*index = idx;
+
+	return ret;
+}
+
+static int _create_update_query(sqlite3 *db, notification_h noti, sqlite3_stmt *stmt)
+{
+	char *b_image_path = NULL;
+	char *b_text = NULL;
+	char *b_key = NULL;
+	char *b_format_args = NULL;
+	char *args = NULL;
+	char *group_args = NULL;
+	char *b_execute_option = NULL;
+	char *b_service_responding = NULL;
+	char *b_service_single_launch = NULL;
+	char *b_service_multi_launch = NULL;
+	char *b_event_handler[NOTIFICATION_EVENT_TYPE_MAX+1] = { NULL , };
+	int flag_simmode = 0;
+	int idx = 1;
+	int i = 0;
+	int b_encode_len = 0;
+	int ret = NOTIFICATION_ERROR_NONE;
+
+	if (noti == NULL || stmt == NULL)
+		return NOTIFICATION_ERROR_INVALID_PARAMETER;
+
+	/* Decode bundle to update DB */
+	if (noti->b_image_path)
+		bundle_encode(noti->b_image_path,
+			(bundle_raw **)&b_image_path, &b_encode_len);
+
+	if (noti->b_text)
+		bundle_encode(noti->b_text, (bundle_raw **)&b_text, &b_encode_len);
+
+	if (noti->b_key)
+		bundle_encode(noti->b_key, (bundle_raw **)&b_key, &b_encode_len);
+
+	if (noti->b_format_args)
+		bundle_encode(noti->b_format_args,
+			(bundle_raw **)&b_format_args, &b_encode_len);
+
+	if (noti->args)
+		bundle_encode(noti->args, (bundle_raw **)&args, &b_encode_len);
+
+	if (noti->group_args)
+		bundle_encode(noti->group_args, (bundle_raw **)&group_args,
+			&b_encode_len);
+
+	if (noti->b_execute_option)
+		bundle_encode(noti->b_execute_option,
+			(bundle_raw **)&b_execute_option, &b_encode_len);
+
+	if (noti->b_service_responding)
+		bundle_encode(noti->b_service_responding,
+			(bundle_raw **)&b_service_responding, &b_encode_len);
+
+	if (noti->b_service_single_launch)
+		bundle_encode(noti->b_service_single_launch,
+			(bundle_raw **)&b_service_single_launch, &b_encode_len);
+
+	if (noti->b_service_multi_launch)
+		bundle_encode(noti->b_service_multi_launch,
+			(bundle_raw **)&b_service_multi_launch, &b_encode_len);
+
+	for (i = 0; i <= NOTIFICATION_EVENT_TYPE_MAX; i++) {
+		if (noti->b_event_handler[i])
+			bundle_encode(noti->b_event_handler[i],
+					(bundle_raw **)&b_event_handler[i], &b_encode_len);
+	}
+
+	/* Check only simmode property is enable */
+	if (noti->flags_for_property & NOTIFICATION_PROP_DISPLAY_ONLY_SIMMODE)
+		flag_simmode = 1;
+
+	__BIND_INT(db, stmt, idx++, noti->type, ret, out);
+	__BIND_INT(db, stmt, idx++, noti->layout, ret, out);
+	__BIND_TEXT(db, stmt, idx++, NOTIFICATION_CHECK_STR(noti->launch_app_id), ret, out);
+	__BIND_TEXT(db, stmt, idx++, NOTIFICATION_CHECK_STR(b_image_path), ret, out);
+	__BIND_TEXT(db, stmt, idx++, NOTIFICATION_CHECK_STR(b_text), ret, out);
+	__BIND_TEXT(db, stmt, idx++, NOTIFICATION_CHECK_STR(b_key), ret, out);
+	__BIND_TEXT_STATIC(db, stmt, idx++, NOTIFICATION_CHECK_STR(noti->tag), ret, out);
+	__BIND_TEXT(db, stmt, idx++, NOTIFICATION_CHECK_STR(b_format_args), ret, out);
+	__BIND_INT(db, stmt, idx++, noti->num_format_args, ret, out);
+	__BIND_TEXT(db, stmt, idx++, NOTIFICATION_CHECK_STR(noti->domain), ret, out);
+	__BIND_TEXT(db, stmt, idx++, NOTIFICATION_CHECK_STR(noti->dir), ret, out);
+	__BIND_INT(db, stmt, idx++, (int)noti->time, ret, out);
+	__BIND_INT(db, stmt, idx++, (int)noti->insert_time, ret, out);
+	__BIND_TEXT(db, stmt, idx++, NOTIFICATION_CHECK_STR(args), ret, out);
+	__BIND_TEXT(db, stmt, idx++, NOTIFICATION_CHECK_STR(group_args), ret, out);
+	__BIND_TEXT(db, stmt, idx++, NOTIFICATION_CHECK_STR(b_execute_option), ret, out);
+	__BIND_TEXT(db, stmt, idx++, NOTIFICATION_CHECK_STR(b_service_responding), ret, out);
+	__BIND_TEXT(db, stmt, idx++, NOTIFICATION_CHECK_STR(b_service_single_launch), ret, out);
+	__BIND_TEXT(db, stmt, idx++, NOTIFICATION_CHECK_STR(b_service_multi_launch), ret, out);
+	__BIND_TEXT(db, stmt, idx++, NOTIFICATION_CHECK_STR(b_event_handler[NOTIFICATION_EVENT_TYPE_CLICK_ON_BUTTON_1]), ret, out);
+	__BIND_TEXT(db, stmt, idx++, NOTIFICATION_CHECK_STR(b_event_handler[NOTIFICATION_EVENT_TYPE_CLICK_ON_BUTTON_2]), ret, out);
+	__BIND_TEXT(db, stmt, idx++, NOTIFICATION_CHECK_STR(b_event_handler[NOTIFICATION_EVENT_TYPE_CLICK_ON_BUTTON_3]), ret, out);
+	__BIND_TEXT(db, stmt, idx++, NOTIFICATION_CHECK_STR(b_event_handler[NOTIFICATION_EVENT_TYPE_CLICK_ON_BUTTON_4]), ret, out);
+	__BIND_TEXT(db, stmt, idx++, NOTIFICATION_CHECK_STR(b_event_handler[NOTIFICATION_EVENT_TYPE_CLICK_ON_BUTTON_5]), ret, out);
+	__BIND_TEXT(db, stmt, idx++, NOTIFICATION_CHECK_STR(b_event_handler[NOTIFICATION_EVENT_TYPE_CLICK_ON_BUTTON_6]), ret, out);
+	__BIND_TEXT(db, stmt, idx++, NOTIFICATION_CHECK_STR(b_event_handler[NOTIFICATION_EVENT_TYPE_CLICK_ON_ICON]), ret, out);
+	__BIND_TEXT(db, stmt, idx++, NOTIFICATION_CHECK_STR(b_event_handler[NOTIFICATION_EVENT_TYPE_CLICK_ON_THUMBNAIL]), ret, out);
+	__BIND_TEXT(db, stmt, idx++, NOTIFICATION_CHECK_STR(b_event_handler[NOTIFICATION_EVENT_TYPE_CLICK_ON_TEXT_INPUT_BUTTON]), ret, out);
+	__BIND_INT(db, stmt, idx++, noti->sound_type, ret, out);
+	__BIND_TEXT(db, stmt, idx++, NOTIFICATION_CHECK_STR(noti->sound_path), ret, out);
+	__BIND_INT(db, stmt, idx++, noti->vibration_type, ret, out);
+	__BIND_TEXT(db, stmt, idx++, NOTIFICATION_CHECK_STR(noti->vibration_path), ret, out);
+	__BIND_INT(db, stmt, idx++, noti->led_operation, ret, out);
+	__BIND_INT(db, stmt, idx++, noti->led_argb, ret, out);
+	__BIND_INT(db, stmt, idx++, noti->led_on_ms, ret, out);
+	__BIND_INT(db, stmt, idx++, noti->led_off_ms, ret, out);
+	__BIND_INT(db, stmt, idx++, noti->flags_for_property, ret, out);
+	__BIND_INT(db, stmt, idx++, flag_simmode, ret, out);
+	__BIND_INT(db, stmt, idx++, noti->display_applist, ret, out);
+	__BIND_DOUBLE(db, stmt, idx++, noti->progress_size, ret, out);
+	__BIND_DOUBLE(db, stmt, idx++, noti->progress_percentage, ret, out);
+	__BIND_INT(db, stmt, idx++, noti->ongoing_flag, ret, out);
+	__BIND_INT(db, stmt, idx++, noti->ongoing_value_type, ret, out);
+	__BIND_INT(db, stmt, idx++, noti->ongoing_current, ret, out);
+	__BIND_INT(db, stmt, idx++, noti->ongoing_duration, ret, out);
+	__BIND_INT(db, stmt, idx++, noti->auto_remove, ret, out);
+	__BIND_INT(db, stmt, idx++, noti->default_button_index, ret, out);
+	__BIND_INT(db, stmt, idx++, noti->hide_timeout, ret, out);
+	__BIND_INT(db, stmt, idx++, noti->delete_timeout, ret, out);
+	__BIND_INT(db, stmt, idx++, noti->text_input_max_length, ret, out);
+	__BIND_INT(db, stmt, idx++, noti->event_flag, ret, out);
+	__BIND_INT(db, stmt, idx++, noti->extension_image_size, ret, out);
+
+out:
+	__free_encoded_data(b_image_path);
+	__free_encoded_data(b_text);
+	__free_encoded_data(b_key);
+	__free_encoded_data(b_format_args);
+	__free_encoded_data(args);
+	__free_encoded_data(group_args);
+	__free_encoded_data(b_execute_option);
+	__free_encoded_data(b_service_responding);
+	__free_encoded_data(b_service_single_launch);
+	__free_encoded_data(b_service_multi_launch);
+
+	for (i = 0; i <= NOTIFICATION_EVENT_TYPE_MAX; i++)
+		__free_encoded_data(b_event_handler[i]);
+
+	return ret;
+}
+
+static int _get_notification(char *query_where, notification_h noti)
+{
+	int ret;
+	char *query = NULL;
+	sqlite3 *db = NULL;
+	sqlite3_stmt *stmt = NULL;
+
+	if (query_where == NULL || noti == NULL)
+		return NOTIFICATION_ERROR_INVALID_PARAMETER;
+
+	db = notification_db_open(DBPATH);
+	if (!db)
+		return get_last_result();
+
+	query = sqlite3_mprintf("SELECT %s FROM %s",
+				NOTI_LIST_DB_ATTRIBUTES_SELECT, query_where);
+	if (query == NULL) {
+		ret = NOTIFICATION_ERROR_OUT_OF_MEMORY;
+		goto err;
+	}
+
+	ret = sqlite3_prepare_v2(db, query, -1, &stmt, NULL);
+	if (ret != SQLITE_OK) {
+		NOTIFICATION_ERR("sqlite3_prepare_v2 failed [%d][%s]", ret,
+				sqlite3_errmsg(db));
+		ret = NOTIFICATION_ERROR_FROM_DB;
+		goto err;
+	}
+
+	ret = sqlite3_step(stmt);
+	if (ret == SQLITE_ROW) {
+		__notification_noti_populate_from_stmt(stmt, noti);
+		ret = NOTIFICATION_ERROR_NONE;
+	} else {
+		ret = NOTIFICATION_ERROR_FROM_DB;
+	}
+
+err:
+	if (stmt)
+		sqlite3_finalize(stmt);
+
+	if (db != NULL)
+		notification_db_close(&db);
+
+	return ret;
+}
+
+static int _get_notification_list(char *query_where, notification_list_h *list, int count)
+{
+	int ret;
+	int internal_count = 0;
+	char *query = NULL;
+	sqlite3 *db = NULL;
+	sqlite3_stmt *stmt = NULL;
+	notification_list_h get_list = NULL;
+	notification_h noti = NULL;
+
+	if (query_where == NULL || list == NULL)
+		return NOTIFICATION_ERROR_INVALID_PARAMETER;
+
+	db = notification_db_open(DBPATH);
+	if (!db)
+		return get_last_result();
+
+	query = sqlite3_mprintf("SELECT %s FROM %s",
+				NOTI_LIST_DB_ATTRIBUTES_SELECT, query_where);
+	if (query == NULL) {
+		ret = NOTIFICATION_ERROR_OUT_OF_MEMORY;
+		goto err;
+	}
+
+	ret = sqlite3_prepare_v2(db, query, -1, &stmt, NULL);
+	if (ret != SQLITE_OK) {
+		NOTIFICATION_ERR("sqlite3_prepare_v2 failed [%d][%s]", ret,
+				sqlite3_errmsg(db));
+		ret = NOTIFICATION_ERROR_FROM_DB;
+		goto err;
+	}
+
+	while (sqlite3_step(stmt) == SQLITE_ROW) {
+		noti = (notification_h)calloc(1, sizeof(struct _notification));
+		if (noti == NULL) {
+			ret = NOTIFICATION_ERROR_OUT_OF_MEMORY;
+			goto err;
+		}
+
+		__notification_noti_populate_from_stmt(stmt, noti);
+		if (noti != NULL) {
+			internal_count++;
+
+			get_list = notification_list_append(get_list, noti);
+
+			if (count != -1 && internal_count >= count) {
+				NOTIFICATION_INFO
+				("internal count %d >= count %d",
+				internal_count, count);
+				break;
+			}
+		}
+	}
+
+err:
+	if (stmt)
+		sqlite3_finalize(stmt);
+
+	if (db != NULL)
+		notification_db_close(&db);
+
+	if (get_list != NULL)
+		*list = notification_list_get_head(get_list);
+
+	return ret;
+}
 int notification_noti_set_tag(const char *tag, char *value, char *buf, int buf_len)
 {
 	int len_total = 0;
@@ -711,9 +708,9 @@ static int __get_setting_from_app_control(notification_h noti, notification_sett
 	int ret;
 
 	ret = notification_get_execute_option(noti,
-				NOTIFICATION_EXECUTE_TYPE_SINGLE_LAUNCH,
-				NULL,
-				&b);
+					NOTIFICATION_EXECUTE_TYPE_SINGLE_LAUNCH,
+					NULL,
+					&b);
 	if (ret != NOTIFICATION_ERROR_NONE || b == NULL) {
 		NOTIFICATION_WARN("Can't get or no the excute option [%x]", ret);
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
@@ -764,7 +761,8 @@ static bool _is_allowed_to_notify(notification_h noti)
 	bool ret = true;
 	int err;
 
-	err = noti_setting_service_get_setting_by_app_id(noti->caller_app_id, &setting, noti->uid);
+	err = noti_setting_service_get_setting_by_app_id(noti->caller_app_id,
+							&setting, noti->uid);
 	if (err != NOTIFICATION_ERROR_NONE) {
 		err = __get_setting_from_app_control(noti, &setting);
 		if (err != NOTIFICATION_ERROR_NONE)
@@ -813,7 +811,8 @@ static int _handle_do_not_disturb_option(notification_h noti)
 		goto out;
 	}
 
-	err = notification_system_setting_get_do_not_disturb(system_setting, &do_not_disturb);
+	err = notification_system_setting_get_do_not_disturb(system_setting,
+							&do_not_disturb);
 	if (err != NOTIFICATION_ERROR_NONE) {
 		NOTIFICATION_ERR("_get_do_not_disturb failed [%d]", err);
 		goto out;
@@ -838,7 +837,9 @@ static int _handle_do_not_disturb_option(notification_h noti)
 		if (do_not_disturb_exception == false) {
 			/* do_not_disturb is ON and do_not_disturb_exception is OFF */
 			/* Then add this notification only on quick panel and indicator */
-			noti->display_applist = noti->display_applist & (NOTIFICATION_DISPLAY_APP_NOTIFICATION_TRAY | NOTIFICATION_DISPLAY_APP_INDICATOR);
+			noti->display_applist = noti->display_applist &
+						(NOTIFICATION_DISPLAY_APP_NOTIFICATION_TRAY |
+						NOTIFICATION_DISPLAY_APP_INDICATOR);
 			/* and reset all sound and vibration and led options */
 			noti->sound_type = NOTIFICATION_SOUND_TYPE_NONE;
 			SAFE_FREE(noti->sound_path);
@@ -913,8 +914,6 @@ EXPORT_API int notification_noti_insert(notification_h noti)
 	sqlite3 *db = NULL;
 	sqlite3_stmt *stmt = NULL;
 	char *query = NULL;
-	char buf_key[32] = { 0, };
-	char *title_key = NULL;
 
 	if (noti == NULL) {
 		NOTIFICATION_ERR("NOTIFICATION_ERROR_INVALID_PARAMETER");
@@ -931,72 +930,40 @@ EXPORT_API int notification_noti_insert(notification_h noti)
 
 	if (_is_pop_up_notification((const char *)noti->caller_app_id, noti->uid) == false) {
 		noti->display_applist = (noti->display_applist & (~NOTIFICATION_DISPLAY_APP_ACTIVE));
-		NOTIFICATION_DBG("notification display applist - app_id [%s], applist [%d]", noti->caller_app_id, noti->display_applist);
+		NOTIFICATION_DBG("notification display applist - app_id [%s], applist [%d]",
+				noti->caller_app_id, noti->display_applist);
 	}
 
 	if (_check_text_input(noti) != NOTIFICATION_ERROR_NONE)
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 
-	db = notification_db_open(DBPATH);
-	if (!db)
-		return get_last_result();
-
 	/* Initialize private ID */
 	noti->group_id = NOTIFICATION_GROUP_ID_NONE;
 	noti->internal_group_id = NOTIFICATION_GROUP_ID_NONE;
 
-	ret = _insertion_query_create(noti, &query);
-	if (ret != NOTIFICATION_ERROR_NONE)
+	db = notification_db_open(DBPATH);
+	if (!db)
+		return get_last_result();
+
+	query = sqlite3_mprintf("INSERT INTO noti_list (%s) VALUES (%s)",
+			NOTI_LIST_DB_ATTRIBUTES_INSERT, NOTI_LIST_INSERT_VALUES);
+	if (query == NULL) {
+		NOTIFICATION_ERR("sqlite3_mprintf failed");
+		ret = NOTIFICATION_ERROR_OUT_OF_MEMORY;
 		goto err;
+	}
 
 	ret = sqlite3_prepare_v2(db, query, -1, &stmt, NULL);
 	if (ret != SQLITE_OK) {
-		NOTIFICATION_ERR("Insert Query : %s", query);
-		NOTIFICATION_ERR("Insert DB error(%d) : %s", ret,
+		NOTIFICATION_ERR("sqlite3_prepare_v2 failed [%d][%s]", ret,
 				 sqlite3_errmsg(db));
 		ret = NOTIFICATION_ERROR_FROM_DB;
 		goto err;
 	}
 
-	/* Get title key */
-	if (noti->b_key != NULL) {
-		snprintf(buf_key, sizeof(buf_key), "%d",
-			 NOTIFICATION_TEXT_TYPE_TITLE);
-
-		bundle_get_str(noti->b_key, buf_key, &title_key);
-	}
-
-	if (title_key == NULL && noti->b_text != NULL) {
-		snprintf(buf_key, sizeof(buf_key), "%d",
-			 NOTIFICATION_TEXT_TYPE_TITLE);
-
-		bundle_get_str(noti->b_text, buf_key, &title_key);
-	}
-
-	if (title_key == NULL)
-		title_key = noti->caller_app_id;
-
-	/* Bind query */
-	ret = _notification_noti_bind_query_text(stmt, "$tag", noti->tag);
-	if (ret != NOTIFICATION_ERROR_NONE) {
-		NOTIFICATION_ERR("Bind error : %s", sqlite3_errmsg(db));
+	ret = _create_insertion_query(db, noti, stmt, NULL);
+	if (ret != NOTIFICATION_ERROR_NONE)
 		goto err;
-	}
-	ret = _notification_noti_bind_query_text(stmt, "$title_key", title_key);
-	if (ret != NOTIFICATION_ERROR_NONE) {
-		NOTIFICATION_ERR("Bind error : %s", sqlite3_errmsg(db));
-		goto err;
-	}
-	ret = _notification_noti_bind_query_double(stmt, "$progress_size", noti->progress_size);
-	if (ret != NOTIFICATION_ERROR_NONE) {
-		NOTIFICATION_ERR("Bind error : %s", sqlite3_errmsg(db));
-		goto err;
-	}
-	ret = _notification_noti_bind_query_double(stmt, "$progress_percentage", noti->progress_percentage);
-	if (ret != NOTIFICATION_ERROR_NONE) {
-		NOTIFICATION_ERR("Bind error : %s", sqlite3_errmsg(db));
-		goto err;
-	}
 
 	ret = sqlite3_step(stmt);
 	if (ret == SQLITE_OK || ret == SQLITE_DONE) {
@@ -1010,11 +977,11 @@ err:
 	if (stmt)
 		sqlite3_finalize(stmt);
 
-	if (db)
-		notification_db_close(&db);
-
 	if (query)
 		sqlite3_free(query);
+
+	if (db)
+		notification_db_close(&db);
 
 	return ret;
 }
@@ -1022,67 +989,25 @@ err:
 /* LCOV_EXCL_START */
 EXPORT_API int notification_noti_get_by_priv_id(notification_h noti, int priv_id)
 {
-	int ret = 0;
-	char *query = NULL;
-	sqlite3 *db = NULL;
-	sqlite3_stmt *stmt = NULL;
+	int ret = NOTIFICATION_ERROR_NONE;
+	char *query_where = NULL;
 
 	if (priv_id < 0 || noti == NULL) {
-		ret = NOTIFICATION_ERROR_INVALID_PARAMETER;
-		goto err;
+		NOTIFICATION_ERR("NOTIFICATION_ERROR_INVALID_PARAMETER");
+		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 	}
 
-	db = notification_db_open(DBPATH);
-	if (!db)
-		return get_last_result();
-
-	char *base_query = "select "
-			 "type, layout, pkg_id, caller_app_id, launch_app_id, image_path, group_id, priv_id, "
-			 "tag, b_text, b_key, b_format_args, num_format_args, "
-			 "text_domain, text_dir, time, insert_time, args, group_args, "
-			 "b_execute_option, b_service_responding, b_service_single_launch, b_service_multi_launch, "
-			 "b_event_handler_click_on_button_1, b_event_handler_click_on_button_2, b_event_handler_click_on_button_3, "
-			 "b_event_handler_click_on_button_4, b_event_handler_click_on_button_5, b_event_handler_click_on_button_6, "
-			 "b_event_handler_click_on_icon, b_event_handler_click_on_thumbnail, b_event_handler_click_on_text_input_button, "
-			 "sound_type, sound_path, vibration_type, vibration_path, led_operation, led_argb, led_on_ms, led_off_ms, "
-			 "flags_for_property, display_applist, progress_size, progress_percentage, ongoing_flag, ongoing_value_type, "
-			 "ongoing_current, ongoing_duration, auto_remove, default_button_index, hide_timeout, delete_timeout, "
-			 "text_input_max_length, event_flag, extension_image_size, uid "
-			 "from noti_list";
-
-	query = sqlite3_mprintf("%s where priv_id = %d", base_query, priv_id);
-
-	if (query == NULL) {
+	query_where = sqlite3_mprintf("noti_list WHERE priv_id = %d", priv_id);
+	if (query_where == NULL) {
 		ret = NOTIFICATION_ERROR_OUT_OF_MEMORY;
 		goto err;
 	}
 
-	ret = sqlite3_prepare_v2(db, query, -1, &stmt, NULL);
-	if (ret != SQLITE_OK) {
-		NOTIFICATION_ERR("select Query : %s", query);
-		NOTIFICATION_ERR("select DB error(%d) : %s", ret,
-				 sqlite3_errmsg(db));
-		ret = NOTIFICATION_ERROR_FROM_DB;
-		goto err;
-	}
-
-	ret = sqlite3_step(stmt);
-	if (ret == SQLITE_ROW) {
-		_notification_noti_populate_from_stmt(stmt, noti);
-		ret = NOTIFICATION_ERROR_NONE;
-	} else {
-		ret = NOTIFICATION_ERROR_FROM_DB;
-	}
+	ret = _get_notification(query_where, noti);
 
 err:
-	if (query)
-		sqlite3_free(query);
-
-	if (stmt)
-		sqlite3_finalize(stmt);
-
-	if (db != NULL)
-		notification_db_close(&db);
+	if (query_where)
+		sqlite3_free(query_where);
 
 	return ret;
 }
@@ -1090,78 +1015,33 @@ err:
 
 EXPORT_API int notification_noti_get_by_tag(notification_h noti, char *app_id, char *tag, uid_t uid)
 {
-	int ret = 0;
-	sqlite3 *db = NULL;
-	sqlite3_stmt *stmt = NULL;
+	int ret = NOTIFICATION_ERROR_NONE;
+	char *query_where;
 
 	if (tag == NULL || noti == NULL) {
 		NOTIFICATION_ERR("NOTIFICATION_ERROR_INVALID_PARAMETER");
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 	}
 
-	db = notification_db_open(DBPATH);
-	if (!db)
-		return get_last_result();
-
-	ret = sqlite3_prepare_v2(db, "select "
-		 "type, layout, pkg_id, caller_app_id, launch_app_id, image_path, group_id, priv_id, "
-		 "tag, b_text, b_key, b_format_args, num_format_args, "
-		 "text_domain, text_dir, time, insert_time, args, group_args, "
-		 "b_execute_option, b_service_responding, b_service_single_launch, b_service_multi_launch, "
-		 "b_event_handler_click_on_button_1, b_event_handler_click_on_button_2, b_event_handler_click_on_button_3, "
-		 "b_event_handler_click_on_button_4, b_event_handler_click_on_button_5, b_event_handler_click_on_button_6, "
-		 "b_event_handler_click_on_icon, b_event_handler_click_on_thumbnail, b_event_handler_click_on_text_input_button, "
-		 "sound_type, sound_path, vibration_type, vibration_path, led_operation, led_argb, led_on_ms, led_off_ms, "
-		 "flags_for_property, display_applist, progress_size, progress_percentage, ongoing_flag, ongoing_value_type, "
-		 "ongoing_current, ongoing_duration, auto_remove, default_button_index, hide_timeout, delete_timeout, "
-		 "text_input_max_length, event_flag, extension_image_size, uid "
-		 "from noti_list where caller_app_id = ? and tag = ? and uid = ?", -1, &stmt, NULL);
-	if (ret != SQLITE_OK) {
-		NOTIFICATION_ERR("Error: %s\n", sqlite3_errmsg(db));
+	query_where = sqlite3_mprintf("noti_list WHERE caller_app_id = %Q "
+			"AND tag = %Q AND uid = %d", app_id, tag, uid);
+	if (query_where == NULL) {
 		ret = NOTIFICATION_ERROR_OUT_OF_MEMORY;
 		goto err;
 	}
 
-	ret = sqlite3_bind_text(stmt, 1, app_id, -1, SQLITE_TRANSIENT);
-	if (ret != SQLITE_OK) {
-		NOTIFICATION_ERR("Error: %s\n", sqlite3_errmsg(db));
-		goto err;
-	}
-
-	ret = sqlite3_bind_text(stmt, 2,  tag, -1, SQLITE_TRANSIENT);
-	if (ret != SQLITE_OK) {
-		NOTIFICATION_ERR("Error: %s\n", sqlite3_errmsg(db));
-		goto err;
-	}
-
-	ret = sqlite3_bind_int(stmt, 3, uid);
-	if (ret != SQLITE_OK) {
-		NOTIFICATION_ERR("Error: %s\n", sqlite3_errmsg(db));
-		goto err;
-	}
-
-	ret = sqlite3_step(stmt);
-	if (ret == SQLITE_ROW) {
-		_notification_noti_populate_from_stmt(stmt, noti);
-		ret = NOTIFICATION_ERROR_NONE;
-	} else {
-		ret = NOTIFICATION_ERROR_FROM_DB;
-	}
+	ret = _get_notification(query_where, noti);
 
 err:
-
-	if (stmt)
-		sqlite3_finalize(stmt);
-
-	if (db != NULL)
-		notification_db_close(&db);
+	if (query_where)
+		sqlite3_free(query_where);
 
 	return ret;
 }
 
 EXPORT_API int notification_noti_update(notification_h noti)
 {
-	int ret = 0;
+	int ret = NOTIFICATION_ERROR_NONE;
 	sqlite3 *db;
 	sqlite3_stmt *stmt = NULL;
 	char *query = NULL;
@@ -1181,7 +1061,8 @@ EXPORT_API int notification_noti_update(notification_h noti)
 
 	if (_is_pop_up_notification((const char *)noti->caller_app_id, noti->uid) == false) {
 		noti->display_applist = (noti->display_applist & (~NOTIFICATION_DISPLAY_APP_ACTIVE));
-		NOTIFICATION_DBG("notification display applist - app_id [%s], applist [%d]", noti->caller_app_id, noti->display_applist);
+		NOTIFICATION_DBG("notification display applist - app_id [%s], applist [%d]",
+				noti->caller_app_id, noti->display_applist);
 	}
 
 	db = notification_db_open(DBPATH);
@@ -1191,41 +1072,29 @@ EXPORT_API int notification_noti_update(notification_h noti)
 	/* Check private ID is exist */
 	ret = _notification_noti_check_priv_id(noti, db);
 	if (ret != NOTIFICATION_ERROR_ALREADY_EXIST_ID) {
+		NOTIFICATION_ERR("NOTIFICATION_ERROR_NOT_EXIST_ID");
 		ret = NOTIFICATION_ERROR_NOT_EXIST_ID;
 		goto err;
 	}
 
-	/* make update query */
-	ret = _update_query_create(noti, &query);
-	if (ret != NOTIFICATION_ERROR_NONE)
+	query = sqlite3_mprintf("UPDATE noti_list SET %s WHERE priv_id = %d ",
+				NOTI_LIST_DB_ATTRIBUTES_UPDATE, noti->priv_id);
+	if (query == NULL) {
+		ret = NOTIFICATION_ERROR_OUT_OF_MEMORY;
 		goto err;
+	}
 
 	ret = sqlite3_prepare_v2(db, query, -1, &stmt, NULL);
 	if (ret != SQLITE_OK) {
-		NOTIFICATION_ERR("Insert Query : %s", query);
-		NOTIFICATION_ERR("Insert DB error(%d) : %s", ret,
+		NOTIFICATION_ERR("sqlite3_prepare_v2 failed [%d][%s]", ret,
 				 sqlite3_errmsg(db));
 		ret = NOTIFICATION_ERROR_FROM_DB;
 		goto err;
 	}
 
-	ret = _notification_noti_bind_query_text(stmt, "$tag", noti->tag);
-	if (ret != NOTIFICATION_ERROR_NONE) {
-		NOTIFICATION_ERR("Bind error : %s", sqlite3_errmsg(db));
+	ret = _create_update_query(db, noti, stmt);
+	if (ret != NOTIFICATION_ERROR_NONE)
 		goto err;
-	}
-
-	ret = _notification_noti_bind_query_double(stmt, "$progress_size", noti->progress_size);
-	if (ret != NOTIFICATION_ERROR_NONE) {
-		NOTIFICATION_ERR("Bind error : %s", sqlite3_errmsg(db));
-		goto err;
-	}
-
-	ret = _notification_noti_bind_query_double(stmt, "$progress_percentage", noti->progress_percentage);
-	if (ret != NOTIFICATION_ERROR_NONE) {
-		NOTIFICATION_ERR("Bind error : %s", sqlite3_errmsg(db));
-		goto err;
-	}
 
 	ret = sqlite3_step(stmt);
 	if (ret == SQLITE_OK || ret == SQLITE_DONE)
@@ -1237,45 +1106,63 @@ err:
 	if (stmt)
 		sqlite3_finalize(stmt);
 
-	if (db)
-		notification_db_close(&db);
-
 	if (query)
 		sqlite3_free(query);
+
+	if (db)
+		notification_db_close(&db);
 
 	return ret;
 }
 
-EXPORT_API int notification_noti_delete_all(notification_type_e type, const char *app_id, int *num_deleted, int **list_deleted_rowid, uid_t uid)
+EXPORT_API int notification_noti_delete_all(notification_type_e type,
+					const char *app_id, int *num_deleted,
+					int **list_deleted_rowid, uid_t uid)
 {
+	sqlite3 *db = NULL;
+	sqlite3_stmt *stmt = NULL;
+	char buf[128] = { 0, };
+	char *query = NULL;
+	char *query_base = NULL;
+	char *query_where = NULL;
+	char err_buf[ERR_BUFFER_SIZE];
 	int ret = NOTIFICATION_ERROR_NONE;
 	int ret_tmp = NOTIFICATION_ERROR_NONE;
 	int i = 0;
 	int data_cnt = 0;
-	sqlite3 *db = NULL;
-	sqlite3_stmt *stmt = NULL;
-	char buf[128] = { 0, };
-	char query[NOTIFICATION_QUERY_MAX] = { 0, };
-	char query_base[NOTIFICATION_QUERY_MAX] = { 0, };
-	char query_where[NOTIFICATION_QUERY_MAX] = { 0, };
-	char err_buf[ERR_BUFFER_SIZE];
 
 	db = notification_db_open(DBPATH);
 	if (!db)
 		return get_last_result();
 
+	query_base = sqlite3_mprintf("DELETE FROM noti_list");
+	if (query_base == NULL) {
+		ret = NOTIFICATION_ERROR_OUT_OF_MEMORY;
+		goto err;
+	}
+
 	if (app_id == NULL || strlen(app_id) == 0) {
-		if (type != NOTIFICATION_TYPE_NONE)
-			snprintf(query_where, sizeof(query_where),
-				 "where type = %d and uid = %d", type, uid);
+		if (type != NOTIFICATION_TYPE_NONE) {
+			query_where = sqlite3_mprintf("WHERE type = %d "
+						"AND uid = %d", type, uid);
+			if (query_where == NULL) {
+				ret = NOTIFICATION_ERROR_OUT_OF_MEMORY;
+				goto err;
+			}
+		}
 	} else {
 		if (type == NOTIFICATION_TYPE_NONE)
-			snprintf(query_where, sizeof(query_where),
-				 "where caller_app_id = '%s' and uid = %d", app_id, uid);
+			query_where = sqlite3_mprintf("WHERE caller_app_id = %Q "
+						"AND uid = %d", app_id, uid);
 		else
-			snprintf(query_where, sizeof(query_where),
-				 "where caller_app_id = '%s' and type = %d and uid = %d",
-				 app_id, type, uid);
+			query_where = sqlite3_mprintf("WHERE caller_app_id = %Q "
+						"AND type = %d AND uid = %d",
+						app_id, type, uid);
+
+		if (query_where == NULL) {
+			ret = NOTIFICATION_ERROR_OUT_OF_MEMORY;
+			goto err;
+		}
 	}
 
 	if (num_deleted != NULL)
@@ -1283,12 +1170,15 @@ EXPORT_API int notification_noti_delete_all(notification_type_e type, const char
 
 	if (list_deleted_rowid != NULL) {
 		*list_deleted_rowid = NULL;
-		snprintf(query, sizeof(query),
-				"select priv_id from noti_list %s ", query_where);
 
-		ret = sqlite3_prepare(db, query, strlen(query), &stmt, NULL);
+		query = sqlite3_mprintf("SELECT priv_id FROM noti_list %s ", query_where);
+		if (query == NULL) {
+			ret = NOTIFICATION_ERROR_OUT_OF_MEMORY;
+			goto err;
+		}
+
+		ret = sqlite3_prepare_v2(db, query, strlen(query), &stmt, NULL);
 		if (ret != SQLITE_OK) {
-			NOTIFICATION_ERR("Select Query : %s", query);
 			NOTIFICATION_ERR("Select DB error(%d) : %s", ret,
 					 sqlite3_errmsg(db));
 
@@ -1319,27 +1209,36 @@ EXPORT_API int notification_noti_delete_all(notification_type_e type, const char
 			data_cnt++;
 		}
 
-		if (stmt) {
-			sqlite3_finalize(stmt);
-			stmt = NULL;
-		}
-
 		if (data_cnt > 0) {
 			query_where[0] = '\0';
-			snprintf(query_base, sizeof(query_base) - 1, "delete from noti_list");
+
 			for (i = 0; i < data_cnt ; i++) {
 				if (i % NOTI_BURST_DELETE_UNIT == 0 && i != 0) {
-					snprintf(query, sizeof(query) - 1, "%s where priv_id in (%s)", query_base, query_where);
+					query = sqlite3_mprintf("%s WHERE priv_id in (%s)", query_base, query_where);
+					if (query == NULL) {
+						ret = NOTIFICATION_ERROR_OUT_OF_MEMORY;
+						goto err;
+					}
 					ret_tmp = notification_db_exec(db, query, NULL);
 					query_where[0] = '\0';
 					if (ret == NOTIFICATION_ERROR_NONE)
 						ret = ret_tmp;
 				}
 				snprintf(buf, sizeof(buf) - 1, "%s%d", (i % NOTI_BURST_DELETE_UNIT == 0) ? "" : ",", *((*list_deleted_rowid) + i));
-				strncat(query_where, buf, sizeof(query_where) - strlen(query_where) - 1);
+				query_where = sqlite3_mprintf("%s%s", query_where, buf);
+				if (query_where == NULL) {
+					ret = NOTIFICATION_ERROR_OUT_OF_MEMORY;
+					goto err;
+				}
 			}
+
 			if ((i <= NOTI_BURST_DELETE_UNIT) || ((i % NOTI_BURST_DELETE_UNIT) > 0)) {
-				snprintf(query, sizeof(query) - 1, "%s where priv_id in (%s)", query_base, query_where);
+				query = sqlite3_mprintf("%s WHERE priv_id in (%s)", query_base, query_where);
+				if (query == NULL) {
+					ret = NOTIFICATION_ERROR_OUT_OF_MEMORY;
+					goto err;
+				}
+
 				ret_tmp = notification_db_exec(db, query, NULL);
 				if (ret == NOTIFICATION_ERROR_NONE)
 					ret = ret_tmp;
@@ -1353,18 +1252,27 @@ EXPORT_API int notification_noti_delete_all(notification_type_e type, const char
 			*num_deleted = data_cnt;
 	} else {
 		/* Make main query */
-		snprintf(query_base, sizeof(query_base), "delete from noti_list ");
-		snprintf(query, sizeof(query), "%s %s", query_base, query_where);
+		query = sqlite3_mprintf("%s %s", query_base, query_where);
+		if (query == NULL) {
+			ret = NOTIFICATION_ERROR_OUT_OF_MEMORY;
+			goto err;
+		}
 
-		ret = notification_db_exec(db, query, NULL);
-
-		if (num_deleted != NULL)
-			*num_deleted = sqlite3_changes(db);
+		ret = notification_db_exec(db, query, num_deleted);
 	}
 
 err:
 	if (stmt)
 		sqlite3_finalize(stmt);
+
+	if (query)
+		sqlite3_free(query);
+
+	if (query_base)
+		sqlite3_free(query_base);
+
+	if (query_where)
+		sqlite3_free(query_where);
 
 	if (db)
 		notification_db_close(&db);
@@ -1376,8 +1284,8 @@ err:
 EXPORT_API int notification_noti_delete_by_priv_id(const char *app_id, int priv_id)
 {
 	sqlite3 *db = NULL;
-	char query[NOTIFICATION_QUERY_MAX] = { 0, };
-	int ret;
+	char *query = NULL;
+	int ret = NOTIFICATION_ERROR_NONE;
 
 	if (app_id == NULL)
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
@@ -1386,11 +1294,18 @@ EXPORT_API int notification_noti_delete_by_priv_id(const char *app_id, int priv_
 	if (!db)
 		return get_last_result();
 
-	snprintf(query, sizeof(query), "delete from noti_list "
-		 "where caller_app_id = '%s' and priv_id = %d", app_id,
-		 priv_id);
+	query = sqlite3_mprintf("DELETE FROM noti_list WHERE caller_app_id = %Q "
+				"AND priv_id = %d", app_id, priv_id);
+	if (query == NULL) {
+		ret = NOTIFICATION_ERROR_OUT_OF_MEMORY;
+		goto err;
+	}
 
 	ret = notification_db_exec(db, query, NULL);
+
+err:
+	if (query)
+		sqlite3_free(query);
 
 	if (db)
 		notification_db_close(&db);
@@ -1399,24 +1314,32 @@ EXPORT_API int notification_noti_delete_by_priv_id(const char *app_id, int priv_
 }
 /* LCOV_EXCL_STOP */
 
-EXPORT_API int notification_noti_delete_by_priv_id_get_changes(const char *app_id, int priv_id, int *num_changes, uid_t uid)
+EXPORT_API int notification_noti_delete_by_priv_id_get_changes(const char *app_id,
+							int priv_id,
+							int *num_changes,
+							uid_t uid)
 {
 	sqlite3 *db = NULL;
-	char query[NOTIFICATION_QUERY_MAX] = { 0, };
-	int ret;
+	char *query = NULL;
+	int ret = NOTIFICATION_ERROR_NONE;
 
 	db = notification_db_open(DBPATH);
 	if (!db)
 		return get_last_result();
 
-	snprintf(query, sizeof(query), "delete from noti_list "
-		"where caller_app_id = '%s' and priv_id = %d and uid = %d",
-		app_id, priv_id, uid);
+	query = sqlite3_mprintf("DELETE FROM noti_list WHERE caller_app_id = %Q "
+				"AND priv_id = %d AND uid = %d",
+				app_id, priv_id, uid);
+	if (query == NULL) {
+		ret = NOTIFICATION_ERROR_OUT_OF_MEMORY;
+		goto err;
+	}
 
-	ret = notification_db_exec(db, query, num_changes);
+	ret = notification_db_exec(db, query, NULL);
 
-	if (num_changes != NULL)
-		NOTIFICATION_DBG("deleted num:%d", *num_changes);
+err:
+	if (query)
+		sqlite3_free(query);
 
 	if (db)
 		notification_db_close(&db);
@@ -1427,89 +1350,101 @@ EXPORT_API int notification_noti_delete_by_priv_id_get_changes(const char *app_i
 /* todo refactoring */
 /* LCOV_EXCL_START */
 EXPORT_API int notification_noti_get_count(notification_type_e type,
-						 const char *app_id,
-						 int group_id, int priv_id,
-						 int *count, uid_t uid)
+					const char *app_id,
+					int group_id, int priv_id,
+					int *count, uid_t uid)
 {
 	sqlite3 *db = NULL;
 	sqlite3_stmt *stmt = NULL;
-	char query[NOTIFICATION_QUERY_MAX] = { 0, };
-	char query_base[NOTIFICATION_QUERY_MAX] = { 0, };
-	char query_where[NOTIFICATION_QUERY_MAX] = { 0, };
-	char query_where_more[NOTIFICATION_QUERY_MAX] = { 0, };
-
-	int ret = 0, get_count = 0, internal_group_id = 0;
+	char *query = NULL;
+	char *query_base = NULL;
+	char *query_where = NULL;
+	char *query_where_more = NULL;
+	int ret = NOTIFICATION_ERROR_NONE;
+	int get_count = 0;
+	int internal_group_id = 0;
 	int status = VCONFKEY_TELEPHONY_SIM_UNKNOWN;
-	int flag_where_more = 0;
-	int ret_vconf = 0;
+
+	/* Check current sim status */
+	ret = vconf_get_int(VCONFKEY_TELEPHONY_SIM_SLOT, &status);
+	if (ret < 0)
+		return NOTIFICATION_ERROR_IO_ERROR;
 
 	db = notification_db_open(DBPATH);
 	if (!db)
 		return get_last_result();
 
-	/* Check current sim status */
-	ret_vconf = vconf_get_int(VCONFKEY_TELEPHONY_SIM_SLOT, &status);
+	query_base = sqlite3_mprintf("SELECT count(*) FROM noti_list ");
+	if (query_base == NULL) {
+		ret = NOTIFICATION_ERROR_OUT_OF_MEMORY;
+		goto err;
+	}
 
-	snprintf(query_base, sizeof(query_base),
-		 "select count(*) from noti_list ");
+	internal_group_id =
+		_notification_noti_get_internal_group_id_by_priv_id(app_id, priv_id, db);
 
 	if (group_id == NOTIFICATION_GROUP_ID_NONE) {
-		if (priv_id == NOTIFICATION_PRIV_ID_NONE) {
-			snprintf(query_where, sizeof(query_where),
-				 "where caller_app_id = '%s' and uid = %d ",
-				 app_id, uid);
-		} else {
-			internal_group_id =
-			    _notification_noti_get_internal_group_id_by_priv_id
-			    (app_id, priv_id, db);
-			snprintf(query_where, sizeof(query_where),
-				 "where caller_app_id = '%s' and internal_group_id = %d and uid = %d ",
-				 app_id, internal_group_id, uid);
-		}
+		if (priv_id == NOTIFICATION_PRIV_ID_NONE)
+			query_where = sqlite3_mprintf("WHERE caller_app_id = %Q "
+					"AND uid = %d ", app_id, uid);
+		else
+			query_where = sqlite3_mprintf("WHERE caller_app_id = %Q "
+					"AND internal_group_id = %d AND uid = %d ",
+					app_id, internal_group_id, uid);
 	} else {
-		if (priv_id == NOTIFICATION_PRIV_ID_NONE) {
-			snprintf(query_where, sizeof(query_where),
-				 "where caller_app_id = '%s' and group_id = %d and uid = %d ",
-				 app_id, group_id, uid);
-		} else {
-			internal_group_id =
-			    _notification_noti_get_internal_group_id_by_priv_id
-			    (app_id, priv_id, db);
-			snprintf(query_where, sizeof(query_where),
-				 "where caller_app_id = '%s' and internal_group_id = %d and uid = %d ",
-				 app_id, internal_group_id, uid);
-		}
+		if (priv_id == NOTIFICATION_PRIV_ID_NONE)
+			query_where = sqlite3_mprintf("WHERE caller_app_id = %Q "
+					"AND group_id = %d AND uid = %d ",
+					app_id, group_id, uid);
+		else
+			query_where = sqlite3_mprintf("WHERE caller_app_id = %Q "
+					"AND internal_group_id = %d AND uid = %d ",
+					app_id, internal_group_id, uid);
 	}
 
-	if (ret_vconf == 0 && status == VCONFKEY_TELEPHONY_SIM_INSERTED) {
+	if (query_where == NULL) {
+		ret = NOTIFICATION_ERROR_OUT_OF_MEMORY;
+		goto err;
+	}
+
+	if (status == VCONFKEY_TELEPHONY_SIM_INSERTED) {
 		if (type != NOTIFICATION_TYPE_NONE) {
-			snprintf(query_where_more, sizeof(query_where_more),
-				 "type = %d ", type);
-			flag_where_more = 1;
+			query_where_more = sqlite3_mprintf("type = %d ", type);
+			if (query_where_more == NULL) {
+				ret = NOTIFICATION_ERROR_OUT_OF_MEMORY;
+				goto err;
+			}
 		}
 	} else {
-		if (type != NOTIFICATION_TYPE_NONE) {
-			snprintf(query_where_more, sizeof(query_where_more),
-				 "type = %d and flag_simmode = 0 ", type);
-			flag_where_more = 1;
-		} else {
-			snprintf(query_where_more, sizeof(query_where_more),
-				 "flag_simmode = 0 ");
-			flag_where_more = 1;
+		if (type != NOTIFICATION_TYPE_NONE)
+			query_where_more = sqlite3_mprintf("type = %d AND "
+					"flag_simmode = 0 ", type);
+		else
+			query_where_more = sqlite3_mprintf("flag_simmode = 0 ");
+
+		if (query_where_more == NULL) {
+			ret = NOTIFICATION_ERROR_OUT_OF_MEMORY;
+			goto err;
 		}
 	}
 
-	if (flag_where_more == 1) {
-		snprintf(query, sizeof(query), "%s %s and %s",
-			 query_base, query_where, query_where_more);
+	if (query_where_more) {
+		query = sqlite3_mprintf("%s %s AND %s", query_base, query_where,
+				query_where_more);
+		if (query == NULL) {
+			ret = NOTIFICATION_ERROR_OUT_OF_MEMORY;
+			goto err;
+		}
 	} else {
-		snprintf(query, sizeof(query), "%s %s", query_base,
-			 query_where);
+		query = sqlite3_mprintf("%s %s", query_base, query_where);
+		if (query == NULL) {
+			ret = NOTIFICATION_ERROR_OUT_OF_MEMORY;
+			goto err;
+		}
 	}
 
-	ret = sqlite3_prepare(db, query, strlen(query), &stmt, NULL);
+	ret = sqlite3_prepare_v2(db, query, -1, &stmt, NULL);
 	if (ret != SQLITE_OK) {
-		NOTIFICATION_ERR("Select Query : %s", query);
 		NOTIFICATION_ERR("Select DB error(%d) : %s", ret,
 				 sqlite3_errmsg(db));
 
@@ -1527,6 +1462,18 @@ err:
 	if (stmt)
 		sqlite3_finalize(stmt);
 
+	if (query)
+		sqlite3_free(query);
+
+	if (query_base)
+		sqlite3_free(query_base);
+
+	if (query_where)
+		sqlite3_free(query_where);
+
+	if (query_where_more)
+		sqlite3_free(query_where_more);
+
 	if (db)
 		notification_db_close(&db);
 
@@ -1537,221 +1484,149 @@ err:
 /* LCOV_EXCL_STOP */
 
 EXPORT_API int notification_noti_get_grouping_list(notification_type_e type,
-							 int count,
-							 notification_list_h *list,
-							 uid_t uid)
+							int count,
+							notification_list_h *list,
+							uid_t uid)
 {
-	sqlite3 *db = NULL;
-	sqlite3_stmt *stmt = NULL;
-	char query[NOTIFICATION_QUERY_MAX] = { 0, };
-	char query_base[NOTIFICATION_QUERY_MAX] = { 0, };
-	char query_uid[NOTIFICATION_QUERY_MAX] = { 0, };
-	char query_where[NOTIFICATION_QUERY_MAX] = { 0, };
-
-	int ret = 0;
-	notification_list_h get_list = NULL;
-	notification_h noti = NULL;
-	int internal_count = 0;
+	char *query = NULL;
+	char *query_uid = NULL;
+	char *query_where = NULL;
+	int ret = NOTIFICATION_ERROR_NONE;
 	int status;
-
-	db = notification_db_open(DBPATH);
-	if (!db)
-		return get_last_result();
 
 	/* Check current sim status */
 	ret = vconf_get_int(VCONFKEY_TELEPHONY_SIM_SLOT, &status);
-
-	snprintf(query_base, sizeof(query_base), "select "
-		 "type, layout, pkg_id, caller_app_id, launch_app_id, image_path, group_id, priv_id, "
-		 "tag, b_text, b_key, b_format_args, num_format_args, "
-		 "text_domain, text_dir, time, insert_time, args, group_args, "
-		 "b_execute_option, b_service_responding, b_service_single_launch, b_service_multi_launch, "
-		 "b_event_handler_click_on_button_1, b_event_handler_click_on_button_2, b_event_handler_click_on_button_3, "
-		 "b_event_handler_click_on_button_4, b_event_handler_click_on_button_5, b_event_handler_click_on_button_6, "
-		 "b_event_handler_click_on_icon, b_event_handler_click_on_thumbnail, b_event_handler_click_on_text_input_button, "
-		 "sound_type, sound_path, vibration_type, vibration_path, led_operation, led_argb, led_on_ms, led_off_ms, "
-		 "flags_for_property, display_applist, progress_size, progress_percentage, ongoing_flag, ongoing_value_type, "
-		 "ongoing_current, ongoing_duration, auto_remove, default_button_index, hide_timeout, delete_timeout, "
-		 "text_input_max_length, event_flag, extension_image_size, uid "
-		 "from noti_list where 1 > 0 ");
+	if (ret < 0)
+		ret = NOTIFICATION_ERROR_IO_ERROR;
 
 	if (status == VCONFKEY_TELEPHONY_SIM_INSERTED) {
-		if (type != NOTIFICATION_TYPE_NONE)
-			snprintf(query_where, sizeof(query_where),
-				 " and type = %d ", type);
+		if (type != NOTIFICATION_TYPE_NONE) {
+			query_where = sqlite3_mprintf(" AND type = %d ", type);
+			if (query_where == NULL)
+				return NOTIFICATION_ERROR_OUT_OF_MEMORY;
+		}
 	} else {
 		if (type != NOTIFICATION_TYPE_NONE)
-			snprintf(query_where, sizeof(query_where),
-				 " and type = %d and flag_simmode = 0 ", type);
+			query_where = sqlite3_mprintf(" AND type = %d AND "
+					"flag_simmode = 0 ", type);
 		else
-			snprintf(query_where, sizeof(query_where),
-				 " and flag_simmode = 0 ");
+			query_where = sqlite3_mprintf(" AND flag_simmode = 0 ");
+
+		if (query_where == NULL)
+			return NOTIFICATION_ERROR_OUT_OF_MEMORY;
 	}
 
-	if (uid != NOTIFICATION_GLOBAL_UID)
-		snprintf(query_uid, sizeof(query_uid), " and uid = %d ", uid);
-
-	snprintf(query, sizeof(query),
-		 "%s %s %s "
-		 "order by rowid desc, time desc", query_base, query_where, query_uid);
-
-	ret = sqlite3_prepare(db, query, strlen(query), &stmt, NULL);
-	if (ret != SQLITE_OK) {
-		NOTIFICATION_ERR("Select Query : %s", query);
-		NOTIFICATION_ERR("Select DB error(%d) : %s", ret,
-				 sqlite3_errmsg(db));
-
-		ret = NOTIFICATION_ERROR_FROM_DB;
-		goto err;
-	}
-
-	while (sqlite3_step(stmt) == SQLITE_ROW) {
-		/* Make notification list */
-		noti = _notification_noti_get_item(stmt);
-		if (noti != NULL) {
-			internal_count++;
-
-			get_list = notification_list_append(get_list, noti);
-
-			if (count != -1 && internal_count >= count) {
-				NOTIFICATION_INFO
-				    ("internal count %d >= count %d",
-				     internal_count, count);
-				break;
-			}
+	if (uid != NOTIFICATION_GLOBAL_UID) {
+		query_uid = sqlite3_mprintf(" AND uid = %d ", uid);
+		if (query_uid == NULL) {
+			ret = NOTIFICATION_ERROR_OUT_OF_MEMORY;
+			goto err;
 		}
 	}
 
-	ret = NOTIFICATION_ERROR_NONE;
+	query = sqlite3_mprintf("noti_list WHERE 1 > 0 %s %s "
+			"ORDER BY rowid DESC, time DESC", query_where, query_uid);
+	if (query == NULL) {
+		ret = NOTIFICATION_ERROR_OUT_OF_MEMORY;
+		goto err;
+	}
+
+	ret = _get_notification_list(query, list, count);
 
 err:
-	if (stmt)
-		sqlite3_finalize(stmt);
+	if (query_where)
+		sqlite3_free(query_where);
 
-	if (db)
-		notification_db_close(&db);
+	if (query_uid)
+		sqlite3_free(query_uid);
 
-	if (get_list != NULL)
-		*list = notification_list_get_head(get_list);
+	if (query)
+		sqlite3_free(query);
 
 	return ret;
 }
 
 EXPORT_API int notification_noti_get_detail_list(const char *app_id,
-						       int group_id,
-						       int priv_id, int count,
-						       notification_list_h *list,
-						       uid_t uid)
+						int group_id,
+						int priv_id, int count,
+						notification_list_h *list,
+						uid_t uid)
 {
-	sqlite3 *db = NULL;
-	sqlite3_stmt *stmt = NULL;
-	char query_base[NOTIFICATION_QUERY_MAX] = { 0, };
-	char query_where[NOTIFICATION_QUERY_MAX] = { 0, };
-
-	char query[NOTIFICATION_QUERY_MAX] = { 0, };
-	int ret = 0;
-	notification_list_h get_list = NULL;
-	notification_h noti = NULL;
-	int internal_count = 0;
+	char *query_where = NULL;
+	char *query = NULL;
+	int ret = NOTIFICATION_ERROR_NONE;
 	int internal_group_id = 0;
-	int status = 0; /* If the vconf_get_int failed, the status will be the garbage value */
+	int status = 0;
+	sqlite3 *db = NULL;
+
+	/* Check current sim status */
+	ret = vconf_get_int(VCONFKEY_TELEPHONY_SIM_SLOT, &status);
+	if (ret < 0)
+		return NOTIFICATION_ERROR_IO_ERROR;
 
 	db = notification_db_open(DBPATH);
 	if (!db)
 		return get_last_result();
 
-	/* Check current sim status */
-	ret = vconf_get_int(VCONFKEY_TELEPHONY_SIM_SLOT, &status);
-
-	snprintf(query_base, sizeof(query_base), "select "
-		 "type, layout, pkg_id, caller_app_id, launch_app_id, image_path, group_id, priv_id, "
-		 "tag, b_text, b_key, b_format_args, num_format_args, "
-		 "text_domain, text_dir, time, insert_time, args, group_args, "
-		 "b_execute_option, b_service_responding, b_service_single_launch, b_service_multi_launch, "
-		 "b_event_handler_click_on_button_1, b_event_handler_click_on_button_2, b_event_handler_click_on_button_3, "
-		 "b_event_handler_click_on_button_4, b_event_handler_click_on_button_5, b_event_handler_click_on_button_6, "
-		 "b_event_handler_click_on_icon, b_event_handler_click_on_thumbnail, b_event_handler_click_on_text_input_button, "
-		 "sound_type, sound_path, vibration_type, vibration_path, led_operation, led_argb, led_on_ms, led_off_ms, "
-		 "flags_for_property, display_applist, progress_size, progress_percentage, ongoing_flag, ongoing_value_type, "
-		 "ongoing_current, ongoing_duration, auto_remove, default_button_index, hide_timeout, delete_timeout, "
-		 "text_input_max_length, event_flag, extension_image_size, uid "
-		 "from noti_list ");
-
-	if (priv_id == NOTIFICATION_PRIV_ID_NONE && group_id == NOTIFICATION_GROUP_ID_NONE) {
+	if (priv_id == NOTIFICATION_PRIV_ID_NONE &&
+		group_id == NOTIFICATION_GROUP_ID_NONE) {
 		if (status == VCONFKEY_TELEPHONY_SIM_INSERTED)
-			snprintf(query_where, sizeof(query_where),
-				 "where  caller_app_id = '%s' and uid = %d ", app_id, uid);
+			query_where = sqlite3_mprintf("WHERE  caller_app_id = %Q "
+				"AND uid = %d ", app_id, uid);
 		else
-			snprintf(query_where, sizeof(query_where),
-				 "where  caller_app_id = '%s' and flag_simmode = 0 and uid = %d ", app_id, uid);
+			query_where = sqlite3_mprintf("WHERE  caller_app_id = %Q "
+				"AND flag_simmode = 0 AND uid = %d ", app_id, uid);
 
 	} else {
 		internal_group_id =
-		    _notification_noti_get_internal_group_id_by_priv_id(app_id,
-									priv_id, db);
+			_notification_noti_get_internal_group_id_by_priv_id(app_id,
+								priv_id, db);
 
 		if (status == VCONFKEY_TELEPHONY_SIM_INSERTED)
-			snprintf(query_where, sizeof(query_where),
-				 "where  caller_app_id = '%s' and internal_group_id = %d and uid = %d ",
+			query_where = sqlite3_mprintf("WHERE  caller_app_id = %Q "
+				"AND internal_group_id = %d AND uid = %d ",
 				 app_id, internal_group_id, uid);
 		else
-			snprintf(query_where, sizeof(query_where),
-				 "where  caller_app_id = '%s' and internal_group_id = %d and flag_simmode = 0 and uid = %d ",
+			query_where = sqlite3_mprintf("WHERE  caller_app_id = %Q "
+				"AND internal_group_id = %d AND flag_simmode = 0 "
+				"AND uid = %d ",
 				 app_id, internal_group_id, uid);
 	}
 
-	snprintf(query, sizeof(query),
-		 "%s %s "
-		 "order by rowid desc, time desc", query_base, query_where);
-
-	ret = sqlite3_prepare(db, query, strlen(query), &stmt, NULL);
-	if (ret != SQLITE_OK) {
-		NOTIFICATION_ERR("Select Query : %s", query);
-		NOTIFICATION_ERR("Select DB error(%d) : %s", ret,
-				 sqlite3_errmsg(db));
-
-		ret = NOTIFICATION_ERROR_FROM_DB;
+	if (query_where == NULL) {
+		ret = NOTIFICATION_ERROR_OUT_OF_MEMORY;
 		goto err;
 	}
 
-	while (sqlite3_step(stmt) == SQLITE_ROW) {
-		/* Make notification list */
-		noti = _notification_noti_get_item(stmt);
-		if (noti != NULL) {
-			internal_count++;
-
-			get_list = notification_list_append(get_list, noti);
-
-			if (count != -1 && internal_count >= count) {
-				NOTIFICATION_INFO
-				    ("internal count %d >= count %d",
-				     internal_count, count);
-				break;
-			}
-		}
+	query = sqlite3_mprintf("noti_list %s ORDER BY rowid DESC, time DESC",
+			query_where);
+	if (query == NULL) {
+		ret = NOTIFICATION_ERROR_OUT_OF_MEMORY;
+		goto err;
 	}
 
-	ret = NOTIFICATION_ERROR_NONE;
+	ret = _get_notification_list(query, list, count);
 
 err:
-	if (stmt)
-		sqlite3_finalize(stmt);
+	if (query_where)
+		sqlite3_free(query_where);
+
+	if (query)
+		sqlite3_free(query);
 
 	if (db)
 		notification_db_close(&db);
-
-	if (get_list != NULL)
-		*list = notification_list_get_head(get_list);
 
 	return ret;
 }
 
 EXPORT_API int notification_noti_check_tag(notification_h noti)
 {
-	int result = 0;
-	int ret = NOTIFICATION_ERROR_NONE;
 	sqlite3 *db;
 	sqlite3_stmt *stmt = NULL;
+	char *query = NULL;
+	int ret = NOTIFICATION_ERROR_NONE;
+	int result = 0;
 
 	if (noti->tag == NULL)
 		return NOTIFICATION_ERROR_NOT_EXIST_ID;
@@ -1760,23 +1635,19 @@ EXPORT_API int notification_noti_check_tag(notification_h noti)
 	if (!db)
 		return get_last_result();
 
-	ret = sqlite3_prepare_v2(db, "SELECT priv_id FROM noti_list WHERE caller_app_id = ? and tag = ?", -1, &stmt, NULL);
-	if (ret != SQLITE_OK) {
-		NOTIFICATION_ERR("Error: %s\n", sqlite3_errmsg(db));
-		if (db)
-			notification_db_close(&db);
-		return NOTIFICATION_ERROR_OUT_OF_MEMORY;
-	}
-
-	ret = sqlite3_bind_text(stmt, 1, noti->caller_app_id, -1, SQLITE_TRANSIENT);
-	if (ret != SQLITE_OK) {
-		NOTIFICATION_ERR("Error: %s\n", sqlite3_errmsg(db));
+	query = sqlite3_mprintf("SELECT priv_id FROM noti_list "
+			"WHERE caller_app_id = %Q AND tag = %Q",
+			NOTIFICATION_CHECK_STR(noti->caller_app_id),
+			NOTIFICATION_CHECK_STR(noti->tag));
+	if (query == NULL) {
+		ret = NOTIFICATION_ERROR_OUT_OF_MEMORY;
 		goto err;
 	}
 
-	ret = sqlite3_bind_text(stmt, 2, noti->tag, -1, SQLITE_TRANSIENT);
+	ret = sqlite3_prepare_v2(db, query, strlen(query), &stmt, NULL);
 	if (ret != SQLITE_OK) {
-		NOTIFICATION_ERR("Error: %s\n", sqlite3_errmsg(db));
+		NOTIFICATION_ERR("sqlite3_prepare_v2 failed [%d][%s]", ret,
+			sqlite3_errmsg(db));
 		goto err;
 	}
 
@@ -1785,7 +1656,6 @@ EXPORT_API int notification_noti_check_tag(notification_h noti)
 		result = sqlite3_column_int(stmt, 0);
 	else
 		result = 0;
-
 
 	/* If result > 0, there is priv_id in DB */
 	if (result > 0) {
@@ -1796,8 +1666,12 @@ EXPORT_API int notification_noti_check_tag(notification_h noti)
 	}
 
 err:
-	if (stmt != NULL)
+	if (stmt)
 		sqlite3_finalize(stmt);
+
+	if (query)
+		sqlite3_free(query);
+
 	if (db)
 		notification_db_close(&db);
 
@@ -1806,10 +1680,11 @@ err:
 
 EXPORT_API int notification_noti_check_count_for_template(notification_h noti, int *count)
 {
-	int result = 0;
-	int ret = NOTIFICATION_ERROR_NONE;
 	sqlite3 *db;
 	sqlite3_stmt *stmt = NULL;
+	char *query = NULL;
+	int ret = NOTIFICATION_ERROR_NONE;
+	int result = 0;
 
 	if (noti == NULL || count == NULL)
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
@@ -1818,17 +1693,19 @@ EXPORT_API int notification_noti_check_count_for_template(notification_h noti, i
 	if (!db)
 		return get_last_result();
 
-	ret = sqlite3_prepare_v2(db, "SELECT COUNT(caller_app_id) FROM noti_template WHERE caller_app_id = ?", -1, &stmt, NULL);
-	if (ret != SQLITE_OK) {
-		NOTIFICATION_ERR("Error: %s\n", sqlite3_errmsg(db));
-		if (db)
-			notification_db_close(&db);
-		return NOTIFICATION_ERROR_OUT_OF_MEMORY;
+	query = sqlite3_mprintf("SELECT COUNT(caller_app_id) FROM noti_template "
+				"WHERE caller_app_id = %Q",
+				NOTIFICATION_CHECK_STR(noti->caller_app_id));
+	if (query == NULL) {
+		ret = NOTIFICATION_ERROR_OUT_OF_MEMORY;
+		goto err;
 	}
 
-	ret = sqlite3_bind_text(stmt, 1, noti->caller_app_id, -1, SQLITE_TRANSIENT);
+	ret = sqlite3_prepare_v2(db, query, strlen(query), &stmt, NULL);
 	if (ret != SQLITE_OK) {
-		NOTIFICATION_ERR("Error: %s\n", sqlite3_errmsg(db));
+		NOTIFICATION_ERR("sqlite3_prepare_v2 failed [%d][%s]", ret,
+			sqlite3_errmsg(db));
+		ret = NOTIFICATION_ERROR_FROM_DB;
 		goto err;
 	}
 
@@ -1841,288 +1718,60 @@ EXPORT_API int notification_noti_check_count_for_template(notification_h noti, i
 	*count = result;
 
 err:
-	if (stmt != NULL)
+	if (stmt)
 		sqlite3_finalize(stmt);
+
+	if (query)
+		sqlite3_free(query);
+
 	if (db)
 		notification_db_close(&db);
 
 	return ret;
 }
 
-static int _template_query_create(notification_h noti, char *template_name, char **query)
-{
-	int i = 0;
-	int b_encode_len = 0;
-	char *args = NULL;
-	char *group_args = NULL;
-	char *b_image_path = NULL;
-	char *b_execute_option = NULL;
-	char *b_service_responding = NULL;
-	char *b_service_single_launch = NULL;
-	char *b_service_multi_launch = NULL;
-	char *b_event_handler[NOTIFICATION_EVENT_TYPE_MAX+1] = { NULL , };
-	char *b_text = NULL;
-	char *b_key = NULL;
-	char *b_format_args = NULL;
-	int flag_simmode = 0;
-
-	if (query == NULL || template_name == NULL)
-		return NOTIFICATION_ERROR_INVALID_PARAMETER;
-
-	/* Decode bundle to insert DB */
-	if (noti->args)
-		bundle_encode(noti->args, (bundle_raw **)&args, &b_encode_len);
-
-	if (noti->group_args)
-		bundle_encode(noti->group_args, (bundle_raw **)&group_args,
-			      &b_encode_len);
-
-	if (noti->b_execute_option)
-		bundle_encode(noti->b_execute_option,
-			      (bundle_raw **)&b_execute_option, &b_encode_len);
-
-	if (noti->b_service_responding)
-		bundle_encode(noti->b_service_responding,
-			      (bundle_raw **)&b_service_responding, &b_encode_len);
-
-	if (noti->b_service_single_launch)
-		bundle_encode(noti->b_service_single_launch,
-			      (bundle_raw **)&b_service_single_launch, &b_encode_len);
-
-	if (noti->b_service_multi_launch)
-		bundle_encode(noti->b_service_multi_launch,
-			      (bundle_raw **)&b_service_multi_launch, &b_encode_len);
-
-
-	for (i = 0; i <= NOTIFICATION_EVENT_TYPE_MAX; i++) {
-		if (noti->b_event_handler[i])
-			bundle_encode(noti->b_event_handler[i],
-					(bundle_raw **)&b_event_handler[i], &b_encode_len);
-	}
-
-	if (noti->b_text)
-		bundle_encode(noti->b_text, (bundle_raw **)&b_text, &b_encode_len);
-
-	if (noti->b_key)
-		bundle_encode(noti->b_key, (bundle_raw **)&b_key, &b_encode_len);
-
-	if (noti->b_format_args)
-		bundle_encode(noti->b_format_args,
-			      (bundle_raw **)&b_format_args, &b_encode_len);
-
-	if (noti->b_image_path)
-		bundle_encode(noti->b_image_path,
-			      (bundle_raw **)&b_image_path, &b_encode_len);
-
-	/* Check only simmode property is enable */
-	if (noti->flags_for_property & NOTIFICATION_PROP_DISPLAY_ONLY_SIMMODE)
-		flag_simmode = 1;
-
-	*query = sqlite3_mprintf("INSERT OR REPLACE INTO noti_template ("
-		"type, "
-		"layout, "
-		"pkg_id, caller_app_id, launch_app_id, "
-		"image_path, "
-		"group_id, internal_group_id,"
-		"title_key, "
-		"b_text, b_key, tag, b_format_args, num_format_args, "
-		"text_domain, text_dir, "
-		"time, insert_time, "
-		"args, group_args, "
-		"b_execute_option, "
-		"b_service_responding, b_service_single_launch, b_service_multi_launch, "
-		"b_event_handler_click_on_button_1, b_event_handler_click_on_button_2, b_event_handler_click_on_button_3, "
-		"b_event_handler_click_on_button_4, b_event_handler_click_on_button_5, b_event_handler_click_on_button_6, "
-		"b_event_handler_click_on_icon, b_event_handler_click_on_thumbnail, b_event_handler_click_on_text_input_button, "
-		"sound_type, sound_path, vibration_type, vibration_path, led_operation, led_argb, led_on_ms, led_off_ms, "
-		"flags_for_property, flag_simmode, display_applist, progress_size, progress_percentage, "
-		"ongoing_flag, ongoing_value_type, ongoing_current, ongoing_duration, "
-		"auto_remove, default_button_index, hide_timeout, delete_timeout, text_input_max_length, "
-		"event_flag, extension_image_size, uid, template_name) values ("
-		"%d, "
-		"%d, "
-		"'%s', '%s', '%s', "
-		"'%s', "
-		"%d, %d,"
-		"$title_key, "
-		"'%s', '%s', $tag, '%s', %d, "
-		"'%s', '%s', "
-		"%d, %d, "
-		"'%s', '%s', "
-		"'%s', "
-		"'%s', '%s', '%s', "
-		"'%s', '%s', '%s', "
-		"'%s', '%s', '%s', "
-		"'%s', '%s', '%s', "
-		"%d, '%s', %d, '%s', %d, %d, %d, %d, "
-		"%d, %d, %d, $progress_size, $progress_percentage, "
-		"%d, %d, %d, %d, "
-		"%d, %d, %d, %d, %d, "
-		"%d, %d, %d, '%s')",
-		noti->type,
-		noti->layout,
-		NOTIFICATION_CHECK_STR(noti->pkg_id),
-		NOTIFICATION_CHECK_STR(noti->caller_app_id),
-		NOTIFICATION_CHECK_STR(noti->launch_app_id),
-		NOTIFICATION_CHECK_STR(b_image_path), noti->group_id,
-		noti->internal_group_id,
-		NOTIFICATION_CHECK_STR(b_text), NOTIFICATION_CHECK_STR(b_key),
-		NOTIFICATION_CHECK_STR(b_format_args), noti->num_format_args,
-		NOTIFICATION_CHECK_STR(noti->domain),
-		NOTIFICATION_CHECK_STR(noti->dir), (int)noti->time,
-		(int)noti->insert_time, NOTIFICATION_CHECK_STR(args),
-		NOTIFICATION_CHECK_STR(group_args),
-		NOTIFICATION_CHECK_STR(b_execute_option),
-		NOTIFICATION_CHECK_STR(b_service_responding),
-		NOTIFICATION_CHECK_STR(b_service_single_launch),
-		NOTIFICATION_CHECK_STR(b_service_multi_launch),
-		NOTIFICATION_CHECK_STR(b_event_handler[NOTIFICATION_EVENT_TYPE_CLICK_ON_BUTTON_1]),
-		NOTIFICATION_CHECK_STR(b_event_handler[NOTIFICATION_EVENT_TYPE_CLICK_ON_BUTTON_2]),
-		NOTIFICATION_CHECK_STR(b_event_handler[NOTIFICATION_EVENT_TYPE_CLICK_ON_BUTTON_3]),
-		NOTIFICATION_CHECK_STR(b_event_handler[NOTIFICATION_EVENT_TYPE_CLICK_ON_BUTTON_4]),
-		NOTIFICATION_CHECK_STR(b_event_handler[NOTIFICATION_EVENT_TYPE_CLICK_ON_BUTTON_5]),
-		NOTIFICATION_CHECK_STR(b_event_handler[NOTIFICATION_EVENT_TYPE_CLICK_ON_BUTTON_6]),
-		NOTIFICATION_CHECK_STR(b_event_handler[NOTIFICATION_EVENT_TYPE_CLICK_ON_ICON]),
-		NOTIFICATION_CHECK_STR(b_event_handler[NOTIFICATION_EVENT_TYPE_CLICK_ON_THUMBNAIL]),
-		NOTIFICATION_CHECK_STR(b_event_handler[NOTIFICATION_EVENT_TYPE_CLICK_ON_TEXT_INPUT_BUTTON]),
-		noti->sound_type, NOTIFICATION_CHECK_STR(noti->sound_path),
-		noti->vibration_type,
-		NOTIFICATION_CHECK_STR(noti->vibration_path),
-		noti->led_operation,
-		noti->led_argb,
-		noti->led_on_ms,
-		noti->led_off_ms,
-		noti->flags_for_property, flag_simmode, noti->display_applist,
-		noti->ongoing_flag,
-		noti->ongoing_value_type,
-		noti->ongoing_current,
-		noti->ongoing_duration,
-		noti->auto_remove,
-		noti->default_button_index,
-		noti->hide_timeout,
-		noti->delete_timeout,
-		noti->text_input_max_length,
-		noti->event_flag,
-		noti->extension_image_size,
-		noti->uid,
-		template_name);
-
-	/* Free decoded data */
-	if (args)
-		free(args);
-
-	if (group_args)
-		free(group_args);
-
-	if (b_execute_option)
-		free(b_execute_option);
-
-	if (b_service_responding)
-		free(b_service_responding);
-
-	if (b_service_single_launch)
-		free(b_service_single_launch);
-
-	if (b_service_multi_launch)
-		free(b_service_multi_launch);
-
-	for (i = 0; i <= NOTIFICATION_EVENT_TYPE_MAX; i++) {
-		if (b_event_handler[i])
-			bundle_free_encoded_rawdata((bundle_raw **)&b_event_handler[i]);
-	}
-
-	if (b_text)
-		free(b_text);
-
-	if (b_key)
-		free(b_key);
-
-	if (b_format_args)
-		free(b_format_args);
-
-	if (b_image_path)
-		free(b_image_path);
-
-	if (*query == NULL)
-		return NOTIFICATION_ERROR_OUT_OF_MEMORY;
-
-	return NOTIFICATION_ERROR_NONE;
-}
-
 EXPORT_API int notification_noti_add_template(notification_h noti, char *template_name)
 {
-	int ret = 0;
 	sqlite3 *db = NULL;
 	sqlite3_stmt *stmt = NULL;
 	char *query = NULL;
-	char buf_key[32] = { 0, };
-	char *title_key = NULL;
+	int idx = 1;
+	int ret = NOTIFICATION_ERROR_NONE;
 
 	if (noti == NULL || template_name == NULL) {
 		NOTIFICATION_ERR("NOTIFICATION_ERROR_INVALID_PARAMETER");
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 	}
 
-	db = notification_db_open(DBPATH);
-	if (!db)
-		return get_last_result();
-
 	/* Initialize private ID */
 	noti->group_id = NOTIFICATION_GROUP_ID_NONE;
 	noti->internal_group_id = NOTIFICATION_GROUP_ID_NONE;
 
-	ret = _template_query_create(noti, template_name, &query);
-	if (ret != NOTIFICATION_ERROR_NONE)
+	db = notification_db_open(DBPATH);
+	if (!db)
+		return get_last_result();
+
+	query = sqlite3_mprintf("INSERT OR REPLACE INTO noti_template "
+				"(%s, template_name) VALUES (%s, %Q)",
+				NOTI_LIST_DB_ATTRIBUTES_INSERT,
+				NOTI_LIST_INSERT_VALUES,
+				template_name);
+	if (query == NULL) {
+		ret = NOTIFICATION_ERROR_OUT_OF_MEMORY;
 		goto err;
+	}
 
 	ret = sqlite3_prepare_v2(db, query, -1, &stmt, NULL);
 	if (ret != SQLITE_OK) {
-		NOTIFICATION_ERR("Insert Query : %s", query);
-		NOTIFICATION_ERR("Insert DB error(%d) : %s", ret,
-				 sqlite3_errmsg(db));
+		NOTIFICATION_ERR("sqlite3_prepare_v2 failed [%d][%s]", ret,
+				sqlite3_errmsg(db));
 		ret = NOTIFICATION_ERROR_FROM_DB;
 		goto err;
 	}
 
-	/* Get title key */
-	if (noti->b_key != NULL) {
-		snprintf(buf_key, sizeof(buf_key), "%d",
-			 NOTIFICATION_TEXT_TYPE_TITLE);
-
-		bundle_get_str(noti->b_key, buf_key, &title_key);
-	}
-
-	if (title_key == NULL && noti->b_text != NULL) {
-		snprintf(buf_key, sizeof(buf_key), "%d",
-			 NOTIFICATION_TEXT_TYPE_TITLE);
-
-		bundle_get_str(noti->b_text, buf_key, &title_key);
-	}
-
-	if (title_key == NULL)
-		title_key = noti->caller_app_id;
-
-	/* Bind query */
-	ret = _notification_noti_bind_query_text(stmt, "$tag", noti->tag);
-	if (ret != NOTIFICATION_ERROR_NONE) {
-		NOTIFICATION_ERR("Bind error : %s", sqlite3_errmsg(db));
+	ret = _create_insertion_query(db, noti, stmt, &idx);
+	if (ret != NOTIFICATION_ERROR_NONE)
 		goto err;
-	}
-	ret = _notification_noti_bind_query_text(stmt, "$title_key", title_key);
-	if (ret != NOTIFICATION_ERROR_NONE) {
-		NOTIFICATION_ERR("Bind error : %s", sqlite3_errmsg(db));
-		goto err;
-	}
-	ret = _notification_noti_bind_query_double(stmt, "$progress_size", noti->progress_size);
-	if (ret != NOTIFICATION_ERROR_NONE) {
-		NOTIFICATION_ERR("Bind error : %s", sqlite3_errmsg(db));
-		goto err;
-	}
-	ret = _notification_noti_bind_query_double(stmt, "$progress_percentage", noti->progress_percentage);
-	if (ret != NOTIFICATION_ERROR_NONE) {
-		NOTIFICATION_ERR("Bind error : %s", sqlite3_errmsg(db));
-		goto err;
-	}
 
 	ret = sqlite3_step(stmt);
 	if (ret == SQLITE_OK || ret == SQLITE_DONE)
@@ -2134,76 +1783,36 @@ err:
 	if (stmt)
 		sqlite3_finalize(stmt);
 
-	if (db)
-		notification_db_close(&db);
-
 	if (query)
 		sqlite3_free(query);
+
+	if (db)
+		notification_db_close(&db);
 
 	return ret;
 }
 
 EXPORT_API int notification_noti_get_package_template(notification_h noti, char *app_id, char *template_name)
 {
-	int ret = 0;
-	sqlite3 *db = NULL;
-	sqlite3_stmt *stmt = NULL;
+	int ret = NOTIFICATION_ERROR_NONE;
+	char *query_where = NULL;
 
 	if (noti == NULL || app_id == NULL || template_name == NULL) {
 		NOTIFICATION_ERR("NOTIFICATION_ERROR_INVALID_PARAMETER");
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 	}
 
-	db = notification_db_open(DBPATH);
-	if (!db)
-		return get_last_result();
-
-	ret = sqlite3_prepare_v2(db, "select "
-		"type, layout, pkg_id, caller_app_id, launch_app_id, image_path, group_id, priv_id, "
-		"tag, b_text, b_key, b_format_args, num_format_args, "
-		"text_domain, text_dir, time, insert_time, args, group_args, "
-		"b_execute_option, b_service_responding, b_service_single_launch, b_service_multi_launch, "
-		"b_event_handler_click_on_button_1, b_event_handler_click_on_button_2, b_event_handler_click_on_button_3, "
-		"b_event_handler_click_on_button_4, b_event_handler_click_on_button_5, b_event_handler_click_on_button_6, "
-		"b_event_handler_click_on_icon, b_event_handler_click_on_thumbnail, b_event_handler_click_on_text_input_button, "
-		"sound_type, sound_path, vibration_type, vibration_path, led_operation, led_argb, led_on_ms, led_off_ms, "
-		"flags_for_property, display_applist, progress_size, progress_percentage, ongoing_flag, ongoing_value_type, "
-		"ongoing_current, ongoing_duration, auto_remove, default_button_index, hide_timeout, delete_timeout, "
-		"text_input_max_length, event_flag, extension_image_size, uid "
-		"from noti_template where caller_app_id = ? and template_name = ?", -1, &stmt, NULL);
-	if (ret != SQLITE_OK) {
-		NOTIFICATION_ERR("Error: %s\n", sqlite3_errmsg(db));
+	query_where = sqlite3_mprintf("noti_template WHERE caller_app_id = %Q "
+			"AND template_name = %Q", app_id, template_name);
+	if (query_where == NULL)
 		return NOTIFICATION_ERROR_OUT_OF_MEMORY;
-	}
 
-	ret = sqlite3_bind_text(stmt, 1,  app_id, -1, SQLITE_TRANSIENT);
-	if (ret != SQLITE_OK) {
-		NOTIFICATION_ERR("Error: %s\n", sqlite3_errmsg(db));
-		goto err;
-	}
+	ret = _get_notification(query_where, noti);
+	if (ret != NOTIFICATION_ERROR_NONE)
+		NOTIFICATION_ERR("_get_notification failed, %d", ret);
 
-	ret = sqlite3_bind_text(stmt, 2,  template_name, -1, SQLITE_TRANSIENT);
-	if (ret != SQLITE_OK) {
-		NOTIFICATION_ERR("Error: %s\n", sqlite3_errmsg(db));
-		goto err;
-	}
-
-	ret = sqlite3_step(stmt);
-	if (ret == SQLITE_ROW) {
-		_notification_noti_populate_from_stmt(stmt, noti);
-		ret = NOTIFICATION_ERROR_NONE;
-	} else {
-		NOTIFICATION_ERR("NOTIFICATION_ERROR_FROM_DB");
-		ret = NOTIFICATION_ERROR_FROM_DB;
-	}
-
-err:
-
-	if (stmt)
-		sqlite3_finalize(stmt);
-
-	if (db != NULL)
-		notification_db_close(&db);
+	if (query_where)
+		sqlite3_free(query_where);
 
 	return ret;
 }
@@ -2211,8 +1820,8 @@ err:
 EXPORT_API int notification_noti_delete_template(const char *pkg_id)
 {
 	sqlite3 *db = NULL;
-	char query[NOTIFICATION_QUERY_MAX] = { 0, };
-	int ret;
+	char *query = NULL;
+	int ret = NOTIFICATION_ERROR_NONE;
 
 	if (pkg_id == NULL)
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
@@ -2221,10 +1830,18 @@ EXPORT_API int notification_noti_delete_template(const char *pkg_id)
 	if (!db)
 		return get_last_result();
 
-	snprintf(query, sizeof(query), "delete from noti_template "
-		 "where pkg_id = '%s'", pkg_id);
+	query = sqlite3_mprintf("DELETE FROM noti_template WHERE pkg_id = %Q",
+				NOTIFICATION_CHECK_STR(pkg_id));
+	if (query == NULL) {
+		ret = NOTIFICATION_ERROR_OUT_OF_MEMORY;
+		goto err;
+	}
 
 	ret = notification_db_exec(db, query, NULL);
+
+err:
+	if (query)
+		sqlite3_free(query);
 
 	if (db)
 		notification_db_close(&db);

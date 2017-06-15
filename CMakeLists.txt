@@ -18,6 +18,7 @@ SET(SRCS
 	./src/notification_ongoing.c
 	./src/notification_group.c
 	./src/notification_db.c
+	./src/notification_db_query.h
 	./src/notification_list.c
 	./src/notification_status.c
 	./src/notification_ipc.c

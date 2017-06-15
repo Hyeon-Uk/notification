@@ -31,8 +31,9 @@
 #include <notification_setting.h>
 #include <notification_setting_internal.h>
 #include <notification_setting_service.h>
+#include "notification_db_query.h"
 
-static int _get_table_field_data_int(char  **table, int *buf, int index)
+static int _get_table_field_data_int(char **table, int *buf, int index)
 {
 	if (table == NULL || buf == NULL || index < 0) {
 		/* LCOV_EXCL_START */
@@ -85,18 +86,18 @@ static int _get_table_field_data_string(char **table, char **buf, int ucs2, int 
 	}
 
 	ret = true;
-out:
 
+out:
 	return ret;
 }
 
 EXPORT_API
 int noti_setting_service_get_setting_by_app_id(const char *app_id, notification_setting_h *setting, uid_t uid)
 {
-	int ret = NOTIFICATION_ERROR_NONE;
 	sqlite3 *db = NULL;
 	char *query = NULL;
 	char **query_result = NULL;
+	int ret = NOTIFICATION_ERROR_NONE;
 	int sql_ret;
 	int row_count = 0;
 	int column_count = 0;
@@ -109,16 +110,14 @@ int noti_setting_service_get_setting_by_app_id(const char *app_id, notification_
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 	}
 
-	sql_ret = db_util_open(DBPATH, &db, 0);
-	if (sql_ret != SQLITE_OK || db == NULL) {
-		NOTIFICATION_ERR("db_util_open failed [%d]", sql_ret); /* LCOV_EXCL_LINE */
-		return NOTIFICATION_ERROR_FROM_DB;
-	}
+	db = notification_db_open(DBPATH);
+	if (!db)
+		return get_last_result();
 
-	query = sqlite3_mprintf("SELECT package_name, app_id, allow_to_notify, do_not_disturb_except, visibility_class, "
-				    "pop_up_notification, lock_screen_content_level, app_disabled FROM %s "
-				    "WHERE app_id = %Q AND uid = %d", NOTIFICATION_SETTING_DB_TABLE, app_id, uid);
-	if (!query) {
+	query = sqlite3_mprintf("SELECT %s FROM %s WHERE app_id = %Q AND uid = %d",
+			NOTIFICATION_SETTING_DB_ATTRIBUTES, NOTIFICATION_SETTING_DB_TABLE,
+			app_id, uid);
+	if (query == NULL) {
 		NOTIFICATION_ERR("fail to alloc query"); /* LCOV_EXCL_LINE */
 		ret = NOTIFICATION_ERROR_OUT_OF_MEMORY;
 		goto out;
@@ -126,7 +125,8 @@ int noti_setting_service_get_setting_by_app_id(const char *app_id, notification_
 
 	sql_ret = sqlite3_get_table(db, query, &query_result, &row_count, &column_count, NULL);
 	if (sql_ret != SQLITE_OK && sql_ret != -1) {
-		NOTIFICATION_ERR("sqlite3_get_table failed [%d][%s]", sql_ret, query); /* LCOV_EXCL_LINE */
+		NOTIFICATION_ERR("sqlite3_get_table failed [%d][%s]", sql_ret,
+				query); /* LCOV_EXCL_LINE */
 		ret = NOTIFICATION_ERROR_FROM_DB;
 		goto out;
 	}
@@ -167,11 +167,8 @@ out:
 	if (query)
 		sqlite3_free(query);
 
-	if (db) {
-		sql_ret = db_util_close(db);
-		if (sql_ret != SQLITE_OK)
-			NOTIFICATION_WARN("fail to db_util_close - [%d]", sql_ret); /* LCOV_EXCL_LINE */
-	}
+	if (db)
+		notification_db_close(&db);
 
 	return ret;
 }
@@ -179,10 +176,10 @@ out:
 EXPORT_API
 int noti_setting_get_setting_array(notification_setting_h *setting_array, int *count, uid_t uid)
 {
-	int ret = NOTIFICATION_ERROR_NONE;
 	sqlite3 *db = NULL;
 	char *query = NULL;
 	char **query_result = NULL;
+	int ret = NOTIFICATION_ERROR_NONE;
 	int sql_ret;
 	int row_count = 0;
 	int column_count = 0;
@@ -195,16 +192,15 @@ int noti_setting_get_setting_array(notification_setting_h *setting_array, int *c
 		return  NOTIFICATION_ERROR_INVALID_PARAMETER;
 	}
 
-	sql_ret = db_util_open(DBPATH, &db, 0);
-	if (sql_ret != SQLITE_OK || db == NULL) {
-		NOTIFICATION_ERR("db_util_open failed [%d]", sql_ret); /* LCOV_EXCL_LINE */
-		return NOTIFICATION_ERROR_FROM_DB;
-	}
+	db = notification_db_open(DBPATH);
+	if (!db)
+		return get_last_result();
 
-	query = sqlite3_mprintf("SELECT package_name, app_id, allow_to_notify, do_not_disturb_except, visibility_class, "
-				    "pop_up_notification, lock_screen_content_level, app_disabled FROM %s WHERE uid = %d AND app_disabled = %d "
-				    "ORDER BY package_name, app_id ", NOTIFICATION_SETTING_DB_TABLE, uid, 0);
-	if (!query) {
+	query = sqlite3_mprintf("SELECT %s FROM %s WHERE uid = %d "
+				"AND app_disabled = %d ORDER BY package_name, "
+				"app_id ", NOTIFICATION_SETTING_DB_ATTRIBUTES,
+				NOTIFICATION_SETTING_DB_TABLE, uid, 0);
+	if (query == NULL) {
 		NOTIFICATION_ERR("fail to alloc query"); /* LCOV_EXCL_LINE */
 		ret = NOTIFICATION_ERROR_OUT_OF_MEMORY;
 		goto out;
@@ -212,7 +208,8 @@ int noti_setting_get_setting_array(notification_setting_h *setting_array, int *c
 
 	sql_ret = sqlite3_get_table(db, query, &query_result, &row_count, &column_count, NULL);
 	if (sql_ret != SQLITE_OK && sql_ret != -1) {
-		NOTIFICATION_ERR("NOTIFICATION_ERROR_FROM_DB failed [%d][%s]", sql_ret, query);	/* LCOV_EXCL_LINE */
+		NOTIFICATION_ERR("NOTIFICATION_ERROR_FROM_DB failed [%d][%s]",
+			sql_ret, query); /* LCOV_EXCL_LINE */
 		ret = NOTIFICATION_ERROR_FROM_DB;
 		goto out;
 	}
@@ -254,11 +251,8 @@ out:
 	if (query)
 		sqlite3_free(query);
 
-	if (db) {
-		sql_ret = db_util_close(db);
-		if (sql_ret != SQLITE_OK)
-			NOTIFICATION_WARN("fail to db_util_close - [%d]", sql_ret); /* LCOV_EXCL_LINE */
-	}
+	if (db)
+		notification_db_close(&db);
 
 	return ret;
 }
@@ -267,10 +261,10 @@ out:
 EXPORT_API
 int noti_system_setting_load_system_setting(notification_system_setting_h *system_setting, uid_t uid)
 {
-	int ret = NOTIFICATION_ERROR_NONE;
 	sqlite3 *db = NULL;
 	char *query = NULL;
 	char **query_result = NULL;
+	int ret = NOTIFICATION_ERROR_NONE;
 	int sql_ret;
 	int row_count = 0;
 	int column_count = 0;
@@ -282,18 +276,14 @@ int noti_system_setting_load_system_setting(notification_system_setting_h *syste
 		return  NOTIFICATION_ERROR_INVALID_PARAMETER;
 	}
 
-	sql_ret = db_util_open(DBPATH, &db, 0);
-	if (sql_ret != SQLITE_OK || db == NULL) {
-		NOTIFICATION_ERR("db_util_open failed [%d]", sql_ret); /* LCOV_EXCL_LINE */
-		return NOTIFICATION_ERROR_FROM_DB;
-	}
+	db = notification_db_open(DBPATH);
+	if (!db)
+		return get_last_result();
 
-	query = sqlite3_mprintf("SELECT do_not_disturb, visibility_class, "
-			"dnd_schedule_enabled, dnd_schedule_day, "
-			"dnd_start_hour, dnd_start_min, dnd_end_hour, dnd_end_min, "
-			"lock_screen_content_level "
-			"FROM %s WHERE uid = %d", NOTIFICATION_SYSTEM_SETTING_DB_TABLE, uid);
-	if (!query) {
+	query = sqlite3_mprintf("SELECT %s FROM %s WHERE uid = %d",
+			NOTIFICATION_SYSTEM_SETTING_DB_ATTRIBUTES,
+			NOTIFICATION_SYSTEM_SETTING_DB_TABLE, uid);
+	if (query == NULL) {
 		NOTIFICATION_ERR("fail to alloc query"); /* LCOV_EXCL_LINE */
 		ret = NOTIFICATION_ERROR_OUT_OF_MEMORY;
 		goto out;
@@ -308,7 +298,8 @@ int noti_system_setting_load_system_setting(notification_system_setting_h *syste
 
 	NOTIFICATION_DBG("row_count [%d] column_count [%d]", row_count, column_count);
 
-	if (!(result_system_setting = (struct notification_system_setting *)malloc(sizeof(struct notification_system_setting)))) {
+	result_system_setting = (struct notification_system_setting *)malloc(sizeof(struct notification_system_setting));
+	if (result_system_setting == NULL) {
 		NOTIFICATION_ERR("malloc failed..."); /* LCOV_EXCL_LINE */
 		ret = NOTIFICATION_ERROR_OUT_OF_MEMORY;
 		goto out;
@@ -344,18 +335,16 @@ int noti_system_setting_load_system_setting(notification_system_setting_h *syste
 	}
 
 	*system_setting = result_system_setting;
+
 out:
 	if (query_result)
-			sqlite3_free_table(query_result);
+		sqlite3_free_table(query_result);
 
 	if (query)
 		sqlite3_free(query);
 
-	if (db) {
-		sql_ret = db_util_close(db);
-		if (sql_ret != SQLITE_OK)
-			NOTIFICATION_WARN("fail to db_util_close - [%d]", sql_ret); /* LCOV_EXCL_LINE */
-	}
+	if (db)
+		notification_db_close(&db);
 
 	return ret;
 }
@@ -366,43 +355,40 @@ int notification_setting_db_update(const char *package_name, const char *app_id,
 				int visibility_class, int pop_up_notification,
 				int lock_screen_content_level, uid_t uid)
 {
-	int ret = NOTIFICATION_ERROR_NONE;
 	sqlite3 *db = NULL;
-	char *sqlbuf = NULL;
-	int sql_ret;
+	char *query = NULL;
+	int ret = NOTIFICATION_ERROR_NONE;
 
-	if (package_name == NULL || strlen(package_name) == 0
-	    || app_id == NULL || strlen(app_id) == 0)
+	if (package_name == NULL || app_id == NULL) {
+		NOTIFICATION_ERR("NOTIFICATION_ERROR_INVALID_PARAMETER"); /* LCOV_EXCL_LINE */
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
-
-	sql_ret = db_util_open(DBPATH, &db, 0);
-	if (sql_ret != SQLITE_OK || db == NULL) {
-		NOTIFICATION_ERR("db_util_open failed [%s][%d]", DBPATH, sql_ret);
-		return NOTIFICATION_ERROR_FROM_DB;
 	}
 
-	sqlbuf = sqlite3_mprintf("UPDATE %s SET allow_to_notify = %d, do_not_disturb_except = %d, visibility_class = %d, " \
-				 "pop_up_notification = %d, lock_screen_content_level = %d " \
-				 "WHERE app_id = %Q AND package_name = %Q AND uid = %d",
-			NOTIFICATION_SETTING_DB_TABLE, allow_to_notify, do_not_disturb_except, visibility_class,
-			pop_up_notification, lock_screen_content_level, app_id, package_name, uid);
-	if (!sqlbuf) {
-		NOTIFICATION_ERR("fail to alloc query");
+	db = notification_db_open(DBPATH);
+	if (!db)
+		return get_last_result();
+
+	query = sqlite3_mprintf("UPDATE %s SET allow_to_notify = %d, "
+			"do_not_disturb_except = %d, visibility_class = %d, "
+			"pop_up_notification = %d, lock_screen_content_level = %d "
+			"WHERE app_id = %Q AND package_name = %Q AND uid = %d ",
+			NOTIFICATION_SETTING_DB_TABLE, allow_to_notify,
+			do_not_disturb_except, visibility_class,
+			pop_up_notification, lock_screen_content_level, app_id,
+			package_name, uid);
+	if (query == NULL) {
 		ret = NOTIFICATION_ERROR_OUT_OF_MEMORY;
 		goto out;
 	}
 
-	ret = notification_db_exec(db, sqlbuf, NULL);
+	ret = notification_db_exec(db, query, NULL);
 
 out:
-	if (sqlbuf)
-		sqlite3_free(sqlbuf);
+	if (query)
+		sqlite3_free(query);
 
-	if (db) {
-		sql_ret = db_util_close(db);
-		if (sql_ret != SQLITE_OK)
-			NOTIFICATION_WARN("fail to db_util_close - [%d]", sql_ret); /* LCOV_EXCL_LINE */
-	}
+	if (db)
+		notification_db_close(&db);
 
 	return ret;
 }
@@ -414,68 +400,41 @@ int notification_setting_db_update_system_setting(int do_not_disturb, int visibi
 		int dnd_end_hour, int dnd_end_min,
 		int lock_screen_content_level, uid_t uid)
 {
-	int ret = NOTIFICATION_ERROR_NONE;
-	int sql_ret;
-	int field_index = 1;
 	sqlite3 *db = NULL;
-	sqlite3_stmt *stmt = NULL;
+	char *query = NULL;
+	int ret = NOTIFICATION_ERROR_NONE;
+	int num_changes = 0;
 
-	sql_ret = db_util_open(DBPATH, &db, 0);
-	if (sql_ret != SQLITE_OK || db == NULL) {
-		NOTIFICATION_ERR("db_util_open failed [%s][%d][%s]", DBPATH, sql_ret, sqlite3_errmsg(db));
-		return  NOTIFICATION_ERROR_FROM_DB;
-	}
+	db = notification_db_open(DBPATH);
+	if (!db)
+		return get_last_result();
 
-	sqlite3_exec(db, "BEGIN immediate;", NULL, NULL, NULL);
-
-	sql_ret = sqlite3_prepare_v2(db, "INSERT OR REPLACE INTO notification_system_setting "
-			"(uid, do_not_disturb, visibility_class, dnd_schedule_enabled, "
-			"dnd_schedule_day, dnd_start_hour, dnd_start_min, "
-			"dnd_end_hour, dnd_end_min, lock_screen_content_level) "
-			"VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ", -1, &stmt, NULL);
-	if (sql_ret != SQLITE_OK) {
-		NOTIFICATION_ERR("sqlite3_prepare_v2 failed [%d][%s]", sql_ret, sqlite3_errmsg(db));
-		ret =  NOTIFICATION_ERROR_FROM_DB;
+	query = sqlite3_mprintf("INSERT OR REPLACE INTO %s (uid, %s) "
+			"VALUES(%d, %d, %d, %d, %d, %d, %d, %d, %d, %d) ",
+			NOTIFICATION_SYSTEM_SETTING_DB_TABLE,
+			NOTIFICATION_SYSTEM_SETTING_DB_ATTRIBUTES,
+			uid, do_not_disturb, visibility_class,
+			dnd_schedule_enabled, dnd_schedule_day, dnd_start_hour,
+			dnd_start_min, dnd_end_hour, dnd_end_min,
+			lock_screen_content_level);
+	if (query == NULL) {
+		ret = NOTIFICATION_ERROR_OUT_OF_MEMORY;
 		goto out;
 	}
 
-	sqlite3_bind_int(stmt, field_index++, uid);
-	sqlite3_bind_int(stmt, field_index++, do_not_disturb);
-	sqlite3_bind_int(stmt, field_index++, visibility_class);
-	sqlite3_bind_int(stmt, field_index++, dnd_schedule_enabled);
-	sqlite3_bind_int(stmt, field_index++, dnd_schedule_day);
-	sqlite3_bind_int(stmt, field_index++, dnd_start_hour);
-	sqlite3_bind_int(stmt, field_index++, dnd_start_min);
-	sqlite3_bind_int(stmt, field_index++, dnd_end_hour);
-	sqlite3_bind_int(stmt, field_index++, dnd_end_min);
-	sqlite3_bind_int(stmt, field_index++, lock_screen_content_level);
-
-	sql_ret = sqlite3_step(stmt);
-	if (sql_ret != SQLITE_OK && sql_ret != SQLITE_DONE) {
-		NOTIFICATION_ERR("sqlite3_step failed [%d][%s]", sql_ret, sqlite3_errmsg(db));
-		ret =  NOTIFICATION_ERROR_FROM_DB;
+	ret = notification_db_exec(db, query, &num_changes);
+	if (ret != NOTIFICATION_ERROR_NONE)
 		goto out;
-	}
 
-	sql_ret = sqlite3_changes(db);
-	if (sql_ret == 0)
+	if (num_changes == 0)
 		NOTIFICATION_WARN("No changes on DB");
 
 out:
-	if (stmt)
-		sqlite3_finalize(stmt);
+	if (query)
+		sqlite3_free(query);
 
-	if (db) {
-		if (ret == NOTIFICATION_ERROR_NONE)
-			sqlite3_exec(db, "END;", NULL, NULL, NULL);
-		else
-			sqlite3_exec(db, "ROLLBACK;", NULL, NULL, NULL);
-
-		sql_ret = db_util_close(db);
-	}
-
-	if (sql_ret != SQLITE_OK)
-		NOTIFICATION_WARN("fail to db_util_close - [%d]", sql_ret);
+	if (db)
+		notification_db_close(&db);
 
 	return ret;
 }
@@ -484,35 +443,32 @@ out:
 EXPORT_API
 int notification_setting_db_update_do_not_disturb(int do_not_disturb, uid_t uid)
 {
-	int ret = NOTIFICATION_ERROR_NONE;
-	int sql_ret;
 	sqlite3 *db = NULL;
-	char *sqlbuf = NULL;
+	char *query = NULL;
+	int ret = NOTIFICATION_ERROR_NONE;
 
-	sql_ret = db_util_open(DBPATH, &db, 0);
-	if (sql_ret != SQLITE_OK || db == NULL) {
-		NOTIFICATION_ERR("db_util_open failed [%s][%d]", DBPATH, sql_ret);
-		return NOTIFICATION_ERROR_FROM_DB;
-	}
+	db = notification_db_open(DBPATH);
+	if (!db)
+		return get_last_result();
 
-	sqlbuf = sqlite3_mprintf("UPDATE notification_system_setting SET do_not_disturb = %d WHERE uid = %d", do_not_disturb, uid);
-	if (!sqlbuf) {
-		NOTIFICATION_ERR("fail to alloc query");
+	query = sqlite3_mprintf("UPDATE %s SET do_not_disturb = %d "
+				"WHERE uid = %d",
+				NOTIFICATION_SYSTEM_SETTING_DB_TABLE,
+				do_not_disturb, uid);
+	if (query == NULL) {
+		NOTIFICATION_ERR("fail to alloc query"); /* LCOV_EXCL_LINE */
 		ret = NOTIFICATION_ERROR_OUT_OF_MEMORY;
 		goto out;
 	}
 
-	ret = notification_db_exec(db, sqlbuf, NULL);
+	ret = notification_db_exec(db, query, NULL);
 
 out:
-	if (sqlbuf)
-		sqlite3_free(sqlbuf);
+	if (query)
+		sqlite3_free(query);
 
-	if (db) {
-		sql_ret = db_util_close(db);
-		if (sql_ret != SQLITE_OK)
-			NOTIFICATION_WARN("fail to db_util_close - [%d]", sql_ret); /* LCOV_EXCL_LINE */
-	}
+	if (db)
+		notification_db_close(&db);
 
 	return ret;
 }
@@ -523,7 +479,6 @@ int notification_system_setting_get_dnd_schedule_enabled_uid(uid_t **uids, int *
 {
 	int ret = NOTIFICATION_ERROR_NONE;
 	int i;
-	int sql_ret;
 	int row_count = 0;
 	int column_count = 0;
 	int column_index = 0;
@@ -532,13 +487,12 @@ int notification_system_setting_get_dnd_schedule_enabled_uid(uid_t **uids, int *
 	sqlite3 *db = NULL;
 	uid_t *result_uids;
 
-	sql_ret = db_util_open(DBPATH, &db, 0);
-	if (sql_ret != SQLITE_OK || db == NULL) {
-		NOTIFICATION_ERR("db_util_open failed [%s][%d]", DBPATH, sql_ret);
-		return NOTIFICATION_ERROR_FROM_DB;
-	}
+	db = notification_db_open(DBPATH);
+	if (!db)
+		return get_last_result();
 
-	query = sqlite3_mprintf("SELECT uid FROM %s WHERE dnd_schedule_enabled = 1",
+	query = sqlite3_mprintf("SELECT uid FROM %s "
+				"WHERE dnd_schedule_enabled = 1",
 				NOTIFICATION_SYSTEM_SETTING_DB_TABLE);
 	if (query == NULL) {
 		ret = NOTIFICATION_ERROR_OUT_OF_MEMORY;
@@ -572,27 +526,24 @@ int notification_system_setting_get_dnd_schedule_enabled_uid(uid_t **uids, int *
 	*count = row_count;
 
 out:
-	if (query_result)
-		sqlite3_free_table(query_result);
-
 	if (query)
 		sqlite3_free(query);
 
-	if (db) {
-		sql_ret = db_util_close(db);
-		if (sql_ret != SQLITE_OK)
-			NOTIFICATION_WARN("fail to db_util_close - [%d]", sql_ret); /* LCOV_EXCL_LINE */
-	}
+	if (query_result)
+		sqlite3_free_table(query_result);
+
+	if (db)
+		notification_db_close(&db);
 
 	return ret;
 }
 
 EXPORT_API
 int notification_get_dnd_and_allow_to_notify(const char *app_id,
-						int *do_not_disturb,
-						int *do_not_disturb_except,
-						int *allow_to_notify,
-						uid_t uid)
+					int *do_not_disturb,
+					int *do_not_disturb_except,
+					int *allow_to_notify,
+					uid_t uid)
 {
 	int ret = NOTIFICATION_ERROR_NONE;
 	int sql_ret;
@@ -608,26 +559,24 @@ int notification_get_dnd_and_allow_to_notify(const char *app_id,
 	if (app_id == NULL)
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 
-	sql_ret = db_util_open(DBPATH, &db, 0);
-	if (sql_ret != SQLITE_OK || db == NULL) {
-		NOTIFICATION_ERR("db_util_open failed [%s][%d]", DBPATH, sql_ret);
-		return NOTIFICATION_ERROR_FROM_DB;
-	}
+	db = notification_db_open(DBPATH);
+	if (!db)
+		return get_last_result();
 
-	query_setting = sqlite3_mprintf("SELECT allow_to_notify, do_not_disturb_except " \
-					"FROM %s WHERE app_id = %Q AND (uid = %d OR uid = %d) " \
-					"ORDER BY uid DESC;",
-					NOTIFICATION_SETTING_DB_TABLE, app_id,
-					uid, tzplatform_getuid(TZ_SYS_GLOBALAPP_USER));
+	query_setting = sqlite3_mprintf("SELECT allow_to_notify, "
+				"do_not_disturb_except FROM %s WHERE app_id = %Q "
+				"AND (uid = %d OR uid = %d) ORDER BY uid DESC",
+				NOTIFICATION_SETTING_DB_TABLE, app_id,
+				uid, tzplatform_getuid(TZ_SYS_GLOBALAPP_USER));
 	if (query_setting == NULL) {
 		NOTIFICATION_ERR("fail to alloc query");
 		ret = NOTIFICATION_ERROR_OUT_OF_MEMORY;
 		goto out;
 	}
 
-	query_system_setting = sqlite3_mprintf("SELECT do_not_disturb FROM %s WHERE uid = %d",
-					       NOTIFICATION_SYSTEM_SETTING_DB_TABLE, uid);
-
+	query_system_setting = sqlite3_mprintf("SELECT do_not_disturb FROM %s "
+					"WHERE uid = %d",
+					NOTIFICATION_SYSTEM_SETTING_DB_TABLE, uid);
 	if (query_system_setting == NULL) {
 		NOTIFICATION_ERR("fail to alloc query");
 		ret = NOTIFICATION_ERROR_OUT_OF_MEMORY;
@@ -640,6 +589,7 @@ int notification_get_dnd_and_allow_to_notify(const char *app_id,
 		ret = NOTIFICATION_ERROR_FROM_DB;
 		goto out;
 	}
+
 	if (row_count == 0) {
 		NOTIFICATION_ERR("Invalid uid [%d] or app id [%s]", uid, app_id);
 		ret = NOTIFICATION_ERROR_INVALID_PARAMETER;
@@ -656,6 +606,7 @@ int notification_get_dnd_and_allow_to_notify(const char *app_id,
 		ret = NOTIFICATION_ERROR_FROM_DB;
 		goto out;
 	}
+
 	if (row_count == 0) {
 		NOTIFICATION_ERR("Invalid uid [%d]", uid);
 		ret = NOTIFICATION_ERROR_INVALID_PARAMETER;
@@ -678,11 +629,8 @@ out:
 	if (query_system_setting)
 		sqlite3_free(query_system_setting);
 
-	if (db) {
-		sql_ret = db_util_close(db);
-		if (sql_ret != SQLITE_OK)
-			NOTIFICATION_WARN("fail to db_util_close - [%d]", sql_ret); /* LCOV_EXCL_LINE */
-	}
+	if (db)
+		notification_db_close(&db);
 
 	return ret;
 }
@@ -705,15 +653,13 @@ EXPORT_API int notification_system_setting_load_dnd_allow_exception(dnd_allow_ex
 		return  NOTIFICATION_ERROR_INVALID_PARAMETER;
 	}
 
-	sql_ret = db_util_open(DBPATH, &db, 0);
-	if (sql_ret != SQLITE_OK || db == NULL) {
-		NOTIFICATION_ERR("db_util_open failed [%d]", sql_ret); /* LCOV_EXCL_LINE */
-		return NOTIFICATION_ERROR_FROM_DB;
-	}
+	db = notification_db_open(DBPATH);
+	if (!db)
+		return get_last_result();
 
 	query = sqlite3_mprintf("SELECT type, value FROM %s WHERE uid = %d",
 			NOTIFICATION_DND_ALLOW_EXCEPTION, uid);
-	if (!query) {
+	if (query == NULL) {
 		NOTIFICATION_ERR("fail to alloc query"); /* LCOV_EXCL_LINE */
 		ret = NOTIFICATION_ERROR_OUT_OF_MEMORY;
 		goto out;
@@ -754,75 +700,55 @@ out:
 	if (query)
 		sqlite3_free(query);
 
-	if (db) {
-		sql_ret = db_util_close(db);
-		if (sql_ret != SQLITE_OK)
-			NOTIFICATION_WARN("fail to db_util_close - [%d]", sql_ret); /* LCOV_EXCL_LINE */
-	}
+	if (db)
+		notification_db_close(&db);
 
 	return ret;
 }
 
-EXPORT_API int notification_system_setting_update_dnd_allow_exception(int type, int value, uid_t uid)
+EXPORT_API
+int notification_system_setting_update_dnd_allow_exception(int type, int value, uid_t uid)
 {
-	int ret = NOTIFICATION_ERROR_NONE;
-	int sql_ret;
-	int field_index = 1;
 	sqlite3 *db = NULL;
-	sqlite3_stmt *stmt = NULL;
+	char *query = NULL;
+	int ret = NOTIFICATION_ERROR_NONE;
+	int num_changes = 0;
 
-	sql_ret = db_util_open(DBPATH, &db, 0);
-	if (sql_ret != SQLITE_OK || db == NULL) {
-		NOTIFICATION_ERR("db_util_open failed [%d]", sql_ret); /* LCOV_EXCL_LINE */
-		return NOTIFICATION_ERROR_FROM_DB;
-	}
+	db = notification_db_open(DBPATH);
+	if (!db)
+		return get_last_result();
 
-	sqlite3_exec(db, "BEGIN immediate;", NULL, NULL, NULL);
-
-	sql_ret = sqlite3_prepare_v2(db, "INSERT OR REPLACE INTO dnd_allow_exception (uid, type, value) VALUES(?, ?, ?) ", -1, &stmt, NULL);
-	if (sql_ret != SQLITE_OK) {
-		NOTIFICATION_ERR("sqlite3_prepare_v2 failed [%d][%s]", sql_ret, sqlite3_errmsg(db));
-		ret = NOTIFICATION_ERROR_FROM_DB;
+	query = sqlite3_mprintf("INSERT OR REPLACE INTO %s (uid, type, value) "
+				"VALUES(%d, %d, %d) ",
+				NOTIFICATION_DND_ALLOW_EXCEPTION,
+				uid, type, value);
+	if (query == NULL) {
+		NOTIFICATION_ERR("fail to alloc query"); /* LCOV_EXCL_LINE */
+		ret = NOTIFICATION_ERROR_OUT_OF_MEMORY;
 		goto out;
 	}
 
-	sqlite3_bind_int(stmt, field_index++, uid);
-	sqlite3_bind_int(stmt, field_index++, type);
-	sqlite3_bind_int(stmt, field_index++, value);
-
-	sql_ret = sqlite3_step(stmt);
-	if (sql_ret != SQLITE_OK && sql_ret != SQLITE_DONE) {
-		NOTIFICATION_ERR("sqlite3_step failed [%d][%s]", sql_ret, sqlite3_errmsg(db));
-		ret = NOTIFICATION_ERROR_FROM_DB;
+	ret = notification_db_exec(db, query, &num_changes);
+	if (ret != NOTIFICATION_ERROR_NONE)
 		goto out;
-	}
 
-	sql_ret = sqlite3_changes(db);
-	if (sql_ret == 0)
+	if (num_changes == 0)
 		NOTIFICATION_WARN("No changes on DB");
 
 out:
-	if (stmt)
-		sqlite3_finalize(stmt);
+	if (query)
+		sqlite3_free(query);
 
-	if (ret == NOTIFICATION_ERROR_NONE)
-		sqlite3_exec(db, "END;", NULL, NULL, NULL);
-	else
-		sqlite3_exec(db, "ROLLBACK;", NULL, NULL, NULL);
-
-	if (db) {
-		sql_ret = db_util_close(db);
-		if (sql_ret != SQLITE_OK)
-			NOTIFICATION_WARN("fail to db_util_close - [%d]", sql_ret); /* LCOV_EXCL_LINE */
-	}
+	if (db)
+		notification_db_close(&db);
 
 	return ret;
 }
 
-EXPORT_API int noti_system_setting_get_do_not_disturb(int *do_not_disturb, uid_t uid)
+EXPORT_API
+int noti_system_setting_get_do_not_disturb(int *do_not_disturb, uid_t uid)
 {
 	int ret = NOTIFICATION_ERROR_NONE;
-	int sql_ret;
 	int row_count = 0;
 	int col_count = 0;
 	int col_index = 0;
@@ -830,11 +756,9 @@ EXPORT_API int noti_system_setting_get_do_not_disturb(int *do_not_disturb, uid_t
 	char **query_result = NULL;
 	sqlite3 *db = NULL;
 
-	sql_ret = db_util_open(DBPATH, &db, 0);
-	if (sql_ret != SQLITE_OK || db == NULL) {
-		NOTIFICATION_ERR("db_util_open failed [%d]", sql_ret); /* LCOV_EXCL_LINE */
-		return NOTIFICATION_ERROR_FROM_DB;
-	}
+	db = notification_db_open(DBPATH);
+	if (!db)
+		return get_last_result();
 
 	query = sqlite3_mprintf("SELECT do_not_disturb FROM %s WHERE uid = %d",
 				NOTIFICATION_SYSTEM_SETTING_DB_TABLE, uid);
@@ -867,52 +791,45 @@ out:
 	if (query)
 		sqlite3_free(query);
 
-	if (db) {
-		sql_ret = db_util_close(db);
-		if (sql_ret != SQLITE_OK)
-			NOTIFICATION_WARN("fail to db_util_close - [%d]", sql_ret); /* LCOV_EXCL_LINE */
-	}
+	if (db)
+		notification_db_close(&db);
 
 	return ret;
 }
 
 /* LCOV_EXCL_START */
-EXPORT_API int notification_setting_db_update_app_disabled(const char *app_id, bool value, uid_t uid)
+EXPORT_API
+int notification_setting_db_update_app_disabled(const char *app_id, bool value, uid_t uid)
 {
-	int ret = NOTIFICATION_ERROR_NONE;
-	int sql_ret;
 	sqlite3 *db = NULL;
-	char *sqlbuf = NULL;
+	char *query = NULL;
+	int ret = NOTIFICATION_ERROR_NONE;
 
 	if (app_id == NULL)
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 
-	sql_ret = db_util_open(DBPATH, &db, 0);
-	if (sql_ret != SQLITE_OK || db == NULL) {
-		NOTIFICATION_ERR("db_util_open failed [%s][%d]", DBPATH, sql_ret);
-		return NOTIFICATION_ERROR_FROM_DB;
-	}
+	db = notification_db_open(DBPATH);
+	if (!db)
+		return get_last_result();
 
-	sqlbuf = sqlite3_mprintf("UPDATE notification_setting SET " \
-			"app_disabled = %d WHERE app_id = %Q AND uid = %d",
-			value, app_id, uid);
-	if (!sqlbuf) {
-		NOTIFICATION_ERR("fail to alloc query");
+	query = sqlite3_mprintf("UPDATE %s SET app_disabled= %d "
+				"WHERE app_id = %Q AND uid = %d",
+				NOTIFICATION_SETTING_DB_TABLE, value,
+				app_id, uid);
+	if (query == NULL) {
+		NOTIFICATION_ERR("fail to alloc query"); /* LCOV_EXCL_LINE */
 		ret = NOTIFICATION_ERROR_OUT_OF_MEMORY;
 		goto out;
 	}
 
-	ret = notification_db_exec(db, sqlbuf, NULL);
+	ret = notification_db_exec(db, query, NULL);
 
 out:
-	if (sqlbuf)
-		sqlite3_free(sqlbuf);
+	if (query)
+		sqlite3_free(query);
 
-	if (db) {
-		sql_ret = db_util_close(db);
-		if (sql_ret != SQLITE_OK)
-			NOTIFICATION_WARN("fail to db_util_close - [%d]", sql_ret);
-	}
+	if (db)
+		notification_db_close(&db);
 
 	return ret;
 }
