@@ -21,6 +21,8 @@ BuildRequires: pkgconfig(libtzplatform-config)
 BuildRequires: pkgconfig(gio-2.0)
 BuildRequires: pkgconfig(glib-2.0)
 BuildRequires: pkgconfig(iniparser)
+BuildRequires: pkgconfig(security-manager)
+BuildRequires: pkgconfig(libsmack)
 
 BuildRequires: cmake
 Requires(post): /sbin/ldconfig
@@ -107,5 +109,6 @@ fi
 %{_includedir}/notification/notification_noti.h
 %{_includedir}/notification/notification_setting_service.h
 %{_includedir}/notification/notification_viewer.h
+%{_includedir}/notification/notification_shared_file.h
 %{_libdir}/pkgconfig/notification.pc
 %{_libdir}/libnotification.so

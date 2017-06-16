@@ -38,22 +38,22 @@
 #include <notification_group.h>
 #include <notification_ipc.h>
 #include <notification_internal.h>
+#include <notification_shared_file.h>
 
 static void (*posted_toast_message_cb)(void *data);
 
 #define NOTI_TEXT_RESULT_LEN 2048
 #define REGULAR_UID_MIN 5000
 
-char *notification_get_app_id_by_pid(void)
+char *notification_get_app_id_by_pid(int pid)
 {
 #define NOTI_APP_ID_LEN 512
 	char app_id[NOTI_APP_ID_LEN + 1] = { 0, };
-	int pid = 0, ret = AUL_R_OK;
+	int ret = AUL_R_OK;
 	int fd;
 	char *dup_app_id;
 	char buf[NOTI_APP_ID_LEN + 1] = { 0, };
 
-	pid = getpid();
 	ret = aul_app_get_appid_bypid(pid, app_id, sizeof(app_id));
 	if (ret != AUL_R_OK) {
 
@@ -92,8 +92,10 @@ EXPORT_API int notification_set_image(notification_h noti,
 						const char *image_path)
 {
 	bundle *b = NULL;
+	bundle *priv_b = NULL;
 	char buf_key[32] = { 0, };
 	char *ret_val = NULL;
+	char *priv_path = NULL;
 
 	if (noti == NULL)
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
@@ -104,7 +106,6 @@ EXPORT_API int notification_set_image(notification_h noti,
 
 	if (noti->b_image_path) {
 		b = noti->b_image_path;
-
 		snprintf(buf_key, sizeof(buf_key), "%d", type);
 
 		bundle_get_str(b, buf_key, &ret_val);
@@ -118,14 +119,27 @@ EXPORT_API int notification_set_image(notification_h noti,
 			return NOTIFICATION_ERROR_NONE;
 
 		b = bundle_create();
-
 		snprintf(buf_key, sizeof(buf_key), "%d", type);
-
 		bundle_add_str(b, buf_key, image_path);
-
 		noti->b_image_path = b;
 	}
 
+	priv_path = notification_check_file_path_is_private(noti->pkg_id, image_path);
+	if (noti->b_priv_image_path) {
+		priv_b = noti->b_priv_image_path;
+
+		ret_val = NULL;
+		bundle_get_str(priv_b, buf_key, &ret_val);
+		if (ret_val)
+			bundle_del(b, buf_key);
+
+		if (priv_path != NULL)
+			bundle_add_str(priv_b, buf_key, priv_path);
+	} else if (priv_path != NULL) {
+		priv_b = bundle_create();
+		bundle_add_str(priv_b, buf_key, priv_path);
+		noti->b_priv_image_path = priv_b;
+	}
 	return NOTIFICATION_ERROR_NONE;
 }
 
@@ -900,6 +914,8 @@ EXPORT_API int notification_set_sound(notification_h noti,
 						       notification_sound_type_e type,
 						       const char *path)
 {
+	char *priv_path = NULL;
+
 	if (noti == NULL)
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 
@@ -913,13 +929,25 @@ EXPORT_API int notification_set_sound(notification_h noti,
 	if (type == NOTIFICATION_SOUND_TYPE_USER_DATA && path != NULL) {
 		if (noti->sound_path != NULL)
 			free(noti->sound_path);
-
 		noti->sound_path = strdup(path);
+
+		if (noti->priv_sound_path != NULL)
+			free(noti->priv_sound_path);
+
+		priv_path = notification_check_file_path_is_private(noti->pkg_id, path);
+		if (priv_path)
+			noti->priv_sound_path = priv_path;
 	} else {
 		if (noti->sound_path != NULL) {
 			free(noti->sound_path);
 			noti->sound_path = NULL;
 		}
+
+		if (noti->priv_sound_path != NULL) {
+			free(noti->priv_sound_path);
+			noti->priv_sound_path = NULL;
+		}
+
 		if (type == NOTIFICATION_SOUND_TYPE_USER_DATA) {
 			noti->sound_type = NOTIFICATION_SOUND_TYPE_DEFAULT;
 			return NOTIFICATION_ERROR_INVALID_PARAMETER;
@@ -950,6 +978,8 @@ EXPORT_API int notification_set_vibration(notification_h noti,
 							   notification_vibration_type_e type,
 							   const char *path)
 {
+	char *priv_path = NULL;
+
 	if (noti == NULL)
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 
@@ -961,15 +991,29 @@ EXPORT_API int notification_set_vibration(notification_h noti,
 
 	/* Save sound path if user data type */
 	if (type == NOTIFICATION_VIBRATION_TYPE_USER_DATA && path != NULL) {
-		if (noti->vibration_path != NULL)
+		if (noti->vibration_path != NULL) {
 			free(noti->vibration_path);
-
+			noti->vibration_path = NULL;
+		}
 		noti->vibration_path = strdup(path);
+
+		if (noti->priv_vibration_path != NULL) {
+			free(noti->priv_vibration_path);
+			noti->priv_vibration_path = NULL;
+		}
+		priv_path = notification_check_file_path_is_private(noti->pkg_id, path);
+		if (priv_path)
+			noti->priv_vibration_path = priv_path;
 	} else {
 		if (noti->vibration_path != NULL) {
 			free(noti->vibration_path);
 			noti->vibration_path = NULL;
 		}
+		if (noti->priv_vibration_path != NULL) {
+			free(noti->priv_vibration_path);
+			noti->priv_vibration_path = NULL;
+		}
+
 		if (type == NOTIFICATION_VIBRATION_TYPE_USER_DATA) {
 			noti->vibration_type = NOTIFICATION_VIBRATION_TYPE_DEFAULT;
 			return NOTIFICATION_ERROR_INVALID_PARAMETER;
@@ -987,7 +1031,6 @@ EXPORT_API int notification_get_vibration(notification_h noti,
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 
 	*type = noti->vibration_type;
-
 	/* Set sound path if user data type */
 	if (noti->vibration_type == NOTIFICATION_VIBRATION_TYPE_USER_DATA
 	    && path != NULL)
@@ -1430,7 +1473,7 @@ static notification_h _notification_create(notification_type_e type)
 				NOTIFICATION_DISPLAY_APP_TICKER |
 				NOTIFICATION_DISPLAY_APP_INDICATOR;
 	noti->auto_remove = true;
-	noti->caller_app_id = notification_get_app_id_by_pid();
+	noti->caller_app_id = notification_get_app_id_by_pid(getpid());
 	if (noti->caller_app_id == NULL) {
 		NOTIFICATION_ERR("get_app_id_by_pid is failed");
 		goto out;
@@ -1575,15 +1618,24 @@ EXPORT_API int notification_clone(notification_h noti, notification_h *clone)
 	if (noti->b_image_path != NULL)
 		new_noti->b_image_path = bundle_dup(noti->b_image_path);
 
+	if (noti->b_priv_image_path != NULL)
+		new_noti->b_priv_image_path = bundle_dup(noti->b_priv_image_path);
+
 	new_noti->sound_type = noti->sound_type;
 
 	if (noti->sound_path != NULL)
 		new_noti->sound_path = strdup(noti->sound_path);
 
+	if (noti->priv_sound_path != NULL)
+		new_noti->priv_sound_path = strdup(noti->priv_sound_path);
+
 	new_noti->vibration_type = noti->vibration_type;
 
 	if (noti->vibration_path != NULL)
 		new_noti->vibration_path = strdup(noti->vibration_path);
+
+	if (noti->priv_vibration_path != NULL)
+		new_noti->priv_vibration_path = strdup(noti->priv_vibration_path);
 
 	new_noti->led_operation = noti->led_operation;
 	new_noti->led_argb = noti->led_argb;
@@ -1656,11 +1708,23 @@ EXPORT_API int notification_free(notification_h noti)
 			bundle_free(noti->b_event_handler[i]);
 	}
 
+	if (noti->b_image_path)
+		bundle_free(noti->b_image_path);
+
+	if (noti->b_priv_image_path)
+		bundle_free(noti->b_priv_image_path);
+
 	if (noti->sound_path)
 		free(noti->sound_path);
 
+	if (noti->priv_sound_path)
+		free(noti->priv_sound_path);
+
 	if (noti->vibration_path)
 		free(noti->vibration_path);
+
+	if (noti->priv_vibration_path)
+		free(noti->priv_vibration_path);
 
 	if (noti->domain)
 		free(noti->domain);
@@ -1676,9 +1740,6 @@ EXPORT_API int notification_free(notification_h noti)
 
 	if (noti->b_format_args)
 		bundle_free(noti->b_format_args);
-
-	if (noti->b_image_path)
-		bundle_free(noti->b_image_path);
 
 	if (noti->app_icon_path)
 		free(noti->app_icon_path);
@@ -1843,7 +1904,7 @@ EXPORT_API int notification_get_noti_block_state(notification_block_state_e *sta
 	if (state == NULL)
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 
-	app_id = notification_get_app_id_by_pid();
+	app_id = notification_get_app_id_by_pid(getpid());
 
 	ret = notification_ipc_get_noti_block_state(app_id, &do_not_disturb, &do_not_disturb_except, &allow_to_notify, getuid());
 

@@ -38,6 +38,7 @@
 #include <notification_group.h>
 #include <notification_ipc.h>
 #include <notification_internal.h>
+#include <notification_shared_file.h>
 
 typedef struct _notification_cb_info notification_cb_info_s;
 typedef struct _notification_event_cb_info notification_event_cb_info_s;
@@ -332,7 +333,7 @@ EXPORT_API int notification_update_progress(notification_h noti,
 	}
 
 	if (noti == NULL)
-		caller_app_id = notification_get_app_id_by_pid();
+		caller_app_id = notification_get_app_id_by_pid(getpid());
 	else
 		caller_app_id = strdup(noti->caller_app_id);
 
@@ -371,7 +372,7 @@ EXPORT_API int notification_update_size(notification_h noti,
 	}
 
 	if (noti == NULL)
-		caller_app_id = notification_get_app_id_by_pid();
+		caller_app_id = notification_get_app_id_by_pid(getpid());
 	else
 		caller_app_id = strdup(noti->caller_app_id);
 
@@ -407,7 +408,7 @@ EXPORT_API int notification_update_content(notification_h noti,
 	}
 
 	if (noti == NULL)
-		caller_app_id = notification_get_app_id_by_pid();
+		caller_app_id = notification_get_app_id_by_pid(getpid());
 	else
 		caller_app_id = strdup(noti->caller_app_id);
 
@@ -666,7 +667,7 @@ EXPORT_API int notification_delete_group_by_group_id(const char *app_id,
 	char *caller_app_id;
 
 	if (app_id == NULL)
-		caller_app_id = notification_get_app_id_by_pid();
+		caller_app_id = notification_get_app_id_by_pid(getpid());
 	else
 		caller_app_id = strdup(app_id);
 
@@ -688,7 +689,7 @@ int notification_delete_group_by_priv_id_for_uid(const char *app_id,
 	char *caller_app_id;
 
 	if (app_id == NULL)
-		caller_app_id = notification_get_app_id_by_pid();
+		caller_app_id = notification_get_app_id_by_pid(getpid());
 	else
 		caller_app_id = strdup(app_id);
 
@@ -722,7 +723,7 @@ int notification_get_count_for_uid(notification_type_e type,
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 
 	if (app_id == NULL)
-		caller_app_id = notification_get_app_id_by_pid();
+		caller_app_id = notification_get_app_id_by_pid(getpid());
 	else
 		caller_app_id = strdup(app_id);
 
@@ -832,7 +833,7 @@ int notification_delete_all_by_type_for_uid(const char *app_id,
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 
 	if (app_id == NULL)
-		caller_app_id = notification_get_app_id_by_pid();
+		caller_app_id = notification_get_app_id_by_pid(getpid());
 	else
 		caller_app_id = strdup(app_id);
 
@@ -864,7 +865,7 @@ int notification_delete_by_priv_id_for_uid(const char *app_id,
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 
 	if (app_id == NULL)
-		caller_app_id = notification_get_app_id_by_pid();
+		caller_app_id = notification_get_app_id_by_pid(getpid());
 	else
 		caller_app_id = strdup(app_id);
 
@@ -1304,10 +1305,75 @@ EXPORT_API int notification_get_uid(notification_h noti,
 	return NOTIFICATION_ERROR_NONE;
 }
 
+static GList *__copy_private_file(notification_h noti)
+{
+	bundle *dst_b;
+	bundle *src_b;
+	char buf_key[32];
+	char *src_path;
+	char *dst_path;
+	int i;
+	GList *file_list = NULL;
+	int ret;
+
+	if (noti->b_priv_image_path && noti->b_image_path) {
+		dst_b = noti->b_priv_image_path;
+		src_b = noti->b_image_path;
+		for (i = NOTIFICATION_IMAGE_TYPE_ICON; i <= NOTIFICATION_IMAGE_TYPE_MAX; i++) {
+			src_path = NULL;
+			dst_path = NULL;
+
+			snprintf(buf_key, sizeof(buf_key), "%d", i);
+
+			bundle_get_str(dst_b, buf_key, &dst_path);
+			if (dst_path == NULL)
+				continue;
+
+			bundle_get_str(src_b, buf_key, &src_path);
+			if (src_path == NULL)
+				continue;
+
+			ret = notification_copy_private_file(src_path, dst_path);
+			if (ret == NOTIFICATION_ERROR_NONE)
+				file_list = g_list_append(file_list, strdup(dst_path));
+		}
+	}
+	if (noti->sound_path && noti->priv_sound_path) {
+		ret = notification_copy_private_file(noti->sound_path,
+						     noti->priv_sound_path);
+		if (ret == NOTIFICATION_ERROR_NONE)
+			file_list = g_list_append(file_list,
+						  strdup(noti->priv_sound_path));
+	}
+
+	if (noti->vibration_path && noti->priv_vibration_path) {
+		ret = notification_copy_private_file(noti->vibration_path,
+						     noti->priv_vibration_path);
+		if (ret == NOTIFICATION_ERROR_NONE)
+			file_list = g_list_append(file_list,
+						  strdup(noti->priv_vibration_path));
+	}
+
+	return file_list;
+}
+
+static void __remove_private_file(gpointer data, gpointer user_data)
+{
+	GFile *src = NULL;
+	char *path = (char *)data;
+
+	src = g_file_new_for_path(path);
+	if (src) {
+		g_file_delete(src, NULL, NULL);
+		g_object_unref(src);
+	}
+}
+
 EXPORT_API int notification_post_for_uid(notification_h noti, uid_t uid)
 {
 	int ret = 0;
 	int id = 0;
+	GList *file_list;
 
 	if (noti == NULL)
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
@@ -1320,12 +1386,17 @@ EXPORT_API int notification_post_for_uid(notification_h noti, uid_t uid)
 	noti->insert_time = time(NULL);
 	noti->uid = uid;
 
+	file_list = __copy_private_file(noti);
 	ret = notification_ipc_request_insert(noti, &id);
-	if (ret != NOTIFICATION_ERROR_NONE)
-		return ret;
+	if (ret == NOTIFICATION_ERROR_NONE) {
+		noti->priv_id = id;
+		NOTIFICATION_DBG("from master:%d", id);
+	} else {
+		g_list_foreach(file_list, __remove_private_file, NULL);
+	}
 
-	noti->priv_id = id;
-	NOTIFICATION_DBG("from master:%d", id);
+	if (file_list)
+		g_list_free_full(file_list, free);
 
 	return NOTIFICATION_ERROR_NONE;
 }
@@ -1361,7 +1432,7 @@ EXPORT_API int notification_delete_all_for_uid(notification_type_e type, uid_t u
 	if (type <= NOTIFICATION_TYPE_NONE || type > NOTIFICATION_TYPE_MAX)
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 
-	caller_app_id = notification_get_app_id_by_pid();
+	caller_app_id = notification_get_app_id_by_pid(getpid());
 
 	ret = notification_ipc_request_delete_multiple(type, caller_app_id, uid);
 
@@ -1383,7 +1454,7 @@ EXPORT_API notification_h notification_load_by_tag_for_uid(const char *tag, uid_
 		return NULL;
 	}
 
-	caller_app_id = notification_get_app_id_by_pid();
+	caller_app_id = notification_get_app_id_by_pid(getpid());
 	if (!caller_app_id) {
 		/* LCOV_EXCL_START */
 		NOTIFICATION_ERR("Failed to get a package name");

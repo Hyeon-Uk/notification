@@ -1539,7 +1539,6 @@ int notification_ipc_request_create_from_template(notification_h noti, const cha
 		notification_ipc_make_noti_from_gvariant(noti, noti_body);
 		g_variant_unref(noti_body);
 		_print_noti(noti);
-
 	}
 
 	if (reply)
@@ -1712,6 +1711,7 @@ EXPORT_API GVariant *notification_ipc_make_gvariant_from_noti(notification_h not
 	bundle_raw *args = NULL;
 	bundle_raw *group_args = NULL;
 	bundle_raw *b_image_path = NULL;
+	bundle_raw *b_priv_image_path = NULL;
 	bundle_raw *b_execute_option = NULL;
 	bundle_raw *b_service_responding = NULL;
 	bundle_raw *b_service_single_launch = NULL;
@@ -1847,15 +1847,30 @@ EXPORT_API GVariant *notification_ipc_make_gvariant_from_noti(notification_h not
 			bundle_free_encoded_rawdata(&b_image_path);
 	}
 
+	if (noti->b_priv_image_path) {
+		bundle_encode(noti->b_priv_image_path,
+			      (bundle_raw **)&b_priv_image_path, &b_encode_len);
+		g_variant_builder_add(&builder, "{iv}", NOTIFICATION_DATA_TYPE_PRIV_IMAGE_PATH, g_variant_new_string((const gchar *)b_priv_image_path));
+
+		if (b_priv_image_path)
+			bundle_free_encoded_rawdata(&b_priv_image_path);
+	}
+
 	g_variant_builder_add(&builder, "{iv}", NOTIFICATION_DATA_TYPE_SOUND_TYPE, g_variant_new_int32(noti->sound_type));
 
 	if (noti->sound_path)
 		g_variant_builder_add(&builder, "{iv}", NOTIFICATION_DATA_TYPE_SOUND_PATH, g_variant_new_string((const gchar *)noti->sound_path));
 
+	if (noti->priv_sound_path)
+		g_variant_builder_add(&builder, "{iv}", NOTIFICATION_DATA_TYPE_PRIV_SOUND_PATH, g_variant_new_string((const gchar *)noti->priv_sound_path));
+
 	g_variant_builder_add(&builder, "{iv}", NOTIFICATION_DATA_TYPE_VIBRATION_TYPE, g_variant_new_int32(noti->vibration_type));
 
 	if (noti->vibration_path)
 		g_variant_builder_add(&builder, "{iv}", NOTIFICATION_DATA_TYPE_VIBRATION_PATH, g_variant_new_string((const gchar *)noti->vibration_path));
+
+	if (noti->priv_vibration_path)
+		g_variant_builder_add(&builder, "{iv}", NOTIFICATION_DATA_TYPE_PRIV_VIBRATION_PATH, g_variant_new_string((const gchar *)noti->priv_vibration_path));
 
 	g_variant_builder_add(&builder, "{iv}", NOTIFICATION_DATA_TYPE_LED_OPERATION, g_variant_new_int32(noti->led_operation));
 
@@ -1984,8 +1999,11 @@ EXPORT_API int notification_ipc_make_noti_from_gvariant(notification_h noti,
 	bundle_raw *b_key = NULL;
 	bundle_raw *b_format_args = NULL;
 	bundle_raw *b_image_path = NULL;
+	bundle_raw *b_priv_image_path = NULL;
 	char *sound_path = NULL;
+	char *priv_sound_path = NULL;
 	char *vibration_path = NULL;
+	char *priv_vibration_path = NULL;
 	char *app_icon_path = NULL;
 	char *app_name = NULL;
 	char *temp_title = NULL;
@@ -2035,10 +2053,13 @@ EXPORT_API int notification_ipc_make_noti_from_gvariant(notification_h noti,
 	_variant_dict_lookup(dict, NOTIFICATION_DATA_TYPE_FORMAT_ARGS, "&s", &b_format_args);
 	_variant_dict_lookup(dict, NOTIFICATION_DATA_TYPE_NUM_FORMAT_ARGS, "i", &noti->num_format_args);
 	_variant_dict_lookup(dict, NOTIFICATION_DATA_TYPE_IMAGE_PATH, "&s", &b_image_path);
+	_variant_dict_lookup(dict, NOTIFICATION_DATA_TYPE_PRIV_IMAGE_PATH, "&s", &b_priv_image_path);
 	_variant_dict_lookup(dict, NOTIFICATION_DATA_TYPE_SOUND_TYPE, "i", &noti->sound_type);
 	_variant_dict_lookup(dict, NOTIFICATION_DATA_TYPE_SOUND_PATH, "&s", &sound_path);
+	_variant_dict_lookup(dict, NOTIFICATION_DATA_TYPE_PRIV_SOUND_PATH, "&s", &priv_sound_path);
 	_variant_dict_lookup(dict, NOTIFICATION_DATA_TYPE_VIBRATION_TYPE, "i", &noti->vibration_type);
 	_variant_dict_lookup(dict, NOTIFICATION_DATA_TYPE_VIBRATION_PATH, "&s", &vibration_path);
+	_variant_dict_lookup(dict, NOTIFICATION_DATA_TYPE_PRIV_VIBRATION_PATH, "&s", &priv_vibration_path);
 	_variant_dict_lookup(dict, NOTIFICATION_DATA_TYPE_LED_OPERATION, "i", &noti->led_operation);
 	_variant_dict_lookup(dict, NOTIFICATION_DATA_TYPE_LED_ARGB, "i", &noti->led_argb);
 	_variant_dict_lookup(dict, NOTIFICATION_DATA_TYPE_LED_ON_MS, "i", &noti->led_on_ms);
@@ -2104,8 +2125,11 @@ EXPORT_API int notification_ipc_make_noti_from_gvariant(notification_h noti,
 	noti->b_key = _create_bundle_from_bundle_raw(b_key);
 	noti->b_format_args = _create_bundle_from_bundle_raw(b_format_args);
 	noti->b_image_path = _create_bundle_from_bundle_raw(b_image_path);
+	noti->b_priv_image_path = _create_bundle_from_bundle_raw(b_priv_image_path);
 	noti->sound_path = _dup_string(sound_path);
+	noti->priv_sound_path = _dup_string(priv_sound_path);
 	noti->vibration_path = _dup_string(vibration_path);
+	noti->priv_vibration_path = _dup_string(priv_vibration_path);
 	noti->app_icon_path = _dup_string(app_icon_path);
 	noti->app_name = _dup_string(app_name);
 	noti->temp_title = _dup_string(temp_title);

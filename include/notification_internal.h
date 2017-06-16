@@ -53,6 +53,15 @@ extern "C" {
  * @brief Enumeration for notification ongoing value type.
  * @since_tizen 3.0
  */
+typedef enum _notification_res_path_type {
+	NOTIFICATION_RES_PATH_TYPE_SOUND = NOTIFICATION_IMAGE_TYPE_MAX + 1,
+	NOTIFICATION_RES_PATH_TYPE_VIBRATION,
+} notification_res_path_type_e;
+
+/**
+ * @brief Enumeration for notification ongoing value type.
+ * @since_tizen 3.0
+ */
 typedef enum _notification_ongoing_value_type {
 	NOTIFICATION_ONGOING_VALUE_TYPE_PERCENT = 0,
 	NOTIFICATION_ONGOING_VALUE_TYPE_TIME,

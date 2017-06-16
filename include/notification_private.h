@@ -62,11 +62,14 @@ struct _notification {
 	int num_format_args;	/* number of format string args */
 
 	bundle *b_image_path;	/* image path */
+	bundle *b_priv_image_path;	/* resource path for image */
 
 	notification_sound_type_e sound_type;
 	char *sound_path;
+	char *priv_sound_path; /* resource path for sound */
 	notification_vibration_type_e vibration_type;
 	char *vibration_path;
+	char *priv_vibration_path; /* resource path for vibration */
 	notification_led_op_e led_operation;
 	int led_argb;
 	int led_on_ms;
@@ -98,6 +101,7 @@ struct _notification {
 	bool event_flag;
 	bool is_translation;
 	int extension_image_size;
+
 	uid_t uid;
 };
 
@@ -132,10 +136,13 @@ typedef enum notification_data_type {
 	NOTIFICATION_DATA_TYPE_FORMAT_ARGS,
 	NOTIFICATION_DATA_TYPE_NUM_FORMAT_ARGS,
 	NOTIFICATION_DATA_TYPE_IMAGE_PATH,
+	NOTIFICATION_DATA_TYPE_PRIV_IMAGE_PATH,
 	NOTIFICATION_DATA_TYPE_SOUND_TYPE,
 	NOTIFICATION_DATA_TYPE_SOUND_PATH,
+	NOTIFICATION_DATA_TYPE_PRIV_SOUND_PATH,
 	NOTIFICATION_DATA_TYPE_VIBRATION_TYPE,
 	NOTIFICATION_DATA_TYPE_VIBRATION_PATH,
+	NOTIFICATION_DATA_TYPE_PRIV_VIBRATION_PATH,
 	NOTIFICATION_DATA_TYPE_LED_OPERATION,
 	NOTIFICATION_DATA_TYPE_LED_ARGB,
 	NOTIFICATION_DATA_TYPE_LED_ON_MS,
@@ -170,7 +177,7 @@ void notification_call_changed_cb_for_uid(notification_op *op_list, int op_num, 
 void notification_call_dnd_changed_cb_for_uid(int do_not_disturb, uid_t uid);
 void notification_call_event_handler_cb(notification_h noti, int event_type);
 void notification_delete_event_handler_cb(int priv_id);
-char *notification_get_app_id_by_pid(void);
+char *notification_get_app_id_by_pid(int pid);
 
 #endif /* __NOTIFICATION_PRIVATE_H__ */
 

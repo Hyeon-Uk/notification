@@ -88,7 +88,7 @@ EXPORT_API int notification_setting_get_setting(notification_setting_h *setting)
 	int ret;
 	char *package_name = NULL;
 
-	package_name = notification_get_app_id_by_pid();
+	package_name = notification_get_app_id_by_pid(getpid());
 
 	if (package_name == NULL)
 		return NOTIFICATION_ERROR_NOT_EXIST_ID;

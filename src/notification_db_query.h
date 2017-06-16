@@ -29,7 +29,8 @@ CREATE TABLE IF NOT EXISTS noti_list ( \
 	caller_app_id TEXT NOT NULL, \
 	launch_app_id TEXT, \
 	image_path TEXT, \
-	group_id INTEGER DEFAULT 0,  \
+	priv_image_path TEXT, \
+	group_id INTEGER DEFAULT 0, \
 	internal_group_id INTEGER DEFAULT 0, \
 	priv_id INTEGER PRIMARY KEY AUTOINCREMENT, \
 	title_key TEXT, \
@@ -59,8 +60,10 @@ CREATE TABLE IF NOT EXISTS noti_list ( \
 	b_event_handler_click_on_text_input_button TEXT, \
 	sound_type INTEGER DEFAULT 0, \
 	sound_path TEXT, \
+	priv_sound_path TEXT, \
 	vibration_type INTEGER DEFAULT 0, \
 	vibration_path TEXT, \
+	priv_vibration_path TEXT, \
 	led_operation INTEGER DEFAULT 0, \
 	led_argb INTEGER DEFAULT 0, \
 	led_on_ms INTEGER DEFAULT -1, \
@@ -157,6 +160,7 @@ CREATE TABLE IF NOT EXISTS noti_template ( \
 	caller_app_id TEXT NOT NULL, \
 	launch_app_id TEXT, \
 	image_path TEXT, \
+	priv_image_path TEXT, \
 	group_id INTEGER DEFAULT 0, \
 	internal_group_id INTEGER DEFAULT 0, \
 	priv_id INTEGER PRIMARY KEY AUTOINCREMENT, \
@@ -187,8 +191,10 @@ CREATE TABLE IF NOT EXISTS noti_template ( \
 	b_event_handler_click_on_text_input_button TEXT, \
 	sound_type INTEGER DEFAULT 0, \
 	sound_path TEXT, \
+	priv_sound_path TEXT, \
 	vibration_type INTEGER DEFAULT 0, \
 	vibration_path TEXT, \
+	priv_vibration_path TEXT, \
 	led_operation INTEGER DEFAULT 0, \
 	led_argb INTEGER DEFAULT 0, \
 	led_on_ms INTEGER DEFAULT -1, \
@@ -216,7 +222,7 @@ CREATE TABLE IF NOT EXISTS noti_template ( \
 
 #define NOTI_LIST_DB_ATTRIBUTES_SELECT \
 	"type, layout, pkg_id, caller_app_id, launch_app_id, image_path, " \
-	"group_id, priv_id, b_text, b_key, " \
+	"priv_image_path, group_id, priv_id, b_text, b_key, " \
 	"tag, b_format_args, num_format_args, text_domain, text_dir, " \
 	"time, insert_time, args, group_args, b_execute_option, " \
 	"b_service_responding, b_service_single_launch, b_service_multi_launch, " \
@@ -225,17 +231,18 @@ CREATE TABLE IF NOT EXISTS noti_template ( \
 	"b_event_handler_click_on_button_5, b_event_handler_click_on_button_6, " \
 	"b_event_handler_click_on_icon, b_event_handler_click_on_thumbnail, " \
 	"b_event_handler_click_on_text_input_button, " \
-	"sound_type, sound_path, vibration_type, vibration_path, " \
+	"sound_type, sound_path, priv_sound_path, " \
+	"vibration_type, vibration_path, priv_vibration_path, " \
 	"led_operation, led_argb, led_on_ms, led_off_ms, " \
 	"flags_for_property, display_applist, " \
-	"progress_size, progress_percentage, ongoing_flag, ongoing_value_type, "\
-	"ongoing_current, ongoing_duration, auto_remove, default_button_index, "\
+	"progress_size, progress_percentage, ongoing_flag, ongoing_value_type, " \
+	"ongoing_current, ongoing_duration, auto_remove, default_button_index, " \
 	"hide_timeout, delete_timeout, text_input_max_length, event_flag, "\
 	"extension_image_size, uid"
 
 #define NOTI_LIST_DB_ATTRIBUTES_INSERT \
 	"type, layout, pkg_id, caller_app_id, launch_app_id, image_path, " \
-	"group_id, internal_group_id, title_key, b_text, b_key, " \
+	"priv_image_path, group_id, internal_group_id, title_key, b_text, b_key, " \
 	"tag, b_format_args, num_format_args, text_domain, text_dir, " \
 	"time, insert_time, args, group_args, b_execute_option, " \
 	"b_service_responding, b_service_single_launch, b_service_multi_launch, " \
@@ -244,7 +251,8 @@ CREATE TABLE IF NOT EXISTS noti_template ( \
 	"b_event_handler_click_on_button_5, b_event_handler_click_on_button_6, " \
 	"b_event_handler_click_on_icon, b_event_handler_click_on_thumbnail, " \
 	"b_event_handler_click_on_text_input_button, " \
-	"sound_type, sound_path, vibration_type, vibration_path, " \
+	"sound_type, sound_path, priv_sound_path, " \
+	"vibration_type, vibration_path, priv_vibration_path, " \
 	"led_operation, led_argb, led_on_ms, led_off_ms, " \
 	"flags_for_property, flag_simmode, display_applist, " \
 	"progress_size, progress_percentage, ongoing_flag, ongoing_value_type, " \
@@ -255,13 +263,14 @@ CREATE TABLE IF NOT EXISTS noti_template ( \
 #define NOTI_LIST_INSERT_VALUES \
 	"?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, " \
 	"?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, " \
-	"?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?"
+	"?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, " \
+	"? "
 
 #define NOTI_LIST_DB_ATTRIBUTES_UPDATE \
 	"type = ?, layout = ?, launch_app_id = ?, image_path = ?, " \
-	"b_text = ?, b_key = ?, tag = ?, b_format_args = ?, " \
-	"num_format_args = ?, text_domain = ?, text_dir = ?, time = ?, " \
-	"insert_time = ?, args = ?, group_args = ?, " \
+	"priv_image_path = ?, b_text = ?, b_key = ?, tag = ?, " \
+	"b_format_args = ?, num_format_args = ?, text_domain = ?, text_dir = ?, " \
+	"time = ?, insert_time = ?, args = ?, group_args = ?, " \
 	"b_execute_option = ?, b_service_responding = ?, " \
 	"b_service_single_launch = ?, b_service_multi_launch = ?, " \
 	"b_event_handler_click_on_button_1 = ?, " \
@@ -273,8 +282,8 @@ CREATE TABLE IF NOT EXISTS noti_template ( \
 	"b_event_handler_click_on_icon = ?, " \
 	"b_event_handler_click_on_thumbnail = ?, " \
 	"b_event_handler_click_on_text_input_button = ?, " \
-	"sound_type = ?, sound_path = ?, " \
-	"vibration_type = ?, vibration_path = ?, " \
+	"sound_type = ?, sound_path = ?, priv_sound_path = ?, " \
+	"vibration_type = ?, vibration_path = ?, priv_vibration_path = ?, " \
 	"led_operation = ?, led_argb = ?, led_on_ms = ?, led_off_ms = ?, " \
 	"flags_for_property = ?, flag_simmode = ?, display_applist = ?, " \
 	"progress_size = ?, progress_percentage = ?, " \

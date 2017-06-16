@@ -70,6 +70,7 @@ static void __notification_noti_populate_from_stmt(sqlite3_stmt *stmt, notificat
 	__free_and_set((void **)&(noti->caller_app_id), notification_db_column_text(stmt, col++));
 	__free_and_set((void **)&(noti->launch_app_id), notification_db_column_text(stmt, col++));
 	noti->b_image_path = notification_db_column_bundle(stmt, col++);
+	noti->b_priv_image_path = notification_db_column_bundle(stmt, col++);
 	noti->group_id = sqlite3_column_int(stmt, col++);
 	noti->internal_group_id = 0;
 	noti->priv_id = sqlite3_column_int(stmt, col++);
@@ -98,8 +99,10 @@ static void __notification_noti_populate_from_stmt(sqlite3_stmt *stmt, notificat
 
 	noti->sound_type = sqlite3_column_int(stmt, col++);
 	__free_and_set((void **)&(noti->sound_path), notification_db_column_text(stmt, col++));
+	__free_and_set((void **)&(noti->priv_sound_path), notification_db_column_text(stmt, col++));
 	noti->vibration_type = sqlite3_column_int(stmt, col++);
 	__free_and_set((void **)&(noti->vibration_path), notification_db_column_text(stmt, col++));
+	__free_and_set((void **)&(noti->priv_vibration_path), notification_db_column_text(stmt, col++));
 	noti->led_operation = sqlite3_column_int(stmt, col++);
 	noti->led_argb = sqlite3_column_int(stmt, col++);
 	noti->led_on_ms = sqlite3_column_int(stmt, col++);
@@ -228,6 +231,7 @@ static int _create_insertion_query(sqlite3 *db, notification_h noti, sqlite3_stm
 	char *args = NULL;
 	char *group_args = NULL;
 	char *b_image_path = NULL;
+	char *b_priv_image_path = NULL;
 	char *b_execute_option = NULL;
 	char *b_service_responding = NULL;
 	char *b_service_single_launch = NULL;
@@ -245,6 +249,10 @@ static int _create_insertion_query(sqlite3 *db, notification_h noti, sqlite3_stm
 	if (noti->b_image_path)
 		bundle_encode(noti->b_image_path, (bundle_raw **)&b_image_path,
 				&b_encode_len);
+
+	if (noti->b_priv_image_path)
+		bundle_encode(noti->b_priv_image_path,
+				(bundle_raw **)&b_priv_image_path, &b_encode_len);
 
 	/* Get title key */
 	if (noti->b_key != NULL) {
@@ -314,6 +322,7 @@ static int _create_insertion_query(sqlite3 *db, notification_h noti, sqlite3_stm
 	__BIND_TEXT(db, stmt, idx++, NOTIFICATION_CHECK_STR(noti->caller_app_id), ret, out);
 	__BIND_TEXT(db, stmt, idx++, NOTIFICATION_CHECK_STR(noti->launch_app_id), ret, out);
 	__BIND_TEXT(db, stmt, idx++, NOTIFICATION_CHECK_STR(b_image_path), ret, out);
+	__BIND_TEXT(db, stmt, idx++, NOTIFICATION_CHECK_STR(b_priv_image_path), ret, out);
 	__BIND_INT(db, stmt, idx++, noti->group_id, ret, out);
 	__BIND_INT(db, stmt, idx++, noti->internal_group_id, ret, out);
 	__BIND_TEXT_STATIC(db, stmt, idx++, NOTIFICATION_CHECK_STR(title_key), ret, out);
@@ -343,8 +352,10 @@ static int _create_insertion_query(sqlite3 *db, notification_h noti, sqlite3_stm
 	__BIND_TEXT(db, stmt, idx++, NOTIFICATION_CHECK_STR(b_event_handler[NOTIFICATION_EVENT_TYPE_CLICK_ON_TEXT_INPUT_BUTTON]), ret, out);
 	__BIND_INT(db, stmt, idx++, noti->sound_type, ret, out);
 	__BIND_TEXT(db, stmt, idx++, NOTIFICATION_CHECK_STR(noti->sound_path), ret, out);
+	__BIND_TEXT(db, stmt, idx++, NOTIFICATION_CHECK_STR(noti->priv_sound_path), ret, out);
 	__BIND_INT(db, stmt, idx++, noti->vibration_type, ret, out);
 	__BIND_TEXT(db, stmt, idx++, NOTIFICATION_CHECK_STR(noti->vibration_path), ret, out);
+	__BIND_TEXT(db, stmt, idx++, NOTIFICATION_CHECK_STR(noti->priv_vibration_path), ret, out);
 	__BIND_INT(db, stmt, idx++, noti->led_operation, ret, out);
 	__BIND_INT(db, stmt, idx++, noti->led_argb, ret, out);
 	__BIND_INT(db, stmt, idx++, noti->led_on_ms, ret, out);
@@ -369,6 +380,7 @@ static int _create_insertion_query(sqlite3 *db, notification_h noti, sqlite3_stm
 
 out:
 	__free_encoded_data(b_image_path);
+	__free_encoded_data(b_priv_image_path);
 	__free_encoded_data(b_text);
 	__free_encoded_data(b_key);
 	__free_encoded_data(b_format_args);
@@ -391,6 +403,7 @@ out:
 static int _create_update_query(sqlite3 *db, notification_h noti, sqlite3_stmt *stmt)
 {
 	char *b_image_path = NULL;
+	char *b_priv_image_path = NULL;
 	char *b_text = NULL;
 	char *b_key = NULL;
 	char *b_format_args = NULL;
@@ -415,11 +428,17 @@ static int _create_update_query(sqlite3 *db, notification_h noti, sqlite3_stmt *
 		bundle_encode(noti->b_image_path,
 			(bundle_raw **)&b_image_path, &b_encode_len);
 
+	if (noti->b_priv_image_path)
+		bundle_encode(noti->b_priv_image_path,
+			(bundle_raw **)&b_priv_image_path, &b_encode_len);
+
 	if (noti->b_text)
-		bundle_encode(noti->b_text, (bundle_raw **)&b_text, &b_encode_len);
+		bundle_encode(noti->b_text,
+			(bundle_raw **)&b_text, &b_encode_len);
 
 	if (noti->b_key)
-		bundle_encode(noti->b_key, (bundle_raw **)&b_key, &b_encode_len);
+		bundle_encode(noti->b_key,
+			(bundle_raw **)&b_key, &b_encode_len);
 
 	if (noti->b_format_args)
 		bundle_encode(noti->b_format_args,
@@ -462,6 +481,7 @@ static int _create_update_query(sqlite3 *db, notification_h noti, sqlite3_stmt *
 	__BIND_INT(db, stmt, idx++, noti->layout, ret, out);
 	__BIND_TEXT(db, stmt, idx++, NOTIFICATION_CHECK_STR(noti->launch_app_id), ret, out);
 	__BIND_TEXT(db, stmt, idx++, NOTIFICATION_CHECK_STR(b_image_path), ret, out);
+	__BIND_TEXT(db, stmt, idx++, NOTIFICATION_CHECK_STR(b_priv_image_path), ret, out);
 	__BIND_TEXT(db, stmt, idx++, NOTIFICATION_CHECK_STR(b_text), ret, out);
 	__BIND_TEXT(db, stmt, idx++, NOTIFICATION_CHECK_STR(b_key), ret, out);
 	__BIND_TEXT_STATIC(db, stmt, idx++, NOTIFICATION_CHECK_STR(noti->tag), ret, out);
@@ -488,8 +508,10 @@ static int _create_update_query(sqlite3 *db, notification_h noti, sqlite3_stmt *
 	__BIND_TEXT(db, stmt, idx++, NOTIFICATION_CHECK_STR(b_event_handler[NOTIFICATION_EVENT_TYPE_CLICK_ON_TEXT_INPUT_BUTTON]), ret, out);
 	__BIND_INT(db, stmt, idx++, noti->sound_type, ret, out);
 	__BIND_TEXT(db, stmt, idx++, NOTIFICATION_CHECK_STR(noti->sound_path), ret, out);
+	__BIND_TEXT(db, stmt, idx++, NOTIFICATION_CHECK_STR(noti->priv_sound_path), ret, out);
 	__BIND_INT(db, stmt, idx++, noti->vibration_type, ret, out);
 	__BIND_TEXT(db, stmt, idx++, NOTIFICATION_CHECK_STR(noti->vibration_path), ret, out);
+	__BIND_TEXT(db, stmt, idx++, NOTIFICATION_CHECK_STR(noti->priv_vibration_path), ret, out);
 	__BIND_INT(db, stmt, idx++, noti->led_operation, ret, out);
 	__BIND_INT(db, stmt, idx++, noti->led_argb, ret, out);
 	__BIND_INT(db, stmt, idx++, noti->led_on_ms, ret, out);
@@ -513,6 +535,7 @@ static int _create_update_query(sqlite3 *db, notification_h noti, sqlite3_stmt *
 
 out:
 	__free_encoded_data(b_image_path);
+	__free_encoded_data(b_priv_image_path);
 	__free_encoded_data(b_text);
 	__free_encoded_data(b_key);
 	__free_encoded_data(b_format_args);
@@ -843,8 +866,10 @@ static int _handle_do_not_disturb_option(notification_h noti)
 			/* and reset all sound and vibration and led options */
 			noti->sound_type = NOTIFICATION_SOUND_TYPE_NONE;
 			SAFE_FREE(noti->sound_path);
+			SAFE_FREE(noti->priv_sound_path);
 			noti->vibration_type = NOTIFICATION_VIBRATION_TYPE_NONE;
 			SAFE_FREE(noti->vibration_path);
+			SAFE_FREE(noti->priv_vibration_path);
 			noti->led_operation = NOTIFICATION_LED_OP_OFF;
 			noti->led_argb = 0;
 			noti->led_on_ms = 0;

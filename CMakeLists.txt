@@ -26,7 +26,9 @@ SET(SRCS
 	./src/notification_setting_service.c
 	./src/notification_internal.c
 	./src/notification_viewer.c
-	./src/notification_error.c)
+	./src/notification_error.c
+	./src/notification_shared_file.c
+	)
 SET(HEADERS-DEVEL
 	./include/notification.h
 	./include/notification_internal.h
@@ -45,6 +47,7 @@ SET(HEADERS-DEVEL
 	./include/notification_noti.h
 	./include/notification_setting_service.h
 	./include/notification_viewer.h
+	./include/notification_shared_file.h
    )
 
 INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/include)
@@ -66,6 +69,8 @@ pkg_check_modules(pkgs REQUIRED
 	glib-2.0
 	gio-2.0
 	iniparser
+	security-manager
+	libsmack
 )
 
 FOREACH(flag ${pkgs_CFLAGS})
