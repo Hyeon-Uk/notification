@@ -298,42 +298,42 @@ EXPORT_API int notification_setting_free_notification(notification_setting_h set
 
 static bool _is_package_in_setting_table(sqlite3 *db, const char *package_name, const char* app_id, uid_t uid)
 {
-	sqlite3_stmt *db_statement = NULL;
-	int sqlite3_ret = SQLITE_OK;
+	sqlite3_stmt *stmt = NULL;
+	int sql_ret = SQLITE_OK;
 	bool err = true;
 	int field_index = 1;
 
 	if (app_id != NULL)
-		sqlite3_ret = sqlite3_prepare_v2(db, "SELECT app_id FROM notification_setting WHERE uid = ? AND package_name = ? AND app_id = ?", -1, &db_statement, NULL);
+		sql_ret = sqlite3_prepare_v2(db, "SELECT app_id FROM notification_setting WHERE uid = ? AND package_name = ? AND app_id = ?", -1, &stmt, NULL);
 	else
-		sqlite3_ret = sqlite3_prepare_v2(db, "SELECT package_name FROM notification_setting WHERE uid = ? AND package_name = ?", -1, &db_statement, NULL);
+		sql_ret = sqlite3_prepare_v2(db, "SELECT package_name FROM notification_setting WHERE uid = ? AND package_name = ?", -1, &stmt, NULL);
 
-	if (sqlite3_ret != SQLITE_OK) {
-		NOTIFICATION_ERR("sqlite3_prepare_v2 failed [%d][%s]", sqlite3_ret, sqlite3_errmsg(db));
+	if (sql_ret != SQLITE_OK) {
+		NOTIFICATION_ERR("sqlite3_prepare_v2 failed [%d][%s]", sql_ret, sqlite3_errmsg(db));
 		err = false;
 		goto out;
 	}
 
-	sqlite3_bind_int(db_statement, field_index++, uid);
-	sqlite3_bind_text(db_statement, field_index++, package_name, -1, SQLITE_TRANSIENT);
+	sqlite3_bind_int(stmt, field_index++, uid);
+	sqlite3_bind_text(stmt, field_index++, package_name, -1, SQLITE_TRANSIENT);
 	if (app_id != NULL)
-		sqlite3_bind_text(db_statement, field_index++, app_id, -1, SQLITE_TRANSIENT);
+		sqlite3_bind_text(stmt, field_index++, app_id, -1, SQLITE_TRANSIENT);
 
-	sqlite3_ret = sqlite3_step(db_statement);
-	if (sqlite3_ret == SQLITE_DONE) {
-		NOTIFICATION_INFO("no matched app_id from package_name found[%s][%s][%d]", package_name, app_id, sqlite3_ret);
+	sql_ret = sqlite3_step(stmt);
+	if (sql_ret == SQLITE_DONE) {
+		NOTIFICATION_INFO("no matched app_id from package_name found[%s][%s][%d]", package_name, app_id, sql_ret);
 		err = false;
 		goto out;
 	}
 
-	if (sqlite3_ret != SQLITE_OK && sqlite3_ret != SQLITE_ROW) {
-		NOTIFICATION_ERR("sqlite3_step failed [%d][%s]", sqlite3_ret, sqlite3_errmsg(db));
+	if (sql_ret != SQLITE_OK && sql_ret != SQLITE_ROW) {
+		NOTIFICATION_ERR("sqlite3_step failed [%d][%s]", sql_ret, sqlite3_errmsg(db));
 		err = false;
 		goto out;
 	}
 out:
-	if (db_statement)
-		sqlite3_finalize(db_statement);
+	if (stmt)
+		sqlite3_finalize(stmt);
 
 	return err;
 }
@@ -342,11 +342,11 @@ static int foreach_app_info_callback(const pkgmgrinfo_appinfo_h handle, void *us
 {
 	setting_local_info *info = (setting_local_info *)user_data;
 	sqlite3 *db = info->db;
-	sqlite3_stmt *db_statement = NULL;
+	sqlite3_stmt *stmt = NULL;
 	int pkgmgr_ret = PACKAGE_MANAGER_ERROR_NONE;
 	int err = true;
 	int field_index = 1;
-	int sqlite3_ret = SQLITE_OK;
+	int sql_ret = SQLITE_OK;
 	char *app_id = NULL;
 	char *package_name = NULL;
 
@@ -370,31 +370,28 @@ static int foreach_app_info_callback(const pkgmgrinfo_appinfo_h handle, void *us
 	}
 
 	NOTIFICATION_INFO("uid %d package_name %s [%s] will be inserted", info->uid, package_name, app_id);
-	sqlite3_ret = sqlite3_prepare_v2(db, "INSERT INTO notification_setting (uid, package_name, app_id) "
-					 "VALUES (?, ?, ?) ", -1, &db_statement, NULL);
+	sql_ret = sqlite3_prepare_v2(db, "INSERT INTO notification_setting (uid, package_name, app_id) "
+					 "VALUES (?, ?, ?) ", -1, &stmt, NULL);
 
-	if (sqlite3_ret != SQLITE_OK) {
-		NOTIFICATION_ERR("sqlite3_prepare_v2 failed [%d][%s]", sqlite3_ret, sqlite3_errmsg(db));
+	if (sql_ret != SQLITE_OK) {
+		NOTIFICATION_ERR("sqlite3_prepare_v2 failed [%d][%s]", sql_ret, sqlite3_errmsg(db));
 		err = false;
 		goto out;
 	}
 
-	sqlite3_bind_int(db_statement, field_index++, info->uid);
-	sqlite3_bind_text(db_statement, field_index++, package_name, -1, SQLITE_TRANSIENT);
-	sqlite3_bind_text(db_statement, field_index++, app_id, -1, SQLITE_TRANSIENT);
+	sqlite3_bind_int(stmt, field_index++, info->uid);
+	sqlite3_bind_text(stmt, field_index++, package_name, -1, SQLITE_TRANSIENT);
+	sqlite3_bind_text(stmt, field_index++, app_id, -1, SQLITE_TRANSIENT);
 
-	sqlite3_ret = sqlite3_step(db_statement);
-
-	NOTIFICATION_INFO("sqlite3_step returns[%d]", sqlite3_ret);
-
-	if (sqlite3_ret != SQLITE_OK && sqlite3_ret != SQLITE_DONE) {
-		NOTIFICATION_ERR("sqlite3_step failed [%d][%s]", sqlite3_ret, sqlite3_errmsg(db));
+	sql_ret = sqlite3_step(stmt);
+	if (sql_ret != SQLITE_OK && sql_ret != SQLITE_DONE) {
+		NOTIFICATION_ERR("sqlite3_step failed [%d][%s]", sql_ret, sqlite3_errmsg(db));
 		err = false;
 	}
 
 out:
-	if (db_statement)
-		sqlite3_finalize(db_statement);
+	if (stmt)
+		sqlite3_finalize(stmt);
 
 	return err;
 }
@@ -445,17 +442,17 @@ EXPORT_API int notification_setting_refresh_setting_table(uid_t uid)
 {
 	int err = NOTIFICATION_ERROR_NONE;
 	sqlite3 *db = NULL;
-	int sqlite3_ret = SQLITE_OK;
+	int sql_ret = SQLITE_OK;
 	int pkgmgr_ret = PACKAGE_MANAGER_ERROR_NONE;
 	pkgmgrinfo_pkginfo_filter_h filter = NULL;
 	setting_local_info info;
 
 	NOTIFICATION_INFO("refresh setting table [%d]", uid);
-	sqlite3_ret = sqlite3_open_v2(DBPATH, &db, SQLITE_OPEN_READWRITE, NULL);
-	if (sqlite3_ret != SQLITE_OK || db == NULL) {
-		NOTIFICATION_ERR("db_util_open failed [%s][%d]", DBPATH, sqlite3_ret);
-		err = NOTIFICATION_ERROR_FROM_DB;
-		goto out;
+
+	sql_ret = sqlite3_open_v2(DBPATH, &db, SQLITE_OPEN_READWRITE, NULL);
+	if (sql_ret != SQLITE_OK || db == NULL) {
+		NOTIFICATION_ERR("db_util_open failed [%s][%d]", DBPATH, sql_ret);
+		return NOTIFICATION_ERROR_FROM_DB;
 	}
 
 	sqlite3_exec(db, "BEGIN immediate;", NULL, NULL, NULL);
@@ -486,14 +483,15 @@ EXPORT_API int notification_setting_refresh_setting_table(uid_t uid)
 out:
 	if (filter)
 		pkgmgrinfo_pkginfo_filter_destroy(filter);
+
 	if (db) {
 		if (err == NOTIFICATION_ERROR_NONE)
 			sqlite3_exec(db, "END;", NULL, NULL, NULL);
 		else
 			sqlite3_exec(db, "ROLLBACK;", NULL, NULL, NULL);
 
-		if ((sqlite3_ret = db_util_close(db)) != SQLITE_OK)
-			NOTIFICATION_WARN("fail to db_util_close - [%d]", sqlite3_ret);
+		if ((sql_ret = db_util_close(db)) != SQLITE_OK)
+			NOTIFICATION_WARN("fail to db_util_close - [%d]", sql_ret);
 	}
 
 	return err;
@@ -503,16 +501,15 @@ static int _install_and_update_package(const char *package_name, uid_t uid)
 {
 	sqlite3 *db;
 	int ret = NOTIFICATION_ERROR_NONE;
-	int sqlite3_ret = SQLITE_OK;
+	int sql_ret = SQLITE_OK;
 	int pkgmgr_ret = PACKAGE_MANAGER_ERROR_NONE;
 	setting_local_info info;
 	pkgmgrinfo_pkginfo_filter_h handle = NULL;
 
-	sqlite3_ret = sqlite3_open_v2(DBPATH, &db, SQLITE_OPEN_READWRITE, NULL);
-	if (sqlite3_ret != SQLITE_OK || db == NULL) {
-		NOTIFICATION_ERR("db_util_open failed [%s][%d]", DBPATH, sqlite3_ret);
-		ret = NOTIFICATION_ERROR_FROM_DB;
-		goto out;
+	sql_ret = sqlite3_open_v2(DBPATH, &db, SQLITE_OPEN_READWRITE, NULL);
+	if (sql_ret != SQLITE_OK || db == NULL) {
+		NOTIFICATION_ERR("db_util_open failed [%s][%d]", DBPATH, sql_ret);
+		return NOTIFICATION_ERROR_FROM_DB;
 	}
 
 	sqlite3_exec(db, "BEGIN immediate;", NULL, NULL, NULL);
@@ -550,14 +547,15 @@ static int _install_and_update_package(const char *package_name, uid_t uid)
 out:
 	if (handle)
 		pkgmgrinfo_pkginfo_filter_destroy(handle);
+
 	if (db) {
 		if (ret == NOTIFICATION_ERROR_NONE)
 			sqlite3_exec(db, "END;", NULL, NULL, NULL);
 		else
 			sqlite3_exec(db, "ROLLBACK;", NULL, NULL, NULL);
 
-		if ((sqlite3_ret = db_util_close(db)) != SQLITE_OK)
-			NOTIFICATION_WARN("db_util_close failed [%d]", sqlite3_ret);
+		if ((sql_ret = db_util_close(db)) != SQLITE_OK)
+			NOTIFICATION_WARN("db_util_close failed [%d]", sql_ret);
 	}
 
 	return ret;
@@ -566,17 +564,16 @@ out:
 static int _delete_package_from_setting_db(const char *package_name, uid_t uid)
 {
 	sqlite3 *db = NULL;
-	sqlite3_stmt *db_statement = NULL;
+	sqlite3_stmt *stmt = NULL;
 	int ret = NOTIFICATION_ERROR_NONE;
-	int sqlite3_ret = SQLITE_OK;
+	int sql_ret = SQLITE_OK;
 	int field_index = 1;
 	bool is_package_in_setting_table = false;
 
-	sqlite3_ret = sqlite3_open_v2(DBPATH, &db, SQLITE_OPEN_READWRITE, NULL);
-	if (sqlite3_ret != SQLITE_OK || db == NULL) {
-		NOTIFICATION_ERR("db_util_open failed [%s][%d]", DBPATH, sqlite3_ret);
-		ret = NOTIFICATION_ERROR_FROM_DB;
-		goto out;
+	sql_ret = sqlite3_open_v2(DBPATH, &db, SQLITE_OPEN_READWRITE, NULL);
+	if (sql_ret != SQLITE_OK || db == NULL) {
+		NOTIFICATION_ERR("db_util_open failed [%s][%d]", DBPATH, sql_ret);
+		return NOTIFICATION_ERROR_FROM_DB;
 	}
 
 	is_package_in_setting_table = _is_package_in_setting_table(db, package_name, NULL, uid);
@@ -587,33 +584,34 @@ static int _delete_package_from_setting_db(const char *package_name, uid_t uid)
 
 	sqlite3_exec(db, "BEGIN immediate;", NULL, NULL, NULL);
 
-	sqlite3_ret = sqlite3_prepare_v2(db, "DELETE FROM notification_setting WHERE uid = ? AND package_name = ? ", -1, &db_statement, NULL);
-	if (sqlite3_ret != SQLITE_OK) {
-		NOTIFICATION_ERR("sqlite3_prepare_v2 failed [%d][%s]", sqlite3_ret, sqlite3_errmsg(db));
+	sql_ret = sqlite3_prepare_v2(db, "DELETE FROM notification_setting WHERE uid = ? AND package_name = ? ", -1, &stmt, NULL);
+	if (sql_ret != SQLITE_OK) {
+		NOTIFICATION_ERR("sqlite3_prepare_v2 failed [%d][%s]", sql_ret, sqlite3_errmsg(db));
 		ret = NOTIFICATION_ERROR_FROM_DB;
 		goto out;
 	}
 
-	sqlite3_bind_int(db_statement, field_index++, uid);
-	sqlite3_bind_text(db_statement, field_index++, package_name, -1, SQLITE_TRANSIENT);
+	sqlite3_bind_int(stmt, field_index++, uid);
+	sqlite3_bind_text(stmt, field_index++, package_name, -1, SQLITE_TRANSIENT);
 
-	sqlite3_ret = sqlite3_step(db_statement);
-	if (sqlite3_ret != SQLITE_OK && sqlite3_ret != SQLITE_DONE) {
-		NOTIFICATION_ERR("sqlite3_step failed [%d][%s]", sqlite3_ret, sqlite3_errmsg(db));
+	sql_ret = sqlite3_step(stmt);
+	if (sql_ret != SQLITE_OK && sql_ret != SQLITE_DONE) {
+		NOTIFICATION_ERR("sqlite3_step failed [%d][%s]", sql_ret, sqlite3_errmsg(db));
 		ret = NOTIFICATION_ERROR_FROM_DB;
 	}
 
 out:
-	if (db_statement)
-		sqlite3_finalize(db_statement);
+	if (stmt)
+		sqlite3_finalize(stmt);
+
 	if (db) {
 		if (ret == NOTIFICATION_ERROR_NONE)
 			sqlite3_exec(db, "END;", NULL, NULL, NULL);
 		else
 			sqlite3_exec(db, "ROLLBACK;", NULL, NULL, NULL);
 
-		if ((sqlite3_ret = db_util_close(db)) != SQLITE_OK)
-			NOTIFICATION_WARN("db_util_close failed [%d]", sqlite3_ret);
+		if ((sql_ret = db_util_close(db)) != SQLITE_OK)
+			NOTIFICATION_WARN("db_util_close failed [%d]", sql_ret);
 	}
 
 	return ret;
@@ -1049,35 +1047,35 @@ EXPORT_API int notification_unregister_system_setting_dnd_changed_cb(dnd_changed
 static bool _is_uid_in_system_setting_table(sqlite3 *db, uid_t uid)
 {
 	bool err = true;
-	sqlite3_stmt *db_statement = NULL;
-	int sqlite3_ret = SQLITE_OK;
+	sqlite3_stmt *stmt = NULL;
+	int sql_ret = SQLITE_OK;
 	int field_index = 1;
 
-	sqlite3_ret = sqlite3_prepare_v2(db, "SELECT uid FROM notification_system_setting WHERE uid = ?", -1, &db_statement, NULL);
-	if (sqlite3_ret != SQLITE_OK) {
-		NOTIFICATION_ERR("sqlite3_prepare_v2 failed [%d][%s]", sqlite3_ret, sqlite3_errmsg(db));
+	sql_ret = sqlite3_prepare_v2(db, "SELECT uid FROM notification_system_setting WHERE uid = ?", -1, &stmt, NULL);
+	if (sql_ret != SQLITE_OK) {
+		NOTIFICATION_ERR("sqlite3_prepare_v2 failed [%d][%s]", sql_ret, sqlite3_errmsg(db));
 		err = false;
 		goto out;
 	}
 
-	sqlite3_bind_int(db_statement, field_index++, uid);
+	sqlite3_bind_int(stmt, field_index++, uid);
 
-	sqlite3_ret = sqlite3_step(db_statement);
-	if (sqlite3_ret == SQLITE_DONE) {
-		NOTIFICATION_INFO("no matched uid found[%d][%d]", uid, sqlite3_ret);
+	sql_ret = sqlite3_step(stmt);
+	if (sql_ret == SQLITE_DONE) {
+		NOTIFICATION_INFO("no matched uid found[%d][%d]", uid, sql_ret);
 		err = false;
 		goto out;
 	}
 
-	if (sqlite3_ret != SQLITE_OK && sqlite3_ret != SQLITE_ROW) {
-		NOTIFICATION_ERR("sqlite3_step failed [%d][%s]", sqlite3_ret, sqlite3_errmsg(db));
+	if (sql_ret != SQLITE_OK && sql_ret != SQLITE_ROW) {
+		NOTIFICATION_ERR("sqlite3_step failed [%d][%s]", sql_ret, sqlite3_errmsg(db));
 		err = false;
 		goto out;
 	}
 
 out:
-	if (db_statement)
-		sqlite3_finalize(db_statement);
+	if (stmt)
+		sqlite3_finalize(stmt);
 
 	return err;
 }
@@ -1085,12 +1083,13 @@ out:
 EXPORT_API int notification_system_setting_init_system_setting_table(uid_t uid)
 {
 	int err = NOTIFICATION_ERROR_NONE;
-	int sqlite3_ret = SQLITE_OK;
+	int sql_ret = SQLITE_OK;
 	int field_index = 1;
 	sqlite3 *db = NULL;
-	sqlite3_stmt *db_statement = NULL;
+	sqlite3_stmt *stmt = NULL;
 
 	NOTIFICATION_INFO("init system setting table [%d]", uid);
+
 	db = notification_db_open(DBPATH);
 	if (db == NULL)
 		return get_last_result();
@@ -1102,35 +1101,35 @@ EXPORT_API int notification_system_setting_init_system_setting_table(uid_t uid)
 		NOTIFICATION_DBG("Notification system setting table is not initialized yet");
 
 		/* notification_system_setting */
-		sqlite3_ret = sqlite3_prepare_v2(db, "INSERT INTO notification_system_setting (uid) VALUES (?) ", -1, &db_statement, NULL);
-		if (sqlite3_ret != SQLITE_OK) {
-			NOTIFICATION_ERR("sqlite3_prepare_v2 failed [%d][%s]", sqlite3_ret, sqlite3_errmsg(db));
+		sql_ret = sqlite3_prepare_v2(db, "INSERT INTO notification_system_setting (uid) VALUES (?) ", -1, &stmt, NULL);
+		if (sql_ret != SQLITE_OK) {
+			NOTIFICATION_ERR("sqlite3_prepare_v2 failed [%d][%s]", sql_ret, sqlite3_errmsg(db));
 			err = NOTIFICATION_ERROR_FROM_DB;
 			goto out;
 		}
 
-		sqlite3_bind_int(db_statement, field_index, uid);
+		sqlite3_bind_int(stmt, field_index, uid);
 
-		sqlite3_ret = sqlite3_step(db_statement);
-		if (sqlite3_ret != SQLITE_OK && sqlite3_ret != SQLITE_DONE) {
-			NOTIFICATION_ERR("sqlite3_step failed [%d][%s]", sqlite3_ret, sqlite3_errmsg(db));
+		sql_ret = sqlite3_step(stmt);
+		if (sql_ret != SQLITE_OK && sql_ret != SQLITE_DONE) {
+			NOTIFICATION_ERR("sqlite3_step failed [%d][%s]", sql_ret, sqlite3_errmsg(db));
 			err = NOTIFICATION_ERROR_FROM_DB;
 			goto out;
 		}
 
 		/* dnd_allow_exception */
-		sqlite3_ret = sqlite3_prepare_v2(db, "INSERT INTO dnd_allow_exception (uid) VALUES (?) ", -1, &db_statement, NULL);
-		if (sqlite3_ret != SQLITE_OK) {
-			NOTIFICATION_ERR("sqlite3_prepare_v2 failed [%d][%s]", sqlite3_ret, sqlite3_errmsg(db));
+		sql_ret = sqlite3_prepare_v2(db, "INSERT INTO dnd_allow_exception (uid) VALUES (?) ", -1, &stmt, NULL);
+		if (sql_ret != SQLITE_OK) {
+			NOTIFICATION_ERR("sqlite3_prepare_v2 failed [%d][%s]", sql_ret, sqlite3_errmsg(db));
 			err = NOTIFICATION_ERROR_FROM_DB;
 			goto out;
 		}
 
-		sqlite3_bind_int(db_statement, field_index, uid);
+		sqlite3_bind_int(stmt, field_index, uid);
 
-		sqlite3_ret = sqlite3_step(db_statement);
-		if (sqlite3_ret != SQLITE_OK && sqlite3_ret != SQLITE_DONE) {
-			NOTIFICATION_ERR("sqlite3_step failed [%d][%s]", sqlite3_ret, sqlite3_errmsg(db));
+		sql_ret = sqlite3_step(stmt);
+		if (sql_ret != SQLITE_OK && sql_ret != SQLITE_DONE) {
+			NOTIFICATION_ERR("sqlite3_step failed [%d][%s]", sql_ret, sqlite3_errmsg(db));
 			err = NOTIFICATION_ERROR_FROM_DB;
 			goto out;
 		}
@@ -1144,10 +1143,12 @@ out:
 			sqlite3_exec(db, "END;", NULL, NULL, NULL);
 		else
 			sqlite3_exec(db, "ROLLBACK;", NULL, NULL, NULL);
+
 		notification_db_close(&db);
 	}
-	if (db_statement)
-		sqlite3_finalize(db_statement);
+
+	if (stmt)
+		sqlite3_finalize(stmt);
 
 	return err;
 }
