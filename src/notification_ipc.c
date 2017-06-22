@@ -2068,9 +2068,16 @@ EXPORT_API int notification_ipc_make_noti_from_gvariant(notification_h noti,
 	_variant_dict_lookup(dict, NOTIFICATION_DATA_TYPE_EXTENSION_IMAGE_SIZE, "i", &noti->extension_image_size);
 	_variant_dict_lookup(dict, NOTIFICATION_DATA_TYPE_UID, "i", &noti->uid);
 
+	if (noti->pkg_id)
+		free(noti->pkg_id);
 	noti->pkg_id = _dup_string(pkg_id);
+
+	if (noti->caller_app_id)
+		free(noti->caller_app_id);
 	noti->caller_app_id = _dup_string(caller_app_id);
+
 	noti->launch_app_id = _dup_string(launch_app_id);
+
 	noti->args = _create_bundle_from_bundle_raw(args);
 	noti->group_args = _create_bundle_from_bundle_raw(group_args);
 	noti->b_execute_option = _create_bundle_from_bundle_raw(b_execute_option);
@@ -2084,8 +2091,15 @@ EXPORT_API int notification_ipc_make_noti_from_gvariant(notification_h noti,
 		noti->b_event_handler[i] = _create_bundle_from_bundle_raw(
 				b_event_handler[i]);
 	}
+
+	if (noti->domain)
+		free(noti->domain);
 	noti->domain = _dup_string(domain);
+
+	if (noti->dir)
+		free(noti->dir);
 	noti->dir = _dup_string(dir);
+
 	noti->b_text = _create_bundle_from_bundle_raw(b_text);
 	noti->b_key = _create_bundle_from_bundle_raw(b_key);
 	noti->b_format_args = _create_bundle_from_bundle_raw(b_format_args);
