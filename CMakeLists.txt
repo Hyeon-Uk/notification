@@ -24,6 +24,7 @@ SET(SRCS
 	./src/notification_setting.c
 	./src/notification_setting_service.c
 	./src/notification_internal.c
+	./src/notification_viewer.c
 	./src/notification_error.c)
 SET(HEADERS-DEVEL
 	./include/notification.h
@@ -42,6 +43,7 @@ SET(HEADERS-DEVEL
 	./include/notification_ipc.h
 	./include/notification_noti.h
 	./include/notification_setting_service.h
+	./include/notification_viewer.h
    )
 
 INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/include)

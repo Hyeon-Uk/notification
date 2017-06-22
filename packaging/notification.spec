@@ -106,5 +106,6 @@ fi
 %{_includedir}/notification/notification_ipc.h
 %{_includedir}/notification/notification_noti.h
 %{_includedir}/notification/notification_setting_service.h
+%{_includedir}/notification/notification_viewer.h
 %{_libdir}/pkgconfig/notification.pc
 %{_libdir}/libnotification.so
