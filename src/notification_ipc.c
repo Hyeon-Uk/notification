@@ -708,7 +708,7 @@ static int _send_sync_noti(GVariant *body, GDBusMessage **reply, char *cmd)
 		else
 			ret = err->code;
 
-		NOTIFICATION_ERR("_send_sync_noti cmd = %s, error %s, err code %d", cmd, err->message, ret);
+		NOTIFICATION_ERR("_send_sync_noti cmd = %s, err code = %d", cmd, ret);
 		g_error_free(err);
 		return ret;
 	}
