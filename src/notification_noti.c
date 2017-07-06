@@ -1335,7 +1335,7 @@ EXPORT_API int notification_noti_delete_by_priv_id_get_changes(const char *app_i
 		goto err;
 	}
 
-	ret = notification_db_exec(db, query, NULL);
+	ret = notification_db_exec(db, query, num_changes);
 
 err:
 	if (query)
