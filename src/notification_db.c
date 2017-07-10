@@ -76,7 +76,13 @@ sqlite3 *notification_db_open(const char *dbfile)
 	int ret = 0;
 	sqlite3 *db = 0;
 
-	ret = db_util_open(dbfile, &db, 0);
+	ret = access(dbfile, R_OK | W_OK);
+	if (ret != 0) {
+		set_last_result(NOTIFICATION_ERROR_FROM_DB);
+		return NULL;
+	}
+
+	ret = sqlite3_open_v2(dbfile, &db, SQLITE_OPEN_READWRITE, NULL);
 	if (ret != SQLITE_OK) {
 		/* LCOV_EXCL_START */
 		if (ret == SQLITE_PERM)
