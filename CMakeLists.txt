@@ -55,7 +55,6 @@ INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/include)
 INCLUDE(FindPkgConfig)
 pkg_check_modules(pkgs REQUIRED
 	sqlite3
-	db-util
 	vconf
 	bundle
 	dlog

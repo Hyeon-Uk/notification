@@ -20,9 +20,7 @@
 #include <string.h>
 
 #include <sqlite3.h>
-#include <db-util.h>
 #include <tizen.h>
-#include <tzplatform_config.h>
 
 #include <notification_error.h>
 #include <notification_debug.h>
@@ -31,44 +29,39 @@
 
 EXPORT_API int notification_db_init()
 {
-	int r;
+	int ret;
 	sqlite3 *db = NULL;
 	char *errmsg = NULL;
-	char defname[FILENAME_MAX];
-	char *query = NULL;
-	const char *db_path = tzplatform_getenv(TZ_SYS_DB);
-	if (db_path == NULL) {
-		NOTIFICATION_ERR("fail to get db_path"); /* LCOV_EXCL_LINE */
-		return NOTIFICATION_ERROR_OUT_OF_MEMORY;
-	}
-	snprintf(defname, sizeof(defname), "%s/%s", db_path, NOTIFICATION_DB_NAME);
 
-	NOTIFICATION_DBG("db path : %s", defname);
-	r = sqlite3_open_v2(defname, &db, SQLITE_OPEN_CREATE | SQLITE_OPEN_READWRITE, NULL);
-	if (r) {
+	ret = sqlite3_open_v2(DBPATH, &db,
+			SQLITE_OPEN_CREATE | SQLITE_OPEN_READWRITE, NULL);
+	if (ret != SQLITE_OK) {
 		/* LCOV_EXCL_START */
-		db_util_close(db);
-		NOTIFICATION_ERR("fail to open notification db %d", r);
-		return NOTIFICATION_ERROR_IO_ERROR;
+		NOTIFICATION_ERR("fail to open notification db %d", ret);
+		ret = NOTIFICATION_ERROR_FROM_DB;
+		goto out;
 		/* LCOV_EXCL_STOP */
 	}
-	query = sqlite3_mprintf(CREATE_NOTIFICATION_TABLE, tzplatform_getuid(TZ_SYS_DEFAULT_USER));
-	NOTIFICATION_DBG("@@@ query : %s", query);
 
-	r = sqlite3_exec(db, CREATE_NOTIFICATION_TABLE, NULL, NULL, &errmsg);
-	if (query)
-		sqlite3_free(query);
-	if (r != SQLITE_OK) {
+	ret = sqlite3_exec(db, CREATE_NOTIFICATION_TABLE, NULL, NULL, &errmsg);
+	if (ret != SQLITE_OK) {
 		/* LCOV_EXCL_START */
-		NOTIFICATION_ERR("query error(%d)(%s)", r, errmsg);
+		NOTIFICATION_ERR("sqlite3_exec error(%d)(%s)", ret, errmsg);
+		ret = NOTIFICATION_ERROR_FROM_DB;
+		goto out;
+		/* LCOV_EXCL_STOP */
+	}
+
+	ret = NOTIFICATION_ERROR_NONE;
+
+out:
+	if (errmsg)
 		sqlite3_free(errmsg);
-		db_util_close(db);
-		return NOTIFICATION_ERROR_IO_ERROR;
-		/* LCOV_EXCL_STOP */
-	}
 
-	db_util_close(db);
-	return NOTIFICATION_ERROR_NONE;
+	if (db)
+		sqlite3_close(db);
+
+	return ret;
 }
 
 sqlite3 *notification_db_open(const char *dbfile)
@@ -104,7 +97,7 @@ int notification_db_close(sqlite3 **db)
 	if (db == NULL || *db == NULL)
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 
-	ret = db_util_close(*db);
+	ret = sqlite3_close(*db);
 	if (ret != SQLITE_OK) {
 		/* LCOV_EXCL_START */
 		NOTIFICATION_ERR("DB close error(%d)", ret);

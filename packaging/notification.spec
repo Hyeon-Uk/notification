@@ -7,7 +7,6 @@ Group:      TBD
 License:    Apache-2.0
 Source0:    %{name}-%{version}.tar.gz
 BuildRequires: pkgconfig(sqlite3)
-BuildRequires: pkgconfig(db-util)
 BuildRequires: pkgconfig(vconf)
 BuildRequires: pkgconfig(bundle)
 BuildRequires: pkgconfig(dbus-1)

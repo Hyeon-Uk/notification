@@ -17,7 +17,6 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-#include <db-util.h>
 #include <package_manager.h>
 #include <pkgmgr-info.h>
 #include <tizen_type.h>
