@@ -125,8 +125,14 @@ static char *__get_data_path_by_pkg_id(const char *pkg_id,
 static const char *__last_index_of(const char *path, const char *search)
 {
 	int i;
-	int search_len = strlen(search);
-	const char *index = path + strlen(path) - search_len;
+	int search_len;
+	const char *index;
+
+	if (path == NULL || search == NULL)
+		return NULL;
+
+	search_len = strlen(search);
+	index = path + strlen(path) - search_len;
 
 	while (index >= path) {
 		for (i = 0; i < search_len; i++)
@@ -146,6 +152,9 @@ static bool __is_private_file(const char *smack_label, const char *pkg_id)
 {
 	const char *smack_index;
 	bool ret = false;
+
+	if (smack_label == NULL || pkg_id == NULL)
+		return ret;
 
 	smack_index = __last_index_of(smack_label, pkg_id);
 	if (smack_index != NULL && (strlen(smack_index) == strlen(pkg_id)))
