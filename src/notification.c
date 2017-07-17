@@ -1483,11 +1483,10 @@ static notification_h _notification_create(notification_type_e type)
 		noti->pkg_id = strdup(noti->caller_app_id);
 	} else {
 		err = aul_app_get_pkgid_bypid(getpid(), pkg_id, sizeof(pkg_id));
-		if (err != AUL_R_OK) {
-			NOTIFICATION_ERR("get_pkgid_bypid is failed err[%d]", err);
-			goto out;
-		}
-		noti->pkg_id = strdup(pkg_id);
+		if (err != AUL_R_OK)
+			noti->pkg_id = strdup(noti->caller_app_id);
+		else
+			noti->pkg_id = strdup(pkg_id);
 
 		err = _notification_get_app_name(pkg_id, &domain_name);
 		if (err != 0 || domain_name == NULL) {
