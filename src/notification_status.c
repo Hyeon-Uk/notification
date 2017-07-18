@@ -171,7 +171,7 @@ int notification_status_message_post(const char *message)
 		/* LCOV_EXCL_START */
 		NOTIFICATION_ERR("g_dbus_connection_emit_signal() failed: %s",
 					err->message);
-		return NOTIFICATION_ERROR_FROM_DBUS;
+		ret = NOTIFICATION_ERROR_FROM_DBUS;
 		goto end;
 		/* LCOV_EXCL_STOP */
 	}
@@ -180,7 +180,7 @@ int notification_status_message_post(const char *message)
 		/* LCOV_EXCL_START */
 		NOTIFICATION_ERR("g_dbus_connection_flush_sync() failed: %s",
 					err->message);
-		return NOTIFICATION_ERROR_FROM_DBUS;
+		ret = NOTIFICATION_ERROR_FROM_DBUS;
 		goto end;
 		/* LCOV_EXCL_STOP */
 	}
