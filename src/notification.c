@@ -555,11 +555,20 @@ EXPORT_API int notification_get_text(notification_h noti,
 			for (temp_str = (char *)get_str; *temp_str != '\0';
 			     temp_str++) {
 				if (*temp_str != '%') {
-					strncat(result_str, temp_str, 1);
+					if (NOTI_TEXT_RESULT_LEN - 1 > strlen(result_str)) {
+						strncat(result_str, temp_str, 1);
+					} else {
+						NOTIFICATION_WARN("The buffer is full");
+						break;
+					}
 				} else {
 					if (*(temp_str + 1) == '%') {
-						strncat(result_str, temp_str,
-							1);
+						if (NOTI_TEXT_RESULT_LEN - 1 > strlen(result_str)) {
+							strncat(result_str, temp_str, 1);
+						} else {
+							NOTIFICATION_WARN("The buffer is full");
+							break;
+						}
 					} else if (*(temp_str + 1) == 'd') {
 						/* Get var Type */
 						ret_variable_int = 0;
@@ -740,10 +749,20 @@ EXPORT_API int notification_get_text(notification_h noti,
 
 							temp_str += 3;
 						} else {
-							strncat(result_str, temp_str, 1);
+							if (NOTI_TEXT_RESULT_LEN - 1 > strlen(result_str)) {
+								strncat(result_str, temp_str, 1);
+							} else {
+								NOTIFICATION_WARN("The buffer is full");
+								break;
+							}
 						}
 					} else {
-						strncat(result_str, temp_str, 1);
+						if (NOTI_TEXT_RESULT_LEN - 1 > strlen(result_str)) {
+							strncat(result_str, temp_str, 1);
+						} else {
+							NOTIFICATION_WARN("The buffer is full");
+							break;
+						}
 					}
 				}
 			}
