@@ -629,7 +629,6 @@ EXPORT_API void notification_add_private_sharing_target_id(pid_t pid,
 	}
 }
 
-/* check wheter file is */
 char *notification_check_file_path_is_private(const char *pkg_id,
 							const char *file_path)
 {
