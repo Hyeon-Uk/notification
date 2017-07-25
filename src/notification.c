@@ -432,25 +432,24 @@ EXPORT_API int notification_set_text(notification_h noti,
 }
 
 EXPORT_API int notification_get_text(notification_h noti,
-						      notification_text_type_e type,
-						      char **text)
+					notification_text_type_e type,
+					char **text)
 {
-	bundle *b = NULL;
+	char result_str[NOTI_TEXT_RESULT_LEN] = { 0, };
+	char buf_str[1024] = { 0, };
 	char buf_key[32] = { 0, };
 	char *ret_val = NULL;
 	char *get_str = NULL;
-	notification_text_type_e check_type = NOTIFICATION_TEXT_TYPE_NONE;
-
 	char *temp_str = NULL;
 	char *translated_str = NULL;
-	char result_str[NOTI_TEXT_RESULT_LEN] = { 0, };
-	char buf_str[1024] = { 0, };
+	bundle *b = NULL;
 	int num_args = 0;
-	notification_variable_type_e ret_var_type = 0;
-	int ret_variable_int = 0;
-	double ret_variable_double = 0.0;
 	int src_len = 0;
 	int max_len = 0;
+	int ret_variable_int = 0;
+	double ret_variable_double = 0.0;
+	notification_text_type_e text_type = NOTIFICATION_TEXT_TYPE_NONE;
+	notification_variable_type_e ret_var_type = 0;
 
 	if (noti == NULL || text == NULL)
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
@@ -458,6 +457,8 @@ EXPORT_API int notification_get_text(notification_h noti,
 	if (type <= NOTIFICATION_TEXT_TYPE_NONE
 	    || type > NOTIFICATION_TEXT_TYPE_MAX)
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
+	else
+		text_type = type;
 
 	if (noti->b_key != NULL) {
 		b = noti->b_key;
@@ -466,7 +467,6 @@ EXPORT_API int notification_get_text(notification_h noti,
 		/* _notification_get_text_domain(noti); */
 
 		snprintf(buf_key, sizeof(buf_key), "%d", type);
-
 		bundle_get_str(b, buf_key, &ret_val);
 
 		if (noti->is_translation == false) {
@@ -491,349 +491,329 @@ EXPORT_API int notification_get_text(notification_h noti,
 
 	if (get_str == NULL && noti->b_text != NULL) {
 		b = noti->b_text;
-
 		snprintf(buf_key, sizeof(buf_key), "%d", type);
-
 		bundle_get_str(b, buf_key, &get_str);
 	}
 
 	if (get_str == NULL && ret_val != NULL)
 		get_str = ret_val; /* fallback for printing anything */
 
-	check_type = type;
+	if (get_str == NULL) {
+		*text = NULL;
+		return NOTIFICATION_ERROR_NONE;
+	}
 
-	if (get_str != NULL) {
-		/* Get number format args */
-		b = noti->b_format_args;
-		noti->num_format_args = 0;
+	/* Get number format args */
+	noti->num_format_args = 0;
 
-		if (b != NULL) {
-			snprintf(buf_key, sizeof(buf_key), "num%d", check_type);
-			bundle_get_str(b, buf_key, &ret_val);
-			if (ret_val != NULL)
-				noti->num_format_args = atoi(ret_val);
+	b = noti->b_format_args;
+	if (b != NULL) {
+		snprintf(buf_key, sizeof(buf_key), "num%d", text_type);
+
+		bundle_get_str(b, buf_key, &ret_val);
+		if (ret_val != NULL)
+			noti->num_format_args = atoi(ret_val);
+	}
+
+	if (noti->num_format_args == 0 || noti->is_translation == true) {
+		*text = (char *)get_str;
+		return NOTIFICATION_ERROR_NONE;
+	}
+
+	/* Check first variable is count, LEFT pos */
+	snprintf(buf_key, sizeof(buf_key), "%dtype%d", text_type, num_args);
+
+	bundle_get_str(b, buf_key, &ret_val);
+	if (ret_val != NULL)
+		ret_var_type = atoi(ret_val);
+
+	if (ret_var_type == NOTIFICATION_VARIABLE_TYPE_COUNT) {
+		/* Get var Value */
+		snprintf(buf_key, sizeof(buf_key), "%dvalue%d",
+			text_type, num_args);
+
+		bundle_get_str(b, buf_key, &ret_val);
+		if (ret_val != NULL)
+			ret_variable_int = atoi(ret_val);
+
+		if (ret_variable_int == NOTIFICATION_COUNT_POS_LEFT) {
+			notification_get_count(noti->type,
+					noti->caller_app_id,
+					noti->group_id,
+					noti->priv_id,
+					&ret_variable_int);
+			snprintf(buf_str, sizeof(buf_str),
+				"%d ", ret_variable_int);
+
+			src_len = strlen(result_str);
+			max_len = NOTI_TEXT_RESULT_LEN - src_len - 1;
+			strncat(result_str, buf_str, max_len);
+			num_args++;
 		}
+	}
 
-		if (noti->num_format_args == 0 || noti->is_translation == true) {
-			*text = (char *)get_str;
+	/* Check variable IN pos */
+	for (temp_str = (char *)get_str; *temp_str != '\0'; temp_str++) {
+		if (*temp_str != '%') {
+			if (NOTI_TEXT_RESULT_LEN - 1 > strlen(result_str)) {
+				strncat(result_str, temp_str, 1);
+			} else {
+				NOTIFICATION_WARN("The buffer is full");
+				break;
+			}
 		} else {
-			/* Check first variable is count, LEFT pos */
-			snprintf(buf_key, sizeof(buf_key), "%dtype%d",
-				 check_type, num_args);
-			bundle_get_str(b, buf_key, &ret_val);
-			if (ret_val != NULL)
-				ret_var_type = atoi(ret_val);
+			if (*(temp_str + 1) == '%') {
+				if (NOTI_TEXT_RESULT_LEN - 1 > strlen(result_str)) {
+					strncat(result_str, temp_str, 1);
+				} else {
+					NOTIFICATION_WARN("The buffer is full");
+					break;
+				}
+			} else if (*(temp_str + 1) == 'd') {
+				/* Get var Type */
+				ret_variable_int = 0;
 
-			if (ret_var_type == NOTIFICATION_VARIABLE_TYPE_COUNT) {
-				/* Get var Value */
-				snprintf(buf_key, sizeof(buf_key), "%dvalue%d",
-					 check_type, num_args);
+				snprintf(buf_key, sizeof(buf_key), "%dtype%d",
+						text_type, num_args);
+
 				bundle_get_str(b, buf_key, &ret_val);
 				if (ret_val != NULL)
-					ret_variable_int = atoi(ret_val);
+					ret_var_type = atoi(ret_val);
 
-				if (ret_variable_int ==
-				    NOTIFICATION_COUNT_POS_LEFT) {
+				if (ret_var_type ==
+					NOTIFICATION_VARIABLE_TYPE_COUNT) {
+					/* Get notification count */
 					notification_get_count(noti->type,
 							noti->caller_app_id,
 							noti->group_id,
 							noti->priv_id,
 							&ret_variable_int);
-					snprintf(buf_str, sizeof(buf_str),
-						 "%d ", ret_variable_int);
+				} else {
+					/* Get var Value */
+					snprintf(buf_key, sizeof(buf_key),
+						"%dvalue%d", text_type, num_args);
+
+					bundle_get_str(b, buf_key, &ret_val);
+					if (ret_val != NULL)
+						ret_variable_int = atoi(ret_val);
+				}
+
+				snprintf(buf_str, sizeof(buf_str), "%d",
+						ret_variable_int);
+
+				src_len = strlen(result_str);
+				max_len = NOTI_TEXT_RESULT_LEN - src_len - 1;
+				strncat(result_str, buf_str, max_len);
+
+				temp_str++;
+				num_args++;
+			} else if (*(temp_str + 1) == 's') {
+				/* Get var Value */
+				snprintf(buf_key, sizeof(buf_key), "%dvalue%d",
+						text_type, num_args);
+
+				bundle_get_str(b, buf_key, &ret_val);
+
+				if (ret_val != NULL && noti->domain != NULL
+						&& noti->dir != NULL) {
+					/* Get application string */
+					bindtextdomain(noti->domain, noti->dir);
+					translated_str =
+						dgettext(noti->domain, ret_val);
+					NOTIFICATION_INFO("translated_str[%s]",
+						translated_str);
+				} else if (ret_val != NULL) {
+					/* Get system string */
+					translated_str =
+						dgettext("sys_string", ret_val);
+					NOTIFICATION_INFO("translated_str[%s]",
+						translated_str);
+				} else {
+					translated_str = NULL;
+				}
+
+				if (translated_str != NULL) {
+					strncpy(buf_str, translated_str,
+							sizeof(buf_str) - 1);
 
 					src_len = strlen(result_str);
 					max_len = NOTI_TEXT_RESULT_LEN - src_len - 1;
-
-					strncat(result_str, buf_str,
-							max_len);
-					num_args++;
+					strncat(result_str, buf_str, max_len);
 				}
-			}
 
-			/* Check variable IN pos */
-			for (temp_str = (char *)get_str; *temp_str != '\0';
-			     temp_str++) {
-				if (*temp_str != '%') {
+				temp_str++;
+				num_args++;
+			} else if (*(temp_str + 1) == 'f') {
+				/* Get var Value */
+				snprintf(buf_key, sizeof(buf_key), "%dvalue%d",
+						text_type, num_args);
+
+				bundle_get_str(b, buf_key, &ret_val);
+				if (ret_val != NULL)
+					ret_variable_double = atof(ret_val);
+
+				snprintf(buf_str, sizeof(buf_str), "%.2f",
+						ret_variable_double);
+
+				src_len = strlen(result_str);
+				max_len = NOTI_TEXT_RESULT_LEN - src_len - 1;
+				strncat(result_str, buf_str, max_len);
+
+				temp_str++;
+				num_args++;
+			} else if (*(temp_str + 1) >= '1' && *(temp_str + 1) <= '9') {
+				if (*(temp_str + 3) == 'd') {
+					/* Get var Type */
+					ret_variable_int = 0;
+
+					snprintf(buf_key, sizeof(buf_key),
+						 "%dtype%d", text_type,
+						 num_args + *(temp_str + 1) - 49);
+
+					bundle_get_str(b, buf_key, &ret_val);
+					if (ret_val != NULL)
+						ret_var_type = atoi(ret_val);
+
+					if (ret_var_type ==
+						NOTIFICATION_VARIABLE_TYPE_COUNT) {
+						/* Get notification count */
+						notification_get_count(noti->type,
+								noti->caller_app_id,
+								noti->group_id,
+								noti->priv_id,
+								&ret_variable_int);
+					} else {
+						/* Get var Value */
+						snprintf(buf_key, sizeof(buf_key),
+							"%dvalue%d", text_type,
+							num_args + *(temp_str + 1) - 49);
+
+						bundle_get_str(b, buf_key, &ret_val);
+						if (ret_val != NULL)
+							ret_variable_int = atoi(ret_val);
+					}
+
+					snprintf(buf_str, sizeof(buf_str), "%d",
+							ret_variable_int);
+
+					src_len = strlen(result_str);
+					max_len = NOTI_TEXT_RESULT_LEN - src_len - 1;
+					strncat(result_str, buf_str, max_len);
+
+					temp_str += 3;
+				} else if (*(temp_str + 3) == 's') {
+					/* Get var Value */
+					snprintf(buf_key, sizeof(buf_key),
+						 "%dvalue%d", text_type,
+						 num_args + *(temp_str + 1) - 49);
+
+					bundle_get_str(b, buf_key, &ret_val);
+
+					snprintf(buf_str, sizeof(buf_str), "%s",
+						 ret_val);
+
+					src_len = strlen(result_str);
+					max_len = NOTI_TEXT_RESULT_LEN - src_len - 1;
+					strncat(result_str, buf_str, max_len);
+
+					temp_str += 3;
+				} else if (*(temp_str + 3) == 'f') {
+					/* Get var Value */
+					snprintf(buf_key, sizeof(buf_key),
+						 "%dvalue%d", text_type,
+						 num_args + *(temp_str + 1) - 49);
+
+					bundle_get_str(b, buf_key, &ret_val);
+					if (ret_val != NULL)
+						ret_variable_double = atof(ret_val);
+
+					snprintf(buf_str, sizeof(buf_str),
+						"%.2f", ret_variable_double);
+
+					src_len = strlen(result_str);
+					max_len = NOTI_TEXT_RESULT_LEN - src_len - 1;
+					strncat(result_str, buf_str, max_len);
+
+					temp_str += 3;
+				} else {
 					if (NOTI_TEXT_RESULT_LEN - 1 > strlen(result_str)) {
 						strncat(result_str, temp_str, 1);
 					} else {
 						NOTIFICATION_WARN("The buffer is full");
 						break;
 					}
+				}
+			} else {
+				if (NOTI_TEXT_RESULT_LEN - 1 > strlen(result_str)) {
+					strncat(result_str, temp_str, 1);
 				} else {
-					if (*(temp_str + 1) == '%') {
-						if (NOTI_TEXT_RESULT_LEN - 1 > strlen(result_str)) {
-							strncat(result_str, temp_str, 1);
-						} else {
-							NOTIFICATION_WARN("The buffer is full");
-							break;
-						}
-					} else if (*(temp_str + 1) == 'd') {
-						/* Get var Type */
-						ret_variable_int = 0;
-
-						snprintf(buf_key,
-							 sizeof(buf_key),
-							 "%dtype%d", check_type,
-							 num_args);
-						bundle_get_str(b, buf_key, &ret_val);
-						if (ret_val != NULL)
-							ret_var_type = atoi(ret_val);
-
-						if (ret_var_type ==
-						    NOTIFICATION_VARIABLE_TYPE_COUNT) {
-							/* Get notification count */
-							notification_get_count(noti->type,
-									noti->caller_app_id,
-									noti->group_id,
-									noti->priv_id,
-									&ret_variable_int);
-						} else {
-							/* Get var Value */
-							snprintf(buf_key,
-								 sizeof(buf_key),
-								 "%dvalue%d",
-								 check_type,
-								 num_args);
-							bundle_get_str(b, buf_key, &ret_val);
-							if (ret_val != NULL)
-								ret_variable_int = atoi(ret_val);
-						}
-
-						snprintf(buf_str,
-							 sizeof(buf_str), "%d",
-							 ret_variable_int);
-
-						src_len = strlen(result_str);
-						max_len = NOTI_TEXT_RESULT_LEN - src_len - 1;
-
-						strncat(result_str, buf_str,
-								max_len);
-
-						temp_str++;
-
-						num_args++;
-					} else if (*(temp_str + 1) == 's') {
-						/* Get var Value */
-						snprintf(buf_key,
-							 sizeof(buf_key),
-							 "%dvalue%d",
-							 check_type, num_args);
-						bundle_get_str(b, buf_key, &ret_val);
-
-						if (ret_val != NULL && noti->domain != NULL	&& noti->dir != NULL) {
-							/* Get application string */
-							bindtextdomain(noti->domain, noti->dir);
-							translated_str = dgettext(noti->domain, ret_val);
-							NOTIFICATION_INFO("translated_str[%s]", translated_str);
-						} else if (ret_val != NULL) {
-							/* Get system string */
-							translated_str = dgettext("sys_string", ret_val);
-							NOTIFICATION_INFO("translated_str[%s]", translated_str);
-						} else {
-							translated_str = NULL;
-						}
-
-						if (translated_str != NULL) {
-							strncpy(buf_str, translated_str, sizeof(buf_str) - 1);
-							src_len = strlen(result_str);
-							max_len = NOTI_TEXT_RESULT_LEN - src_len - 1;
-							strncat(result_str, buf_str, max_len);
-						}
-						temp_str++;
-						num_args++;
-					} else if (*(temp_str + 1) == 'f') {
-						/* Get var Value */
-						snprintf(buf_key,
-							 sizeof(buf_key),
-							 "%dvalue%d",
-							 check_type, num_args);
-						bundle_get_str(b, buf_key, &ret_val);
-						if (ret_val != NULL)
-							ret_variable_double = atof(ret_val);
-
-						snprintf(buf_str,
-							 sizeof(buf_str),
-							 "%.2f",
-							 ret_variable_double);
-
-						src_len = strlen(result_str);
-						max_len = NOTI_TEXT_RESULT_LEN - src_len - 1;
-						strncat(result_str, buf_str, max_len);
-
-						temp_str++;
-						num_args++;
-					} else if (*(temp_str + 1) >= '1' && *(temp_str + 1) <= '9') {
-						if (*(temp_str + 3) == 'd') {
-							/* Get var Type */
-							ret_variable_int = 0;
-
-							snprintf(buf_key,
-								 sizeof(buf_key),
-								 "%dtype%d", check_type,
-								 num_args + *(temp_str + 1) - 49);
-							bundle_get_str(b, buf_key, &ret_val);
-							if (ret_val != NULL)
-								ret_var_type = atoi(ret_val);
-
-							if (ret_var_type ==
-							    NOTIFICATION_VARIABLE_TYPE_COUNT) {
-								/* Get notification count */
-								notification_get_count(noti->type,
-										noti->caller_app_id,
-										noti->group_id,
-										noti->priv_id,
-										&ret_variable_int);
-							} else {
-								/* Get var Value */
-								snprintf(buf_key,
-									 sizeof
-									 (buf_key),
-									 "%dvalue%d",
-									 check_type,
-									 num_args + *(temp_str + 1) - 49);
-								bundle_get_str(b, buf_key, &ret_val);
-								if (ret_val != NULL)
-									ret_variable_int = atoi(ret_val);
-
-							}
-
-							snprintf(buf_str,
-								 sizeof(buf_str), "%d",
-								 ret_variable_int);
-
-							src_len = strlen(result_str);
-							max_len = NOTI_TEXT_RESULT_LEN - src_len - 1;
-
-							strncat(result_str, buf_str, max_len);
-
-							temp_str += 3;
-						} else if (*(temp_str + 3) == 's') {
-							/* Get var Value */
-							snprintf(buf_key,
-								 sizeof(buf_key),
-								 "%dvalue%d",
-								 check_type, num_args + *(temp_str + 1) - 49);
-							bundle_get_str(b, buf_key, &ret_val);
-
-							snprintf(buf_str,
-								 sizeof(buf_str), "%s",
-								 ret_val);
-
-							src_len = strlen(result_str);
-							max_len = NOTI_TEXT_RESULT_LEN - src_len - 1;
-
-							strncat(result_str, buf_str, max_len);
-
-							temp_str += 3;
-						} else if (*(temp_str + 3) == 'f') {
-							/* Get var Value */
-							snprintf(buf_key,
-								 sizeof(buf_key),
-								 "%dvalue%d",
-								 check_type, num_args + *(temp_str + 1) - 49);
-							bundle_get_str(b, buf_key, &ret_val);
-							if (ret_val != NULL)
-								ret_variable_double = atof(ret_val);
-
-							snprintf(buf_str,
-								 sizeof(buf_str),
-								 "%.2f",
-								 ret_variable_double);
-
-							src_len = strlen(result_str);
-							max_len = NOTI_TEXT_RESULT_LEN - src_len - 1;
-
-							strncat(result_str, buf_str, max_len);
-
-							temp_str += 3;
-						} else {
-							if (NOTI_TEXT_RESULT_LEN - 1 > strlen(result_str)) {
-								strncat(result_str, temp_str, 1);
-							} else {
-								NOTIFICATION_WARN("The buffer is full");
-								break;
-							}
-						}
-					} else {
-						if (NOTI_TEXT_RESULT_LEN - 1 > strlen(result_str)) {
-							strncat(result_str, temp_str, 1);
-						} else {
-							NOTIFICATION_WARN("The buffer is full");
-							break;
-						}
-					}
+					NOTIFICATION_WARN("The buffer is full");
+					break;
 				}
-			}
-
-			/* Check last variable is count, LEFT pos */
-			if (num_args < noti->num_format_args) {
-				snprintf(buf_key, sizeof(buf_key), "%dtype%d",
-					 check_type, num_args);
-				bundle_get_str(b, buf_key, &ret_val);
-				if (ret_val != NULL)
-					ret_var_type = atoi(ret_val);
-
-				if (ret_var_type ==
-				    NOTIFICATION_VARIABLE_TYPE_COUNT) {
-					/* Get var Value */
-					snprintf(buf_key, sizeof(buf_key),
-						 "%dvalue%d", check_type,
-						 num_args);
-					bundle_get_str(b, buf_key, &ret_val);
-					if (ret_val != NULL)
-						ret_variable_int = atoi(ret_val);
-
-					if (ret_variable_int ==
-					    NOTIFICATION_COUNT_POS_RIGHT) {
-						notification_get_count(noti->type,
-								noti->caller_app_id,
-								noti->group_id,
-								noti->priv_id,
-								&ret_variable_int);
-						snprintf(buf_str,
-							 sizeof(buf_str), " %d",
-							 ret_variable_int);
-
-						src_len = strlen(result_str);
-						max_len = NOTI_TEXT_RESULT_LEN - src_len - 1;
-
-						strncat(result_str, buf_str, max_len);
-
-						num_args++;
-					}
-				}
-			}
-
-			switch (check_type) {
-			case NOTIFICATION_TEXT_TYPE_TITLE:
-			case NOTIFICATION_TEXT_TYPE_GROUP_TITLE:
-				if (noti->temp_title != NULL)
-					free(noti->temp_title);
-
-				noti->temp_title = strdup(result_str);
-
-				*text = noti->temp_title;
-				break;
-			case NOTIFICATION_TEXT_TYPE_CONTENT:
-			case NOTIFICATION_TEXT_TYPE_CONTENT_FOR_DISPLAY_OPTION_IS_OFF:
-			case NOTIFICATION_TEXT_TYPE_GROUP_CONTENT:
-			case NOTIFICATION_TEXT_TYPE_GROUP_CONTENT_FOR_DISPLAY_OPTION_IS_OFF:
-				if (noti->temp_content !=
-				    NULL)
-					free(noti->temp_content);
-
-				noti->temp_content = strdup(result_str);
-
-				*text = noti->temp_content;
-				break;
-			default:
-				break;
 			}
 		}
-	} else {
-		*text = NULL;
+	}
+
+	/* Check last variable is count, LEFT pos */
+	if (num_args < noti->num_format_args) {
+		snprintf(buf_key, sizeof(buf_key), "%dtype%d",
+				text_type, num_args);
+
+		bundle_get_str(b, buf_key, &ret_val);
+		if (ret_val != NULL)
+			ret_var_type = atoi(ret_val);
+
+		if (ret_var_type == NOTIFICATION_VARIABLE_TYPE_COUNT) {
+			/* Get var Value */
+			snprintf(buf_key, sizeof(buf_key), "%dvalue%d",
+					text_type, num_args);
+
+			bundle_get_str(b, buf_key, &ret_val);
+			if (ret_val != NULL)
+				ret_variable_int = atoi(ret_val);
+
+			if (ret_variable_int == NOTIFICATION_COUNT_POS_RIGHT) {
+				notification_get_count(noti->type,
+						noti->caller_app_id,
+						noti->group_id,
+						noti->priv_id,
+						&ret_variable_int);
+				snprintf(buf_str, sizeof(buf_str), " %d",
+						ret_variable_int);
+
+				src_len = strlen(result_str);
+				max_len = NOTI_TEXT_RESULT_LEN - src_len - 1;
+				strncat(result_str, buf_str, max_len);
+
+				num_args++;
+			}
+		}
+	}
+
+	switch (text_type) {
+	case NOTIFICATION_TEXT_TYPE_TITLE:
+	case NOTIFICATION_TEXT_TYPE_GROUP_TITLE:
+		if (noti->temp_title != NULL)
+			free(noti->temp_title);
+
+		noti->temp_title = strdup(result_str);
+
+		*text = noti->temp_title;
+		break;
+	case NOTIFICATION_TEXT_TYPE_CONTENT:
+	case NOTIFICATION_TEXT_TYPE_CONTENT_FOR_DISPLAY_OPTION_IS_OFF:
+	case NOTIFICATION_TEXT_TYPE_GROUP_CONTENT:
+	case NOTIFICATION_TEXT_TYPE_GROUP_CONTENT_FOR_DISPLAY_OPTION_IS_OFF:
+		if (noti->temp_content !=
+		    NULL)
+			free(noti->temp_content);
+
+		noti->temp_content = strdup(result_str);
+
+		*text = noti->temp_content;
+		break;
+	default:
+		break;
 	}
 
 	return NOTIFICATION_ERROR_NONE;
