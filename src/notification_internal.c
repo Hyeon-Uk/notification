@@ -1059,7 +1059,6 @@ EXPORT_API int notification_get_execute_option(notification_h noti,
 			|| type > NOTIFICATION_EXECUTE_TYPE_MAX)
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 
-
 	switch (type) {
 	case NOTIFICATION_EXECUTE_TYPE_RESPONDING:
 		b = noti->b_service_responding;

@@ -337,6 +337,7 @@ static sharing_file_info_s * __dup_file_info(sharing_file_info_s *src)
 	return file_info;
 
 }
+
 static void __make_file_info(char *src_path, char *dst_path,
 	GList **new_file_list, GList *shared_file_list, bool *is_overlapping)
 {
@@ -393,6 +394,7 @@ static void __make_file_info(char *src_path, char *dst_path,
 	}
 
 }
+
 static GList* __get_new_file_list(notification_h noti,
 				GList *shared_file_list,
 				bool *is_overlapping)
@@ -535,7 +537,6 @@ static gint __comp_priv_id(gconstpointer a, gconstpointer b)
 
 	return 1;
 }
-
 
 static gint __comp_target_app(gconstpointer a, gconstpointer b)
 {
