@@ -104,7 +104,7 @@ void notification_call_changed_cb_for_uid(notification_op *op_list, int op_num, 
 		return;
 
 	if (op_list == NULL) {
-		NOTIFICATION_ERR("invalid data");
+		NOTIFICATION_ERR("Invalid parameter");
 		return;
 	}
 
@@ -224,7 +224,7 @@ EXPORT_API int notification_resister_changed_cb_for_uid(
 
 	noti_cb_info_new = (notification_cb_info_s *)malloc(sizeof(notification_cb_info_s));
 	if (noti_cb_info_new == NULL) {
-		NOTIFICATION_ERR("malloc failed");
+		NOTIFICATION_ERR("Failed to alloc memory");
 		return NOTIFICATION_ERROR_OUT_OF_MEMORY;
 	}
 
@@ -1007,7 +1007,7 @@ notification_h notification_load_for_uid(char *app_id,
 
 	noti = (notification_h)calloc(1, sizeof(struct _notification));
 	if (noti == NULL) {
-		NOTIFICATION_ERR("NO MEMORY : noti == NULL");
+		NOTIFICATION_ERR("Failed to alloc memory");
 		return NULL;
 	}
 
@@ -1131,7 +1131,6 @@ EXPORT_API int notification_insert_for_uid(notification_h noti,
 		return ret;
 
 	noti->priv_id = id;
-	NOTIFICATION_DBG("from master:%d", id);
 
 	/* If priv_id is valid data, set priv_id */
 	if (priv_id != NULL)
@@ -1183,7 +1182,7 @@ EXPORT_API int notification_register_detailed_changed_cb_for_uid(
 
 	noti_cb_info_new = (notification_cb_info_s *)malloc(sizeof(notification_cb_info_s));
 	if (noti_cb_info_new == NULL) {
-		NOTIFICATION_ERR("malloc failed");
+		NOTIFICATION_ERR("Failed to alloc memory");
 		return NOTIFICATION_ERROR_OUT_OF_MEMORY;
 	}
 
@@ -1389,7 +1388,7 @@ EXPORT_API int notification_post_for_uid(notification_h noti, uid_t uid)
 	ret = notification_ipc_request_insert(noti, &id);
 	if (ret == NOTIFICATION_ERROR_NONE) {
 		noti->priv_id = id;
-		NOTIFICATION_DBG("from master:%d", id);
+		NOTIFICATION_INFO("Posted notification id[%d]", id);
 	} else {
 		g_list_foreach(file_list, __remove_private_file, NULL);
 	}
@@ -1448,7 +1447,7 @@ EXPORT_API notification_h notification_load_by_tag_for_uid(const char *tag, uid_
 	char *caller_app_id;
 
 	if (tag == NULL) {
-		NOTIFICATION_ERR("Invalid parameter");
+		NOTIFICATION_ERR("Invalid tag");
 		set_last_result(NOTIFICATION_ERROR_INVALID_PARAMETER);
 		return NULL;
 	}
@@ -1498,7 +1497,7 @@ EXPORT_API notification_h notification_create_from_package_template(const char *
 
 	noti = (notification_h)calloc(1, sizeof(struct _notification));
 	if (noti == NULL) {
-		NOTIFICATION_ERR("Failed to alloc a new notification");
+		NOTIFICATION_ERR("Failed to alloc memory");
 		set_last_result(NOTIFICATION_ERROR_OUT_OF_MEMORY);
 		return NULL;
 	}
@@ -1669,7 +1668,7 @@ EXPORT_API int notification_post_with_event_cb_for_uid(notification_h noti, even
 	} else {
 		info = (notification_event_cb_info_s *)malloc(sizeof(notification_cb_info_s));
 		if (info == NULL) {
-			NOTIFICATION_ERR("malloc failed");
+			NOTIFICATION_ERR("Failed to alloc memory");
 			return NOTIFICATION_ERROR_OUT_OF_MEMORY;
 		}
 		info->priv_id = priv_id;
@@ -1750,7 +1749,7 @@ EXPORT_API int notification_check_event_receiver_available(notification_h noti, 
 
 	ret = notification_get_id(noti, NULL, &priv_id);
 	if (ret != NOTIFICATION_ERROR_NONE) {
-		NOTIFICATION_ERR("failed notification_get_id");
+		NOTIFICATION_ERR("Failed to get priv id");
 		return ret;
 	}
 

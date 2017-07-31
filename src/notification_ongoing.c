@@ -59,7 +59,7 @@ static void __notification_ongoing_update_callback(GDBusConnection *connection,
 	info = calloc(1, sizeof(struct ongoing_info_s));
 	if (info == NULL) {
 		/* LCOV_EXCL_START */
-		NOTIFICATION_ERR("Out of memory");
+		NOTIFICATION_ERR("Failed to alloc memory");
 		return;
 		/* LCOV_EXCL_STOP */
 	}
@@ -77,7 +77,7 @@ static void __notification_ongoing_update_callback(GDBusConnection *connection,
 
 	if (app_id == NULL) {
 		/* LCOV_EXCL_START */
-		NOTIFICATION_ERR("app_id is null");
+		NOTIFICATION_ERR("app_id is NULL");
 		free(info);
 		return;
 		/* LCOV_EXCL_STOP */
@@ -106,7 +106,8 @@ static int __send_ongoing_update_signal(const char *signal_name, GVariant *param
 	conn = g_bus_get_sync(G_BUS_TYPE_SYSTEM, NULL, &err);
 	if (conn == NULL) {
 		/* LCOV_EXCL_START */
-		NOTIFICATION_ERR("g_bus_get_sync() failed: %s", err->message);
+		NOTIFICATION_ERR("Failed to connect to the D-BUS Daemon[%s]",
+					err->message);
 		ret = NOTIFICATION_ERROR_FROM_DBUS;
 		goto end;
 		/* LCOV_EXCL_STOP */
@@ -120,7 +121,7 @@ static int __send_ongoing_update_signal(const char *signal_name, GVariant *param
 					param,
 					&err) == FALSE) {
 		/* LCOV_EXCL_START */
-		NOTIFICATION_ERR("g_dbus_connection_emit_signal() failed: %s",
+		NOTIFICATION_ERR("Failed to emit gdbus signal[%s]",
 					err->message);
 		ret = NOTIFICATION_ERROR_FROM_DBUS;
 		goto end;
@@ -129,7 +130,7 @@ static int __send_ongoing_update_signal(const char *signal_name, GVariant *param
 
 	if (g_dbus_connection_flush_sync(conn, NULL, &err) == FALSE) {
 		/* LCOV_EXCL_START */
-		NOTIFICATION_ERR("g_dbus_connection_flush_sync() failed: %s",
+		NOTIFICATION_ERR("Failed to flush connection sync[%s]",
 					err->message);
 		ret = NOTIFICATION_ERROR_FROM_DBUS;
 		goto end;
@@ -182,7 +183,7 @@ int notification_ongoing_update_cb_set(notification_ongoing_update_cb callback,
 					NULL);
 		if (od.subscribe_id == 0) {
 			/* LCOV_EXCL_START */
-			NOTIFICATION_ERR("g_dbus_connection_signal_subscribe() failed");
+			NOTIFICATION_ERR("Failed to subscribe signal");
 			g_object_unref(od.conn);
 			return NOTIFICATION_ERROR_FROM_DBUS;
 			/* LCOV_EXCL_STOP */
@@ -225,8 +226,7 @@ int notification_ongoing_update_progress(const char *caller_app_id,
 	ret = __send_ongoing_update_signal(MEMBER_PROGRESS, param);
 	if (ret != NOTIFICATION_ERROR_NONE) {
 		/* LCOV_EXCL_START */
-		NOTIFICATION_ERR("notification_ongoing_update_progress failed %d",
-					ret);
+		NOTIFICATION_ERR("Failed to update progress[%d]", ret);
 		return ret;
 		/* LCOV_EXCL_STOP */
 	}
@@ -245,8 +245,7 @@ int notification_ongoing_update_size(const char *caller_app_id,
 	ret = __send_ongoing_update_signal(MEMBER_SIZE, param);
 	if (ret != NOTIFICATION_ERROR_NONE) {
 		/* LCOV_EXCL_START */
-		NOTIFICATION_ERR("notification_ongoing_update_size failed %d",
-					ret);
+		NOTIFICATION_ERR("Failed to update size[%d]", ret);
 		return ret;
 		/* LCOV_EXCL_STOP */
 	}
@@ -265,7 +264,7 @@ int notification_ongoing_update_content(const char *caller_app_id,
 	ret = __send_ongoing_update_signal(MEMBER_CONTENT, param);
 	if (ret != NOTIFICATION_ERROR_NONE) {
 		/* LCOV_EXCL_START */
-		NOTIFICATION_ERR("notification_ongoing_update_content failed %d",
+		NOTIFICATION_ERR("Failed to update content[%d]",
 					ret);
 		return ret;
 		/* LCOV_EXCL_STOP */

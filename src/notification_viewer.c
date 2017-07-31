@@ -58,13 +58,13 @@ EXPORT_API int notification_launch_default_viewer(const char *default_viewer, in
 
 	ret = app_control_create(&app_control);
 	if (ret != APP_CONTROL_ERROR_NONE) {
-		NOTIFICATION_ERR("app_control_create failed [%x]", ret);
+		NOTIFICATION_ERR("Failed to create app_control[%x]", ret);
 		goto out;
 	}
 
 	ret = app_control_set_app_id(app_control, default_viewer);
 	if (ret != APP_CONTROL_ERROR_NONE) {
-		NOTIFICATION_ERR("app_control_set_app_id failed [%x]", ret);
+		NOTIFICATION_ERR("Failed to set app id to app_control[%x]", ret);
 		goto out;
 	}
 
@@ -72,13 +72,13 @@ EXPORT_API int notification_launch_default_viewer(const char *default_viewer, in
 
 	ret = app_control_add_extra_data(app_control, "NOTIFICATION_PRIVATE_ID", buf);
 	if (ret != APP_CONTROL_ERROR_NONE) {
-		NOTIFICATION_ERR("app_control_set_extra_data failed [%x]", ret);
+		NOTIFICATION_ERR("Failed to add extra data to app_control[%x]", ret);
 		goto out;
 	}
 
 	ret = app_control_send_launch_request(app_control, NULL, NULL);
 	if (ret != APP_CONTROL_ERROR_NONE) {
-		NOTIFICATION_ERR("app_control_send_launch_request failed [%x]", ret);
+		NOTIFICATION_ERR("Failed to request app launch[%x]", ret);
 		goto out;
 	}
 

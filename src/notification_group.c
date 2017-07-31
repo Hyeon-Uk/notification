@@ -49,13 +49,13 @@ static int _notification_group_check_data_inserted(const char *app_id,
 		result = 0;
 
 
-	NOTIFICATION_INFO("Check Data Inserted : query[%s], result : [%d]",
-			  query, result);
-
 	sqlite3_finalize(stmt);
 
 	if (result > 0)
 		return NOTIFICATION_ERROR_ALREADY_EXIST_ID;
+
+	NOTIFICATION_INFO("Check Data Inserted appid[%s] group_id[%d] result[%d]",
+			  app_id, group_id, result);
 
 	return NOTIFICATION_ERROR_NONE;
 }
@@ -93,9 +93,8 @@ int notification_group_set_badge(const char *app_id,
 
 	ret = sqlite3_prepare_v2(db, query, -1, &stmt, NULL);
 	if (ret != SQLITE_OK) {
-		NOTIFICATION_ERR("Insert Query : %s", query);
-		NOTIFICATION_ERR("Insert DB error(%d) : %s", ret,
-				 sqlite3_errmsg(db));
+		NOTIFICATION_ERR("Failed to insert data app_id[%s] err[%d][%s]",
+				 app_id, ret, sqlite3_errmsg(db));
 		if (stmt)
 			sqlite3_finalize(stmt);
 
@@ -162,9 +161,8 @@ int notification_group_get_badge(const char *app_id,
 
 	ret = sqlite3_prepare(db, query, strlen(query), &stmt, NULL);
 	if (ret != SQLITE_OK) {
-		NOTIFICATION_ERR("Select Query : %s", query);
-		NOTIFICATION_ERR("Select DB error(%d) : %s", ret,
-				 sqlite3_errmsg(db));
+		NOTIFICATION_ERR("Failed to insert data app_id[%s] err[%d][%s]",
+				 app_id, ret, sqlite3_errmsg(db));
 		if (db)
 			notification_db_close(&db);
 

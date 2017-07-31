@@ -52,7 +52,7 @@ static GHashTable *_noti_dnd_cb_hash = NULL;
 EXPORT_API int notification_setting_get_setting_array_for_uid(notification_setting_h *setting_array, int *count, uid_t uid)
 {
 	if (setting_array == NULL || count == NULL) {
-		NOTIFICATION_ERR("NOTIFICATION_ERROR_INVALID_PARAMETER");
+		NOTIFICATION_ERR("Invalid parameter");
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 	}
 
@@ -67,7 +67,7 @@ EXPORT_API int notification_setting_get_setting_array(notification_setting_h *se
 EXPORT_API int notification_setting_get_setting_by_appid_for_uid(const char *app_id, notification_setting_h *setting, uid_t uid)
 {
 	if (app_id == NULL || setting == NULL) {
-		NOTIFICATION_ERR("NOTIFICATION_ERROR_INVALID_PARAMETER");
+		NOTIFICATION_ERR("Invalid parameter");
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 	}
 
@@ -333,7 +333,7 @@ static bool _is_package_in_setting_table(sqlite3 *db, const char *package_name, 
 
 	sql_ret = sqlite3_step(stmt);
 	if (sql_ret == SQLITE_DONE) {
-		NOTIFICATION_INFO("no matched [%s] from package_name [%s], [%d]",
+		NOTIFICATION_INFO("No matched [%s] from package_name [%s], [%d]",
 				app_id, package_name, sql_ret);
 		err = false;
 		goto out;
@@ -369,7 +369,7 @@ static int _foreach_app_info_callback(const pkgmgrinfo_appinfo_h handle,
 
 	ret = pkgmgrinfo_appinfo_get_appid(handle, &app_id);
 	if (ret != PACKAGE_MANAGER_ERROR_NONE) {
-		NOTIFICATION_ERR("pkgmgrinfo_appinfo_get_appid failed [%d]",
+		NOTIFICATION_ERR("Failed to get appid from pkgmgrinfo [%d]",
 				ret);
 		err = false;
 		goto out;
@@ -377,7 +377,7 @@ static int _foreach_app_info_callback(const pkgmgrinfo_appinfo_h handle,
 
 	ret = pkgmgrinfo_appinfo_get_pkgname(handle, &package_name);
 	if (ret != PACKAGE_MANAGER_ERROR_NONE) {
-		NOTIFICATION_ERR("pkgmgrinfo_appinfo_get_pkgname failed [%d]",
+		NOTIFICATION_ERR("Failed to get pkgname from pkgmgrinfo[%d]",
 				ret);
 		goto out;
 	}
@@ -387,9 +387,6 @@ static int _foreach_app_info_callback(const pkgmgrinfo_appinfo_h handle,
 		err = false;
 		goto out;
 	}
-
-	NOTIFICATION_INFO("uid %d package_name %s [%s] will be inserted",
-				info->uid, package_name, app_id);
 
 	query = sqlite3_mprintf("INSERT INTO %s (uid, package_name, app_id) "
 				"VALUES (%d, %Q, %Q) ",
@@ -406,6 +403,9 @@ static int _foreach_app_info_callback(const pkgmgrinfo_appinfo_h handle,
 	ret = notification_db_exec(db, query, NULL);
 	if (ret != NOTIFICATION_ERROR_NONE)
 		err = false;
+	else
+		NOTIFICATION_INFO("uid [%d] package_name [%s] appid [%s] is inserted",
+				info->uid, package_name, app_id);
 
 out:
 	if (query)
@@ -424,28 +424,29 @@ static int _foreach_package_info_callback(const pkgmgrinfo_pkginfo_h package_inf
 
 	pkgmgr_ret = pkgmgrinfo_pkginfo_get_pkgname(package_info, &package_name);
 	if (pkgmgr_ret != PACKAGE_MANAGER_ERROR_NONE) {
-		NOTIFICATION_ERR("package_info_get_package failed [%d]", pkgmgr_ret);
+		NOTIFICATION_ERR("Failed to get pkgname from pkgmgrinfo[%d]", pkgmgr_ret);
 		err = false;
 		goto out;
 	}
 
 	pkgmgr_ret = pkgmgrinfo_appinfo_filter_create(&handle);
 	if (pkgmgr_ret != PMINFO_R_OK) {
-		NOTIFICATION_ERR("pkgmgrinfo_appinfo_filter_create failed [%d]", pkgmgr_ret);
+		NOTIFICATION_ERR("Failed to create appinofo[%d]",
+					pkgmgr_ret);
 		err = false;
 		goto out;
 	}
 
 	pkgmgr_ret = pkgmgrinfo_appinfo_filter_add_string(handle, PMINFO_APPINFO_PROP_APP_PACKAGE, package_name);
 	if (pkgmgr_ret != PMINFO_R_OK) {
-		NOTIFICATION_ERR("pkgmgrinfo_appinfo_filter_add_string failed [%d]", pkgmgr_ret);
+		NOTIFICATION_ERR("Failed to add string to appinfo[%d]", pkgmgr_ret);
 		err = false;
 		goto out;
 	}
 
 	pkgmgr_ret = pkgmgrinfo_appinfo_usr_filter_foreach_appinfo(handle, _foreach_app_info_callback, info, info->uid);
 	if (pkgmgr_ret != PMINFO_R_OK) {
-		NOTIFICATION_ERR("pkgmgrinfo_pkginfo_filter_foreach_appinfo failed [%d]", pkgmgr_ret);
+		NOTIFICATION_ERR("Failed to iterate appinfo[%d]", pkgmgr_ret);
 		err = false;
 		goto out;
 	}
@@ -471,21 +472,21 @@ static int _install_and_update_package(const char *package_name, uid_t uid)
 
 	pkgmgr_ret = pkgmgrinfo_pkginfo_filter_create(&handle);
 	if (pkgmgr_ret != PMINFO_R_OK) {
-		NOTIFICATION_ERR("pkgmgrinfo_pkginfo_filter_create failed [%d]", pkgmgr_ret);
+		NOTIFICATION_ERR("Failed to create pkginfo_filter[%d]", pkgmgr_ret);
 		err = NOTIFICATION_ERROR_FROM_DB;
 		goto out;
 	}
 
 	pkgmgr_ret = pkgmgrinfo_pkginfo_filter_add_string(handle, PMINFO_PKGINFO_PROP_PACKAGE_PRIVILEGE, NOTIFICATION_PRIVILEGE);
 	if (pkgmgr_ret != PMINFO_R_OK) {
-		NOTIFICATION_ERR("pkgmgrinfo_pkginfo_filter_add_string failed [%d]", pkgmgr_ret);
+		NOTIFICATION_ERR("Failed to add string to pkginfo_filter[%d]", pkgmgr_ret);
 		err = NOTIFICATION_ERROR_FROM_DB;
 		goto out;
 	}
 
 	pkgmgr_ret = pkgmgrinfo_pkginfo_filter_add_string(handle, PMINFO_PKGINFO_PROP_PACKAGE_ID, package_name);
 	if (pkgmgr_ret != PMINFO_R_OK) {
-		NOTIFICATION_ERR("pkgmgrinfo_pkginfo_filter_add_string failed [%d]", pkgmgr_ret);
+		NOTIFICATION_ERR("Failed to add string to pkginfo_filter[%d]", pkgmgr_ret);
 		err = NOTIFICATION_ERROR_FROM_DB;
 		goto out;
 	}
@@ -494,7 +495,7 @@ static int _install_and_update_package(const char *package_name, uid_t uid)
 	info.uid = uid;
 	pkgmgr_ret = pkgmgrinfo_pkginfo_usr_filter_foreach_pkginfo(handle, _foreach_package_info_callback, &info, uid);
 	if (pkgmgr_ret != PMINFO_R_OK) {
-		NOTIFICATION_ERR("pkgmgrinfo_pkginfo_usr_filter_foreach_pkginfo failed [%d]", pkgmgr_ret);
+		NOTIFICATION_ERR("Failed to iterate pkginfo[%d]", pkgmgr_ret);
 		err = NOTIFICATION_ERROR_FROM_DB;
 		goto out;
 	}
@@ -533,7 +534,7 @@ static int _delete_package_from_setting_db(const char *package_name, uid_t uid)
 				package_name);
 	if (query == NULL) {
 		/* LCOV_EXCL_START */
-		NOTIFICATION_ERR("fail to alloc query");
+		NOTIFICATION_ERR("Failed to alloc query");
 		err = NOTIFICATION_ERROR_OUT_OF_MEMORY;
 		goto out;
 		/* LCOV_EXCL_STOP */
@@ -559,7 +560,7 @@ EXPORT_API int notification_setting_refresh_setting_table(uid_t uid)
 	pkgmgrinfo_pkginfo_filter_h filter = NULL;
 	setting_local_info info;
 
-	NOTIFICATION_INFO("refresh setting table [%d]", uid);
+	NOTIFICATION_INFO("Refresh setting table [%d]", uid);
 
 	db = notification_db_open(DBPATH);
 	if (!db)
@@ -567,14 +568,14 @@ EXPORT_API int notification_setting_refresh_setting_table(uid_t uid)
 
 	pkgmgr_ret = pkgmgrinfo_pkginfo_filter_create(&filter);
 	if (pkgmgr_ret != PMINFO_R_OK) {
-		NOTIFICATION_ERR("pkgmgrinfo_pkginfo_filter_create failed [%d]", pkgmgr_ret);
+		NOTIFICATION_ERR("Failed to create pkginfo_filter[%d]", pkgmgr_ret);
 		err = NOTIFICATION_ERROR_FROM_DB;
 		goto out;
 	}
 
 	pkgmgr_ret = pkgmgrinfo_pkginfo_filter_add_string(filter, PMINFO_PKGINFO_PROP_PACKAGE_PRIVILEGE, NOTIFICATION_PRIVILEGE);
 	if (pkgmgr_ret != PMINFO_R_OK) {
-		NOTIFICATION_ERR("pkgmgrinfo_pkginfo_filter_add_string failed [%d]", pkgmgr_ret);
+		NOTIFICATION_ERR("Failed to add string to pkginfo_filter[%d]", pkgmgr_ret);
 		err = NOTIFICATION_ERROR_FROM_DB;
 		goto out;
 	}
@@ -583,7 +584,7 @@ EXPORT_API int notification_setting_refresh_setting_table(uid_t uid)
 	info.uid = uid;
 	pkgmgr_ret = pkgmgrinfo_pkginfo_usr_filter_foreach_pkginfo(filter, _foreach_package_info_callback, &info, uid);
 	if (pkgmgr_ret != PMINFO_R_OK) {
-		NOTIFICATION_ERR("pkgmgrinfo_pkginfo_usr_filter_foreach_pkginfo failed [%d]", pkgmgr_ret);
+		NOTIFICATION_ERR("Failed to foreach pkginfo[%d]", pkgmgr_ret);
 		err = NOTIFICATION_ERROR_FROM_DB;
 		goto out;
 	}
@@ -857,7 +858,7 @@ EXPORT_API int notification_system_setting_get_dnd_allow_exceptions(notification
 		dnd_allow_exception_data = (dnd_allow_exception_h)list->data;
 		*value = dnd_allow_exception_data->value;
 	} else {
-		NOTIFICATION_ERR("Invalid parameter - type");
+		NOTIFICATION_ERR("Invalid type");
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 	}
 
@@ -917,7 +918,7 @@ void notification_call_dnd_changed_cb_for_uid(int do_not_disturb, uid_t uid)
 
 	noti_dnd_cb_list = (GList *)g_hash_table_lookup(_noti_dnd_cb_hash, GUINT_TO_POINTER(uid));
 	if (noti_dnd_cb_list == NULL) {
-		NOTIFICATION_ERR("Invalide data");
+		NOTIFICATION_ERR("Invalid data");
 		return;
 	}
 
@@ -941,7 +942,7 @@ EXPORT_API int notification_register_system_setting_dnd_changed_cb_for_uid(dnd_c
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 
 	if (notification_ipc_monitor_init(uid) != NOTIFICATION_ERROR_NONE) {
-		NOTIFICATION_ERR("notification_ipc_monitor_init error");
+		NOTIFICATION_ERR("Failed to init monitor");
 		return NOTIFICATION_ERROR_IO_ERROR;
 	}
 
@@ -1037,7 +1038,7 @@ static bool _is_uid_in_system_setting_table(sqlite3 *db, uid_t uid)
 				NOTIFICATION_SYSTEM_SETTING_DB_TABLE, uid);
 	if (query == NULL) {
 		/* LCOV_EXCL_START */
-		NOTIFICATION_ERR("fail to alloc query");
+		NOTIFICATION_ERR("Failed to alloc query");
 		return NOTIFICATION_ERROR_OUT_OF_MEMORY;
 		/* LCOV_EXCL_STOP */
 	}
@@ -1054,7 +1055,7 @@ static bool _is_uid_in_system_setting_table(sqlite3 *db, uid_t uid)
 
 	sql_ret = sqlite3_step(stmt);
 	if (sql_ret == SQLITE_DONE) {
-		NOTIFICATION_INFO("no matched uid found[%d][%d]", uid, sql_ret);
+		NOTIFICATION_INFO("No matched uid[%d] err[%d]", uid, sql_ret);
 		err = false;
 		goto out;
 	}
@@ -1089,7 +1090,7 @@ EXPORT_API int notification_system_setting_init_system_setting_table(uid_t uid)
 		return get_last_result(); /* LCOV_EXCL_LINE */
 
 	if (_is_uid_in_system_setting_table(db, uid) == true) {
-		NOTIFICATION_DBG("table is already initialized.");
+		NOTIFICATION_INFO("Setting table is already initialized.");
 		goto out;
 	}
 
@@ -1117,7 +1118,7 @@ EXPORT_API int notification_system_setting_init_system_setting_table(uid_t uid)
 					uid);
 	if (query_dnd_allow_exception == NULL) {
 		/* LCOV_EXCL_START */
-		NOTIFICATION_ERR("fail to alloc query");
+		NOTIFICATION_ERR("Failed to alloc query");
 		ret = NOTIFICATION_ERROR_OUT_OF_MEMORY;
 		goto out;
 		/* LCOV_EXCL_STOP */
@@ -1127,7 +1128,7 @@ EXPORT_API int notification_system_setting_init_system_setting_table(uid_t uid)
 	if (ret != NOTIFICATION_ERROR_NONE)
 		goto out;
 
-	NOTIFICATION_DBG("initialization is success.");
+	NOTIFICATION_DBG("Initialization is success.");
 
 out:
 	if (query_system_setting)

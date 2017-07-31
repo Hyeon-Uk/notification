@@ -57,7 +57,7 @@ int main(int argc, char *argv[])
 	uid_t uid = 0;
 
 	if (!_is_authorized()) {
-		_E("You are not an authorized user!");
+		_E("Not an authorized user");
 		return -1;
 	}
 
@@ -66,13 +66,13 @@ int main(int argc, char *argv[])
 
 	ret = notification_setting_refresh_setting_table(uid);
 	if (ret != NOTIFICATION_ERROR_NONE) {
-		_E("notification setting table refresh fail.");
+		_E("Failed to refresh setting table");
 		return ret;
 	}
 
 	ret = notification_system_setting_init_system_setting_table(uid);
 	if (ret != NOTIFICATION_ERROR_NONE) {
-		_E("notification system setting table init fail.");
+		_E("Failed to init system setting table");
 		return ret;
 	}
 

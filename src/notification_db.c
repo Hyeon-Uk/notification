@@ -37,7 +37,7 @@ EXPORT_API int notification_db_init()
 			SQLITE_OPEN_CREATE | SQLITE_OPEN_READWRITE, NULL);
 	if (ret != SQLITE_OK) {
 		/* LCOV_EXCL_START */
-		NOTIFICATION_ERR("fail to open notification db %d", ret);
+		NOTIFICATION_ERR("Failed to open db[%d]", ret);
 		ret = NOTIFICATION_ERROR_FROM_DB;
 		goto out;
 		/* LCOV_EXCL_STOP */
@@ -46,7 +46,7 @@ EXPORT_API int notification_db_init()
 	ret = sqlite3_exec(db, CREATE_NOTIFICATION_TABLE, NULL, NULL, &errmsg);
 	if (ret != SQLITE_OK) {
 		/* LCOV_EXCL_START */
-		NOTIFICATION_ERR("sqlite3_exec error(%d)(%s)", ret, errmsg);
+		NOTIFICATION_ERR("Failed to exec sqlite[%d][%s]", ret, errmsg);
 		ret = NOTIFICATION_ERROR_FROM_DB;
 		goto out;
 		/* LCOV_EXCL_STOP */
@@ -100,7 +100,7 @@ int notification_db_close(sqlite3 **db)
 	ret = sqlite3_close(*db);
 	if (ret != SQLITE_OK) {
 		/* LCOV_EXCL_START */
-		NOTIFICATION_ERR("DB close error(%d)", ret);
+		NOTIFICATION_ERR("Failed to close db[%d]", ret);
 		return NOTIFICATION_ERROR_FROM_DB;
 		/* LCOV_EXCL_STOP */
 	}
@@ -121,7 +121,7 @@ int notification_db_exec(sqlite3 *db, const char *query, int *num_changes)
 	ret = sqlite3_prepare_v2(db, query, strlen(query), &stmt, NULL);
 	if (ret != SQLITE_OK) {
 		/* LCOV_EXCL_START */
-		NOTIFICATION_ERR("DB err(%d) : %s", ret, sqlite3_errmsg(db));
+		NOTIFICATION_ERR("Sqlite3 err[%d][%s]", ret, sqlite3_errmsg(db));
 		return NOTIFICATION_ERROR_FROM_DB;
 		/* LCOV_EXCL_STOP */
 	}
@@ -134,7 +134,7 @@ int notification_db_exec(sqlite3 *db, const char *query, int *num_changes)
 		ret = NOTIFICATION_ERROR_NONE;
 	} else {
 		/* LCOV_EXCL_START */
-		NOTIFICATION_ERR("DB err(%d) : %s", ret,
+		NOTIFICATION_ERR("Sqlite err[%d][%s]", ret,
 				 sqlite3_errmsg(db));
 		ret = NOTIFICATION_ERROR_FROM_DB;
 		/* LCOV_EXCL_STOP */

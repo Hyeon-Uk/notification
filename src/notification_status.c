@@ -57,14 +57,14 @@ static void __notification_status_message_dbus_callback(GDBusConnection *connect
 	g_variant_get(parameters, "(&s)", &message);
 	if (strlen(message) <= 0) {
 		/* LCOV_EXCL_START */
-		NOTIFICATION_ERR("message has only NULL");
+		NOTIFICATION_ERR("message is NULL");
 		return;
 		/* LCOV_EXCL_STOP */
 	}
 
 	if (!md.callback) {
 		/* LCOV_EXCL_START */
-		NOTIFICATION_ERR("no callback");
+		NOTIFICATION_ERR("No callback");
 		return;
 		/* LCOV_EXCL_STOP */
 	}
@@ -84,7 +84,7 @@ int notification_status_monitor_message_cb_set(notification_status_message_cb ca
 		md.conn = g_bus_get_sync(G_BUS_TYPE_SYSTEM, NULL, &error);
 		if (md.conn == NULL) {
 			/* LCOV_EXCL_START */
-			NOTIFICATION_ERR("Failed to connect to the D-BUS Daemon: %s",
+			NOTIFICATION_ERR("Failed to connect to the D-BUS Daemon[%s]",
 						error->message);
 			g_error_free(error);
 			return NOTIFICATION_ERROR_FROM_DBUS;
@@ -105,7 +105,7 @@ int notification_status_monitor_message_cb_set(notification_status_message_cb ca
 					NULL);
 		if (md.message_id == 0) {
 			/* LCOV_EXCL_START */
-			NOTIFICATION_ERR("g_dbus_connection_signal_subscribe() failed.");
+			NOTIFICATION_ERR("Failed to subscribe signal");
 			g_object_unref(md.conn);
 			return NOTIFICATION_ERROR_FROM_DBUS;
 			/* LCOV_EXCL_STOP */
@@ -153,7 +153,8 @@ int notification_status_message_post(const char *message)
 	conn = g_bus_get_sync(G_BUS_TYPE_SYSTEM, NULL, &err);
 	if (conn == NULL) {
 		/* LCOV_EXCL_START */
-		NOTIFICATION_ERR("g_bus_get_sync() failed: %s", err->message);
+		NOTIFICATION_ERR("Failed to connect to the D-BUS Daemon[%s]",
+					err->message);
 		ret = NOTIFICATION_ERROR_FROM_DBUS;
 		goto end;
 		/* LCOV_EXCL_STOP */
@@ -169,7 +170,7 @@ int notification_status_message_post(const char *message)
 					param,
 					&err) == FALSE) {
 		/* LCOV_EXCL_START */
-		NOTIFICATION_ERR("g_dbus_connection_emit_signal() failed: %s",
+		NOTIFICATION_ERR("Failed to emit signal[%s]",
 					err->message);
 		ret = NOTIFICATION_ERROR_FROM_DBUS;
 		goto end;
@@ -178,7 +179,7 @@ int notification_status_message_post(const char *message)
 
 	if (g_dbus_connection_flush_sync(conn, NULL, &err) == FALSE) {
 		/* LCOV_EXCL_START */
-		NOTIFICATION_ERR("g_dbus_connection_flush_sync() failed: %s",
+		NOTIFICATION_ERR("Failed to flush connection sync[%s]",
 					err->message);
 		ret = NOTIFICATION_ERROR_FROM_DBUS;
 		goto end;
