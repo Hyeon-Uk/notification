@@ -1697,7 +1697,7 @@ EXPORT_API int notification_send_event(notification_h noti, int event_type)
 	if (!((event_type >= NOTIFICATION_EVENT_TYPE_CLICK_ON_BUTTON_1
 		&& event_type <= NOTIFICATION_EVENT_TYPE_MAX) ||
 		(event_type >= NOTIFICATION_EVENT_TYPE_HIDDEN_BY_USER
-		&& event_type <= NOTIFICATION_EVENT_TYPE_HIDDEN_BY_TIMEOUT) ||
+		&& event_type <= NOTIFICATION_EVENT_TYPE_HIDDEN_BY_EXTERNAL) ||
 		(event_type >= NOTIFICATION_EVENT_TYPE_PRESSED
 		&& event_type <= NOTIFICATION_EVENT_TYPE_DELETED)))
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
@@ -1721,7 +1721,7 @@ EXPORT_API int notification_send_event_by_priv_id(int priv_id, int event_type)
 	if (!((event_type >= NOTIFICATION_EVENT_TYPE_CLICK_ON_BUTTON_1
 		&& event_type <= NOTIFICATION_EVENT_TYPE_MAX) ||
 		(event_type >= NOTIFICATION_EVENT_TYPE_HIDDEN_BY_USER
-		&& event_type <= NOTIFICATION_EVENT_TYPE_HIDDEN_BY_TIMEOUT) ||
+		&& event_type <= NOTIFICATION_EVENT_TYPE_HIDDEN_BY_EXTERNAL) ||
 		(event_type >= NOTIFICATION_EVENT_TYPE_PRESSED
 		&& event_type <= NOTIFICATION_EVENT_TYPE_DELETED)))
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
