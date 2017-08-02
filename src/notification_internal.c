@@ -28,6 +28,8 @@
 #include <tizen.h>
 #include <bundle.h>
 #include <bundle_internal.h>
+#include <app_control.h>
+#include <app_control_internal.h>
 
 #include <notification.h>
 #include <notification_list.h>
@@ -1822,4 +1824,130 @@ EXPORT_API int notification_get_extention_data(notification_h noti, const char *
 		return NOTIFICATION_ERROR_IO_ERROR;
 
 	return NOTIFICATION_ERROR_NONE;
+}
+
+#define KEY_LEN 40
+#define EXTENSION_EVENT_KEY "_NOTIFICATION_EXTENSION_EVENT_"
+EXPORT_API int notification_set_extension_event_handler(notification_h noti,
+					notification_event_type_extension_e event,
+					app_control_h event_handler)
+{
+	int err;
+	int ret = NOTIFICATION_ERROR_NONE;
+	int len;
+	bundle *app_control_bundle = NULL;
+	bundle_raw *b_raw = NULL;
+	char key[KEY_LEN];
+	char *del = NULL;
+
+	if (noti == NULL || event_handler == NULL) {
+		NOTIFICATION_ERR("Invalid parameter");
+		return NOTIFICATION_ERROR_INVALID_PARAMETER;
+	}
+
+	if (event < NOTIFICATION_EVENT_TYPE_HIDDEN_BY_USER ||
+	    event > NOTIFICATION_EVENT_TYPE_HIDDEN_BY_EXTERNAL) {
+		NOTIFICATION_ERR("Invalid event [%d]", event);
+		return NOTIFICATION_ERROR_INVALID_PARAMETER;
+	}
+
+	if (noti->args == NULL)
+		noti->args = bundle_create();
+
+	snprintf(key, sizeof(key), "%s%d", EXTENSION_EVENT_KEY, event);
+	bundle_get_str(noti->args, key, &del);
+	if (del != NULL) {
+		bundle_del(noti->args, key);
+		del = NULL;
+	}
+
+	err = app_control_export_as_bundle(event_handler, &app_control_bundle);
+	if (err != APP_CONTROL_ERROR_NONE) {
+		NOTIFICATION_ERR("Failed to export app_control to bundle [%d]", err);
+		ret = NOTIFICATION_ERROR_IO_ERROR;
+		goto out;
+	}
+
+	err = bundle_encode(app_control_bundle, &b_raw, &len);
+	if (err != BUNDLE_ERROR_NONE) {
+		NOTIFICATION_ERR("Failed to encode bundle [%d]", err);
+		ret = NOTIFICATION_ERROR_IO_ERROR;
+		goto out;
+	}
+
+	err = bundle_add_str(noti->args, key, (const char *)b_raw);
+	if (err != BUNDLE_ERROR_NONE) {
+		NOTIFICATION_ERR("Failed to add str to bundle [%d]", err);
+		ret = NOTIFICATION_ERROR_IO_ERROR;
+		goto out;
+	}
+
+out:
+	if (b_raw)
+		bundle_free_encoded_rawdata(&b_raw);
+	if (app_control_bundle)
+		bundle_free(app_control_bundle);
+
+	return NOTIFICATION_ERROR_NONE;
+}
+
+EXPORT_API int notification_get_extension_event_handler(notification_h noti,
+					notification_event_type_extension_e event,
+					app_control_h *event_handler)
+{
+	int err;
+	int ret = NOTIFICATION_ERROR_NONE;
+	char *ret_str;
+	char key[KEY_LEN];
+	bundle *app_control_bundle = NULL;
+	app_control_h ret_app_control = NULL;
+
+	if (noti == NULL || event_handler == NULL) {
+		NOTIFICATION_ERR("Invalid parameter");
+		return NOTIFICATION_ERROR_INVALID_PARAMETER;
+	}
+
+	if (event < NOTIFICATION_EVENT_TYPE_HIDDEN_BY_USER ||
+	    event > NOTIFICATION_EVENT_TYPE_HIDDEN_BY_EXTERNAL) {
+		NOTIFICATION_ERR("Invalid event [%d]", event);
+		return NOTIFICATION_ERROR_INVALID_PARAMETER;
+	}
+
+	snprintf(key, sizeof(key), "%s%d", EXTENSION_EVENT_KEY, event);
+
+	bundle_get_str(noti->args, key, &ret_str);
+	if (ret_str == NULL) {
+		NOTIFICATION_ERR("No handler, Invalid event[%d]", event);
+		return NOTIFICATION_ERROR_INVALID_PARAMETER;
+	}
+
+	app_control_bundle = _create_bundle_from_bundle_raw((bundle_raw *)ret_str);
+	if (app_control_bundle == NULL) {
+		NOTIFICATION_ERR("Failed to create bundle");
+		return NOTIFICATION_ERROR_IO_ERROR;
+	}
+
+	err = app_control_create(&ret_app_control);
+	if (err != APP_CONTROL_ERROR_NONE) {
+		NOTIFICATION_ERR("Failed to create app control [%d]", err);
+		ret = NOTIFICATION_ERROR_IO_ERROR;
+		goto out;
+	}
+
+	err = app_control_import_from_bundle(ret_app_control, app_control_bundle);
+	if (err != APP_CONTROL_ERROR_NONE) {
+		NOTIFICATION_ERR("Failed to import app control from bundle [%d]",
+				err);
+		app_control_destroy(ret_app_control);
+		ret = NOTIFICATION_ERROR_IO_ERROR;
+		goto out;
+	}
+
+	*event_handler = ret_app_control;
+
+out:
+	if (app_control_bundle)
+		bundle_free(app_control_bundle);
+
+	return ret;
 }

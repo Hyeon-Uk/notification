@@ -1399,6 +1399,13 @@ int notification_get_text_input_max_length(notification_h noti, int *text_input_
 int notification_set_extention_data(notification_h noti, const char *key, bundle *value);
 int notification_get_extention_data(notification_h noti, const char *key, bundle **value);
 
+int notification_set_extension_event_handler(notification_h noti,
+					notification_event_type_extension_e event,
+					app_control_h event_handler);
+
+int notification_get_extension_event_handler(notification_h noti,
+					notification_event_type_extension_e event,
+					app_control_h *event_handler);
 /**
  * @}
  */
