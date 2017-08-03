@@ -1396,7 +1396,7 @@ EXPORT_API int notification_post_for_uid(notification_h noti, uid_t uid)
 	if (file_list)
 		g_list_free_full(file_list, free);
 
-	return NOTIFICATION_ERROR_NONE;
+	return ret;
 }
 
 EXPORT_API int notification_update_for_uid(notification_h noti, uid_t uid)
