@@ -1888,7 +1888,7 @@ out:
 	if (app_control_bundle)
 		bundle_free(app_control_bundle);
 
-	return NOTIFICATION_ERROR_NONE;
+	return ret;
 }
 
 EXPORT_API int notification_get_extension_event_handler(notification_h noti,
