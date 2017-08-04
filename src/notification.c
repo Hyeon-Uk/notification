@@ -1441,7 +1441,7 @@ static notification_h _notification_create(notification_type_e type)
 	char *app_root_path = NULL;
 	char locale_directory[PATH_MAX] = { 0, }; /* PATH_MAX 4096 */
 	char pkg_id[NOTI_PKG_ID_LEN + 1] = { 0, };
-	int err;
+	int err = 0;
 
 	if (type <= NOTIFICATION_TYPE_NONE || type > NOTIFICATION_TYPE_MAX) {
 		NOTIFICATION_ERR("Invalid notification type[%d]", type);
@@ -1475,6 +1475,7 @@ static notification_h _notification_create(notification_type_e type)
 	noti->caller_app_id = notification_get_app_id_by_pid(getpid());
 	if (noti->caller_app_id == NULL) {
 		NOTIFICATION_ERR("Failed to get caller_app_id");
+		err = -1;
 		goto out;
 	}
 
@@ -1524,11 +1525,19 @@ out:
 	if (package_info)
 		package_info_destroy(package_info);
 
+	if (err != 0) {
+		notification_free(noti);
+		noti = NULL;
+		set_last_result(NOTIFICATION_ERROR_IO_ERROR);
+	} else {
+		set_last_result(NOTIFICATION_ERROR_NONE);
+	}
+
 	/*!
 	 * \NOTE
 	 * Other fields are already initialized with ZERO.
 	 */
-	set_last_result(NOTIFICATION_ERROR_NONE);
+
 	return noti;
 }
 

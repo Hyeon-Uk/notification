@@ -1070,6 +1070,7 @@ int notification_delete(notification_h noti);
  * @exception #NOTIFICATION_ERROR_NONE Success
  * @exception #NOTIFICATION_ERROR_INVALID_PARAMETER Invalid input value
  * @exception #NOTIFICATION_ERROR_OUT_OF_MEMORY Out of memory
+ * @exception #NOTIFICATION_ERROR_IO_ERROR I/O error
  * @see #notification_type_e
  * @par Sample code:
  * @code
