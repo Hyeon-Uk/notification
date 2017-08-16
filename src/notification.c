@@ -1481,6 +1481,8 @@ static notification_h _notification_create(notification_type_e type)
 
 	if (getuid() < REGULAR_UID_MIN) {
 		noti->pkg_id = strdup(noti->caller_app_id);
+		if (noti->pkg_id == NULL)
+			err = -1;
 	} else {
 		err = aul_app_get_pkgid_bypid(getpid(), pkg_id, sizeof(pkg_id));
 		if (err != AUL_R_OK)
@@ -1488,16 +1490,23 @@ static notification_h _notification_create(notification_type_e type)
 		else
 			noti->pkg_id = strdup(pkg_id);
 
+		if (noti->pkg_id == NULL) {
+			err = -1;
+			goto out;
+		}
+
 		err = _notification_get_app_name(pkg_id, &domain_name);
 		if (err != 0 || domain_name == NULL) {
-			NOTIFICATION_WARN("Failed to get app name domain_name[%p]",
-					err, domain_name);
+			NOTIFICATION_WARN("Failed to get domain_name");
+			err = 0;
+			/* In the case of the web app,
+			the domain can not be obtained. */
 			goto out;
 		}
 
 		err = package_info_create(pkg_id, &package_info);
 		if (err != PACKAGE_MANAGER_ERROR_NONE || package_info == NULL) {
-			NOTIFICATION_WARN("Failted to create package_info err[%d] pkg_id[%s]",
+			NOTIFICATION_WARN("Failed to create package_info err[%d] pkg_id[%s]",
 					err, pkg_id);
 			goto out;
 		}
