@@ -1897,7 +1897,7 @@ EXPORT_API int notification_get_extension_event_handler(notification_h noti,
 {
 	int err;
 	int ret = NOTIFICATION_ERROR_NONE;
-	char *ret_str;
+	char *ret_str = NULL;
 	char key[KEY_LEN];
 	bundle *app_control_bundle = NULL;
 	app_control_h ret_app_control = NULL;
