@@ -18,6 +18,6 @@
 #define __NOTIFICATION_VIEWER_H__
 
 int notification_get_default_viewer(const char *path, char **default_viewer);
-int notification_launch_default_viewer(const char *default_viewer, int priv_id);
+int notification_launch_default_viewer(const char *default_viewer, int priv_id, uid_t uid);
 
 #endif /* __NOTIFICATION_VIEWER_H__ */

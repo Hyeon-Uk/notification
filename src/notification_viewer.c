@@ -20,6 +20,7 @@
 
 #include <app_control_internal.h>
 #include <iniparser.h>
+#include <aul_svc.h>
 
 #include <notification.h>
 #include <notification_debug.h>
@@ -50,43 +51,46 @@ EXPORT_API int notification_get_default_viewer(const char *path, char **default_
 	return 0;
 }
 
-EXPORT_API int notification_launch_default_viewer(const char *default_viewer, int priv_id)
+EXPORT_API int notification_launch_default_viewer(const char *default_viewer, int priv_id, uid_t uid)
 {
 	int ret;
 	char buf[32] = {0,};
-	app_control_h app_control = NULL;
+	bundle *b = NULL;
 
-	ret = app_control_create(&app_control);
-	if (ret != APP_CONTROL_ERROR_NONE) {
-		NOTIFICATION_ERR("Failed to create app_control[%x]", ret);
-		goto out;
+	b = bundle_create();
+	if (b == NULL) {
+		NOTIFICATION_ERR("Failed to create bundle");
+		return NOTIFICATION_ERROR_OUT_OF_MEMORY;
 	}
 
-	ret = app_control_set_app_id(app_control, default_viewer);
-	if (ret != APP_CONTROL_ERROR_NONE) {
-		NOTIFICATION_ERR("Failed to set app id to app_control[%x]", ret);
+	ret = aul_svc_set_appid(b, default_viewer);
+	if (ret != AUL_SVC_RET_OK) {
+		NOTIFICATION_ERR("Failed to set appid to bundle[%x]", ret);
 		goto out;
 	}
 
 	snprintf(buf, sizeof(buf), "%d", priv_id);
 
-	ret = app_control_add_extra_data(app_control, "NOTIFICATION_PRIVATE_ID", buf);
-	if (ret != APP_CONTROL_ERROR_NONE) {
-		NOTIFICATION_ERR("Failed to add extra data to app_control[%x]", ret);
+	ret = aul_svc_add_data(b, "NOTIFICATION_PRIVATE_ID", buf);
+	if (ret != AUL_SVC_RET_OK) {
+		NOTIFICATION_ERR("Failed to add extra_data[%x]", ret);
 		goto out;
 	}
 
-	ret = app_control_send_launch_request(app_control, NULL, NULL);
-	if (ret != APP_CONTROL_ERROR_NONE) {
-		NOTIFICATION_ERR("Failed to request app launch[%x]", ret);
-		goto out;
+	ret = aul_svc_run_service_async_for_uid(b, 0, NULL, NULL, uid);
+	if (ret < 0) {
+		NOTIFICATION_ERR("Failed to request app launch[%d]", ret);
+	} else {
+		NOTIFICATION_INFO("successed to request app launch[%d],[%d]",
+				ret, uid);
+		ret = APP_CONTROL_ERROR_NONE;
 	}
 
 out:
-	if (app_control)
-		app_control_destroy(app_control);
+	if (b)
+		bundle_free(b);
 
-	if (ret == APP_CONTROL_ERROR_NONE)
+	if (ret == 0)
 		ret = NOTIFICATION_ERROR_NONE;
 	else
 		ret = NOTIFICATION_ERROR_IO_ERROR;
