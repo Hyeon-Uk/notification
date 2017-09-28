@@ -82,6 +82,7 @@ static bool __make_sharing_dir(const char *dir)
 	if (access(dir, R_OK) != 0) {
 		noti_dir = g_file_new_for_path(dir);
 		if (g_file_make_directory(noti_dir, NULL, &g_err) == false) {
+			/* LCOV_EXCL_START */
 			if (g_err) {
 				NOTIFICATION_ERR("Failed to make sharing dir[%s]",
 					g_err->message);
@@ -89,6 +90,7 @@ static bool __make_sharing_dir(const char *dir)
 			}
 			g_object_unref(noti_dir);
 			return false;
+			/* LCOV_EXCL_STOP */
 		}
 		g_object_unref(noti_dir);
 	}
@@ -148,6 +150,7 @@ static const char *__last_index_of(const char *path, const char *search)
 }
 
 /* Check path that include res directory */
+/* LCOV_EXCL_START */
 static bool __is_private_file(const char *smack_label, const char *pkg_id)
 {
 	const char *smack_index;
@@ -162,6 +165,7 @@ static bool __is_private_file(const char *smack_label, const char *pkg_id)
 
 	return ret;
 }
+/* LCOV_EXCL_STOP */
 
 static bool __is_RO_file(const char *smack_label)
 {
@@ -189,9 +193,11 @@ int notification_copy_private_file(const char* src_path,
 
 	dst = g_file_new_for_path(dst_path);
 	if (dst == NULL) {
+		/* LCOV_EXCL_START */
 		NOTIFICATION_ERR("dst path is wrong [%s]", dst_path);
 		ret = NOTIFICATION_ERROR_IO_ERROR;
 		goto out;
+		/* LCOV_EXCL_STOP */
 	}
 
 	if (g_file_query_exists(dst, NULL) == true) {
@@ -202,12 +208,15 @@ int notification_copy_private_file(const char* src_path,
 
 	src = g_file_new_for_path(src_path);
 	if (src == NULL) {
+		/* LCOV_EXCL_START */
 		NOTIFICATION_ERR("src path is wrong [%s]", src_path);
 		ret = NOTIFICATION_ERROR_IO_ERROR;
 		goto out;
+		/* LCOV_EXCL_STOP */
 	}
 
 	if (!g_file_copy(src, dst, G_FILE_COPY_NOFOLLOW_SYMLINKS,
+		/* LCOV_EXCL_START */
 			NULL, NULL, NULL, &g_err)) {
 		if (g_err) {
 			NOTIFICATION_ERR(
@@ -217,6 +226,7 @@ int notification_copy_private_file(const char* src_path,
 		}
 		ret = NOTIFICATION_ERROR_IO_ERROR;
 		goto out;
+		/* LCOV_EXCL_STOP */
 	}
 
 	ut.modtime = time(NULL);
@@ -245,6 +255,7 @@ static void __free_file_info(gpointer data)
 	}
 }
 
+/* LCOV_EXCL_START */
 static void __free_req_info(gpointer data)
 {
 	sharing_req_data_s * info = (sharing_req_data_s *)data;
@@ -262,6 +273,7 @@ static void __free_req_info(gpointer data)
 
 	free(info);
 }
+/* LCOV_EXCL_STOP */
 
 static char **__convert_list_to_array(GList *list, int *length)
 {
@@ -298,6 +310,7 @@ static gint __comp_str(gconstpointer a, gconstpointer b)
 	return strcmp(new_file, file);
 }
 
+/* LCOV_EXCL_START */
 static gint __comp_file_info(gconstpointer a, gconstpointer b)
 {
 	sharing_file_info_s *file = (sharing_file_info_s *)a;
@@ -308,7 +321,9 @@ static gint __comp_file_info(gconstpointer a, gconstpointer b)
 
 	return strcmp(new_file->dst_path, file->dst_path);
 }
+/* LCOV_EXCL_STOP */
 
+/* LCOV_EXCL_START */
 static gint __comp_dst_path(gconstpointer a, gconstpointer b)
 {
 	sharing_file_info_s *info = (sharing_file_info_s *)a;
@@ -319,6 +334,7 @@ static gint __comp_dst_path(gconstpointer a, gconstpointer b)
 
 	return strcmp(info->dst_path, path);
 }
+/* LCOV_EXCL_STOP */
 
 static sharing_file_info_s * __dup_file_info(sharing_file_info_s *src)
 {
@@ -870,18 +886,22 @@ int __set_sharing_for_new_file(sharing_req_data_s *req_data,
 	ret = security_manager_private_sharing_req_set_owner_appid(handle,
 					req_data->app_id);
 	if (ret != SECURITY_MANAGER_SUCCESS) {
+		/* LCOV_EXCL_START */
 		NOTIFICATION_ERR("Failed to set owner appid[%s][%d]",
 				req_data->app_id, ret);
 		ret = NOTIFICATION_ERROR_IO_ERROR;
 		goto out;
+		/* LCOV_EXCL_STOP */
 	}
 
 	ret = security_manager_private_sharing_req_add_paths(handle,
 						(const char **)path_array, len);
 	if (ret != SECURITY_MANAGER_SUCCESS) {
+		/* LCOV_EXCL_START */
 		NOTIFICATION_ERR("Failed to add paths [%d]", ret);
 		ret = NOTIFICATION_ERROR_IO_ERROR;
 		goto out;
+		/* LCOV_EXCL_STOP */
 	}
 
 	if (is_overlapping == true) {
@@ -890,17 +910,21 @@ int __set_sharing_for_new_file(sharing_req_data_s *req_data,
 			ret = security_manager_private_sharing_req_set_target_appid(
 							handle, (const char *)iter->data);
 			if (ret != SECURITY_MANAGER_SUCCESS) {
+				/* LCOV_EXCL_START */
 				NOTIFICATION_ERR("Failed to set target appid [%s]",
 					(const char *)iter->data);
 				ret = NOTIFICATION_ERROR_IO_ERROR;
 				goto out;
+				/* LCOV_EXCL_STOP */
 			}
 
 			ret = security_manager_private_sharing_drop(handle);
 			if (ret != SECURITY_MANAGER_SUCCESS) {
+				/* LCOV_EXCL_START */
 				NOTIFICATION_ERR("Failed to drop [%d]", ret);
 				ret = NOTIFICATION_ERROR_IO_ERROR;
 				goto out;
+				/* LCOV_EXCL_STOP */
 			}
 		}
 	}
@@ -910,17 +934,21 @@ int __set_sharing_for_new_file(sharing_req_data_s *req_data,
 		ret = security_manager_private_sharing_req_set_target_appid(handle,
 							(const char *)iter->data);
 		if (ret != SECURITY_MANAGER_SUCCESS) {
-				NOTIFICATION_ERR("Failed to set target appid [%s]",
-					(const char *)iter->data);
-				ret = NOTIFICATION_ERROR_IO_ERROR;
-				goto out;
+			/* LCOV_EXCL_START */
+			NOTIFICATION_ERR("Failed to set target appid [%s]",
+				(const char *)iter->data);
+			ret = NOTIFICATION_ERROR_IO_ERROR;
+			goto out;
+			/* LCOV_EXCL_STOP */
 		}
 
 		ret = security_manager_private_sharing_apply(handle);
 		if (ret != SECURITY_MANAGER_SUCCESS) {
+			/* LCOV_EXCL_START */
 			NOTIFICATION_ERR("Failed to apply PS [%d]", ret);
 			ret = NOTIFICATION_ERROR_IO_ERROR;
 			goto out;
+			/* LCOV_EXCL_STOP */
 		}
 	}
 

@@ -143,17 +143,21 @@ static int _notification_noti_check_priv_id(notification_h noti, sqlite3 *db)
 				"WHERE caller_app_id = %Q AND priv_id = %d",
 				noti->caller_app_id, noti->priv_id);
 	if (query == NULL) {
-		NOTIFICATION_ERR("Failed to alloc query"); /* LCOV_EXCL_LINE */
+		/* LCOV_EXCL_START */
+		NOTIFICATION_ERR("Failed to alloc query");
 		ret = NOTIFICATION_ERROR_OUT_OF_MEMORY;
 		goto err;
+		/* LCOV_EXCL_STOP */
 	}
 
 	ret = sqlite3_prepare_v2(db, query, strlen(query), &stmt, NULL);
 	if (ret != SQLITE_OK) {
+		/* LCOV_EXCL_START */
 		NOTIFICATION_ERR("Failed to sqlite3_prepare_v2 Failed [%d][%s]",
 				ret, sqlite3_errmsg(db));
 		ret = NOTIFICATION_ERROR_FROM_DB;
 		goto err;
+		/* LCOV_EXCL_STOP */
 	}
 
 	ret = sqlite3_step(stmt);
@@ -189,17 +193,21 @@ static int _notification_noti_get_internal_group_id_by_priv_id(const char *app_i
 				"WHERE caller_app_id = %Q AND priv_id = %d",
 				app_id, priv_id);
 	if (query == NULL) {
+		/* LCOV_EXCL_START */
 		NOTIFICATION_ERR("Failed to alloc query"); /* LCOV_EXCL_LINE */
 		ret = NOTIFICATION_ERROR_OUT_OF_MEMORY;
 		goto err;
+		/* LCOV_EXCL_STOP */
 	}
 
 	ret = sqlite3_prepare_v2(db, query, strlen(query), &stmt, NULL);
 	if (ret != SQLITE_OK) {
+		/* LCOV_EXCL_START */
 		NOTIFICATION_ERR("sqlite3_prepare_v2 Failed [%d][%s]", ret,
 				sqlite3_errmsg(db));
 		ret = NOTIFICATION_ERROR_FROM_DB;
 		goto err;
+		/* LCOV_EXCL_STOP */
 	}
 
 	ret = sqlite3_step(stmt);
@@ -569,16 +577,20 @@ static int _get_notification(char *query_where, notification_h noti)
 	query = sqlite3_mprintf("SELECT %s FROM %s",
 				NOTI_LIST_DB_ATTRIBUTES_SELECT, query_where);
 	if (query == NULL) {
+		/* LCOV_EXCL_START */
 		ret = NOTIFICATION_ERROR_OUT_OF_MEMORY;
 		goto err;
+		/* LCOV_EXCL_STOP */
 	}
 
 	ret = sqlite3_prepare_v2(db, query, -1, &stmt, NULL);
 	if (ret != SQLITE_OK) {
+		/* LCOV_EXCL_START */
 		NOTIFICATION_ERR("sqlite3_prepare_v2 failed [%d][%s]", ret,
 				sqlite3_errmsg(db));
 		ret = NOTIFICATION_ERROR_FROM_DB;
 		goto err;
+		/* LCOV_EXCL_STOP */
 	}
 
 	ret = sqlite3_step(stmt);
@@ -619,23 +631,29 @@ static int _get_notification_list(char *query_where, notification_list_h *list, 
 	query = sqlite3_mprintf("SELECT %s FROM %s",
 				NOTI_LIST_DB_ATTRIBUTES_SELECT, query_where);
 	if (query == NULL) {
+		/* LCOV_EXCL_START */
 		ret = NOTIFICATION_ERROR_OUT_OF_MEMORY;
 		goto err;
+		/* LCOV_EXCL_STOP */
 	}
 
 	ret = sqlite3_prepare_v2(db, query, -1, &stmt, NULL);
 	if (ret != SQLITE_OK) {
+		/* LCOV_EXCL_START */
 		NOTIFICATION_ERR("sqlite3_prepare_v2 failed [%d][%s]", ret,
 				sqlite3_errmsg(db));
 		ret = NOTIFICATION_ERROR_FROM_DB;
 		goto err;
+		/* LCOV_EXCL_STOP */
 	}
 
 	while (sqlite3_step(stmt) == SQLITE_ROW) {
 		noti = (notification_h)calloc(1, sizeof(struct _notification));
 		if (noti == NULL) {
+			/* LCOV_EXCL_START */
 			ret = NOTIFICATION_ERROR_OUT_OF_MEMORY;
 			goto err;
+			/* LCOV_EXCL_STOP */
 		}
 
 		__notification_noti_populate_from_stmt(stmt, noti);
@@ -974,17 +992,21 @@ EXPORT_API int notification_noti_insert(notification_h noti)
 	query = sqlite3_mprintf("INSERT INTO noti_list (%s) VALUES (%s)",
 			NOTI_LIST_DB_ATTRIBUTES_INSERT, NOTI_LIST_INSERT_VALUES);
 	if (query == NULL) {
+		/* LCOV_EXCL_START */
 		NOTIFICATION_ERR("sqlite3_mprintf Failed");
 		ret = NOTIFICATION_ERROR_OUT_OF_MEMORY;
 		goto err;
+		/* LCOV_EXCL_STOP */
 	}
 
 	ret = sqlite3_prepare_v2(db, query, -1, &stmt, NULL);
 	if (ret != SQLITE_OK) {
+		/* LCOV_EXCL_START */
 		NOTIFICATION_ERR("sqlite3_prepare_v2 Failed [%d][%s]", ret,
 				 sqlite3_errmsg(db));
 		ret = NOTIFICATION_ERROR_FROM_DB;
 		goto err;
+		/* LCOV_EXCL_STOP */
 	}
 
 	ret = _create_insertion_query(db, noti, stmt, NULL);
@@ -1025,8 +1047,10 @@ EXPORT_API int notification_noti_get_by_priv_id(notification_h noti, int priv_id
 
 	query_where = sqlite3_mprintf("noti_list WHERE priv_id = %d", priv_id);
 	if (query_where == NULL) {
+		/* LCOV_EXCL_START */
 		ret = NOTIFICATION_ERROR_OUT_OF_MEMORY;
 		goto err;
+		/* LCOV_EXCL_STOP */
 	}
 
 	ret = _get_notification(query_where, noti);
@@ -1052,8 +1076,10 @@ EXPORT_API int notification_noti_get_by_tag(notification_h noti, char *app_id, c
 	query_where = sqlite3_mprintf("noti_list WHERE caller_app_id = %Q "
 			"AND tag = %Q AND uid = %d", app_id, tag, uid);
 	if (query_where == NULL) {
+		/* LCOV_EXCL_START */
 		ret = NOTIFICATION_ERROR_OUT_OF_MEMORY;
 		goto err;
+		/* LCOV_EXCL_STOP */
 	}
 
 	ret = _get_notification(query_where, noti);
@@ -1106,16 +1132,20 @@ EXPORT_API int notification_noti_update(notification_h noti)
 	query = sqlite3_mprintf("UPDATE noti_list SET %s WHERE priv_id = %d ",
 				NOTI_LIST_DB_ATTRIBUTES_UPDATE, noti->priv_id);
 	if (query == NULL) {
+		/* LCOV_EXCL_START */
 		ret = NOTIFICATION_ERROR_OUT_OF_MEMORY;
 		goto err;
+		/* LCOV_EXCL_STOP */
 	}
 
 	ret = sqlite3_prepare_v2(db, query, -1, &stmt, NULL);
 	if (ret != SQLITE_OK) {
+		/* LCOV_EXCL_START */
 		NOTIFICATION_ERR("sqlite3_prepare_v2 Failed [%d][%s]", ret,
 				 sqlite3_errmsg(db));
 		ret = NOTIFICATION_ERROR_FROM_DB;
 		goto err;
+		/* LCOV_EXCL_STOP */
 	}
 
 	ret = _create_update_query(db, noti, stmt);
@@ -1172,8 +1202,10 @@ EXPORT_API int notification_noti_delete_all(notification_type_e type,
 			query_where = sqlite3_mprintf("WHERE type = %d "
 						"AND uid = %d", type, uid);
 			if (query_where == NULL) {
+				/* LCOV_EXCL_START */
 				ret = NOTIFICATION_ERROR_OUT_OF_MEMORY;
 				goto err;
+				/* LCOV_EXCL_STOP */
 			}
 		}
 	} else {
@@ -1186,8 +1218,10 @@ EXPORT_API int notification_noti_delete_all(notification_type_e type,
 						app_id, type, uid);
 
 		if (query_where == NULL) {
+			/* LCOV_EXCL_START */
 			ret = NOTIFICATION_ERROR_OUT_OF_MEMORY;
 			goto err;
+			/* LCOV_EXCL_STOP */
 		}
 	}
 
@@ -1199,17 +1233,21 @@ EXPORT_API int notification_noti_delete_all(notification_type_e type,
 
 		query = sqlite3_mprintf("SELECT priv_id FROM noti_list %s ", query_where);
 		if (query == NULL) {
+			/* LCOV_EXCL_START */
 			ret = NOTIFICATION_ERROR_OUT_OF_MEMORY;
 			goto err;
+			/* LCOV_EXCL_STOP */
 		}
 
 		ret = sqlite3_prepare_v2(db, query, strlen(query), &stmt, NULL);
 		if (ret != SQLITE_OK) {
+			/* LCOV_EXCL_START */
 			NOTIFICATION_ERR("Failed to sqlite3_prepare_V2 [%d][%s]",
 					ret, sqlite3_errmsg(db));
 
 			ret = NOTIFICATION_ERROR_FROM_DB;
 			goto err;
+			/* LCOV_EXCL_STOP */
 		}
 
 		while (sqlite3_step(stmt) == SQLITE_ROW) {
@@ -1220,6 +1258,7 @@ EXPORT_API int notification_noti_delete_all(notification_type_e type,
 				if (tmp) {
 					*list_deleted_rowid = tmp;
 				} else {
+					/* LCOV_EXCL_START */
 					NOTIFICATION_ERR("Failed to realloc memory [%s]", strerror_r(errno, err_buf, sizeof(err_buf)));
 					/*!
 					 * \TODO
@@ -1229,6 +1268,7 @@ EXPORT_API int notification_noti_delete_all(notification_type_e type,
 					*list_deleted_rowid = NULL;
 					ret = NOTIFICATION_ERROR_OUT_OF_MEMORY;
 					goto err;
+					/* LCOV_EXCL_STOP */
 				}
 			}
 			*((*list_deleted_rowid) + data_cnt) = sqlite3_column_int(stmt, 0);
@@ -1242,8 +1282,10 @@ EXPORT_API int notification_noti_delete_all(notification_type_e type,
 				if (i % NOTI_BURST_DELETE_UNIT == 0 && i != 0) {
 					query = sqlite3_mprintf("%s WHERE priv_id in (%s)", query_base, query_where);
 					if (query == NULL) {
+						/* LCOV_EXCL_START */
 						ret = NOTIFICATION_ERROR_OUT_OF_MEMORY;
 						goto err;
+						/* LCOV_EXCL_STOP */
 					}
 					ret_tmp = notification_db_exec(db, query, NULL);
 					query_where[0] = '\0';
@@ -1253,16 +1295,20 @@ EXPORT_API int notification_noti_delete_all(notification_type_e type,
 				snprintf(buf, sizeof(buf) - 1, "%s%d", (i % NOTI_BURST_DELETE_UNIT == 0) ? "" : ",", *((*list_deleted_rowid) + i));
 				query_where = sqlite3_mprintf("%s%s", query_where, buf);
 				if (query_where == NULL) {
+					/* LCOV_EXCL_START */
 					ret = NOTIFICATION_ERROR_OUT_OF_MEMORY;
 					goto err;
+					/* LCOV_EXCL_STOP */
 				}
 			}
 
 			if ((i <= NOTI_BURST_DELETE_UNIT) || ((i % NOTI_BURST_DELETE_UNIT) > 0)) {
 				query = sqlite3_mprintf("%s WHERE priv_id in (%s)", query_base, query_where);
 				if (query == NULL) {
+					/* LCOV_EXCL_START */
 					ret = NOTIFICATION_ERROR_OUT_OF_MEMORY;
 					goto err;
+					/* LCOV_EXCL_STOP */
 				}
 
 				ret_tmp = notification_db_exec(db, query, NULL);
@@ -1280,8 +1326,10 @@ EXPORT_API int notification_noti_delete_all(notification_type_e type,
 		/* Make main query */
 		query = sqlite3_mprintf("%s %s", query_base, query_where);
 		if (query == NULL) {
+			/* LCOV_EXCL_START */
 			ret = NOTIFICATION_ERROR_OUT_OF_MEMORY;
 			goto err;
+			/* LCOV_EXCL_STOP */
 		}
 
 		ret = notification_db_exec(db, query, num_deleted);
@@ -1357,8 +1405,10 @@ EXPORT_API int notification_noti_delete_by_priv_id_get_changes(const char *app_i
 				"AND priv_id = %d AND uid = %d",
 				app_id, priv_id, uid);
 	if (query == NULL) {
+		/* LCOV_EXCL_START */
 		ret = NOTIFICATION_ERROR_OUT_OF_MEMORY;
 		goto err;
+		/* LCOV_EXCL_STOP */
 	}
 
 	ret = notification_db_exec(db, query, num_changes);
@@ -1545,16 +1595,20 @@ EXPORT_API int notification_noti_get_grouping_list(notification_type_e type,
 	if (uid != NOTIFICATION_GLOBAL_UID) {
 		query_uid = sqlite3_mprintf(" AND uid = %d ", uid);
 		if (query_uid == NULL) {
+			/* LCOV_EXCL_START */
 			ret = NOTIFICATION_ERROR_OUT_OF_MEMORY;
 			goto err;
+			/* LCOV_EXCL_STOP */
 		}
 	}
 
 	query = sqlite3_mprintf("noti_list WHERE 1 > 0 %s %s "
 			"ORDER BY rowid DESC, time DESC", query_where, query_uid);
 	if (query == NULL) {
+		/* LCOV_EXCL_START */
 		ret = NOTIFICATION_ERROR_OUT_OF_MEMORY;
 		goto err;
+		/* LCOV_EXCL_STOP */
 	}
 
 	ret = _get_notification_list(query, list, count);
@@ -1620,15 +1674,19 @@ EXPORT_API int notification_noti_get_detail_list(const char *app_id,
 	}
 
 	if (query_where == NULL) {
+		/* LCOV_EXCL_START */
 		ret = NOTIFICATION_ERROR_OUT_OF_MEMORY;
 		goto err;
+		/* LCOV_EXCL_STOP */
 	}
 
 	query = sqlite3_mprintf("noti_list %s ORDER BY rowid DESC, time DESC",
 			query_where);
 	if (query == NULL) {
+		/* LCOV_EXCL_START */
 		ret = NOTIFICATION_ERROR_OUT_OF_MEMORY;
 		goto err;
+		/* LCOV_EXCL_STOP */
 	}
 
 	ret = _get_notification_list(query, list, count);
@@ -1666,15 +1724,19 @@ EXPORT_API int notification_noti_check_tag(notification_h noti)
 			NOTIFICATION_CHECK_STR(noti->caller_app_id),
 			NOTIFICATION_CHECK_STR(noti->tag));
 	if (query == NULL) {
+		/* LCOV_EXCL_START */
 		ret = NOTIFICATION_ERROR_OUT_OF_MEMORY;
 		goto err;
+		/* LCOV_EXCL_STOP */
 	}
 
 	ret = sqlite3_prepare_v2(db, query, strlen(query), &stmt, NULL);
 	if (ret != SQLITE_OK) {
+		/* LCOV_EXCL_START */
 		NOTIFICATION_ERR("Failed to sqlite3_prepare_v2[%d][%s]",
 				ret, sqlite3_errmsg(db));
 		goto err;
+		/* LCOV_EXCL_STOP */
 	}
 
 	ret = sqlite3_step(stmt);
@@ -1723,16 +1785,20 @@ EXPORT_API int notification_noti_check_count_for_template(notification_h noti, i
 				"WHERE caller_app_id = %Q",
 				NOTIFICATION_CHECK_STR(noti->caller_app_id));
 	if (query == NULL) {
+		/* LCOV_EXCL_START */
 		ret = NOTIFICATION_ERROR_OUT_OF_MEMORY;
 		goto err;
+		/* LCOV_EXCL_STOP */
 	}
 
 	ret = sqlite3_prepare_v2(db, query, strlen(query), &stmt, NULL);
 	if (ret != SQLITE_OK) {
+		/* LCOV_EXCL_START */
 		NOTIFICATION_ERR("Failed to sqlite3_prepare_v2[%d][%s]",
 				ret, sqlite3_errmsg(db));
 		ret = NOTIFICATION_ERROR_FROM_DB;
 		goto err;
+		/* LCOV_EXCL_STOP */
 	}
 
 	ret = sqlite3_step(stmt);
@@ -1783,16 +1849,20 @@ EXPORT_API int notification_noti_add_template(notification_h noti, char *templat
 				NOTI_LIST_INSERT_VALUES,
 				template_name);
 	if (query == NULL) {
+		/* LCOV_EXCL_START */
 		ret = NOTIFICATION_ERROR_OUT_OF_MEMORY;
 		goto err;
+		/* LCOV_EXCL_STOP */
 	}
 
 	ret = sqlite3_prepare_v2(db, query, -1, &stmt, NULL);
 	if (ret != SQLITE_OK) {
+		/* LCOV_EXCL_START */
 		NOTIFICATION_ERR("Failed to sqlite3_prepare_v2[%d][%s]",
 				ret, sqlite3_errmsg(db));
 		ret = NOTIFICATION_ERROR_FROM_DB;
 		goto err;
+		/* LCOV_EXCL_STOP */
 	}
 
 	ret = _create_insertion_query(db, noti, stmt, &idx);
@@ -1859,8 +1929,10 @@ EXPORT_API int notification_noti_delete_template(const char *pkg_id)
 	query = sqlite3_mprintf("DELETE FROM noti_template WHERE pkg_id = %Q",
 				NOTIFICATION_CHECK_STR(pkg_id));
 	if (query == NULL) {
+		/* LCOV_EXCL_START */
 		ret = NOTIFICATION_ERROR_OUT_OF_MEMORY;
 		goto err;
+		/* LCOV_EXCL_STOP */
 	}
 
 	ret = notification_db_exec(db, query, NULL);

@@ -165,6 +165,7 @@ void notification_call_event_handler_cb(notification_h noti, int event_type)
 	info->cb(noti, event_type, info->userdata);
 }
 
+/* LCOV_EXCL_START */
 void notification_delete_event_handler_cb(int priv_id)
 {
 	GList *delete_list;
@@ -189,6 +190,7 @@ void notification_delete_event_handler_cb(int priv_id)
 	if (__noti_event_cb_list == NULL)
 		notification_ipc_event_monitor_fini();
 }
+/* LCOV_EXCL_STOP */
 
 EXPORT_API int notification_add_deferred_task(
 		void (*deferred_task_cb)(void *data), void *user_data)
@@ -226,8 +228,10 @@ EXPORT_API int notification_resister_changed_cb_for_uid(
 
 	noti_cb_info_new = (notification_cb_info_s *)malloc(sizeof(notification_cb_info_s));
 	if (noti_cb_info_new == NULL) {
+		/* LCOV_EXCL_START */
 		NOTIFICATION_ERR("Failed to alloc memory");
 		return NOTIFICATION_ERROR_OUT_OF_MEMORY;
+		/* LCOV_EXCL_STOP */
 	}
 
 	noti_cb_info_new->cb_type = NOTIFICATION_CB_NORMAL;
@@ -1184,8 +1188,10 @@ EXPORT_API int notification_register_detailed_changed_cb_for_uid(
 
 	noti_cb_info_new = (notification_cb_info_s *)malloc(sizeof(notification_cb_info_s));
 	if (noti_cb_info_new == NULL) {
+		/* LCOV_EXCL_START */
 		NOTIFICATION_ERR("Failed to alloc memory");
 		return NOTIFICATION_ERROR_OUT_OF_MEMORY;
+		/* LCOV_EXCL_STOP */
 	}
 
 	noti_cb_info_new->cb_type = NOTIFICATION_CB_DETAILED;
@@ -1357,6 +1363,7 @@ static GList *__copy_private_file(notification_h noti)
 	return file_list;
 }
 
+/* LCOV_EXCL_START */
 static void __remove_private_file(gpointer data, gpointer user_data)
 {
 	GFile *src = NULL;
@@ -1368,6 +1375,7 @@ static void __remove_private_file(gpointer data, gpointer user_data)
 		g_object_unref(src);
 	}
 }
+/* LCOV_EXCL_STOP */
 
 EXPORT_API int notification_post_for_uid(notification_h noti, uid_t uid)
 {
@@ -1499,9 +1507,11 @@ EXPORT_API notification_h notification_create_from_package_template(const char *
 
 	noti = (notification_h)calloc(1, sizeof(struct _notification));
 	if (noti == NULL) {
+		/* LCOV_EXCL_START */
 		NOTIFICATION_ERR("Failed to alloc memory");
 		set_last_result(NOTIFICATION_ERROR_OUT_OF_MEMORY);
 		return NULL;
+		/* LCOV_EXCL_STOP */
 	}
 
 	ret = notification_ipc_request_create_from_package_template(noti, app_id, template_name);
@@ -1670,8 +1680,10 @@ EXPORT_API int notification_post_with_event_cb_for_uid(notification_h noti, even
 	} else {
 		info = (notification_event_cb_info_s *)malloc(sizeof(notification_cb_info_s));
 		if (info == NULL) {
+			/* LCOV_EXCL_START */
 			NOTIFICATION_ERR("Failed to alloc memory");
 			return NOTIFICATION_ERROR_OUT_OF_MEMORY;
+			/* LCOV_EXCL_STOP */
 		}
 		info->priv_id = priv_id;
 		info->cb = cb;
@@ -1863,23 +1875,29 @@ EXPORT_API int notification_set_extension_event_handler(notification_h noti,
 
 	err = app_control_export_as_bundle(event_handler, &app_control_bundle);
 	if (err != APP_CONTROL_ERROR_NONE) {
+		/* LCOV_EXCL_START */
 		NOTIFICATION_ERR("Failed to export app_control to bundle [%d]", err);
 		ret = NOTIFICATION_ERROR_IO_ERROR;
 		goto out;
+		/* LCOV_EXCL_STOP */
 	}
 
 	err = bundle_encode(app_control_bundle, &b_raw, &len);
 	if (err != BUNDLE_ERROR_NONE) {
+		/* LCOV_EXCL_START */
 		NOTIFICATION_ERR("Failed to encode bundle [%d]", err);
 		ret = NOTIFICATION_ERROR_IO_ERROR;
 		goto out;
+		/* LCOV_EXCL_STOP */
 	}
 
 	err = bundle_add_str(noti->args, key, (const char *)b_raw);
 	if (err != BUNDLE_ERROR_NONE) {
+		/* LCOV_EXCL_START */
 		NOTIFICATION_ERR("Failed to add str to bundle [%d]", err);
 		ret = NOTIFICATION_ERROR_IO_ERROR;
 		goto out;
+		/* LCOV_EXCL_STOP */
 	}
 
 out:
@@ -1923,24 +1941,30 @@ EXPORT_API int notification_get_extension_event_handler(notification_h noti,
 
 	app_control_bundle = _create_bundle_from_bundle_raw((bundle_raw *)ret_str);
 	if (app_control_bundle == NULL) {
+		/* LCOV_EXCL_START */
 		NOTIFICATION_ERR("Failed to create bundle");
 		return NOTIFICATION_ERROR_IO_ERROR;
+		/* LCOV_EXCL_STOP */
 	}
 
 	err = app_control_create(&ret_app_control);
 	if (err != APP_CONTROL_ERROR_NONE) {
+		/* LCOV_EXCL_START */
 		NOTIFICATION_ERR("Failed to create app control [%d]", err);
 		ret = NOTIFICATION_ERROR_IO_ERROR;
 		goto out;
+		/* LCOV_EXCL_STOP */
 	}
 
 	err = app_control_import_from_bundle(ret_app_control, app_control_bundle);
 	if (err != APP_CONTROL_ERROR_NONE) {
+		/* LCOV_EXCL_START */
 		NOTIFICATION_ERR("Failed to import app control from bundle [%d]",
 				err);
 		app_control_destroy(ret_app_control);
 		ret = NOTIFICATION_ERROR_IO_ERROR;
 		goto out;
+		/* LCOV_EXCL_STOP */
 	}
 
 	*event_handler = ret_app_control;

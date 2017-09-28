@@ -340,10 +340,12 @@ static bool _is_package_in_setting_table(sqlite3 *db, const char *package_name, 
 	}
 
 	if (sql_ret != SQLITE_OK && sql_ret != SQLITE_ROW) {
+		/* LCOV_EXCL_START */
 		NOTIFICATION_ERR("sqlite3_step failed [%d][%s]", sql_ret,
 				sqlite3_errmsg(db));
 		err = false;
 		goto out;
+		/* LCOV_EXCL_STOP */
 	}
 
 out:
@@ -369,17 +371,21 @@ static int _foreach_app_info_callback(const pkgmgrinfo_appinfo_h handle,
 
 	ret = pkgmgrinfo_appinfo_get_appid(handle, &app_id);
 	if (ret != PACKAGE_MANAGER_ERROR_NONE) {
+		/* LCOV_EXCL_START */
 		NOTIFICATION_ERR("Failed to get appid from pkgmgrinfo [%d]",
 				ret);
 		err = false;
 		goto out;
+		/* LCOV_EXCL_STOP */
 	}
 
 	ret = pkgmgrinfo_appinfo_get_pkgname(handle, &package_name);
 	if (ret != PACKAGE_MANAGER_ERROR_NONE) {
+		/* LCOV_EXCL_START */
 		NOTIFICATION_ERR("Failed to get pkgname from pkgmgrinfo[%d]",
 				ret);
 		goto out;
+		/* LCOV_EXCL_STOP */
 	}
 
 	if (_is_package_in_setting_table(db, package_name, app_id, info->uid) == true) {
@@ -424,31 +430,39 @@ static int _foreach_package_info_callback(const pkgmgrinfo_pkginfo_h package_inf
 
 	pkgmgr_ret = pkgmgrinfo_pkginfo_get_pkgname(package_info, &package_name);
 	if (pkgmgr_ret != PACKAGE_MANAGER_ERROR_NONE) {
+		/* LCOV_EXCL_START */
 		NOTIFICATION_ERR("Failed to get pkgname from pkgmgrinfo[%d]", pkgmgr_ret);
 		err = false;
 		goto out;
+		/* LCOV_EXCL_STOP */
 	}
 
 	pkgmgr_ret = pkgmgrinfo_appinfo_filter_create(&handle);
 	if (pkgmgr_ret != PMINFO_R_OK) {
+		/* LCOV_EXCL_START */
 		NOTIFICATION_ERR("Failed to create appinofo[%d]",
 					pkgmgr_ret);
 		err = false;
 		goto out;
+		/* LCOV_EXCL_STOP */
 	}
 
 	pkgmgr_ret = pkgmgrinfo_appinfo_filter_add_string(handle, PMINFO_APPINFO_PROP_APP_PACKAGE, package_name);
 	if (pkgmgr_ret != PMINFO_R_OK) {
+		/* LCOV_EXCL_START */
 		NOTIFICATION_ERR("Failed to add string to appinfo[%d]", pkgmgr_ret);
 		err = false;
 		goto out;
+		/* LCOV_EXCL_STOP */
 	}
 
 	pkgmgr_ret = pkgmgrinfo_appinfo_usr_filter_foreach_appinfo(handle, _foreach_app_info_callback, info, info->uid);
 	if (pkgmgr_ret != PMINFO_R_OK) {
+		/* LCOV_EXCL_START */
 		NOTIFICATION_ERR("Failed to iterate appinfo[%d]", pkgmgr_ret);
 		err = false;
 		goto out;
+		/* LCOV_EXCL_STOP */
 	}
 
 out:
@@ -472,32 +486,40 @@ static int _install_and_update_package(const char *package_name, uid_t uid)
 
 	pkgmgr_ret = pkgmgrinfo_pkginfo_filter_create(&handle);
 	if (pkgmgr_ret != PMINFO_R_OK) {
+		/* LCOV_EXCL_START */
 		NOTIFICATION_ERR("Failed to create pkginfo_filter[%d]", pkgmgr_ret);
 		err = NOTIFICATION_ERROR_FROM_DB;
 		goto out;
+		/* LCOV_EXCL_STOP */
 	}
 
 	pkgmgr_ret = pkgmgrinfo_pkginfo_filter_add_string(handle, PMINFO_PKGINFO_PROP_PACKAGE_PRIVILEGE, NOTIFICATION_PRIVILEGE);
 	if (pkgmgr_ret != PMINFO_R_OK) {
+		/* LCOV_EXCL_START */
 		NOTIFICATION_ERR("Failed to add string to pkginfo_filter[%d]", pkgmgr_ret);
 		err = NOTIFICATION_ERROR_FROM_DB;
 		goto out;
+		/* LCOV_EXCL_STOP */
 	}
 
 	pkgmgr_ret = pkgmgrinfo_pkginfo_filter_add_string(handle, PMINFO_PKGINFO_PROP_PACKAGE_ID, package_name);
 	if (pkgmgr_ret != PMINFO_R_OK) {
+		/* LCOV_EXCL_START */
 		NOTIFICATION_ERR("Failed to add string to pkginfo_filter[%d]", pkgmgr_ret);
 		err = NOTIFICATION_ERROR_FROM_DB;
 		goto out;
+		/* LCOV_EXCL_STOP */
 	}
 
 	info.db = db;
 	info.uid = uid;
 	pkgmgr_ret = pkgmgrinfo_pkginfo_usr_filter_foreach_pkginfo(handle, _foreach_package_info_callback, &info, uid);
 	if (pkgmgr_ret != PMINFO_R_OK) {
+		/* LCOV_EXCL_START */
 		NOTIFICATION_ERR("Failed to iterate pkginfo[%d]", pkgmgr_ret);
 		err = NOTIFICATION_ERROR_FROM_DB;
 		goto out;
+		/* LCOV_EXCL_STOP */
 	}
 
 out:
@@ -568,25 +590,31 @@ EXPORT_API int notification_setting_refresh_setting_table(uid_t uid)
 
 	pkgmgr_ret = pkgmgrinfo_pkginfo_filter_create(&filter);
 	if (pkgmgr_ret != PMINFO_R_OK) {
+		/* LCOV_EXCL_START */
 		NOTIFICATION_ERR("Failed to create pkginfo_filter[%d]", pkgmgr_ret);
 		err = NOTIFICATION_ERROR_FROM_DB;
 		goto out;
+		/* LCOV_EXCL_STOP */
 	}
 
 	pkgmgr_ret = pkgmgrinfo_pkginfo_filter_add_string(filter, PMINFO_PKGINFO_PROP_PACKAGE_PRIVILEGE, NOTIFICATION_PRIVILEGE);
 	if (pkgmgr_ret != PMINFO_R_OK) {
+		/* LCOV_EXCL_START */
 		NOTIFICATION_ERR("Failed to add string to pkginfo_filter[%d]", pkgmgr_ret);
 		err = NOTIFICATION_ERROR_FROM_DB;
 		goto out;
+		/* LCOV_EXCL_STOP */
 	}
 
 	info.db = db;
 	info.uid = uid;
 	pkgmgr_ret = pkgmgrinfo_pkginfo_usr_filter_foreach_pkginfo(filter, _foreach_package_info_callback, &info, uid);
 	if (pkgmgr_ret != PMINFO_R_OK) {
+		/* LCOV_EXCL_START */
 		NOTIFICATION_ERR("Failed to foreach pkginfo[%d]", pkgmgr_ret);
 		err = NOTIFICATION_ERROR_FROM_DB;
 		goto out;
+		/* LCOV_EXCL_STOP */
 	}
 
 out:
@@ -908,6 +936,7 @@ static gint _noti_dnd_cb_compare(gconstpointer a, gconstpointer b)
 	return 1;
 }
 
+/* LCOV_EXCL_START */
 void notification_call_dnd_changed_cb_for_uid(int do_not_disturb, uid_t uid)
 {
 	GList *noti_dnd_cb_list = NULL;
@@ -931,6 +960,7 @@ void notification_call_dnd_changed_cb_for_uid(int do_not_disturb, uid_t uid)
 			dnd_data->callback(dnd_data->user_data, do_not_disturb);
 	}
 }
+/* LCOV_EXCL_STOP */
 
 EXPORT_API int notification_register_system_setting_dnd_changed_cb_for_uid(dnd_changed_cb callback, void *user_data, uid_t uid)
 {
