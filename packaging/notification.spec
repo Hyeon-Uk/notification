@@ -1,7 +1,7 @@
 %bcond_with wayland
 Name:       notification
 Summary:    Notification library
-Version:    0.3.35
+Version:    0.3.36
 Release:    1
 Group:      TBD
 License:    Apache-2.0
