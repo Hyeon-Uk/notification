@@ -1162,7 +1162,8 @@ EXPORT_API void notification_remove_private_sharing(
 	iter = req_data->shared_file_list;
 	for (; iter != NULL; iter = g_list_next(iter)) {
 		if (g_remove(((sharing_file_info_s *)(iter->data))->dst_path) != 0)
-			NOTIFICATION_ERR("Failed [%s] [%d]", iter->data, errno);
+			NOTIFICATION_ERR("Failed [%s] [%d]",
+					(const char *)iter->data, errno);
 	}
 
 	g_rmdir(req_data->dir);
