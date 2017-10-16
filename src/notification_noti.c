@@ -598,6 +598,11 @@ static int _get_notification(char *query_where, notification_h noti)
 		__notification_noti_populate_from_stmt(stmt, noti);
 		ret = NOTIFICATION_ERROR_NONE;
 	} else {
+		if (ret == SQLITE_DONE)
+			NOTIFICATION_DBG("No valid record found");
+		else
+			NOTIFICATION_ERR("sqlite3_step failed [%d][%s]", ret,
+					sqlite3_errmsg(db));
 		ret = NOTIFICATION_ERROR_FROM_DB;
 	}
 
