@@ -1014,14 +1014,18 @@ notification_h notification_load_for_uid(char *app_id,
 	noti = (notification_h)calloc(1, sizeof(struct _notification));
 	if (noti == NULL) {
 		NOTIFICATION_ERR("Failed to alloc memory");
+		set_last_result(NOTIFICATION_ERROR_OUT_OF_MEMORY);
 		return NULL;
 	}
 
 	ret = notification_ipc_request_load_noti_by_priv_id(noti, app_id, priv_id, uid);
 	if (ret != NOTIFICATION_ERROR_NONE) {
 		notification_free(noti);
+		set_last_result(ret);
 		return NULL;
 	}
+
+	set_last_result(NOTIFICATION_ERROR_NONE);
 
 	return noti;
 }
