@@ -38,8 +38,24 @@ EXPORT_API int notification_db_init()
 	if (ret != SQLITE_OK) {
 		/* LCOV_EXCL_START */
 		NOTIFICATION_ERR("Failed to open db[%d]", ret);
-		ret = NOTIFICATION_ERROR_FROM_DB;
-		goto out;
+
+		if (sqlite3_errcode(db) == SQLITE_CORRUPT) {
+			if (db)
+				sqlite3_close(db);
+			unlink(DBPATH);
+
+			ret = sqlite3_open_v2(DBPATH, &db, SQLITE_OPEN_CREATE |
+					SQLITE_OPEN_READWRITE, NULL);
+			if (ret != SQLITE_OK) {
+				NOTIFICATION_ERR("Failed to open db[%d]", ret);
+				unlink(DBPATH);
+				ret = NOTIFICATION_ERROR_FROM_DB;
+				goto out;
+			}
+		} else {
+			ret = NOTIFICATION_ERROR_FROM_DB;
+			goto out;
+		}
 		/* LCOV_EXCL_STOP */
 	}
 
@@ -47,8 +63,33 @@ EXPORT_API int notification_db_init()
 	if (ret != SQLITE_OK) {
 		/* LCOV_EXCL_START */
 		NOTIFICATION_ERR("Failed to exec sqlite[%d][%s]", ret, errmsg);
-		ret = NOTIFICATION_ERROR_FROM_DB;
-		goto out;
+
+		if (ret == SQLITE_CORRUPT || ret == SQLITE_NOTADB) {
+			sqlite3_close(db);
+			unlink(DBPATH);
+			ret = sqlite3_open_v2(DBPATH, &db, SQLITE_OPEN_CREATE |
+					SQLITE_OPEN_READWRITE, NULL);
+			if (ret != SQLITE_OK) {
+				NOTIFICATION_ERR("Failed to open db[%d]", ret);
+				unlink(DBPATH);
+				ret = NOTIFICATION_ERROR_FROM_DB;
+				goto out;
+			}
+
+			sqlite3_free(errmsg);
+			ret = sqlite3_exec(db, CREATE_NOTIFICATION_TABLE, NULL,
+						NULL, &errmsg);
+			if (ret != SQLITE_OK) {
+				NOTIFICATION_ERR("Failed to exec sqlite, \
+						again[%d][%s]", ret, errmsg);
+				unlink(DBPATH);
+				ret = NOTIFICATION_ERROR_FROM_DB;
+				goto out;
+			}
+		} else {
+			ret = NOTIFICATION_ERROR_FROM_DB;
+			goto out;
+		}
 		/* LCOV_EXCL_STOP */
 	}
 
