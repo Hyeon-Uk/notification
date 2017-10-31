@@ -19,206 +19,199 @@
 #define NOTIFICATION_SYSTEM_SETTING_DB_TABLE "notification_system_setting"
 #define NOTIFICATION_DND_ALLOW_EXCEPTION "dnd_allow_exception"
 
-#define CREATE_NOTIFICATION_TABLE "\
-PRAGMA journal_mode = PERSIST; \
-PRAGMA synchronous = FULL; \
-CREATE TABLE IF NOT EXISTS noti_list ( \
-	type INTEGER NOT NULL, \
-	layout INTEGER NOT NULL DEFAULT 0, \
-	pkg_id TEXT NOT NULL, \
-	caller_app_id TEXT NOT NULL, \
-	launch_app_id TEXT, \
-	image_path TEXT, \
-	priv_image_path TEXT, \
-	group_id INTEGER DEFAULT 0, \
-	internal_group_id INTEGER DEFAULT 0, \
-	priv_id INTEGER PRIMARY KEY AUTOINCREMENT, \
-	title_key TEXT, \
-	b_text TEXT, \
-	b_key TEXT, \
-	tag TEXT, \
-	b_format_args TEXT, \
-	num_format_args INTEGER DEFAULT 0, \
-	text_domain TEXT, \
-	text_dir TEXT, \
-	time INTEGER DEFAULT 0, \
-	insert_time INTEGER DEFAULT 0, \
-	args TEXT, \
-	group_args TEXT, \
-	b_execute_option TEXT, \
-	b_service_responding TEXT, \
-	b_service_single_launch TEXT, \
-	b_service_multi_launch TEXT, \
-	b_event_handler_click_on_button_1 TEXT, \
-	b_event_handler_click_on_button_2 TEXT, \
-	b_event_handler_click_on_button_3 TEXT, \
-	b_event_handler_click_on_button_4 TEXT, \
-	b_event_handler_click_on_button_5 TEXT, \
-	b_event_handler_click_on_button_6 TEXT, \
-	b_event_handler_click_on_icon TEXT, \
-	b_event_handler_click_on_thumbnail TEXT, \
-	b_event_handler_click_on_text_input_button TEXT, \
-	sound_type INTEGER DEFAULT 0, \
-	sound_path TEXT, \
-	priv_sound_path TEXT, \
-	vibration_type INTEGER DEFAULT 0, \
-	vibration_path TEXT, \
-	priv_vibration_path TEXT, \
-	led_operation INTEGER DEFAULT 0, \
-	led_argb INTEGER DEFAULT 0, \
-	led_on_ms INTEGER DEFAULT -1, \
-	led_off_ms INTEGER DEFAULT -1, \
-	flags_for_property INTEGER DEFAULT 0, \
-	flag_simmode INTEGER DEFAULT 0, \
-	display_applist INTEGER, \
-	progress_size DOUBLE DEFAULT 0, \
-	progress_percentage DOUBLE DEFAULT 0, \
-	ongoing_flag INTEGER DEFAULT 0, \
-	ongoing_value_type INTEGER DEFAULT 0, \
-	ongoing_current INTEGER DEFAULT 0, \
-	ongoing_duration INTEGER DEFAULT 0, \
-	auto_remove INTEGER DEFAULT 1, \
-	default_button_index INTEGER DEFAULT 0, \
-	hide_timeout INTEGER DEFAULT 0, \
-	delete_timeout INTEGER DEFAULT 0, \
-	text_input_max_length INTEGER DEFAULT 0, \
-	event_flag INTEGER DEFAULT 0, \
-	extension_image_size INTEGER DEFAULT 0, \
-	uid INTEGER \
-); \
-CREATE TABLE IF NOT EXISTS noti_group_data ( \
-	caller_app_id TEXT NOT NULL, \
-	group_id INTEGER DEFAULT 0, \
-	badge INTEGER DEFAULT 0, \
-	title TEXT, \
-	content TEXT, \
-	loc_title TEXT, \
-	loc_content TEXT, \
-	count_display_title INTEGER, \
-	count_display_content INTEGER, \
-	rowid INTEGER PRIMARY KEY AUTOINCREMENT, \
-	UNIQUE (caller_app_id, group_id) \
-); \
-CREATE TABLE IF NOT EXISTS ongoing_list ( \
-	caller_app_id TEXT NOT NULL, \
-	launch_app_id TEXT, \
-	icon_path TEXT, \
-	group_id INTEGER DEFAULT 0, \
-	internal_group_id INTEGER DEFAULT 0, \
-	priv_id INTERGER NOT NULL, \
-	title TEXT, \
-	content TEXT, \
-	default_content TEXT, \
-	loc_title TEXT, \
-	loc_content TEXT, \
-	loc_default_content TEXT, \
-	text_domain TEXT, \
-	text_dir TEXT, \
-	args TEXT, \
-	group_args TEXT, \
-	flag INTEGER DEFAULT 0, \
-	progress_size DOUBLE DEFAULT 0, \
-	progress_percentage DOUBLE DEFAULT 0, \
-	rowid INTEGER PRIMARY KEY AUTOINCREMENT, \
-	UNIQUE (caller_app_id, priv_id) \
-); \
-CREATE TABLE IF NOT EXISTS notification_setting ( \
-	uid INTEGER, \
-	package_name TEXT NOT NULL, \
-	app_id TEXT NOT NULL, \
-	allow_to_notify INTEGER DEFAULT 1, \
-	do_not_disturb_except INTEGER DEFAULT 0, \
-	visibility_class INTEGER DEFAULT 0, \
-	pop_up_notification INTEGER DEFAULT 1, \
-	lock_screen_content_level INTEGER DEFAULT 0, \
-	app_disabled INTEGER DEFAULT 0, \
-	UNIQUE (uid, package_name, app_id) \
-); \
-CREATE TABLE IF NOT EXISTS notification_system_setting ( \
-	uid INTEGER, \
-	do_not_disturb INTEGER DEFAULT 0, \
-	visibility_class INTEGER DEFAULT 0, \
-	dnd_schedule_enabled INTEGER DEFAULT 0, \
-	dnd_schedule_day INTEGER DEFAULT 62, \
-	dnd_start_hour INTEGER DEFAULT 22, \
-	dnd_start_min INTEGER DEFAULT 0, \
-	dnd_end_hour INTEGER DEFAULT 8, \
-	dnd_end_min INTEGER DEFAULT 0, \
-	lock_screen_content_level INTEGER DEFAULT 0, \
-	UNIQUE (uid) \
-); \
-CREATE TABLE IF NOT EXISTS dnd_allow_exception ( \
-	uid INTEGER, \
-	type INTEGER DEFAULT 0, \
-	value INTEGER DEFAULT 0, \
-	UNIQUE (uid, type) \
-); \
-CREATE TABLE IF NOT EXISTS noti_template ( \
-	type INTEGER NOT NULL, \
-	layout INTEGER NOT NULL DEFAULT 0, \
-	pkg_id TEXT NOT NULL, \
-	caller_app_id TEXT NOT NULL, \
-	launch_app_id TEXT, \
-	image_path TEXT, \
-	priv_image_path TEXT, \
-	group_id INTEGER DEFAULT 0, \
-	internal_group_id INTEGER DEFAULT 0, \
-	priv_id INTEGER PRIMARY KEY AUTOINCREMENT, \
-	title_key TEXT, \
-	b_text TEXT, \
-	b_key TEXT, \
-	tag TEXT, \
-	b_format_args TEXT, \
-	num_format_args INTEGER DEFAULT 0, \
-	text_domain TEXT, \
-	text_dir TEXT, \
-	time INTEGER DEFAULT 0, \
-	insert_time INTEGER DEFAULT 0, \
-	args TEXT, \
-	group_args TEXT, \
-	b_execute_option TEXT, \
-	b_service_responding TEXT, \
-	b_service_single_launch TEXT, \
-	b_service_multi_launch TEXT, \
-	b_event_handler_click_on_button_1 TEXT, \
-	b_event_handler_click_on_button_2 TEXT, \
-	b_event_handler_click_on_button_3 TEXT, \
-	b_event_handler_click_on_button_4 TEXT, \
-	b_event_handler_click_on_button_5 TEXT, \
-	b_event_handler_click_on_button_6 TEXT, \
-	b_event_handler_click_on_icon TEXT, \
-	b_event_handler_click_on_thumbnail TEXT, \
-	b_event_handler_click_on_text_input_button TEXT, \
-	sound_type INTEGER DEFAULT 0, \
-	sound_path TEXT, \
-	priv_sound_path TEXT, \
-	vibration_type INTEGER DEFAULT 0, \
-	vibration_path TEXT, \
-	priv_vibration_path TEXT, \
-	led_operation INTEGER DEFAULT 0, \
-	led_argb INTEGER DEFAULT 0, \
-	led_on_ms INTEGER DEFAULT -1, \
-	led_off_ms INTEGER DEFAULT -1, \
-	flags_for_property INTEGER DEFAULT 0, \
-	flag_simmode INTEGER DEFAULT 0, \
-	display_applist INTEGER, \
-	progress_size DOUBLE DEFAULT 0, \
-	progress_percentage DOUBLE DEFAULT 0, \
-	ongoing_flag INTEGER DEFAULT 0, \
-	ongoing_value_type INTEGER DEFAULT 0, \
-	ongoing_current INTEGER DEFAULT 0, \
-	ongoing_duration INTEGER DEFAULT 0, \
-	auto_remove INTEGER DEFAULT 1, \
-	default_button_index INTEGER DEFAULT 0, \
-	hide_timeout INTEGER DEFAULT 0, \
-	delete_timeout INTEGER DEFAULT 0, \
-	text_input_max_length INTEGER DEFAULT 0, \
-	event_flag INTEGER DEFAULT 0, \
-	extension_image_size INTEGER DEFAULT 0, \
-	uid INTEGER, \
-	template_name TEXT, \
-	UNIQUE (caller_app_id, template_name) \
-);"
+#define CREATE_NOTIFICATION_TABLE \
+	"PRAGMA journal_mode = PERSIST;\n" \
+	"PRAGMA synchronous = FULL;\n" \
+	"CREATE TABLE IF NOT EXISTS noti_list (\n" \
+	"  type INTEGER NOT NULL,\n" \
+	"  layout INTEGER NOT NULL DEFAULT 0,\n" \
+	"  pkg_id TEXT NOT NULL,\n" \
+	"  caller_app_id TEXT NOT NULL,\n" \
+	"  launch_app_id TEXT,\n" \
+	"  image_path TEXT,\n" \
+	"  priv_image_path TEXT,\n" \
+	"  group_id INTEGER DEFAULT 0,\n" \
+	"  internal_group_id INTEGER DEFAULT 0,\n" \
+	"  priv_id INTEGER PRIMARY KEY AUTOINCREMENT,\n" \
+	"  title_key TEXT,\n" \
+	"  b_text TEXT,\n" \
+	"  b_key TEXT,\n" \
+	"  tag TEXT,\n" \
+	"  b_format_args TEXT,\n" \
+	"  num_format_args INTEGER DEFAULT 0,\n" \
+	"  text_domain TEXT,\n" \
+	"  text_dir TEXT,\n" \
+	"  time INTEGER DEFAULT 0,\n" \
+	"  insert_time INTEGER DEFAULT 0,\n" \
+	"  args TEXT,\n" \
+	"  group_args TEXT,\n" \
+	"  b_execute_option TEXT,\n" \
+	"  b_service_responding TEXT,\n" \
+	"  b_service_single_launch TEXT,\n" \
+	"  b_service_multi_launch TEXT,\n" \
+	"  b_event_handler_click_on_button_1 TEXT,\n" \
+	"  b_event_handler_click_on_button_2 TEXT,\n" \
+	"  b_event_handler_click_on_button_3 TEXT,\n" \
+	"  b_event_handler_click_on_button_4 TEXT,\n" \
+	"  b_event_handler_click_on_button_5 TEXT,\n" \
+	"  b_event_handler_click_on_button_6 TEXT,\n" \
+	"  b_event_handler_click_on_icon TEXT,\n" \
+	"  b_event_handler_click_on_thumbnail TEXT,\n" \
+	"  b_event_handler_click_on_text_input_button TEXT,\n" \
+	"  sound_type INTEGER DEFAULT 0,\n" \
+	"  sound_path TEXT,\n" \
+	"  priv_sound_path TEXT,\n" \
+	"  vibration_type INTEGER DEFAULT 0,\n" \
+	"  vibration_path TEXT,\n" \
+	"  priv_vibration_path TEXT,\n" \
+	"  led_operation INTEGER DEFAULT 0,\n" \
+	"  led_argb INTEGER DEFAULT 0,\n" \
+	"  led_on_ms INTEGER DEFAULT -1,\n" \
+	"  led_off_ms INTEGER DEFAULT -1,\n" \
+	"  flags_for_property INTEGER DEFAULT 0,\n" \
+	"  flag_simmode INTEGER DEFAULT 0,\n" \
+	"  display_applist INTEGER,\n" \
+	"  progress_size DOUBLE DEFAULT 0,\n" \
+	"  progress_percentage DOUBLE DEFAULT 0,\n" \
+	"  ongoing_flag INTEGER DEFAULT 0,\n" \
+	"  ongoing_value_type INTEGER DEFAULT 0,\n" \
+	"  ongoing_current INTEGER DEFAULT 0,\n" \
+	"  ongoing_duration INTEGER DEFAULT 0,\n" \
+	"  auto_remove INTEGER DEFAULT 1,\n" \
+	"  default_button_index INTEGER DEFAULT 0,\n" \
+	"  hide_timeout INTEGER DEFAULT 0,\n" \
+	"  delete_timeout INTEGER DEFAULT 0,\n" \
+	"  text_input_max_length INTEGER DEFAULT 0,\n" \
+	"  event_flag INTEGER DEFAULT 0,\n" \
+	"  extension_image_size INTEGER DEFAULT 0,\n" \
+	"  uid INTEGER );\n" \
+	"CREATE TABLE IF NOT EXISTS noti_group_data (\n" \
+	"  caller_app_id TEXT NOT NULL,\n" \
+	"  group_id INTEGER DEFAULT 0,\n" \
+	"  badge INTEGER DEFAULT 0,\n" \
+	"  title TEXT,\n" \
+	"  content TEXT,\n" \
+	"  loc_title TEXT,\n" \
+	"  loc_content TEXT,\n" \
+	"  count_display_title INTEGER,\n" \
+	"  count_display_content INTEGER,\n" \
+	"  rowid INTEGER PRIMARY KEY AUTOINCREMENT,\n" \
+	"  UNIQUE (caller_app_id, group_id));\n" \
+	"CREATE TABLE IF NOT EXISTS ongoing_list (\n" \
+	"  caller_app_id TEXT NOT NULL,\n" \
+	"  launch_app_id TEXT,\n" \
+	"  icon_path TEXT,\n" \
+	"  group_id INTEGER DEFAULT 0,\n" \
+	"  internal_group_id INTEGER DEFAULT 0,\n" \
+	"  priv_id INTERGER NOT NULL,\n" \
+	"  title TEXT,\n" \
+	"  content TEXT,\n" \
+	"  default_content TEXT,\n" \
+	"  loc_title TEXT,\n" \
+	"  loc_content TEXT,\n" \
+	"  loc_default_content TEXT,\n" \
+	"  text_domain TEXT,\n" \
+	"  text_dir TEXT,\n" \
+	"  args TEXT,\n" \
+	"  group_args TEXT,\n" \
+	"  flag INTEGER DEFAULT 0,\n" \
+	"  progress_size DOUBLE DEFAULT 0,\n" \
+	"  progress_percentage DOUBLE DEFAULT 0,\n" \
+	"  rowid INTEGER PRIMARY KEY AUTOINCREMENT,\n" \
+	"  UNIQUE (caller_app_id, priv_id));\n" \
+	"CREATE TABLE IF NOT EXISTS notification_setting (\n" \
+	"  uid INTEGER,\n" \
+	"  package_name TEXT NOT NULL,\n" \
+	"  app_id TEXT NOT NULL,\n" \
+	"  allow_to_notify INTEGER DEFAULT 1,\n" \
+	"  do_not_disturb_except INTEGER DEFAULT 0,\n" \
+	"  visibility_class INTEGER DEFAULT 0,\n" \
+	"  pop_up_notification INTEGER DEFAULT 1,\n" \
+	"  lock_screen_content_level INTEGER DEFAULT 0,\n" \
+	"  app_disabled INTEGER DEFAULT 0,\n" \
+	"  UNIQUE (uid, package_name, app_id));\n" \
+	"CREATE TABLE IF NOT EXISTS notification_system_setting (\n" \
+	"  uid INTEGER,\n" \
+	"  do_not_disturb INTEGER DEFAULT 0,\n" \
+	"  visibility_class INTEGER DEFAULT 0,\n" \
+	"  dnd_schedule_enabled INTEGER DEFAULT 0,\n" \
+	"  dnd_schedule_day INTEGER DEFAULT 62,\n" \
+	"  dnd_start_hour INTEGER DEFAULT 22,\n" \
+	"  dnd_start_min INTEGER DEFAULT 0,\n" \
+	"  dnd_end_hour INTEGER DEFAULT 8,\n" \
+	"  dnd_end_min INTEGER DEFAULT 0,\n" \
+	"  lock_screen_content_level INTEGER DEFAULT 0,\n" \
+	"  UNIQUE (uid));\n"\
+	"CREATE TABLE IF NOT EXISTS dnd_allow_exception (\n" \
+	"  uid INTEGER,\n" \
+	"  type INTEGER DEFAULT 0,\n" \
+	"  value INTEGER DEFAULT 0,\n" \
+	"  UNIQUE (uid, type));\n" \
+	"CREATE TABLE IF NOT EXISTS noti_template (\n" \
+	"  type INTEGER NOT NULL,\n" \
+	"  layout INTEGER NOT NULL DEFAULT 0,\n" \
+	"  pkg_id TEXT NOT NULL,\n" \
+	"  caller_app_id TEXT NOT NULL,\n" \
+	"  launch_app_id TEXT,\n" \
+	"  image_path TEXT,\n" \
+	"  priv_image_path TEXT,\n" \
+	"  group_id INTEGER DEFAULT 0,\n" \
+	"  internal_group_id INTEGER DEFAULT 0,\n" \
+	"  priv_id INTEGER PRIMARY KEY AUTOINCREMENT,\n" \
+	"  title_key TEXT,\n" \
+	"  b_text TEXT,\n" \
+	"  b_key TEXT,\n" \
+	"  tag TEXT,\n" \
+	"  b_format_args TEXT,\n" \
+	"  num_format_args INTEGER DEFAULT 0,\n" \
+	"  text_domain TEXT,\n" \
+	"  text_dir TEXT,\n" \
+	"  time INTEGER DEFAULT 0,\n" \
+	"  insert_time INTEGER DEFAULT 0,\n" \
+	"  args TEXT,\n" \
+	"  group_args TEXT,\n" \
+	"  b_execute_option TEXT,\n" \
+	"  b_service_responding TEXT,\n" \
+	"  b_service_single_launch TEXT,\n" \
+	"  b_service_multi_launch TEXT,\n" \
+	"  b_event_handler_click_on_button_1 TEXT,\n" \
+	"  b_event_handler_click_on_button_2 TEXT,\n" \
+	"  b_event_handler_click_on_button_3 TEXT,\n" \
+	"  b_event_handler_click_on_button_4 TEXT,\n" \
+	"  b_event_handler_click_on_button_5 TEXT,\n" \
+	"  b_event_handler_click_on_button_6 TEXT,\n" \
+	"  b_event_handler_click_on_icon TEXT,\n" \
+	"  b_event_handler_click_on_thumbnail TEXT,\n" \
+	"  b_event_handler_click_on_text_input_button TEXT,\n" \
+	"  sound_type INTEGER DEFAULT 0,\n" \
+	"  sound_path TEXT,\n" \
+	"  priv_sound_path TEXT,\n" \
+	"  vibration_type INTEGER DEFAULT 0,\n" \
+	"  vibration_path TEXT,\n" \
+	"  priv_vibration_path TEXT,\n" \
+	"  led_operation INTEGER DEFAULT 0,\n" \
+	"  led_argb INTEGER DEFAULT 0,\n" \
+	"  led_on_ms INTEGER DEFAULT -1,\n" \
+	"  led_off_ms INTEGER DEFAULT -1,\n" \
+	"  flags_for_property INTEGER DEFAULT 0,\n" \
+	"  flag_simmode INTEGER DEFAULT 0,\n" \
+	"  display_applist INTEGER,\n" \
+	"  progress_size DOUBLE DEFAULT 0,\n" \
+	"  progress_percentage DOUBLE DEFAULT 0,\n" \
+	"  ongoing_flag INTEGER DEFAULT 0,\n" \
+	"  ongoing_value_type INTEGER DEFAULT 0,\n" \
+	"  ongoing_current INTEGER DEFAULT 0,\n" \
+	"  ongoing_duration INTEGER DEFAULT 0,\n" \
+	"  auto_remove INTEGER DEFAULT 1,\n" \
+	"  default_button_index INTEGER DEFAULT 0,\n" \
+	"  hide_timeout INTEGER DEFAULT 0,\n" \
+	"  delete_timeout INTEGER DEFAULT 0,\n" \
+	"  text_input_max_length INTEGER DEFAULT 0,\n" \
+	"  event_flag INTEGER DEFAULT 0,\n" \
+	"  extension_image_size INTEGER DEFAULT 0,\n" \
+	"  uid INTEGER,\n" \
+	"  template_name TEXT,\n" \
+	"  UNIQUE (caller_app_id, template_name));\n"
 
 #define NOTI_LIST_DB_ATTRIBUTES_SELECT \
 	"type, layout, pkg_id, caller_app_id, launch_app_id, image_path, " \
