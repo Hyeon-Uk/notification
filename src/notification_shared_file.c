@@ -182,8 +182,8 @@ static bool __is_RO_file(const char *smack_label)
 }
 
 /* file copy from /res to /data */
-int notification_copy_private_file(const char* src_path,
-					const char* dst_path)
+int notification_copy_private_file(const char *src_path,
+					const char *dst_path)
 {
 	int ret = NOTIFICATION_ERROR_NONE;
 	GFile *src = NULL;
@@ -336,7 +336,7 @@ static gint __comp_dst_path(gconstpointer a, gconstpointer b)
 }
 /* LCOV_EXCL_STOP */
 
-static sharing_file_info_s * __dup_file_info(sharing_file_info_s *src)
+static sharing_file_info_s *__dup_file_info(sharing_file_info_s *src)
 {
 	sharing_file_info_s *file_info;
 	file_info = (sharing_file_info_s *)calloc(1, sizeof(sharing_file_info_s));
@@ -411,7 +411,7 @@ static void __make_file_info(char *src_path, char *dst_path,
 
 }
 
-static GList* __get_new_file_list(notification_h noti,
+static GList *__get_new_file_list(notification_h noti,
 				GList *shared_file_list,
 				bool *is_overlapping)
 {
@@ -471,7 +471,7 @@ static GList* __get_new_file_list(notification_h noti,
 	return new_file_list;
 }
 
-static char* __get_shared_dir(notification_h noti)
+static char *__get_shared_dir(notification_h noti)
 {
 	char *path = NULL;
 	char *dir;

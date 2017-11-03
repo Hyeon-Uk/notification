@@ -29,7 +29,6 @@
 struct _notification_list {
 	notification_list_h prev;
 	notification_list_h next;
-
 	notification_h noti;
 };
 
@@ -37,7 +36,7 @@ notification_list_h _notification_list_create(void)
 {
 	notification_list_h list = NULL;
 
-	list = (notification_list_h) malloc(sizeof(struct _notification_list));
+	list = (notification_list_h)malloc(sizeof(struct _notification_list));
 	if (list == NULL) {
 		/* LCOV_EXCL_START */
 		NOTIFICATION_ERR("Failed to alloc memory");
