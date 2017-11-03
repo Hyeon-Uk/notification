@@ -288,11 +288,6 @@ static int testapp_test_post_notifications()
 		goto FINISH_OFF;
 	}
 
-	if (repeat_count > 30) {
-		testapp_print("Too many count");
-		goto FINISH_OFF;
-	}
-
 	for (i = 0; i < repeat_count; i++) {
 		if ((err = testapp_add_a_notification()) != NOTIFICATION_ERROR_NONE) {
 			testapp_print("testapp_add_a_notification failed[%d]", err);
@@ -562,7 +557,7 @@ static int testapp_test_get_list()
 	bool ongoing_flag;
 	bool auto_remove;
 
-	noti_err = notification_get_detail_list("./notification-test-app", NOTIFICATION_PRIV_ID_NONE, NOTIFICATION_GROUP_ID_NONE, 10, &noti_list_handle);
+	noti_err = notification_get_list(NOTIFICATION_TYPE_NONE, -1, &noti_list_handle);
 
 	if (noti_err != NOTIFICATION_ERROR_NONE) {
 		testapp_print("notification_get_detail_list failed[%d]\n", noti_err);
