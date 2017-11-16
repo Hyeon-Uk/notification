@@ -48,15 +48,9 @@ Development files needed to build software that needs to system a system notific
 MAJORVER=`echo %{version} | awk 'BEGIN {FS="."}{print $1}'`
 export LDFLAGS+="-Wl,--rpath=%{_prefix}/lib -Wl,--as-needed"
 LDFLAGS="$LDFLAGS"
-%if %{with wayland}
 %cmake . \
-	-DCMAKE_INSTALL_PREFIX=%{_prefix} -DHAVE_WAYLAND=On \
+	-DCMAKE_INSTALL_PREFIX=%{_prefix} \
 	-DMAJORVER=${MAJORVER} -DFULLVER=%{version}
-%else
-%cmake . \
-	-DCMAKE_INSTALL_PREFIX=%{_prefix} -DHAVE_X11=On \
-	-DMAJORVER=${MAJORVER} -DFULLVER=%{version}
-%endif
 make %{?jobs:-j%jobs}
 
 %install
