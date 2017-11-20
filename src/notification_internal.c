@@ -1786,6 +1786,11 @@ static bundle *_create_bundle_from_bundle_raw(bundle_raw *string)
 
 EXPORT_API int notification_set_extention_data(notification_h noti, const char *key, bundle *value)
 {
+	return notification_set_extension_data(noti, key, value);
+}
+
+EXPORT_API int notification_set_extension_data(notification_h noti, const char *key, bundle *value)
+{
 	int ret;
 	int len = 0;
 	char *del = NULL;
@@ -1819,6 +1824,11 @@ EXPORT_API int notification_set_extention_data(notification_h noti, const char *
 }
 
 EXPORT_API int notification_get_extention_data(notification_h noti, const char *key, bundle **value)
+{
+	return notification_get_extension_data(noti, key, value);
+}
+
+EXPORT_API int notification_get_extension_data(notification_h noti, const char *key, bundle **value)
 {
 	char *ret_str;
 	bundle *args;

@@ -1396,7 +1396,47 @@ notification_h notification_load_by_tag_for_uid(const char *tag, uid_t uid);
  */
 int notification_get_text_input_max_length(notification_h noti, int *text_input_max_length);
 
+/**
+ * @brief Sets an extension data.
+ * @since_tizen 4.0
+ * @param[in] noti	The notification handle
+ * @param[in] key	The key
+ * @param[in] value	The bundle data
+ * @return #NOTIFICATION_ERROR_NONE on success,
+ *         otherwise any other value on failure
+ * @retval #NOTIFICATION_ERROR_NONE	Success
+ * @retval #NOTIFICATION_ERROR_INVALID_PARAMETER	Invalid parameter
+ */
+int notification_set_extension_data(notification_h noti, const char *key, bundle *value);
+
+/**
+ * @brief Gets an extension data.
+ * @since_tizen 4.0
+ * @param[in] noti	The notification handle
+ * @param[in] key	The key
+ * @param[out] value	The bundle data
+ * @return #NOTIFICATION_ERROR_NONE on success,
+ *         otherwise any other value on failure
+ * @retval #NOTIFICATION_ERROR_NONE	Success
+ * @retval #NOTIFICATION_ERROR_INVALID_PARAMETER	Invalid parameter
+ * @retval #NOTIFICATION_ERROR_IO_ERROR			IO Error
+ */
+int notification_get_extension_data(notification_h noti, const char *key, bundle **value);
+
+/**
+ * @brief This function will be deprecated.
+ * @see notification_set_extension_data()
+ *
+ */
+NOTIFICATION_DEPRECATED_API
 int notification_set_extention_data(notification_h noti, const char *key, bundle *value);
+
+/**
+ * @brief This function will be deprecated.
+ * @see notification_get_extension_data()
+ *
+ */
+NOTIFICATION_DEPRECATED_API
 int notification_get_extention_data(notification_h noti, const char *key, bundle **value);
 
 int notification_set_extension_event_handler(notification_h noti,
