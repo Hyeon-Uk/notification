@@ -54,7 +54,8 @@ EXPORT_API int notification_get_default_viewer(const char *path, char **default_
 }
 
 /* LCOV_EXCL_START */
-EXPORT_API int notification_launch_default_viewer(const char *default_viewer, int priv_id, uid_t uid)
+EXPORT_API int notification_launch_default_viewer(const char *default_viewer,
+			int priv_id, notification_op_type_e status, uid_t uid)
 {
 	int ret;
 	char buf[32] = {0,};
@@ -75,6 +76,15 @@ EXPORT_API int notification_launch_default_viewer(const char *default_viewer, in
 	snprintf(buf, sizeof(buf), "%d", priv_id);
 
 	ret = aul_svc_add_data(b, "NOTIFICATION_PRIVATE_ID", buf);
+	if (ret != AUL_SVC_RET_OK) {
+		NOTIFICATION_ERR("Failed to add extra_data[%x]", ret);
+		goto out;
+	}
+
+	memset(buf, 0, sizeof(buf));
+	snprintf(buf, sizeof(buf), "%d", status);
+
+	ret = aul_svc_add_data(b, "NOTIFICATION_OP_TYPE", buf);
 	if (ret != AUL_SVC_RET_OK) {
 		NOTIFICATION_ERR("Failed to add extra_data[%x]", ret);
 		goto out;
