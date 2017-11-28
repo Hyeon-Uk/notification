@@ -22,7 +22,6 @@
 #define CREATE_NOTIFICATION_TABLE \
 	"PRAGMA journal_mode = PERSIST;\n" \
 	"PRAGMA synchronous = FULL;\n" \
-	"PRAGMA integrity_check;\n" \
 	"CREATE TABLE IF NOT EXISTS noti_list (\n" \
 	"  type INTEGER NOT NULL,\n" \
 	"  layout INTEGER NOT NULL DEFAULT 0,\n" \

@@ -27,78 +27,92 @@
 #include <notification_db.h>
 #include "notification_db_query.h"
 
-EXPORT_API int notification_db_init()
+static bool is_db_corrupted = false;
+
+static int __check_integrity_cb(void *pid, int argc, char **argv, char **notUsed)
 {
-	int ret;
-	sqlite3 *db = NULL;
+	if (!strcmp(argv[0], "ok")) {
+		NOTIFICATION_ERR("db integrity result : %s" , argv[0]);
+		is_db_corrupted = true;
+		return -1;
+	}
+
+	NOTIFICATION_INFO("db integrity result : %s" , argv[0]);
+	return 0;
+}
+
+static int __recover_corrupted_db(sqlite3 *db)
+{
+	int ret = NOTIFICATION_ERROR_NONE;
+	int sql_ret;
 	char *errmsg = NULL;
 
-	ret = sqlite3_open_v2(DBPATH, &db,
-			SQLITE_OPEN_CREATE | SQLITE_OPEN_READWRITE, NULL);
-	if (ret != SQLITE_OK) {
-		/* LCOV_EXCL_START */
-		NOTIFICATION_ERR("Failed to open db[%d]", ret);
+	NOTIFICATION_INFO("DB is corrupted, start to recover corrupted db");
+	if (db)
+		sqlite3_close(db);
+	unlink(DBPATH);
 
-		if (sqlite3_errcode(db) == SQLITE_CORRUPT) {
-			if (db)
-				sqlite3_close(db);
-			unlink(DBPATH);
-
-			ret = sqlite3_open_v2(DBPATH, &db, SQLITE_OPEN_CREATE |
-					SQLITE_OPEN_READWRITE, NULL);
-			if (ret != SQLITE_OK) {
-				NOTIFICATION_ERR("Failed to open db[%d]", ret);
-				unlink(DBPATH);
-				ret = NOTIFICATION_ERROR_FROM_DB;
-				goto out;
-			}
-		} else {
-			ret = NOTIFICATION_ERROR_FROM_DB;
-			goto out;
-		}
-		/* LCOV_EXCL_STOP */
+	sql_ret = sqlite3_open_v2(DBPATH, &db,
+				SQLITE_OPEN_CREATE |SQLITE_OPEN_READWRITE,
+				NULL);
+	if (sql_ret != SQLITE_OK) {
+		NOTIFICATION_ERR("Failed to open db[%d]", sql_ret);
+		unlink(DBPATH);
+		ret = NOTIFICATION_ERROR_FROM_DB;
+		goto out;
 	}
 
-	ret = sqlite3_exec(db, CREATE_NOTIFICATION_TABLE, NULL, NULL, &errmsg);
-	if (ret != SQLITE_OK) {
-		/* LCOV_EXCL_START */
-		NOTIFICATION_ERR("Failed to exec sqlite[%d][%s]", ret, errmsg);
-
-		if (ret == SQLITE_CORRUPT || ret == SQLITE_NOTADB) {
-			sqlite3_close(db);
-			unlink(DBPATH);
-			ret = sqlite3_open_v2(DBPATH, &db, SQLITE_OPEN_CREATE |
-					SQLITE_OPEN_READWRITE, NULL);
-			if (ret != SQLITE_OK) {
-				NOTIFICATION_ERR("Failed to open db[%d]", ret);
-				unlink(DBPATH);
-				ret = NOTIFICATION_ERROR_FROM_DB;
-				goto out;
-			}
-
-			sqlite3_free(errmsg);
-			ret = sqlite3_exec(db, CREATE_NOTIFICATION_TABLE, NULL,
-						NULL, &errmsg);
-			if (ret != SQLITE_OK) {
-				NOTIFICATION_ERR("Failed to exec sqlite, \
-						again[%d][%s]", ret, errmsg);
-				unlink(DBPATH);
-				ret = NOTIFICATION_ERROR_FROM_DB;
-				goto out;
-			}
-		} else {
-			ret = NOTIFICATION_ERROR_FROM_DB;
-			goto out;
-		}
-		/* LCOV_EXCL_STOP */
+	sql_ret = sqlite3_exec(db, CREATE_NOTIFICATION_TABLE, NULL, NULL, &errmsg);
+	if (sql_ret != SQLITE_OK) {
+		NOTIFICATION_ERR("Failed to exec query[%d][%s]", sql_ret, errmsg);
+		ret = NOTIFICATION_ERROR_FROM_DB;
 	}
-
-	ret = NOTIFICATION_ERROR_NONE;
 
 out:
 	if (errmsg)
 		sqlite3_free(errmsg);
 
+	return ret;
+}
+
+EXPORT_API int notification_db_init()
+{
+	int ret = NOTIFICATION_ERROR_NONE;
+	int sql_ret;
+	sqlite3 *db = NULL;
+	char *errmsg = NULL;
+
+	sql_ret = sqlite3_open_v2(DBPATH, &db,
+			SQLITE_OPEN_CREATE | SQLITE_OPEN_READWRITE, NULL);
+	if (sql_ret != SQLITE_OK) {
+		/* LCOV_EXCL_START */
+		NOTIFICATION_ERR("Failed to open db[%d]", ret);
+		ret = NOTIFICATION_ERROR_FROM_DB;
+		goto out;
+		/* LCOV_EXCL_STOP */
+	}
+
+	sql_ret = sqlite3_exec(db, CREATE_NOTIFICATION_TABLE, NULL, NULL, &errmsg);
+	if (sql_ret != SQLITE_OK) {
+		/* LCOV_EXCL_START */
+		NOTIFICATION_ERR("Failed to exec sqlite[%d][%s]", ret, errmsg);
+		ret = NOTIFICATION_ERROR_FROM_DB;
+		goto out;
+		/* LCOV_EXCL_STOP */
+	}
+
+	sql_ret = sqlite3_exec(db, "PRAGMA integrity_check",
+			       __check_integrity_cb, NULL, &errmsg);
+	if (sql_ret != SQLITE_OK || is_db_corrupted) {
+		NOTIFICATION_ERR("Failed to exec query[%d][%s]", sql_ret, errmsg);
+		ret = NOTIFICATION_ERROR_FROM_DB;
+	}
+
+out:
+	if (sql_ret == SQLITE_CORRUPT || sql_ret == SQLITE_NOTADB || is_db_corrupted)
+		ret = __recover_corrupted_db(db);
+	if (errmsg)
+		sqlite3_free(errmsg);
 	if (db)
 		sqlite3_close(db);
 
