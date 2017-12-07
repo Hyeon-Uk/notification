@@ -1439,13 +1439,42 @@ int notification_set_extention_data(notification_h noti, const char *key, bundle
 NOTIFICATION_DEPRECATED_API
 int notification_get_extention_data(notification_h noti, const char *key, bundle **value);
 
+/*
+ * @brief Sets the handler for a specific extension event.
+ * @details When some extension event occurs on notification, application launched by app_control_send_launch_request with app_control handle.
+ * @since_tizen 4.0
+ * @param[in] noti The notification handle
+ * @param[in] event_type Event type
+ * @param[in] event_handler App control handle
+ * @return #NOTIFICATION_ERROR_NONE on success,
+ *         otherwise any other value on failure
+ * @retval #NOTIFICATION_ERROR_NONE Success
+ * @retval #NOTIFICATION_ERROR_INVALID_PARAMETER Invalid parameter
+ * @retval #NOTIFICATION_ERROR_IO_ERROR I/O error
+ * @see #notification_event_type_extension_e
+ */
 int notification_set_extension_event_handler(notification_h noti,
 					notification_event_type_extension_e event,
 					app_control_h event_handler);
 
+/*
+ * @brief Gets the handler for a specific extension event.
+ * @details When extension event occurs on notification, application launched by app_control_send_launch_request with app_control handle.
+ * @since_tizen 4.0
+ * @param[in] noti The notification handle
+ * @param[in] event_type Event type
+ * @param[out] event_handler App control handle
+ * @return #NOTIFICATION_ERROR_NONE on success,
+ *         otherwise any other value on failure
+ * @retval #NOTIFICATION_ERROR_NONE Success
+ * @retval #NOTIFICATION_ERROR_INVALID_PARAMETER Invalid parameter
+ * @retval #NOTIFICATION_ERROR_IO_ERROR I/O error
+ * @see #notification_event_type_extension_e
+ */
 int notification_get_extension_event_handler(notification_h noti,
 					notification_event_type_extension_e event,
 					app_control_h *event_handler);
+
 /**
  * @}
  */
