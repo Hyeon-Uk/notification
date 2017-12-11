@@ -98,6 +98,7 @@ int notification_ipc_make_dnd_allow_exception_from_gvariant(
 int notification_ipc_send_event(notification_h noti, int event_type, int priv_id);
 int notification_ipc_check_event_receiver(int priv_id, bool *available);
 void notification_ipc_reset_event_handler(int priv_id);
+int notification_ipc_request_get_all_count(notification_type_e type, int *count, uid_t uid);
 #ifdef __cplusplus
 }
 #endif

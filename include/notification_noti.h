@@ -51,6 +51,8 @@ int notification_noti_get_count(notification_type_e type,
 		int group_id, int priv_id,
 		int *count, uid_t uid);
 
+int notification_noti_get_all_count(notification_type_e type, int *count, uid_t uid);
+
 int notification_noti_get_grouping_list(notification_type_e type,
 		int count,
 		notification_list_h *list,

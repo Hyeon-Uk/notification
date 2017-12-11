@@ -1674,6 +1674,33 @@ int notification_ipc_get_noti_block_state(const char *app_id, int *do_not_distur
 	return ret;
 }
 
+int notification_ipc_request_get_all_count(notification_type_e type, int *count, uid_t uid)
+{
+	int ret;
+	int ret_count = -1;
+	GDBusMessage *reply = NULL;
+	GVariant *reply_body = NULL;
+
+	ret = _dbus_init();
+	if (ret != NOTIFICATION_ERROR_NONE) {
+		NOTIFICATION_ERR("Failed to init dbus connection[%d]", ret);
+		return ret;
+	}
+
+	ret = _send_sync_noti(g_variant_new("(ii)", type, uid),
+			&reply, "get_noti_all_count");
+	if (ret == NOTIFICATION_ERROR_NONE) {
+		reply_body = g_dbus_message_get_body(reply);
+		g_variant_get(reply_body, "(i)", &ret_count);
+		*count = ret_count;
+	}
+
+	if (reply)
+		g_object_unref(reply);
+
+	return ret;
+}
+
 int notification_ipc_send_event(notification_h noti, int event_type, int priv_id)
 {
 	int ret;

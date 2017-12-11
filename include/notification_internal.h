@@ -314,6 +314,13 @@ NOTIFICATION_DEPRECATED_API int notification_delete_group_by_group_id(const char
 NOTIFICATION_DEPRECATED_API int notification_delete_group_by_priv_id(const char *app_id,
 							  notification_type_e type,
 							  int priv_id);
+
+/**
+ * @brief This function will be deprecated.
+ *
+ */
+NOTIFICATION_DEPRECATED_API int notifiation_clear(notification_type_e type);
+
 /**
  * @brief This function will be deprecated.
  *
@@ -324,10 +331,21 @@ NOTIFICATION_DEPRECATED_API int notification_get_count(notification_type_e type,
 					    int *count);
 
 /**
- * @brief This function will be deprecated.
- *
+ * @internal
+ * @brief
+ * @details Gets the numbers of all notifications
+ * @since tizen 4.0
+ * @param[int] type the type of notification
+ * @param[out] count the numbers of all notifications
+ * @return NOTIFICATION_ERROR_NONE on success, other value on failure
+ * @retval NOTIFICATION_ERROR_NONE Success
+ * @retval NOTIFICATION_ERROR_INVALID_PARAMETER Invalid input value
+ * @retval NOTIFICATION_ERROR_IO_ERROR I/O Error
+ * @retval NOTIFICATION_ERROR_FROM_DB Error from DB
+ * @retval NOTIFICATION_ERROR_PERMISSION_DENIED The application does not have the privilege to call this method
  */
-NOTIFICATION_DEPRECATED_API int notifiation_clear(notification_type_e type);
+int notification_get_all_count(notification_type_e type, int *count);
+int notification_get_all_count_for_uid(notification_type_e type, int *count, uid_t uid);
 
 /**
  * @internal

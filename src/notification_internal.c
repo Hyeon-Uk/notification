@@ -1989,3 +1989,32 @@ out:
 
 	return ret;
 }
+
+EXPORT_API int notification_get_all_count_for_uid(notification_type_e type, int *count, uid_t uid)
+{
+	int ret;
+
+	if (count == NULL) {
+		NOTIFICATION_ERR("Invalid parameter - count is null");
+		return NOTIFICATION_ERROR_INVALID_PARAMETER;
+	}
+
+	if (type < NOTIFICATION_TYPE_NONE || type > NOTIFICATION_TYPE_MAX) {
+		NOTIFICATION_ERR("Invalid parameter - wrong type");
+		return NOTIFICATION_ERROR_INVALID_PARAMETER;
+	}
+
+	ret = notification_ipc_request_get_all_count(type, count, uid);
+	if (ret != NOTIFICATION_ERROR_NONE) {
+		NOTIFICATION_ERR("Failed to get count [%d]", ret);
+		return ret;
+	}
+
+	return ret;
+}
+
+EXPORT_API int notification_get_all_count(notification_type_e type, int *count)
+{
+	return notification_get_all_count_for_uid(type, count, getuid());
+}
+

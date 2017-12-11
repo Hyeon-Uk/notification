@@ -1564,6 +1564,67 @@ err:
 }
 /* LCOV_EXCL_STOP */
 
+EXPORT_API int notification_noti_get_all_count(notification_type_e type, int *count, uid_t uid)
+{
+	int ret = NOTIFICATION_ERROR_NONE;
+	int sql_ret;
+	sqlite3 *db = NULL;
+	sqlite3_stmt *stmt = NULL;
+	char *sql_buf = NULL;
+
+	if (count == NULL) {
+		NOTIFICATION_ERR("Invalid parameter - count is null");
+		return NOTIFICATION_ERROR_INVALID_PARAMETER;
+	}
+
+	db = notification_db_open(DBPATH);
+	if (db == NULL) {
+		ret = get_last_result();
+		NOTIFICATION_ERR("Failed to open db [%d]", ret);
+		return ret;
+	}
+
+	if (type != NOTIFICATION_TYPE_NONE)
+		sql_buf = sqlite3_mprintf("SELECT count(*) FROM %q "
+				"WHERE uid = %d AND type = %d",
+				NOTIFICATION_DB_TABLE, uid, type);
+	else
+		sql_buf = sqlite3_mprintf("SELECT count(*) FROM %q WHERE uid = %d",
+				NOTIFICATION_DB_TABLE, uid);
+
+	if (sql_buf == NULL) {
+		ret = NOTIFICATION_ERROR_FROM_DB;
+		NOTIFICATION_ERR("OOM - sqlite3_mprintf");
+		goto out;
+	}
+
+	sql_ret = sqlite3_prepare_v2(db, sql_buf, -1, &stmt, NULL);
+	if (sql_ret != SQLITE_OK) {
+		ret = NOTIFICATION_ERROR_FROM_DB;
+		NOTIFICATION_ERR("SQLITE3 Error - sqlite3_prepare_v2 [%d][%s]",
+				sql_ret, sqlite3_errmsg(db));
+		goto out;
+	}
+
+	sql_ret = sqlite3_step(stmt);
+	if (sql_ret == SQLITE_ROW)
+		*count = sqlite3_column_int(stmt, 0);
+	else
+		*count = 0;
+
+	NOTIFICATION_INFO("The numbers of all notification is [%d]", *count);
+
+out:
+	if (stmt)
+		sqlite3_finalize(stmt);
+	if (sql_buf)
+		sqlite3_free(sql_buf);
+	if (db)
+		notification_db_close(&db);
+
+	return ret;
+}
+
 EXPORT_API int notification_noti_get_grouping_list(notification_type_e type,
 							int count,
 							notification_list_h *list,
