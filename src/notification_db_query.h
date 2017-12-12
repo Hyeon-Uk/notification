@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-#define NOTIFICATION_DB_NAME ".notification.db"
 #define NOTIFICATION_SETTING_DB_TABLE "notification_setting"
 #define NOTIFICATION_SYSTEM_SETTING_DB_TABLE "notification_system_setting"
 #define NOTIFICATION_DND_ALLOW_EXCEPTION "dnd_allow_exception"
