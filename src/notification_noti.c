@@ -69,6 +69,7 @@ static void __notification_noti_populate_from_stmt(sqlite3_stmt *stmt, notificat
 	__free_and_set((void **)&(noti->pkg_id), notification_db_column_text(stmt, col++));
 	__free_and_set((void **)&(noti->caller_app_id), notification_db_column_text(stmt, col++));
 	__free_and_set((void **)&(noti->launch_app_id), notification_db_column_text(stmt, col++));
+	__free_and_set((void **)&(noti->app_label), notification_db_column_text(stmt, col++));
 	noti->b_image_path = notification_db_column_bundle(stmt, col++);
 	noti->b_priv_image_path = notification_db_column_bundle(stmt, col++);
 	noti->group_id = sqlite3_column_int(stmt, col++);
@@ -127,7 +128,6 @@ static void __notification_noti_populate_from_stmt(sqlite3_stmt *stmt, notificat
 	noti->uid = sqlite3_column_int(stmt, col++);
 
 	noti->app_icon_path = NULL;
-	noti->app_name = NULL;
 	noti->temp_title = NULL;
 	noti->temp_content = NULL;
 }
@@ -329,6 +329,7 @@ static int _create_insertion_query(sqlite3 *db, notification_h noti, sqlite3_stm
 	__BIND_TEXT(db, stmt, idx++, NOTIFICATION_CHECK_STR(noti->pkg_id), ret, out);
 	__BIND_TEXT(db, stmt, idx++, NOTIFICATION_CHECK_STR(noti->caller_app_id), ret, out);
 	__BIND_TEXT(db, stmt, idx++, NOTIFICATION_CHECK_STR(noti->launch_app_id), ret, out);
+	__BIND_TEXT(db, stmt, idx++, NOTIFICATION_CHECK_STR(noti->app_label), ret, out);
 	__BIND_TEXT(db, stmt, idx++, NOTIFICATION_CHECK_STR(b_image_path), ret, out);
 	__BIND_TEXT(db, stmt, idx++, NOTIFICATION_CHECK_STR(b_priv_image_path), ret, out);
 	__BIND_INT(db, stmt, idx++, noti->group_id, ret, out);
@@ -488,6 +489,7 @@ static int _create_update_query(sqlite3 *db, notification_h noti, sqlite3_stmt *
 	__BIND_INT(db, stmt, idx++, noti->type, ret, out);
 	__BIND_INT(db, stmt, idx++, noti->layout, ret, out);
 	__BIND_TEXT(db, stmt, idx++, NOTIFICATION_CHECK_STR(noti->launch_app_id), ret, out);
+	__BIND_TEXT(db, stmt, idx++, NOTIFICATION_CHECK_STR(noti->app_label), ret, out);
 	__BIND_TEXT(db, stmt, idx++, NOTIFICATION_CHECK_STR(b_image_path), ret, out);
 	__BIND_TEXT(db, stmt, idx++, NOTIFICATION_CHECK_STR(b_priv_image_path), ret, out);
 	__BIND_TEXT(db, stmt, idx++, NOTIFICATION_CHECK_STR(b_text), ret, out);

@@ -1494,6 +1494,67 @@ int notification_get_extension_event_handler(notification_h noti,
 					app_control_h *event_handler);
 
 /**
+ * @internal
+ * @brief Sets the label of caller application.
+ * @details It recommends for daemons. For an Application, the label is set when notification create.
+ * @since tizen 5.0
+ * @param[in] noti Notification handle
+ * @param[in] label Label of Caller application
+ * @return NOTIFICATION_ERROR_NONE on success, other value on failure
+ * @retval NOTIFICATION_ERROR_NONE Success
+ * @retval NOTIFICATION_ERROR_INVALID_PARAMETER Invalid input value
+ * @par Sample code:
+ * @code
+#include <notification.h>
+...
+{
+	notification_h noti = NULL;
+	int noti_err = NOTIFICATION_ERROR_NONE;
+
+	noti = notification_create(NOTIFICATION_TYPE_NOTI);
+	if (noti == NULL) {
+		return;
+	}
+
+	noti_err  = notification_set_app_label(noti, "message");
+	if (noti_err != NOTIFICATION_ERROR_NONE) {
+		notification_free(noti);
+		return;
+	}
+}
+ * @endcode
+ */
+int notification_set_app_label(notification_h noti, char *label);
+
+/**
+ * @internal
+ * @brief Gets the label of caller application
+ * @details Label may be null if it was not set.
+ * Do not free @a label. It will be freed when notification_free() is called.
+ * @since tizen 5.0
+ * @param[in] noti Notification handle
+ * @param[out] label Label of Caller application
+ * @return NOTIFICATION_ERROR_NONE on success, other value on failure
+ * @retval NOTIFICATION_ERROR_NONE Success
+ * @retval NOTIFICATION_ERROR_INVALID_PARAMETER Invalid input value
+ * @par Sample code:
+ * @code
+#include <notification.h>
+...
+{
+	int noti_err = NOTIFICATION_ERROR_NONE;
+	char *label = NULL;
+
+	noti_err  = notification_get_app_label(noti, &label);
+	if (noti_err != NOTIFICATION_ERROR_NONE) {
+		return;
+	}
+}
+ * @endcode
+ */
+int notification_get_app_label(notification_h noti, char **label);
+
+/**
  * @}
  */
 #ifdef __cplusplus

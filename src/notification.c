@@ -28,6 +28,8 @@
 #include <package_manager.h>
 #include <aul.h>
 #include <tizen.h>
+#include <pkgmgr-info.h>
+#include <pkgmgrinfo_type.h>
 
 #include <notification.h>
 #include <notification_list.h>
@@ -1425,7 +1427,7 @@ EXPORT_API int notification_delete(notification_h noti)
 	return notification_delete_for_uid(noti, getuid());
 }
 
-static int _notification_get_app_name(const char *app_id, char **name)
+static int _notification_get_domain_name(const char *app_id, char **name)
 {
 	char *name_token = NULL;
 
@@ -1451,8 +1453,10 @@ static notification_h _notification_create(notification_type_e type)
 #define NOTI_PKG_ID_LEN 512
 	notification_h noti = NULL;
 	package_info_h package_info = NULL;
+	pkgmgrinfo_appinfo_h appinfo = NULL;
 	char *domain_name = NULL;
 	char *app_root_path = NULL;
+	char *label = NULL;
 	char locale_directory[PATH_MAX] = { 0, }; /* PATH_MAX 4096 */
 	char pkg_id[NOTI_PKG_ID_LEN + 1] = { 0, };
 	int err = 0;
@@ -1511,7 +1515,7 @@ static notification_h _notification_create(notification_type_e type)
 			goto out;
 		}
 
-		err = _notification_get_app_name(pkg_id, &domain_name);
+		err = _notification_get_domain_name(pkg_id, &domain_name);
 		if (err != 0 || domain_name == NULL) {
 			NOTIFICATION_WARN("Failed to get domain_name");
 			err = 0;
@@ -1519,6 +1523,8 @@ static notification_h _notification_create(notification_type_e type)
 			the domain can not be obtained. */
 			goto out;
 		}
+
+		noti->domain = strdup(domain_name);
 
 		err = package_info_create(pkg_id, &package_info);
 		if (err != PACKAGE_MANAGER_ERROR_NONE || package_info == NULL) {
@@ -1539,9 +1545,25 @@ static notification_h _notification_create(notification_type_e type)
 		}
 
 		snprintf(locale_directory, PATH_MAX, "%s/res/locale", app_root_path);
-
-		noti->domain = strdup(domain_name);
 		noti->dir    = strdup(locale_directory);
+
+		err = pkgmgrinfo_appinfo_get_usr_appinfo(noti->caller_app_id,
+					getuid(), &appinfo);
+		if (err != PMINFO_R_OK || appinfo == NULL) {
+			NOTIFICATION_WARN("Failed to get appinfo err[%d]",
+					err, noti->caller_app_id);
+			err = 0;
+			goto out;
+		}
+
+		err = pkgmgrinfo_appinfo_get_label(appinfo, &label);
+		if (err != PMINFO_R_OK || label == NULL) {
+			NOTIFICATION_WARN("Failed to get app_label err[%d]", err);
+			err = 0;
+			goto out;
+		}
+
+		noti->app_label = strdup(label);
 	}
 
 out:
@@ -1553,6 +1575,9 @@ out:
 
 	if (package_info)
 		package_info_destroy(package_info);
+
+	if (appinfo)
+		pkgmgrinfo_appinfo_destroy_appinfo(appinfo);
 
 	if (err != 0) {
 		notification_free(noti);
@@ -1701,6 +1726,10 @@ EXPORT_API int notification_clone(notification_h noti, notification_h *clone)
 	new_noti->event_flag = noti->event_flag;
 	new_noti->is_translation = noti->is_translation;
 	new_noti->extension_image_size = noti->extension_image_size;
+
+	if (noti->app_label != NULL)
+		new_noti->app_label = strdup(noti->app_label);
+
 	new_noti->uid = noti->uid;
 
 	*clone = new_noti;
@@ -1782,8 +1811,8 @@ EXPORT_API int notification_free(notification_h noti)
 	if (noti->app_icon_path)
 		free(noti->app_icon_path);
 
-	if (noti->app_name)
-		free(noti->app_name);
+	if (noti->app_label)
+		free(noti->app_label);
 
 	if (noti->temp_title)
 		free(noti->temp_title);

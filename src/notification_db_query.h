@@ -28,6 +28,7 @@
 	"  pkg_id TEXT NOT NULL,\n" \
 	"  caller_app_id TEXT NOT NULL,\n" \
 	"  launch_app_id TEXT,\n" \
+	"  app_label TEXT,\n" \
 	"  image_path TEXT,\n" \
 	"  priv_image_path TEXT,\n" \
 	"  group_id INTEGER DEFAULT 0,\n" \
@@ -153,6 +154,7 @@
 	"  pkg_id TEXT NOT NULL,\n" \
 	"  caller_app_id TEXT NOT NULL,\n" \
 	"  launch_app_id TEXT,\n" \
+	"  app_label TEXT,\n" \
 	"  image_path TEXT,\n" \
 	"  priv_image_path TEXT,\n" \
 	"  group_id INTEGER DEFAULT 0,\n" \
@@ -214,8 +216,8 @@
 	"  UNIQUE (caller_app_id, template_name));\n"
 
 #define NOTI_LIST_DB_ATTRIBUTES_SELECT \
-	"type, layout, pkg_id, caller_app_id, launch_app_id, image_path, " \
-	"priv_image_path, group_id, priv_id, b_text, b_key, " \
+	"type, layout, pkg_id, caller_app_id, launch_app_id, app_label, "\
+	"image_path, priv_image_path, group_id, priv_id, b_text, b_key, " \
 	"tag, b_format_args, num_format_args, text_domain, text_dir, " \
 	"time, insert_time, args, group_args, b_execute_option, " \
 	"b_service_responding, b_service_single_launch, b_service_multi_launch, " \
@@ -234,10 +236,10 @@
 	"extension_image_size, uid"
 
 #define NOTI_LIST_DB_ATTRIBUTES_INSERT \
-	"type, layout, pkg_id, caller_app_id, launch_app_id, image_path, " \
-	"priv_image_path, group_id, internal_group_id, title_key, b_text, b_key, " \
-	"tag, b_format_args, num_format_args, text_domain, text_dir, " \
-	"time, insert_time, args, group_args, b_execute_option, " \
+	"type, layout, pkg_id, caller_app_id, launch_app_id, app_label, " \
+	"image_path, priv_image_path, group_id, internal_group_id, title_key, " \
+	"b_text, b_key, tag, b_format_args, num_format_args, text_domain, " \
+	"text_dir, time, insert_time, args, group_args, b_execute_option, " \
 	"b_service_responding, b_service_single_launch, b_service_multi_launch, " \
 	"b_event_handler_click_on_button_1, b_event_handler_click_on_button_2, " \
 	"b_event_handler_click_on_button_3, b_event_handler_click_on_button_4, " \
@@ -257,11 +259,11 @@
 	"?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, " \
 	"?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, " \
 	"?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, " \
-	"? "
+	"?, ? "
 
 #define NOTI_LIST_DB_ATTRIBUTES_UPDATE \
-	"type = ?, layout = ?, launch_app_id = ?, image_path = ?, " \
-	"priv_image_path = ?, b_text = ?, b_key = ?, tag = ?, " \
+	"type = ?, layout = ?, launch_app_id = ?, app_label = ?, " \
+	"image_path = ?, priv_image_path = ?, b_text = ?, b_key = ?, tag = ?, " \
 	"b_format_args = ?, num_format_args = ?, text_domain = ?, text_dir = ?, " \
 	"time = ?, insert_time = ?, args = ?, group_args = ?, " \
 	"b_execute_option = ?, b_service_responding = ?, " \
@@ -284,7 +286,7 @@
 	"ongoing_current = ?, ongoing_duration = ?, " \
 	"auto_remove = ?, default_button_index = ?, " \
 	"hide_timeout = ?, delete_timeout = ?, " \
-	"text_input_max_length = ?, event_flag = ?, extension_image_size = ?"
+	"text_input_max_length = ?, event_flag = ?, extension_image_size = ? "
 
 #define NOTIFICATION_SETTING_DB_ATTRIBUTES \
 	"package_name, app_id, allow_to_notify, do_not_disturb_except, "\

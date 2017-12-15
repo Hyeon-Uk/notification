@@ -1980,8 +1980,8 @@ EXPORT_API GVariant *notification_ipc_make_gvariant_from_noti(notification_h not
 
 	if (noti->app_icon_path != NULL)
 		g_variant_builder_add(&builder, "{iv}", NOTIFICATION_DATA_TYPE_APP_ICON_PATH, g_variant_new_string((const gchar *)noti->app_icon_path));
-	if (noti->app_name != NULL)
-		g_variant_builder_add(&builder, "{iv}", NOTIFICATION_DATA_TYPE_APP_NAME, g_variant_new_string((const gchar *)noti->app_name));
+	if (noti->app_label != NULL)
+		g_variant_builder_add(&builder, "{iv}", NOTIFICATION_DATA_TYPE_APP_LABEL, g_variant_new_string((const gchar *)noti->app_label));
 	if (noti->temp_title != NULL)
 		g_variant_builder_add(&builder, "{iv}", NOTIFICATION_DATA_TYPE_TEMP_TITLE, g_variant_new_string((const gchar *)noti->temp_title));
 	if (noti->temp_content != NULL)
@@ -2087,7 +2087,7 @@ EXPORT_API int notification_ipc_make_noti_from_gvariant(notification_h noti,
 	char *vibration_path = NULL;
 	char *priv_vibration_path = NULL;
 	char *app_icon_path = NULL;
-	char *app_name = NULL;
+	char *app_label = NULL;
 	char *temp_title = NULL;
 	char *temp_content = NULL;
 	char *tag = NULL;
@@ -2153,7 +2153,7 @@ EXPORT_API int notification_ipc_make_noti_from_gvariant(notification_h noti,
 	_variant_dict_lookup(dict, NOTIFICATION_DATA_TYPE_PROGRESS_SIZE, "d", &noti->progress_size);
 	_variant_dict_lookup(dict, NOTIFICATION_DATA_TYPE_PROGRESS_PERCENTAGE, "d", &noti->progress_percentage);
 	_variant_dict_lookup(dict, NOTIFICATION_DATA_TYPE_APP_ICON_PATH, "&s", &app_icon_path);
-	_variant_dict_lookup(dict, NOTIFICATION_DATA_TYPE_APP_NAME, "&s", &app_name);
+	_variant_dict_lookup(dict, NOTIFICATION_DATA_TYPE_APP_LABEL, "&s", &app_label);
 	_variant_dict_lookup(dict, NOTIFICATION_DATA_TYPE_TEMP_TITLE, "&s", &temp_title);
 	_variant_dict_lookup(dict, NOTIFICATION_DATA_TYPE_TEMP_CONTENT, "&s", &temp_content);
 	_variant_dict_lookup(dict, NOTIFICATION_DATA_TYPE_TAG, "&s", &tag);
@@ -2213,7 +2213,7 @@ EXPORT_API int notification_ipc_make_noti_from_gvariant(notification_h noti,
 	noti->vibration_path = _dup_string(vibration_path);
 	noti->priv_vibration_path = _dup_string(priv_vibration_path);
 	noti->app_icon_path = _dup_string(app_icon_path);
-	noti->app_name = _dup_string(app_name);
+	noti->app_label = _dup_string(app_label);
 	noti->temp_title = _dup_string(temp_title);
 	noti->temp_content = _dup_string(temp_content);
 	noti->tag = _dup_string(tag);

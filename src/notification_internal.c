@@ -2018,3 +2018,26 @@ EXPORT_API int notification_get_all_count(notification_type_e type, int *count)
 	return notification_get_all_count_for_uid(type, count, getuid());
 }
 
+EXPORT_API int notification_set_app_label(notification_h noti, char *label)
+{
+	if (noti == NULL || label == NULL)
+		return NOTIFICATION_ERROR_INVALID_PARAMETER;
+
+	if (noti->app_label)
+		free(noti->app_label);
+
+	noti->app_label = strdup(label);
+
+	return NOTIFICATION_ERROR_NONE;
+}
+
+EXPORT_API int notification_get_app_label(notification_h noti, char **label)
+{
+	if (noti == NULL || label == NULL)
+		return NOTIFICATION_ERROR_INVALID_PARAMETER;
+
+	if (noti->app_label)
+		*label = noti->app_label;
+
+	return NOTIFICATION_ERROR_NONE;
+}

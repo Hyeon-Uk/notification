@@ -85,7 +85,7 @@ struct _notification {
 	double progress_percentage;	/* percentage of progress */
 
 	char *app_icon_path;	/* Temporary stored app icon path from AIL */
-	char *app_name;		/* Temporary stored app name from AIL */
+	char *app_label;
 	char *temp_title;
 	char *temp_content;
 	char *tag;
@@ -154,7 +154,7 @@ typedef enum notification_data_type {
 	NOTIFICATION_DATA_TYPE_PROGRESS_SIZE,
 	NOTIFICATION_DATA_TYPE_PROGRESS_PERCENTAGE,
 	NOTIFICATION_DATA_TYPE_APP_ICON_PATH,
-	NOTIFICATION_DATA_TYPE_APP_NAME,
+	NOTIFICATION_DATA_TYPE_APP_LABEL,
 	NOTIFICATION_DATA_TYPE_TEMP_TITLE,
 	NOTIFICATION_DATA_TYPE_TEMP_CONTENT,
 	NOTIFICATION_DATA_TYPE_TAG,
