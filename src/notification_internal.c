@@ -106,7 +106,7 @@ void notification_call_changed_cb_for_uid(notification_op *op_list, int op_num, 
 		return;
 
 	if (op_list == NULL) {
-		NOTIFICATION_ERR("Invalid parameter");
+		ERR("Invalid parameter");
 		return;
 	}
 
@@ -229,7 +229,7 @@ EXPORT_API int notification_resister_changed_cb_for_uid(
 	noti_cb_info_new = (notification_cb_info_s *)malloc(sizeof(notification_cb_info_s));
 	if (noti_cb_info_new == NULL) {
 		/* LCOV_EXCL_START */
-		NOTIFICATION_ERR("Failed to alloc memory");
+		ERR("Failed to alloc memory");
 		return NOTIFICATION_ERROR_OUT_OF_MEMORY;
 		/* LCOV_EXCL_STOP */
 	}
@@ -1013,7 +1013,7 @@ notification_h notification_load_for_uid(char *app_id,
 
 	noti = (notification_h)calloc(1, sizeof(struct _notification));
 	if (noti == NULL) {
-		NOTIFICATION_ERR("Failed to alloc memory");
+		ERR("Failed to alloc memory");
 		set_last_result(NOTIFICATION_ERROR_OUT_OF_MEMORY);
 		return NULL;
 	}
@@ -1193,7 +1193,7 @@ EXPORT_API int notification_register_detailed_changed_cb_for_uid(
 	noti_cb_info_new = (notification_cb_info_s *)malloc(sizeof(notification_cb_info_s));
 	if (noti_cb_info_new == NULL) {
 		/* LCOV_EXCL_START */
-		NOTIFICATION_ERR("Failed to alloc memory");
+		ERR("Failed to alloc memory");
 		return NOTIFICATION_ERROR_OUT_OF_MEMORY;
 		/* LCOV_EXCL_STOP */
 	}
@@ -1402,7 +1402,7 @@ EXPORT_API int notification_post_for_uid(notification_h noti, uid_t uid)
 	ret = notification_ipc_request_insert(noti, &id);
 	if (ret == NOTIFICATION_ERROR_NONE) {
 		noti->priv_id = id;
-		NOTIFICATION_INFO("Posted notification id[%d]", id);
+		INFO("Posted notification id[%d]", id);
 	} else {
 		g_list_foreach(file_list, __remove_private_file, NULL);
 	}
@@ -1461,7 +1461,7 @@ EXPORT_API notification_h notification_load_by_tag_for_uid(const char *tag, uid_
 	char *caller_app_id;
 
 	if (tag == NULL) {
-		NOTIFICATION_ERR("Invalid tag");
+		ERR("Invalid tag");
 		set_last_result(NOTIFICATION_ERROR_INVALID_PARAMETER);
 		return NULL;
 	}
@@ -1469,7 +1469,7 @@ EXPORT_API notification_h notification_load_by_tag_for_uid(const char *tag, uid_
 	caller_app_id = notification_get_app_id_by_pid(getpid());
 	if (!caller_app_id) {
 		/* LCOV_EXCL_START */
-		NOTIFICATION_ERR("Failed to get a package name");
+		ERR("Failed to get a package name");
 		set_last_result(NOTIFICATION_ERROR_OUT_OF_MEMORY);
 		return NULL;
 		/* LCOV_EXCL_STOP */
@@ -1478,7 +1478,7 @@ EXPORT_API notification_h notification_load_by_tag_for_uid(const char *tag, uid_
 	noti = (notification_h)calloc(1, sizeof(struct _notification));
 	if (noti == NULL) {
 		/* LCOV_EXCL_START */
-		NOTIFICATION_ERR("Failed to alloc a new notification");
+		ERR("Failed to alloc a new notification");
 		set_last_result(NOTIFICATION_ERROR_OUT_OF_MEMORY);
 		free(caller_app_id);
 
@@ -1504,7 +1504,7 @@ EXPORT_API notification_h notification_create_from_package_template(const char *
 	notification_h noti;
 
 	if (app_id == NULL || template_name == NULL) {
-		NOTIFICATION_ERR("Invalid parameter");
+		ERR("Invalid parameter");
 		set_last_result(NOTIFICATION_ERROR_INVALID_PARAMETER);
 		return NULL;
 	}
@@ -1512,7 +1512,7 @@ EXPORT_API notification_h notification_create_from_package_template(const char *
 	noti = (notification_h)calloc(1, sizeof(struct _notification));
 	if (noti == NULL) {
 		/* LCOV_EXCL_START */
-		NOTIFICATION_ERR("Failed to alloc memory");
+		ERR("Failed to alloc memory");
 		set_last_result(NOTIFICATION_ERROR_OUT_OF_MEMORY);
 		return NULL;
 		/* LCOV_EXCL_STOP */
@@ -1685,7 +1685,7 @@ EXPORT_API int notification_post_with_event_cb_for_uid(notification_h noti, even
 		info = (notification_event_cb_info_s *)malloc(sizeof(notification_cb_info_s));
 		if (info == NULL) {
 			/* LCOV_EXCL_START */
-			NOTIFICATION_ERR("Failed to alloc memory");
+			ERR("Failed to alloc memory");
 			return NOTIFICATION_ERROR_OUT_OF_MEMORY;
 			/* LCOV_EXCL_STOP */
 		}
@@ -1767,7 +1767,7 @@ EXPORT_API int notification_check_event_receiver_available(notification_h noti, 
 
 	ret = notification_get_id(noti, NULL, &priv_id);
 	if (ret != NOTIFICATION_ERROR_NONE) {
-		NOTIFICATION_ERR("Failed to get priv id");
+		ERR("Failed to get priv id");
 		return ret;
 	}
 
@@ -1867,13 +1867,13 @@ EXPORT_API int notification_set_extension_event_handler(notification_h noti,
 	char *del = NULL;
 
 	if (noti == NULL || event_handler == NULL) {
-		NOTIFICATION_ERR("Invalid parameter");
+		ERR("Invalid parameter");
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 	}
 
 	if (event < NOTIFICATION_EVENT_TYPE_HIDDEN_BY_USER ||
 	    event > NOTIFICATION_EVENT_TYPE_HIDDEN_BY_EXTERNAL) {
-		NOTIFICATION_ERR("Invalid event [%d]", event);
+		ERR("Invalid event [%d]", event);
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 	}
 
@@ -1890,7 +1890,7 @@ EXPORT_API int notification_set_extension_event_handler(notification_h noti,
 	err = app_control_export_as_bundle(event_handler, &app_control_bundle);
 	if (err != APP_CONTROL_ERROR_NONE) {
 		/* LCOV_EXCL_START */
-		NOTIFICATION_ERR("Failed to export app_control to bundle [%d]", err);
+		ERR("Failed to export app_control to bundle [%d]", err);
 		ret = NOTIFICATION_ERROR_IO_ERROR;
 		goto out;
 		/* LCOV_EXCL_STOP */
@@ -1899,7 +1899,7 @@ EXPORT_API int notification_set_extension_event_handler(notification_h noti,
 	err = bundle_encode(app_control_bundle, &b_raw, &len);
 	if (err != BUNDLE_ERROR_NONE) {
 		/* LCOV_EXCL_START */
-		NOTIFICATION_ERR("Failed to encode bundle [%d]", err);
+		ERR("Failed to encode bundle [%d]", err);
 		ret = NOTIFICATION_ERROR_IO_ERROR;
 		goto out;
 		/* LCOV_EXCL_STOP */
@@ -1908,7 +1908,7 @@ EXPORT_API int notification_set_extension_event_handler(notification_h noti,
 	err = bundle_add_str(noti->args, key, (const char *)b_raw);
 	if (err != BUNDLE_ERROR_NONE) {
 		/* LCOV_EXCL_START */
-		NOTIFICATION_ERR("Failed to add str to bundle [%d]", err);
+		ERR("Failed to add str to bundle [%d]", err);
 		ret = NOTIFICATION_ERROR_IO_ERROR;
 		goto out;
 		/* LCOV_EXCL_STOP */
@@ -1935,13 +1935,13 @@ EXPORT_API int notification_get_extension_event_handler(notification_h noti,
 	app_control_h ret_app_control = NULL;
 
 	if (noti == NULL || event_handler == NULL) {
-		NOTIFICATION_ERR("Invalid parameter");
+		ERR("Invalid parameter");
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 	}
 
 	if (event < NOTIFICATION_EVENT_TYPE_HIDDEN_BY_USER ||
 	    event > NOTIFICATION_EVENT_TYPE_HIDDEN_BY_EXTERNAL) {
-		NOTIFICATION_ERR("Invalid event [%d]", event);
+		ERR("Invalid event [%d]", event);
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 	}
 
@@ -1949,14 +1949,14 @@ EXPORT_API int notification_get_extension_event_handler(notification_h noti,
 
 	bundle_get_str(noti->args, key, &ret_str);
 	if (ret_str == NULL) {
-		NOTIFICATION_ERR("No handler, Invalid event[%d]", event);
+		ERR("No handler, Invalid event[%d]", event);
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 	}
 
 	app_control_bundle = _create_bundle_from_bundle_raw((bundle_raw *)ret_str);
 	if (app_control_bundle == NULL) {
 		/* LCOV_EXCL_START */
-		NOTIFICATION_ERR("Failed to create bundle");
+		ERR("Failed to create bundle");
 		return NOTIFICATION_ERROR_IO_ERROR;
 		/* LCOV_EXCL_STOP */
 	}
@@ -1964,7 +1964,7 @@ EXPORT_API int notification_get_extension_event_handler(notification_h noti,
 	err = app_control_create(&ret_app_control);
 	if (err != APP_CONTROL_ERROR_NONE) {
 		/* LCOV_EXCL_START */
-		NOTIFICATION_ERR("Failed to create app control [%d]", err);
+		ERR("Failed to create app control [%d]", err);
 		ret = NOTIFICATION_ERROR_IO_ERROR;
 		goto out;
 		/* LCOV_EXCL_STOP */
@@ -1973,8 +1973,7 @@ EXPORT_API int notification_get_extension_event_handler(notification_h noti,
 	err = app_control_import_from_bundle(ret_app_control, app_control_bundle);
 	if (err != APP_CONTROL_ERROR_NONE) {
 		/* LCOV_EXCL_START */
-		NOTIFICATION_ERR("Failed to import app control from bundle [%d]",
-				err);
+		ERR("Failed to import app control from bundle [%d]", err);
 		app_control_destroy(ret_app_control);
 		ret = NOTIFICATION_ERROR_IO_ERROR;
 		goto out;
@@ -1995,18 +1994,18 @@ EXPORT_API int notification_get_all_count_for_uid(notification_type_e type, int 
 	int ret;
 
 	if (count == NULL) {
-		NOTIFICATION_ERR("Invalid parameter - count is null");
+		ERR("Invalid parameter - count is null");
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 	}
 
 	if (type < NOTIFICATION_TYPE_NONE || type > NOTIFICATION_TYPE_MAX) {
-		NOTIFICATION_ERR("Invalid parameter - wrong type");
+		ERR("Invalid parameter - wrong type");
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 	}
 
 	ret = notification_ipc_request_get_all_count(type, count, uid);
 	if (ret != NOTIFICATION_ERROR_NONE) {
-		NOTIFICATION_ERR("Failed to get count [%d]", ret);
+		ERR("Failed to get count [%d]", ret);
 		return ret;
 	}
 

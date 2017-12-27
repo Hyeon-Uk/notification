@@ -84,7 +84,7 @@ char *notification_get_app_id_by_pid(int pid)
 
 	dup_app_id = strdup(app_id);
 	if (!dup_app_id)
-		NOTIFICATION_ERR("Failed to strdup, errno[%d]", errno);
+		ERR("Failed to strdup, errno[%d]", errno);
 
 	return dup_app_id;
 }
@@ -403,8 +403,7 @@ EXPORT_API int notification_set_text(notification_h noti,
 			break;
 
 		default:
-			NOTIFICATION_ERR("Invalid variable type. : %d",
-					 var_type);
+			ERR("Invalid variable type. : %d", var_type);
 			noti_err = NOTIFICATION_ERROR_INVALID_PARAMETER;
 			break;
 		}
@@ -560,7 +559,7 @@ EXPORT_API int notification_get_text(notification_h noti,
 			if (NOTI_TEXT_RESULT_LEN - 1 > strlen(result_str)) {
 				strncat(result_str, temp_str, 1);
 			} else {
-				NOTIFICATION_WARN("The buffer is full");
+				WARN("The buffer is full");
 				break;
 			}
 		} else {
@@ -568,7 +567,7 @@ EXPORT_API int notification_get_text(notification_h noti,
 				if (NOTI_TEXT_RESULT_LEN - 1 > strlen(result_str)) {
 					strncat(result_str, temp_str, 1);
 				} else {
-					NOTIFICATION_WARN("The buffer is full");
+					WARN("The buffer is full");
 					break;
 				}
 			} else if (*(temp_str + 1) == 'd') {
@@ -622,14 +621,12 @@ EXPORT_API int notification_get_text(notification_h noti,
 					bindtextdomain(noti->domain, noti->dir);
 					translated_str =
 						dgettext(noti->domain, ret_val);
-					NOTIFICATION_INFO("translated_str[%s]",
-						translated_str);
+					INFO("translated_str[%s]", translated_str);
 				} else if (ret_val != NULL) {
 					/* Get system string */
 					translated_str =
 						dgettext("sys_string", ret_val);
-					NOTIFICATION_INFO("translated_str[%s]",
-						translated_str);
+					INFO("translated_str[%s]", translated_str);
 				} else {
 					translated_str = NULL;
 				}
@@ -741,7 +738,7 @@ EXPORT_API int notification_get_text(notification_h noti,
 					if (NOTI_TEXT_RESULT_LEN - 1 > strlen(result_str)) {
 						strncat(result_str, temp_str, 1);
 					} else {
-						NOTIFICATION_WARN("The buffer is full");
+						WARN("The buffer is full");
 						break;
 					}
 				}
@@ -749,7 +746,7 @@ EXPORT_API int notification_get_text(notification_h noti,
 				if (NOTI_TEXT_RESULT_LEN - 1 > strlen(result_str)) {
 					strncat(result_str, temp_str, 1);
 				} else {
-					NOTIFICATION_WARN("The buffer is full");
+					WARN("The buffer is full");
 					break;
 				}
 			}
@@ -1117,7 +1114,7 @@ EXPORT_API int notification_set_launch_option(notification_h noti,
 	}
 
 	if ((ret = app_control_export_as_bundle(app_control, &b)) != APP_CONTROL_ERROR_NONE) {
-		NOTIFICATION_ERR("Failed to convert appcontrol to bundle[%d]", ret);
+		ERR("Failed to convert appcontrol to bundle[%d]", ret);
 		err = NOTIFICATION_ERROR_INVALID_PARAMETER;
 		goto out;
 	}
@@ -1158,19 +1155,19 @@ EXPORT_API int notification_get_launch_option(notification_h noti,
 			} else {
 				/* LCOV_EXCL_START */
 				app_control_destroy(app_control_new);
-				NOTIFICATION_ERR("Failed to import app control from bundle[%d]", ret);
+				ERR("Failed to import app control from bundle[%d]", ret);
 				return NOTIFICATION_ERROR_IO_ERROR;
 				/* LCOV_EXCL_STOP */
 			}
 		} else {
 			/* LCOV_EXCL_START */
-			NOTIFICATION_ERR("Failed to create app control[%d]", ret);
+			ERR("Failed to create app control[%d]", ret);
 			return NOTIFICATION_ERROR_IO_ERROR;
 			/* LCOV_EXCL_STOP */
 		}
 	} else {
 		/* LCOV_EXCL_START */
-		NOTIFICATION_ERR("Failed to get execute option[%d]", ret);
+		ERR("Failed to get execute option[%d]", ret);
 		return ret;
 		/* LCOV_EXCL_STOP */
 	}
@@ -1185,19 +1182,19 @@ EXPORT_API int notification_set_event_handler(notification_h noti, notification_
 
 	if (noti == NULL) {
 		err = NOTIFICATION_ERROR_INVALID_PARAMETER;
-		NOTIFICATION_ERR("Invalid notification handle");
+		ERR("Invalid notification handle");
 		goto out;
 	}
 
 	if (event_type < NOTIFICATION_EVENT_TYPE_CLICK_ON_BUTTON_1
 		|| event_type > NOTIFICATION_EVENT_TYPE_MAX) {
-		NOTIFICATION_ERR("Invalid event type");
+		ERR("Invalid event type");
 		err = NOTIFICATION_ERROR_INVALID_PARAMETER;
 		goto out;
 	}
 
 	if ((err = app_control_export_as_bundle(event_handler, &app_control_bundle)) != APP_CONTROL_ERROR_NONE) {
-		NOTIFICATION_ERR("Failed to export app_control to bundle[%d]", err);
+		ERR("Failed to export app_control to bundle[%d]", err);
 		goto out;
 	}
 
@@ -1218,14 +1215,14 @@ EXPORT_API int notification_get_event_handler(notification_h noti, notification_
 
 	if (noti == NULL || event_handler == NULL) {
 		err = NOTIFICATION_ERROR_INVALID_PARAMETER;
-		NOTIFICATION_ERR("Invalid handle");
+		ERR("Invalid handle");
 		goto out;
 	}
 
 	if (event_type < NOTIFICATION_EVENT_TYPE_CLICK_ON_BUTTON_1
 		|| event_type > NOTIFICATION_EVENT_TYPE_MAX) {
 		/* LCOV_EXCL_START */
-		NOTIFICATION_ERR("Invalid event type");
+		ERR("Invalid event type");
 		err = NOTIFICATION_ERROR_INVALID_PARAMETER;
 		goto out;
 		/* LCOV_EXCL_STOP */
@@ -1234,7 +1231,7 @@ EXPORT_API int notification_get_event_handler(notification_h noti, notification_
 	b = noti->b_event_handler[event_type];
 	if (b == NULL) {
 		/* LCOV_EXCL_START */
-		NOTIFICATION_ERR("No event handler");
+		ERR("No event handler");
 		err = NOTIFICATION_ERROR_NOT_EXIST_ID;
 		goto out;
 		/* LCOV_EXCL_STOP */
@@ -1243,7 +1240,7 @@ EXPORT_API int notification_get_event_handler(notification_h noti, notification_
 	err = app_control_create(&app_control_new);
 	if (err != APP_CONTROL_ERROR_NONE || app_control_new == NULL) {
 		/* LCOV_EXCL_START */
-		NOTIFICATION_ERR("Failted to create app_control[%d]", err);
+		ERR("Failed to create app_control[%d]", err);
 		err = NOTIFICATION_ERROR_IO_ERROR;
 		goto out;
 		/* LCOV_EXCL_STOP */
@@ -1256,7 +1253,7 @@ EXPORT_API int notification_get_event_handler(notification_h noti, notification_
 		/* LCOV_EXCL_START */
 		app_control_destroy(app_control_new);
 		app_control_new = NULL;
-		NOTIFICATION_ERR("Failed to import app control from bundle[%d]", err);
+		ERR("Failed to import app control from bundle[%d]", err);
 		err = NOTIFICATION_ERROR_IO_ERROR;
 		goto out;
 		/* LCOV_EXCL_STOP */
@@ -1462,7 +1459,7 @@ static notification_h _notification_create(notification_type_e type)
 	int err = 0;
 
 	if (type <= NOTIFICATION_TYPE_NONE || type > NOTIFICATION_TYPE_MAX) {
-		NOTIFICATION_ERR("Invalid notification type[%d]", type);
+		ERR("Invalid notification type[%d]", type);
 		set_last_result(NOTIFICATION_ERROR_INVALID_PARAMETER);
 		return NULL;
 	}
@@ -1470,7 +1467,7 @@ static notification_h _notification_create(notification_type_e type)
 	noti = (notification_h)calloc(1, sizeof(struct _notification));
 	if (noti == NULL) {
 		/* LCOV_EXCL_START */
-		NOTIFICATION_ERR("Failed to alloc memory");
+		ERR("Failed to alloc memory");
 		set_last_result(NOTIFICATION_ERROR_OUT_OF_MEMORY);
 		return NULL;
 		/* LCOV_EXCL_STOP */
@@ -1494,7 +1491,7 @@ static notification_h _notification_create(notification_type_e type)
 	noti->auto_remove = true;
 	noti->caller_app_id = notification_get_app_id_by_pid(getpid());
 	if (noti->caller_app_id == NULL) {
-		NOTIFICATION_ERR("Failed to get caller_app_id");
+		ERR("Failed to get caller_app_id");
 		err = -1;
 		goto out;
 	}
@@ -1517,7 +1514,7 @@ static notification_h _notification_create(notification_type_e type)
 
 		err = _notification_get_domain_name(pkg_id, &domain_name);
 		if (err != 0 || domain_name == NULL) {
-			NOTIFICATION_WARN("Failed to get domain_name");
+			WARN("Failed to get domain_name");
 			err = 0;
 			/* In the case of the web app,
 			the domain can not be obtained. */
@@ -1529,7 +1526,7 @@ static notification_h _notification_create(notification_type_e type)
 		err = package_info_create(pkg_id, &package_info);
 		if (err != PACKAGE_MANAGER_ERROR_NONE || package_info == NULL) {
 			/* LCOV_EXCL_START */
-			NOTIFICATION_WARN("Failed to create package_info err[%d] pkg_id[%s]",
+			WARN("Failed to create package_info err[%d] pkg_id[%s]",
 					err, pkg_id);
 			goto out;
 			/* LCOV_EXCL_STOP */
@@ -1538,7 +1535,7 @@ static notification_h _notification_create(notification_type_e type)
 		err = package_info_get_root_path(package_info, &app_root_path);
 		if (err != PACKAGE_MANAGER_ERROR_NONE || app_root_path == NULL) {
 			/* LCOV_EXCL_START */
-			NOTIFICATION_WARN("Failed to get root path err[%d] path[%p]",
+			WARN("Failed to get root path err[%d] path[%p]",
 					err, app_root_path);
 			goto out;
 			/* LCOV_EXCL_STOP */
@@ -1550,7 +1547,7 @@ static notification_h _notification_create(notification_type_e type)
 		err = pkgmgrinfo_appinfo_get_usr_appinfo(noti->caller_app_id,
 					getuid(), &appinfo);
 		if (err != PMINFO_R_OK || appinfo == NULL) {
-			NOTIFICATION_WARN("Failed to get appinfo err[%d]",
+			WARN("Failed to get appinfo err[%d]",
 					err, noti->caller_app_id);
 			err = 0;
 			goto out;
@@ -1558,7 +1555,7 @@ static notification_h _notification_create(notification_type_e type)
 
 		err = pkgmgrinfo_appinfo_get_label(appinfo, &label);
 		if (err != PMINFO_R_OK || label == NULL) {
-			NOTIFICATION_WARN("Failed to get app_label err[%d]", err);
+			WARN("Failed to get app_label err[%d]", err);
 			err = 0;
 			goto out;
 		}
@@ -1611,14 +1608,14 @@ EXPORT_API int notification_clone(notification_h noti, notification_h *clone)
 	notification_h new_noti = NULL;
 
 	if (noti == NULL || clone == NULL) {
-		NOTIFICATION_ERR("Invalid handle");
+		ERR("Invalid handle");
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 	}
 
 	new_noti = (notification_h) calloc(1, sizeof(struct _notification));
 	if (new_noti == NULL) {
 		/* LCOV_EXCL_START */
-		NOTIFICATION_ERR("Failed to alloc memory");
+		ERR("Failed to alloc memory");
 		return NOTIFICATION_ERROR_OUT_OF_MEMORY;
 		/* LCOV_EXCL_STOP */
 	}
@@ -1924,7 +1921,7 @@ EXPORT_API int notification_get_auto_remove(notification_h noti, bool *auto_remo
 EXPORT_API int notification_save_as_template(notification_h noti, const char *template_name)
 {
 	if (noti == NULL || template_name == NULL) {
-		NOTIFICATION_ERR("Invalid parameter");
+		ERR("Invalid parameter");
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 	}
 
@@ -1937,7 +1934,7 @@ EXPORT_API notification_h notification_create_from_template(const char *template
 	notification_h noti = NULL;
 
 	if (template_name == NULL) {
-		NOTIFICATION_ERR("Invalid parameter");
+		ERR("Invalid parameter");
 		set_last_result(NOTIFICATION_ERROR_INVALID_PARAMETER);
 		return NULL;
 	}
@@ -1945,7 +1942,7 @@ EXPORT_API notification_h notification_create_from_template(const char *template
 	noti = (notification_h)calloc(1, sizeof(struct _notification));
 	if (noti == NULL) {
 		/* LCOV_EXCL_START */
-		NOTIFICATION_ERR("Failed to alloc memory");
+		ERR("Failed to alloc memory");
 		set_last_result(NOTIFICATION_ERROR_OUT_OF_MEMORY);
 		return NULL;
 		/* LCOV_EXCL_STOP */

@@ -52,7 +52,7 @@ static GHashTable *_noti_dnd_cb_hash = NULL;
 EXPORT_API int notification_setting_get_setting_array_for_uid(notification_setting_h *setting_array, int *count, uid_t uid)
 {
 	if (setting_array == NULL || count == NULL) {
-		NOTIFICATION_ERR("Invalid parameter");
+		ERR("Invalid parameter");
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 	}
 
@@ -67,7 +67,7 @@ EXPORT_API int notification_setting_get_setting_array(notification_setting_h *se
 EXPORT_API int notification_setting_get_setting_by_appid_for_uid(const char *app_id, notification_setting_h *setting, uid_t uid)
 {
 	if (app_id == NULL || setting == NULL) {
-		NOTIFICATION_ERR("Invalid parameter");
+		ERR("Invalid parameter");
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 	}
 
@@ -103,12 +103,12 @@ EXPORT_API int notification_setting_get_setting(notification_setting_h *setting)
 EXPORT_API int notification_setting_get_package_name(notification_setting_h setting, char **value)
 {
 	if (setting == NULL || value == NULL) {
-		NOTIFICATION_ERR("Invalid parameter");
+		ERR("Invalid parameter");
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 	}
 
 	if (setting->package_name == NULL) {
-		NOTIFICATION_ERR("setting->package_name is null");
+		ERR("setting->package_name is null");
 		return NOTIFICATION_ERROR_NOT_EXIST_ID;
 	}
 
@@ -120,12 +120,12 @@ EXPORT_API int notification_setting_get_package_name(notification_setting_h sett
 EXPORT_API int notification_setting_get_appid(notification_setting_h setting, char **app_id)
 {
 	if (setting == NULL || app_id == NULL) {
-		NOTIFICATION_ERR("Invalid parameter");
+		ERR("Invalid parameter");
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 	}
 
 	if (setting->app_id == NULL) {
-		NOTIFICATION_ERR("setting->app_id is null");
+		ERR("setting->app_id is null");
 		return NOTIFICATION_ERROR_NOT_EXIST_ID;
 	}
 
@@ -137,7 +137,7 @@ EXPORT_API int notification_setting_get_appid(notification_setting_h setting, ch
 EXPORT_API int notification_setting_get_allow_to_notify(notification_setting_h setting, bool *value)
 {
 	if (setting == NULL || value == NULL) {
-		NOTIFICATION_ERR("Invalid parameter");
+		ERR("Invalid parameter");
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 	}
 
@@ -149,7 +149,7 @@ EXPORT_API int notification_setting_get_allow_to_notify(notification_setting_h s
 EXPORT_API int notification_setting_set_allow_to_notify(notification_setting_h setting, bool value)
 {
 	if (setting == NULL) {
-		NOTIFICATION_ERR("Invalid parameter");
+		ERR("Invalid parameter");
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 	}
 
@@ -161,7 +161,7 @@ EXPORT_API int notification_setting_set_allow_to_notify(notification_setting_h s
 EXPORT_API int notification_setting_get_do_not_disturb_except(notification_setting_h setting, bool *value)
 {
 	if (setting == NULL || value == NULL) {
-		NOTIFICATION_ERR("Invalid parameter");
+		ERR("Invalid parameter");
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 	}
 
@@ -173,7 +173,7 @@ EXPORT_API int notification_setting_get_do_not_disturb_except(notification_setti
 EXPORT_API int notification_setting_set_do_not_disturb_except(notification_setting_h setting, bool value)
 {
 	if (setting == NULL) {
-		NOTIFICATION_ERR("Invalid parameter");
+		ERR("Invalid parameter");
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 	}
 
@@ -185,7 +185,7 @@ EXPORT_API int notification_setting_set_do_not_disturb_except(notification_setti
 EXPORT_API int notification_setting_get_visibility_class(notification_setting_h setting, int *value)
 {
 	if (setting == NULL || value == NULL) {
-		NOTIFICATION_ERR("Invalid parameter");
+		ERR("Invalid parameter");
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 	}
 
@@ -197,7 +197,7 @@ EXPORT_API int notification_setting_get_visibility_class(notification_setting_h 
 EXPORT_API int notification_setting_set_visibility_class(notification_setting_h setting, int value)
 {
 	if (setting == NULL) {
-		NOTIFICATION_ERR("Invalid parameter");
+		ERR("Invalid parameter");
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 	}
 
@@ -209,7 +209,7 @@ EXPORT_API int notification_setting_set_visibility_class(notification_setting_h 
 EXPORT_API int notification_setting_get_pop_up_notification(notification_setting_h setting, bool *value)
 {
 	if (setting == NULL || value == NULL) {
-		NOTIFICATION_ERR("Invalid parameter");
+		ERR("Invalid parameter");
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 	}
 
@@ -220,7 +220,7 @@ EXPORT_API int notification_setting_get_pop_up_notification(notification_setting
 EXPORT_API int notification_setting_set_pop_up_notification(notification_setting_h setting, bool value)
 {
 	if (setting == NULL) {
-		NOTIFICATION_ERR("Invalid parameter");
+		ERR("Invalid parameter");
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 	}
 
@@ -231,7 +231,7 @@ EXPORT_API int notification_setting_set_pop_up_notification(notification_setting
 EXPORT_API int notification_setting_get_lock_screen_content(notification_setting_h setting, lock_screen_content_level_e *level)
 {
 	if (setting == NULL || level == NULL) {
-		NOTIFICATION_ERR("Invalid parameter");
+		ERR("Invalid parameter");
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 	}
 
@@ -243,7 +243,7 @@ EXPORT_API int notification_setting_get_lock_screen_content(notification_setting
 EXPORT_API int notification_setting_set_lock_screen_content(notification_setting_h setting, lock_screen_content_level_e level)
 {
 	if (setting == NULL) {
-		NOTIFICATION_ERR("Invalid parameter");
+		ERR("Invalid parameter");
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 	}
 
@@ -255,7 +255,7 @@ EXPORT_API int notification_setting_set_lock_screen_content(notification_setting
 EXPORT_API int notification_setting_get_app_disabled(notification_setting_h setting, bool *value)
 {
 	if (setting == NULL || value == NULL) {
-		NOTIFICATION_ERR("Invalid parameter");
+		ERR("Invalid parameter");
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 	}
 
@@ -267,7 +267,7 @@ EXPORT_API int notification_setting_get_app_disabled(notification_setting_h sett
 EXPORT_API int notification_setting_update_setting_for_uid(notification_setting_h setting, uid_t uid)
 {
 	if (setting == NULL) {
-		NOTIFICATION_ERR("Invalid parameter");
+		ERR("Invalid parameter");
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 	}
 
@@ -282,7 +282,7 @@ EXPORT_API int notification_setting_update_setting(notification_setting_h settin
 EXPORT_API int notification_setting_free_notification(notification_setting_h setting)
 {
 	if (setting == NULL) {
-		NOTIFICATION_ERR("Invalid parameter");
+		ERR("Invalid parameter");
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 	}
 
@@ -316,7 +316,7 @@ static bool _is_package_in_setting_table(sqlite3 *db, const char *package_name, 
 
 	if (query == NULL) {
 		/* LCOV_EXCL_START */
-		NOTIFICATION_ERR("fail to alloc query");
+		ERR("fail to alloc query");
 		return false;
 		/* LCOV_EXCL_STOP */
 	}
@@ -324,7 +324,7 @@ static bool _is_package_in_setting_table(sqlite3 *db, const char *package_name, 
 	sql_ret = sqlite3_prepare_v2(db, query, -1, &stmt, NULL);
 	if (sql_ret != SQLITE_OK) {
 		/* LCOV_EXCL_START */
-		NOTIFICATION_ERR("sqlite3_prepare_v2 failed [%d][%s]", sql_ret,
+		ERR("sqlite3_prepare_v2 failed [%d][%s]", sql_ret,
 				sqlite3_errmsg(db));
 		err = false;
 		goto out;
@@ -333,7 +333,7 @@ static bool _is_package_in_setting_table(sqlite3 *db, const char *package_name, 
 
 	sql_ret = sqlite3_step(stmt);
 	if (sql_ret == SQLITE_DONE) {
-		NOTIFICATION_INFO("No matched [%s] from package_name [%s], [%d]",
+		INFO("No matched [%s] from package_name [%s], [%d]",
 				app_id, package_name, sql_ret);
 		err = false;
 		goto out;
@@ -341,7 +341,7 @@ static bool _is_package_in_setting_table(sqlite3 *db, const char *package_name, 
 
 	if (sql_ret != SQLITE_OK && sql_ret != SQLITE_ROW) {
 		/* LCOV_EXCL_START */
-		NOTIFICATION_ERR("sqlite3_step failed [%d][%s]", sql_ret,
+		ERR("sqlite3_step failed [%d][%s]", sql_ret,
 				sqlite3_errmsg(db));
 		err = false;
 		goto out;
@@ -372,7 +372,7 @@ static int _foreach_app_info_callback(const pkgmgrinfo_appinfo_h handle,
 	ret = pkgmgrinfo_appinfo_get_appid(handle, &app_id);
 	if (ret != PACKAGE_MANAGER_ERROR_NONE) {
 		/* LCOV_EXCL_START */
-		NOTIFICATION_ERR("Failed to get appid from pkgmgrinfo [%d]",
+		ERR("Failed to get appid from pkgmgrinfo [%d]",
 				ret);
 		err = false;
 		goto out;
@@ -382,14 +382,14 @@ static int _foreach_app_info_callback(const pkgmgrinfo_appinfo_h handle,
 	ret = pkgmgrinfo_appinfo_get_pkgname(handle, &package_name);
 	if (ret != PACKAGE_MANAGER_ERROR_NONE) {
 		/* LCOV_EXCL_START */
-		NOTIFICATION_ERR("Failed to get pkgname from pkgmgrinfo[%d]",
+		ERR("Failed to get pkgname from pkgmgrinfo[%d]",
 				ret);
 		goto out;
 		/* LCOV_EXCL_STOP */
 	}
 
 	if (_is_package_in_setting_table(db, package_name, app_id, info->uid) == true) {
-		NOTIFICATION_INFO("uid %d [%s] is exist", info->uid, app_id);
+		INFO("uid %d [%s] is exist", info->uid, app_id);
 		err = false;
 		goto out;
 	}
@@ -400,7 +400,7 @@ static int _foreach_app_info_callback(const pkgmgrinfo_appinfo_h handle,
 				info->uid, package_name, app_id);
 	if (query == NULL) {
 		/* LCOV_EXCL_START */
-		NOTIFICATION_ERR("fail to alloc query");
+		ERR("fail to alloc query");
 		err = false;
 		goto out;
 		/* LCOV_EXCL_STOP */
@@ -410,7 +410,7 @@ static int _foreach_app_info_callback(const pkgmgrinfo_appinfo_h handle,
 	if (ret != NOTIFICATION_ERROR_NONE)
 		err = false;
 	else
-		NOTIFICATION_INFO("uid [%d] package_name [%s] appid [%s] is inserted",
+		INFO("uid [%d] package_name [%s] appid [%s] is inserted",
 				info->uid, package_name, app_id);
 
 out:
@@ -431,7 +431,7 @@ static int _foreach_package_info_callback(const pkgmgrinfo_pkginfo_h package_inf
 	pkgmgr_ret = pkgmgrinfo_pkginfo_get_pkgname(package_info, &package_name);
 	if (pkgmgr_ret != PACKAGE_MANAGER_ERROR_NONE) {
 		/* LCOV_EXCL_START */
-		NOTIFICATION_ERR("Failed to get pkgname from pkgmgrinfo[%d]", pkgmgr_ret);
+		ERR("Failed to get pkgname from pkgmgrinfo[%d]", pkgmgr_ret);
 		err = false;
 		goto out;
 		/* LCOV_EXCL_STOP */
@@ -440,7 +440,7 @@ static int _foreach_package_info_callback(const pkgmgrinfo_pkginfo_h package_inf
 	pkgmgr_ret = pkgmgrinfo_appinfo_filter_create(&handle);
 	if (pkgmgr_ret != PMINFO_R_OK) {
 		/* LCOV_EXCL_START */
-		NOTIFICATION_ERR("Failed to create appinofo[%d]",
+		ERR("Failed to create appinofo[%d]",
 					pkgmgr_ret);
 		err = false;
 		goto out;
@@ -450,7 +450,7 @@ static int _foreach_package_info_callback(const pkgmgrinfo_pkginfo_h package_inf
 	pkgmgr_ret = pkgmgrinfo_appinfo_filter_add_string(handle, PMINFO_APPINFO_PROP_APP_PACKAGE, package_name);
 	if (pkgmgr_ret != PMINFO_R_OK) {
 		/* LCOV_EXCL_START */
-		NOTIFICATION_ERR("Failed to add string to appinfo[%d]", pkgmgr_ret);
+		ERR("Failed to add string to appinfo[%d]", pkgmgr_ret);
 		err = false;
 		goto out;
 		/* LCOV_EXCL_STOP */
@@ -459,7 +459,7 @@ static int _foreach_package_info_callback(const pkgmgrinfo_pkginfo_h package_inf
 	pkgmgr_ret = pkgmgrinfo_appinfo_usr_filter_foreach_appinfo(handle, _foreach_app_info_callback, info, info->uid);
 	if (pkgmgr_ret != PMINFO_R_OK) {
 		/* LCOV_EXCL_START */
-		NOTIFICATION_ERR("Failed to iterate appinfo[%d]", pkgmgr_ret);
+		ERR("Failed to iterate appinfo[%d]", pkgmgr_ret);
 		err = false;
 		goto out;
 		/* LCOV_EXCL_STOP */
@@ -487,7 +487,7 @@ static int _install_and_update_package(const char *package_name, uid_t uid)
 	pkgmgr_ret = pkgmgrinfo_pkginfo_filter_create(&handle);
 	if (pkgmgr_ret != PMINFO_R_OK) {
 		/* LCOV_EXCL_START */
-		NOTIFICATION_ERR("Failed to create pkginfo_filter[%d]", pkgmgr_ret);
+		ERR("Failed to create pkginfo_filter[%d]", pkgmgr_ret);
 		err = NOTIFICATION_ERROR_FROM_DB;
 		goto out;
 		/* LCOV_EXCL_STOP */
@@ -496,7 +496,7 @@ static int _install_and_update_package(const char *package_name, uid_t uid)
 	pkgmgr_ret = pkgmgrinfo_pkginfo_filter_add_string(handle, PMINFO_PKGINFO_PROP_PACKAGE_PRIVILEGE, NOTIFICATION_PRIVILEGE);
 	if (pkgmgr_ret != PMINFO_R_OK) {
 		/* LCOV_EXCL_START */
-		NOTIFICATION_ERR("Failed to add string to pkginfo_filter[%d]", pkgmgr_ret);
+		ERR("Failed to add string to pkginfo_filter[%d]", pkgmgr_ret);
 		err = NOTIFICATION_ERROR_FROM_DB;
 		goto out;
 		/* LCOV_EXCL_STOP */
@@ -505,7 +505,7 @@ static int _install_and_update_package(const char *package_name, uid_t uid)
 	pkgmgr_ret = pkgmgrinfo_pkginfo_filter_add_string(handle, PMINFO_PKGINFO_PROP_PACKAGE_ID, package_name);
 	if (pkgmgr_ret != PMINFO_R_OK) {
 		/* LCOV_EXCL_START */
-		NOTIFICATION_ERR("Failed to add string to pkginfo_filter[%d]", pkgmgr_ret);
+		ERR("Failed to add string to pkginfo_filter[%d]", pkgmgr_ret);
 		err = NOTIFICATION_ERROR_FROM_DB;
 		goto out;
 		/* LCOV_EXCL_STOP */
@@ -516,7 +516,7 @@ static int _install_and_update_package(const char *package_name, uid_t uid)
 	pkgmgr_ret = pkgmgrinfo_pkginfo_usr_filter_foreach_pkginfo(handle, _foreach_package_info_callback, &info, uid);
 	if (pkgmgr_ret != PMINFO_R_OK) {
 		/* LCOV_EXCL_START */
-		NOTIFICATION_ERR("Failed to iterate pkginfo[%d]", pkgmgr_ret);
+		ERR("Failed to iterate pkginfo[%d]", pkgmgr_ret);
 		err = NOTIFICATION_ERROR_FROM_DB;
 		goto out;
 		/* LCOV_EXCL_STOP */
@@ -546,7 +546,7 @@ static int _delete_package_from_setting_db(const char *package_name, uid_t uid)
 	is_package_in_setting_table = _is_package_in_setting_table(db,
 				package_name, NULL, uid);
 	if (is_package_in_setting_table == false) {
-		NOTIFICATION_INFO("[%s] is not exist", package_name);
+		INFO("[%s] is not exist", package_name);
 		goto out;
 	}
 
@@ -556,7 +556,7 @@ static int _delete_package_from_setting_db(const char *package_name, uid_t uid)
 				package_name);
 	if (query == NULL) {
 		/* LCOV_EXCL_START */
-		NOTIFICATION_ERR("Failed to alloc query");
+		ERR("Failed to alloc query");
 		err = NOTIFICATION_ERROR_OUT_OF_MEMORY;
 		goto out;
 		/* LCOV_EXCL_STOP */
@@ -582,7 +582,7 @@ EXPORT_API int notification_setting_refresh_setting_table(uid_t uid)
 	pkgmgrinfo_pkginfo_filter_h filter = NULL;
 	setting_local_info info;
 
-	NOTIFICATION_INFO("Refresh setting table [%d]", uid);
+	INFO("Refresh setting table [%d]", uid);
 
 	db = notification_db_open();
 	if (!db)
@@ -591,7 +591,7 @@ EXPORT_API int notification_setting_refresh_setting_table(uid_t uid)
 	pkgmgr_ret = pkgmgrinfo_pkginfo_filter_create(&filter);
 	if (pkgmgr_ret != PMINFO_R_OK) {
 		/* LCOV_EXCL_START */
-		NOTIFICATION_ERR("Failed to create pkginfo_filter[%d]", pkgmgr_ret);
+		ERR("Failed to create pkginfo_filter[%d]", pkgmgr_ret);
 		err = NOTIFICATION_ERROR_FROM_DB;
 		goto out;
 		/* LCOV_EXCL_STOP */
@@ -600,7 +600,7 @@ EXPORT_API int notification_setting_refresh_setting_table(uid_t uid)
 	pkgmgr_ret = pkgmgrinfo_pkginfo_filter_add_string(filter, PMINFO_PKGINFO_PROP_PACKAGE_PRIVILEGE, NOTIFICATION_PRIVILEGE);
 	if (pkgmgr_ret != PMINFO_R_OK) {
 		/* LCOV_EXCL_START */
-		NOTIFICATION_ERR("Failed to add string to pkginfo_filter[%d]", pkgmgr_ret);
+		ERR("Failed to add string to pkginfo_filter[%d]", pkgmgr_ret);
 		err = NOTIFICATION_ERROR_FROM_DB;
 		goto out;
 		/* LCOV_EXCL_STOP */
@@ -611,7 +611,7 @@ EXPORT_API int notification_setting_refresh_setting_table(uid_t uid)
 	pkgmgr_ret = pkgmgrinfo_pkginfo_usr_filter_foreach_pkginfo(filter, _foreach_package_info_callback, &info, uid);
 	if (pkgmgr_ret != PMINFO_R_OK) {
 		/* LCOV_EXCL_START */
-		NOTIFICATION_ERR("Failed to foreach pkginfo[%d]", pkgmgr_ret);
+		ERR("Failed to foreach pkginfo[%d]", pkgmgr_ret);
 		err = NOTIFICATION_ERROR_FROM_DB;
 		goto out;
 		/* LCOV_EXCL_STOP */
@@ -640,7 +640,7 @@ EXPORT_API int notification_setting_delete_package_for_uid(const char *package_n
 EXPORT_API int notification_system_setting_load_system_setting_for_uid(notification_system_setting_h *system_setting, uid_t uid)
 {
 	if (system_setting == NULL) {
-		NOTIFICATION_ERR("NOTIFICATION_ERROR_INVALID_PARAMETER");
+		ERR("NOTIFICATION_ERROR_INVALID_PARAMETER");
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 	}
 
@@ -655,7 +655,7 @@ EXPORT_API int notification_system_setting_load_system_setting(notification_syst
 EXPORT_API int notification_system_setting_update_system_setting_for_uid(notification_system_setting_h system_setting, uid_t uid)
 {
 	if (system_setting == NULL) {
-		NOTIFICATION_ERR("Invalid parameter");
+		ERR("Invalid parameter");
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 	}
 
@@ -670,7 +670,7 @@ EXPORT_API int notification_system_setting_update_system_setting(notification_sy
 EXPORT_API int notification_system_setting_free_system_setting(notification_system_setting_h system_setting)
 {
 	if (system_setting == NULL) {
-		NOTIFICATION_ERR("Invalid parameter");
+		ERR("Invalid parameter");
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 	}
 
@@ -687,7 +687,7 @@ EXPORT_API int notification_system_setting_free_system_setting(notification_syst
 EXPORT_API int notification_system_setting_get_do_not_disturb(notification_system_setting_h system_setting, bool *value)
 {
 	if (system_setting == NULL || value == NULL) {
-		NOTIFICATION_ERR("Invalid parameter");
+		ERR("Invalid parameter");
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 	}
 
@@ -699,7 +699,7 @@ EXPORT_API int notification_system_setting_get_do_not_disturb(notification_syste
 EXPORT_API int notification_system_setting_set_do_not_disturb(notification_system_setting_h system_setting, bool value)
 {
 	if (system_setting == NULL) {
-		NOTIFICATION_ERR("Invalid parameter");
+		ERR("Invalid parameter");
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 	}
 
@@ -711,7 +711,7 @@ EXPORT_API int notification_system_setting_set_do_not_disturb(notification_syste
 EXPORT_API int notification_system_setting_get_visibility_class(notification_system_setting_h system_setting, int *value)
 {
 	if (system_setting == NULL || value == NULL) {
-		NOTIFICATION_ERR("Invalid parameter");
+		ERR("Invalid parameter");
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 	}
 
@@ -723,7 +723,7 @@ EXPORT_API int notification_system_setting_get_visibility_class(notification_sys
 EXPORT_API int notification_system_setting_set_visibility_class(notification_system_setting_h system_setting, int value)
 {
 	if (system_setting == NULL) {
-		NOTIFICATION_ERR("Invalid parameter");
+		ERR("Invalid parameter");
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 	}
 
@@ -735,7 +735,7 @@ EXPORT_API int notification_system_setting_set_visibility_class(notification_sys
 EXPORT_API int notification_system_setting_dnd_schedule_get_enabled(notification_system_setting_h system_setting, bool *enabled)
 {
 	if (system_setting == NULL || enabled == NULL) {
-		NOTIFICATION_ERR("Invalid parameter");
+		ERR("Invalid parameter");
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 	}
 
@@ -747,7 +747,7 @@ EXPORT_API int notification_system_setting_dnd_schedule_get_enabled(notification
 EXPORT_API int notification_system_setting_dnd_schedule_set_enabled(notification_system_setting_h system_setting, bool enabled)
 {
 	if (system_setting == NULL) {
-		NOTIFICATION_ERR("Invalid parameter");
+		ERR("Invalid parameter");
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 	}
 
@@ -759,7 +759,7 @@ EXPORT_API int notification_system_setting_dnd_schedule_set_enabled(notification
 EXPORT_API int notification_system_setting_dnd_schedule_get_day(notification_system_setting_h system_setting, int *day)
 {
 	if (system_setting == NULL || day == NULL) {
-		NOTIFICATION_ERR("Invalid parameter");
+		ERR("Invalid parameter");
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 	}
 
@@ -771,7 +771,7 @@ EXPORT_API int notification_system_setting_dnd_schedule_get_day(notification_sys
 EXPORT_API int notification_system_setting_dnd_schedule_set_day(notification_system_setting_h system_setting, int day)
 {
 	if (system_setting == NULL) {
-		NOTIFICATION_ERR("Invalid parameter");
+		ERR("Invalid parameter");
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 	}
 
@@ -783,7 +783,7 @@ EXPORT_API int notification_system_setting_dnd_schedule_set_day(notification_sys
 EXPORT_API int notification_system_setting_dnd_schedule_get_start_time(notification_system_setting_h system_setting, int *hour, int *min)
 {
 	if (system_setting == NULL || hour == NULL || min == NULL) {
-		NOTIFICATION_ERR("Invalid parameter");
+		ERR("Invalid parameter");
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 	}
 
@@ -796,7 +796,7 @@ EXPORT_API int notification_system_setting_dnd_schedule_get_start_time(notificat
 EXPORT_API int notification_system_setting_dnd_schedule_set_start_time(notification_system_setting_h system_setting, int hour, int min)
 {
 	if (system_setting == NULL) {
-		NOTIFICATION_ERR("Invalid parameter");
+		ERR("Invalid parameter");
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 	}
 
@@ -809,7 +809,7 @@ EXPORT_API int notification_system_setting_dnd_schedule_set_start_time(notificat
 EXPORT_API int notification_system_setting_dnd_schedule_get_end_time(notification_system_setting_h system_setting, int *hour, int *min)
 {
 	if (system_setting == NULL || hour == NULL || min == NULL) {
-		NOTIFICATION_ERR("Invalid parameter");
+		ERR("Invalid parameter");
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 	}
 
@@ -822,7 +822,7 @@ EXPORT_API int notification_system_setting_dnd_schedule_get_end_time(notificatio
 EXPORT_API int notification_system_setting_dnd_schedule_set_end_time(notification_system_setting_h system_setting, int hour, int min)
 {
 	if (system_setting == NULL) {
-		NOTIFICATION_ERR("Invalid parameter");
+		ERR("Invalid parameter");
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 	}
 
@@ -835,7 +835,7 @@ EXPORT_API int notification_system_setting_dnd_schedule_set_end_time(notificatio
 EXPORT_API int notification_system_setting_get_lock_screen_content(notification_system_setting_h system_setting, lock_screen_content_level_e *level)
 {
 	if (system_setting == NULL || level == NULL) {
-		NOTIFICATION_ERR("Invalid parameter");
+		ERR("Invalid parameter");
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 	}
 
@@ -847,7 +847,7 @@ EXPORT_API int notification_system_setting_get_lock_screen_content(notification_
 EXPORT_API int notification_system_setting_set_lock_screen_content(notification_system_setting_h system_setting, lock_screen_content_level_e level)
 {
 	if (system_setting == NULL) {
-		NOTIFICATION_ERR("Invalid parameter");
+		ERR("Invalid parameter");
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 	}
 
@@ -877,7 +877,7 @@ EXPORT_API int notification_system_setting_get_dnd_allow_exceptions(notification
 	GList *list;
 
 	if (system_setting == NULL || value == NULL) {
-		NOTIFICATION_ERR("Invalid parameter");
+		ERR("Invalid parameter");
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 	}
 
@@ -886,7 +886,7 @@ EXPORT_API int notification_system_setting_get_dnd_allow_exceptions(notification
 		dnd_allow_exception_data = (dnd_allow_exception_h)list->data;
 		*value = dnd_allow_exception_data->value;
 	} else {
-		NOTIFICATION_ERR("Invalid type");
+		ERR("Invalid type");
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 	}
 
@@ -899,7 +899,7 @@ EXPORT_API int notification_system_setting_set_dnd_allow_exceptions(notification
 	GList *list = NULL;
 
 	if (system_setting == NULL) {
-		NOTIFICATION_ERR("Invalid parameter");
+		ERR("Invalid parameter");
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 	}
 
@@ -947,7 +947,7 @@ void notification_call_dnd_changed_cb_for_uid(int do_not_disturb, uid_t uid)
 
 	noti_dnd_cb_list = (GList *)g_hash_table_lookup(_noti_dnd_cb_hash, GUINT_TO_POINTER(uid));
 	if (noti_dnd_cb_list == NULL) {
-		NOTIFICATION_ERR("Invalid data");
+		ERR("Invalid data");
 		return;
 	}
 
@@ -972,7 +972,7 @@ EXPORT_API int notification_register_system_setting_dnd_changed_cb_for_uid(dnd_c
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 
 	if (notification_ipc_monitor_init(uid) != NOTIFICATION_ERROR_NONE) {
-		NOTIFICATION_ERR("Failed to init monitor");
+		ERR("Failed to init monitor");
 		return NOTIFICATION_ERROR_IO_ERROR;
 	}
 
@@ -995,7 +995,7 @@ EXPORT_API int notification_register_system_setting_dnd_changed_cb_for_uid(dnd_c
 		noti_dnd_found_list = g_list_find_custom(noti_dnd_list, (gconstpointer)callback,
 							 (GCompareFunc)_noti_dnd_cb_compare);
 		if (noti_dnd_found_list) {
-			NOTIFICATION_ERR("Already existing callback");
+			ERR("Already existing callback");
 			free(dnd_data);
 			return NOTIFICATION_ERROR_INVALID_PARAMETER;
 		} else {
@@ -1068,7 +1068,7 @@ static bool _is_uid_in_system_setting_table(sqlite3 *db, uid_t uid)
 				NOTIFICATION_SYSTEM_SETTING_DB_TABLE, uid);
 	if (query == NULL) {
 		/* LCOV_EXCL_START */
-		NOTIFICATION_ERR("Failed to alloc query");
+		ERR("Failed to alloc query");
 		return NOTIFICATION_ERROR_OUT_OF_MEMORY;
 		/* LCOV_EXCL_STOP */
 	}
@@ -1076,7 +1076,7 @@ static bool _is_uid_in_system_setting_table(sqlite3 *db, uid_t uid)
 	sql_ret = sqlite3_prepare_v2(db, query, -1, &stmt, NULL);
 	if (sql_ret != SQLITE_OK) {
 		/* LCOV_EXCL_START */
-		NOTIFICATION_ERR("sqlite3_prepare_v2 failed [%d][%s]", sql_ret,
+		ERR("sqlite3_prepare_v2 failed [%d][%s]", sql_ret,
 				sqlite3_errmsg(db));
 		err = false;
 		goto out;
@@ -1085,13 +1085,13 @@ static bool _is_uid_in_system_setting_table(sqlite3 *db, uid_t uid)
 
 	sql_ret = sqlite3_step(stmt);
 	if (sql_ret == SQLITE_DONE) {
-		NOTIFICATION_INFO("No matched uid[%d] err[%d]", uid, sql_ret);
+		INFO("No matched uid[%d] err[%d]", uid, sql_ret);
 		err = false;
 		goto out;
 	}
 
 	if (sql_ret != SQLITE_OK && sql_ret != SQLITE_ROW) {
-		NOTIFICATION_ERR("sqlite3_step failed [%d][%s]",
+		ERR("sqlite3_step failed [%d][%s]",
 				sql_ret, sqlite3_errmsg(db));
 		err = false;
 	}
@@ -1113,14 +1113,14 @@ EXPORT_API int notification_system_setting_init_system_setting_table(uid_t uid)
 	char *query_dnd_allow_exception = NULL;
 	int ret = NOTIFICATION_ERROR_NONE;
 
-	NOTIFICATION_INFO("init system setting table [%d]", uid);
+	INFO("init system setting table [%d]", uid);
 
 	db = notification_db_open();
 	if (db == NULL)
 		return get_last_result(); /* LCOV_EXCL_LINE */
 
 	if (_is_uid_in_system_setting_table(db, uid) == true) {
-		NOTIFICATION_INFO("Setting table is already initialized.");
+		INFO("Setting table is already initialized.");
 		goto out;
 	}
 
@@ -1131,7 +1131,7 @@ EXPORT_API int notification_system_setting_init_system_setting_table(uid_t uid)
 					uid);
 	if (query_system_setting == NULL) {
 		/* LCOV_EXCL_START */
-		NOTIFICATION_ERR("fail to alloc query");
+		ERR("fail to alloc query");
 		ret = NOTIFICATION_ERROR_OUT_OF_MEMORY;
 		goto out;
 		/* LCOV_EXCL_STOP */
@@ -1148,7 +1148,7 @@ EXPORT_API int notification_system_setting_init_system_setting_table(uid_t uid)
 					uid);
 	if (query_dnd_allow_exception == NULL) {
 		/* LCOV_EXCL_START */
-		NOTIFICATION_ERR("Failed to alloc query");
+		ERR("Failed to alloc query");
 		ret = NOTIFICATION_ERROR_OUT_OF_MEMORY;
 		goto out;
 		/* LCOV_EXCL_STOP */
@@ -1158,7 +1158,7 @@ EXPORT_API int notification_system_setting_init_system_setting_table(uid_t uid)
 	if (ret != NOTIFICATION_ERROR_NONE)
 		goto out;
 
-	NOTIFICATION_DBG("Initialization is success.");
+	DBG("Initialization is success.");
 
 out:
 	if (query_system_setting)

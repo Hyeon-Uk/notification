@@ -302,7 +302,7 @@
 do { \
 	ret = sqlite3_bind_text(stmt, i, text, -1, SQLITE_TRANSIENT); \
 	if (ret != SQLITE_OK) { \
-		NOTIFICATION_ERR("bind error(index %d): [%d][%s]", i, ret, \
+		ERR("bind error(index %d): [%d][%s]", i, ret, \
 				sqlite3_errmsg(db)); \
 		ret = NOTIFICATION_ERROR_FROM_DB; \
 		goto label; \
@@ -313,7 +313,7 @@ do { \
 do { \
 	ret = sqlite3_bind_text(stmt, i, text, -1, SQLITE_STATIC); \
 	if (ret != SQLITE_OK) { \
-		NOTIFICATION_ERR("bind error(index %d): [%d][%s]", i, ret, \
+		ERR("bind error(index %d): [%d][%s]", i, ret, \
 				sqlite3_errmsg(db)); \
 		ret = NOTIFICATION_ERROR_FROM_DB; \
 		goto label; \
@@ -324,7 +324,7 @@ do { \
 do { \
 	ret = sqlite3_bind_int(stmt, i, int); \
 	if (ret != SQLITE_OK) { \
-		NOTIFICATION_ERR("bind error(index %d): [%d][%s]", i, ret, \
+		ERR("bind error(index %d): [%d][%s]", i, ret, \
 				sqlite3_errmsg(db)); \
 		ret = NOTIFICATION_ERROR_FROM_DB; \
 		goto label; \
@@ -335,7 +335,7 @@ do { \
 do { \
 	ret = sqlite3_bind_double(stmt, i, double); \
 	if (ret != SQLITE_OK) { \
-		NOTIFICATION_ERR("bind error(index %d): [%d][%s]", i, ret, \
+		ERR("bind error(index %d): [%d][%s]", i, ret, \
 				sqlite3_errmsg(db)); \
 		ret = NOTIFICATION_ERROR_FROM_DB; \
 		goto label; \

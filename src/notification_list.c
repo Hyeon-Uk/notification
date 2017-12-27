@@ -39,7 +39,7 @@ notification_list_h _notification_list_create(void)
 	list = (notification_list_h)malloc(sizeof(struct _notification_list));
 	if (list == NULL) {
 		/* LCOV_EXCL_START */
-		NOTIFICATION_ERR("Failed to alloc memory");
+		ERR("Failed to alloc memory");
 		return NULL;
 		/* LCOV_EXCL_STOP */
 	}
@@ -57,7 +57,7 @@ EXPORT_API notification_list_h notification_list_get_head(notification_list_h li
 	notification_list_h cur_list = NULL;
 
 	if (list == NULL) {
-		NOTIFICATION_ERR("Invalid parameter");
+		ERR("Invalid parameter");
 		set_last_result(NOTIFICATION_ERROR_INVALID_PARAMETER);
 		return NULL;
 	}
@@ -76,7 +76,7 @@ EXPORT_API notification_list_h notification_list_get_tail(notification_list_h li
 	notification_list_h cur_list = NULL;
 
 	if (list == NULL) {
-		NOTIFICATION_ERR("INVALID DATA : list == NULL");
+		ERR("INVALID DATA : list == NULL");
 		set_last_result(NOTIFICATION_ERROR_INVALID_PARAMETER);
 		return NULL;
 	}
@@ -95,7 +95,7 @@ EXPORT_API notification_list_h notification_list_get_prev(notification_list_h li
 	notification_list_h cur_list = NULL;
 
 	if (list == NULL) {
-		NOTIFICATION_ERR("INVALID DATA : list == NULL");
+		ERR("INVALID DATA : list == NULL");
 		set_last_result(NOTIFICATION_ERROR_INVALID_PARAMETER);
 		return NULL;
 	}
@@ -111,7 +111,7 @@ EXPORT_API notification_list_h notification_list_get_next(notification_list_h li
 	notification_list_h cur_list = NULL;
 
 	if (list == NULL) {
-		NOTIFICATION_ERR("INVALID DATA : list == NULL");
+		ERR("INVALID DATA : list == NULL");
 		set_last_result(NOTIFICATION_ERROR_INVALID_PARAMETER);
 		return NULL;
 	}
@@ -127,7 +127,7 @@ EXPORT_API notification_h notification_list_get_data(notification_list_h list)
 	notification_list_h cur_list = NULL;
 
 	if (list == NULL) {
-		NOTIFICATION_ERR("INVALID DATA : list == NULL");
+		ERR("INVALID DATA : list == NULL");
 		set_last_result(NOTIFICATION_ERROR_INVALID_PARAMETER);
 		return NULL;
 	}
@@ -144,7 +144,7 @@ EXPORT_API int notification_list_get_count(notification_list_h list)
 	notification_list_h cur_list = NULL;
 
 	if (list == NULL) {
-		NOTIFICATION_ERR("Invalid paramter");
+		ERR("Invalid paramter");
 		set_last_result(NOTIFICATION_ERROR_INVALID_PARAMETER);
 		return 0;
 	}
@@ -167,7 +167,7 @@ EXPORT_API notification_list_h notification_list_append(notification_list_h list
 	notification_list_h cur_list = NULL;
 
 	if (noti == NULL) {
-		NOTIFICATION_ERR("Invalid parameter");
+		ERR("Invalid parameter");
 		set_last_result(NOTIFICATION_ERROR_INVALID_PARAMETER);
 		return NULL;
 	}
@@ -178,7 +178,7 @@ EXPORT_API notification_list_h notification_list_append(notification_list_h list
 		new_list = _notification_list_create();
 		if (new_list == NULL) {
 			/* LCOV_EXCL_START */
-			NOTIFICATION_ERR("Failed to alloc memory");
+			ERR("Failed to alloc memory");
 			set_last_result(NOTIFICATION_ERROR_OUT_OF_MEMORY);
 			return NULL;
 			/* LCOV_EXCL_STOP */
@@ -192,7 +192,7 @@ EXPORT_API notification_list_h notification_list_append(notification_list_h list
 		cur_list = _notification_list_create();
 		if (cur_list == NULL) {
 			/* LCOV_EXCL_START */
-			NOTIFICATION_ERR("Failed to alloc memory");
+			ERR("Failed to alloc memory");
 			set_last_result(NOTIFICATION_ERROR_OUT_OF_MEMORY);
 			return NULL;
 			/* LCOV_EXCL_STOP */

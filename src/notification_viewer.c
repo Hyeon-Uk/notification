@@ -32,14 +32,14 @@ EXPORT_API int notification_get_default_viewer(const char *path, char **default_
 	dictionary *dict = NULL;
 
 	if (access(path, F_OK) != 0) {
-		NOTIFICATION_ERR("can't access file_path(%s)", path);
+		ERR("can't access file_path(%s)", path);
 		return -1;
 	}
 
 	/* LCOV_EXCL_START */
 	dict = iniparser_load(path);
 	if (!dict) {
-		NOTIFICATION_ERR("can't load file");
+		ERR("can't load file");
 		return -1;
 	}
 
@@ -63,13 +63,13 @@ EXPORT_API int notification_launch_default_viewer(const char *default_viewer,
 
 	b = bundle_create();
 	if (b == NULL) {
-		NOTIFICATION_ERR("Failed to create bundle");
+		ERR("Failed to create bundle");
 		return NOTIFICATION_ERROR_OUT_OF_MEMORY;
 	}
 
 	ret = aul_svc_set_appid(b, default_viewer);
 	if (ret != AUL_SVC_RET_OK) {
-		NOTIFICATION_ERR("Failed to set appid to bundle[%x]", ret);
+		ERR("Failed to set appid to bundle[%x]", ret);
 		goto out;
 	}
 
@@ -77,7 +77,7 @@ EXPORT_API int notification_launch_default_viewer(const char *default_viewer,
 
 	ret = aul_svc_add_data(b, "NOTIFICATION_PRIVATE_ID", buf);
 	if (ret != AUL_SVC_RET_OK) {
-		NOTIFICATION_ERR("Failed to add extra_data[%x]", ret);
+		ERR("Failed to add extra_data[%x]", ret);
 		goto out;
 	}
 
@@ -86,15 +86,15 @@ EXPORT_API int notification_launch_default_viewer(const char *default_viewer,
 
 	ret = aul_svc_add_data(b, "NOTIFICATION_OP_TYPE", buf);
 	if (ret != AUL_SVC_RET_OK) {
-		NOTIFICATION_ERR("Failed to add extra_data[%x]", ret);
+		ERR("Failed to add extra_data[%x]", ret);
 		goto out;
 	}
 
 	ret = aul_svc_run_service_async_for_uid(b, 0, NULL, NULL, uid);
 	if (ret < 0) {
-		NOTIFICATION_ERR("Failed to request app launch[%d]", ret);
+		ERR("Failed to request app launch[%d]", ret);
 	} else {
-		NOTIFICATION_INFO("successed to request app launch[%d],[%d]",
+		INFO("successed to request app launch[%d],[%d]",
 				ret, uid);
 		ret = APP_CONTROL_ERROR_NONE;
 	}

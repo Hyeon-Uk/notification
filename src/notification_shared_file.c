@@ -42,7 +42,7 @@
 #define __OOM_CHECK(value, ret_value, free_fun) \
 do { \
 	if (value == NULL) { \
-		NOTIFICATION_ERR("out of memory"); \
+		ERR("out of memory"); \
 		free_fun; \
 		return ret_value; \
 	} \
@@ -84,7 +84,7 @@ static bool __make_sharing_dir(const char *dir)
 		if (g_file_make_directory(noti_dir, NULL, &g_err) == false) {
 			/* LCOV_EXCL_START */
 			if (g_err) {
-				NOTIFICATION_ERR("Failed to make sharing dir[%s]",
+				ERR("Failed to make sharing dir[%s]",
 					g_err->message);
 				g_error_free(g_err);
 			}
@@ -194,7 +194,7 @@ int notification_copy_private_file(const char *src_path,
 	dst = g_file_new_for_path(dst_path);
 	if (dst == NULL) {
 		/* LCOV_EXCL_START */
-		NOTIFICATION_ERR("dst path is wrong [%s]", dst_path);
+		ERR("dst path is wrong [%s]", dst_path);
 		ret = NOTIFICATION_ERROR_IO_ERROR;
 		goto out;
 		/* LCOV_EXCL_STOP */
@@ -202,14 +202,14 @@ int notification_copy_private_file(const char *src_path,
 
 	if (g_file_query_exists(dst, NULL) == true) {
 		ret = NOTIFICATION_ERROR_ALREADY_EXIST_ID;
-		NOTIFICATION_INFO("dst path existed [%s]", dst_path);
+		INFO("dst path existed [%s]", dst_path);
 		goto out;
 	}
 
 	src = g_file_new_for_path(src_path);
 	if (src == NULL) {
 		/* LCOV_EXCL_START */
-		NOTIFICATION_ERR("src path is wrong [%s]", src_path);
+		ERR("src path is wrong [%s]", src_path);
 		ret = NOTIFICATION_ERROR_IO_ERROR;
 		goto out;
 		/* LCOV_EXCL_STOP */
@@ -219,7 +219,7 @@ int notification_copy_private_file(const char *src_path,
 		/* LCOV_EXCL_START */
 			NULL, NULL, NULL, &g_err)) {
 		if (g_err) {
-			NOTIFICATION_ERR(
+			ERR(
 				"Copying file from [%s] to [%s] is failed [%s]",
 					 src_path, dst_path, g_err->message);
 			g_error_free(g_err);
@@ -231,7 +231,7 @@ int notification_copy_private_file(const char *src_path,
 
 	ut.modtime = time(NULL);
 	if (g_utime(dst_path, &ut) != 0)
-		NOTIFICATION_DBG("Failed to set g_utime %d ", errno);
+		DBG("Failed to set g_utime %d ", errno);
 
 out:
 	if (src)
@@ -386,7 +386,7 @@ static void __make_file_info(char *src_path, char *dst_path,
 				__free_file_info(file_info));
 
 			if (stat(dst_path, &stat_buf) != 0)
-				NOTIFICATION_ERR("Failed to get stat info");
+				ERR("Failed to get stat info");
 			file_info->modification_time = stat_buf.st_mtime;
 
 			*new_file_list = g_list_append(*new_file_list, file_info);
@@ -394,7 +394,7 @@ static void __make_file_info(char *src_path, char *dst_path,
 			file_info = (sharing_file_info_s *)tmp->data;
 
 			if (stat(file_info->dst_path, &stat_buf) != 0)
-				NOTIFICATION_ERR("Failed to get stat info");
+				ERR("Failed to get stat info");
 
 			if (file_info->modification_time != stat_buf.st_mtime) {
 				dup_file_info = __dup_file_info(file_info);
@@ -494,13 +494,13 @@ static char *__get_shared_dir(notification_h noti)
 		path = noti->priv_vibration_path;
 
 	if (path == NULL) {
-		NOTIFICATION_DBG("No private resource");
+		DBG("No private resource");
 		return NULL;
 	}
 
 	index =  __last_index_of(path, "/");
 	if (index == NULL) {
-		NOTIFICATION_ERR("Failed to find directory separator");
+		ERR("Failed to find directory separator");
 		return NULL;
 	}
 
@@ -620,13 +620,13 @@ EXPORT_API void notification_add_private_sharing_target_id(pid_t pid,
 	if (target_app == NULL) {
 		app_id = notification_get_app_id_by_pid((int)pid);
 		if (app_id == NULL) {
-			NOTIFICATION_ERR("Failed to get app id by pid");
+			ERR("Failed to get app id by pid");
 			return;
 		}
 
 		target_info = (target_app_info_s *)calloc(1, sizeof(target_app_info_s));
 		if (target_info == NULL) {
-			NOTIFICATION_ERR("Failed to alloc memory");
+			ERR("Failed to alloc memory");
 			free(app_id);
 			return;
 		}
@@ -634,7 +634,7 @@ EXPORT_API void notification_add_private_sharing_target_id(pid_t pid,
 		target_info->app_id = app_id;
 		target_info->dbus_sender_name = strdup(sender);
 		if (target_info->dbus_sender_name == NULL) {
-			NOTIFICATION_ERR("Failed to alloc memory");
+			ERR("Failed to alloc memory");
 			free(target_info);
 			free(app_id);
 			return;
@@ -656,7 +656,7 @@ char *notification_check_file_path_is_private(const char *pkg_id,
 	size = smack_new_label_from_path(file_path, XATTR_NAME_SMACK,
 							TRUE, &smack_label);
 	if (size <= 0) {
-		NOTIFICATION_ERR("Failed to get smack info");
+		ERR("Failed to get smack info");
 		return NULL;
 	}
 
@@ -667,7 +667,7 @@ char *notification_check_file_path_is_private(const char *pkg_id,
 	if (dst_path == NULL && __is_private_file(smack_label, pkg_id)) {
 		dst_path = strdup(file_path);
 		if (dst_path == NULL)
-			NOTIFICATION_ERR("Failed to strdup");
+			ERR("Failed to strdup");
 	}
 
 	free(smack_label);
@@ -756,7 +756,7 @@ EXPORT_API void notification_calibrate_private_sharing(
 			free(updated_noti->sound_path);
 			updated_noti->sound_path = strdup(source_noti->sound_path);
 			if (updated_noti->sound_path == NULL)
-				NOTIFICATION_ERR("out of memory");
+				ERR("out of memory");
 		}
 	}
 
@@ -767,7 +767,7 @@ EXPORT_API void notification_calibrate_private_sharing(
 			updated_noti->vibration_path =
 				strdup(source_noti->priv_vibration_path);
 			if (updated_noti->vibration_path == NULL)
-				NOTIFICATION_ERR("out of memory");
+				ERR("out of memory");
 		}
 	}
 }
@@ -794,7 +794,7 @@ int __set_sharing_for_new_target(sharing_req_data_s *req_data,
 
 		app_info = strdup(target_info->app_id);
 		if (app_info == NULL) {
-			NOTIFICATION_ERR("out of memory");
+			ERR("out of memory");
 			goto out;
 		}
 
@@ -802,7 +802,7 @@ int __set_sharing_for_new_target(sharing_req_data_s *req_data,
 			ret = security_manager_private_sharing_req_new(&handle);
 			if (ret != SECURITY_MANAGER_SUCCESS) {
 				ret = NOTIFICATION_ERROR_IO_ERROR;
-				NOTIFICATION_ERR("Failed to create PS handle");
+				ERR("Failed to create PS handle");
 				goto out;
 			}
 
@@ -810,7 +810,7 @@ int __set_sharing_for_new_target(sharing_req_data_s *req_data,
 						handle, req_data->app_id);
 			if (ret != SECURITY_MANAGER_SUCCESS) {
 				ret = NOTIFICATION_ERROR_IO_ERROR;
-				NOTIFICATION_ERR(
+				ERR(
 					"Failed to set owner appid(%s) %d",
 						req_data->app_id, ret);
 				goto out;
@@ -826,7 +826,7 @@ int __set_sharing_for_new_target(sharing_req_data_s *req_data,
 					handle, (const char **)path_array, len);
 			if (ret != SECURITY_MANAGER_SUCCESS) {
 				ret = NOTIFICATION_ERROR_IO_ERROR;
-				NOTIFICATION_ERR("Failed to add paths %d", ret);
+				ERR("Failed to add paths %d", ret);
 				goto out;
 			}
 		}
@@ -835,7 +835,7 @@ int __set_sharing_for_new_target(sharing_req_data_s *req_data,
 					handle, target_info->app_id);
 		if (ret != SECURITY_MANAGER_SUCCESS) {
 			ret = NOTIFICATION_ERROR_IO_ERROR;
-			NOTIFICATION_ERR("Failed to set target appid(%s)",
+			ERR("Failed to set target appid(%s)",
 				(const char *)iter->data);
 			goto out;
 		}
@@ -843,7 +843,7 @@ int __set_sharing_for_new_target(sharing_req_data_s *req_data,
 		ret = security_manager_private_sharing_apply(handle);
 		if (ret != SECURITY_MANAGER_SUCCESS) {
 			ret = NOTIFICATION_ERROR_IO_ERROR;
-			NOTIFICATION_ERR("Failed to apply PS %d", ret);
+			ERR("Failed to apply PS %d", ret);
 			goto out;
 		}
 
@@ -879,7 +879,7 @@ int __set_sharing_for_new_file(sharing_req_data_s *req_data,
 	ret = security_manager_private_sharing_req_new(&handle);
 	if (ret != SECURITY_MANAGER_SUCCESS) {
 		ret = NOTIFICATION_ERROR_IO_ERROR;
-		NOTIFICATION_ERR("Failed to create private sharing request handle[%d]", ret);
+		ERR("Failed to create private sharing request handle[%d]", ret);
 		goto out;
 	}
 
@@ -887,7 +887,7 @@ int __set_sharing_for_new_file(sharing_req_data_s *req_data,
 					req_data->app_id);
 	if (ret != SECURITY_MANAGER_SUCCESS) {
 		/* LCOV_EXCL_START */
-		NOTIFICATION_ERR("Failed to set owner appid[%s][%d]",
+		ERR("Failed to set owner appid[%s][%d]",
 				req_data->app_id, ret);
 		ret = NOTIFICATION_ERROR_IO_ERROR;
 		goto out;
@@ -898,7 +898,7 @@ int __set_sharing_for_new_file(sharing_req_data_s *req_data,
 						(const char **)path_array, len);
 	if (ret != SECURITY_MANAGER_SUCCESS) {
 		/* LCOV_EXCL_START */
-		NOTIFICATION_ERR("Failed to add paths [%d]", ret);
+		ERR("Failed to add paths [%d]", ret);
 		ret = NOTIFICATION_ERROR_IO_ERROR;
 		goto out;
 		/* LCOV_EXCL_STOP */
@@ -911,7 +911,7 @@ int __set_sharing_for_new_file(sharing_req_data_s *req_data,
 							handle, (const char *)iter->data);
 			if (ret != SECURITY_MANAGER_SUCCESS) {
 				/* LCOV_EXCL_START */
-				NOTIFICATION_ERR("Failed to set target appid [%s]",
+				ERR("Failed to set target appid [%s]",
 					(const char *)iter->data);
 				ret = NOTIFICATION_ERROR_IO_ERROR;
 				goto out;
@@ -921,7 +921,7 @@ int __set_sharing_for_new_file(sharing_req_data_s *req_data,
 			ret = security_manager_private_sharing_drop(handle);
 			if (ret != SECURITY_MANAGER_SUCCESS) {
 				/* LCOV_EXCL_START */
-				NOTIFICATION_ERR("Failed to drop [%d]", ret);
+				ERR("Failed to drop [%d]", ret);
 				ret = NOTIFICATION_ERROR_IO_ERROR;
 				goto out;
 				/* LCOV_EXCL_STOP */
@@ -935,7 +935,7 @@ int __set_sharing_for_new_file(sharing_req_data_s *req_data,
 							(const char *)iter->data);
 		if (ret != SECURITY_MANAGER_SUCCESS) {
 			/* LCOV_EXCL_START */
-			NOTIFICATION_ERR("Failed to set target appid [%s]",
+			ERR("Failed to set target appid [%s]",
 				(const char *)iter->data);
 			ret = NOTIFICATION_ERROR_IO_ERROR;
 			goto out;
@@ -945,7 +945,7 @@ int __set_sharing_for_new_file(sharing_req_data_s *req_data,
 		ret = security_manager_private_sharing_apply(handle);
 		if (ret != SECURITY_MANAGER_SUCCESS) {
 			/* LCOV_EXCL_START */
-			NOTIFICATION_ERR("Failed to apply PS [%d]", ret);
+			ERR("Failed to apply PS [%d]", ret);
 			ret = NOTIFICATION_ERROR_IO_ERROR;
 			goto out;
 			/* LCOV_EXCL_STOP */
@@ -1051,7 +1051,7 @@ EXPORT_API int notification_set_private_sharing(notification_h noti,
 		ret = NOTIFICATION_ERROR_IO_ERROR;
 		goto out;
 	}
-	NOTIFICATION_INFO("PS success priv id[%d] shared file count[%d] target app count[%d]",
+	INFO("PS success priv id[%d] shared file count[%d] target app count[%d]",
 				noti->priv_id,
 				g_list_length(req_data->shared_file_list),
 				g_list_length(req_data->target_app_table));
@@ -1115,21 +1115,21 @@ EXPORT_API void notification_remove_private_sharing(
 	if (g_list_length(req_data->target_app_table) > 0) {
 		ret = security_manager_private_sharing_req_new(&handle);
 		if (ret != SECURITY_MANAGER_SUCCESS) {
-			NOTIFICATION_ERR("Failed to create PS request handle");
+			ERR("Failed to create PS request handle");
 			goto out;
 		}
 
 		ret = security_manager_private_sharing_req_set_owner_appid(
 					handle, src_app_id);
 		if (ret != SECURITY_MANAGER_SUCCESS) {
-			NOTIFICATION_ERR("Failed to set owner appid(%s) %d",
+			ERR("Failed to set owner appid(%s) %d",
 					req_data->app_id, ret);
 			goto out;
 		}
 
 		path_array = __convert_list_to_array(req_data->shared_file_list, &len);
 		if (path_array == NULL) {
-			NOTIFICATION_ERR("path_array is null %d",
+			ERR("path_array is null %d",
 				g_list_length(req_data->shared_file_list));
 			goto out;
 		}
@@ -1137,7 +1137,7 @@ EXPORT_API void notification_remove_private_sharing(
 		ret = security_manager_private_sharing_req_add_paths(handle,
 						(const char **)path_array, len);
 		if (ret != SECURITY_MANAGER_SUCCESS) {
-			NOTIFICATION_ERR("Failed to add paths %d", ret);
+			ERR("Failed to add paths %d", ret);
 			goto out;
 		}
 
@@ -1146,14 +1146,14 @@ EXPORT_API void notification_remove_private_sharing(
 			ret = security_manager_private_sharing_req_set_target_appid(
 						handle, (const char *)iter->data);
 			if (ret != SECURITY_MANAGER_SUCCESS) {
-				NOTIFICATION_ERR("Failed to set target appid(%s)",
+				ERR("Failed to set target appid(%s)",
 					(const char *)iter->data);
 				goto out;
 			}
 
 			ret = security_manager_private_sharing_drop(handle);
 			if (ret != SECURITY_MANAGER_SUCCESS) {
-				NOTIFICATION_ERR("Failed to drop %d", ret);
+				ERR("Failed to drop %d", ret);
 				goto out;
 			}
 		}
@@ -1162,7 +1162,7 @@ EXPORT_API void notification_remove_private_sharing(
 	iter = req_data->shared_file_list;
 	for (; iter != NULL; iter = g_list_next(iter)) {
 		if (g_remove(((sharing_file_info_s *)(iter->data))->dst_path) != 0)
-			NOTIFICATION_ERR("Failed [%s] [%d]",
+			ERR("Failed [%s] [%d]",
 					(const char *)iter->data, errno);
 	}
 

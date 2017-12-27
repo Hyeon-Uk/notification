@@ -32,12 +32,12 @@ static bool is_db_corrupted = false;
 static int __check_integrity_cb(void *pid, int argc, char **argv, char **notUsed)
 {
 	if (!strcmp(argv[0], "ok")) {
-		NOTIFICATION_ERR("db integrity result : %s" , argv[0]);
+		ERR("db integrity result : %s" , argv[0]);
 		is_db_corrupted = true;
 		return -1;
 	}
 
-	NOTIFICATION_INFO("db integrity result : %s" , argv[0]);
+	INFO("db integrity result : %s" , argv[0]);
 	return 0;
 }
 
@@ -47,7 +47,7 @@ static int __recover_corrupted_db(sqlite3 *db)
 	int sql_ret;
 	char *errmsg = NULL;
 
-	NOTIFICATION_INFO("DB is corrupted, start to recover corrupted db");
+	INFO("DB is corrupted, start to recover corrupted db");
 	if (db)
 		sqlite3_close(db);
 	unlink(DBPATH);
@@ -56,7 +56,7 @@ static int __recover_corrupted_db(sqlite3 *db)
 				SQLITE_OPEN_CREATE |SQLITE_OPEN_READWRITE,
 				NULL);
 	if (sql_ret != SQLITE_OK) {
-		NOTIFICATION_ERR("Failed to open db[%d]", sql_ret);
+		ERR("Failed to open db[%d]", sql_ret);
 		unlink(DBPATH);
 		ret = NOTIFICATION_ERROR_FROM_DB;
 		goto out;
@@ -64,7 +64,7 @@ static int __recover_corrupted_db(sqlite3 *db)
 
 	sql_ret = sqlite3_exec(db, CREATE_NOTIFICATION_TABLE, NULL, NULL, &errmsg);
 	if (sql_ret != SQLITE_OK) {
-		NOTIFICATION_ERR("Failed to exec query[%d][%s]", sql_ret, errmsg);
+		ERR("Failed to exec query[%d][%s]", sql_ret, errmsg);
 		ret = NOTIFICATION_ERROR_FROM_DB;
 	}
 
@@ -86,7 +86,7 @@ EXPORT_API int notification_db_init()
 			SQLITE_OPEN_CREATE | SQLITE_OPEN_READWRITE, NULL);
 	if (sql_ret != SQLITE_OK) {
 		/* LCOV_EXCL_START */
-		NOTIFICATION_ERR("Failed to open db[%d]", ret);
+		ERR("Failed to open db[%d]", ret);
 		ret = NOTIFICATION_ERROR_FROM_DB;
 		goto out;
 		/* LCOV_EXCL_STOP */
@@ -95,7 +95,7 @@ EXPORT_API int notification_db_init()
 	sql_ret = sqlite3_exec(db, CREATE_NOTIFICATION_TABLE, NULL, NULL, &errmsg);
 	if (sql_ret != SQLITE_OK) {
 		/* LCOV_EXCL_START */
-		NOTIFICATION_ERR("Failed to exec sqlite[%d][%s]", ret, errmsg);
+		ERR("Failed to exec sqlite[%d][%s]", ret, errmsg);
 		ret = NOTIFICATION_ERROR_FROM_DB;
 		goto out;
 		/* LCOV_EXCL_STOP */
@@ -104,7 +104,7 @@ EXPORT_API int notification_db_init()
 	sql_ret = sqlite3_exec(db, "PRAGMA integrity_check",
 			       __check_integrity_cb, NULL, &errmsg);
 	if (sql_ret != SQLITE_OK || is_db_corrupted) {
-		NOTIFICATION_ERR("Failed to exec query[%d][%s]", sql_ret, errmsg);
+		ERR("Failed to exec query[%d][%s]", sql_ret, errmsg);
 		ret = NOTIFICATION_ERROR_FROM_DB;
 	}
 
@@ -157,7 +157,7 @@ int notification_db_close(sqlite3 **db)
 	ret = sqlite3_close(*db);
 	if (ret != SQLITE_OK) {
 		/* LCOV_EXCL_START */
-		NOTIFICATION_ERR("Failed to close db[%d]", ret);
+		ERR("Failed to close db[%d]", ret);
 		return NOTIFICATION_ERROR_FROM_DB;
 		/* LCOV_EXCL_STOP */
 	}
@@ -178,7 +178,7 @@ int notification_db_exec(sqlite3 *db, const char *query, int *num_changes)
 	ret = sqlite3_prepare_v2(db, query, strlen(query), &stmt, NULL);
 	if (ret != SQLITE_OK) {
 		/* LCOV_EXCL_START */
-		NOTIFICATION_ERR("Sqlite3 err[%d][%s]", ret, sqlite3_errmsg(db));
+		ERR("Sqlite3 err[%d][%s]", ret, sqlite3_errmsg(db));
 		return NOTIFICATION_ERROR_FROM_DB;
 		/* LCOV_EXCL_STOP */
 	}
@@ -191,8 +191,7 @@ int notification_db_exec(sqlite3 *db, const char *query, int *num_changes)
 		ret = NOTIFICATION_ERROR_NONE;
 	} else {
 		/* LCOV_EXCL_START */
-		NOTIFICATION_ERR("Sqlite err[%d][%s]", ret,
-				 sqlite3_errmsg(db));
+		ERR("Sqlite err[%d][%s]", ret, sqlite3_errmsg(db));
 		ret = NOTIFICATION_ERROR_FROM_DB;
 		/* LCOV_EXCL_STOP */
 	}

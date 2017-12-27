@@ -144,7 +144,7 @@ static int _notification_noti_check_priv_id(notification_h noti, sqlite3 *db)
 				noti->caller_app_id, noti->priv_id);
 	if (query == NULL) {
 		/* LCOV_EXCL_START */
-		NOTIFICATION_ERR("Failed to alloc query");
+		ERR("Failed to alloc query");
 		ret = NOTIFICATION_ERROR_OUT_OF_MEMORY;
 		goto err;
 		/* LCOV_EXCL_STOP */
@@ -153,7 +153,7 @@ static int _notification_noti_check_priv_id(notification_h noti, sqlite3 *db)
 	ret = sqlite3_prepare_v2(db, query, strlen(query), &stmt, NULL);
 	if (ret != SQLITE_OK) {
 		/* LCOV_EXCL_START */
-		NOTIFICATION_ERR("Failed to sqlite3_prepare_v2 Failed [%d][%s]",
+		ERR("Failed to sqlite3_prepare_v2 Failed [%d][%s]",
 				ret, sqlite3_errmsg(db));
 		ret = NOTIFICATION_ERROR_FROM_DB;
 		goto err;
@@ -194,7 +194,7 @@ static int _notification_noti_get_internal_group_id_by_priv_id(const char *app_i
 				app_id, priv_id);
 	if (query == NULL) {
 		/* LCOV_EXCL_START */
-		NOTIFICATION_ERR("Failed to alloc query"); /* LCOV_EXCL_LINE */
+		ERR("Failed to alloc query"); /* LCOV_EXCL_LINE */
 		ret = NOTIFICATION_ERROR_OUT_OF_MEMORY;
 		goto err;
 		/* LCOV_EXCL_STOP */
@@ -203,7 +203,7 @@ static int _notification_noti_get_internal_group_id_by_priv_id(const char *app_i
 	ret = sqlite3_prepare_v2(db, query, strlen(query), &stmt, NULL);
 	if (ret != SQLITE_OK) {
 		/* LCOV_EXCL_START */
-		NOTIFICATION_ERR("sqlite3_prepare_v2 Failed [%d][%s]", ret,
+		ERR("sqlite3_prepare_v2 Failed [%d][%s]", ret,
 				sqlite3_errmsg(db));
 		ret = NOTIFICATION_ERROR_FROM_DB;
 		goto err;
@@ -224,7 +224,7 @@ err:
 		sqlite3_free(query);
 
 	if (ret != NOTIFICATION_ERROR_NONE)
-		NOTIFICATION_ERR("Failed to get internal group ID [%d]", ret);
+		ERR("Failed to get internal group ID [%d]", ret);
 
 	return result;
 }
@@ -588,7 +588,7 @@ static int _get_notification(char *query_where, notification_h noti)
 	ret = sqlite3_prepare_v2(db, query, -1, &stmt, NULL);
 	if (ret != SQLITE_OK) {
 		/* LCOV_EXCL_START */
-		NOTIFICATION_ERR("sqlite3_prepare_v2 failed [%d][%s]", ret,
+		ERR("sqlite3_prepare_v2 failed [%d][%s]", ret,
 				sqlite3_errmsg(db));
 		ret = NOTIFICATION_ERROR_FROM_DB;
 		goto err;
@@ -601,9 +601,9 @@ static int _get_notification(char *query_where, notification_h noti)
 		ret = NOTIFICATION_ERROR_NONE;
 	} else {
 		if (ret == SQLITE_DONE)
-			NOTIFICATION_DBG("No valid record found");
+			DBG("No valid record found");
 		else
-			NOTIFICATION_ERR("sqlite3_step failed [%d][%s]", ret,
+			ERR("sqlite3_step failed [%d][%s]", ret,
 					sqlite3_errmsg(db));
 		ret = NOTIFICATION_ERROR_FROM_DB;
 	}
@@ -647,7 +647,7 @@ static int _get_notification_list(char *query_where, notification_list_h *list, 
 	ret = sqlite3_prepare_v2(db, query, -1, &stmt, NULL);
 	if (ret != SQLITE_OK) {
 		/* LCOV_EXCL_START */
-		NOTIFICATION_ERR("sqlite3_prepare_v2 failed [%d][%s]", ret,
+		ERR("sqlite3_prepare_v2 failed [%d][%s]", ret,
 				sqlite3_errmsg(db));
 		ret = NOTIFICATION_ERROR_FROM_DB;
 		goto err;
@@ -670,8 +670,7 @@ static int _get_notification_list(char *query_where, notification_list_h *list, 
 			get_list = notification_list_append(get_list, noti);
 
 			if (count != -1 && internal_count >= count) {
-				NOTIFICATION_INFO
-				("internal count[%d] count[%d]",
+				INFO("internal count[%d] count[%d]",
 				internal_count, count);
 				break;
 			}
@@ -760,31 +759,31 @@ static int __get_setting_from_app_control(notification_h noti, notification_sett
 					NULL,
 					&b);
 	if (ret != NOTIFICATION_ERROR_NONE || b == NULL) {
-		NOTIFICATION_WARN("Failed to get or no the excute option [%x]", ret);
+		WARN("Failed to get or no the excute option [%x]", ret);
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 	}
 
 	ret = app_control_create(&app_control);
 	if (ret != APP_CONTROL_ERROR_NONE) {
-		NOTIFICATION_ERR("Failed to create app_control [%x]", ret);
+		ERR("Failed to create app_control [%x]", ret);
 		goto out;
 	}
 
 	ret = app_control_import_from_bundle(app_control, b);
 	if (ret != APP_CONTROL_ERROR_NONE) {
-		NOTIFICATION_ERR("Failed to import from bundle to app_control [%x]", ret);
+		ERR("Failed to import from bundle to app_control [%x]", ret);
 		goto out;
 	}
 
 	ret = app_control_get_app_id(app_control, &app_id);
 	if (ret != APP_CONTROL_ERROR_NONE || app_id == NULL) {
-		NOTIFICATION_ERR("Failed to get app id from app_control [%x]", ret);
+		ERR("Failed to get app id from app_control [%x]", ret);
 		goto out;
 	}
 
 	ret = noti_setting_service_get_setting_by_app_id(app_id, &setting_new, noti->uid);
 	if (ret != APP_CONTROL_ERROR_NONE || setting == NULL) {
-		NOTIFICATION_ERR("Failed to get setting by app id[%s][%x]",
+		ERR("Failed to get setting by app id[%s][%x]",
 				app_id, ret);
 		goto out;
 	}
@@ -820,13 +819,13 @@ static bool _is_allowed_to_notify(notification_h noti)
 
 	err = notification_setting_get_allow_to_notify(setting, &allow_to_notify);
 	if (err != NOTIFICATION_ERROR_NONE) {
-		NOTIFICATION_ERR("Failed to get allow_to_notify [%x]", err);
+		ERR("Failed to get allow_to_notify [%x]", err);
 		goto out;
 	}
 
 	err = notification_setting_get_app_disabled(setting, &app_disabled);
 	if (err != NOTIFICATION_ERROR_NONE) {
-		NOTIFICATION_ERR("Failed to get app_disabled [%x]", err);
+		ERR("Failed to get app_disabled [%x]", err);
 		goto out;
 	}
 
@@ -849,37 +848,37 @@ static int _handle_do_not_disturb_option(notification_h noti)
 	notification_system_setting_h system_setting = NULL;
 
 	if (noti == NULL) {
-		NOTIFICATION_ERR("Invalid notification handle");
+		ERR("Invalid notification handle");
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 	}
 
 	/* Get system setting */
 	err = noti_system_setting_load_system_setting(&system_setting, noti->uid);
 	if (err != NOTIFICATION_ERROR_NONE) {
-		NOTIFICATION_ERR("Failed to load system setting [%d]", err);
+		ERR("Failed to load system setting [%d]", err);
 		goto out;
 	}
 
 	err = notification_system_setting_get_do_not_disturb(system_setting,
 							&do_not_disturb);
 	if (err != NOTIFICATION_ERROR_NONE) {
-		NOTIFICATION_ERR("Failed to get do_not_disturb [%d]", err);
+		ERR("Failed to get do_not_disturb [%d]", err);
 		goto out;
 	}
 
-	NOTIFICATION_DBG("do_not_disturb [%d]", do_not_disturb);
+	DBG("do_not_disturb [%d]", do_not_disturb);
 
 	if (do_not_disturb) {
 		/* Check exception option of the caller app_id */
 		err = noti_setting_service_get_setting_by_app_id(noti->caller_app_id, &setting, noti->uid);
 		if (err != NOTIFICATION_ERROR_NONE) {
-			NOTIFICATION_ERR("Failed to get setting by app_id [%d]", err);
+			ERR("Failed to get setting by app_id [%d]", err);
 			goto out;
 		}
 
 		err = notification_setting_get_do_not_disturb_except(setting, &do_not_disturb_exception);
 		if (err != NOTIFICATION_ERROR_NONE) {
-			NOTIFICATION_ERR("Failed to get do_not_disturb_exception [%d]", err);
+			ERR("Failed to get do_not_disturb_exception [%d]", err);
 			goto out;
 		}
 
@@ -921,18 +920,18 @@ static bool _is_pop_up_notification(const char *app_id, uid_t uid)
 
 	err = noti_setting_service_get_setting_by_app_id(app_id, &setting, uid);
 	if (err != NOTIFICATION_ERROR_NONE) {
-		NOTIFICATION_WARN("Failed get the setting for [%s] [%x]", app_id, err);
+		WARN("Failed get the setting for [%s] [%x]", app_id, err);
 		goto out;
 	}
 
 	err = notification_setting_get_pop_up_notification(setting, &ret);
 	if (err != NOTIFICATION_ERROR_NONE) {
-		NOTIFICATION_ERR("Failed to get pop_up_notification [%d]", err);
+		ERR("Failed to get pop_up_notification [%d]", err);
 		goto out;
 	}
 
 	if (ret != true)
-		NOTIFICATION_DBG("[%s] is not allowed Pop-up notification", app_id);
+		DBG("[%s] is not allowed Pop-up notification", app_id);
 
 out:
 	if (setting)
@@ -951,7 +950,7 @@ static int _check_text_input(notification_h noti)
 	if (err == NOTIFICATION_ERROR_NONE && text_input_max_length != 0) {
 		err = notification_get_event_handler(noti, NOTIFICATION_EVENT_TYPE_CLICK_ON_TEXT_INPUT_BUTTON, &app_control);
 		if (err != NOTIFICATION_ERROR_NONE || app_control == NULL) {
-			NOTIFICATION_ERR("Event handler for text_input is not set");
+			ERR("Event handler for text_input is not set");
 			return -1;
 		}
 	}
@@ -967,21 +966,21 @@ EXPORT_API int notification_noti_insert(notification_h noti)
 	char *query = NULL;
 
 	if (noti == NULL) {
-		NOTIFICATION_ERR("Invalid notification handle");
+		ERR("Invalid notification handle");
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 	}
 
 	if (_is_allowed_to_notify(noti) == false) {
-		NOTIFICATION_ERR("[%s] is not allowed to notify", noti->caller_app_id);
+		ERR("[%s] is not allowed to notify", noti->caller_app_id);
 		return NOTIFICATION_ERROR_PERMISSION_DENIED;
 	}
 
 	if (_handle_do_not_disturb_option(noti) != NOTIFICATION_ERROR_NONE)
-		NOTIFICATION_WARN("Failed to handle do_not_disturb");
+		WARN("Failed to handle do_not_disturb");
 
 	if (_is_pop_up_notification((const char *)noti->caller_app_id, noti->uid) == false) {
 		noti->display_applist = (noti->display_applist & (~NOTIFICATION_DISPLAY_APP_ACTIVE));
-		NOTIFICATION_DBG("notification display applist - app_id [%s], applist [%d]",
+		DBG("notification display applist - app_id [%s], applist [%d]",
 				noti->caller_app_id, noti->display_applist);
 	}
 
@@ -1000,7 +999,7 @@ EXPORT_API int notification_noti_insert(notification_h noti)
 			NOTI_LIST_DB_ATTRIBUTES_INSERT, NOTI_LIST_INSERT_VALUES);
 	if (query == NULL) {
 		/* LCOV_EXCL_START */
-		NOTIFICATION_ERR("sqlite3_mprintf Failed");
+		ERR("sqlite3_mprintf Failed");
 		ret = NOTIFICATION_ERROR_OUT_OF_MEMORY;
 		goto err;
 		/* LCOV_EXCL_STOP */
@@ -1009,7 +1008,7 @@ EXPORT_API int notification_noti_insert(notification_h noti)
 	ret = sqlite3_prepare_v2(db, query, -1, &stmt, NULL);
 	if (ret != SQLITE_OK) {
 		/* LCOV_EXCL_START */
-		NOTIFICATION_ERR("sqlite3_prepare_v2 Failed [%d][%s]", ret,
+		ERR("sqlite3_prepare_v2 Failed [%d][%s]", ret,
 				 sqlite3_errmsg(db));
 		ret = NOTIFICATION_ERROR_FROM_DB;
 		goto err;
@@ -1048,7 +1047,7 @@ EXPORT_API int notification_noti_get_by_priv_id(notification_h noti, int priv_id
 	char *query_where = NULL;
 
 	if (priv_id < 0 || noti == NULL) {
-		NOTIFICATION_ERR("Invalid parameter");
+		ERR("Invalid parameter");
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 	}
 
@@ -1076,7 +1075,7 @@ EXPORT_API int notification_noti_get_by_tag(notification_h noti, char *app_id, c
 	char *query_where;
 
 	if (tag == NULL || noti == NULL) {
-		NOTIFICATION_ERR("Invalid paramter");
+		ERR("Invalid paramter");
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 	}
 
@@ -1106,21 +1105,21 @@ EXPORT_API int notification_noti_update(notification_h noti)
 	char *query = NULL;
 
 	if (noti == NULL) {
-		NOTIFICATION_ERR("Invalid parameter");
+		ERR("Invalid parameter");
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 	}
 
 	if (_is_allowed_to_notify(noti) == false) {
-		NOTIFICATION_DBG("[%s] is not allowed to notify", noti->caller_app_id);
+		DBG("[%s] is not allowed to notify", noti->caller_app_id);
 		return NOTIFICATION_ERROR_PERMISSION_DENIED;
 	}
 
 	if (_handle_do_not_disturb_option(noti) != NOTIFICATION_ERROR_NONE)
-		NOTIFICATION_WARN("Failed to handle do_not_disturb");
+		WARN("Failed to handle do_not_disturb");
 
 	if (_is_pop_up_notification((const char *)noti->caller_app_id, noti->uid) == false) {
 		noti->display_applist = (noti->display_applist & (~NOTIFICATION_DISPLAY_APP_ACTIVE));
-		NOTIFICATION_DBG("notification display applist - app_id [%s], applist [%d]",
+		DBG("notification display applist - app_id [%s], applist [%d]",
 				noti->caller_app_id, noti->display_applist);
 	}
 
@@ -1131,7 +1130,7 @@ EXPORT_API int notification_noti_update(notification_h noti)
 	/* Check private ID is exist */
 	ret = _notification_noti_check_priv_id(noti, db);
 	if (ret != NOTIFICATION_ERROR_ALREADY_EXIST_ID) {
-		NOTIFICATION_ERR("The ID is not existed");
+		ERR("The ID is not existed");
 		ret = NOTIFICATION_ERROR_NOT_EXIST_ID;
 		goto err;
 	}
@@ -1148,7 +1147,7 @@ EXPORT_API int notification_noti_update(notification_h noti)
 	ret = sqlite3_prepare_v2(db, query, -1, &stmt, NULL);
 	if (ret != SQLITE_OK) {
 		/* LCOV_EXCL_START */
-		NOTIFICATION_ERR("sqlite3_prepare_v2 Failed [%d][%s]", ret,
+		ERR("sqlite3_prepare_v2 Failed [%d][%s]", ret,
 				 sqlite3_errmsg(db));
 		ret = NOTIFICATION_ERROR_FROM_DB;
 		goto err;
@@ -1249,7 +1248,7 @@ EXPORT_API int notification_noti_delete_all(notification_type_e type,
 		ret = sqlite3_prepare_v2(db, query, strlen(query), &stmt, NULL);
 		if (ret != SQLITE_OK) {
 			/* LCOV_EXCL_START */
-			NOTIFICATION_ERR("Failed to sqlite3_prepare_V2 [%d][%s]",
+			ERR("Failed to sqlite3_prepare_V2 [%d][%s]",
 					ret, sqlite3_errmsg(db));
 
 			ret = NOTIFICATION_ERROR_FROM_DB;
@@ -1266,7 +1265,7 @@ EXPORT_API int notification_noti_delete_all(notification_type_e type,
 					*list_deleted_rowid = tmp;
 				} else {
 					/* LCOV_EXCL_START */
-					NOTIFICATION_ERR("Failed to realloc memory [%s]", strerror_r(errno, err_buf, sizeof(err_buf)));
+					ERR("Failed to realloc memory [%s]", strerror_r(errno, err_buf, sizeof(err_buf)));
 					/*!
 					 * \TODO
 					 * How can I handle this?
@@ -1528,7 +1527,7 @@ EXPORT_API int notification_noti_get_count(notification_type_e type,
 
 	ret = sqlite3_prepare_v2(db, query, -1, &stmt, NULL);
 	if (ret != SQLITE_OK) {
-		NOTIFICATION_ERR("Failed to sqlite3_prepare_v2[%d][%s]",
+		ERR("Failed to sqlite3_prepare_v2[%d][%s]",
 				ret, sqlite3_errmsg(db));
 
 		ret = NOTIFICATION_ERROR_FROM_DB;
@@ -1575,14 +1574,14 @@ EXPORT_API int notification_noti_get_all_count(notification_type_e type, int *co
 	char *sql_buf = NULL;
 
 	if (count == NULL) {
-		NOTIFICATION_ERR("Invalid parameter - count is null");
+		ERR("Invalid parameter - count is null");
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 	}
 
 	db = notification_db_open();
 	if (db == NULL) {
 		ret = get_last_result();
-		NOTIFICATION_ERR("Failed to open db [%d]", ret);
+		ERR("Failed to open db [%d]", ret);
 		return ret;
 	}
 
@@ -1596,14 +1595,14 @@ EXPORT_API int notification_noti_get_all_count(notification_type_e type, int *co
 
 	if (sql_buf == NULL) {
 		ret = NOTIFICATION_ERROR_FROM_DB;
-		NOTIFICATION_ERR("OOM - sqlite3_mprintf");
+		ERR("OOM - sqlite3_mprintf");
 		goto out;
 	}
 
 	sql_ret = sqlite3_prepare_v2(db, sql_buf, -1, &stmt, NULL);
 	if (sql_ret != SQLITE_OK) {
 		ret = NOTIFICATION_ERROR_FROM_DB;
-		NOTIFICATION_ERR("SQLITE3 Error - sqlite3_prepare_v2 [%d][%s]",
+		ERR("SQLITE3 Error - sqlite3_prepare_v2 [%d][%s]",
 				sql_ret, sqlite3_errmsg(db));
 		goto out;
 	}
@@ -1614,7 +1613,7 @@ EXPORT_API int notification_noti_get_all_count(notification_type_e type, int *co
 	else
 		*count = 0;
 
-	NOTIFICATION_INFO("The numbers of all notification is [%d]", *count);
+	INFO("The numbers of all notification is [%d]", *count);
 
 out:
 	if (stmt)
@@ -1801,7 +1800,7 @@ EXPORT_API int notification_noti_check_tag(notification_h noti)
 	ret = sqlite3_prepare_v2(db, query, strlen(query), &stmt, NULL);
 	if (ret != SQLITE_OK) {
 		/* LCOV_EXCL_START */
-		NOTIFICATION_ERR("Failed to sqlite3_prepare_v2[%d][%s]",
+		ERR("Failed to sqlite3_prepare_v2[%d][%s]",
 				ret, sqlite3_errmsg(db));
 		goto err;
 		/* LCOV_EXCL_STOP */
@@ -1862,7 +1861,7 @@ EXPORT_API int notification_noti_check_count_for_template(notification_h noti, i
 	ret = sqlite3_prepare_v2(db, query, strlen(query), &stmt, NULL);
 	if (ret != SQLITE_OK) {
 		/* LCOV_EXCL_START */
-		NOTIFICATION_ERR("Failed to sqlite3_prepare_v2[%d][%s]",
+		ERR("Failed to sqlite3_prepare_v2[%d][%s]",
 				ret, sqlite3_errmsg(db));
 		ret = NOTIFICATION_ERROR_FROM_DB;
 		goto err;
@@ -1899,7 +1898,7 @@ EXPORT_API int notification_noti_add_template(notification_h noti, char *templat
 	int ret = NOTIFICATION_ERROR_NONE;
 
 	if (noti == NULL || template_name == NULL) {
-		NOTIFICATION_ERR("NOTIFICATION_ERROR_INVALID_PARAMETER");
+		ERR("NOTIFICATION_ERROR_INVALID_PARAMETER");
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 	}
 
@@ -1926,7 +1925,7 @@ EXPORT_API int notification_noti_add_template(notification_h noti, char *templat
 	ret = sqlite3_prepare_v2(db, query, -1, &stmt, NULL);
 	if (ret != SQLITE_OK) {
 		/* LCOV_EXCL_START */
-		NOTIFICATION_ERR("Failed to sqlite3_prepare_v2[%d][%s]",
+		ERR("Failed to sqlite3_prepare_v2[%d][%s]",
 				ret, sqlite3_errmsg(db));
 		ret = NOTIFICATION_ERROR_FROM_DB;
 		goto err;
@@ -1962,7 +1961,7 @@ EXPORT_API int notification_noti_get_package_template(notification_h noti, char 
 	char *query_where = NULL;
 
 	if (noti == NULL || app_id == NULL || template_name == NULL) {
-		NOTIFICATION_ERR("NOTIFICATION_ERROR_INVALID_PARAMETER");
+		ERR("NOTIFICATION_ERROR_INVALID_PARAMETER");
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 	}
 
@@ -1973,7 +1972,7 @@ EXPORT_API int notification_noti_get_package_template(notification_h noti, char 
 
 	ret = _get_notification(query_where, noti);
 	if (ret != NOTIFICATION_ERROR_NONE)
-		NOTIFICATION_ERR("Failed to get notification [%d]", ret);
+		ERR("Failed to get notification [%d]", ret);
 
 	if (query_where)
 		sqlite3_free(query_where);
