@@ -110,7 +110,7 @@ int noti_setting_service_get_setting_by_app_id(const char *app_id, notification_
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 	}
 
-	db = notification_db_open(DBPATH);
+	db = notification_db_open();
 	if (!db)
 		return get_last_result();
 
@@ -198,7 +198,7 @@ int noti_setting_get_setting_array(notification_setting_h *setting_array, int *c
 		return  NOTIFICATION_ERROR_INVALID_PARAMETER;
 	}
 
-	db = notification_db_open(DBPATH);
+	db = notification_db_open();
 	if (!db)
 		return get_last_result();
 
@@ -288,7 +288,7 @@ int noti_system_setting_load_system_setting(notification_system_setting_h *syste
 		return  NOTIFICATION_ERROR_INVALID_PARAMETER;
 	}
 
-	db = notification_db_open(DBPATH);
+	db = notification_db_open();
 	if (!db)
 		return get_last_result();
 
@@ -382,7 +382,7 @@ int notification_setting_db_update(const char *package_name, const char *app_id,
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 	}
 
-	db = notification_db_open(DBPATH);
+	db = notification_db_open();
 	if (!db)
 		return get_last_result();
 
@@ -425,7 +425,7 @@ int notification_setting_db_update_system_setting(int do_not_disturb, int visibi
 	int ret = NOTIFICATION_ERROR_NONE;
 	int num_changes = 0;
 
-	db = notification_db_open(DBPATH);
+	db = notification_db_open();
 	if (!db)
 		return get_last_result();
 
@@ -469,7 +469,7 @@ int notification_setting_db_update_do_not_disturb(int do_not_disturb, uid_t uid)
 	char *query = NULL;
 	int ret = NOTIFICATION_ERROR_NONE;
 
-	db = notification_db_open(DBPATH);
+	db = notification_db_open();
 	if (!db)
 		return get_last_result();
 
@@ -511,7 +511,7 @@ int notification_system_setting_get_dnd_schedule_enabled_uid(uid_t **uids, int *
 	sqlite3 *db = NULL;
 	uid_t *result_uids;
 
-	db = notification_db_open(DBPATH);
+	db = notification_db_open();
 	if (!db)
 		return get_last_result();
 
@@ -589,7 +589,7 @@ int notification_get_dnd_and_allow_to_notify(const char *app_id,
 	if (app_id == NULL)
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 
-	db = notification_db_open(DBPATH);
+	db = notification_db_open();
 	if (!db)
 		return get_last_result();
 
@@ -691,7 +691,7 @@ EXPORT_API int notification_system_setting_load_dnd_allow_exception(dnd_allow_ex
 		return  NOTIFICATION_ERROR_INVALID_PARAMETER;
 	}
 
-	db = notification_db_open(DBPATH);
+	db = notification_db_open();
 	if (!db)
 		return get_last_result();
 
@@ -756,7 +756,7 @@ int notification_system_setting_update_dnd_allow_exception(int type, int value, 
 	int ret = NOTIFICATION_ERROR_NONE;
 	int num_changes = 0;
 
-	db = notification_db_open(DBPATH);
+	db = notification_db_open();
 	if (!db)
 		return get_last_result();
 
@@ -800,7 +800,7 @@ int noti_system_setting_get_do_not_disturb(int *do_not_disturb, uid_t uid)
 	char **query_result = NULL;
 	sqlite3 *db = NULL;
 
-	db = notification_db_open(DBPATH);
+	db = notification_db_open();
 	if (!db)
 		return get_last_result();
 
@@ -858,7 +858,7 @@ int notification_setting_db_update_app_disabled(const char *app_id, bool value, 
 	if (app_id == NULL)
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 
-	db = notification_db_open(DBPATH);
+	db = notification_db_open();
 	if (!db)
 		return get_last_result();
 

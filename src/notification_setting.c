@@ -480,7 +480,7 @@ static int _install_and_update_package(const char *package_name, uid_t uid)
 	setting_local_info info;
 	pkgmgrinfo_pkginfo_filter_h handle = NULL;
 
-	db = notification_db_open(DBPATH);
+	db = notification_db_open();
 	if (!db)
 		return get_last_result();
 
@@ -539,7 +539,7 @@ static int _delete_package_from_setting_db(const char *package_name, uid_t uid)
 	int err = NOTIFICATION_ERROR_NONE;
 	bool is_package_in_setting_table = false;
 
-	db = notification_db_open(DBPATH);
+	db = notification_db_open();
 	if (!db)
 		return get_last_result();
 
@@ -584,7 +584,7 @@ EXPORT_API int notification_setting_refresh_setting_table(uid_t uid)
 
 	NOTIFICATION_INFO("Refresh setting table [%d]", uid);
 
-	db = notification_db_open(DBPATH);
+	db = notification_db_open();
 	if (!db)
 		return get_last_result();
 
@@ -1115,7 +1115,7 @@ EXPORT_API int notification_system_setting_init_system_setting_table(uid_t uid)
 
 	NOTIFICATION_INFO("init system setting table [%d]", uid);
 
-	db = notification_db_open(DBPATH);
+	db = notification_db_open();
 	if (db == NULL)
 		return get_last_result(); /* LCOV_EXCL_LINE */
 

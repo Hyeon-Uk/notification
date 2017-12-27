@@ -119,12 +119,12 @@ out:
 	return ret;
 }
 
-sqlite3 *notification_db_open(const char *dbfile)
+sqlite3 *notification_db_open()
 {
 	int ret = 0;
 	sqlite3 *db = 0;
 
-	ret = access(dbfile, R_OK | W_OK);
+	ret = access(DBPATH, R_OK | W_OK);
 	if (ret != 0) {
 		/* LCOV_EXCL_START */
 		set_last_result(NOTIFICATION_ERROR_FROM_DB);
@@ -132,7 +132,7 @@ sqlite3 *notification_db_open(const char *dbfile)
 		/* LCOV_EXCL_STOP */
 	}
 
-	ret = sqlite3_open_v2(dbfile, &db, SQLITE_OPEN_READWRITE, NULL);
+	ret = sqlite3_open_v2(DBPATH, &db, SQLITE_OPEN_READWRITE, NULL);
 	if (ret != SQLITE_OK) {
 		/* LCOV_EXCL_START */
 		if (ret == SQLITE_PERM)

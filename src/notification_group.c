@@ -71,7 +71,7 @@ int notification_group_set_badge(const char *app_id,
 	int ret;
 	int result;
 
-	db = notification_db_open(DBPATH);
+	db = notification_db_open();
 	if (!db)
 		return get_last_result();
 
@@ -130,7 +130,7 @@ int notification_group_get_badge(const char *app_id,
 	int ret;
 	int col = 0;
 
-	db = notification_db_open(DBPATH);
+	db = notification_db_open();
 	if (!db)
 		return get_last_result();
 

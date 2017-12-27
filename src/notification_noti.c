@@ -572,7 +572,7 @@ static int _get_notification(char *query_where, notification_h noti)
 	if (query_where == NULL || noti == NULL)
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 
-	db = notification_db_open(DBPATH);
+	db = notification_db_open();
 	if (!db)
 		return get_last_result();
 
@@ -631,7 +631,7 @@ static int _get_notification_list(char *query_where, notification_list_h *list, 
 	if (query_where == NULL || list == NULL)
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 
-	db = notification_db_open(DBPATH);
+	db = notification_db_open();
 	if (!db)
 		return get_last_result();
 
@@ -992,7 +992,7 @@ EXPORT_API int notification_noti_insert(notification_h noti)
 	noti->group_id = NOTIFICATION_GROUP_ID_NONE;
 	noti->internal_group_id = NOTIFICATION_GROUP_ID_NONE;
 
-	db = notification_db_open(DBPATH);
+	db = notification_db_open();
 	if (!db)
 		return get_last_result();
 
@@ -1124,7 +1124,7 @@ EXPORT_API int notification_noti_update(notification_h noti)
 				noti->caller_app_id, noti->display_applist);
 	}
 
-	db = notification_db_open(DBPATH);
+	db = notification_db_open();
 	if (!db)
 		return get_last_result();
 
@@ -1194,7 +1194,7 @@ EXPORT_API int notification_noti_delete_all(notification_type_e type,
 	int i = 0;
 	int data_cnt = 0;
 
-	db = notification_db_open(DBPATH);
+	db = notification_db_open();
 	if (!db)
 		return get_last_result();
 
@@ -1371,7 +1371,7 @@ EXPORT_API int notification_noti_delete_by_priv_id(const char *app_id, int priv_
 	if (app_id == NULL)
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 
-	db = notification_db_open(DBPATH);
+	db = notification_db_open();
 	if (!db)
 		return get_last_result();
 
@@ -1404,7 +1404,7 @@ EXPORT_API int notification_noti_delete_by_priv_id_get_changes(const char *app_i
 	char *query = NULL;
 	int ret = NOTIFICATION_ERROR_NONE;
 
-	db = notification_db_open(DBPATH);
+	db = notification_db_open();
 	if (!db)
 		return get_last_result();
 
@@ -1453,7 +1453,7 @@ EXPORT_API int notification_noti_get_count(notification_type_e type,
 	if (ret < 0)
 		return NOTIFICATION_ERROR_IO_ERROR;
 
-	db = notification_db_open(DBPATH);
+	db = notification_db_open();
 	if (!db)
 		return get_last_result();
 
@@ -1579,7 +1579,7 @@ EXPORT_API int notification_noti_get_all_count(notification_type_e type, int *co
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 	}
 
-	db = notification_db_open(DBPATH);
+	db = notification_db_open();
 	if (db == NULL) {
 		ret = get_last_result();
 		NOTIFICATION_ERR("Failed to open db [%d]", ret);
@@ -1712,7 +1712,7 @@ EXPORT_API int notification_noti_get_detail_list(const char *app_id,
 	if (ret < 0)
 		return NOTIFICATION_ERROR_IO_ERROR;
 
-	db = notification_db_open(DBPATH);
+	db = notification_db_open();
 	if (!db)
 		return get_last_result();
 
@@ -1783,7 +1783,7 @@ EXPORT_API int notification_noti_check_tag(notification_h noti)
 	if (noti->tag == NULL)
 		return NOTIFICATION_ERROR_NOT_EXIST_ID;
 
-	db = notification_db_open(DBPATH);
+	db = notification_db_open();
 	if (!db)
 		return get_last_result();
 
@@ -1845,7 +1845,7 @@ EXPORT_API int notification_noti_check_count_for_template(notification_h noti, i
 	if (noti == NULL || count == NULL)
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 
-	db = notification_db_open(DBPATH);
+	db = notification_db_open();
 	if (!db)
 		return get_last_result();
 
@@ -1907,7 +1907,7 @@ EXPORT_API int notification_noti_add_template(notification_h noti, char *templat
 	noti->group_id = NOTIFICATION_GROUP_ID_NONE;
 	noti->internal_group_id = NOTIFICATION_GROUP_ID_NONE;
 
-	db = notification_db_open(DBPATH);
+	db = notification_db_open();
 	if (!db)
 		return get_last_result();
 
@@ -1990,7 +1990,7 @@ EXPORT_API int notification_noti_delete_template(const char *pkg_id)
 	if (pkg_id == NULL)
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 
-	db = notification_db_open(DBPATH);
+	db = notification_db_open();
 	if (!db)
 		return get_last_result();
 
