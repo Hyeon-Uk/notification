@@ -54,8 +54,10 @@ int notification_noti_get_count(notification_type_e type,
 int notification_noti_get_all_count(notification_type_e type, int *count, uid_t uid);
 
 int notification_noti_get_grouping_list(notification_type_e type,
-		int count,
+		int page_number,
+		int count_per_page,
 		notification_list_h *list,
+		int *list_count,
 		uid_t uid);
 
 int notification_noti_get_detail_list(const char *app_id,

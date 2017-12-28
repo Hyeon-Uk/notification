@@ -83,6 +83,31 @@ int notification_get_list_for_uid(notification_type_e type,
 
 /**
  * @internal
+ * @brief Gets the notification list associated with the partition into pages.
+ * @since_tizen 4.0
+ * @privlevel public
+ * @privilege %http://tizen.org/privilege/notification
+ * @param[in]  type            The notification type
+ * @param[in]  page_number     The page number of the value set \n
+ *                             It starts from @c 1.
+ * @param[in]  count_per_page  The desired maximum count of the data items per page
+ *                             The maximum value is 100, If the value is set more than 100, \n
+ *                             it is automatically set 100.
+ * @param[out] list            The notification list handle
+ * @return #NOTIFICATION_ERROR_NONE on success,
+ *         otherwise any other value on failure
+ * @retval #NOTIFICATION_ERROR_NONE         Success
+ * @retval #NOTIFICATION_ERROR_INVALID_PARAMETER Invalid parameter
+ * @retval #NOTIFICATION_ERROR_PERMISSION_DENIED The application does not have the privilege to call this method
+ * @see #notification_list_h
+ */
+int notification_get_list_by_page(notification_type_e type,
+		int page_number, int count_per_page, notification_list_h *list);
+
+int notification_get_list_by_page_for_uid(notification_type_e type,
+		int page_number, int count_per_page, notification_list_h *list, uid_t uid);
+/**
+ * @internal
  * @brief Returns the notification detail list handle of grouping data.
  * @details If count is equal to c -1, all notifications are returned.
  * @since_tizen @if MOBILE 2.3 @elseif WEARABLE 2.3.1 @endif

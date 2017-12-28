@@ -257,7 +257,7 @@ EXPORT_API int notification_get_list_for_uid(notification_type_e type,
 	if (list == NULL)
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 
-	ret = notification_ipc_request_load_noti_grouping_list(type, count, &get_list, uid);
+	ret = notification_ipc_request_load_noti_grouping_list(type, 1, count, &get_list, uid);
 	if (ret != NOTIFICATION_ERROR_NONE)
 		return ret;
 
@@ -274,6 +274,52 @@ EXPORT_API int notification_get_list(notification_type_e type,
 	return notification_get_list_for_uid(type, count, list, getuid());
 }
 
+EXPORT_API int notification_get_list_by_page_for_uid(notification_type_e type,
+		int page_number,
+		int count_per_page,
+		notification_list_h *list,
+		uid_t uid)
+{
+#define COUNT_PER_PAGE_MAX 100
+
+	int ret;
+	notification_list_h get_list = NULL;
+
+	if (list == NULL) {
+		ERR("Invalid parameter - list is null");
+		return NOTIFICATION_ERROR_INVALID_PARAMETER;
+	}
+
+	if (page_number <= 0) {
+		ERR("Invalid parameter - page_number [%d]", page_number);
+		return NOTIFICATION_ERROR_INVALID_PARAMETER;
+	}
+
+	if (count_per_page > COUNT_PER_PAGE_MAX) {
+		WARN("count_per_page exceeds max value, max must be set %d",
+				COUNT_PER_PAGE_MAX);
+		count_per_page = COUNT_PER_PAGE_MAX;
+	}
+
+	ret = notification_ipc_request_load_noti_grouping_list(type,
+			page_number, count_per_page, &get_list, uid);
+	if (ret != NOTIFICATION_ERROR_NONE) {
+		ERR("fail request load noti grouping list");
+		return ret;
+	}
+
+	*list = notification_list_get_head(get_list);
+
+	return ret;
+}
+
+EXPORT_API int notification_get_list_by_page(notification_type_e type,
+	int page_number, int count_per_page, notification_list_h *list)
+{
+	return notification_get_list_by_page_for_uid(type,
+			page_number, count_per_page, list, getuid());
+}
+
 EXPORT_API int notification_get_detail_list_for_uid(const char *app_id,
 		int group_id,
 		int priv_id,
@@ -281,8 +327,8 @@ EXPORT_API int notification_get_detail_list_for_uid(const char *app_id,
 		notification_list_h *list,
 		uid_t uid)
 {
-	notification_list_h get_list = NULL;
 	int ret = 0;
+	notification_list_h get_list = NULL;
 
 	if (list == NULL || app_id == NULL)
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;

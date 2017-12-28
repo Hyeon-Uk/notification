@@ -30,6 +30,7 @@
 #include <notification_internal.h>
 
 #include <gio/gio.h>
+#include <gio/gunixfdlist.h>
 
 #define PROVIDER_BUS_NAME "org.tizen.data_provider_service"
 #define PROVIDER_OBJECT_PATH "/org/tizen/data_provider_service"
@@ -651,11 +652,9 @@ static int _dbus_signal_init()
 	return ret;
 }
 
-static int _send_sync_noti(GVariant *body, GDBusMessage **reply, char *cmd)
+static GDBusMessage *__get_new_msg(GVariant *body, const char *cmd)
 {
-	int ret = NOTIFICATION_ERROR_NONE;
-	GError *err = NULL;
-	GDBusMessage *msg;
+	GDBusMessage *msg = NULL;
 
 	msg = g_dbus_message_new_method_call(
 			PROVIDER_BUS_NAME,
@@ -667,12 +666,20 @@ static int _send_sync_noti(GVariant *body, GDBusMessage **reply, char *cmd)
 		ERR("Failed to alloc new method call");
 		if (body)
 			g_variant_unref(body);
-		return NOTIFICATION_ERROR_OUT_OF_MEMORY;
+		return NULL;
 		/* LCOV_EXCL_STOP */
 	}
 
 	if (body != NULL)
 		g_dbus_message_set_body(msg, body);
+
+	return msg;
+}
+
+static int __send_message(GDBusMessage *msg, GDBusMessage **reply, const char *cmd)
+{
+	int ret = NOTIFICATION_ERROR_NONE;
+	GError *g_err = NULL;
 
 	*reply = g_dbus_connection_send_message_with_reply_sync(
 			_gdbus_conn,
@@ -681,36 +688,83 @@ static int _send_sync_noti(GVariant *body, GDBusMessage **reply, char *cmd)
 			-1,
 			NULL,
 			NULL,
-			&err);
-
-	g_object_unref(msg);
+			&g_err);
 
 	if (!*reply) {
 		/* LCOV_EXCL_START */
 		ret = NOTIFICATION_ERROR_SERVICE_NOT_READY;
-		if (err != NULL) {
-			ERR("No reply. cmd[%s] err[%s]", cmd, err->message);
-			if (err->code == G_DBUS_ERROR_ACCESS_DENIED)
+		if (g_err != NULL) {
+			ERR("No reply. cmd[%s] err[%s]", cmd, g_err->message);
+			if (g_err->code == G_DBUS_ERROR_ACCESS_DENIED)
 				ret = NOTIFICATION_ERROR_PERMISSION_DENIED;
-			g_error_free(err);
+			g_error_free(g_err);
 		}
 		return ret;
 		/* LCOV_EXCL_STOP */
 	}
 
-	if (g_dbus_message_to_gerror(*reply, &err)) {
-		if (err->code == G_DBUS_ERROR_ACCESS_DENIED)
+	if (g_dbus_message_to_gerror(*reply, &g_err)) {
+		if (g_err->code == G_DBUS_ERROR_ACCESS_DENIED)
 			ret = NOTIFICATION_ERROR_PERMISSION_DENIED;
 		else
-			ret = err->code;
-
-		ERR("Failed to send message[%s] err[%d]", cmd, ret);
-		g_error_free(err);
+			ret = g_err->code;
+		g_error_free(g_err);
 		return ret;
 	}
 
-	DBG("Success to send sync message");
+	INFO("Success to send message[%s]", cmd);
 	return NOTIFICATION_ERROR_NONE;
+}
+
+static int _send_sync_noti_with_fd(int fd, GVariant *body, GDBusMessage **reply, char *cmd)
+{
+	int ret = NOTIFICATION_ERROR_NONE;
+	GDBusMessage *msg = NULL;
+	GUnixFDList *fd_list = NULL;
+	GError *g_err = NULL;
+
+	fd_list = g_unix_fd_list_new();
+	g_unix_fd_list_append(fd_list, fd, &g_err);
+	if (g_err != NULL) {
+		ERR("g_unix_fd_list_append [%s]", g_err->message);
+		g_object_unref(fd_list);
+		g_error_free(g_err);
+		return NOTIFICATION_ERROR_IO_ERROR;
+	}
+
+	msg = __get_new_msg(body, cmd);
+	if (msg == NULL) {
+		g_object_unref(fd_list);
+		return NOTIFICATION_ERROR_IO_ERROR;
+	}
+
+	g_dbus_message_set_unix_fd_list(msg, fd_list);
+
+	ret = __send_message(msg, reply, cmd);
+
+	g_object_unref(msg);
+	g_object_unref(fd_list);
+
+	INFO("Done - send sync message with fd list [%d]", ret);
+	return ret;
+}
+
+static int _send_sync_noti(GVariant *body, GDBusMessage **reply, char *cmd)
+{
+	int ret = NOTIFICATION_ERROR_NONE;
+	GDBusMessage *msg = NULL;
+
+	msg = __get_new_msg(body, cmd);
+	if (msg == NULL)
+		return NOTIFICATION_ERROR_IO_ERROR;
+
+	ret = __send_message(msg, reply, cmd);
+
+	if (msg)
+		g_object_unref(msg);
+
+	INFO("Done - send sync message [%d]", ret);
+	return ret;
 }
 
 static void _send_message_with_reply_async_cb(GDBusConnection *connection,
@@ -1154,17 +1208,90 @@ int notification_ipc_request_get_count(notification_type_e type,
 }
 /* LCOV_EXCL_STOP */
 
-int notification_ipc_request_load_noti_grouping_list(notification_type_e type, int count,
-		notification_list_h *list, uid_t uid)
+static int __receive_list_from_socket(int fd, notification_list_h *list, int list_count)
 {
+	int ret = NOTIFICATION_ERROR_NONE;
+	char *data = NULL;
+	unsigned int data_size = 0;
+	unsigned int buf_size = 0;
+	notification_h noti;
+	GVariant *noti_body;
+	GVariant *reply_body;
+
+	ret = notification_ipc_socket_get_read_buf_size(fd, &buf_size);
+	if (ret != NOTIFICATION_ERROR_NONE) {
+		ERR("get read buf size");
+		return NOTIFICATION_ERROR_IO_ERROR;
+	}
+
+	data = (char *)calloc(buf_size, sizeof(char));
+	if (data == NULL) {
+		ERR("OOM - socket buffer");
+		return NOTIFICATION_ERROR_OUT_OF_MEMORY;
+	}
+
+	while (list_count > 0) {
+		ret = notification_ipc_socket_read(fd, (char *)&data_size, sizeof(data_size));
+		if (ret != NOTIFICATION_ERROR_NONE) {
+			ERR("socket read buf [%d]", ret);
+			goto out;
+		}
+
+		if (data_size > buf_size) {
+			buf_size = data_size;
+			if (data)
+				free(data);
+			data = (char *)calloc(data_size, sizeof(char));
+			if (data == NULL) {
+				ret = NOTIFICATION_ERROR_OUT_OF_MEMORY;
+				ERR("OOM - socket bulk buffer");
+				goto out;
+			}
+		}
+
+		ret = notification_ipc_socket_read(fd, data, data_size);
+		if (ret != NOTIFICATION_ERROR_NONE) {
+			ERR("socket read buf [%d]", ret);
+			goto out;
+		}
+
+		noti = (notification_h)calloc(1, sizeof(struct _notification));
+		if (noti == NULL) {
+			ret = NOTIFICATION_ERROR_OUT_OF_MEMORY;
+			ERR("OOM - notification handle");
+			goto out;
+		}
+
+		reply_body = g_variant_new_from_data(G_VARIANT_TYPE("(v)"),
+				data, data_size, TRUE, NULL, NULL);
+		g_variant_get(reply_body, "(v)", &noti_body);
+		notification_ipc_make_noti_from_gvariant(noti, noti_body);
+		*list = notification_list_append(*list, noti);
+		g_variant_unref(noti_body);
+		g_variant_unref(reply_body);
+		list_count--;
+	}
+
+out:
+	if (ret != NOTIFICATION_ERROR_NONE)
+		notification_free_list(*list);
+	if (data)
+		free(data);
+
+	return ret;
+}
+
+int notification_ipc_request_load_noti_grouping_list(notification_type_e type,
+		int count, int count_per_page, notification_list_h *list, uid_t uid)
+{
+#define RCV_SOCK 0
+#define SND_SOCK 1
 	int result;
+	int sockfd[2] = { 0, };
+	int list_count;
 	GDBusMessage *reply = NULL;
 	GVariant *body;
 	GVariant *reply_body;
-	GVariant *iter_body;
-	GVariantIter *iter;
-	notification_h noti;
-	GVariant *noti_body;
 
 	result = _dbus_init();
 	if (result != NOTIFICATION_ERROR_NONE) {
@@ -1174,35 +1301,27 @@ int notification_ipc_request_load_noti_grouping_list(notification_type_e type, i
 		/* LCOV_EXCL_STOP */
 	}
 
-	body = g_variant_new("(iii)", type, count, uid);
-	result = _send_sync_noti(body, &reply, "load_noti_grouping_list");
+	result = notification_ipc_socket_pair(sockfd);
+	if (result != NOTIFICATION_ERROR_NONE)
+		return result;
+	INFO("socket receive[%d] send[%d]", sockfd[RCV_SOCK], sockfd[SND_SOCK]);
 
+	body = g_variant_new("(iiii)", type, count, count_per_page, uid);
+	result = _send_sync_noti_with_fd(sockfd[SND_SOCK], body, &reply, "load_noti_grouping_list");
 	if (result == NOTIFICATION_ERROR_NONE) {
 		reply_body = g_dbus_message_get_body(reply);
-		g_variant_get(reply_body, "(a(v))", &iter);
-
-		while (g_variant_iter_loop(iter, "(v)", &iter_body)) {
-			noti = notification_create(NOTIFICATION_TYPE_NOTI);
-			if (!noti) {
-				/* LCOV_EXCL_START */
-				result = NOTIFICATION_ERROR_OUT_OF_MEMORY;
-				ERR("failed to create a notification");
-				notification_free_list(*list);
-				break;
-				/* LCOV_EXCL_STOP */
-			}
-			g_variant_get(iter_body, "(v)", &noti_body);
-			notification_ipc_make_noti_from_gvariant(noti, noti_body);
-			*list = notification_list_append(*list, noti);
-			g_variant_unref(noti_body);
-		}
-		g_variant_iter_free(iter);
+		g_variant_get(reply_body, "(i)", &list_count);
+		result = __receive_list_from_socket(sockfd[RCV_SOCK], list, list_count);
 	}
 
 	if (reply)
 		g_object_unref(reply);
+	if (sockfd[RCV_SOCK])
+		close(sockfd[RCV_SOCK]);
+	if (sockfd[SND_SOCK])
+		close(sockfd[SND_SOCK]);
 
-	DBG("result[%d]", result);
+	INFO("result [%d]", result);
 	return result;
 }
 

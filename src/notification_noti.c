@@ -618,7 +618,7 @@ err:
 	return ret;
 }
 
-static int _get_notification_list(char *query_where, notification_list_h *list, int count)
+static int _get_notification_list(char *query_where, notification_list_h *list, int *list_count, int count)
 {
 	int ret;
 	int internal_count = 0;
@@ -666,9 +666,7 @@ static int _get_notification_list(char *query_where, notification_list_h *list, 
 		__notification_noti_populate_from_stmt(stmt, noti);
 		if (noti != NULL) {
 			internal_count++;
-
 			get_list = notification_list_append(get_list, noti);
-
 			if (count != -1 && internal_count >= count) {
 				INFO("internal count[%d] count[%d]",
 				internal_count, count);
@@ -684,8 +682,10 @@ err:
 	if (db != NULL)
 		notification_db_close(&db);
 
-	if (get_list != NULL)
+	if (get_list != NULL) {
 		*list = notification_list_get_head(get_list);
+		*list_count = internal_count;
+	}
 
 	return ret;
 }
@@ -1627,8 +1627,10 @@ out:
 }
 
 EXPORT_API int notification_noti_get_grouping_list(notification_type_e type,
-							int count,
+							int page_number,
+							int count_per_page,
 							notification_list_h *list,
+							int *list_count,
 							uid_t uid)
 {
 	char *query = NULL;
@@ -1636,6 +1638,7 @@ EXPORT_API int notification_noti_get_grouping_list(notification_type_e type,
 	char *query_where = NULL;
 	int ret = NOTIFICATION_ERROR_NONE;
 	int status;
+	int start_index;
 
 	/* Check current sim status */
 	ret = vconf_get_int(VCONFKEY_TELEPHONY_SIM_SLOT, &status);
@@ -1669,8 +1672,18 @@ EXPORT_API int notification_noti_get_grouping_list(notification_type_e type,
 		}
 	}
 
-	query = sqlite3_mprintf("noti_list WHERE 1 > 0 %s %s "
-			"ORDER BY rowid DESC, time DESC", query_where, query_uid);
+	if (count_per_page > 0) {
+		start_index = (page_number - 1) * count_per_page;
+		query = sqlite3_mprintf("noti_list WHERE 1 > 0 %s %s "
+				"ORDER BY rowid DESC, time DESC LIMIT %d,%d",
+				query_where, query_uid, start_index, count_per_page);
+	} else {
+		query = sqlite3_mprintf("noti_list WHERE 1 > 0 %s %s "
+				"ORDER BY rowid DESC, time DESC",
+				query_where, query_uid);
+		count_per_page = -1;
+	}
+
 	if (query == NULL) {
 		/* LCOV_EXCL_START */
 		ret = NOTIFICATION_ERROR_OUT_OF_MEMORY;
@@ -1678,7 +1691,7 @@ EXPORT_API int notification_noti_get_grouping_list(notification_type_e type,
 		/* LCOV_EXCL_STOP */
 	}
 
-	ret = _get_notification_list(query, list, count);
+	ret = _get_notification_list(query, list, list_count, count_per_page);
 
 err:
 	if (query_where)
@@ -1756,7 +1769,7 @@ EXPORT_API int notification_noti_get_detail_list(const char *app_id,
 		/* LCOV_EXCL_STOP */
 	}
 
-	ret = _get_notification_list(query, list, count);
+	ret = _get_notification_list(query, list, NULL, count);
 
 err:
 	if (query_where)

@@ -69,8 +69,7 @@ int notification_ipc_update_system_setting(
 int notification_ipc_request_load_noti_by_tag(notification_h noti,
 		const char *app_id, const char *tag, uid_t uid);
 int notification_ipc_request_load_noti_grouping_list(notification_type_e type,
-		int count,
-		notification_list_h *list, uid_t uid);
+		int count, int count_per_page, notification_list_h *list, uid_t uid);
 int notification_ipc_request_get_setting_array(
 		notification_setting_h *setting_array, int *count, uid_t uid);
 int notification_ipc_request_get_setting_by_app_id(
@@ -99,6 +98,14 @@ int notification_ipc_send_event(notification_h noti, int event_type, int priv_id
 int notification_ipc_check_event_receiver(int priv_id, bool *available);
 void notification_ipc_reset_event_handler(int priv_id);
 int notification_ipc_request_get_all_count(notification_type_e type, int *count, uid_t uid);
+
+/* Functions related with socket */
+int notification_ipc_socket_pair(int *fd);
+int notification_ipc_socket_get_read_buf_size(int fd, unsigned int *size);
+int notification_ipc_socket_get_write_buf_size(int fd, unsigned int *size);
+int notification_ipc_socket_write(int fd, const char *buffer, unsigned int nbytes);
+int notification_ipc_socket_write_string(int fd, const char *buffer, unsigned int string_len);
+int notification_ipc_socket_read(int fd, char *buffer, unsigned int nbytes);
 #ifdef __cplusplus
 }
 #endif

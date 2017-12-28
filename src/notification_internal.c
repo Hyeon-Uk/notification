@@ -648,7 +648,7 @@ int notification_get_grouping_list_for_uid(notification_type_e type, int count,
 	if (list == NULL)
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 
-	ret = notification_noti_get_grouping_list(type, count, &get_list, uid);
+	ret = notification_noti_get_grouping_list(type, 1, count, &get_list, NULL, uid);
 	if (ret != NOTIFICATION_ERROR_NONE)
 		return ret;
 
