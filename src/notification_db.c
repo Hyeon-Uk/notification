@@ -31,7 +31,9 @@ static bool is_db_corrupted = false;
 
 static int __check_integrity_cb(void *pid, int argc, char **argv, char **notUsed)
 {
-	if (!strcmp(argv[0], "ok")) {
+	char *check_str = "ok";
+
+	if (strncmp(argv[0], check_str, strlen(check_str))) {
 		ERR("db integrity result : %s" , argv[0]);
 		is_db_corrupted = true;
 		return -1;
