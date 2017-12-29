@@ -71,5 +71,7 @@ int notification_noti_add_template(notification_h noti, char *template_name);
 int notification_noti_get_package_template(notification_h noti, char *app_id, char *template_name);
 int notification_noti_delete_template(const char *pkg_id);
 
+void notification_noti_init_data(void);
+
 #endif /* __NOTIFICATION_NOTI_H__ */
 

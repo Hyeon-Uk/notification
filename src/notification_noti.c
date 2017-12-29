@@ -2013,3 +2013,31 @@ err:
 
 	return ret;
 }
+
+EXPORT_API void notification_noti_init_data(void)
+{
+	int ret;
+	sqlite3 *db = NULL;
+	char *query = NULL;
+
+	db = notification_db_open();
+	if (!db) {
+		ERR("db open");
+		return;
+	}
+
+	query = sqlite3_mprintf("DELETE FROM noti_list WHERE type = %d OR flags_for_property & %d",
+			NOTIFICATION_TYPE_ONGOING, NOTIFICATION_PROP_VOLATILE_DISPLAY);
+	if (!query) {
+		ERR("OOM - sql query");
+		notification_db_close(&db);
+		return;
+	}
+
+	ret = notification_db_exec(db, query, NULL);
+	if (ret != NOTIFICATION_ERROR_NONE)
+		ERR("notification_db_exec");
+
+	sqlite3_free(query);
+	notification_db_close(&db);
+}
