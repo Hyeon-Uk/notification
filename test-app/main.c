@@ -365,34 +365,36 @@ static int testapp_test_delete_all_notifications()
 
 static int testapp_test_post_heads_up_notification_with_button()
 {
-	notification_h noti_handle = NULL;
-	int noti_err = NOTIFICATION_ERROR_NONE;
+	notification_h noti = NULL;
+	int err = NOTIFICATION_ERROR_NONE;
 	int app_control_err = APP_CONTROL_ERROR_NONE;
-	int priv_id = 0;
-	int group_id = 0;
-	char *app_id = NULL;
 	app_control_h app_control = NULL;
-	time_t result = time(NULL);
-	char tag[100] = { 0, };
 
-	noti_handle = notification_create(NOTIFICATION_TYPE_NOTI);
-
-	if (noti_handle == NULL) {
+	noti = notification_create(NOTIFICATION_TYPE_NOTI);
+	if (noti == NULL) {
 		testapp_print("notification_create failed");
+		return get_last_result();
+	}
+
+	err = notification_set_text(noti, NOTIFICATION_TEXT_TYPE_TITLE,
+			"I'm Title", NULL, NOTIFICATION_VARIABLE_TYPE_NONE);
+	if (err != NOTIFICATION_ERROR_NONE) {
+		testapp_print("set title failed[%d]\n", err);
 		goto FINISH_OFF;
 	}
 
-	noti_err = notification_set_text(noti_handle, NOTIFICATION_TEXT_TYPE_TITLE, "I'm Title", "TITLE", NOTIFICATION_VARIABLE_TYPE_NONE);
-	noti_err = notification_set_text(noti_handle, NOTIFICATION_TEXT_TYPE_CONTENT, "I'm Content", "CONTENT", NOTIFICATION_VARIABLE_TYPE_NONE);
+	err = notification_set_text(noti, NOTIFICATION_TEXT_TYPE_CONTENT,
+			"I'm Content", NULL, NOTIFICATION_VARIABLE_TYPE_NONE);
+	if (err != NOTIFICATION_ERROR_NONE) {
+		testapp_print("set content failed[%d]\n", err);
+		goto FINISH_OFF;
+	}
 
-	noti_err = notification_set_display_applist(noti_handle, NOTIFICATION_DISPLAY_APP_ACTIVE | NOTIFICATION_DISPLAY_APP_NOTIFICATION_TRAY);
-
-	snprintf(tag, 100, "%d", (int)result);
-
-	noti_err = notification_set_tag(noti_handle, tag);
-
-	if (noti_err != NOTIFICATION_ERROR_NONE) {
-		testapp_print("notification_set_display_applist failed[%d]\n", noti_err);
+	err = notification_set_display_applist(noti,
+			NOTIFICATION_DISPLAY_APP_ACTIVE |
+			NOTIFICATION_DISPLAY_APP_NOTIFICATION_TRAY);
+	if (err != NOTIFICATION_ERROR_NONE) {
+		testapp_print("set display_applist failed[%d]\n", err);
 		goto FINISH_OFF;
 	}
 
@@ -408,64 +410,64 @@ static int testapp_test_post_heads_up_notification_with_button()
 		goto FINISH_OFF;
 	}
 
-	noti_err = notification_set_event_handler(noti_handle, NOTIFICATION_EVENT_TYPE_CLICK_ON_BUTTON_1, app_control);
-
-	if (noti_err != NOTIFICATION_ERROR_NONE) {
-		testapp_print("notification_set_event_handler failed[%d]", noti_err);
+	err = notification_set_event_handler(noti,
+			NOTIFICATION_EVENT_TYPE_CLICK_ON_BUTTON_1, app_control);
+	if (err != NOTIFICATION_ERROR_NONE) {
+		testapp_print("set event_handler failed[%d]", err);
 		goto FINISH_OFF;
 	}
 
-	app_control_destroy(app_control);
-	app_control = NULL;
-
-	noti_err = notification_post(noti_handle);
-
-	if (noti_err != NOTIFICATION_ERROR_NONE) {
-		testapp_print("notification_post failed[%d]", noti_err);
+	err = notification_set_text(noti, NOTIFICATION_TEXT_TYPE_BUTTON_1,
+			"reply", NULL, NOTIFICATION_VARIABLE_TYPE_NONE);
+	if (err != NOTIFICATION_ERROR_NONE) {
+		testapp_print("set text failed[%d]\n", err);
 		goto FINISH_OFF;
 	}
 
-	noti_err = notification_get_id(noti_handle, &group_id, &priv_id);
-
-	if (noti_err != NOTIFICATION_ERROR_NONE) {
-		testapp_print("notification_get_id failed[%d]", noti_err);
+	err = notification_set_event_handler(noti,
+			NOTIFICATION_EVENT_TYPE_CLICK_ON_TEXT_INPUT_BUTTON,
+			app_control);
+	if (err != NOTIFICATION_ERROR_NONE) {
+		testapp_print("set event_handler failed[%d]", err);
 		goto FINISH_OFF;
 	}
 
-	if (noti_handle)
-		notification_free(noti_handle);
-	noti_handle = NULL;
-
-	noti_handle = notification_load(NULL, priv_id);
-
-	if (noti_handle == NULL) {
-		testapp_print("notification_load failed");
+	err = notification_set_text(noti,
+			NOTIFICATION_TEXT_TYPE_TEXT_INPUT_BUTTON,
+			"SEND", NULL, NOTIFICATION_VARIABLE_TYPE_NONE);
+	if (err != NOTIFICATION_ERROR_NONE) {
+		testapp_print("set text failed[%d]\n", err);
 		goto FINISH_OFF;
 	}
 
-	noti_err = notification_get_event_handler(noti_handle, NOTIFICATION_EVENT_TYPE_CLICK_ON_BUTTON_1, &app_control);
-
-	if (noti_err != NOTIFICATION_ERROR_NONE || app_control == NULL) {
-		testapp_print("notification_get_event_handler failed[%d]", noti_err);
+	err = notification_set_text(noti,
+			NOTIFICATION_TEXT_TYPE_TEXT_INPUT_PLACEHOLDER,
+			"input message", NULL, NOTIFICATION_VARIABLE_TYPE_NONE);
+	if (err != NOTIFICATION_ERROR_NONE) {
+		testapp_print("set text failed[%d]\n", err);
 		goto FINISH_OFF;
 	}
 
-	app_control_get_app_id(app_control, &app_id);
+	err = notification_set_text_input(noti, 160);
+	if (err != NOTIFICATION_ERROR_NONE) {
+		testapp_print("set text_input failed[%d]\n", err);
+		goto FINISH_OFF;
+	}
 
-	if (app_id) {
-		testapp_print("result app_id [%s]\n", app_id);
-		free(app_id);
+	err = notification_post(noti);
+	if (err != NOTIFICATION_ERROR_NONE) {
+		testapp_print("notification_post failed[%d]", err);
+		goto FINISH_OFF;
 	}
 
 FINISH_OFF:
-
 	if (app_control)
 		app_control_destroy(app_control);
 
-	if (noti_handle)
-		notification_free(noti_handle);
+	if (noti)
+		notification_free(noti);
 
-	return noti_err;
+	return err;
 }
 
 static int testapp_test_post_notification_with_domain_text()
