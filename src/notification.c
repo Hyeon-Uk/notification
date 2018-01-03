@@ -1879,7 +1879,9 @@ EXPORT_API int notification_get_ongoing_flag(notification_h noti, bool *ongoing_
 
 EXPORT_API int notification_add_button(notification_h noti, notification_button_index_e button_index)
 {
-	if (noti == NULL || button_index < NOTIFICATION_BUTTON_1 || button_index > NOTIFICATION_BUTTON_6)
+	if (noti == NULL ||
+		!((button_index >= NOTIFICATION_BUTTON_1 && button_index <= NOTIFICATION_BUTTON_6) ||
+		(button_index >= NOTIFICATION_BUTTON_7 && button_index <= NOTIFICATION_BUTTON_10)))
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 
 	return NOTIFICATION_ERROR_NONE;
@@ -1887,7 +1889,9 @@ EXPORT_API int notification_add_button(notification_h noti, notification_button_
 
 EXPORT_API int notification_remove_button(notification_h noti, notification_button_index_e button_index)
 {
-	if (noti == NULL || button_index < NOTIFICATION_BUTTON_1 || button_index > NOTIFICATION_BUTTON_6)
+	if (noti == NULL ||
+		!((button_index >= NOTIFICATION_BUTTON_1 && button_index <= NOTIFICATION_BUTTON_6) ||
+		(button_index >= NOTIFICATION_BUTTON_7 && button_index <= NOTIFICATION_BUTTON_10)))
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 
 	if (noti->b_event_handler[button_index - 1]) {

@@ -87,6 +87,10 @@ typedef enum _notification_event_type {
 	NOTIFICATION_EVENT_TYPE_CLICK_ON_ICON = 6, /**< Event type : Click on icon */
 	NOTIFICATION_EVENT_TYPE_CLICK_ON_THUMBNAIL = 7, /**< Event type : Click on thumbnail */
 	NOTIFICATION_EVENT_TYPE_CLICK_ON_TEXT_INPUT_BUTTON = 8, /**< Event type : Click on text_input button(Since 3.0) */
+	NOTIFICATION_EVENT_TYPE_CLICK_ON_BUTTON_7, /**< Event type : Click on button 7 (Since 5.0) */
+	NOTIFICATION_EVENT_TYPE_CLICK_ON_BUTTON_8, /**< Event type : Click on button 8 (Since 5.0) */
+	NOTIFICATION_EVENT_TYPE_CLICK_ON_BUTTON_9, /**< Event type : Click on button 9 (Since 5.0) */
+	NOTIFICATION_EVENT_TYPE_CLICK_ON_BUTTON_10, /**< Event type : Click on button 10 (Since 5.0) */
 } notification_event_type_e;
 
 
@@ -147,6 +151,10 @@ typedef enum _notification_button_index {
 	NOTIFICATION_BUTTON_4 = 4, /**< button 4 */
 	NOTIFICATION_BUTTON_5 = 5, /**< button 5 */
 	NOTIFICATION_BUTTON_6 = 6, /**< button 6 */
+	NOTIFICATION_BUTTON_7 = 10, /**< button 7 (Since 5.0) */
+	NOTIFICATION_BUTTON_8 = 11, /**< button 8 (Since 5.0) */
+	NOTIFICATION_BUTTON_9 = 12, /**< button 9 (Since 5.0) */
+	NOTIFICATION_BUTTON_10 = 13, /**< button 10 (Since 5.0) */
 } notification_button_index_e;
 
 
@@ -178,6 +186,10 @@ typedef enum _notification_text_type {
 	NOTIFICATION_TEXT_TYPE_TEXT_INPUT_PLACEHOLDER, /**< Guide text on the message reply box(Since 3.0) */
 	NOTIFICATION_TEXT_TYPE_TEXT_INPUT_BUTTON, /**< Text on button the on message reply box(Since 3.0) */
 	NOTIFICATION_TEXT_TYPE_CONTENT_EXTENSION, /**< Content for extended notification (Since 4.0) */
+	NOTIFICATION_TEXT_TYPE_BUTTON_7, /**< Text on button 7 (Since 5.0) */
+	NOTIFICATION_TEXT_TYPE_BUTTON_8, /**< Text on button 8 (Since 5.0) */
+	NOTIFICATION_TEXT_TYPE_BUTTON_9, /**< Text on button 9 (Since 5.0) */
+	NOTIFICATION_TEXT_TYPE_BUTTON_10, /**< Text on button 10 (Since 5.0) */
 } notification_text_type_e;
 
 
@@ -207,6 +219,10 @@ typedef enum _notification_image_type {
 	NOTIFICATION_IMAGE_TYPE_BUTTON_6, /**< Image for button 6 */
 	NOTIFICATION_IMAGE_TYPE_TEXT_INPUT_BUTTON, /**< Image for message reply(Since 3.0) */
 	NOTIFICATION_IMAGE_TYPE_EXTENSION, /**< Image for extended notification (Since 4.0) */
+	NOTIFICATION_IMAGE_TYPE_BUTTON_7, /**< Image for button 7 (Since 5.0) */
+	NOTIFICATION_IMAGE_TYPE_BUTTON_8, /**< Image for button 8 (Since 5.0) */
+	NOTIFICATION_IMAGE_TYPE_BUTTON_9, /**< Image for button 9 (Since 5.0) */
+	NOTIFICATION_IMAGE_TYPE_BUTTON_10, /**< Image for button 10 (Since 5.0) */
 } notification_image_type_e;
 
 

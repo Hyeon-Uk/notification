@@ -360,6 +360,10 @@ static int _create_insertion_query(sqlite3 *db, notification_h noti, sqlite3_stm
 	__BIND_TEXT(db, stmt, idx++, NOTIFICATION_CHECK_STR(b_event_handler[NOTIFICATION_EVENT_TYPE_CLICK_ON_ICON]), ret, out);
 	__BIND_TEXT(db, stmt, idx++, NOTIFICATION_CHECK_STR(b_event_handler[NOTIFICATION_EVENT_TYPE_CLICK_ON_THUMBNAIL]), ret, out);
 	__BIND_TEXT(db, stmt, idx++, NOTIFICATION_CHECK_STR(b_event_handler[NOTIFICATION_EVENT_TYPE_CLICK_ON_TEXT_INPUT_BUTTON]), ret, out);
+	__BIND_TEXT(db, stmt, idx++, NOTIFICATION_CHECK_STR(b_event_handler[NOTIFICATION_EVENT_TYPE_CLICK_ON_BUTTON_7]), ret, out);
+	__BIND_TEXT(db, stmt, idx++, NOTIFICATION_CHECK_STR(b_event_handler[NOTIFICATION_EVENT_TYPE_CLICK_ON_BUTTON_8]), ret, out);
+	__BIND_TEXT(db, stmt, idx++, NOTIFICATION_CHECK_STR(b_event_handler[NOTIFICATION_EVENT_TYPE_CLICK_ON_BUTTON_9]), ret, out);
+	__BIND_TEXT(db, stmt, idx++, NOTIFICATION_CHECK_STR(b_event_handler[NOTIFICATION_EVENT_TYPE_CLICK_ON_BUTTON_10]), ret, out);
 	__BIND_INT(db, stmt, idx++, noti->sound_type, ret, out);
 	__BIND_TEXT(db, stmt, idx++, NOTIFICATION_CHECK_STR(noti->sound_path), ret, out);
 	__BIND_TEXT(db, stmt, idx++, NOTIFICATION_CHECK_STR(noti->priv_sound_path), ret, out);
@@ -517,6 +521,10 @@ static int _create_update_query(sqlite3 *db, notification_h noti, sqlite3_stmt *
 	__BIND_TEXT(db, stmt, idx++, NOTIFICATION_CHECK_STR(b_event_handler[NOTIFICATION_EVENT_TYPE_CLICK_ON_ICON]), ret, out);
 	__BIND_TEXT(db, stmt, idx++, NOTIFICATION_CHECK_STR(b_event_handler[NOTIFICATION_EVENT_TYPE_CLICK_ON_THUMBNAIL]), ret, out);
 	__BIND_TEXT(db, stmt, idx++, NOTIFICATION_CHECK_STR(b_event_handler[NOTIFICATION_EVENT_TYPE_CLICK_ON_TEXT_INPUT_BUTTON]), ret, out);
+	__BIND_TEXT(db, stmt, idx++, NOTIFICATION_CHECK_STR(b_event_handler[NOTIFICATION_EVENT_TYPE_CLICK_ON_BUTTON_7]), ret, out);
+	__BIND_TEXT(db, stmt, idx++, NOTIFICATION_CHECK_STR(b_event_handler[NOTIFICATION_EVENT_TYPE_CLICK_ON_BUTTON_8]), ret, out);
+	__BIND_TEXT(db, stmt, idx++, NOTIFICATION_CHECK_STR(b_event_handler[NOTIFICATION_EVENT_TYPE_CLICK_ON_BUTTON_9]), ret, out);
+	__BIND_TEXT(db, stmt, idx++, NOTIFICATION_CHECK_STR(b_event_handler[NOTIFICATION_EVENT_TYPE_CLICK_ON_BUTTON_10]), ret, out);
 	__BIND_INT(db, stmt, idx++, noti->sound_type, ret, out);
 	__BIND_TEXT(db, stmt, idx++, NOTIFICATION_CHECK_STR(noti->sound_path), ret, out);
 	__BIND_TEXT(db, stmt, idx++, NOTIFICATION_CHECK_STR(noti->priv_sound_path), ret, out);

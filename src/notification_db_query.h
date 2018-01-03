@@ -59,6 +59,10 @@
 	"  b_event_handler_click_on_icon TEXT,\n" \
 	"  b_event_handler_click_on_thumbnail TEXT,\n" \
 	"  b_event_handler_click_on_text_input_button TEXT,\n" \
+	"  b_event_handler_click_on_button_7 TEXT,\n" \
+	"  b_event_handler_click_on_button_8 TEXT,\n" \
+	"  b_event_handler_click_on_button_9 TEXT,\n" \
+	"  b_event_handler_click_on_button_10 TEXT,\n" \
 	"  sound_type INTEGER DEFAULT 0,\n" \
 	"  sound_path TEXT,\n" \
 	"  priv_sound_path TEXT,\n" \
@@ -185,6 +189,10 @@
 	"  b_event_handler_click_on_icon TEXT,\n" \
 	"  b_event_handler_click_on_thumbnail TEXT,\n" \
 	"  b_event_handler_click_on_text_input_button TEXT,\n" \
+	"  b_event_handler_click_on_button_7 TEXT,\n" \
+	"  b_event_handler_click_on_button_8 TEXT,\n" \
+	"  b_event_handler_click_on_button_9 TEXT,\n" \
+	"  b_event_handler_click_on_button_10 TEXT,\n" \
 	"  sound_type INTEGER DEFAULT 0,\n" \
 	"  sound_path TEXT,\n" \
 	"  priv_sound_path TEXT,\n" \
@@ -226,6 +234,8 @@
 	"b_event_handler_click_on_button_5, b_event_handler_click_on_button_6, " \
 	"b_event_handler_click_on_icon, b_event_handler_click_on_thumbnail, " \
 	"b_event_handler_click_on_text_input_button, " \
+	"b_event_handler_click_on_button_7, b_event_handler_click_on_button_8, " \
+	"b_event_handler_click_on_button_9, b_event_handler_click_on_button_10, " \
 	"sound_type, sound_path, priv_sound_path, " \
 	"vibration_type, vibration_path, priv_vibration_path, " \
 	"led_operation, led_argb, led_on_ms, led_off_ms, " \
@@ -246,6 +256,8 @@
 	"b_event_handler_click_on_button_5, b_event_handler_click_on_button_6, " \
 	"b_event_handler_click_on_icon, b_event_handler_click_on_thumbnail, " \
 	"b_event_handler_click_on_text_input_button, " \
+	"b_event_handler_click_on_button_7, b_event_handler_click_on_button_8, " \
+	"b_event_handler_click_on_button_9, b_event_handler_click_on_button_10, " \
 	"sound_type, sound_path, priv_sound_path, " \
 	"vibration_type, vibration_path, priv_vibration_path, " \
 	"led_operation, led_argb, led_on_ms, led_off_ms, " \
@@ -259,7 +271,7 @@
 	"?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, " \
 	"?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, " \
 	"?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, " \
-	"?, ? "
+	"?, ?, ?, ?, ?, ? "
 
 #define NOTI_LIST_DB_ATTRIBUTES_UPDATE \
 	"type = ?, layout = ?, launch_app_id = ?, app_label = ?, " \
@@ -277,6 +289,10 @@
 	"b_event_handler_click_on_icon = ?, " \
 	"b_event_handler_click_on_thumbnail = ?, " \
 	"b_event_handler_click_on_text_input_button = ?, " \
+	"b_event_handler_click_on_button_7 = ?, " \
+	"b_event_handler_click_on_button_8 = ?, " \
+	"b_event_handler_click_on_button_9 = ?, " \
+	"b_event_handler_click_on_button_10 = ?, " \
 	"sound_type = ?, sound_path = ?, priv_sound_path = ?, " \
 	"vibration_type = ?, vibration_path = ?, priv_vibration_path = ?, " \
 	"led_operation = ?, led_argb = ?, led_on_ms = ?, led_off_ms = ?, " \
