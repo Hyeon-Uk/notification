@@ -85,17 +85,6 @@ static void _print_noti(notification_h noti)
 			 app_id, text, content, tag, noti->priv_id);
 }
 
-static inline char *_string_get(char *string)
-{
-	if (string == NULL)
-		return NULL;
-
-	if (string[0] == '\0')
-		return NULL;
-
-	return string;
-}
-
 static void __provider_appeared_cb(GDBusConnection *connection,
 				   const gchar *name,
 				   const gchar *name_owner,
