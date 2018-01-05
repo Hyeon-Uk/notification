@@ -18,6 +18,7 @@
 #define __NOTIFICATION_NOTI_H__
 
 #include <sys/types.h>
+#include <glib.h>
 
 #include <notification.h>
 #include <notification_list.h>
@@ -74,6 +75,7 @@ int notification_noti_get_package_template(notification_h noti, char *app_id, ch
 int notification_noti_delete_template(const char *pkg_id);
 
 void notification_noti_init_data(void);
+int notification_noti_check_limit(notification_h noti, uid_t uid, GList **list);
 
 #endif /* __NOTIFICATION_NOTI_H__ */
 

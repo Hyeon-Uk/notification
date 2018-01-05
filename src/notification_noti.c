@@ -39,6 +39,7 @@
 
 #define NOTI_BURST_DELETE_UNIT 10
 #define ERR_BUFFER_SIZE		1024
+#define NOTI_LIMIT 100
 
 static void __free_and_set(void **target_ptr, void *new_ptr)
 {
@@ -2053,4 +2054,107 @@ EXPORT_API void notification_noti_init_data(void)
 
 	sqlite3_free(query);
 	notification_db_close(&db);
+}
+
+EXPORT_API int notification_noti_check_limit(notification_h noti, uid_t uid, GList **list)
+{
+	int ret;
+	int priv_id;
+	int count = 0;
+	char *query = NULL;
+	char *list_query = NULL;
+	sqlite3 *db = NULL;
+	sqlite3_stmt *stmt;
+
+	if (noti == NULL)
+		return NOTIFICATION_ERROR_INVALID_PARAMETER;
+
+	db = notification_db_open();
+	if (!db)
+		return get_last_result();
+
+	query = sqlite3_mprintf("SELECT COUNT(*) FROM noti_list "
+			"WHERE caller_app_id = %Q AND uid = %d ",
+			noti->caller_app_id, uid);
+	if (query == NULL) {
+		/* LCOV_EXCL_START */
+		ERR("sqlite3_mprintf Failed");
+		ret = NOTIFICATION_ERROR_OUT_OF_MEMORY;
+		goto err;
+		/* LCOV_EXCL_STOP */
+	}
+
+	ret = sqlite3_prepare_v2(db, query, -1, &stmt, NULL);
+	if (ret != SQLITE_OK) {
+		/* LCOV_EXCL_START */
+		ERR("sqlite3_prepare_v2 Failed [%d][%s]", ret,
+				 sqlite3_errmsg(db));
+		ret = NOTIFICATION_ERROR_FROM_DB;
+		goto err;
+		/* LCOV_EXCL_STOP */
+	}
+
+	ret = sqlite3_step(stmt);
+	if (ret == SQLITE_ROW) {
+		count = sqlite3_column_int(stmt, 0);
+		ret = NOTIFICATION_ERROR_NONE;
+	} else {
+		ret = NOTIFICATION_ERROR_FROM_DB;
+		goto err;
+	}
+
+	if (count > NOTI_LIMIT) {
+		count -= NOTI_LIMIT;
+
+		ret = sqlite3_reset(stmt);
+		if (ret != SQLITE_OK) {
+			/* LCOV_EXCL_START */
+			ret = NOTIFICATION_ERROR_FROM_DB;
+			goto err;
+			/* LCOV_EXCL_STOP */
+		}
+
+		list_query = sqlite3_mprintf("SELECT priv_id FROM noti_list "
+			"WHERE caller_app_id = %Q AND uid = %d "
+			"AND type = %d ORDER BY insert_time ASC, priv_id ASC",
+			noti->caller_app_id, uid, NOTIFICATION_TYPE_NOTI);
+		if (list_query == NULL) {
+			/* LCOV_EXCL_START */
+			ERR("sqlite3_mprintf Failed");
+			ret = NOTIFICATION_ERROR_OUT_OF_MEMORY;
+			goto err;
+			/* LCOV_EXCL_STOP */
+		}
+
+		ret = sqlite3_prepare_v2(db, list_query, -1, &stmt, NULL);
+		if (ret != SQLITE_OK) {
+			/* LCOV_EXCL_START */
+			ERR("sqlite3_prepare_v2 Failed [%d][%s]", ret,
+				 sqlite3_errmsg(db));
+			ret = NOTIFICATION_ERROR_FROM_DB;
+			goto err;
+			/* LCOV_EXCL_STOP */
+		}
+
+		while (sqlite3_step(stmt) == SQLITE_ROW && count > 0) {
+			priv_id = sqlite3_column_int(stmt, 0);
+			*list = g_list_append(*list, GINT_TO_POINTER(priv_id));
+			count--;
+		}
+	}
+
+err:
+	if (stmt)
+		sqlite3_finalize(stmt);
+
+	if (query)
+		sqlite3_free(query);
+
+	if (list_query)
+		sqlite3_free(list_query);
+
+	if (db)
+		notification_db_close(&db);
+
+	return ret;
 }
