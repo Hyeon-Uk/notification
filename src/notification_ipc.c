@@ -2487,14 +2487,17 @@ int notification_ipc_make_dnd_allow_exception_from_gvariant(struct notification_
 
 static int _send_service_register(uid_t uid)
 {
-	GDBusMessage *reply = NULL;
 	int result;
 	notification_op *noti_op = NULL;
+	GDBusMessage *reply = NULL;
 
 	result = _send_sync_noti(g_variant_new("(i)", uid), &reply, "noti_service_register");
-
 	if (reply)
 		g_object_unref(reply);
+	if (result != NOTIFICATION_ERROR_NONE) {
+		ERR("send sync noti [%d]", result);
+		return result;
+	}
 
 	noti_op = _ipc_create_op(NOTIFICATION_OP_SERVICE_READY, 1, NULL, 1, NULL);
 	if (noti_op != NULL) {
