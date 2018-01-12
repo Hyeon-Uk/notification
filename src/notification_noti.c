@@ -660,6 +660,10 @@ static int _get_notification_list(char *query_where, notification_list_h *list, 
 		if (noti == NULL) {
 			/* LCOV_EXCL_START */
 			ret = NOTIFICATION_ERROR_OUT_OF_MEMORY;
+			if (get_list) {
+				get_list = notification_list_get_head(get_list);
+				notification_free_list(get_list);
+			}
 			goto err;
 			/* LCOV_EXCL_STOP */
 		}
@@ -676,17 +680,18 @@ static int _get_notification_list(char *query_where, notification_list_h *list, 
 		}
 	}
 
+	if (get_list != NULL) {
+		*list = notification_list_get_head(get_list);
+		if (list_count)
+			*list_count = internal_count;
+	}
+
 err:
 	if (stmt)
 		sqlite3_finalize(stmt);
 
 	if (db != NULL)
 		notification_db_close(&db);
-
-	if (get_list != NULL) {
-		*list = notification_list_get_head(get_list);
-		*list_count = internal_count;
-	}
 
 	return ret;
 }
