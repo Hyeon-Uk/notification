@@ -610,6 +610,9 @@ static int _get_notification(char *query_where, notification_h noti)
 	}
 
 err:
+	if (query)
+		sqlite3_free(query);
+
 	if (stmt)
 		sqlite3_finalize(stmt);
 
@@ -692,6 +695,9 @@ err:
 
 	if (db != NULL)
 		notification_db_close(&db);
+
+	if (query)
+		sqlite3_free(query);
 
 	return ret;
 }
