@@ -220,9 +220,6 @@ EXPORT_API int notification_resister_changed_cb_for_uid(
 	if (changed_cb == NULL)
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 
-	if (notification_ipc_monitor_init(uid) != NOTIFICATION_ERROR_NONE)
-		return NOTIFICATION_ERROR_IO_ERROR;
-
 	if (_noti_cb_hash == NULL)
 		_noti_cb_hash = g_hash_table_new(g_direct_hash, g_direct_equal);
 
@@ -246,6 +243,11 @@ EXPORT_API int notification_resister_changed_cb_for_uid(
 		g_hash_table_insert(_noti_cb_hash, GUINT_TO_POINTER(uid), noti_cb_list);
 	} else {
 		noti_cb_list = g_list_append(noti_cb_list, noti_cb_info_new);
+	}
+
+	if (notification_ipc_monitor_init(uid) != NOTIFICATION_ERROR_NONE) {
+		notification_unresister_changed_cb_for_uid(changed_cb, uid);
+		return NOTIFICATION_ERROR_IO_ERROR;
 	}
 
 	return NOTIFICATION_ERROR_NONE;
@@ -1184,9 +1186,6 @@ EXPORT_API int notification_register_detailed_changed_cb_for_uid(
 	if (detailed_changed_cb == NULL)
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 
-	if (notification_ipc_monitor_init(uid) != NOTIFICATION_ERROR_NONE)
-		return NOTIFICATION_ERROR_IO_ERROR;
-
 	if (_noti_cb_hash == NULL)
 		_noti_cb_hash = g_hash_table_new(g_direct_hash, g_direct_equal);
 
@@ -1210,6 +1209,11 @@ EXPORT_API int notification_register_detailed_changed_cb_for_uid(
 		g_hash_table_insert(_noti_cb_hash, GUINT_TO_POINTER(uid), noti_cb_list);
 	} else {
 		noti_cb_list = g_list_append(noti_cb_list, noti_cb_info_new);
+	}
+
+	if (notification_ipc_monitor_init(uid) != NOTIFICATION_ERROR_NONE) {
+		notification_unregister_detailed_changed_cb_for_uid(detailed_changed_cb, user_data, uid);
+		return NOTIFICATION_ERROR_IO_ERROR;
 	}
 
 	return NOTIFICATION_ERROR_NONE;

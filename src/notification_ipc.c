@@ -2503,6 +2503,8 @@ static int _send_service_register(uid_t uid)
 		return result;
 	}
 
+	is_master_started = 1;
+
 	noti_op = _ipc_create_op(NOTIFICATION_OP_SERVICE_READY, 1, NULL, 1, NULL);
 	if (noti_op != NULL) {
 		notification_call_changed_cb_for_uid(noti_op, 1, uid);
@@ -2529,8 +2531,9 @@ static void _on_name_appeared(GDBusConnection *connection,
 	int uid = GPOINTER_TO_INT(user_data);
 
 	DBG("uid[%d] name[%s]", uid, name);
-	is_master_started = 1;
-	_ipc_monitor_register(uid);
+
+	if (is_master_started == 0)
+		_ipc_monitor_register(uid);
 
 	/* TODO: dbus activation isn't enough ? */
 	_do_deffered_task();
@@ -2578,7 +2581,6 @@ int notification_ipc_monitor_init(uid_t uid)
 	}
 
 	if (provider_monitor_id == 0) {
-
 		provider_monitor_id = g_bus_watch_name_on_connection(
 				_gdbus_conn,
 				PROVIDER_BUS_NAME,
