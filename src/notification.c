@@ -44,7 +44,7 @@
 
 static void (*posted_toast_message_cb)(void *data);
 
-#define NOTI_TEXT_RESULT_LEN 2048
+#define NOTI_TEXT_RESULT_LEN 4096
 #define REGULAR_UID_MIN 5000
 
 char *notification_get_app_id_by_pid(int pid)
@@ -225,7 +225,7 @@ EXPORT_API int notification_set_text(notification_h noti,
 {
 	bundle *b = NULL;
 	char buf_key[32] = { 0, };
-	char buf_val[1024] = { 0, };
+	char buf_val[NOTI_TEXT_RESULT_LEN] = { 0, };
 	char *ret_val = NULL;
 	va_list var_args;
 	notification_variable_type_e var_type;
@@ -437,7 +437,7 @@ EXPORT_API int notification_get_text(notification_h noti,
 					char **text)
 {
 	char result_str[NOTI_TEXT_RESULT_LEN] = { 0, };
-	char buf_str[1024] = { 0, };
+	char buf_str[NOTI_TEXT_RESULT_LEN] = { 0, };
 	char buf_key[32] = { 0, };
 	char *ret_val = NULL;
 	char *get_str = NULL;
