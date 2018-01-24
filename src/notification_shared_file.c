@@ -782,7 +782,7 @@ int __set_sharing_for_new_target(sharing_req_data_s *req_data,
 	private_sharing_req *handle = NULL;
 	GList *iter, *tmp;
 	target_app_info_s *target_info;
-	char *app_info;
+	char *app_info = NULL;
 
 	iter = target_app_list;
 	for (; iter != NULL; iter = g_list_next(iter)) {
@@ -795,6 +795,7 @@ int __set_sharing_for_new_target(sharing_req_data_s *req_data,
 		app_info = strdup(target_info->app_id);
 		if (app_info == NULL) {
 			ERR("out of memory");
+			ret = NOTIFICATION_ERROR_OUT_OF_MEMORY;
 			goto out;
 		}
 
@@ -853,6 +854,9 @@ int __set_sharing_for_new_target(sharing_req_data_s *req_data,
 	}
 
 out:
+	if (ret != NOTIFICATION_ERROR_NONE && app_info)
+		free(app_info);
+
 	if (handle != NULL)
 		security_manager_private_sharing_req_free(handle);
 	if (path_array != NULL)
@@ -965,7 +969,6 @@ EXPORT_API int notification_set_private_sharing(notification_h noti,
 						uid_t uid)
 {
 	int ret = NOTIFICATION_ERROR_NONE;
-	char *shared_dir;
 	bool is_overlapping = false;
 	sharing_req_data_s *req_data;
 	sharing_file_info_s *file_info, *dup_file_info;
@@ -975,10 +978,6 @@ EXPORT_API int notification_set_private_sharing(notification_h noti,
 
 	if (noti == NULL || noti->caller_app_id == NULL)
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
-
-	shared_dir = __get_shared_dir(noti);
-	if (shared_dir == NULL)
-		return NOTIFICATION_ERROR_NONE;
 
 	tmp = g_list_find_custom(__uid_list, GINT_TO_POINTER(uid),
 						__comp_uid_info_list);
@@ -1002,7 +1001,7 @@ EXPORT_API int notification_set_private_sharing(notification_h noti,
 		__OOM_CHECK(req_data->app_id, NOTIFICATION_ERROR_OUT_OF_MEMORY,
 						__free_req_info(req_data));
 
-		req_data->dir = strdup(shared_dir);
+		req_data->dir = __get_shared_dir(noti);
 		__OOM_CHECK(req_data->dir, NOTIFICATION_ERROR_OUT_OF_MEMORY,
 						__free_req_info(req_data));
 
@@ -1012,8 +1011,7 @@ EXPORT_API int notification_set_private_sharing(notification_h noti,
 		req_data = (sharing_req_data_s *)req_list->data;
 	}
 
-	__make_sharing_dir(shared_dir);
-	free(shared_dir);
+	__make_sharing_dir(req_data->dir);
 
 	tmp = g_list_find_custom(req_data->priv_id_list,
 				GINT_TO_POINTER(noti->priv_id), __comp_priv_id);

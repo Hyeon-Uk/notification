@@ -365,7 +365,7 @@ static void _add_noti_notify(GVariant *parameters)
 {
 	int ret;
 	notification_h noti;
-	notification_op *noti_op;
+	notification_op *noti_op = NULL;
 	GVariant *body = NULL;
 	uid_t uid;
 
@@ -386,13 +386,13 @@ static void _add_noti_notify(GVariant *parameters)
 		/* Enable changed cb */
 		noti_op = _ipc_create_op(NOTIFICATION_OP_INSERT, 1, &(noti->priv_id), 1, &noti);
 		ret = notification_get_uid(noti, &uid);
-		if (noti_op != NULL && ret == NOTIFICATION_ERROR_NONE) {
+		if (noti_op != NULL && ret == NOTIFICATION_ERROR_NONE)
 			notification_call_changed_cb_for_uid(noti_op, 1, uid);
-			free(noti_op);
-		}
 	}
 	g_variant_unref(body);
 	notification_free(noti);
+	if (noti_op)
+		free(noti_op);
 }
 /* LCOV_EXCL_STOP */
 
@@ -401,7 +401,7 @@ static void _update_noti_notify(GVariant *parameters)
 {
 	int ret;
 	notification_h noti;
-	notification_op *noti_op;
+	notification_op *noti_op = NULL;
 	GVariant *body = NULL;
 	uid_t uid;
 
@@ -417,13 +417,13 @@ static void _update_noti_notify(GVariant *parameters)
 
 	noti_op = _ipc_create_op(NOTIFICATION_OP_UPDATE, 1, &(noti->priv_id), 1, &noti);
 	ret = notification_get_uid(noti, &uid);
-	if (noti_op != NULL && ret == NOTIFICATION_ERROR_NONE) {
+	if (noti_op != NULL && ret == NOTIFICATION_ERROR_NONE)
 		notification_call_changed_cb_for_uid(noti_op, 1, uid);
-		free(noti_op);
-	}
 
 	g_variant_unref(body);
 	notification_free(noti);
+	if (noti_op)
+		free(noti_op);
 }
 /* LCOV_EXCL_STOP */
 
