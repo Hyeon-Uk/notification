@@ -1469,8 +1469,10 @@ EXPORT_API int notification_noti_get_count(notification_type_e type,
 
 	/* Check current sim status */
 	ret = vconf_get_int(VCONFKEY_TELEPHONY_SIM_SLOT, &status);
-	if (ret < 0)
-		return NOTIFICATION_ERROR_IO_ERROR;
+	if (ret < 0) {
+		status = VCONFKEY_TELEPHONY_SIM_INSERTED;
+		WARN("vconf_get_int");
+	}
 
 	db = notification_db_open();
 	if (!db)
@@ -1662,8 +1664,10 @@ EXPORT_API int notification_noti_get_grouping_list(notification_type_e type,
 
 	/* Check current sim status */
 	ret = vconf_get_int(VCONFKEY_TELEPHONY_SIM_SLOT, &status);
-	if (ret < 0)
-		ret = NOTIFICATION_ERROR_IO_ERROR;
+	if (ret < 0) {
+		status = VCONFKEY_TELEPHONY_SIM_INSERTED;
+		WARN("vconf_get_int");
+	}
 
 	if (status == VCONFKEY_TELEPHONY_SIM_INSERTED) {
 		if (type != NOTIFICATION_TYPE_NONE) {
@@ -1741,8 +1745,10 @@ EXPORT_API int notification_noti_get_detail_list(const char *app_id,
 
 	/* Check current sim status */
 	ret = vconf_get_int(VCONFKEY_TELEPHONY_SIM_SLOT, &status);
-	if (ret < 0)
-		return NOTIFICATION_ERROR_IO_ERROR;
+	if (ret < 0) {
+		status = VCONFKEY_TELEPHONY_SIM_INSERTED;
+		WARN("vconf_get_int");
+	}
 
 	db = notification_db_open();
 	if (!db)
