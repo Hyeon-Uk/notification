@@ -1686,7 +1686,7 @@ EXPORT_API int notification_post_with_event_cb_for_uid(notification_h noti, even
 		info->cb = cb;
 		info->userdata = userdata;
 	} else {
-		info = (notification_event_cb_info_s *)malloc(sizeof(notification_cb_info_s));
+		info = (notification_event_cb_info_s *)malloc(sizeof(notification_event_cb_info_s));
 		if (info == NULL) {
 			/* LCOV_EXCL_START */
 			ERR("Failed to alloc memory");
