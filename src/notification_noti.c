@@ -1224,15 +1224,15 @@ EXPORT_API int notification_noti_delete_all(notification_type_e type,
 	}
 
 	if (app_id == NULL || strlen(app_id) == 0) {
-		if (type != NOTIFICATION_TYPE_NONE) {
-			query_where = sqlite3_mprintf("WHERE type = %d "
-						"AND uid = %d", type, uid);
-			if (query_where == NULL) {
-				/* LCOV_EXCL_START */
-				ret = NOTIFICATION_ERROR_OUT_OF_MEMORY;
-				goto err;
-				/* LCOV_EXCL_STOP */
-			}
+		if (type == NOTIFICATION_TYPE_NONE)
+			query_where = sqlite3_mprintf("WHERE uid = %d", uid);
+		else
+			query_where = sqlite3_mprintf("WHERE type = %d AND uid = %d", type, uid);
+		if (query_where == NULL) {
+			/* LCOV_EXCL_START */
+			ret = NOTIFICATION_ERROR_OUT_OF_MEMORY;
+			goto err;
+			/* LCOV_EXCL_STOP */
 		}
 	} else {
 		if (type == NOTIFICATION_TYPE_NONE)
