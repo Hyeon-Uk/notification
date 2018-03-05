@@ -43,7 +43,7 @@ extern "C" {
  * @addtogroup NOTIFICATION_MODULE
  * @{
  */
-#define NOTIFICATION_DO_NOT_SHOW_TIME_STAMP -1 /**< Do not show time stamp on the notificaion. Could be passed as a argument of notification_set_time() */
+#define NOTIFICATION_DO_NOT_SHOW_TIME_STAMP -1 /**< Do not show time stamp on the notification. Could be passed as a argument of notification_set_time() */
 
 
 /**
@@ -64,7 +64,7 @@ typedef enum _notification_ly_type {
 
 
 /**
- * @brief Enumeration for notification lauch option type.
+ * @brief Enumeration for notification launch option type.
  * @since_tizen @if WEARABLE 2.3.1 @elseif MOBILE 2.3 @endif
  */
 typedef enum  _notification_launch_option_type {
