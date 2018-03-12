@@ -973,6 +973,7 @@ static int _check_text_input(notification_h noti)
 			ERR("Event handler for text_input is not set");
 			return -1;
 		}
+		app_control_destroy(app_control);
 	}
 
 	return NOTIFICATION_ERROR_NONE;

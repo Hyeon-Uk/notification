@@ -142,6 +142,10 @@ EXPORT_API int notification_set_image(notification_h noti,
 		bundle_add_str(priv_b, buf_key, priv_path);
 		noti->b_priv_image_path = priv_b;
 	}
+
+	if (priv_path)
+		free(priv_path);
+
 	return NOTIFICATION_ERROR_NONE;
 }
 
