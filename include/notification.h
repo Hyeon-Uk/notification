@@ -662,8 +662,8 @@ int notification_set_event_handler(notification_h noti, notification_event_type_
 
 /**
  * @brief Gets the event handler of a specific event.
- * @remarks You must release @a app_control using app_control_destroy().
  * @since_tizen @if MOBILE 2.4 @elseif WEARABLE 3.0 @endif
+ * @remarks You must release @a app_control using app_control_destroy().
  * @param[in] noti The notification handle
  * @param[in] event_type Launching option type
  * @param[out] event_handler The handler of App Control
@@ -1175,7 +1175,6 @@ int notification_free(notification_h noti);
  *         other value on failure
  * @retval #NOTIFICATION_ERROR_NONE Success
  * @retval #NOTIFICATION_ERROR_INVALID_PARAMETER Invalid parameter
- * @retval #NOTIFICATION_ERROR_PERMISSION_DENIED The application does not have the privilege to call this method
  * @see notification_get_tag()
  * @par Sample code:
  * @code
@@ -1210,7 +1209,6 @@ int notification_set_tag(notification_h noti, const char *tag);
  *         other value on failure
  * @retval #NOTIFICATION_ERROR_NONE Success
  * @retval #NOTIFICATION_ERROR_INVALID_PARAMETER Invalid parameter
- * @retval #NOTIFICATION_ERROR_PERMISSION_DENIED The application does not have the privilege to call this method
  * @see notification_set_tag()
  * @par Sample code:
  * @code
@@ -1423,9 +1421,9 @@ int notification_remove_button(notification_h noti, notification_button_index_e 
 /**
  * @brief Sets the 'auto remove' option of the active notification.
  * @details The 'auto remove' option lets the active notification be removed several seconds after it shows. Default value is true.
+ * @since_tizen @if MOBILE 2.4 @elseif WEARABLE 3.0 @endif
  * @remarks When 'auto_remove' is set as false, the active notification will not be removed
  *          as long as the user removes the active notification or the app which posted the active notification removes the active notification.
- * @since_tizen @if MOBILE 2.4 @elseif WEARABLE 3.0 @endif
  * @param[in] noti Notification handle
  * @param[in] auto_remove Auto remove option
  * @return #NOTIFICATION_ERROR_NONE On success,
@@ -1570,11 +1568,11 @@ notification_h notification_create_from_template(const char *template_name);
 
 /**
  * @brief Gets notification block state.
- * @details	The user can set the notification block state in settings.
- *		The block state indicates whether or not notifications can be posted.
- *		Additionally only notifications to the notification panel are
- *		allowed in "Do not disturb mode". Sound, Vibrate and
- *		Active/Instant notifications are blocked.
+ * @details The user can set the notification block state in settings.
+ *          The block state indicates whether or not notifications can be posted.
+ *          Additionally only notifications to the notification panel are
+ *          allowed in "Do not disturb mode". Sound, Vibrate and
+ *          Active/Instant notifications are blocked.
  * @since_tizen 3.0
  * @privlevel public
  * @privilege %http://tizen.org/privilege/notification

@@ -74,15 +74,50 @@ int notification_ongoing_update_cb_set(notification_ongoing_update_cb callback, 
  */
 int notification_ongoing_update_cb_unset(void);
 
+/**
+ * @brief Updates progress.
+ * @since_tizen @if MOBILE 2.3 @elseif WEARABLE 2.3.1 @endif
+ * @param[in] caller_app_id
+ * @param[in] priv_id
+ * @param[in] progress
+ * @return #NOTIFICATION_ERROR_NONE on success,
+ *         otherwise any other value on failure
+ * @retval #NOTIFICATION_ERROR_NONE         Success
+ * @retval #NOTIFICATION_ERROR_INVALID_PARAMETER Invalid parameter
+ * @retval #NOTIFICATION_ERROR_FROM_DBUS Error from DBus
+ */
 int notification_ongoing_update_progress(const char *caller_app_id,
-							  int priv_id,
-							  double progress);
+					int priv_id, double progress);
 
+/**
+ * @brief Updates size.
+ * @since_tizen @if MOBILE 2.3 @elseif WEARABLE 2.3.1 @endif
+ * @param[in] caller_app_id
+ * @param[in] priv_id
+ * @param[in] size
+ * @return #NOTIFICATION_ERROR_NONE on success,
+ *         otherwise any other value on failure
+ * @retval #NOTIFICATION_ERROR_NONE         Success
+ * @retval #NOTIFICATION_ERROR_INVALID_PARAMETER Invalid parameter
+ * @retval #NOTIFICATION_ERROR_FROM_DBUS Error from DBus
+ */
 int notification_ongoing_update_size(const char *caller_app_id,
-						      int priv_id, double size);
+				int priv_id, double size);
 
+/**
+ * @brief Updates content.
+ * @since_tizen @if MOBILE 2.3 @elseif WEARABLE 2.3.1 @endif
+ * @param[in] caller_app_id
+ * @param[in] priv_id
+ * @param[in] content
+ * @return #NOTIFICATION_ERROR_NONE on success,
+ *         otherwise any other value on failure
+ * @retval #NOTIFICATION_ERROR_NONE         Success
+ * @retval #NOTIFICATION_ERROR_INVALID_PARAMETER Invalid parameter
+ * @retval #NOTIFICATION_ERROR_FROM_DBUS Error from DBus
+ */
 int notification_ongoing_update_content(const char *caller_app_id,
-						      int priv_id, const char *content);
+				int priv_id, const char *content);
 
 /**
  * @}

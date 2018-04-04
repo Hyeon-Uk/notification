@@ -49,9 +49,9 @@ typedef struct _notification_list *notification_list_h;
  * @since_tizen @if MOBILE 2.3 @elseif WEARABLE 2.3.1 @endif
  * @privlevel public
  * @privilege %http://tizen.org/privilege/notification
- * @param[in]  type  The notification type
- * @param[in]  count The returned notification data number
- * @param[out] #NOTIFICATION_ERROR_NONE on success, other value on failure
+ * @param[in] type The notification type
+ * @param[in] count The returned notification data number
+ * @param[out] list The notification list handle
  * @return #NOTIFICATION_ERROR_NONE on success,
  *         otherwise any other value on failure
  * @retval #NOTIFICATION_ERROR_NONE         Success

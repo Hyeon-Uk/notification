@@ -68,8 +68,7 @@ typedef enum _notification_ly_type {
  * @since_tizen @if WEARABLE 2.3.1 @elseif MOBILE 2.3 @endif
  */
 typedef enum  _notification_launch_option_type {
-	NOTIFICATION_LAUNCH_OPTION_APP_CONTROL = 1,
-	/**< Launching with app control */
+	NOTIFICATION_LAUNCH_OPTION_APP_CONTROL = 1, /**< Launching with app control */
 } notification_launch_option_type;
 
 
@@ -133,7 +132,7 @@ typedef enum _notification_led_op {
  * @since_tizen 2.3
  */
 typedef enum _notification_count_display_type {
-	NOTIFICATION_COUNT_DISPLAY_TYPE_NONE = -1,
+	NOTIFICATION_COUNT_DISPLAY_TYPE_NONE = -1, /**< None */
 	NOTIFICATION_COUNT_DISPLAY_TYPE_LEFT = 0, /**< The number is placed to left */
 	NOTIFICATION_COUNT_DISPLAY_TYPE_IN, /**< The number is placed to center */
 	NOTIFICATION_COUNT_DISPLAY_TYPE_RIGHT, /**< The number is placed to right */
@@ -163,7 +162,7 @@ typedef enum _notification_button_index {
  * @since_tizen @if WEARABLE 2.3.1 @elseif MOBILE 2.3 @endif
  */
 typedef enum _notification_text_type {
-	NOTIFICATION_TEXT_TYPE_NONE = -1,
+	NOTIFICATION_TEXT_TYPE_NONE = -1, /**< None */
 	NOTIFICATION_TEXT_TYPE_TITLE = 0, /**< Title */
 	NOTIFICATION_TEXT_TYPE_CONTENT, /**< Content */
 	NOTIFICATION_TEXT_TYPE_CONTENT_FOR_DISPLAY_OPTION_IS_OFF, /**< Content for content display option is off of the Settings */
@@ -198,7 +197,7 @@ typedef enum _notification_text_type {
  * @since_tizen @if WEARABLE 2.3.1 @elseif MOBILE 2.3 @endif
  */
 typedef enum _notification_image_type {
-	NOTIFICATION_IMAGE_TYPE_NONE = -1,
+	NOTIFICATION_IMAGE_TYPE_NONE = -1, /**< None */
 	NOTIFICATION_IMAGE_TYPE_ICON = 0, /**< Icon */
 	NOTIFICATION_IMAGE_TYPE_ICON_FOR_INDICATOR, /**< Indicator icon */
 	NOTIFICATION_IMAGE_TYPE_ICON_FOR_LOCK, /**< Lock screen icon */
@@ -378,9 +377,9 @@ typedef struct _notification_op {
  * @since_tizen @if MOBILE 2.4 @elseif WEARABLE 3.0 @endif
  */
 typedef enum notification_permission_type {
-	NOTIFICATION_PERMISSION_TYPE_NONE = 0,
-	NOTIFICATION_PERMISSION_TYPE_DELETE = 1,
-	NOTIFICATION_PERMISSION_TYPE_UPDATE = 2,
+	NOTIFICATION_PERMISSION_TYPE_NONE = 0, /**< None */
+	NOTIFICATION_PERMISSION_TYPE_DELETE = 1, /**< Delete */
+	NOTIFICATION_PERMISSION_TYPE_UPDATE = 2, /**< Update */
 } notification_permission_type_e;
 
 /**

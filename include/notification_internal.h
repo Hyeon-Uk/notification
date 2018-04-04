@@ -50,12 +50,12 @@ extern "C" {
 #define NOTIFICATION_VARIABLE_TYPE_MAX NOTIFICATION_VARIABLE_TYPE_COUNT
 
 /**
- * @brief Enumeration for notification ongoing value type.
+ * @brief Enumeration for notification resource path type.
  * @since_tizen 3.0
  */
 typedef enum _notification_res_path_type {
-	NOTIFICATION_RES_PATH_TYPE_SOUND = NOTIFICATION_IMAGE_TYPE_MAX + 1,
-	NOTIFICATION_RES_PATH_TYPE_VIBRATION,
+	NOTIFICATION_RES_PATH_TYPE_SOUND = NOTIFICATION_IMAGE_TYPE_MAX + 1, /**< Sound */
+	NOTIFICATION_RES_PATH_TYPE_VIBRATION, /**< Vibration */
 } notification_res_path_type_e;
 
 /**
@@ -63,8 +63,8 @@ typedef enum _notification_res_path_type {
  * @since_tizen 3.0
  */
 typedef enum _notification_ongoing_value_type {
-	NOTIFICATION_ONGOING_VALUE_TYPE_PERCENT = 0,
-	NOTIFICATION_ONGOING_VALUE_TYPE_TIME,
+	NOTIFICATION_ONGOING_VALUE_TYPE_PERCENT = 0, /**< Percent */
+	NOTIFICATION_ONGOING_VALUE_TYPE_TIME, /**< Time */
 } notification_ongoing_value_type_e;
 
 /**
@@ -73,17 +73,17 @@ typedef enum _notification_ongoing_value_type {
  * @see #notification_event_type_e
  */
 typedef enum _notification_event_type_extension {
-	NOTIFICATION_EVENT_TYPE_HIDDEN_BY_USER = 100,
-	NOTIFICATION_EVENT_TYPE_HIDDEN_BY_TIMEOUT = 101,
-	NOTIFICATION_EVENT_TYPE_HIDDEN_BY_EXTERNAL = 102,
-	NOTIFICATION_EVENT_TYPE_PRESSED = 200,
-	NOTIFICATION_EVENT_TYPE_DELETED = 201,
+	NOTIFICATION_EVENT_TYPE_HIDDEN_BY_USER = 100, /**< Hidden by user */
+	NOTIFICATION_EVENT_TYPE_HIDDEN_BY_TIMEOUT = 101, /**< Hidden by timeout */
+	NOTIFICATION_EVENT_TYPE_HIDDEN_BY_EXTERNAL = 102, /**< Hidden by external */
+	NOTIFICATION_EVENT_TYPE_PRESSED = 200, /**< Pressed by user */
+	NOTIFICATION_EVENT_TYPE_DELETED = 201, /**< Deleted by user */
 } notification_event_type_extension_e;
 
 GQuark notification_error_quark(void);
 
 /**
- * @brief This function add deferred task. the registered task will be executed when notification service become ready
+ * @brief This function add deferred task. The registered task will be executed when notification service become ready.
  * @param[in] deferred_task_cb The callback function
  * @param[in] user_data The user data to be passed to the callback function
  * @return #NOTIFICATION_ERROR_NONE if success, other value if failure
@@ -131,6 +131,7 @@ notification_unresister_changed_cb_for_uid(
 /**
  * @brief Updates the progress of the inserted notification. This only works for the ongoing notification (NOTIFICATION_TYPE_ONGOING).
  * @details The Notification view on the notification area could be updated.
+ * @since_tizen @if MOBILE 2.3 @elseif WEARABLE 2.3.1 @endif
  * @param[in] noti Notification handle or NULL if priv_id is valid
  * @param[in] priv_id Private ID
  * @param[in] progress Percentage value of progressive data
@@ -139,7 +140,7 @@ notification_unresister_changed_cb_for_uid(
  * @retval NOTIFICATION_ERROR_INVALID_PARAMETER Invalid input value
  * @par Sample code:
  * @code
-#include <notification.h>
+#include <notification_internal.h>
 ...
  {
 	int noti_err = NOTIFICATION_ERROR_NONE;
@@ -158,6 +159,7 @@ int notification_update_progress(notification_h noti,
 /**
  * @brief Updates the size of inserted notification data. This only works for the ongoing notification (NOTIFICATION_TYPE_ONGOING).
  * @details Notification view on notification area could be updated.
+ * @since_tizen @if MOBILE 2.3 @elseif WEARABLE 2.3.1 @endif
  * @param[in] noti Notification handle or NULL if priv_id is valid
  * @param[in] priv_id Private ID
  * @param[in] size Bytes of progressive data
@@ -166,7 +168,7 @@ int notification_update_progress(notification_h noti,
  * @retval NOTIFICATION_ERROR_INVALID_PARAMETER Invalid input value
  * @par Sample code:
  * @code
-#include <notification.h>
+#include <notification_internal.h>
 ...
  {
 	int noti_err = NOTIFICATION_ERROR_NONE;
@@ -184,6 +186,7 @@ int notification_update_size(notification_h noti,
 /**
  * @brief Updates the content of the inserted notification data. This is only for the ongoing notification (NOTIFICATION_TYPE_ONGOING).
  * @details Notification view on notification area could be updated.
+ * @since_tizen @if MOBILE 2.3 @elseif WEARABLE 2.3.1 @endif
  * @param[in] noti Notification handle or NULL if priv_id is valid
  * @param[in] priv_id Private ID
  * @param[in] content Text to update
@@ -192,7 +195,7 @@ int notification_update_size(notification_h noti,
  * @retval NOTIFICATION_ERROR_INVALID_PARAMETER Invalid input value
  * @par Sample code:
  * @code
-#include <notification.h>
+#include <notification_internal.h>
 ...
  {
 	int noti_err = NOTIFICATION_ERROR_NONE;
@@ -332,11 +335,10 @@ NOTIFICATION_DEPRECATED_API int notification_get_count(notification_type_e type,
 
 /**
  * @internal
- * @brief
- * @details Gets the numbers of all notifications
+ * @brief Gets the numbers of all notifications.
  * @since tizen 4.0
- * @param[int] type the type of notification
- * @param[out] count the numbers of all notifications
+ * @param[in] type The type of notification
+ * @param[out] count The numbers of all notifications
  * @return NOTIFICATION_ERROR_NONE on success, other value on failure
  * @retval NOTIFICATION_ERROR_NONE Success
  * @retval NOTIFICATION_ERROR_INVALID_PARAMETER Invalid input value
@@ -403,7 +405,9 @@ NOTIFICATION_DEPRECATED_API int notification_set_pkgname(notification_h noti,
 
 /**
  * @internal
+ * @brief Sets caller's app_id.
  * @details caller_app_id is set automatically when notification_create() is called. We do not recommend to use this API.
+ * @since_tizen 4.0
  * @param[in] noti Notification handle
  * @param[in] app_id Caller application id
  * @return NOTIFICATION_ERROR_NONE on success, other value on failure
@@ -559,7 +563,8 @@ NOTIFICATION_DEPRECATED_API int notification_get_id(notification_h noti,
 
 /**
  * @internal
- * @brief Set priv_id of the notification.
+ * @brief Sets priv_id of the notification.
+ * @since_tizen 4.0
  * @param[in] noti Notification handle
  * @param[in] priv_id Private ID
  * @return NOTIFICATION_ERROR_NONE on success, other value on failure
@@ -698,11 +703,8 @@ NOTIFICATION_DEPRECATED_API int notification_get_execute_option(notification_h n
 }
  * @endcode
  */
-int notification_insert(notification_h noti,
-		int *priv_id);
-
-int notification_insert_for_uid(notification_h noti,
-		int *priv_id, uid_t uid);
+int notification_insert(notification_h noti, int *priv_id);
+int notification_insert_for_uid(notification_h noti, int *priv_id, uid_t uid);
 
 /**
  * @internal
@@ -884,8 +886,8 @@ int notification_get_default_button(notification_h noti, notification_button_ind
 /**
  * @brief Gets the notification ongoing value type.
  * @since_tizen 3.0
- * @param[in] noti	The notification handle
- * @param[out] type	The notification ongoing value type
+ * @param[in] noti The notification handle
+ * @param[out] type The notification ongoing value type
  * @return #NOTIFICATION_ERROR_NONE on success,
  *         otherwise any other value on failure
  * @retval #NOTIFICATION_ERROR_NONE         Success
@@ -954,7 +956,7 @@ int notification_get_ongoing_value_type(notification_h noti, notification_ongoin
 int notification_set_ongoing_value_type(notification_h noti, notification_ongoing_value_type_e type);
 
 /**
- * @brief Gets the notification ongoing time when ongoint type value is set NOTIFICATION_ONGOING_VALUE_TYPE_TIME.
+ * @brief Gets the notification ongoing time when ongoint type value is set #NOTIFICATION_ONGOING_VALUE_TYPE_TIME.
  * @since_tizen 3.0
  * @param[in] noti	The notification handle
  * @param[out] current	The ongoing current time
@@ -991,7 +993,7 @@ int notification_set_ongoing_value_type(notification_h noti, notification_ongoin
 int notification_get_ongoing_time(notification_h noti, int *current, int *duration);
 
 /**
- * @brief Sets the notification ongoing time when ongoint type value is set NOTIFICATION_ONGOING_VALUE_TYPE_TIME.
+ * @brief Sets the notification ongoing time when ongoint type value is set #NOTIFICATION_ONGOING_VALUE_TYPE_TIME.
  * @since_tizen 3.0
  * @param[in] noti	The notification handle
  * @param[in] current	The ongoing current time
@@ -1347,7 +1349,8 @@ int notification_get_event_flag(notification_h noti, bool *event_flag);
 int notification_check_event_receiver_available(notification_h noti, bool *available);
 
 /**
- * @brief This function translate localized texts
+ * @brief This function translate localized texts.
+ * @since_tizen 3.0
  * @param[in] noti The notification handle that is created by notification_create()
  * @return #NOTIFICATION_ERROR_NONE if success, other value if failure
  * @see notification_create()
@@ -1392,6 +1395,8 @@ notification_h notification_load_by_tag_for_uid(const char *tag, uid_t uid);
 /**
  * @brief Gets a max length of text input.
  * @since_tizen 3.0
+ * @param[in] noti The notification handle
+ * @param[in] Max length of Text input
  * @return #NOTIFICATION_ERROR_NONE on success,
  *         otherwise any other value on failure
  * @retval #NOTIFICATION_ERROR_NONE	Success
@@ -1497,7 +1502,7 @@ int notification_get_extension_event_handler(notification_h noti,
  * @internal
  * @brief Sets the label of caller application.
  * @details It recommends for daemons. For an Application, the label is set when notification create.
- * @since tizen 5.0
+ * @since_tizen 5.0
  * @param[in] noti Notification handle
  * @param[in] label Label of Caller application
  * @return NOTIFICATION_ERROR_NONE on success, other value on failure
@@ -1528,10 +1533,10 @@ int notification_set_app_label(notification_h noti, char *label);
 
 /**
  * @internal
- * @brief Gets the label of caller application
+ * @brief Gets the label of caller application.
  * @details Label may be null if it was not set.
- * Do not free @a label. It will be freed when notification_free() is called.
- * @since tizen 5.0
+ *          Do not free @a label. It will be freed when notification_free() is called.
+ * @since_tizen 5.0
  * @param[in] noti Notification handle
  * @param[out] label Label of Caller application
  * @return NOTIFICATION_ERROR_NONE on success, other value on failure

@@ -30,15 +30,16 @@ extern "C" {
 typedef struct notification_system_setting *notification_system_setting_h;
 typedef struct notification_system_setting_dnd_allow_exception *dnd_allow_exception_h;
 
-/*
- * The prototype of handler that 'Do not disturb' mode set schdule changed alarm.
+/**
+ * @brief The prototype of handler that 'Do not disturb' mode set schdule changed alarm.
+ * @since_tizen 3.0
  */
 typedef void (*dnd_changed_cb)(void *user_data, int do_not_disturb);
 
 /**
-* @brief Enumeration for Week Flag, the days of the week.
-* @since_tizen 3.0
-*/
+ * @brief Enumeration for Week Flag, the days of the week.
+ * @since_tizen 3.0
+ */
 typedef enum {
 	DND_SCHEDULE_WEEK_FLAG_SUNDAY = 0x01,		/**< Sunday */
 	DND_SCHEDULE_WEEK_FLAG_MONDAY = 0x02,		/**< Monday */
@@ -47,7 +48,6 @@ typedef enum {
 	DND_SCHEDULE_WEEK_FLAG_THURSDAY = 0x10,		/**< Thursday */
 	DND_SCHEDULE_WEEK_FLAG_FRIDAY = 0x20,		/**< Friday */
 	DND_SCHEDULE_WEEK_FLAG_SATURDAY = 0x40,		/**< Saturday */
-	DND_SCHEDULE_WEEK_FLAG_MAX = 0x80,
 	DND_SCHEDULE_WEEK_FLAG_ALL = DND_SCHEDULE_WEEK_FLAG_SUNDAY|
 					DND_SCHEDULE_WEEK_FLAG_MONDAY |
 					DND_SCHEDULE_WEEK_FLAG_TUESDAY |
@@ -58,13 +58,13 @@ typedef enum {
 } dnd_schedule_week_flag_e;
 
 /**
-* @brief Enumeration for lock screen content.
-* @since_tizen 3.0
-*/
+ * @brief Enumeration for lock screen content.
+ * @since_tizen 3.0
+ */
 typedef enum lock_screen_content_level {
-	SHOW_ALL_CONTENT = 0,
-	HIDE_SENSITIVE_CONTENT,
-	DO_NOT_SHOW_NOTIFICATIONS,
+	SHOW_ALL_CONTENT = 0, /**< Show all*/
+	HIDE_SENSITIVE_CONTENT, /**< Hide sensitive */
+	DO_NOT_SHOW_NOTIFICATIONS, /**< Do not Showw */
 } lock_screen_content_level_e;
 
 /**
@@ -72,7 +72,7 @@ typedef enum lock_screen_content_level {
  * @since_tizen 3.0
  */
 typedef enum dnd_allow_exception_type {
-	NOTIFICATION_DND_ALLOWED_CALLS = 0,
+	NOTIFICATION_DND_ALLOWED_CALLS = 0, /**< Call */
 	/* possible to add */
 } dnd_allow_exception_type_e;
 
@@ -81,10 +81,10 @@ typedef enum dnd_allow_exception_type {
  * @since_tizen 3.0
  */
 typedef enum notification_dnd_allowed_calls {
-	NOTIFICATION_DND_ALLOWED_CALLS_EVERYONE = 0,
-	NOTIFICATION_DND_ALLOWED_CALLS_CONTACT,
-	NOTIFICATION_DND_ALLOWED_CALLS_FAVORITE,
-	NOTIFICATION_DND_ALLOWED_CALLS_NOBODY,
+	NOTIFICATION_DND_ALLOWED_CALLS_EVERYONE = 0, /**< Everyone */
+	NOTIFICATION_DND_ALLOWED_CALLS_CONTACT, /**< Contact */
+	NOTIFICATION_DND_ALLOWED_CALLS_FAVORITE, /**< Favorite */
+	NOTIFICATION_DND_ALLOWED_CALLS_NOBODY, /**< Nobody */
 } notification_dnd_allowed_calls_e;
 
 /* Application setting */
@@ -125,8 +125,8 @@ struct notification_system_setting_dnd_allow_exception {
  * @since_tizen @if WEARABLE 2.3.1 @elseif MOBILE 2.3 @endif
  * @privlevel public
  * @privilege %http://tizen.org/privilege/notification
- * @param[out] setting_array	The array of otification setting
- * @param[out] count		The count of array
+ * @param[out] setting_array The array of notification setting
+ * @param[out] count The count of array
  * @return #NOTIFICATION_ERROR_NONE on success,
  *         otherwise any other value on failure
  * @retval #NOTIFICATION_ERROR_NONE         Success
@@ -159,14 +159,14 @@ struct notification_system_setting_dnd_allow_exception {
 int notification_setting_get_setting_array(notification_setting_h *setting_array, int *count);
 int notification_setting_get_setting_array_for_uid(notification_setting_h *setting_array, int *count, uid_t uid);
 
-/*
+/**
  * @internal
  * @brief Gets notification setting by package name.
  * @since_tizen @if wearable 2.3.1 @elseif mobile 2.3 @endif
  * @privlevel public
  * @privilege %http://tizen.org/privilege/notification
- * @param[in] package_name	The package_name
- * @param[out] setting		The notification setting
+ * @param[in] package_name The package_name
+ * @param[out] setting The notification setting
  * @return #NOTIFICATION_ERROR_NONE on success,
  *         otherwise any other value on failure
  * @retval #NOTIFICATION_ERROR_NONE			Success
@@ -198,12 +198,12 @@ int notification_setting_get_setting_array_for_uid(notification_setting_h *setti
 int notification_setting_get_setting_by_package_name(const char *package_name, notification_setting_h *setting);
 int notification_setting_get_setting_by_appid_for_uid(const char *app_id, notification_setting_h *setting, uid_t uid);
 
-/*
+/**
  * @internal
  * @brief Gets package name from notification setting handle.
  * @since_tizen @if wearable 2.3.1 @elseif mobile 2.3 @endif
- * @param[in] setting	The notification setting handle
- * @param[out] value	The package name
+ * @param[in] setting The notification setting handle
+ * @param[out] value The package name
  * @return #NOTIFICATION_ERROR_NONE on success,
  *         otherwise any other value on failure
  * @retval #NOTIFICATION_ERROR_NONE         Success
@@ -234,12 +234,12 @@ int notification_setting_get_setting_by_appid_for_uid(const char *app_id, notifi
  */
 int notification_setting_get_package_name(notification_setting_h setting, char **value);
 
-/*
+/**
  * @internal
  * @brief Gets application id from notification setting handle.
  * @since_tizen 3.0
- * @param[in] setting	The notification setting handle
- * @param[out] app_id	The application id
+ * @param[in] setting The notification setting handle
+ * @param[out] app_id The application id
  * @return #NOTIFICATION_ERROR_NONE on success,
  *         otherwise any other value on failure
  * @retval #NOTIFICATION_ERROR_NONE         Success
@@ -270,12 +270,12 @@ int notification_setting_get_package_name(notification_setting_h setting, char *
  */
 int notification_setting_get_appid(notification_setting_h setting, char **app_id);
 
-/*
+/**
  * @internal
  * @brief Gets value which whether allow notification from individual applications.
  * @since_tizen @if wearable 2.3.1 @elseif mobile 2.3 @endif
- * @param[in] setting	The notification setting handle
- * @param[out] value	The value which whether allow to notification
+ * @param[in] setting The notification setting handle
+ * @param[out] value The value which whether allow to notification
  * @return #NOTIFICATION_ERROR_NONE on success,
  *         otherwise any other value on failure
  * @retval #NOTIFICATION_ERROR_NONE			Success
@@ -305,13 +305,13 @@ int notification_setting_get_appid(notification_setting_h setting, char **app_id
  */
 int notification_setting_get_allow_to_notify(notification_setting_h setting, bool *value);
 
-/*
+/**
  * @internal
  * @brief Sets value which whether allow notification from individual applications.
  * @details After notification_setting_update_setting() call, the allow_to_notify is updated.
  * @since_tizen @if wearable 2.3.1 @elseif mobile 2.3 @endif
- * @param[in] setting	The notification setting handle
- * @param[in] value	The value whether allow to notification
+ * @param[in] setting The notification setting handle
+ * @param[in] value The value whether allow to notification
  * @return #NOTIFICATION_ERROR_NONE on success,
  *         otherwise any other value on failure
  * @retval #NOTIFICATION_ERROR_NONE         Success
@@ -343,13 +343,12 @@ int notification_setting_get_allow_to_notify(notification_setting_h setting, boo
  */
 int notification_setting_set_allow_to_notify(notification_setting_h setting, bool value);
 
-/*
+/**
  * @internal
  * @brief Gets value which whether do not disturb notification from notification setting handle.
  * @since_tizen @if wearable 2.3.1 @elseif mobile 2.3 @endif
- * @param[in] setting	The notification setting handle
- * @param[out] value	The value which whether do not disturb notification or not
- *
+ * @param[in] setting The notification setting handle
+ * @param[out] value The value which whether do not disturb notification or not
  * @return #NOTIFICATION_ERROR_NONE on success,
  *         otherwise any other value on failure
  * @retval #NOTIFICATION_ERROR_NONE         Success
@@ -379,13 +378,13 @@ int notification_setting_set_allow_to_notify(notification_setting_h setting, boo
  */
 int notification_setting_get_do_not_disturb_except(notification_setting_h setting, bool *value);
 
-/*
+/**
  * @internal
  * @brief Sets value which whether do not disturb notification or not.
  * @details After notification_setting_update_setting() call, the do_not_disturb value is updated.
  * @since_tizen @if wearable 2.3.1 @elseif mobile 2.3 @endif
- * @param[in] setting	The notification setting handle
- * @param[in] value	The value which do not disturb notification or not
+ * @param[in] setting The notification setting handle
+ * @param[in] value The value which do not disturb notification or not
  * @return #NOTIFICATION_ERROR_NONE on success,
  *         otherwise any other value on failure
  * @retval #NOTIFICATION_ERROR_NONE         Success
@@ -417,12 +416,12 @@ int notification_setting_get_do_not_disturb_except(notification_setting_h settin
  */
 int notification_setting_set_do_not_disturb_except(notification_setting_h setting, bool value);
 
-/*
+/**
  * @internal
  * @brief Gets value whether Pop up notification is allowed or not.
  * @since_tizen 3.0
- * @param[in] setting	The notification setting handle
- * @param[in] value	The value
+ * @param[in] setting The notification setting handle
+ * @param[in] value The value
  * @return #NOTIFICATION_ERROR_NONE on success,
  *         otherwise any other value on failure
  * @retval #NOTIFICATION_ERROR_NONE         Success
@@ -454,13 +453,13 @@ int notification_setting_set_do_not_disturb_except(notification_setting_h settin
  */
 int notification_setting_get_pop_up_notification(notification_setting_h setting, bool *value);
 
-/*
+/**
  * @internal
  * @brief Sets value which Pop up notification allow or block.
  * @details After notification_setting_update_setting() call, the pop_up_notification value is updated.
  * @since_tizen 3.0
- * @param[in] setting	The notification setting handle
- * @param[in] value	The value
+ * @param[in] setting The notification setting handle
+ * @param[in] value The value
  * @return #NOTIFICATION_ERROR_NONE on success,
  *         otherwise any other value on failure
  * @retval #NOTIFICATION_ERROR_NONE         Success
@@ -492,12 +491,12 @@ int notification_setting_get_pop_up_notification(notification_setting_h setting,
  */
 int notification_setting_set_pop_up_notification(notification_setting_h setting, bool value);
 
-/*
+/**
  * @internal
  * @brief Gets displaying level that notification's information on lock screen from individual application.
  * @since_tizen 3.0
- * @param[in] setting	The notification setting handle
- * @param[out] level	The displaying level of notification's information on lock screen
+ * @param[in] setting The notification setting handle
+ * @param[out] level The displaying level of notification's information on lock screen
  * @return #NOTIFICATION_ERROR_NONE on success,
  *         otherwise any other value on failure
  * @retval #NOTIFICATION_ERROR_NONE         Success
@@ -528,13 +527,13 @@ int notification_setting_set_pop_up_notification(notification_setting_h setting,
  */
 int notification_setting_get_lock_screen_content(notification_setting_h setting, lock_screen_content_level_e *level);
 
-/*
+/**
  * @internal
  * @brief Sets displaying level that notification's information on lock screen from individual application.
  * @details After notification_setting_update_setting() call, the lock_screen_content_level value is updated.
  * @since_tizen 3.0
- * @param[in] setting	The notification setting handle
- * @param[out] level	The displaying level of notification's information on lock screen
+ * @param[in] setting The notification setting handle
+ * @param[out] level The displaying level of notification's information on lock screen
  * @return #NOTIFICATION_ERROR_NONE on success,
  *         otherwise any other value on failure
  * @retval #NOTIFICATION_ERROR_NONE         Success
@@ -567,14 +566,14 @@ int notification_setting_get_lock_screen_content(notification_setting_h setting,
  */
 int notification_setting_set_lock_screen_content(notification_setting_h setting, lock_screen_content_level_e level);
 
-/*
+/**
  * @internal
- * @brief Gets The value that determines whether the app is disabled
+ * @brief Gets The value that determines whether the app is disabled.
  * @since_tizen 3.0
  * @privlevel public
  * @privilege %http://tizen.org/privilege/notification
- * @param[in] setting   The notification system setting handle
- * @param[out] value    The value that determines whether the app is disabled
+ * @param[in] setting The notification system setting handle
+ * @param[out] value The value that determines whether the app is disabled
  * @return #NOTIFICATION_ERROR_NONE on success,
  *         otherwise any other value on failure
  * @retval #NOTIFICATION_ERROR_NONE         Success
@@ -601,17 +600,21 @@ int notification_setting_set_lock_screen_content(notification_setting_h setting,
  */
 int notification_setting_get_app_disabled(notification_setting_h setting, bool *value);
 
-/*
+/**
  * @internal
  * @brief Gets the notification system setting handle.
  * @since_tizen @if wearable 2.3.1 @elseif mobile 2.3 @endif
  * @privlevel public
  * @privilege %http://tizen.org/privilege/notification
- * @param[in] setting	The notification system setting handle
+ * @param[in] system_setting The notification system setting handle
  * @return #NOTIFICATION_ERROR_NONE on success,
  *         otherwise any other value on failure
  * @retval #NOTIFICATION_ERROR_NONE         Success
  * @retval #NOTIFICATION_ERROR_INVALID_PARAMETER Invalid parameter
+ * @retval #NOTIFICATION_ERROR_OUT_OF_MEMORY Out of memory
+ * @retval #NOTIFICATION_ERROR_IO_ERROR I/O error
+ * @retval #NOTIFICATION_ERROR_SERVICE_NOT_READY No response from notification service
+ * @retval #NOTIFICATION_ERROR_PERMISSION_DENIED Permission denied
  * @par sample code:
  * @code
 #include <notification_setting_internal.h>
@@ -637,13 +640,13 @@ int notification_setting_get_app_disabled(notification_setting_h setting, bool *
 int notification_system_setting_load_system_setting(notification_system_setting_h *system_setting);
 int notification_system_setting_load_system_setting_for_uid(notification_system_setting_h *system_setting, uid_t uid);
 
-/*
+/**
  * @internal
- * @brief Update the notification system handle.
+ * @brief Updates the notification system handle.
  * @since_tizen @if wearable 2.3.1 @elseif mobile 2.3 @endif
  * @privlevel public
  * @privilege %http://tizen.org/privilege/notification
- * @param[in] setting	The notification system setting handle
+ * @param[in] system_setting The notification system setting handle
  * @return #NOTIFICATION_ERROR_NONE on success,
  *         otherwise any other value on failure
  * @retval #NOTIFICATION_ERROR_NONE         Success
@@ -673,11 +676,11 @@ int notification_system_setting_load_system_setting_for_uid(notification_system_
 int notification_system_setting_update_system_setting(notification_system_setting_h system_setting);
 int notification_system_setting_update_system_setting_for_uid(notification_system_setting_h system_setting, uid_t uid);
 
-/*
+/**
  * @internal
  * @brief Frees the internal structure data of a notification system setting handle.
  * @since_tizen @if wearable 2.3.1 @elseif mobile 2.3 @endif
- * @param[in] setting	The notification system setting handle
+ * @param[in] system_setting The notification system setting handle
  * @return #NOTIFICATION_ERROR_NONE on success,
  *         otherwise any other value on failure
  * @retval #NOTIFICATION_ERROR_NONE         Success
@@ -704,13 +707,12 @@ int notification_system_setting_update_system_setting_for_uid(notification_syste
  */
 int notification_system_setting_free_system_setting(notification_system_setting_h system_setting);
 
-/*
+/**
  * @internal
  * @brief Gets value which whether do not disturb notification from notification system setting handle.
  * @since_tizen @if wearable 2.3.1 @elseif mobile 2.3 @endif
- * @param[in] setting	The notification system setting handle
- * @param[out] value	The value which whether do not disturb notification or not
- *
+ * @param[in] system_setting The notification system setting handle
+ * @param[out] value The value which whether do not disturb notification or not
  * @return #NOTIFICATION_ERROR_NONE on success,
  *         otherwise any other value on failure
  * @retval #NOTIFICATION_ERROR_NONE         Success
@@ -740,14 +742,13 @@ int notification_system_setting_free_system_setting(notification_system_setting_
  */
 int notification_system_setting_get_do_not_disturb(notification_system_setting_h system_setting, bool *value);
 
-/*
+/**
  * @internal
  * @brief Sets value which whether do not disturb notification or not.
  * @details After notification_system_setting_update_system_setting() call, the do_not_disturb value is not updated.
  * @since_tizen @if wearable 2.3.1 @elseif mobile 2.3 @endif
- * @param[in] setting	The notification system setting handle
- * @param[in] value	The value which do not disturb notification or not
- *
+ * @param[in] system_setting The notification system setting handle
+ * @param[in] value The value which do not disturb notification or not
  * @return #NOTIFICATION_ERROR_NONE on success,
  *         otherwise any other value on failure
  * @retval #NOTIFICATION_ERROR_NONE         Success
@@ -779,12 +780,12 @@ int notification_system_setting_get_do_not_disturb(notification_system_setting_h
  */
 int notification_system_setting_set_do_not_disturb(notification_system_setting_h system_setting, bool value);
 
-/*
+/**
  * @internal
  * @brief Gets value which whether information on the notification view is visible.
  * @since_tizen @if wearable 2.3.1 @elseif mobile 2.3 @endif
- * @param[in] setting	The notification system setting handle
- * @param[out] value	The visibility_class value
+ * @param[in] system_setting The notification system setting handle
+ * @param[out] value The visibility_class value
  * @return #NOTIFICATION_ERROR_NONE on success,
  *         otherwise any other value on failure
  * @retval #NOTIFICATION_ERROR_NONE         Success
@@ -814,13 +815,13 @@ int notification_system_setting_set_do_not_disturb(notification_system_setting_h
  */
 int notification_system_setting_get_visibility_class(notification_system_setting_h system_setting, int *value);
 
-/*
+/**
  * @internal
  * @brief Sets value which whether information on the notification view is visible.
  * @details After notification_system_setting_update_system_setting() call, the visibility_class value is not updated.
  * @since_tizen @if wearable 2.3.1 @elseif mobile 2.3 @endif
- * @param[in] setting	The notification setting handle
- * @param[in] value	The visibility_class value
+ * @param[in] system_setting The notification setting handle
+ * @param[in] value The visibility_class value
  * @return #NOTIFICATION_ERROR_NONE on success,
  *         otherwise any other value on failure
  * @retval #NOTIFICATION_ERROR_NONE         Success
@@ -852,12 +853,12 @@ int notification_system_setting_get_visibility_class(notification_system_setting
  */
 int notification_system_setting_set_visibility_class(notification_system_setting_h system_setting, int value);
 
-/*
+/**
  * @internal
  * @brief Gets value which whether 'Do not disturb' mode is enable or not.
  * @since_tizen 3.0
- * @param[in] setting	The notification system setting handle
- * @param[out] enabled	The dnd_schedule_enabled value
+ * @param[in] system_setting The notification system setting handle
+ * @param[out] enabled The dnd_schedule_enabled value
  * @return #NOTIFICATION_ERROR_NONE on success,
  *         otherwise any other value on failure
  * @retval #NOTIFICATION_ERROR_NONE         Success
@@ -887,13 +888,13 @@ int notification_system_setting_set_visibility_class(notification_system_setting
  */
 int notification_system_setting_dnd_schedule_get_enabled(notification_system_setting_h system_setting, bool *enabled);
 
-/*
+/**
  * @internal
  * @brief Sets value which whether 'Do not disturb' mode is enable or not.
  * @details After notification_system_setting_update_system_setting() call, the 'Do not disturb' mode is not updated.
  * @since_tizen 3.0
- * @param[in] setting	The notification system setting handle
- * @param[in] enabled	The dnd_schedule_enabled value
+ * @param[in] system_setting The notification system setting handle
+ * @param[in] enabled The dnd_schedule_enabled value
  * @return #NOTIFICATION_ERROR_NONE on success,
  *         otherwise any other value on failure
  * @retval #NOTIFICATION_ERROR_NONE         Success
@@ -925,12 +926,12 @@ int notification_system_setting_dnd_schedule_get_enabled(notification_system_set
  */
 int notification_system_setting_dnd_schedule_set_enabled(notification_system_setting_h system_setting, bool enabled);
 
-/*
+/**
  * @internal
  * @brief Gets days of the week that 'Do not disturb' mode is enable.
  * @since_tizen 3.0
- * @param[in] setting	The notification system setting handle
- * @param[out] day	The days of the week that enable 'Do not disturb' mode
+ * @param[in] system_setting The notification system setting handle
+ * @param[out] day The days of the week that enable 'Do not disturb' mode
  * @return #NOTIFICATION_ERROR_NONE on success,
  *         otherwise any other value on failure
  * @retval #NOTIFICATION_ERROR_NONE         Success
@@ -961,13 +962,13 @@ int notification_system_setting_dnd_schedule_set_enabled(notification_system_set
  */
 int notification_system_setting_dnd_schedule_get_day(notification_system_setting_h system_setting, int *day);
 
-/*
+/**
  * @internal
  * @brief Sets days of the week that 'Do not disturb' mode is enable.
  * @details After notification_system_setting_update_system_setting() call, the days not updated.
  * @since_tizen 3.0
- * @param[in] setting	The notification system setting handle
- * @param[in] day	The days of the week that enable 'Do not disturb' mode
+ * @param[in] system_setting The notification system setting handle
+ * @param[in] day The days of the week that enable 'Do not disturb' mode
  * @return #NOTIFICATION_ERROR_NONE on success,
  *         otherwise any other value on failure
  * @retval #NOTIFICATION_ERROR_NONE         Success
@@ -1000,13 +1001,13 @@ int notification_system_setting_dnd_schedule_get_day(notification_system_setting
  */
 int notification_system_setting_dnd_schedule_set_day(notification_system_setting_h system_setting, int day);
 
-/*
+/**
  * @internal
  * @brief Gets time that 'Do not disturb' mode is started.
  * @since_tizen 3.0
- * @param[in] setting	The notification system setting handle
- * @param[out] hour	The hour that 'Do not disturb' mode is started
- * @param[out] min	The min that 'Do not disturb' mode is started
+ * @param[in] system_setting The notification system setting handle
+ * @param[out] hour The hour that 'Do not disturb' mode is started
+ * @param[out] min The min that 'Do not disturb' mode is started
  * @return #NOTIFICATION_ERROR_NONE on success,
  *         otherwise any other value on failure
  * @retval #NOTIFICATION_ERROR_NONE         Success
@@ -1037,13 +1038,13 @@ int notification_system_setting_dnd_schedule_set_day(notification_system_setting
  */
 int notification_system_setting_dnd_schedule_get_start_time(notification_system_setting_h system_setting, int *hour, int *min);
 
-/*
+/**
  * @internal
  * @brief Sets time that 'Do not disturb' mode is started.
  * @since_tizen 3.0
- * @param[in] setting	The notification system setting handle
- * @param[in] hour	The hour that 'Do not disturb' mode is startd
- * @param[in] min	The min that 'Do not disturb' mode is started
+ * @param[in] system_setting The notification system setting handle
+ * @param[in] hour The hour that 'Do not disturb' mode is startd
+ * @param[in] min The min that 'Do not disturb' mode is started
  * @return #NOTIFICATION_ERROR_NONE on success,
  *         otherwise any other value on failure
  * @retval #NOTIFICATION_ERROR_NONE         Success
@@ -1077,13 +1078,13 @@ int notification_system_setting_dnd_schedule_get_start_time(notification_system_
  */
 int notification_system_setting_dnd_schedule_set_start_time(notification_system_setting_h system_setting, int hour, int min);
 
-/*
+/**
  * @internal
  * @brief Gets time that 'Do not disturb' mode is ended.
  * @since_tizen 3.0
- * @param[in] setting	The notification system setting handle
- * @param[out] hour	The hour that 'Do not disturb' mode is ended
- * @param[out] min	The min that 'Do not disturb' mode is ended
+ * @param[in] system_setting The notification system setting handle
+ * @param[out] hour The hour that 'Do not disturb' mode is ended
+ * @param[out] min The min that 'Do not disturb' mode is ended
  * @return #NOTIFICATION_ERROR_NONE on success,
  *         otherwise any other value on failure
  * @retval #NOTIFICATION_ERROR_NONE         Success
@@ -1114,13 +1115,13 @@ int notification_system_setting_dnd_schedule_set_start_time(notification_system_
  */
 int notification_system_setting_dnd_schedule_get_end_time(notification_system_setting_h system_setting, int *hour, int *min);
 
-/*
+/**
  * @internal
  * @brief Sets time that 'Do not disturb' mode is ended.
  * @since_tizen 3.0
- * @param[in] setting	The notification system setting handle
- * @param[in] hour	The hour that 'Do not disturb' mode is ended
- * @param[in] min	The min that 'Do not disturb' mode is ended
+ * @param[in] system_setting The notification system setting handle
+ * @param[in] hour The hour that 'Do not disturb' mode is ended
+ * @param[in] min The min that 'Do not disturb' mode is ended
  * @return #NOTIFICATION_ERROR_NONE on success,
  *         otherwise any other value on failure
  * @retval #NOTIFICATION_ERROR_NONE         Success
@@ -1154,12 +1155,12 @@ int notification_system_setting_dnd_schedule_get_end_time(notification_system_se
  */
 int notification_system_setting_dnd_schedule_set_end_time(notification_system_setting_h system_setting, int hour, int min);
 
-/*
+/**
  * @internal
  * @brief Gets displaying level that notification's information on lock screen.
  * @since_tizen 3.0
- * @param[in] setting	The notification system setting handle
- * @param[out] level	The displaying level of notification's information on lock screen
+ * @param[in] system_setting The notification system setting handle
+ * @param[out] level The displaying level of notification's information on lock screen
  * @return #NOTIFICATION_ERROR_NONE on success,
  *         otherwise any other value on failure
  * @retval #NOTIFICATION_ERROR_NONE         Success
@@ -1194,8 +1195,8 @@ int notification_system_setting_get_lock_screen_content(notification_system_sett
  * @internal
  * @brief Sets displaying level that notification's information on lock screen.
  * @since_tizen 3.0
- * @param[in] setting	The notification system setting handle
- * @param[in] level	The displaying level of notification's information on lock screen
+ * @param[in] system_setting The notification system setting handle
+ * @param[in] level The displaying level of notification's information on lock screen
  * @return #NOTIFICATION_ERROR_NONE on success,
  *         otherwise any other value on failure
  * @retval #NOTIFICATION_ERROR_NONE         Success
@@ -1228,14 +1229,14 @@ int notification_system_setting_get_lock_screen_content(notification_system_sett
  */
 int notification_system_setting_set_lock_screen_content(notification_system_setting_h system_setting, lock_screen_content_level_e level);
 
-/*
+/**
  * @internal
  * @brief Gets a value of the do_not_disturb allow exceptions.
  * @since_tizen 3.0
  * @privlevel public
  * @privilege %http://tizen.org/privilege/notification
- * @param[in] setting The notification system setting handle
- * @param[in] dnd_allow_exception_type_e The exceptional item of do_not_distrub
+ * @param[in] system_setting The notification system setting handle
+ * @param[in] type The exceptional item of do_not_distrub
  * @param[out] value The value of the exceptional item
  * @return #NOTIFICATION_ERROR_NONE on success,
  *         otherwise any other value on failure
@@ -1269,14 +1270,14 @@ int notification_system_setting_set_lock_screen_content(notification_system_sett
  */
 int notification_system_setting_get_dnd_allow_exceptions(notification_system_setting_h system_setting, dnd_allow_exception_type_e type, int *value);
 
-/*
+/**
  * @internal
  * @brief Sets a value of the do_not_disturb allow exceptions.
  * @since_tizen 3.0
  * @privlevel public
  * @privilege %http://tizen.org/privilege/notification
- * @param[in] setting The notification system setting handle
- * @param[in] dnd_allow_exception_type_e The exceptional item of do_not_distrub
+ * @param[in] system_setting The notification system setting handle
+ * @param[in] type The exceptional item of do_not_distrub
  * @param[in] value The value of the exceptional item
  * @return #NOTIFICATION_ERROR_NONE on success,
  *         otherwise any other value on failure
@@ -1311,15 +1312,15 @@ int notification_system_setting_get_dnd_allow_exceptions(notification_system_set
  */
 int notification_system_setting_set_dnd_allow_exceptions(notification_system_setting_h system_setting, dnd_allow_exception_type_e type, int value);
 
-/*
+/**
  * @internal
  * @brief Registers a callback for turn on/off 'Do not disturb' mode by user_data
  *        or 'Do not disturb' mode setting schedule is start or end.
  * @since_tizen 3.0
  * @privlevel public
  * @privilege %http://tizen.org/privilege/notification
- * @param[in] callback	The callback function
- * @param[in] user_data	The user data
+ * @param[in] callback The callback function
+ * @param[in] user_data The user data
  * @return #NOTIFICATION_ERROR_NONE on success,
  *         otherwise any other value on failure
  * @retval #NOTIFICATION_ERROR_NONE Success
@@ -1355,14 +1356,14 @@ static void changed_cb(void *user_data, int do_not_disturb)
 int notification_register_system_setting_dnd_changed_cb(dnd_changed_cb callback, void *user_data);
 int notification_register_system_setting_dnd_changed_cb_for_uid(dnd_changed_cb callback, void *user_data, uid_t uid);
 
-/*
+/**
  * @internal
  * @brief Unregisters a callback for turn on/off 'Do not disturb' mode by user_data
  *        or 'Do not disturb' mode setting schedule is start or end.
  * @since_tizen 3.0
  * @privlevel public
  * @privilege %http://tizen.org/privilege/notification
- * @param[in] callback	The callback function
+ * @param[in] callback The callback function
  * @return #NOTIFICATION_ERROR_NONE on success,
  *         otherwise any other value on failure
  * @retval #NOTIFICATION_ERROR_NONE Success
@@ -1395,8 +1396,90 @@ static void changed_cb(void *user_data, int do_not_disturb)
 int notification_unregister_system_setting_dnd_changed_cb(dnd_changed_cb callback);
 int notification_unregister_system_setting_dnd_changed_cb_for_uid(dnd_changed_cb callback, uid_t uid);
 
+/**
+ * @internal
+ * @brief Updates the notification setting if the pacakge is installed or updated.
+ * @since_tizen 3.0
+ * @param[in] package_name
+ * @param[in] uid User id
+ * @return #NOTIFICATION_ERROR_NONE on success,
+ *         otherwise any other value on failure
+ * @retval #NOTIFICATION_ERROR_NONE Success
+ * @retval #NOTIFICATION_ERROR_INVALID_PARAMETER Invalid parameter
+ * @retval #NOTIFICATION_ERROR_FROM_DB Error from DB query
+ * @par sample code:
+ * @code
+#include <notification_setting.h>
+...
+{
+	int ret;
+
+	ret = notification_setting_insert_package_for_uid(pkg_name, uid);
+	if (ret = NOTIFICATION_ERROR_NONE)
+		return;
+}
+ * @endcode
+ */
 int notification_setting_insert_package_for_uid(const char *package_name, uid_t uid);
+
+/**
+ * @internal
+ * @brief Deletes the notification setting if the pacakge is uninstalled.
+ * @since_tizen 3.0
+ * @param[in] package_name
+ * @param[in] uid User id
+ * @return #NOTIFICATION_ERROR_NONE on success,
+ *         otherwise any other value on failure
+ * @retval #NOTIFICATION_ERROR_NONE Success
+ * @retval #NOTIFICATION_ERROR_INVALID_PARAMETER Invalid parameter
+ * @retval #NOTIFICATION_ERROR_FROM_DB Error from DB query
+ * @par sample code:
+ * @code
+#include <notification_setting.h>
+...
+{
+	int ret;
+
+	ret = notification_setting_delete_package_for_uid(pkg_name, uid);
+	if (ret = NOTIFICATION_ERROR_NONE)
+		return;
+}
+ * @endcode
+ */
 int notification_setting_delete_package_for_uid(const char *package_name, uid_t uid);
+
+/**
+ * @internal
+ * @brief Updates the notification setting.
+ * @since_tizen 3.0
+ * @param[in] setting Notification setting handle
+ * @param[in] uid User id
+ * @return #NOTIFICATION_ERROR_NONE on success,
+ *         otherwise any other value on failure
+ * @retval #NOTIFICATION_ERROR_NONE Success
+ * @retval #NOTIFICATION_ERROR_INVALID_PARAMETER Invalid parameter
+ * @retval #NOTIFICATION_ERROR_OUT_OF_MEMORY Out of memory
+ * @retval #NOTIFICATION_ERROR_IO_ERROR I/O error
+ * @retval #NOTIFICATION_ERROR_SERVICE_NOT_READY No response from notification service
+ * @retval #NOTIFICATION_ERROR_PERMISSION_DENIED Permission denied
+ * @par sample code:
+ * @code
+#include <notification_setting.h>
+...
+{
+	int ret;
+	notification_setting_h setting;
+
+	// Get setting data
+
+	// Update setting data
+
+	ret = notification_setting_update_setting_for_uid(setting, uid);
+	if (ret = NOTIFICATION_ERROR_NONE)
+		return;
+}
+ * @endcode
+ */
 int notification_setting_update_setting_for_uid(notification_setting_h setting, uid_t uid);
 
 /* OLD IMPLEMENTATION */

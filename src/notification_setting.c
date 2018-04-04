@@ -85,16 +85,15 @@ EXPORT_API int notification_setting_get_setting_by_package_name(const char *pack
 EXPORT_API int notification_setting_get_setting(notification_setting_h *setting)
 {
 	int ret;
-	char *package_name = NULL;
+	char *app_id = NULL;
 
-	package_name = notification_get_app_id_by_pid(getpid());
-
-	if (package_name == NULL)
+	app_id = notification_get_app_id_by_pid(getpid());
+	if (app_id == NULL)
 		return NOTIFICATION_ERROR_NOT_EXIST_ID;
 
-	ret = notification_setting_get_setting_by_package_name(package_name, setting);
+	ret = notification_setting_get_setting_by_package_name(app_id, setting);
 
-	free(package_name);
+	free(app_id);
 
 	return ret;
 }
