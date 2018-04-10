@@ -1002,8 +1002,10 @@ EXPORT_API int notification_set_private_sharing(notification_h noti,
 						__free_req_info(req_data));
 
 		req_data->dir = __get_shared_dir(noti);
-		__OOM_CHECK(req_data->dir, NOTIFICATION_ERROR_OUT_OF_MEMORY,
-						__free_req_info(req_data));
+		if (req_data->dir == NULL) {
+			__free_req_info(req_data);
+			return NOTIFICATION_ERROR_INVALID_PARAMETER;
+		}
 
 		uid_info->sharing_req_list = g_list_append(
 			uid_info->sharing_req_list, req_data);
