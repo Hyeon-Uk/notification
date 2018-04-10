@@ -1560,6 +1560,12 @@ int notification_set_app_label(notification_h noti, char *label);
 int notification_get_app_label(notification_h noti, char **label);
 
 /**
+ * @ This API is only for App Framework internally.
+ */
+int notification_set_indirect_request(notification_h noti, pid_t pid,
+		uid_t uid);
+
+/**
  * @}
  */
 #ifdef __cplusplus

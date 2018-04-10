@@ -30,6 +30,7 @@
 #include <bundle_internal.h>
 #include <app_control.h>
 #include <app_control_internal.h>
+#include <pkgmgr-info.h>
 
 #include <notification.h>
 #include <notification_list.h>
@@ -41,6 +42,8 @@
 #include <notification_ipc.h>
 #include <notification_internal.h>
 #include <notification_shared_file.h>
+
+#define REGULAR_UID_MIN 5000
 
 typedef struct _notification_cb_info notification_cb_info_s;
 typedef struct _notification_event_cb_info notification_event_cb_info_s;
@@ -2041,6 +2044,77 @@ EXPORT_API int notification_get_app_label(notification_h noti, char **label)
 
 	if (noti->app_label)
 		*label = noti->app_label;
+
+	return NOTIFICATION_ERROR_NONE;
+}
+
+static void __set_caller_info(bundle *b, const char *appid, uid_t uid)
+{
+	pkgmgrinfo_appinfo_h handle;
+	char buf[12];
+	char *pkgid = NULL;
+	int r;
+
+	snprintf(buf, sizeof(buf), "%u", uid);
+	bundle_del(b, AUL_K_ORG_CALLER_UID);
+	bundle_add(b, AUL_K_ORG_CALLER_UID, buf);
+
+	bundle_del(b, AUL_K_ORG_CALLER_APPID);
+	bundle_add(b, AUL_K_ORG_CALLER_APPID, appid);
+
+	r = pkgmgrinfo_appinfo_get_usr_appinfo(appid, uid, &handle);
+	if (r != PMINFO_R_OK)
+		return;
+
+	pkgmgrinfo_appinfo_get_pkgid(handle, &pkgid);
+	if (pkgid) {
+		bundle_del(b, AUL_K_ORG_CALLER_PKGID);
+		bundle_add(b, AUL_K_ORG_CALLER_PKGID, pkgid);
+	}
+	pkgmgrinfo_appinfo_destroy_appinfo(handle);
+}
+
+static void __set_indirect_request(bundle *b)
+{
+	bundle_del(b, AUL_K_REQUEST_TYPE);
+	bundle_add(b, AUL_K_REQUEST_TYPE, "indirect-request");
+}
+
+EXPORT_API int notification_set_indirect_request(notification_h noti,
+		pid_t pid, uid_t uid)
+{
+	char appid[256] = { 0, };
+	int r;
+	int i;
+
+	if (noti == NULL || pid <= 1 || uid < REGULAR_UID_MIN)
+		return NOTIFICATION_ERROR_INVALID_PARAMETER;
+
+	r = aul_app_get_appid_bypid(pid, appid, sizeof(appid));
+	if (r != AUL_R_OK)
+		return NOTIFICATION_ERROR_INVALID_PARAMETER;
+
+	if (noti->b_service_responding) {
+		__set_caller_info(noti->b_service_responding, appid, uid);
+		__set_indirect_request(noti->b_service_responding);
+	}
+
+	if (noti->b_service_single_launch) {
+		__set_caller_info(noti->b_service_single_launch, appid, uid);
+		__set_indirect_request(noti->b_service_single_launch);
+	}
+
+	if (noti->b_service_multi_launch) {
+		__set_caller_info(noti->b_service_multi_launch, appid, uid);
+		__set_indirect_request(noti->b_service_multi_launch);
+	}
+
+	for (i = 0; i <= NOTIFICATION_EVENT_TYPE_MAX; i++) {
+		if (noti->b_event_handler[i]) {
+			__set_caller_info(noti->b_event_handler[i], appid, uid);
+			__set_indirect_request(noti->b_event_handler[i]);
+		}
+	}
 
 	return NOTIFICATION_ERROR_NONE;
 }
