@@ -24,7 +24,6 @@ pkg_check_modules(pkgs REQUIRED
 	dlog
 	aul
 	dbus-1
-	dbus-glib-1
 	capi-appfw-app-control
 	capi-appfw-package-manager
 	pkgmgr-info

@@ -21,7 +21,6 @@
 #include <fcntl.h>
 #include <libintl.h>
 #include <dbus/dbus.h>
-#include <dbus/dbus-glib-lowlevel.h>
 #include <gio/gio.h>
 
 #include <aul.h>
