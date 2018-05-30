@@ -419,92 +419,42 @@ out:
 	return err;
 }
 
-static int _foreach_package_info_callback(const pkgmgrinfo_pkginfo_h package_info, void *user_data)
-{
-	char *package_name = NULL;
-	int pkgmgr_ret;
-	int err = true;
-	pkgmgrinfo_appinfo_filter_h handle = NULL;
-	setting_local_info *info = (setting_local_info *)user_data;
-
-	pkgmgr_ret = pkgmgrinfo_pkginfo_get_pkgname(package_info, &package_name);
-	if (pkgmgr_ret != PACKAGE_MANAGER_ERROR_NONE) {
-		/* LCOV_EXCL_START */
-		ERR("Failed to get pkgname from pkgmgrinfo[%d]", pkgmgr_ret);
-		err = false;
-		goto out;
-		/* LCOV_EXCL_STOP */
-	}
-
-	pkgmgr_ret = pkgmgrinfo_appinfo_filter_create(&handle);
-	if (pkgmgr_ret != PMINFO_R_OK) {
-		/* LCOV_EXCL_START */
-		ERR("Failed to create appinofo[%d]",
-					pkgmgr_ret);
-		err = false;
-		goto out;
-		/* LCOV_EXCL_STOP */
-	}
-
-	pkgmgr_ret = pkgmgrinfo_appinfo_filter_add_string(handle, PMINFO_APPINFO_PROP_APP_PACKAGE, package_name);
-	if (pkgmgr_ret != PMINFO_R_OK) {
-		/* LCOV_EXCL_START */
-		ERR("Failed to add string to appinfo[%d]", pkgmgr_ret);
-		err = false;
-		goto out;
-		/* LCOV_EXCL_STOP */
-	}
-
-	pkgmgr_ret = pkgmgrinfo_appinfo_usr_filter_foreach_appinfo(handle, _foreach_app_info_callback, info, info->uid);
-	if (pkgmgr_ret != PMINFO_R_OK) {
-		/* LCOV_EXCL_START */
-		ERR("Failed to iterate appinfo[%d]", pkgmgr_ret);
-		err = false;
-		goto out;
-		/* LCOV_EXCL_STOP */
-	}
-
-out:
-	if (handle)
-		pkgmgrinfo_appinfo_filter_destroy(handle);
-
-	return err;
-}
-
 static int _install_and_update_package(const char *package_name, uid_t uid)
 {
 	sqlite3 *db;
 	int err = NOTIFICATION_ERROR_NONE;
 	int pkgmgr_ret;
 	setting_local_info info;
-	pkgmgrinfo_pkginfo_filter_h handle = NULL;
+	pkgmgrinfo_appinfo_filter_h handle = NULL;
 
 	db = notification_db_open();
 	if (!db)
 		return get_last_result();
 
-	pkgmgr_ret = pkgmgrinfo_pkginfo_filter_create(&handle);
+	pkgmgr_ret = pkgmgrinfo_appinfo_filter_create(&handle);
 	if (pkgmgr_ret != PMINFO_R_OK) {
 		/* LCOV_EXCL_START */
-		ERR("Failed to create pkginfo_filter[%d]", pkgmgr_ret);
+		ERR("Failed to create appinfo_filter[%d]", pkgmgr_ret);
 		err = NOTIFICATION_ERROR_FROM_DB;
 		goto out;
 		/* LCOV_EXCL_STOP */
 	}
 
-	pkgmgr_ret = pkgmgrinfo_pkginfo_filter_add_string(handle, PMINFO_PKGINFO_PROP_PACKAGE_PRIVILEGE, NOTIFICATION_PRIVILEGE);
+	pkgmgr_ret = pkgmgrinfo_appinfo_filter_add_string(handle,
+			PMINFO_APPINFO_PROP_PRIVILEGE, NOTIFICATION_PRIVILEGE);
 	if (pkgmgr_ret != PMINFO_R_OK) {
 		/* LCOV_EXCL_START */
-		ERR("Failed to add string to pkginfo_filter[%d]", pkgmgr_ret);
+		ERR("Failed to add string to appinfo_filter[%d]", pkgmgr_ret);
 		err = NOTIFICATION_ERROR_FROM_DB;
 		goto out;
 		/* LCOV_EXCL_STOP */
 	}
 
-	pkgmgr_ret = pkgmgrinfo_pkginfo_filter_add_string(handle, PMINFO_PKGINFO_PROP_PACKAGE_ID, package_name);
+	pkgmgr_ret = pkgmgrinfo_appinfo_filter_add_string(handle,
+			PMINFO_APPINFO_PROP_APP_PACKAGE, package_name);
 	if (pkgmgr_ret != PMINFO_R_OK) {
 		/* LCOV_EXCL_START */
-		ERR("Failed to add string to pkginfo_filter[%d]", pkgmgr_ret);
+		ERR("Failed to add string to appinfo_filter[%d]", pkgmgr_ret);
 		err = NOTIFICATION_ERROR_FROM_DB;
 		goto out;
 		/* LCOV_EXCL_STOP */
@@ -512,10 +462,11 @@ static int _install_and_update_package(const char *package_name, uid_t uid)
 
 	info.db = db;
 	info.uid = uid;
-	pkgmgr_ret = pkgmgrinfo_pkginfo_usr_filter_foreach_pkginfo(handle, _foreach_package_info_callback, &info, uid);
+	pkgmgr_ret = pkgmgrinfo_appinfo_usr_filter_foreach_appinfo(handle,
+			_foreach_app_info_callback, &info, uid);
 	if (pkgmgr_ret != PMINFO_R_OK) {
 		/* LCOV_EXCL_START */
-		ERR("Failed to iterate pkginfo[%d]", pkgmgr_ret);
+		ERR("Failed to iterate appinfo[%d]", pkgmgr_ret);
 		err = NOTIFICATION_ERROR_FROM_DB;
 		goto out;
 		/* LCOV_EXCL_STOP */
@@ -523,7 +474,7 @@ static int _install_and_update_package(const char *package_name, uid_t uid)
 
 out:
 	if (handle)
-		pkgmgrinfo_pkginfo_filter_destroy(handle);
+		pkgmgrinfo_appinfo_filter_destroy(handle);
 
 	if (db)
 		notification_db_close(&db);
@@ -578,7 +529,7 @@ EXPORT_API int notification_setting_refresh_setting_table(uid_t uid)
 	int err = NOTIFICATION_ERROR_NONE;
 	sqlite3 *db = NULL;
 	int pkgmgr_ret;
-	pkgmgrinfo_pkginfo_filter_h filter = NULL;
+	pkgmgrinfo_appinfo_filter_h filter = NULL;
 	setting_local_info info;
 
 	INFO("Refresh setting table [%d]", uid);
@@ -587,19 +538,20 @@ EXPORT_API int notification_setting_refresh_setting_table(uid_t uid)
 	if (!db)
 		return get_last_result();
 
-	pkgmgr_ret = pkgmgrinfo_pkginfo_filter_create(&filter);
+	pkgmgr_ret = pkgmgrinfo_appinfo_filter_create(&filter);
 	if (pkgmgr_ret != PMINFO_R_OK) {
 		/* LCOV_EXCL_START */
-		ERR("Failed to create pkginfo_filter[%d]", pkgmgr_ret);
+		ERR("Failed to create appinfo_filter[%d]", pkgmgr_ret);
 		err = NOTIFICATION_ERROR_FROM_DB;
 		goto out;
 		/* LCOV_EXCL_STOP */
 	}
 
-	pkgmgr_ret = pkgmgrinfo_pkginfo_filter_add_string(filter, PMINFO_PKGINFO_PROP_PACKAGE_PRIVILEGE, NOTIFICATION_PRIVILEGE);
+	pkgmgr_ret = pkgmgrinfo_appinfo_filter_add_string(filter,
+			PMINFO_APPINFO_PROP_PRIVILEGE, NOTIFICATION_PRIVILEGE);
 	if (pkgmgr_ret != PMINFO_R_OK) {
 		/* LCOV_EXCL_START */
-		ERR("Failed to add string to pkginfo_filter[%d]", pkgmgr_ret);
+		ERR("Failed to add string to appinfo_filter[%d]", pkgmgr_ret);
 		err = NOTIFICATION_ERROR_FROM_DB;
 		goto out;
 		/* LCOV_EXCL_STOP */
@@ -607,10 +559,11 @@ EXPORT_API int notification_setting_refresh_setting_table(uid_t uid)
 
 	info.db = db;
 	info.uid = uid;
-	pkgmgr_ret = pkgmgrinfo_pkginfo_usr_filter_foreach_pkginfo(filter, _foreach_package_info_callback, &info, uid);
+	pkgmgr_ret = pkgmgrinfo_appinfo_usr_filter_foreach_appinfo(filter,
+			_foreach_app_info_callback, &info, uid);
 	if (pkgmgr_ret != PMINFO_R_OK) {
 		/* LCOV_EXCL_START */
-		ERR("Failed to foreach pkginfo[%d]", pkgmgr_ret);
+		ERR("Failed to foreach appinfo[%d]", pkgmgr_ret);
 		err = NOTIFICATION_ERROR_FROM_DB;
 		goto out;
 		/* LCOV_EXCL_STOP */
@@ -618,7 +571,7 @@ EXPORT_API int notification_setting_refresh_setting_table(uid_t uid)
 
 out:
 	if (filter)
-		pkgmgrinfo_pkginfo_filter_destroy(filter);
+		pkgmgrinfo_appinfo_filter_destroy(filter);
 
 	if (db)
 		notification_db_close(&db);
