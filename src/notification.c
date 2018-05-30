@@ -1550,7 +1550,7 @@ static notification_h _notification_create(notification_type_e type)
 		err = pkgmgrinfo_appinfo_get_usr_appinfo(noti->caller_app_id,
 					getuid(), &appinfo);
 		if (err != PMINFO_R_OK || appinfo == NULL) {
-			WARN("Failed to get appinfo err[%d]",
+			WARN("Failed to get appinfo err[%d] caller_app_id[%s]",
 					err, noti->caller_app_id);
 			err = 0;
 			goto out;
