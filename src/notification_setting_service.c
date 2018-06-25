@@ -854,6 +854,7 @@ int notification_setting_db_update_app_disabled(const char *app_id, bool value, 
 	sqlite3 *db = NULL;
 	char *query = NULL;
 	int ret = NOTIFICATION_ERROR_NONE;
+	int num_changes = 0;
 
 	if (app_id == NULL)
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
@@ -862,7 +863,7 @@ int notification_setting_db_update_app_disabled(const char *app_id, bool value, 
 	if (!db)
 		return get_last_result();
 
-	query = sqlite3_mprintf("UPDATE %s SET app_disabled= %d "
+	query = sqlite3_mprintf("UPDATE %s SET app_disabled= %d " \
 				"WHERE app_id = %Q AND uid = %d",
 				NOTIFICATION_SETTING_DB_TABLE, value,
 				app_id, uid);
@@ -872,7 +873,9 @@ int notification_setting_db_update_app_disabled(const char *app_id, bool value, 
 		goto out;
 	}
 
-	ret = notification_db_exec(db, query, NULL);
+	ret = notification_db_exec(db, query, &num_changes);
+	if (ret == NOTIFICATION_ERROR_NONE && num_changes <= 0)
+		ret = NOTIFICATION_ERROR_NOT_EXIST_ID;
 
 out:
 	if (query)
@@ -884,3 +887,45 @@ out:
 	return ret;
 }
 /* LCOV_EXCL_STOP */
+
+/* LCOV_EXCL_START */
+EXPORT_API
+int notification_setting_db_update_pkg_disabled(const char *pkg_id, bool value, uid_t uid)
+{
+	sqlite3 *db = NULL;
+	char *query = NULL;
+	int ret = NOTIFICATION_ERROR_NONE;
+	int num_changes = 0;
+
+	if (pkg_id == NULL)
+		return NOTIFICATION_ERROR_INVALID_PARAMETER;
+
+	db = notification_db_open(DBPATH);
+	if (!db)
+		return get_last_result();
+
+	query = sqlite3_mprintf("UPDATE %s SET app_disabled= %d " \
+				"WHERE package_name = %Q AND uid = %d",
+				NOTIFICATION_SETTING_DB_TABLE, value,
+				pkg_id, uid);
+	if (query == NULL) {
+		NOTIFICATION_ERR("Failed to alloc memory"); /* LCOV_EXCL_LINE */
+		ret = NOTIFICATION_ERROR_OUT_OF_MEMORY;
+		goto out;
+	}
+
+	ret = notification_db_exec(db, query, &num_changes);
+	if (ret == NOTIFICATION_ERROR_NONE && num_changes <= 0)
+		ret = NOTIFICATION_ERROR_NOT_EXIST_ID;
+
+out:
+	if (query)
+		sqlite3_free(query);
+
+	if (db)
+		notification_db_close(&db);
+
+	return ret;
+}
+/* LCOV_EXCL_STOP */
+

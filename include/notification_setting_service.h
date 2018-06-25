@@ -45,6 +45,8 @@ int notification_get_dnd_and_allow_to_notify(const char *app_id, int *do_not_dis
 int notification_system_setting_load_dnd_allow_exception(dnd_allow_exception_h *dnd_allow_exception, int *count, uid_t uid);
 int notification_system_setting_update_dnd_allow_exception(int type, int value, uid_t uid);
 int notification_setting_db_update_app_disabled(const char *app_id, bool value, uid_t uid);
+int notification_setting_db_update_pkg_disabled(const char *pkg_id, bool value, uid_t uid);
+
 #ifdef __cplusplus
 }
 #endif
