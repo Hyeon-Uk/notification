@@ -909,7 +909,7 @@ int notification_setting_db_update_pkg_disabled(const char *pkg_id, bool value, 
 				NOTIFICATION_SETTING_DB_TABLE, value,
 				pkg_id, uid);
 	if (query == NULL) {
-		NOTIFICATION_ERR("Failed to alloc memory"); /* LCOV_EXCL_LINE */
+		ERR("Failed to alloc memory"); /* LCOV_EXCL_LINE */
 		ret = NOTIFICATION_ERROR_OUT_OF_MEMORY;
 		goto out;
 	}
