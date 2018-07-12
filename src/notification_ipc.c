@@ -464,28 +464,42 @@ static void _delete_single_notify(GVariant *parameters)
 /* LCOV_EXCL_START */
 static void _delete_multiple_notify(GVariant *parameters)
 {
-	int buf[100] = {0,};
+	int *buf;
 	int idx = 0;
+	int num;
 	notification_op *noti_op;
 	GVariantIter *iter;
 	uid_t uid;
 
-	g_variant_get(parameters, "(a(i)i)", &iter, &uid);
-	while (g_variant_iter_loop(iter, "(i)", &buf[idx])) {
+	g_variant_get(parameters, "(a(i)ii)", &iter, &num, &uid);
+	if (num <= 0) {
+		ERR("Invalid number to delete");
+		return;
+	}
+	DBG("Deleted count[%d]", num);
+
+	buf = (int *)malloc(sizeof(int) * num);
+	if (buf == NULL) {
+		ERR("Failed to alloc");
+		return;
+	}
+
+	while (g_variant_iter_loop(iter, "(i)", &buf[idx]) && idx < num) {
 		DBG("priv id[%d]", buf[idx]);
 		idx++;
 	}
 	g_variant_iter_free(iter);
 
-	DBG("Deleted count[%d]", idx);
 	noti_op = _ipc_create_op(NOTIFICATION_OP_DELETE, idx, buf, idx, NULL);
 	if (noti_op == NULL) {
 		ERR("Failed to create op");
+		free(buf);
 		return;
 	}
 
 	notification_call_changed_cb_for_uid(noti_op, idx, uid);
 	free(noti_op);
+	free(buf);
 }
 /* LCOV_EXCL_STOP */
 
