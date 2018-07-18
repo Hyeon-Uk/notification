@@ -484,7 +484,7 @@ static void _delete_multiple_notify(GVariant *parameters)
 		return;
 	}
 
-	while (g_variant_iter_loop(iter, "(i)", &buf[idx]) && idx < num) {
+	while (idx < num && g_variant_iter_loop(iter, "(i)", &buf[idx])) {
 		DBG("priv id[%d]", buf[idx]);
 		idx++;
 	}
