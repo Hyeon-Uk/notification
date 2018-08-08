@@ -69,7 +69,7 @@ EXPORT_API int notification_ipc_socket_get_read_buf_size(int fd, unsigned int *s
 	return __get_socket_buffer_size(fd, size, SO_RCVBUF);
 }
 
-EXPORT_API int notification_ipc_get_socket_write_buf_size(int fd, unsigned int *size)
+EXPORT_API int notification_ipc_socket_get_write_buf_size(int fd, unsigned int *size)
 {
 	return __get_socket_buffer_size(fd, size, SO_SNDBUF);
 }
