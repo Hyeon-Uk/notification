@@ -29,6 +29,7 @@
 
 static bool is_db_corrupted = false;
 
+/* LCOV_EXCL_START */
 static int __check_integrity_cb(void *pid, int argc, char **argv, char **notUsed)
 {
 	char *check_str = "ok";
@@ -42,7 +43,9 @@ static int __check_integrity_cb(void *pid, int argc, char **argv, char **notUsed
 	INFO("db integrity result : %s" , argv[0]);
 	return 0;
 }
+/* LCOV_EXCL_STOP */
 
+/* LCOV_EXCL_START */
 static int __recover_corrupted_db(sqlite3 *db)
 {
 	int ret = NOTIFICATION_ERROR_NONE;
@@ -76,7 +79,9 @@ out:
 
 	return ret;
 }
+/* LCOV_EXCL_STOP */
 
+/* LCOV_EXCL_START */
 EXPORT_API int notification_db_init()
 {
 	int ret = NOTIFICATION_ERROR_NONE;
@@ -87,20 +92,16 @@ EXPORT_API int notification_db_init()
 	sql_ret = sqlite3_open_v2(DBPATH, &db,
 			SQLITE_OPEN_CREATE | SQLITE_OPEN_READWRITE, NULL);
 	if (sql_ret != SQLITE_OK) {
-		/* LCOV_EXCL_START */
 		ERR("Failed to open db[%d]", ret);
 		ret = NOTIFICATION_ERROR_FROM_DB;
 		goto out;
-		/* LCOV_EXCL_STOP */
 	}
 
 	sql_ret = sqlite3_exec(db, CREATE_NOTIFICATION_TABLE, NULL, NULL, &errmsg);
 	if (sql_ret != SQLITE_OK) {
-		/* LCOV_EXCL_START */
 		ERR("Failed to exec sqlite[%d][%s]", ret, errmsg);
 		ret = NOTIFICATION_ERROR_FROM_DB;
 		goto out;
-		/* LCOV_EXCL_STOP */
 	}
 
 	sql_ret = sqlite3_exec(db, "PRAGMA integrity_check",
@@ -120,6 +121,7 @@ out:
 
 	return ret;
 }
+/* LCOV_EXCL_STOP */
 
 sqlite3 *notification_db_open()
 {

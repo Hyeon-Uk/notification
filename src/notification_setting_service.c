@@ -297,7 +297,7 @@ int noti_system_setting_load_system_setting(notification_system_setting_h *syste
 			NOTIFICATION_SYSTEM_SETTING_DB_TABLE, uid);
 	if (query == NULL) {
 		/* LCOV_EXCL_START */
-		ERR("Failed to alloc query"); /* LCOV_EXCL_LINE */
+		ERR("Failed to alloc query");
 		ret = NOTIFICATION_ERROR_OUT_OF_MEMORY;
 		goto out;
 		/* LCOV_EXCL_STOP */
@@ -306,7 +306,7 @@ int noti_system_setting_load_system_setting(notification_system_setting_h *syste
 	sql_ret = sqlite3_get_table(db, query, &query_result, &row_count, &column_count, NULL);
 	if (sql_ret != SQLITE_OK && sql_ret != -1) {
 		/* LCOV_EXCL_START */
-		ERR("Failed to get db table [%d][%s]", sql_ret, query); /* LCOV_EXCL_LINE */
+		ERR("Failed to get db table [%d][%s]", sql_ret, query);
 		ret = NOTIFICATION_ERROR_FROM_DB;
 		goto out;
 		/* LCOV_EXCL_STOP */
@@ -317,7 +317,7 @@ int noti_system_setting_load_system_setting(notification_system_setting_h *syste
 	result_system_setting = (struct notification_system_setting *)malloc(sizeof(struct notification_system_setting));
 	if (result_system_setting == NULL) {
 		/* LCOV_EXCL_START */
-		ERR("Failed to alloc memory"); /* LCOV_EXCL_LINE */
+		ERR("Failed to alloc memory");
 		ret = NOTIFICATION_ERROR_OUT_OF_MEMORY;
 		goto out;
 		/* LCOV_EXCL_STOP */
@@ -325,7 +325,8 @@ int noti_system_setting_load_system_setting(notification_system_setting_h *syste
 
 	/* no system setting record. allow everyting */
 	if (!row_count) {
-		DBG("No setting found"); /* LCOV_EXCL_LINE */
+		/* LCOV_EXCL_START */
+		DBG("No setting found");
 		result_system_setting->do_not_disturb = 0;
 		result_system_setting->visibility_class = 0;
 		result_system_setting->dnd_schedule_enabled = 0;
@@ -336,6 +337,7 @@ int noti_system_setting_load_system_setting(notification_system_setting_h *syste
 		result_system_setting->dnd_end_min = 0;
 		result_system_setting->lock_screen_content_level = 0;
 		result_system_setting->dnd_allow_exceptions = NULL;
+		/* LCOV_EXCL_STOP */
 	} else {
 		/* LCOV_EXCL_START */
 		col_index = column_count;
@@ -478,11 +480,9 @@ int notification_setting_db_update_do_not_disturb(int do_not_disturb, uid_t uid)
 				NOTIFICATION_SYSTEM_SETTING_DB_TABLE,
 				do_not_disturb, uid);
 	if (query == NULL) {
-		/* LCOV_EXCL_START */
-		ERR("Failed to alloc query"); /* LCOV_EXCL_LINE */
+		ERR("Failed to alloc query");
 		ret = NOTIFICATION_ERROR_OUT_OF_MEMORY;
 		goto out;
-		/* LCOV_EXCL_STOP */
 	}
 
 	ret = notification_db_exec(db, query, NULL);
@@ -498,6 +498,7 @@ out:
 }
 /* LCOV_EXCL_STOP */
 
+/* LCOV_EXCL_START */
 EXPORT_API
 int notification_system_setting_get_dnd_schedule_enabled_uid(uid_t **uids, int *count)
 {
@@ -519,19 +520,15 @@ int notification_system_setting_get_dnd_schedule_enabled_uid(uid_t **uids, int *
 				"WHERE dnd_schedule_enabled = 1",
 				NOTIFICATION_SYSTEM_SETTING_DB_TABLE);
 	if (query == NULL) {
-		/* LCOV_EXCL_START */
 		ret = NOTIFICATION_ERROR_OUT_OF_MEMORY;
 		goto out;
-		/* LCOV_EXCL_STOP */
 	}
 
 	ret = sqlite3_get_table(db, query, &query_result, &row_count, &column_count, NULL);
 	if (ret != SQLITE_OK && ret != -1) {
-		/* LCOV_EXCL_START */
-		ERR("Failed to get DB table [%d][%s]", ret, query);	/* LCOV_EXCL_LINE */
+		ERR("Failed to get DB table [%d][%s]", ret, query);
 		ret = NOTIFICATION_ERROR_FROM_DB;
 		goto out;
-		/* LCOV_EXCL_STOP */
 	}
 
 	if (row_count == 0) {
@@ -541,11 +538,9 @@ int notification_system_setting_get_dnd_schedule_enabled_uid(uid_t **uids, int *
 	}
 
 	if (!(result_uids = (uid_t *)malloc(sizeof(int) * row_count))) {
-		/* LCOV_EXCL_START */
 		ERR("Failed to alloc memory");
 		ret = NOTIFICATION_ERROR_OUT_OF_MEMORY;
 		goto out;
-		/* LCOV_EXCL_STOP */
 	}
 
 	column_index = column_count;
@@ -567,6 +562,7 @@ out:
 
 	return ret;
 }
+/* LCOV_EXCL_STOP */
 
 EXPORT_API
 int notification_get_dnd_and_allow_to_notify(const char *app_id,

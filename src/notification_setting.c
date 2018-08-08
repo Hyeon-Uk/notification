@@ -107,8 +107,10 @@ EXPORT_API int notification_setting_get_package_name(notification_setting_h sett
 	}
 
 	if (setting->package_name == NULL) {
+		/* LCOV_EXCL_START */
 		ERR("setting->package_name is null");
 		return NOTIFICATION_ERROR_NOT_EXIST_ID;
+		/* LCOV_EXCL_STOP */
 	}
 
 	*value = SAFE_STRDUP(setting->package_name);
@@ -124,8 +126,10 @@ EXPORT_API int notification_setting_get_appid(notification_setting_h setting, ch
 	}
 
 	if (setting->app_id == NULL) {
+		/* LCOV_EXCL_START */
 		ERR("setting->app_id is null");
 		return NOTIFICATION_ERROR_NOT_EXIST_ID;
+		/* LCOV_EXCL_STOP */
 	}
 
 	*app_id = SAFE_STRDUP(setting->app_id);
@@ -524,6 +528,7 @@ out:
 	return err;
 }
 
+/* LCOV_EXCL_START */
 EXPORT_API int notification_setting_refresh_setting_table(uid_t uid)
 {
 	int err = NOTIFICATION_ERROR_NONE;
@@ -540,21 +545,17 @@ EXPORT_API int notification_setting_refresh_setting_table(uid_t uid)
 
 	pkgmgr_ret = pkgmgrinfo_appinfo_filter_create(&filter);
 	if (pkgmgr_ret != PMINFO_R_OK) {
-		/* LCOV_EXCL_START */
 		ERR("Failed to create appinfo_filter[%d]", pkgmgr_ret);
 		err = NOTIFICATION_ERROR_FROM_DB;
 		goto out;
-		/* LCOV_EXCL_STOP */
 	}
 
 	pkgmgr_ret = pkgmgrinfo_appinfo_filter_add_string(filter,
 			PMINFO_APPINFO_PROP_PRIVILEGE, NOTIFICATION_PRIVILEGE);
 	if (pkgmgr_ret != PMINFO_R_OK) {
-		/* LCOV_EXCL_START */
 		ERR("Failed to add string to appinfo_filter[%d]", pkgmgr_ret);
 		err = NOTIFICATION_ERROR_FROM_DB;
 		goto out;
-		/* LCOV_EXCL_STOP */
 	}
 
 	info.db = db;
@@ -562,11 +563,9 @@ EXPORT_API int notification_setting_refresh_setting_table(uid_t uid)
 	pkgmgr_ret = pkgmgrinfo_appinfo_usr_filter_foreach_appinfo(filter,
 			_foreach_app_info_callback, &info, uid);
 	if (pkgmgr_ret != PMINFO_R_OK) {
-		/* LCOV_EXCL_START */
 		ERR("Failed to foreach appinfo[%d]", pkgmgr_ret);
 		err = NOTIFICATION_ERROR_FROM_DB;
 		goto out;
-		/* LCOV_EXCL_STOP */
 	}
 
 out:
@@ -578,6 +577,7 @@ out:
 
 	return err;
 }
+/* LCOV_EXCL_STOP */
 
 EXPORT_API int notification_setting_insert_package_for_uid(const char *package_name, uid_t uid)
 {
@@ -924,8 +924,10 @@ EXPORT_API int notification_register_system_setting_dnd_changed_cb_for_uid(dnd_c
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 
 	if (notification_ipc_monitor_init(uid) != NOTIFICATION_ERROR_NONE) {
+		/* LCOV_EXCL_START */
 		ERR("Failed to init monitor");
 		return NOTIFICATION_ERROR_IO_ERROR;
+		/* LCOV_EXCL_STOP */
 	}
 
 	if (_noti_dnd_cb_hash == NULL)
@@ -1009,6 +1011,7 @@ EXPORT_API int notification_unregister_system_setting_dnd_changed_cb(dnd_changed
 	return notification_unregister_system_setting_dnd_changed_cb_for_uid(callback, getuid());
 }
 
+/* LCOV_EXCL_START */
 static bool _is_uid_in_system_setting_table(sqlite3 *db, uid_t uid)
 {
 	sqlite3_stmt *stmt = NULL;
@@ -1019,20 +1022,16 @@ static bool _is_uid_in_system_setting_table(sqlite3 *db, uid_t uid)
 	query = sqlite3_mprintf("SELECT uid FROM %s WHERE uid = %d",
 				NOTIFICATION_SYSTEM_SETTING_DB_TABLE, uid);
 	if (query == NULL) {
-		/* LCOV_EXCL_START */
 		ERR("Failed to alloc query");
 		return NOTIFICATION_ERROR_OUT_OF_MEMORY;
-		/* LCOV_EXCL_STOP */
 	}
 
 	sql_ret = sqlite3_prepare_v2(db, query, -1, &stmt, NULL);
 	if (sql_ret != SQLITE_OK) {
-		/* LCOV_EXCL_START */
 		ERR("sqlite3_prepare_v2 failed [%d][%s]", sql_ret,
 				sqlite3_errmsg(db));
 		err = false;
 		goto out;
-		/* LCOV_EXCL_STOP */
 	}
 
 	sql_ret = sqlite3_step(stmt);
@@ -1057,7 +1056,9 @@ out:
 
 	return err;
 }
+/* LCOV_EXCL_STOP */
 
+/* LCOV_EXCL_START */
 EXPORT_API int notification_system_setting_init_system_setting_table(uid_t uid)
 {
 	sqlite3 *db = NULL;
@@ -1069,7 +1070,7 @@ EXPORT_API int notification_system_setting_init_system_setting_table(uid_t uid)
 
 	db = notification_db_open();
 	if (db == NULL)
-		return get_last_result(); /* LCOV_EXCL_LINE */
+		return get_last_result();
 
 	if (_is_uid_in_system_setting_table(db, uid) == true) {
 		INFO("Setting table is already initialized.");
@@ -1082,11 +1083,9 @@ EXPORT_API int notification_system_setting_init_system_setting_table(uid_t uid)
 					NOTIFICATION_SYSTEM_SETTING_DB_TABLE,
 					uid);
 	if (query_system_setting == NULL) {
-		/* LCOV_EXCL_START */
 		ERR("fail to alloc query");
 		ret = NOTIFICATION_ERROR_OUT_OF_MEMORY;
 		goto out;
-		/* LCOV_EXCL_STOP */
 	}
 
 	ret = notification_db_exec(db, query_system_setting, NULL);
@@ -1099,11 +1098,9 @@ EXPORT_API int notification_system_setting_init_system_setting_table(uid_t uid)
 					NOTIFICATION_DND_ALLOW_EXCEPTION,
 					uid);
 	if (query_dnd_allow_exception == NULL) {
-		/* LCOV_EXCL_START */
 		ERR("Failed to alloc query");
 		ret = NOTIFICATION_ERROR_OUT_OF_MEMORY;
 		goto out;
-		/* LCOV_EXCL_STOP */
 	}
 
 	ret = notification_db_exec(db, query_dnd_allow_exception, NULL);
@@ -1124,3 +1121,4 @@ out:
 
 	return ret;
 }
+/* LCOV_EXCL_STOP */

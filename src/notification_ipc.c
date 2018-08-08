@@ -567,9 +567,11 @@ static void _send_event(GVariant *parameters)
 	g_variant_unref(coupled_body);
 	g_variant_unref(body);
 	if (ret != NOTIFICATION_ERROR_NONE) {
+		/* LCOV_EXCL_START */
 		ERR("Failed to make notification handle from gvariant");
 		notification_free(noti);
 		return;
+		/* LCOV_EXCL_STOP */
 	}
 
 	notification_call_event_handler_cb(noti, event_type);
@@ -740,10 +742,12 @@ static int _send_sync_noti_with_fd(int fd, GVariant *body, GDBusMessage **reply,
 	fd_list = g_unix_fd_list_new();
 	g_unix_fd_list_append(fd_list, fd, &g_err);
 	if (g_err != NULL) {
+		/* LCOV_EXCL_START */
 		ERR("g_unix_fd_list_append [%s]", g_err->message);
 		g_object_unref(fd_list);
 		g_error_free(g_err);
 		return NOTIFICATION_ERROR_IO_ERROR;
+		/* LCOV_EXCL_STOP */
 	}
 
 	msg = __get_new_msg(body, cmd);

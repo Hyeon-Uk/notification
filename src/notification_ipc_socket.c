@@ -86,6 +86,7 @@ EXPORT_API int notification_ipc_socket_write(int fd, const char *buffer, unsigne
 		errno = 0;
 		nb = write(fd, buffer, left);
 		if (nb == -1) {
+			/* LCOV_EXCL_START */
 			if (errno == EINTR || errno == EAGAIN || errno == EWOULDBLOCK) {
 				ERR("continue..");
 				retry_cnt++;
@@ -94,6 +95,7 @@ EXPORT_API int notification_ipc_socket_write(int fd, const char *buffer, unsigne
 			}
 			ERR("error fd [%d] errno [%d]", fd, errno);
 			return NOTIFICATION_ERROR_IO_ERROR;
+			/* LCOV_EXCL_STOP */
 		}
 
 		left -= nb;
@@ -115,15 +117,19 @@ EXPORT_API int notification_ipc_socket_write_string(int fd, const char *buffer, 
 
 	ret = notification_ipc_socket_write(fd, (char *)&string_len, sizeof(string_len));
 	if (ret != NOTIFICATION_ERROR_NONE) {
+		/* LCOV_EXCL_START */
 		ERR("write string_len fail");
 		return ret;
+		/* LCOV_EXCL_STOP */
 	}
 
 	if (string_len > 0) {
 		ret = notification_ipc_socket_write(fd, buffer, string_len);
 		if (ret != NOTIFICATION_ERROR_NONE) {
+			/* LCOV_EXCL_START */
 			ERR("write string fail");
 			return ret;
+			/* LCOV_EXCL_STOP */
 		}
 	}
 

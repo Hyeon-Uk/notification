@@ -26,6 +26,7 @@
 #include <notification_debug.h>
 #include <notification_viewer.h>
 
+/* LCOV_EXCL_START */
 EXPORT_API int notification_get_default_viewer(const char *path, char **default_viewer)
 {
 	char *viewer = NULL;
@@ -36,7 +37,6 @@ EXPORT_API int notification_get_default_viewer(const char *path, char **default_
 		return -1;
 	}
 
-	/* LCOV_EXCL_START */
 	dict = iniparser_load(path);
 	if (!dict) {
 		ERR("can't load file");
@@ -50,8 +50,8 @@ EXPORT_API int notification_get_default_viewer(const char *path, char **default_
 	iniparser_freedict(dict);
 
 	return 0;
-	/* LCOV_EXCL_STOP */
 }
+/* LCOV_EXCL_STOP */
 
 /* LCOV_EXCL_START */
 EXPORT_API int notification_launch_default_viewer(const char *default_viewer,

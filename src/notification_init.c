@@ -40,6 +40,7 @@
 #define _E(fmt, arg...) fprintf(stderr, "[NOTIFICATION_INIT][E][%s,%d] "fmt"\n", \
 		__FUNCTION__, __LINE__, ##arg);
 
+/* LCOV_EXCL_START */
 static int _is_authorized()
 {
 	/* pkg_init db should be called by as root privilege. */
@@ -50,7 +51,9 @@ static int _is_authorized()
 	else
 		return 0;
 }
+/* LCOV_EXCL_STOP */
 
+/* LCOV_EXCL_START */
 int main(int argc, char *argv[])
 {
 	int ret;
@@ -78,3 +81,4 @@ int main(int argc, char *argv[])
 
 	return ret;
 }
+/* LCOV_EXCL_STOP */

@@ -1603,9 +1603,11 @@ EXPORT_API int notification_noti_get_all_count(notification_type_e type, int *co
 
 	db = notification_db_open();
 	if (db == NULL) {
+		/* LCOV_EXCL_START */
 		ret = get_last_result();
 		ERR("Failed to open db [%d]", ret);
 		return ret;
+		/* LCOV_EXCL_STOP */
 	}
 
 	if (type != NOTIFICATION_TYPE_NONE)
@@ -1617,17 +1619,21 @@ EXPORT_API int notification_noti_get_all_count(notification_type_e type, int *co
 				NOTIFICATION_DB_TABLE, uid);
 
 	if (sql_buf == NULL) {
+		/* LCOV_EXCL_START */
 		ret = NOTIFICATION_ERROR_FROM_DB;
 		ERR("OOM - sqlite3_mprintf");
 		goto out;
+		/* LCOV_EXCL_STOP */
 	}
 
 	sql_ret = sqlite3_prepare_v2(db, sql_buf, -1, &stmt, NULL);
 	if (sql_ret != SQLITE_OK) {
+		/* LCOV_EXCL_START */
 		ret = NOTIFICATION_ERROR_FROM_DB;
 		ERR("SQLITE3 Error - sqlite3_prepare_v2 [%d][%s]",
 				sql_ret, sqlite3_errmsg(db));
 		goto out;
+		/* LCOV_EXCL_STOP */
 	}
 
 	sql_ret = sqlite3_step(stmt);
@@ -2054,6 +2060,7 @@ err:
 	return ret;
 }
 
+/* LCOV_EXCL_START */
 EXPORT_API void notification_noti_init_data(void)
 {
 	int ret;
@@ -2081,6 +2088,7 @@ EXPORT_API void notification_noti_init_data(void)
 	sqlite3_free(query);
 	notification_db_close(&db);
 }
+/* LCOV_EXCL_STOP */
 
 EXPORT_API int notification_noti_check_limit(notification_h noti, uid_t uid, GList **list)
 {
