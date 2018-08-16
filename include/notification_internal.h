@@ -58,23 +58,22 @@ int notification_add_deferred_task(
 int notification_del_deferred_task(
 		void (*deferred_task_cb)(void *data));
 
-
 /**
  * @brief This function will be removed.
- * @see notification_unresister_changed_cb()
+ * @see notification_register_detailed_changed_cb()
  */
 int
 notification_resister_changed_cb(
 	void (*changed_cb)(void *data, notification_type_e type),
 	void *user_data);
-
 int
 notification_resister_changed_cb_for_uid(
 	void (*changed_cb)(void *data, notification_type_e type),
 	void *user_data, uid_t uid);
+
 /**
  * @brief This function will be removed.
- * @see notification_resister_changed_cb()
+ * @see notification_unregister_detailed_changed_cb()
  */
 int
 notification_unresister_changed_cb(
@@ -97,7 +96,7 @@ notification_unresister_changed_cb_for_uid(
  * @code
 #include <notification_internal.h>
 ...
- {
+{
 	int noti_err = NOTIFICATION_ERROR_NONE;
 
 	noti_err  = notification_update_progress(NULL, APP_NOTI_PRIV_ID, 0.6);
@@ -125,7 +124,7 @@ int notification_update_progress(notification_h noti,
  * @code
 #include <notification_internal.h>
 ...
- {
+{
 	int noti_err = NOTIFICATION_ERROR_NONE;
 
 	noti_err  = notification_update_size(NULL, APP_NOTI_PRIV_ID, 3000000);
@@ -152,7 +151,7 @@ int notification_update_size(notification_h noti,
  * @code
 #include <notification_internal.h>
 ...
- {
+{
 	int noti_err = NOTIFICATION_ERROR_NONE;
 
 	noti_err  = notification_update_content(NULL, APP_NOTI_PRIV_ID, "updated string");
@@ -317,7 +316,7 @@ int notification_get_all_count_for_uid(notification_type_e type, int *count, uid
  * @code
 #include <notification.h>
 ...
- {
+{
 	int noti_err = NOTIFICATION_ERROR_NONE;
 
 	noti_err  = notification_clear(NOTIFICATION_TYPE_NOTI);
@@ -349,7 +348,6 @@ NOTIFICATION_DEPRECATED_API int notification_is_service_ready(void);
 NOTIFICATION_DEPRECATED_API int notification_op_get_data(notification_op *noti_op,
 						       notification_op_data_type_e type,
 						       void *data);
-
 
 /**
  * @brief This function will be deprecated.
@@ -404,7 +402,7 @@ int notification_set_app_id(notification_h noti, const char *app_id);
  * @code
 #include <notification.h>
 ...
- {
+{
 	int noti_err = NOTIFICATION_ERROR_NONE;
 
 	noti_err  = notification_delete_all_by_type(NULL, NOTIFICATION_TYPE_NOTI);
@@ -648,7 +646,7 @@ NOTIFICATION_DEPRECATED_API int notification_get_execute_option(notification_h n
  * @code
 #include <notification.h>
 ...
- {
+{
 	int noti_err = NOTIFICATION_ERROR_NONE;
 
 	noti_err  = notification_insert(noti, NULL);
@@ -682,7 +680,7 @@ int notification_insert_for_uid(notification_h noti, int *priv_id, uid_t uid);
  * @code
 #include <notification.h>
 ...
- {
+{
 	int noti_err = NOTIFICATION_ERROR_NONE;
 
 	noti_err  = notification_update_async(NULL, result_cb, data);
@@ -762,6 +760,7 @@ int notification_unregister_detailed_changed_cb(
 int notification_unregister_detailed_changed_cb_for_uid(
 		void (*detailed_changed_cb)(void *data, notification_type_e type, notification_op *op_list, int num_op),
 		void *user_data, uid_t uid);
+
 /**
  * @brief Sets the default button to display highlight on the notification.
  * @since_tizen 3.0
@@ -1417,7 +1416,7 @@ int notification_set_extention_data(notification_h noti, const char *key, bundle
 NOTIFICATION_DEPRECATED_API
 int notification_get_extention_data(notification_h noti, const char *key, bundle **value);
 
-/*
+/**
  * @brief Sets the handler for a specific extension event.
  * @details When some extension event occurs on notification, application launched by app_control_send_launch_request with app_control handle.
  * @since_tizen 4.0
@@ -1435,7 +1434,7 @@ int notification_set_extension_event_handler(notification_h noti,
 					notification_event_type_extension_e event,
 					app_control_h event_handler);
 
-/*
+/**
  * @brief Gets the handler for a specific extension event.
  * @details When extension event occurs on notification, application launched by app_control_send_launch_request with app_control handle.
  * @since_tizen 4.0

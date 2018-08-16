@@ -14,20 +14,16 @@
  * limitations under the License.
  */
 
-
 #ifndef __NOTIFICATION_H__
 #define __NOTIFICATION_H__
-
 
 #include <time.h>
 #include <bundle.h>
 #include <app_control.h>
 
-
 #include <notification_error.h>
 #include <notification_type.h>
 #include <notification_status.h>
-
 
 #ifdef __cplusplus
 extern "C" {
@@ -1156,17 +1152,6 @@ int notification_free(notification_h noti);
 
 
 /**
- * @}
- */
-
-
-/**
- * @addtogroup NOTIFICATION_MODULE
- * @{
- */
-
-
-/**
  * @brief Sets the tag of the notification handle.
  * @since_tizen @if WEARABLE 2.3.1 @elseif MOBILE 2.3 @endif
  * @param[in] noti Notification handle
@@ -1385,6 +1370,7 @@ int notification_get_pkgname(notification_h noti, char **pkgname);
  * @endcode
  */
 int notification_add_button(notification_h noti, notification_button_index_e button_index);
+
 
 /**
  * @brief Removes a button on the notification.
