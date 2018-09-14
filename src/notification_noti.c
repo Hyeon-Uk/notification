@@ -63,7 +63,7 @@ static void __notification_noti_populate_from_stmt(sqlite3_stmt *stmt, notificat
 	int i = 0;
 
 	if (stmt == NULL || noti == NULL)
-		return ;
+		return;
 
 	noti->type = sqlite3_column_int(stmt, col++);
 	noti->layout = sqlite3_column_int(stmt, col++);
@@ -245,7 +245,7 @@ static int _create_insertion_query(sqlite3 *db, notification_h noti, sqlite3_stm
 	char *b_service_responding = NULL;
 	char *b_service_single_launch = NULL;
 	char *b_service_multi_launch = NULL;
-	char *b_event_handler[NOTIFICATION_EVENT_TYPE_MAX+1] = { NULL , };
+	char *b_event_handler[NOTIFICATION_EVENT_TYPE_MAX+1] = { NULL, };
 	int flag_simmode = 0;
 	int idx = 1;
 	int i = 0;
@@ -427,7 +427,7 @@ static int _create_update_query(sqlite3 *db, notification_h noti, sqlite3_stmt *
 	char *b_service_responding = NULL;
 	char *b_service_single_launch = NULL;
 	char *b_service_multi_launch = NULL;
-	char *b_event_handler[NOTIFICATION_EVENT_TYPE_MAX+1] = { NULL , };
+	char *b_event_handler[NOTIFICATION_EVENT_TYPE_MAX+1] = { NULL, };
 	int flag_simmode = 0;
 	int idx = 1;
 	int i = 0;

@@ -38,10 +38,10 @@
 #undef _E
 #endif
 #define _E(fmt, arg...) fprintf(stderr, "[NOTIFICATION_INIT][E][%s,%d] "fmt"\n", \
-		__FUNCTION__, __LINE__, ##arg);
+		__func__, __LINE__, ##arg)
 
 /* LCOV_EXCL_START */
-static int _is_authorized()
+static int _is_authorized(void)
 {
 	/* pkg_init db should be called by as root privilege. */
 	uid_t uid = getuid();

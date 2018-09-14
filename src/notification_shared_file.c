@@ -46,7 +46,7 @@ do { \
 		free_fun; \
 		return ret_value; \
 	} \
-} while (0);
+} while (0)
 
 GList *__uid_list;
 typedef struct uid_info {
@@ -258,7 +258,7 @@ static void __free_file_info(gpointer data)
 /* LCOV_EXCL_START */
 static void __free_req_info(gpointer data)
 {
-	sharing_req_data_s * info = (sharing_req_data_s *)data;
+	sharing_req_data_s *info = (sharing_req_data_s *)data;
 
 	if (info == NULL)
 		return;
@@ -339,6 +339,7 @@ static gint __comp_dst_path(gconstpointer a, gconstpointer b)
 static sharing_file_info_s *__dup_file_info(sharing_file_info_s *src)
 {
 	sharing_file_info_s *file_info;
+
 	file_info = (sharing_file_info_s *)calloc(1, sizeof(sharing_file_info_s));
 	__OOM_CHECK(file_info, NULL, DUMMY_PARAM);
 

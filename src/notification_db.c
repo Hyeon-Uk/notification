@@ -35,12 +35,12 @@ static int __check_integrity_cb(void *pid, int argc, char **argv, char **notUsed
 	char *check_str = "ok";
 
 	if (strncmp(argv[0], check_str, strlen(check_str))) {
-		ERR("db integrity result : %s" , argv[0]);
+		ERR("db integrity result : %s", argv[0]);
 		is_db_corrupted = true;
 		return -1;
 	}
 
-	INFO("db integrity result : %s" , argv[0]);
+	INFO("db integrity result : %s", argv[0]);
 	return 0;
 }
 /* LCOV_EXCL_STOP */
@@ -58,7 +58,7 @@ static int __recover_corrupted_db(sqlite3 *db)
 	unlink(DBPATH);
 
 	sql_ret = sqlite3_open_v2(DBPATH, &db,
-				SQLITE_OPEN_CREATE |SQLITE_OPEN_READWRITE,
+				SQLITE_OPEN_CREATE | SQLITE_OPEN_READWRITE,
 				NULL);
 	if (sql_ret != SQLITE_OK) {
 		ERR("Failed to open db[%d]", sql_ret);
@@ -82,7 +82,7 @@ out:
 /* LCOV_EXCL_STOP */
 
 /* LCOV_EXCL_START */
-EXPORT_API int notification_db_init()
+EXPORT_API int notification_db_init(void)
 {
 	int ret = NOTIFICATION_ERROR_NONE;
 	int sql_ret;
@@ -206,7 +206,7 @@ int notification_db_exec(sqlite3 *db, const char *query, int *num_changes)
 	return ret;
 }
 
-char *notification_db_column_text(sqlite3_stmt * stmt, int col)
+char *notification_db_column_text(sqlite3_stmt *stmt, int col)
 {
 	const unsigned char *col_text = NULL;
 
@@ -217,7 +217,7 @@ char *notification_db_column_text(sqlite3_stmt * stmt, int col)
 	return strdup((char *)col_text);
 }
 
-bundle *notification_db_column_bundle(sqlite3_stmt * stmt, int col)
+bundle *notification_db_column_bundle(sqlite3_stmt *stmt, int col)
 {
 	const unsigned char *col_bundle = NULL;
 

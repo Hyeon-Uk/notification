@@ -299,7 +299,8 @@ EXPORT_API int notification_setting_free_notification(notification_setting_h set
 	return NOTIFICATION_ERROR_NONE;
 }
 
-static bool _is_package_in_setting_table(sqlite3 *db, const char *package_name, const char* app_id, uid_t uid)
+static bool _is_package_in_setting_table(sqlite3 *db, const char *package_name,
+			const char *app_id, uid_t uid)
 {
 	sqlite3_stmt *stmt = NULL;
 	char *query = NULL;
@@ -952,9 +953,9 @@ EXPORT_API int notification_register_system_setting_dnd_changed_cb_for_uid(dnd_c
 			ERR("Already existing callback");
 			free(dnd_data);
 			return NOTIFICATION_ERROR_INVALID_PARAMETER;
-		} else {
-			noti_dnd_list = g_list_append(noti_dnd_list, dnd_data);
 		}
+
+		noti_dnd_list = g_list_append(noti_dnd_list, dnd_data);
 	}
 
 	return NOTIFICATION_ERROR_NONE;

@@ -145,7 +145,8 @@ int noti_setting_service_get_setting_by_app_id(const char *app_id, notification_
 
 	row_count = 1;
 
-	if (!(result_setting_array = (struct notification_setting *)malloc(sizeof(struct notification_setting) * row_count))) {
+	result_setting_array = (struct notification_setting *)malloc(sizeof(struct notification_setting) * row_count);
+	if (result_setting_array == NULL) {
 		/* LCOV_EXCL_START */
 		ERR("Failed to alloc memory");
 		ret = NOTIFICATION_ERROR_OUT_OF_MEMORY;
@@ -232,7 +233,8 @@ int noti_setting_get_setting_array(notification_setting_h *setting_array, int *c
 
 	DBG("row_count[%d] column_count[%d]", row_count, column_count);
 
-	if (!(result_setting_array = (struct notification_setting *)malloc(sizeof(struct notification_setting) * row_count))) {
+	result_setting_array = (struct notification_setting *)malloc(sizeof(struct notification_setting) * row_count);
+	if (result_setting_array == NULL) {
 		/* LCOV_EXCL_START */
 		ERR("Failed to alloc memory"); /* LCOV_EXCL_LINE */
 		ret = NOTIFICATION_ERROR_OUT_OF_MEMORY;
@@ -537,7 +539,8 @@ int notification_system_setting_get_dnd_schedule_enabled_uid(uid_t **uids, int *
 		goto out;
 	}
 
-	if (!(result_uids = (uid_t *)malloc(sizeof(int) * row_count))) {
+	result_uids = (uid_t *)malloc(sizeof(int) * row_count);
+	if (result_uids == NULL) {
 		ERR("Failed to alloc memory");
 		ret = NOTIFICATION_ERROR_OUT_OF_MEMORY;
 		goto out;

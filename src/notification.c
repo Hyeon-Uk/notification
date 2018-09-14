@@ -461,8 +461,8 @@ EXPORT_API int notification_get_text(notification_h noti,
 	if (type <= NOTIFICATION_TEXT_TYPE_NONE
 	    || type > NOTIFICATION_TEXT_TYPE_MAX)
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
-	else
-		text_type = type;
+
+	text_type = type;
 
 	if (noti->b_key != NULL) {
 		b = noti->b_key;
@@ -1104,7 +1104,7 @@ EXPORT_API int notification_get_led_time_period(notification_h noti,
 }
 
 EXPORT_API int notification_set_launch_option(notification_h noti,
-								notification_launch_option_type type, void *option)
+			notification_launch_option_type type, void *option)
 {
 	int err = NOTIFICATION_ERROR_NONE;
 	int ret = 0;
@@ -1116,7 +1116,8 @@ EXPORT_API int notification_set_launch_option(notification_h noti,
 		goto out;
 	}
 
-	if ((ret = app_control_export_as_bundle(app_control, &b)) != APP_CONTROL_ERROR_NONE) {
+	ret = app_control_export_as_bundle(app_control, &b);
+	if (ret != APP_CONTROL_ERROR_NONE) {
 		ERR("Failed to convert appcontrol to bundle[%d]", ret);
 		err = NOTIFICATION_ERROR_INVALID_PARAMETER;
 		goto out;
@@ -1196,7 +1197,8 @@ EXPORT_API int notification_set_event_handler(notification_h noti, notification_
 		goto out;
 	}
 
-	if ((err = app_control_export_as_bundle(event_handler, &app_control_bundle)) != APP_CONTROL_ERROR_NONE) {
+	err = app_control_export_as_bundle(event_handler, &app_control_bundle);
+	if (err != APP_CONTROL_ERROR_NONE) {
 		ERR("Failed to export app_control to bundle[%d]", err);
 		goto out;
 	}
@@ -1740,6 +1742,7 @@ EXPORT_API int notification_clone(notification_h noti, notification_h *clone)
 EXPORT_API int notification_free(notification_h noti)
 {
 	int i = 0;
+
 	if (noti == NULL)
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 

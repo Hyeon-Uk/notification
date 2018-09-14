@@ -54,8 +54,8 @@ typedef enum __notification_cb_type {
 
 struct _notification_cb_info {
 	_notification_cb_type_e cb_type;
-	void (*changed_cb) (void *data, notification_type_e type);
-	void (*detailed_changed_cb) (void *data, notification_type_e type, notification_op *op_list, int num_op);
+	void (*changed_cb)(void *data, notification_type_e type);
+	void (*detailed_changed_cb)(void *data, notification_type_e type, notification_op *op_list, int num_op);
 	void *data;
 };
 
@@ -89,6 +89,7 @@ void notification_reset_event_handler_list(void)
 static void __free_changed_cb_info(gpointer data)
 {
 	notification_cb_info_s *noti_cb_info = (notification_cb_info_s *)data;
+
 	if (noti_cb_info)
 		free(noti_cb_info);
 }
@@ -118,9 +119,9 @@ void notification_call_changed_cb_for_uid(notification_op *op_list, int op_num, 
 	for (; noti_cb_list != NULL; noti_cb_list = noti_cb_list->next) {
 		noti_cb_info = noti_cb_list->data;
 
-		if (noti_cb_info->cb_type == NOTIFICATION_CB_NORMAL && noti_cb_info->changed_cb) {
+		if (noti_cb_info->cb_type == NOTIFICATION_CB_NORMAL && noti_cb_info->changed_cb)
 			noti_cb_info->changed_cb(noti_cb_info->data, type);
-		}
+
 		if (noti_cb_info->cb_type == NOTIFICATION_CB_DETAILED && noti_cb_info->detailed_changed_cb) {
 			noti_cb_info->detailed_changed_cb(noti_cb_info->data,
 					type, op_list, op_num);
@@ -336,8 +337,8 @@ EXPORT_API int notification_update_progress(notification_h noti,
 	if (priv_id <= NOTIFICATION_PRIV_ID_NONE) {
 		if (noti == NULL)
 			return NOTIFICATION_ERROR_INVALID_PARAMETER;
-		else
-			input_priv_id = noti->priv_id;
+
+		input_priv_id = noti->priv_id;
 	} else {
 		input_priv_id = priv_id;
 	}
@@ -375,8 +376,8 @@ EXPORT_API int notification_update_size(notification_h noti,
 	if (priv_id <= NOTIFICATION_PRIV_ID_NONE) {
 		if (noti == NULL)
 			return NOTIFICATION_ERROR_INVALID_PARAMETER;
-		else
-			input_priv_id = noti->priv_id;
+
+		input_priv_id = noti->priv_id;
 	} else {
 		input_priv_id = priv_id;
 	}
@@ -411,8 +412,8 @@ EXPORT_API int notification_update_content(notification_h noti,
 	if (priv_id <= NOTIFICATION_PRIV_ID_NONE) {
 		if (noti == NULL)
 			return NOTIFICATION_ERROR_INVALID_PARAMETER;
-		else
-			input_priv_id = noti->priv_id;
+
+		input_priv_id = noti->priv_id;
 	} else {
 		input_priv_id = priv_id;
 	}
@@ -800,7 +801,6 @@ EXPORT_API int notification_op_get_data(notification_op *noti_op, notification_o
 		break;
 	default:
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
-		break;
 	}
 
 	return NOTIFICATION_ERROR_NONE;

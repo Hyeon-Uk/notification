@@ -60,7 +60,7 @@ struct _task_list {
 	task_list *prev;
 	task_list *next;
 
-	void (*task_cb) (void *data);
+	void (*task_cb)(void *data);
 	void *data;
 };
 
@@ -104,7 +104,7 @@ static void __provider_vanished_cb(GDBusConnection *connection,
 }
 /* LCOV_EXCL_STOP */
 
-static int _dbus_init()
+static int _dbus_init(void)
 {
 	GError *error = NULL;
 
@@ -636,7 +636,7 @@ static int _dbus_event_handler_signal_init(void)
 	return ret;
 }
 
-static int _dbus_signal_init()
+static int _dbus_signal_init(void)
 {
 	int id;
 	int ret = NOTIFICATION_ERROR_NONE;
@@ -2356,6 +2356,7 @@ EXPORT_API int notification_ipc_make_noti_from_gvariant(notification_h noti,
 EXPORT_API GVariant *notification_ipc_make_gvariant_from_system_setting(struct notification_system_setting *noti_setting)
 {
 	GVariant *body = NULL;
+
 	body = g_variant_new("(iiiiiiiii)",
 			noti_setting->do_not_disturb,
 			noti_setting->visibility_class,
