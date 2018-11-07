@@ -1146,7 +1146,7 @@ typedef void (*event_handler_cb)(notification_h noti, int event_type, void *user
  * @code
 #include <notification.h>
 
-static void event_callback(notification noti, int event_type, void *userdata)
+static void event_callback(notification_h noti, int event_type, void *userdata)
 {
 	...
 }
