@@ -2117,3 +2117,22 @@ EXPORT_API int notification_set_indirect_request(notification_h noti,
 
 	return NOTIFICATION_ERROR_NONE;
 }
+
+
+int notification_delete_all_by_viewer_for_uid(int viewer, uid_t uid)
+{
+	int ret;
+
+	if (viewer < NOTIFICATION_DISPLAY_APP_NOTIFICATION_TRAY)
+		return NOTIFICATION_ERROR_INVALID_PARAMETER;
+
+	ret = notification_ipc_request_delete_multiple_by_viewer(viewer, uid);
+
+	return ret;
+}
+
+EXPORT_API int notification_delete_all_by_viewer(int viewer)
+{
+	return notification_delete_all_by_viewer_for_uid(viewer, getuid());
+}
+

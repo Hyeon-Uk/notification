@@ -1520,6 +1520,36 @@ int notification_set_indirect_request(notification_h noti, pid_t pid,
 		uid_t uid);
 
 /**
+ * @internal
+ * @brief Notification viewer can delete all notifications displayed in the viewer.
+ * @since_tizen 5.5
+ * @privlevel public
+ * @privilege %http://tizen.org/privilege/notification
+ * @param[in] viewer Combination value of display list
+ * @return NOTIFICATION_ERROR_NONE on success, other value on failure
+ * @retval NOTIFICATION_ERROR_NONE Success
+ * @retval NOTIFICATION_ERROR_INVALID_PARAMETER Invalid input value
+ * @retval NOTIFICATION_ERROR_IO_ERROR I/O error
+ * @retval NOTIFICATION_ERROR_OUT_OF_MEMORY Out of memory
+ * @retval NOTIFICATION_ERROR_PERMISSION_DENIED The application does not have the privilege to call this method
+ * @retval NOTIFICATION_ERROR_FROM_DB Error from DB query
+ * @retval NOTIFICATION_ERROR_SERVICE_NOT_READY No response from notification service
+ * @par Sample code:
+ * @code
+#include <notification.h>
+...
+{
+	noti_err = notification_delete_all_by_viewer(NOTIFICATION_DISPLAY_APP_NOTIFICATION_TRAY);
+	if (noti_err != NOTIFICATION_ERROR_NONE) {
+		return;
+	}
+}
+ * @endcode
+ */
+int notification_delete_all_by_viewer(int viewer);
+int notification_delete_all_by_viewer_for_uid(int viewer, uid_t uid);
+
+/**
  * @}
  */
 #ifdef __cplusplus

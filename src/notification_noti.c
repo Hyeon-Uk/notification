@@ -1450,6 +1450,78 @@ err:
 	return ret;
 }
 
+EXPORT_API int notification_noti_delete_all_by_viewer(int viewer,
+			int *deleted_num, GList **deleted_list, uid_t uid)
+{
+	sqlite3 *db = NULL;
+	sqlite3_stmt *stmt = NULL;
+	char *query = NULL;
+	int cnt = 0;
+	int priv_id;
+	int ret;
+
+	db = notification_db_open();
+	if (!db)
+		return get_last_result();
+
+	if (deleted_num != NULL)
+		*deleted_num = 0;
+
+	query = sqlite3_mprintf("SELECT priv_id FROM noti_list "
+				"WHERE (display_applist & %d) = %d "
+				"AND uid = %d", viewer, viewer, uid);
+	if (query == NULL) {
+		/* LCOV_EXCL_START */
+		ret = NOTIFICATION_ERROR_OUT_OF_MEMORY;
+		goto err;
+		/* LCOV_EXCL_STOP */
+	}
+
+	ret = sqlite3_prepare_v2(db, query, strlen(query), &stmt, NULL);
+	if (ret != SQLITE_OK) {
+		/* LCOV_EXCL_START */
+		ERR("Failed to sqlite3_prepare [%d][%s]", ret,
+						sqlite3_errmsg(db));
+		ret = NOTIFICATION_ERROR_FROM_DB;
+		goto err;
+		/* LCOV_EXCL_STOP */
+	}
+
+	while (sqlite3_step(stmt) == SQLITE_ROW) {
+		priv_id = sqlite3_column_int(stmt, 0);
+
+		query = sqlite3_mprintf("DELETE FROM noti_list "
+			"WHERE priv_id = %d", priv_id);
+
+		ret = notification_db_exec(db, query, NULL);
+		if (ret != NOTIFICATION_ERROR_NONE){
+			goto err;
+		}
+
+		if (deleted_list != NULL) {
+			*deleted_list = g_list_append(*deleted_list,
+						GINT_TO_POINTER(priv_id));
+		}
+
+		cnt++;
+	}
+
+	if (deleted_num != NULL)
+		*deleted_num = cnt;
+
+err:
+	if (stmt)
+		sqlite3_finalize(stmt);
+
+	if (query)
+		sqlite3_free(query);
+
+	if (db)
+		notification_db_close(&db);
+
+	return ret;
+}
+
 /* todo refactoring */
 /* LCOV_EXCL_START */
 EXPORT_API int notification_noti_get_count(notification_type_e type,

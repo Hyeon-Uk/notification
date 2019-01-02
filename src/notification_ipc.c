@@ -503,6 +503,46 @@ static void _delete_multiple_notify(GVariant *parameters)
 }
 /* LCOV_EXCL_STOP */
 
+static void _delete_multiple_by_viewer_notify(GVariant *parameters)
+{
+	int *buf;
+	int idx = 0;
+	int num;
+	notification_op *noti_op;
+	GVariantIter *iter;
+	uid_t uid;
+
+	g_variant_get(parameters, "(a(i)ii)", &iter, &num, &uid);
+	if (num <= 0) {
+		ERR("Invalid number to delete");
+		return;
+	}
+	DBG("Deleted count[%d]", num);
+
+	buf = (int *)malloc(sizeof(int) * num);
+	if (buf == NULL) {
+		ERR("Failed to alloc");
+		return;
+	}
+
+	while (idx < num && g_variant_iter_loop(iter, "(i)", &buf[idx])) {
+		DBG("priv id[%d]", buf[idx]);
+		idx++;
+	}
+	g_variant_iter_free(iter);
+
+	noti_op = _ipc_create_op(NOTIFICATION_OP_DELETE, idx, buf, idx, NULL);
+	if (noti_op == NULL) {
+		ERR("Failed to create op");
+		free(buf);
+		return;
+	}
+
+	notification_call_changed_cb_for_uid(noti_op, idx, uid);
+	free(noti_op);
+	free(buf);
+}
+
 /* LCOV_EXCL_START */
 static void _change_dnd_notify(GVariant *parameters)
 {
@@ -537,6 +577,8 @@ static void _handle_noti_notify(GDBusConnection *connection,
 		_delete_single_notify(parameters);
 	else if (g_strcmp0(signal_name, "delete_multiple_notify") == 0)
 		_delete_multiple_notify(parameters);
+	else if (g_strcmp0(signal_name, "delete_multiple_by_viewer_notify") == 0)
+		_delete_multiple_by_viewer_notify(parameters);
 	else if (g_strcmp0(signal_name, "refresh_noti_notify") == 0)
 		_refresh_noti_notify(parameters);
 	else if (g_strcmp0(signal_name, "change_dnd_notify") == 0)
@@ -1104,6 +1146,36 @@ int notification_ipc_request_delete_multiple(notification_type_e type, char *app
 	body = g_variant_new("(sii)", app_id, type, uid);
 	result = _send_sync_noti(body, &reply, "del_noti_multiple");
 
+	if (result == NOTIFICATION_ERROR_NONE) {
+		reply_body = g_dbus_message_get_body(reply);
+		g_variant_get(reply_body, "(i)", &num_deleted);
+		DBG("Deleted count[%d]", num_deleted);
+	}
+
+	if (reply)
+		g_object_unref(reply);
+
+	DBG("result[%d]", result);
+	return result;
+}
+
+int notification_ipc_request_delete_multiple_by_viewer(int viewer, uid_t uid)
+{
+	int result;
+	int num_deleted;
+	GVariant *body;
+	GVariant *reply_body;
+	GDBusMessage *reply = NULL;
+
+	result = _dbus_init();
+	if (result != NOTIFICATION_ERROR_NONE) {
+		ERR("Failed to init dbus connection[%d]", result);
+		return result;
+	}
+
+	body = g_variant_new("(ii)", viewer, uid);
+
+	result = _send_sync_noti(body, &reply, "del_noti_multiple_by_viewer");
 	if (result == NOTIFICATION_ERROR_NONE) {
 		reply_body = g_dbus_message_get_body(reply);
 		g_variant_get(reply_body, "(i)", &num_deleted);

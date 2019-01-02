@@ -61,6 +61,7 @@ int notification_ipc_request_update_async(notification_h noti,
 int notification_ipc_request_refresh(uid_t uid);
 int notification_ipc_request_delete_multiple(notification_type_e type,
 		char *app_id, uid_t uid);
+int notification_ipc_request_delete_multiple_by_viewer(int viewer, uid_t uid);
 int notification_ipc_request_delete_single(notification_type_e type,
 		char *app_id, int priv_id, uid_t uid);
 int notification_ipc_update_setting(notification_setting_h setting, uid_t uid);

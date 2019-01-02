@@ -47,6 +47,9 @@ int notification_noti_delete_by_priv_id(const char *app_id, int priv_id);
 int notification_noti_delete_by_priv_id_get_changes(const char *app_id, int priv_id,
 						    int *num_changes, uid_t uid);
 
+int notification_noti_delete_all_by_viewer(int viewer, int *deleted_num,
+					GList **deleted_list, uid_t uid);
+
 int notification_noti_get_count(notification_type_e type,
 		const char *app_id,
 		int group_id, int priv_id,
