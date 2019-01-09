@@ -62,12 +62,10 @@ int notification_del_deferred_task(
  * @brief This function will be removed.
  * @see notification_register_detailed_changed_cb()
  */
-int
-notification_resister_changed_cb(
+int notification_resister_changed_cb(
 	void (*changed_cb)(void *data, notification_type_e type),
 	void *user_data);
-int
-notification_resister_changed_cb_for_uid(
+int notification_resister_changed_cb_for_uid(
 	void (*changed_cb)(void *data, notification_type_e type),
 	void *user_data, uid_t uid);
 
@@ -75,11 +73,9 @@ notification_resister_changed_cb_for_uid(
  * @brief This function will be removed.
  * @see notification_unregister_detailed_changed_cb()
  */
-int
-notification_unresister_changed_cb(
+int notification_unresister_changed_cb(
 	void (*changed_cb)(void *data, notification_type_e type));
-int
-notification_unresister_changed_cb_for_uid(
+int notification_unresister_changed_cb_for_uid(
 	void (*changed_cb)(void *data, notification_type_e type), uid_t uid);
 
 /**
@@ -89,9 +85,9 @@ notification_unresister_changed_cb_for_uid(
  * @param[in] noti Notification handle or NULL if priv_id is valid
  * @param[in] priv_id Private ID
  * @param[in] progress Percentage value of progressive data
- * @return NOTIFICATION_ERROR_NONE on success, other value on failure
- * @retval NOTIFICATION_ERROR_NONE Success
- * @retval NOTIFICATION_ERROR_INVALID_PARAMETER Invalid input value
+ * @return #NOTIFICATION_ERROR_NONE on success, other value on failure
+ * @retval #NOTIFICATION_ERROR_NONE Success
+ * @retval #NOTIFICATION_ERROR_INVALID_PARAMETER Invalid input value
  * @par Sample code:
  * @code
 #include <notification_internal.h>
@@ -106,9 +102,7 @@ notification_unresister_changed_cb_for_uid(
 }
  * @endcode
  */
-int notification_update_progress(notification_h noti,
-						  int priv_id,
-						  double progress);
+int notification_update_progress(notification_h noti, int priv_id, double progress);
 
 /**
  * @brief Updates the size of inserted notification data. This only works for the ongoing notification (NOTIFICATION_TYPE_ONGOING).
@@ -117,9 +111,9 @@ int notification_update_progress(notification_h noti,
  * @param[in] noti Notification handle or NULL if priv_id is valid
  * @param[in] priv_id Private ID
  * @param[in] size Bytes of progressive data
- * @return NOTIFICATION_ERROR_NONE if success, other value if failure
- * @retval NOTIFICATION_ERROR_NONE Success
- * @retval NOTIFICATION_ERROR_INVALID_PARAMETER Invalid input value
+ * @return #NOTIFICATION_ERROR_NONE if success, other value if failure
+ * @retval #NOTIFICATION_ERROR_NONE Success
+ * @retval #NOTIFICATION_ERROR_INVALID_PARAMETER Invalid input value
  * @par Sample code:
  * @code
 #include <notification_internal.h>
@@ -134,8 +128,7 @@ int notification_update_progress(notification_h noti,
 }
  * @endcode
  */
-int notification_update_size(notification_h noti,
-					      int priv_id, double size);
+int notification_update_size(notification_h noti, int priv_id, double size);
 
 /**
  * @brief Updates the content of the inserted notification data. This is only for the ongoing notification (NOTIFICATION_TYPE_ONGOING).
@@ -144,9 +137,9 @@ int notification_update_size(notification_h noti,
  * @param[in] noti Notification handle or NULL if priv_id is valid
  * @param[in] priv_id Private ID
  * @param[in] content Text to update
- * @return NOTIFICATION_ERROR_NONE on success, other value on failure
- * @retval NOTIFICATION_ERROR_NONE Success
- * @retval NOTIFICATION_ERROR_INVALID_PARAMETER Invalid input value
+ * @return #NOTIFICATION_ERROR_NONE on success, other value on failure
+ * @retval #NOTIFICATION_ERROR_NONE Success
+ * @retval #NOTIFICATION_ERROR_INVALID_PARAMETER Invalid input value
  * @par Sample code:
  * @code
 #include <notification_internal.h>
@@ -161,131 +154,95 @@ int notification_update_size(notification_h noti,
 }
  * @endcode
  */
-int notification_update_content(notification_h noti,
-							 int priv_id,
-							 const char *content);
+int notification_update_content(notification_h noti, int priv_id, const char *content);
 
 /**
  * @brief This function will be deprecated.
  * @see notification_set_image()
- *
  */
-NOTIFICATION_DEPRECATED_API int notification_set_icon(notification_h noti,
-					   const char *icon_path);
+int notification_set_icon(notification_h noti, const char *icon_path) NOTIFICATION_DEPRECATED_API;
 
 /**
  * @brief This function will be deprecated.
  * @see notification_get_image()
- *
  */
-NOTIFICATION_DEPRECATED_API int notification_get_icon(notification_h noti,
-					   char **icon_path);
+int notification_get_icon(notification_h noti, char **icon_path) NOTIFICATION_DEPRECATED_API;
 
 /**
  * @brief This function will be deprecated.
  * @see notification_set_text()
- *
  */
-NOTIFICATION_DEPRECATED_API int notification_set_title(notification_h noti,
-					    const char *title,
-					    const char *loc_title);
+int notification_set_title(notification_h noti, const char *title, const char *loc_title) NOTIFICATION_DEPRECATED_API;
 
 /**
  * @brief This function will be deprecated.
  * @see notification_get_text()
- *
  */
-NOTIFICATION_DEPRECATED_API int notification_get_title(notification_h noti,
-					    char **title,
-					    char **loc_title);
+int notification_get_title(notification_h noti, char **title, char **loc_title) NOTIFICATION_DEPRECATED_API;
 
 /**
  * @brief This function will be deprecated.
  * @see notification_set_text()
- *
  */
-NOTIFICATION_DEPRECATED_API int notification_set_content(notification_h noti,
-					      const char *content,
-					      const char *loc_content);
+int notification_set_content(notification_h noti, const char *content, const char *loc_content) NOTIFICATION_DEPRECATED_API;
 
 /**
  * @brief This function will be deprecated.
  * @see notification_get_text()
- *
  */
-NOTIFICATION_DEPRECATED_API int notification_get_content(notification_h noti,
-					      char **content,
-					      char **loc_content);
+int notification_get_content(notification_h noti, char **content, char **loc_content) NOTIFICATION_DEPRECATED_API;
 
 /**
  * @brief This function will be removed.
  * @see notification_set_execute_option()
- *
  */
-NOTIFICATION_DEPRECATED_API int notification_set_application(notification_h noti, const char *app_id);	/* Do not use this */
+int notification_set_application(notification_h noti, const char *app_id) NOTIFICATION_DEPRECATED_API;
 
 /**
  * @brief This function will be removed.
  * @see notification_get_execute_option()
- *
  */
-NOTIFICATION_DEPRECATED_API int notification_get_application(notification_h noti, char **app_id);	/* Do not use this */
+int notification_get_application(notification_h noti, char **app_id) NOTIFICATION_DEPRECATED_API;
 
 /**
  * @brief This function will be deprecated.
  * @see notification_set_execute_option()
- *
  */
-NOTIFICATION_DEPRECATED_API int notification_set_args(notification_h noti, bundle *args, bundle *group_args);	/* Do not use this */
+int notification_set_args(notification_h noti, bundle *args, bundle *group_args) NOTIFICATION_DEPRECATED_API;
 
 /**
  * @brief This function will be deprecated.
  * @see notification_get_execute_option()
- *
  */
-NOTIFICATION_DEPRECATED_API int notification_get_args(notification_h noti, bundle **args, bundle **group_args);	/* Do not use this */
+int notification_get_args(notification_h noti, bundle **args, bundle **group_args) NOTIFICATION_DEPRECATED_API;
 
 /**
  * @brief This function is deprecated.
  * @see notification_get_grouping_list()
- *
  */
-NOTIFICATION_DEPRECATED_API int notification_get_grouping_list(notification_type_e type,
-						    int count,
-						    notification_list_h *list);
+int notification_get_grouping_list(notification_type_e type, int count, notification_list_h *list) NOTIFICATION_DEPRECATED_API;
 
 /**
  * @brief This function will be deprecated.
  * @see notification_delete_by_priv_id()
- *
  */
-NOTIFICATION_DEPRECATED_API int notification_delete_group_by_group_id(const char *app_id,
-							   notification_type_e type,
-							   int group_id);
+int notification_delete_group_by_group_id(const char *app_id, notification_type_e type, int group_id) NOTIFICATION_DEPRECATED_API;
 
 /**
  * @brief This function will be deprecated.
  * @see notification_delete_by_priv_id()
- *
  */
-NOTIFICATION_DEPRECATED_API int notification_delete_group_by_priv_id(const char *app_id,
-							  notification_type_e type,
-							  int priv_id);
+int notification_delete_group_by_priv_id(const char *app_id, notification_type_e type, int priv_id) NOTIFICATION_DEPRECATED_API;
 
 /**
  * @brief This function will be deprecated.
- *
  */
-NOTIFICATION_DEPRECATED_API int notifiation_clear(notification_type_e type);
+int notifiation_clear(notification_type_e type) NOTIFICATION_DEPRECATED_API;
 
 /**
  * @brief This function will be deprecated.
- *
  */
-NOTIFICATION_DEPRECATED_API int notification_get_count(notification_type_e type,
-					    const char *app_id,
-					    int group_id, int priv_id,
-					    int *count);
+int notification_get_count(notification_type_e type, const char *app_id, int group_id, int priv_id, int *count) NOTIFICATION_DEPRECATED_API;
 
 /**
  * @internal
@@ -293,12 +250,12 @@ NOTIFICATION_DEPRECATED_API int notification_get_count(notification_type_e type,
  * @since tizen 4.0
  * @param[in] type The type of notification
  * @param[out] count The numbers of all notifications
- * @return NOTIFICATION_ERROR_NONE on success, other value on failure
- * @retval NOTIFICATION_ERROR_NONE Success
- * @retval NOTIFICATION_ERROR_INVALID_PARAMETER Invalid input value
- * @retval NOTIFICATION_ERROR_IO_ERROR I/O Error
- * @retval NOTIFICATION_ERROR_FROM_DB Error from DB
- * @retval NOTIFICATION_ERROR_PERMISSION_DENIED The application does not have the privilege to call this method
+ * @return #NOTIFICATION_ERROR_NONE on success, other value on failure
+ * @retval #NOTIFICATION_ERROR_NONE Success
+ * @retval #NOTIFICATION_ERROR_INVALID_PARAMETER Invalid input value
+ * @retval #NOTIFICATION_ERROR_IO_ERROR I/O Error
+ * @retval #NOTIFICATION_ERROR_FROM_DB Error from DB
+ * @retval #NOTIFICATION_ERROR_PERMISSION_DENIED The application does not have the privilege to call this method
  */
 int notification_get_all_count(notification_type_e type, int *count);
 int notification_get_all_count_for_uid(notification_type_e type, int *count, uid_t uid);
@@ -308,9 +265,9 @@ int notification_get_all_count_for_uid(notification_type_e type, int *count, uid
  * @brief This function will be deprecated.
  * @details Use only for the notification tray's clear button operation.
  * @param[in] type Notification type
- * @return NOTIFICATION_ERROR_NONE on success, other value on failure
- * @retval NOTIFICATION_ERROR_NONE Success
- * @retval NOTIFICATION_ERROR_INVALID_PARAMETER Invalid input value
+ * @return #NOTIFICATION_ERROR_NONE on success, other value on failure
+ * @retval #NOTIFICATION_ERROR_NONE Success
+ * @retval #NOTIFICATION_ERROR_INVALID_PARAMETER Invalid input value
  * @see #notification_type_e
  * @par Sample code:
  * @code
@@ -326,35 +283,32 @@ int notification_get_all_count_for_uid(notification_type_e type, int *count, uid
 }
  * @endcode
  */
-NOTIFICATION_DEPRECATED_API int notification_clear(notification_type_e type);
+int notification_clear(notification_type_e type) NOTIFICATION_DEPRECATED_API;
 
 /**
  * @internal
  * @brief This function will be deprecated.
  * @return 1 on ready, other value on not ready
  */
-NOTIFICATION_DEPRECATED_API int notification_is_service_ready(void);
+int notification_is_service_ready(void) NOTIFICATION_DEPRECATED_API;
 
 /**
  * @internal
  * @brief This function will be deprecated.
  * @param[in] list Notification list handle
- * @return NOTIFICATION_ERROR_NONE on success, other value on failure
- * @retval NOTIFICATION_ERROR_NONE Success
- * @retval NOTIFICATION_ERROR_INVALID_PARAMETER Invalid parameter
+ * @return #NOTIFICATION_ERROR_NONE on success, other value on failure
+ * @retval #NOTIFICATION_ERROR_NONE Success
+ * @retval #NOTIFICATION_ERROR_INVALID_PARAMETER Invalid parameter
  * @pre notification_get_grouping_list() or notification_get_detail_list().
  * @see #notification_op
  */
-NOTIFICATION_DEPRECATED_API int notification_op_get_data(notification_op *noti_op,
-						       notification_op_data_type_e type,
-						       void *data);
+int notification_op_get_data(notification_op *noti_op, notification_op_data_type_e type, void *data) NOTIFICATION_DEPRECATED_API;
 
 /**
  * @brief This function will be deprecated.
  * @see notification_set_app_id()
  */
-NOTIFICATION_DEPRECATED_API int notification_set_pkgname(notification_h noti,
-					      const char *pkgname);
+int notification_set_pkgname(notification_h noti, const char *pkgname) NOTIFICATION_DEPRECATED_API;
 
 /**
  * @internal
@@ -363,9 +317,9 @@ NOTIFICATION_DEPRECATED_API int notification_set_pkgname(notification_h noti,
  * @since_tizen 4.0
  * @param[in] noti Notification handle
  * @param[in] app_id Caller application id
- * @return NOTIFICATION_ERROR_NONE on success, other value on failure
- * @retval NOTIFICATION_ERROR_NONE Success
- * @retval NOTIFICATION_ERROR_INVALID_PARAMETER Invalid input value
+ * @return #NOTIFICATION_ERROR_NONE on success, other value on failure
+ * @retval #NOTIFICATION_ERROR_NONE Success
+ * @retval #NOTIFICATION_ERROR_INVALID_PARAMETER Invalid input value
  * @par Sample code:
  * @code
 #include <notification.h>
@@ -395,9 +349,9 @@ int notification_set_app_id(notification_h noti, const char *app_id);
  * @details If @a app_id is NULL, caller_app_id is set internally.
  * @param[in] app_id Caller application ID or NULL
  * @param[in] type Notification type
- * @return NOTIFICATION_ERROR_NONE if success, other value if failure
- * @retval NOTIFICATION_ERROR_NONE Success
- * @retval NOTIFICATION_ERROR_INVALID_PARAMETER Invalid input value
+ * @return #NOTIFICATION_ERROR_NONE if success, other value if failure
+ * @retval #NOTIFICATION_ERROR_NONE Success
+ * @retval #NOTIFICATION_ERROR_INVALID_PARAMETER Invalid input value
  * @par Sample code:
  * @code
 #include <notification.h>
@@ -412,8 +366,7 @@ int notification_set_app_id(notification_h noti, const char *app_id);
 }
  * @endcode
  */
-NOTIFICATION_DEPRECATED_API int notification_delete_all_by_type(const char *app_id,
-						     notification_type_e type);
+int notification_delete_all_by_type(const char *app_id, notification_type_e type) NOTIFICATION_DEPRECATED_API;
 
 /**
  * @internal
@@ -422,9 +375,9 @@ NOTIFICATION_DEPRECATED_API int notification_delete_all_by_type(const char *app_
  * @param[in] app_id Caller application ID or NULL
  * @param[in] type Notification type
  * @param[in] priv_id Priv ID
- * @return NOTIFICATION_ERROR_NONE if success, other value if failure
- * @retval NOTIFICATION_ERROR_NONE Success
- * @retval NOTIFICATION_ERROR_INVALID_PARAMETER Invalid input value
+ * @return #NOTIFICATION_ERROR_NONE if success, other value if failure
+ * @retval #NOTIFICATION_ERROR_NONE Success
+ * @retval #NOTIFICATION_ERROR_INVALID_PARAMETER Invalid input value
  * @par Sample code:
  * @code
 #include <notification.h>
@@ -439,9 +392,7 @@ NOTIFICATION_DEPRECATED_API int notification_delete_all_by_type(const char *app_
 }
  * @endcode
  */
-NOTIFICATION_DEPRECATED_API int notification_delete_by_priv_id(const char *app_id,
-						    notification_type_e type,
-						    int priv_id);
+int notification_delete_by_priv_id(const char *app_id, notification_type_e type, int priv_id) NOTIFICATION_DEPRECATED_API;
 
 /**
  * @internal
@@ -452,9 +403,9 @@ NOTIFICATION_DEPRECATED_API int notification_delete_by_priv_id(const char *app_i
  * @param[in] text Basic text for button
  * @param[in] key Value for localized text
  * @param[in] service_handle Appsvc bundle data
- * @return NOTIFICATION_ERROR_NONE on success, other value on failure
- * @retval NOTIFICATION_ERROR_NONE Success
- * @retval NOTIFICATION_ERROR_INVALID_PARAMETER Invalid parameter
+ * @return #NOTIFICATION_ERROR_NONE on success, other value on failure
+ * @retval #NOTIFICATION_ERROR_NONE Success
+ * @retval #NOTIFICATION_ERROR_INVALID_PARAMETER Invalid parameter
  * @par Sample code:
  * @code
 #include <notification.h>
@@ -480,11 +431,11 @@ NOTIFICATION_DEPRECATED_API int notification_delete_by_priv_id(const char *app_i
 }
  * @endcode
  */
-NOTIFICATION_DEPRECATED_API int notification_set_execute_option(notification_h noti,
-						     notification_execute_type_e type,
-						     const char *text,
-						     const char *key,
-						     bundle *service_handle);
+int notification_set_execute_option(notification_h noti,
+				notification_execute_type_e type,
+				const char *text,
+				const char *key,
+				bundle *service_handle) NOTIFICATION_DEPRECATED_API;
 
 /**
  * @internal
@@ -493,9 +444,9 @@ NOTIFICATION_DEPRECATED_API int notification_set_execute_option(notification_h n
  * @param[in] noti Notification handle
  * @param[out] group_id Group ID
  * @param[out] priv_id Private ID
- * @return NOTIFICATION_ERROR_NONE on success, other value on failure
- * @retval NOTIFICATION_ERROR_NONE Success
- * @retval NOTIFICATION_ERROR_INVALID_PARAMETER Invalid parameter
+ * @return #NOTIFICATION_ERROR_NONE on success, other value on failure
+ * @retval #NOTIFICATION_ERROR_NONE Success
+ * @retval #NOTIFICATION_ERROR_INVALID_PARAMETER Invalid parameter
  * @par Sample code:
  * @code
 #include <notification.h>
@@ -511,8 +462,7 @@ NOTIFICATION_DEPRECATED_API int notification_set_execute_option(notification_h n
  }
  * @endcode
  */
-NOTIFICATION_DEPRECATED_API int notification_get_id(notification_h noti,
-					 int *group_id, int *priv_id);
+int notification_get_id(notification_h noti, int *group_id, int *priv_id) NOTIFICATION_DEPRECATED_API;
 
 /**
  * @internal
@@ -520,9 +470,9 @@ NOTIFICATION_DEPRECATED_API int notification_get_id(notification_h noti,
  * @since_tizen 4.0
  * @param[in] noti Notification handle
  * @param[in] priv_id Private ID
- * @return NOTIFICATION_ERROR_NONE on success, other value on failure
- * @retval NOTIFICATION_ERROR_NONE Success
- * @retval NOTIFICATION_ERROR_INVALID_PARAMETER Invalid parameter
+ * @return #NOTIFICATION_ERROR_NONE on success, other value on failure
+ * @retval #NOTIFICATION_ERROR_NONE Success
+ * @retval #NOTIFICATION_ERROR_INVALID_PARAMETER Invalid parameter
  */
 int notification_set_priv_id(notification_h noti, int priv_id);
 
@@ -552,8 +502,7 @@ int notification_set_priv_id(notification_h noti, int priv_id);
 }
  * @endcode
  */
-NOTIFICATION_DEPRECATED_API notification_h notification_load(char *app_id,
-				int priv_id);
+notification_h notification_load(char *app_id, int priv_id) NOTIFICATION_DEPRECATED_API;
 
 /**
  * @internal
@@ -588,8 +537,8 @@ NOTIFICATION_DEPRECATED_API notification_h notification_load(char *app_id,
 }
  * @endcode
  */
-NOTIFICATION_DEPRECATED_API notification_h notification_new(notification_type_e type, int group_id,
-				int priv_id);
+notification_h notification_new(notification_type_e type,
+				int group_id, int priv_id) NOTIFICATION_DEPRECATED_API;
 
 /**
  * @internal
@@ -598,9 +547,10 @@ NOTIFICATION_DEPRECATED_API notification_h notification_new(notification_type_e 
  * @param[in] type Notification execute type
  * @param[out] text Text for button
  * @param[out] service_handle Appsvc bundle data
- * @return NOTIFICATION_ERROR_NONE on success, other value on failure
- * @retval NOTIFICATION_ERROR_NONE Success
- * @retval NOTIFICATION_ERROR_INVALID_PARAMETER Invalid parameter
+ * @return #NOTIFICATION_ERROR_NONE on success,
+ *         otherwise any other value on failure
+ * @retval #NOTIFICATION_ERROR_NONE Success
+ * @retval #NOTIFICATION_ERROR_INVALID_PARAMETER Invalid parameter
  * @par Sample code:
  * @code
 #include <notification.h>
@@ -620,10 +570,10 @@ NOTIFICATION_DEPRECATED_API notification_h notification_new(notification_type_e 
 }
  * @endcode
  */
-NOTIFICATION_DEPRECATED_API int notification_get_execute_option(notification_h noti,
-						     notification_execute_type_e type,
-						     const char **text,
-						     bundle **service_handle);
+int notification_get_execute_option(notification_h noti,
+				notification_execute_type_e type,
+				const char **text,
+				bundle **service_handle) NOTIFICATION_DEPRECATED_API;
 
 /**
  * @internal
@@ -633,13 +583,13 @@ NOTIFICATION_DEPRECATED_API int notification_get_execute_option(notification_h n
  * @since_tizen @if MOBILE 2.3 @elseif WEARABLE 2.3.1 @endif
  * @privlevel public
  * @privilege %http://tizen.org/privilege/notification
- * @param[in]  noti    The notification handle
+ * @param[in] noti The notification handle
  * @param[out] priv_id The private ID
  * @return #NOTIFICATION_ERROR_NONE on success,
  *         otherwise any other value on failure
- * @retval #NOTIFICATION_ERROR_NONE         Success
+ * @retval #NOTIFICATION_ERROR_NONE Success
  * @retval #NOTIFICATION_ERROR_INVALID_PARAMETER Invalid parameter
- * @retval NOTIFICATION_ERROR_PERMISSION_DENIED The application does not have the privilege to call this method
+ * @retval #NOTIFICATION_ERROR_PERMISSION_DENIED The application does not have the privilege to call this method
  * @pre Notification handle should be created by notification_create().
  * @post notification_free().
  * @par Sample code:
@@ -667,12 +617,12 @@ int notification_insert_for_uid(notification_h noti, int *priv_id, uid_t uid);
  * @privlevel public
  * @privilege %http://tizen.org/privilege/notification
  * @remarks This function updates the notification asynchronously.
- * @param[in] noti      The notification handle that is created by notification_create()
+ * @param[in] noti The notification handle that is created by notification_create()
  * @param[in] result_cb The callback called when an update completed
  * @param[in] user_data The user data which you want to use in callback
  * @return #NOTIFICATION_ERROR_NONE on success,
  *         otherwise any other value on failure
- * @retval #NOTIFICATION_ERROR_NONE         Success
+ * @retval #NOTIFICATION_ERROR_NONE Success
  * @retval #NOTIFICATION_ERROR_INVALID_PARAMETER Invalid input value
  * @retval #NOTIFICATION_ERROR_NOT_EXIST_ID Priv ID does not exist
  * @retval #NOTIFICATION_ERROR_PERMISSION_DENIED The application does not have the privilege to call this method
@@ -706,7 +656,7 @@ int notification_update_async_for_uid(notification_h noti,
  * @param[in] user_data  The user data
  * @return #NOTIFICATION_ERROR_NONE on success,
  *         otherwise any other value on failure
- * @retval #NOTIFICATION_ERROR_NONE         Success
+ * @retval #NOTIFICATION_ERROR_NONE Success
  * @retval #NOTIFICATION_ERROR_INVALID_PARAMETER Invalid parameter
  * @retval #NOTIFICATION_ERROR_PERMISSION_DENIED The application does not have the privilege to call this method
  * @see notification_unregister_detailed_changed_cb()
@@ -738,7 +688,7 @@ int notification_register_detailed_changed_cb_for_uid(
  * @param[in] changed_cb The callback function
  * @return #NOTIFICATION_ERROR_NONE on success,
  *         otherwise any other value on failure
- * @retval #NOTIFICATION_ERROR_NONE         Success
+ * @retval #NOTIFICATION_ERROR_NONE Success
  * @retval #NOTIFICATION_ERROR_INVALID_PARAMETER Invalid parameter
  * @retval #NOTIFICATION_ERROR_PERMISSION_DENIED The application does not have the privilege to call this method
  * @see notification_register_detailed_changed_cb()
@@ -765,11 +715,11 @@ int notification_unregister_detailed_changed_cb_for_uid(
  * @brief Sets the default button to display highlight on the notification.
  * @since_tizen 3.0
  * @remarks If you want to default button is off, you set that index is zero
- * @param[in] noti       The notification handle
- * @param[in] index      The notification button index
+ * @param[in] noti The notification handle
+ * @param[in] index The notification button index
  * @return #NOTIFICATION_ERROR_NONE on success,
  *         otherwise any other value on failure
- * @retval #NOTIFICATION_ERROR_NONE         Success
+ * @retval #NOTIFICATION_ERROR_NONE Success
  * @retval #NOTIFICATION_ERROR_INVALID_PARAMETER Invalid parameter
  * @pre Notification handle should be created by notification_create().
  * @see #notification_button_index_e
@@ -797,16 +747,17 @@ int notification_unregister_detailed_changed_cb_for_uid(
 }
  * @endcode
  */
-int notification_set_default_button(notification_h noti, notification_button_index_e index);
+int notification_set_default_button(notification_h noti,
+				notification_button_index_e index);
 
 /**
  * @brief Gets the default button to display highlight on the notification.
  * @since_tizen 3.0
- * @param[in] noti       The notification handle
- * @param[out] index     The notification button index
+ * @param[in] noti The notification handle
+ * @param[out] index The notification button index
  * @return #NOTIFICATION_ERROR_NONE on success,
  *         otherwise any other value on failure
- * @retval #NOTIFICATION_ERROR_NONE         Success
+ * @retval #NOTIFICATION_ERROR_NONE Success
  * @retval #NOTIFICATION_ERROR_INVALID_PARAMETER Invalid parameter
  * @pre Notification handle should be created by notification_create().
  * @see #notification_button_index_e
@@ -831,11 +782,11 @@ int notification_set_default_button(notification_h noti, notification_button_ind
 	}
 
 	...
-
 }
  * @endcode
  */
-int notification_get_default_button(notification_h noti, notification_button_index_e *index);
+int notification_get_default_button(notification_h noti,
+				notification_button_index_e *index);
 
 /**
  * @brief Gets the notification ongoing value type.
@@ -844,7 +795,7 @@ int notification_get_default_button(notification_h noti, notification_button_ind
  * @param[out] type The notification ongoing value type
  * @return #NOTIFICATION_ERROR_NONE on success,
  *         otherwise any other value on failure
- * @retval #NOTIFICATION_ERROR_NONE         Success
+ * @retval #NOTIFICATION_ERROR_NONE Success
  * @retval #NOTIFICATION_ERROR_INVALID_PARAMETER Invalid parameter
  * @pre Notification handle should be created by notification_create().
  * @see #notification_ongoing_value_type_e
@@ -870,16 +821,17 @@ int notification_get_default_button(notification_h noti, notification_button_ind
 }
  * @endcode
  */
-int notification_get_ongoing_value_type(notification_h noti, notification_ongoing_value_type_e *type);
+int notification_get_ongoing_value_type(notification_h noti,
+				notification_ongoing_value_type_e *type);
 
 /**
  * @brief Sets the notification ongoing value type.
  * @since_tizen 3.0
- * @param[in] noti	The notification handle
- * @param[in] type	The notification ongoing value type
+ * @param[in] noti The notification handle
+ * @param[in] type The notification ongoing value type
  * @return #NOTIFICATION_ERROR_NONE on success,
  *         otherwise any other value on failure
- * @retval #NOTIFICATION_ERROR_NONE         Success
+ * @retval #NOTIFICATION_ERROR_NONE Success
  * @retval #NOTIFICATION_ERROR_INVALID_PARAMETER Invalid parameter
  * @pre Notification handle should be created by notification_create().
  * @see #notification_ongoing_value_type_e
@@ -907,17 +859,18 @@ int notification_get_ongoing_value_type(notification_h noti, notification_ongoin
 }
  * @endcode
  */
-int notification_set_ongoing_value_type(notification_h noti, notification_ongoing_value_type_e type);
+int notification_set_ongoing_value_type(notification_h noti,
+				notification_ongoing_value_type_e type);
 
 /**
  * @brief Gets the notification ongoing time when ongoint type value is set #NOTIFICATION_ONGOING_VALUE_TYPE_TIME.
  * @since_tizen 3.0
- * @param[in] noti	The notification handle
- * @param[out] current	The ongoing current time
- * @param[out] duration	The ongoing duration time
+ * @param[in] noti The notification handle
+ * @param[out] current The ongoing current time
+ * @param[out] duration The ongoing duration time
  * @return #NOTIFICATION_ERROR_NONE on success,
  *         otherwise any other value on failure
- * @retval #NOTIFICATION_ERROR_NONE         Success
+ * @retval #NOTIFICATION_ERROR_NONE Success
  * @retval #NOTIFICATION_ERROR_INVALID_PARAMETER Invalid parameter
  * @pre Notification handle should be created by notification_create().
  * @see #notification_ongoing_value_type_e
@@ -949,12 +902,12 @@ int notification_get_ongoing_time(notification_h noti, int *current, int *durati
 /**
  * @brief Sets the notification ongoing time when ongoint type value is set #NOTIFICATION_ONGOING_VALUE_TYPE_TIME.
  * @since_tizen 3.0
- * @param[in] noti	The notification handle
- * @param[in] current	The ongoing current time
- * @param[in] duration	The ongoing duration time
+ * @param[in] noti The notification handle
+ * @param[in] current The ongoing current time
+ * @param[in] duration The ongoing duration time
  * @return #NOTIFICATION_ERROR_NONE on success,
  *         otherwise any other value on failure
- * @retval #NOTIFICATION_ERROR_NONE         Success
+ * @retval #NOTIFICATION_ERROR_NONE Success
  * @retval #NOTIFICATION_ERROR_INVALID_PARAMETER Invalid parameter
  * @pre Notification handle should be created by notification_create().
  * @see #notification_ongoing_value_type_e
@@ -989,11 +942,11 @@ int notification_set_ongoing_time(notification_h noti, int current, int duration
 /**
  * @brief Gets timeout value in second when the notification can be hidden from the viewer.
  * @since_tizen 3.0
- * @param[in] noti	The notification handle
- * @param[out] timeout	The timeout time(sec)
+ * @param[in] noti The notification handle
+ * @param[out] timeout The timeout time(sec)
  * @return #NOTIFICATION_ERROR_NONE on success,
  *         otherwise any other value on failure
- * @retval #NOTIFICATION_ERROR_NONE         Success
+ * @retval #NOTIFICATION_ERROR_NONE Success
  * @retval #NOTIFICATION_ERROR_INVALID_PARAMETER Invalid parameter
  * @pre Notification handle should be created by notification_create().
  * @see #notification_event_type_extension_e
@@ -1024,11 +977,11 @@ int notification_get_hide_timeout(notification_h noti, int *timeout);
 /**
  * @brief Sets timeout value in second when the notification can be hidden from the viewer.
  * @since_tizen 3.0
- * @param[in] noti	The notification handle
- * @param[in] timeout	The timeout time(sec)
+ * @param[in] noti The notification handle
+ * @param[in] timeout The timeout time(sec)
  * @return #NOTIFICATION_ERROR_NONE on success,
  *         otherwise any other value on failure
- * @retval #NOTIFICATION_ERROR_NONE         Success
+ * @retval #NOTIFICATION_ERROR_NONE Success
  * @retval #NOTIFICATION_ERROR_INVALID_PARAMETER Invalid parameter
  * @pre Notification handle should be created by notification_create().
  * @see #notification_event_type_extension_e
@@ -1058,11 +1011,11 @@ int notification_set_hide_timeout(notification_h noti, int timeout);
 /**
  * @brief Gets timeout value in second when the notification can be deleted from the viewer.
  * @since_tizen 3.0
- * @param[in] noti	The notification handle
- * @param[out] timeout	The timeout time(sec)
+ * @param[in] noti The notification handle
+ * @param[out] timeout The timeout time(sec)
  * @return #NOTIFICATION_ERROR_NONE on success,
  *         otherwise any other value on failure
- * @retval #NOTIFICATION_ERROR_NONE         Success
+ * @retval #NOTIFICATION_ERROR_NONE Success
  * @retval #NOTIFICATION_ERROR_INVALID_PARAMETER Invalid parameter
  * @pre Notification handle should be created by notification_create().
  * @par Sample code:
@@ -1092,11 +1045,11 @@ int notification_get_delete_timeout(notification_h noti, int *timeout);
 /**
  * @brief Sets timeout value in second when the notification can be deleted from the viewer.
  * @since_tizen 3.0
- * @param[in] noti	The notification handle
- * @param[in] timeout	The timeout time(sec)
+ * @param[in] noti The notification handle
+ * @param[in] timeout The timeout time(sec)
  * @return #NOTIFICATION_ERROR_NONE on success,
  *         otherwise any other value on failure
- * @retval #NOTIFICATION_ERROR_NONE         Success
+ * @retval #NOTIFICATION_ERROR_NONE Success
  * @retval #NOTIFICATION_ERROR_INVALID_PARAMETER Invalid parameter
  * @pre Notification handle should be created by notification_create().
  * @par Sample code:
@@ -1127,17 +1080,17 @@ typedef void (*event_handler_cb)(notification_h noti, int event_type, void *user
 /**
  * @brief Posts a notification with event handler callback.
  * @details The registered callback could be called when take notification event
- *	    and the callback is automatically deleted when notification you posted is deleted.
+ *          and the callback is automatically deleted when notification you posted is deleted.
  * @since_tizen 3.0
  * @privlevel public
  * @privilege %http://tizen.org/privilege/notification
  * @remarks Providing one event callback for each notification handle and distinguish the event by parameter.
- * @param[in] noti	The notification handle
- * @param[in] cb	The event handler callback function
- * @param[in] userdata	The user data
+ * @param[in] noti The notification handle
+ * @param[in] cb The event handler callback function
+ * @param[in] userdata The user data
  * @return #NOTIFICATION_ERROR_NONE on success,
  *         otherwise any other value on failure
- * @retval #NOTIFICATION_ERROR_NONE         Success
+ * @retval #NOTIFICATION_ERROR_NONE Success
  * @retval #NOTIFICATION_ERROR_INVALID_PARAMETER Invalid parameter
  * @retval #NOTIFICATION_ERROR_IO_ERROR I/O Error
  * @retval #NOTIFICATION_PERMISSION_DENIED Permission denied
@@ -1174,8 +1127,8 @@ static void event_callback(notification_h noti, int event_type, void *userdata)
  * @endcode
  */
 int notification_post_with_event_cb(notification_h noti, event_handler_cb cb, void *userdata);
-int notification_post_with_event_cb_for_uid(notification_h noti, event_handler_cb cb,
-					    void *userdata, uid_t uid);
+int notification_post_with_event_cb_for_uid(notification_h noti,
+				event_handler_cb cb, void *userdata, uid_t uid);
 
 /**
  * @brief Sends a event type to an application that posted notification.
@@ -1183,11 +1136,11 @@ int notification_post_with_event_cb_for_uid(notification_h noti, event_handler_c
  * @since_tizen 3.0
  * @privlevel public
  * @privilege %http://tizen.org/privilege/notification
- * @param[in] noti		The notification handle
- * @param[in] event_type	The event type
+ * @param[in] noti The notification handle
+ * @param[in] event_type The event type
  * @return #NOTIFICATION_ERROR_NONE on success,
  *         otherwise any other value on failure
- * @retval #NOTIFICATION_ERROR_NONE         Success
+ * @retval #NOTIFICATION_ERROR_NONE Success
  * @retval #NOTIFICATION_ERROR_INVALID_PARAMETER Invalid parameter
  * @retval #NOTIFICATION_ERROR_IO_ERROR I/O Error
  * @retval #NOTIFICATION_PERMISSION_DENIED Permission denied
@@ -1219,17 +1172,17 @@ int notification_send_event_by_priv_id(int priv_id, int event_type);
 /**
  * @brief Gets the event flag.
  * @details When you create a notification handle, a default value of event flag is false.
- *	    The flag automatically set true when post a notification using notification_post_with_event_cb().
- *	    The viewer application for showing the notifications can use this API to check if it needs to call
- *	    notification_send_event() to sends event of notification for making the callback of the processes
- *	    that have posted notification to be called. Call notification_send_event()
- *	    when the notification_get_event_flag() tells that the @event_flag is true.
+ *          The flag automatically set true when post a notification using notification_post_with_event_cb().
+ *          The viewer application for showing the notifications can use this API to check if it needs to call
+ *          notification_send_event() to sends event of notification for making the callback of the processes
+ *          that have posted notification to be called. Call notification_send_event()
+ *          when the notification_get_event_flag() tells that the @event_flag is true.
  * @since_tizen 3.0
- * @param[in] noti	The notification handle
- * @param[out] event_flag	The event flag
+ * @param[in] noti The notification handle
+ * @param[out] event_flag The event flag
  * @return #NOTIFICATION_ERROR_NONE on success,
  *         otherwise any other value on failure
- * @retval #NOTIFICATION_ERROR_NONE         Success
+ * @retval #NOTIFICATION_ERROR_NONE Success
  * @retval #NOTIFICATION_ERROR_INVALID_PARAMETER Invalid parameter
  * @pre Notification handle should be created by notification_create().
  * @par Sample code:
@@ -1353,8 +1306,8 @@ notification_h notification_load_by_tag_for_uid(const char *tag, uid_t uid);
  * @param[in] Max length of Text input
  * @return #NOTIFICATION_ERROR_NONE on success,
  *         otherwise any other value on failure
- * @retval #NOTIFICATION_ERROR_NONE	Success
- * @retval #NOTIFICATION_ERROR_INVALID_PARAMETER	Invalid parameter
+ * @retval #NOTIFICATION_ERROR_NONE Success
+ * @retval #NOTIFICATION_ERROR_INVALID_PARAMETER Invalid parameter
  * @par Sample code:
  * @code
 #include <notification.h>
@@ -1376,45 +1329,41 @@ int notification_get_text_input_max_length(notification_h noti, int *text_input_
 /**
  * @brief Sets an extension data.
  * @since_tizen 4.0
- * @param[in] noti	The notification handle
- * @param[in] key	The key
- * @param[in] value	The bundle data
+ * @param[in] noti The notification handle
+ * @param[in] key The key
+ * @param[in] value The bundle data
  * @return #NOTIFICATION_ERROR_NONE on success,
  *         otherwise any other value on failure
- * @retval #NOTIFICATION_ERROR_NONE	Success
- * @retval #NOTIFICATION_ERROR_INVALID_PARAMETER	Invalid parameter
+ * @retval #NOTIFICATION_ERROR_NONE Success
+ * @retval #NOTIFICATION_ERROR_INVALID_PARAMETER Invalid parameter
  */
 int notification_set_extension_data(notification_h noti, const char *key, bundle *value);
 
 /**
  * @brief Gets an extension data.
  * @since_tizen 4.0
- * @param[in] noti	The notification handle
- * @param[in] key	The key
- * @param[out] value	The bundle data
+ * @param[in] noti The notification handle
+ * @param[in] key The key
+ * @param[out] value The bundle data
  * @return #NOTIFICATION_ERROR_NONE on success,
  *         otherwise any other value on failure
- * @retval #NOTIFICATION_ERROR_NONE	Success
- * @retval #NOTIFICATION_ERROR_INVALID_PARAMETER	Invalid parameter
- * @retval #NOTIFICATION_ERROR_IO_ERROR			IO Error
+ * @retval #NOTIFICATION_ERROR_NONE Success
+ * @retval #NOTIFICATION_ERROR_INVALID_PARAMETER Invalid parameter
+ * @retval #NOTIFICATION_ERROR_IO_ERROR IO Error
  */
 int notification_get_extension_data(notification_h noti, const char *key, bundle **value);
 
 /**
  * @brief This function will be deprecated.
  * @see notification_set_extension_data()
- *
  */
-NOTIFICATION_DEPRECATED_API
-int notification_set_extention_data(notification_h noti, const char *key, bundle *value);
+int notification_set_extention_data(notification_h noti, const char *key, bundle *value) NOTIFICATION_DEPRECATED_API;
 
 /**
  * @brief This function will be deprecated.
  * @see notification_get_extension_data()
- *
  */
-NOTIFICATION_DEPRECATED_API
-int notification_get_extention_data(notification_h noti, const char *key, bundle **value);
+int notification_get_extention_data(notification_h noti, const char *key, bundle **value) NOTIFICATION_DEPRECATED_API;
 
 /**
  * @brief Sets the handler for a specific extension event.
@@ -1439,7 +1388,7 @@ int notification_set_extension_event_handler(notification_h noti,
  * @details When extension event occurs on notification, application launched by app_control_send_launch_request with app_control handle.
  * @since_tizen 4.0
  * @param[in] noti The notification handle
- * @param[in] event_type Event type
+ * @param[in] event  Event type
  * @param[out] event_handler App control handle
  * @return #NOTIFICATION_ERROR_NONE on success,
  *         otherwise any other value on failure
@@ -1459,9 +1408,9 @@ int notification_get_extension_event_handler(notification_h noti,
  * @since_tizen 5.0
  * @param[in] noti Notification handle
  * @param[in] label Label of Caller application
- * @return NOTIFICATION_ERROR_NONE on success, other value on failure
- * @retval NOTIFICATION_ERROR_NONE Success
- * @retval NOTIFICATION_ERROR_INVALID_PARAMETER Invalid input value
+ * @return #NOTIFICATION_ERROR_NONE on success, other value on failure
+ * @retval #NOTIFICATION_ERROR_NONE Success
+ * @retval #NOTIFICATION_ERROR_INVALID_PARAMETER Invalid input value
  * @par Sample code:
  * @code
 #include <notification.h>
@@ -1493,9 +1442,9 @@ int notification_set_app_label(notification_h noti, char *label);
  * @since_tizen 5.0
  * @param[in] noti Notification handle
  * @param[out] label Label of Caller application
- * @return NOTIFICATION_ERROR_NONE on success, other value on failure
- * @retval NOTIFICATION_ERROR_NONE Success
- * @retval NOTIFICATION_ERROR_INVALID_PARAMETER Invalid input value
+ * @return #NOTIFICATION_ERROR_NONE on success, other value on failure
+ * @retval #NOTIFICATION_ERROR_NONE Success
+ * @retval #NOTIFICATION_ERROR_INVALID_PARAMETER Invalid input value
  * @par Sample code:
  * @code
 #include <notification.h>
@@ -1516,8 +1465,7 @@ int notification_get_app_label(notification_h noti, char **label);
 /**
  * @ This API is only for App Framework internally.
  */
-int notification_set_indirect_request(notification_h noti, pid_t pid,
-		uid_t uid);
+int notification_set_indirect_request(notification_h noti, pid_t pid, uid_t uid);
 
 /**
  * @internal
@@ -1526,14 +1474,14 @@ int notification_set_indirect_request(notification_h noti, pid_t pid,
  * @privlevel public
  * @privilege %http://tizen.org/privilege/notification
  * @param[in] viewer Combination value of display list
- * @return NOTIFICATION_ERROR_NONE on success, other value on failure
- * @retval NOTIFICATION_ERROR_NONE Success
- * @retval NOTIFICATION_ERROR_INVALID_PARAMETER Invalid input value
- * @retval NOTIFICATION_ERROR_IO_ERROR I/O error
- * @retval NOTIFICATION_ERROR_OUT_OF_MEMORY Out of memory
- * @retval NOTIFICATION_ERROR_PERMISSION_DENIED The application does not have the privilege to call this method
- * @retval NOTIFICATION_ERROR_FROM_DB Error from DB query
- * @retval NOTIFICATION_ERROR_SERVICE_NOT_READY No response from notification service
+ * @return #NOTIFICATION_ERROR_NONE on success, other value on failure
+ * @retval #NOTIFICATION_ERROR_NONE Success
+ * @retval #NOTIFICATION_ERROR_INVALID_PARAMETER Invalid input value
+ * @retval #NOTIFICATION_ERROR_IO_ERROR I/O error
+ * @retval #NOTIFICATION_ERROR_OUT_OF_MEMORY Out of memory
+ * @retval #NOTIFICATION_ERROR_PERMISSION_DENIED The application does not have the privilege to call this method
+ * @retval #NOTIFICATION_ERROR_FROM_DB Error from DB query
+ * @retval #NOTIFICATION_ERROR_SERVICE_NOT_READY No response from notification service
  * @par Sample code:
  * @code
 #include <notification.h>
