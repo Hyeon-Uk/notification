@@ -1450,15 +1450,19 @@ err:
 	return ret;
 }
 
-EXPORT_API int notification_noti_delete_all_by_viewer(int viewer,
+EXPORT_API int notification_noti_delete_by_display_applist(int display_applist,
 			int *deleted_num, GList **deleted_list, uid_t uid)
 {
 	sqlite3 *db = NULL;
 	sqlite3_stmt *stmt = NULL;
+	notification_deleted_list_info_s *info = NULL;
 	char *query = NULL;
 	int cnt = 0;
 	int priv_id;
 	int ret;
+
+	if (display_applist < NOTIFICATION_DISPLAY_APP_NOTIFICATION_TRAY)
+		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 
 	db = notification_db_open();
 	if (!db)
@@ -1467,9 +1471,9 @@ EXPORT_API int notification_noti_delete_all_by_viewer(int viewer,
 	if (deleted_num != NULL)
 		*deleted_num = 0;
 
-	query = sqlite3_mprintf("SELECT priv_id FROM noti_list "
+	query = sqlite3_mprintf("SELECT priv_id, caller_app_id FROM noti_list "
 				"WHERE (display_applist & %d) = %d "
-				"AND uid = %d", viewer, viewer, uid);
+				"AND uid = %d", display_applist, display_applist, uid);
 	if (query == NULL) {
 		/* LCOV_EXCL_START */
 		ret = NOTIFICATION_ERROR_OUT_OF_MEMORY;
@@ -1490,17 +1494,34 @@ EXPORT_API int notification_noti_delete_all_by_viewer(int viewer,
 	while (sqlite3_step(stmt) == SQLITE_ROW) {
 		priv_id = sqlite3_column_int(stmt, 0);
 
+		if (deleted_list != NULL) {
+			info = (notification_deleted_list_info_s *)calloc(1,
+					sizeof(notification_deleted_list_info_s));
+			if (info == NULL) {
+				/* LCOV_EXCL_START */
+				ERR("Failed to alloc memory");
+				ret = NOTIFICATION_ERROR_OUT_OF_MEMORY;
+				goto err;
+				/* LCOV_EXCL_STOP */
+			}
+
+			info->priv_id = priv_id;
+			info->app_id = notification_db_column_text(stmt, 1);
+
+			*deleted_list = g_list_append(*deleted_list, info);
+		}
+
+		if (query) {
+			sqlite3_free(query);
+			query = NULL;
+		}
+
 		query = sqlite3_mprintf("DELETE FROM noti_list "
 			"WHERE priv_id = %d", priv_id);
 
 		ret = notification_db_exec(db, query, NULL);
 		if (ret != NOTIFICATION_ERROR_NONE){
 			goto err;
-		}
-
-		if (deleted_list != NULL) {
-			*deleted_list = g_list_append(*deleted_list,
-						GINT_TO_POINTER(priv_id));
 		}
 
 		cnt++;

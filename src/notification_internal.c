@@ -2119,20 +2119,15 @@ EXPORT_API int notification_set_indirect_request(notification_h noti,
 }
 
 
-int notification_delete_all_by_viewer_for_uid(int viewer, uid_t uid)
+int notification_delete_by_display_applist_for_uid(int display_applist, uid_t uid)
 {
-	int ret;
-
-	if (viewer < NOTIFICATION_DISPLAY_APP_NOTIFICATION_TRAY)
+	if (display_applist < NOTIFICATION_DISPLAY_APP_NOTIFICATION_TRAY)
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 
-	ret = notification_ipc_request_delete_multiple_by_viewer(viewer, uid);
-
-	return ret;
+	return notification_ipc_request_delete_by_display_applist(display_applist, uid);
 }
 
-EXPORT_API int notification_delete_all_by_viewer(int viewer)
+EXPORT_API int notification_delete_by_display_applist(int display_applist)
 {
-	return notification_delete_all_by_viewer_for_uid(viewer, getuid());
+	return notification_delete_by_display_applist_for_uid(display_applist, getuid());
 }
-

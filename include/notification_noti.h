@@ -27,6 +27,13 @@
 #define TAG_TYPE_INVALID -1
 #define TAG_TYPE_TIME 1
 
+struct _notification_deleted_list_info {
+	int priv_id;
+	char *app_id;
+};
+
+typedef struct _notification_deleted_list_info notification_deleted_list_info_s;
+
 int notification_noti_set_tag(const char *tag, char *value, char *buf, int buf_len);
 
 char *notification_noti_strip_tag(const char *tagged_str);
@@ -47,8 +54,8 @@ int notification_noti_delete_by_priv_id(const char *app_id, int priv_id);
 int notification_noti_delete_by_priv_id_get_changes(const char *app_id, int priv_id,
 						    int *num_changes, uid_t uid);
 
-int notification_noti_delete_all_by_viewer(int viewer, int *deleted_num,
-					GList **deleted_list, uid_t uid);
+int notification_noti_delete_by_display_applist(int display_applist,
+				int *deleted_num, GList **deleted_list, uid_t uid);
 
 int notification_noti_get_count(notification_type_e type,
 		const char *app_id,

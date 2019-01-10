@@ -503,7 +503,7 @@ static void _delete_multiple_notify(GVariant *parameters)
 }
 /* LCOV_EXCL_STOP */
 
-static void _delete_multiple_by_viewer_notify(GVariant *parameters)
+static void _delete_by_display_applist_notify(GVariant *parameters)
 {
 	int *buf;
 	int idx = 0;
@@ -517,6 +517,7 @@ static void _delete_multiple_by_viewer_notify(GVariant *parameters)
 		ERR("Invalid number to delete");
 		return;
 	}
+
 	DBG("Deleted count[%d]", num);
 
 	buf = (int *)malloc(sizeof(int) * num);
@@ -577,12 +578,12 @@ static void _handle_noti_notify(GDBusConnection *connection,
 		_delete_single_notify(parameters);
 	else if (g_strcmp0(signal_name, "delete_multiple_notify") == 0)
 		_delete_multiple_notify(parameters);
-	else if (g_strcmp0(signal_name, "delete_multiple_by_viewer_notify") == 0)
-		_delete_multiple_by_viewer_notify(parameters);
 	else if (g_strcmp0(signal_name, "refresh_noti_notify") == 0)
 		_refresh_noti_notify(parameters);
 	else if (g_strcmp0(signal_name, "change_dnd_notify") == 0)
 		_change_dnd_notify(parameters);
+	else if (g_strcmp0(signal_name, "delete_by_display_applist_notify") == 0)
+		_delete_by_display_applist_notify(parameters);
 }
 /* LCOV_EXCL_STOP */
 
@@ -1159,7 +1160,7 @@ int notification_ipc_request_delete_multiple(notification_type_e type, char *app
 	return result;
 }
 
-int notification_ipc_request_delete_multiple_by_viewer(int viewer, uid_t uid)
+int notification_ipc_request_delete_by_display_applist(int display_applist, uid_t uid)
 {
 	int result;
 	int num_deleted;
@@ -1173,9 +1174,9 @@ int notification_ipc_request_delete_multiple_by_viewer(int viewer, uid_t uid)
 		return result;
 	}
 
-	body = g_variant_new("(ii)", viewer, uid);
+	body = g_variant_new("(ii)", display_applist, uid);
 
-	result = _send_sync_noti(body, &reply, "del_noti_multiple_by_viewer");
+	result = _send_sync_noti(body, &reply, "del_noti_by_display_applist");
 	if (result == NOTIFICATION_ERROR_NONE) {
 		reply_body = g_dbus_message_get_body(reply);
 		g_variant_get(reply_body, "(i)", &num_deleted);

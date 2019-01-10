@@ -1473,7 +1473,7 @@ int notification_set_indirect_request(notification_h noti, pid_t pid, uid_t uid)
  * @since_tizen 5.5
  * @privlevel public
  * @privilege %http://tizen.org/privilege/notification
- * @param[in] viewer Combination value of display list
+ * @param[in] display_applist Combination value of display list
  * @return #NOTIFICATION_ERROR_NONE on success, other value on failure
  * @retval #NOTIFICATION_ERROR_NONE Success
  * @retval #NOTIFICATION_ERROR_INVALID_PARAMETER Invalid input value
@@ -1484,18 +1484,18 @@ int notification_set_indirect_request(notification_h noti, pid_t pid, uid_t uid)
  * @retval #NOTIFICATION_ERROR_SERVICE_NOT_READY No response from notification service
  * @par Sample code:
  * @code
-#include <notification.h>
+#include <notification_internal.h>
 ...
 {
-	noti_err = notification_delete_all_by_viewer(NOTIFICATION_DISPLAY_APP_NOTIFICATION_TRAY);
+	noti_err = notification_delete_by_display_applist(NOTIFICATION_DISPLAY_APP_NOTIFICATION_TRAY);
 	if (noti_err != NOTIFICATION_ERROR_NONE) {
 		return;
 	}
 }
  * @endcode
  */
-int notification_delete_all_by_viewer(int viewer);
-int notification_delete_all_by_viewer_for_uid(int viewer, uid_t uid);
+int notification_delete_by_display_applist(int display_applist);
+int notification_delete_by_display_applist_for_uid(int display_applist, uid_t uid);
 
 /**
  * @}
