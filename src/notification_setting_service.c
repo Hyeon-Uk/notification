@@ -720,7 +720,8 @@ EXPORT_API int notification_system_setting_load_dnd_allow_exception(dnd_allow_ex
 		dnd_allow_exception_data = (dnd_allow_exception_h)malloc(sizeof(struct notification_system_setting_dnd_allow_exception) * row_count);
 		if (dnd_allow_exception_data == NULL) {
 			ERR("Failed to alloc memory");
-			return NOTIFICATION_ERROR_OUT_OF_MEMORY;
+			ret =  NOTIFICATION_ERROR_OUT_OF_MEMORY;
+			goto out;
 		}
 
 		col_index = column_count;

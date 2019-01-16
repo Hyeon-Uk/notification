@@ -109,8 +109,7 @@ int notification_group_set_badge(const char *app_id,
 	else
 		result = NOTIFICATION_ERROR_FROM_DB;
 
-	if (stmt)
-		sqlite3_finalize(stmt);
+	sqlite3_finalize(stmt);
 
 	if (db)
 		notification_db_close(&db);

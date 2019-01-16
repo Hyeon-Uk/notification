@@ -200,8 +200,7 @@ int notification_db_exec(sqlite3 *db, const char *query, int *num_changes)
 		/* LCOV_EXCL_STOP */
 	}
 
-	if (stmt)
-		sqlite3_finalize(stmt);
+	sqlite3_finalize(stmt);
 
 	return ret;
 }
