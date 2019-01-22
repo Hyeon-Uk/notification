@@ -57,6 +57,18 @@ static void __free_encoded_data(char *encoded_data)
 		bundle_free_encoded_rawdata((bundle_raw **)&encoded_data);
 }
 
+static void __free_deleted_list(notification_deleted_list_info_s *info, int count)
+{
+	int i;
+
+	for (i = 0; i < count; i++) {
+		if ((info + i)->app_id != NULL)
+			free((info + i)->app_id);
+	}
+
+	free(info);
+}
+
 static void __notification_noti_populate_from_stmt(sqlite3_stmt *stmt, notification_h noti)
 {
 	int col = 0;
@@ -979,6 +991,52 @@ static int _check_text_input(notification_h noti)
 	return NOTIFICATION_ERROR_NONE;
 }
 
+static int _get_noti_count(sqlite3 *db, char *query_where, int *count)
+{
+	int ret;
+	char *query = NULL;
+	sqlite3_stmt *stmt = NULL;
+
+	if (db == NULL || query_where == NULL || count == NULL)
+		return NOTIFICATION_ERROR_INVALID_PARAMETER;
+
+	query = sqlite3_mprintf("SELECT COUNT(*) FROM noti_list %s", query_where);
+	if (query == NULL) {
+		/* LCOV_EXCL_START */
+		ERR("sqlite3_mprintf Failed");
+		ret = NOTIFICATION_ERROR_OUT_OF_MEMORY;
+		goto err;
+		/* LCOV_EXCL_STOP */
+	}
+
+	ret = sqlite3_prepare_v2(db, query, -1, &stmt, NULL);
+	if (ret != SQLITE_OK) {
+		/* LCOV_EXCL_START */
+		ERR("sqlite3_prepare_v2 Failed [%d][%s]", ret,
+			sqlite3_errmsg(db));
+		ret = NOTIFICATION_ERROR_FROM_DB;
+		goto err;
+		/* LCOV_EXCL_STOP */
+	}
+
+	ret = sqlite3_step(stmt);
+	if (ret == SQLITE_ROW) {
+		*count = sqlite3_column_int(stmt, 0);
+		ret = NOTIFICATION_ERROR_NONE;
+	} else {
+		ret = NOTIFICATION_ERROR_FROM_DB;
+		goto err;
+	}
+
+err:
+	if (stmt)
+		sqlite3_finalize(stmt);
+	if (query)
+		sqlite3_free(query);
+
+	return ret;
+}
+
 EXPORT_API int notification_noti_insert(notification_h noti)
 {
 	int ret = 0;
@@ -1199,8 +1257,8 @@ err:
 }
 
 EXPORT_API int notification_noti_delete_all(notification_type_e type,
-					const char *app_id, int *num_deleted,
-					int **list_deleted_rowid, uid_t uid)
+					const char *app_id, int *deleted_num,
+					int **deleted_list, uid_t uid)
 {
 	sqlite3 *db = NULL;
 	sqlite3_stmt *stmt = NULL;
@@ -1208,7 +1266,7 @@ EXPORT_API int notification_noti_delete_all(notification_type_e type,
 	char *query_where = NULL;
 	int *tmp = NULL;
 	int ret = NOTIFICATION_ERROR_NONE;
-	int data_cnt = 0;
+	int count = 0;
 	int i = 0;
 
 	db = notification_db_open();
@@ -1220,7 +1278,8 @@ EXPORT_API int notification_noti_delete_all(notification_type_e type,
 		if (type == NOTIFICATION_TYPE_NONE)
 			query_where = sqlite3_mprintf("WHERE uid = %d", uid);
 		else
-			query_where = sqlite3_mprintf("WHERE type = %d AND uid = %d", type, uid);
+			query_where = sqlite3_mprintf("WHERE type = %d "
+						"AND uid = %d", type, uid);
 		if (query_where == NULL) {
 			/* LCOV_EXCL_START */
 			ret = NOTIFICATION_ERROR_OUT_OF_MEMORY;
@@ -1244,14 +1303,17 @@ EXPORT_API int notification_noti_delete_all(notification_type_e type,
 		}
 	}
 
-	if (num_deleted != NULL)
-		*num_deleted = 0;
+	/* check count to delete */
+	ret = _get_noti_count(db, query_where, &count);
+	if (ret != NOTIFICATION_ERROR_NONE) {
+		ERR("Failed to get count to delete %d", ret);
+		goto err;
+	}
 
-	if (list_deleted_rowid != NULL) {
-		*list_deleted_rowid = NULL;
-
-		/* 1. Get count to delete */
-		query = sqlite3_mprintf("SELECT COUNT(*) FROM noti_list %s ", query_where);
+	/* Get priv_id and add to list */
+	if (count > 0 && deleted_list != NULL) {
+		query = sqlite3_mprintf("SELECT priv_id FROM noti_list %s",
+				query_where);
 		if (query == NULL) {
 			/* LCOV_EXCL_START */
 			ret = NOTIFICATION_ERROR_OUT_OF_MEMORY;
@@ -1269,42 +1331,7 @@ EXPORT_API int notification_noti_delete_all(notification_type_e type,
 			/* LCOV_EXCL_STOP */
 		}
 
-		if (sqlite3_step(stmt) == SQLITE_ROW) {
-			data_cnt = sqlite3_column_int(stmt, 0);
-			ret = NOTIFICATION_ERROR_NONE;
-
-			if (data_cnt == 0)
-				goto err;
-		} else {
-			ret = NOTIFICATION_ERROR_FROM_DB;
-			goto err;
-		}
-
-		sqlite3_free(query);
-
-		/* 2. Get priv_id and add to list */
-		query = sqlite3_mprintf("SELECT priv_id FROM noti_list %s ", query_where);
-		if (query == NULL) {
-			/* LCOV_EXCL_START */
-			ret = NOTIFICATION_ERROR_OUT_OF_MEMORY;
-			goto err;
-			/* LCOV_EXCL_STOP */
-		}
-
-		sqlite3_finalize(stmt);
-		stmt = NULL;
-
-		ret = sqlite3_prepare_v2(db, query, strlen(query), &stmt, NULL);
-		if (ret != SQLITE_OK) {
-			/* LCOV_EXCL_START */
-			ERR("Failed to sqlite3_prepare_V2 [%d][%s]",
-					ret, sqlite3_errmsg(db));
-			ret = NOTIFICATION_ERROR_FROM_DB;
-			goto err;
-			/* LCOV_EXCL_STOP */
-		}
-
-		tmp = (int *)calloc(data_cnt, sizeof(int));
+		tmp = (int *)calloc(count, sizeof(int));
 		if (tmp == NULL) {
 			/* LCOV_EXCL_START */
 			ERR("Failed to alloc memory");
@@ -1319,6 +1346,7 @@ EXPORT_API int notification_noti_delete_all(notification_type_e type,
 		}
 
 		sqlite3_free(query);
+		query = NULL;
 	}
 
 	/* execute main query */
@@ -1330,15 +1358,15 @@ EXPORT_API int notification_noti_delete_all(notification_type_e type,
 		/* LCOV_EXCL_STOP */
 	}
 
-	ret = notification_db_exec(db, query, num_deleted);
+	ret = notification_db_exec(db, query, NULL);
 	if (ret != NOTIFICATION_ERROR_NONE)
 		goto err;
 
-	if (list_deleted_rowid)
-		*list_deleted_rowid = tmp;
+	if (deleted_list)
+		*deleted_list = tmp;
 
-	if (num_deleted != NULL)
-		*num_deleted = data_cnt;
+	if (deleted_num != NULL)
+		*deleted_num = count;
 
 err:
 	if (stmt)
@@ -1431,15 +1459,18 @@ err:
 }
 
 EXPORT_API int notification_noti_delete_by_display_applist(int display_applist,
-			int *deleted_num, GList **deleted_list, uid_t uid)
+			int *deleted_num,
+			notification_deleted_list_info_s **deleted_list,
+			uid_t uid)
 {
 	sqlite3 *db = NULL;
 	sqlite3_stmt *stmt = NULL;
 	notification_deleted_list_info_s *info = NULL;
 	char *query = NULL;
-	int cnt = 0;
-	int priv_id;
+	char *query_where = NULL;
+	int count = 0;
 	int ret;
+	int i = 0;
 
 	if (display_applist < NOTIFICATION_DISPLAY_APP_NOTIFICATION_TRAY)
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
@@ -1448,74 +1479,102 @@ EXPORT_API int notification_noti_delete_by_display_applist(int display_applist,
 	if (!db)
 		return get_last_result();
 
-	if (deleted_num != NULL)
-		*deleted_num = 0;
-
-	query = sqlite3_mprintf("SELECT priv_id, caller_app_id FROM noti_list "
-				"WHERE (display_applist & %d) = %d "
-				"AND uid = %d", display_applist, display_applist, uid);
-	if (query == NULL) {
+	query_where = sqlite3_mprintf("WHERE (display_applist & %d) = %d "
+				"AND uid = %d", display_applist, display_applist,
+				uid);
+	if (query_where == NULL) {
 		/* LCOV_EXCL_START */
+		ERR("sqlite3_mprintf Failed");
 		ret = NOTIFICATION_ERROR_OUT_OF_MEMORY;
 		goto err;
 		/* LCOV_EXCL_STOP */
 	}
 
-	ret = sqlite3_prepare_v2(db, query, strlen(query), &stmt, NULL);
-	if (ret != SQLITE_OK) {
+	/* check count to delete */
+	ret = _get_noti_count(db, query_where, &count);
+	if (ret != NOTIFICATION_ERROR_NONE) {
+		ERR("Failed to get count to delete %d", ret);
+		goto err;
+	}
+
+	/* get priv_id, app_id to add deleted_list */
+	if (count > 0 && deleted_list != NULL) {
+		query = sqlite3_mprintf("SELECT priv_id, caller_app_id "
+				"FROM noti_list %s", query_where);
+		if (query == NULL) {
+			/* LCOV_EXCL_START */
+			ret = NOTIFICATION_ERROR_OUT_OF_MEMORY;
+			goto err;
+			/* LCOV_EXCL_STOP */
+		}
+
+		ret = sqlite3_prepare_v2(db, query, strlen(query), &stmt, NULL);
+		if (ret != SQLITE_OK) {
+			/* LCOV_EXCL_START */
+			ERR("Failed to sqlite3_prepare [%d][%s]", ret,
+							sqlite3_errmsg(db));
+			ret = NOTIFICATION_ERROR_FROM_DB;
+			goto err;
+			/* LCOV_EXCL_STOP */
+		}
+
+		info = (notification_deleted_list_info_s *)calloc(count,
+				sizeof(notification_deleted_list_info_s));
+		if (info == NULL) {
+			/* LCOV_EXCL_START */
+			ERR("Failed to alloc memory");
+			ret = NOTIFICATION_ERROR_OUT_OF_MEMORY;
+			goto err;
+			/* LCOV_EXCL_STOP */
+		}
+
+		while (sqlite3_step(stmt) == SQLITE_ROW) {
+			(info + i)->priv_id = sqlite3_column_int(stmt, 0);
+			(info + i)->app_id = notification_db_column_text(stmt, 1);
+			i++;
+		}
+
+		if (query) {
+			sqlite3_free(query);
+			query = NULL;
+		}
+	}
+
+	/* execute main query */
+	query = sqlite3_mprintf("DELETE FROM noti_list %s", query_where);
+	if (query == NULL) {
 		/* LCOV_EXCL_START */
-		ERR("Failed to sqlite3_prepare [%d][%s]", ret,
-						sqlite3_errmsg(db));
-		ret = NOTIFICATION_ERROR_FROM_DB;
+		ERR("sqlite3_mprintf Failed");
+		ret = NOTIFICATION_ERROR_OUT_OF_MEMORY;
 		goto err;
 		/* LCOV_EXCL_STOP */
 	}
 
-	while (sqlite3_step(stmt) == SQLITE_ROW) {
-		priv_id = sqlite3_column_int(stmt, 0);
+	ret = notification_db_exec(db, query, NULL);
+	if (ret != NOTIFICATION_ERROR_NONE)
+		goto err;
 
-		if (deleted_list != NULL) {
-			info = (notification_deleted_list_info_s *)calloc(1,
-					sizeof(notification_deleted_list_info_s));
-			if (info == NULL) {
-				/* LCOV_EXCL_START */
-				ERR("Failed to alloc memory");
-				ret = NOTIFICATION_ERROR_OUT_OF_MEMORY;
-				goto err;
-				/* LCOV_EXCL_STOP */
-			}
-
-			info->priv_id = priv_id;
-			info->app_id = notification_db_column_text(stmt, 1);
-
-			*deleted_list = g_list_append(*deleted_list, info);
-		}
-
-		if (query)
-			sqlite3_free(query);
-
-		query = sqlite3_mprintf("DELETE FROM noti_list "
-			"WHERE priv_id = %d", priv_id);
-
-		ret = notification_db_exec(db, query, NULL);
-		if (ret != NOTIFICATION_ERROR_NONE)
-			goto err;
-
-		cnt++;
-	}
 
 	if (deleted_num != NULL)
-		*deleted_num = cnt;
+		*deleted_num = count;
+
+	if (deleted_list != NULL)
+		*deleted_list = info;
 
 err:
 	if (stmt)
 		sqlite3_finalize(stmt);
-
+	if (query_where)
+		sqlite3_free(query_where);
 	if (query)
 		sqlite3_free(query);
-
 	if (db)
 		notification_db_close(&db);
+
+	if (ret != NOTIFICATION_ERROR_NONE) {
+		if (info != NULL)
+			__free_deleted_list(info, count);
+	}
 
 	return ret;
 }
@@ -2166,7 +2225,7 @@ EXPORT_API int notification_noti_check_limit(notification_h noti, uid_t uid, GLi
 	int priv_id;
 	int count = 0;
 	char *query = NULL;
-	char *list_query = NULL;
+	char *query_where = NULL;
 	sqlite3 *db = NULL;
 	sqlite3_stmt *stmt = NULL;
 
@@ -2177,10 +2236,9 @@ EXPORT_API int notification_noti_check_limit(notification_h noti, uid_t uid, GLi
 	if (!db)
 		return get_last_result();
 
-	query = sqlite3_mprintf("SELECT COUNT(*) FROM noti_list "
-			"WHERE caller_app_id = %Q AND uid = %d ",
+	query_where = sqlite3_mprintf("WHERE caller_app_id = %Q AND uid = %d ",
 			noti->caller_app_id, uid);
-	if (query == NULL) {
+	if (query_where == NULL) {
 		/* LCOV_EXCL_START */
 		ERR("sqlite3_mprintf Failed");
 		ret = NOTIFICATION_ERROR_OUT_OF_MEMORY;
@@ -2188,33 +2246,21 @@ EXPORT_API int notification_noti_check_limit(notification_h noti, uid_t uid, GLi
 		/* LCOV_EXCL_STOP */
 	}
 
-	ret = sqlite3_prepare_v2(db, query, -1, &stmt, NULL);
-	if (ret != SQLITE_OK) {
-		/* LCOV_EXCL_START */
-		ERR("sqlite3_prepare_v2 Failed [%d][%s]", ret,
-				 sqlite3_errmsg(db));
-		ret = NOTIFICATION_ERROR_FROM_DB;
-		goto err;
-		/* LCOV_EXCL_STOP */
-	}
-
-	ret = sqlite3_step(stmt);
-	if (ret == SQLITE_ROW) {
-		count = sqlite3_column_int(stmt, 0);
-		ret = NOTIFICATION_ERROR_NONE;
-	} else {
-		ret = NOTIFICATION_ERROR_FROM_DB;
+	/* check count to delete */
+	ret = _get_noti_count(db, query_where, &count);
+	if (ret != NOTIFICATION_ERROR_NONE) {
+		ERR("Failed to get count to delete %d", ret);
 		goto err;
 	}
 
+	/* get priv_id to delete */
 	if (count > NOTI_LIMIT) {
 		count -= NOTI_LIMIT;
 
-		list_query = sqlite3_mprintf("SELECT priv_id FROM noti_list "
-			"WHERE caller_app_id = %Q AND uid = %d "
+		query = sqlite3_mprintf("SELECT priv_id FROM noti_list %s "
 			"AND type = %d ORDER BY insert_time ASC, priv_id ASC",
-			noti->caller_app_id, uid, NOTIFICATION_TYPE_NOTI);
-		if (list_query == NULL) {
+			query_where, NOTIFICATION_TYPE_NOTI);
+		if (query == NULL) {
 			/* LCOV_EXCL_START */
 			ERR("sqlite3_mprintf Failed");
 			ret = NOTIFICATION_ERROR_OUT_OF_MEMORY;
@@ -2222,10 +2268,7 @@ EXPORT_API int notification_noti_check_limit(notification_h noti, uid_t uid, GLi
 			/* LCOV_EXCL_STOP */
 		}
 
-		sqlite3_finalize(stmt);
-		stmt = NULL;
-
-		ret = sqlite3_prepare_v2(db, list_query, -1, &stmt, NULL);
+		ret = sqlite3_prepare_v2(db, query, -1, &stmt, NULL);
 		if (ret != SQLITE_OK) {
 			/* LCOV_EXCL_START */
 			ERR("sqlite3_prepare_v2 Failed [%d][%s]", ret,
@@ -2245,13 +2288,10 @@ EXPORT_API int notification_noti_check_limit(notification_h noti, uid_t uid, GLi
 err:
 	if (stmt)
 		sqlite3_finalize(stmt);
-
 	if (query)
 		sqlite3_free(query);
-
-	if (list_query)
-		sqlite3_free(list_query);
-
+	if (query_where)
+		sqlite3_free(query_where);
 	if (db)
 		notification_db_close(&db);
 

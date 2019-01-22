@@ -45,7 +45,7 @@ int notification_noti_insert(notification_h noti);
 int notification_noti_update(notification_h noti);
 
 int notification_noti_delete_all(notification_type_e type, const char *app_id,
-		int *num_deleted, int **list_deleted_rowid, uid_t uid);
+		int *deleted_num, int **deleted_list, uid_t uid);
 
 int notification_noti_get_by_priv_id(notification_h noti, int priv_id);
 int notification_noti_get_by_tag(notification_h noti, char *app_id, char* tag, uid_t uid);
@@ -55,7 +55,9 @@ int notification_noti_delete_by_priv_id_get_changes(const char *app_id, int priv
 						    int *num_changes, uid_t uid);
 
 int notification_noti_delete_by_display_applist(int display_applist,
-				int *deleted_num, GList **deleted_list, uid_t uid);
+		int *deleted_num,
+		notification_deleted_list_info_s **deleted_list,
+		uid_t uid);
 
 int notification_noti_get_count(notification_type_e type,
 		const char *app_id,
