@@ -356,7 +356,8 @@ static int testapp_test_delete_all_notifications()
 {
 	int noti_err = NOTIFICATION_ERROR_NONE;
 
-	noti_err = notification_delete_all(NOTIFICATION_TYPE_NOTI);
+	//noti_err = notification_delete_all(NOTIFICATION_TYPE_NOTI);
+	noti_err = notification_delete_by_display_applist(NOTIFICATION_DISPLAY_APP_NOTIFICATION_TRAY);
 
 	testapp_print("notification_delete_all returns[%d]", noti_err);
 

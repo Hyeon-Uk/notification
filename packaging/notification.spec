@@ -16,12 +16,11 @@ BuildRequires: pkgconfig(capi-appfw-app-control)
 BuildRequires: pkgconfig(capi-appfw-package-manager)
 BuildRequires: pkgconfig(pkgmgr-info)
 BuildRequires: pkgconfig(libtzplatform-config)
-BuildRequires: pkgconfig(gio-2.0)
-BuildRequires: pkgconfig(gio-unix-2.0)
 BuildRequires: pkgconfig(glib-2.0)
 BuildRequires: pkgconfig(iniparser)
 BuildRequires: pkgconfig(security-manager)
 BuildRequires: pkgconfig(libsmack)
+BuildRequires: pkgconfig(gmock)
 
 BuildRequires: cmake
 Requires(post): /sbin/ldconfig
@@ -106,3 +105,53 @@ fi
 %{_includedir}/notification/notification_type_internal.h
 %{_libdir}/pkgconfig/notification.pc
 %{_libdir}/libnotification.so
+
+
+
+#################################################
+# notification-ex
+#################################################
+%package -n %{name}-ex
+Summary: Library for developing the notification
+Group: Applications/Application Utility
+License: Apache-2.0
+
+%description -n %{name}-ex
+Provide APIs to develop the notification.
+
+%package -n %{name}-ex-devel
+Summary: Notification development library (dev)
+Group: Development/Libraries
+Requires: %{name}-ex
+
+%description -n %{name}-ex-devel
+Header & package configuration files to support development of the notification.
+
+%post -n %{name}-ex
+/sbin/ldconfig
+
+%postun -n %{name}-ex -p /sbin/ldconfig
+
+%files -n %{name}-ex
+%manifest %{name}-ex.manifest
+%attr(0644,root,root) %{_libdir}/libnotification-ex.so.*
+%license LICENSE
+
+%files -n %{name}-ex-devel
+%{_includedir}/notification-ex/*.h
+%{_libdir}/pkgconfig/notification-ex.pc
+%attr(0644,root,root) %{_libdir}/libnotification-ex.so
+
+
+#################################################
+# notification_ex_unittests
+#################################################
+%package -n notification_ex_unittests
+Summary:    GTest for notification_ex
+Group:      Development/Libraries
+
+%description -n notification_ex_unittests
+GTest for notification_ex
+
+%files -n notification_ex_unittests
+%{_bindir}/notification_ex_unittests
