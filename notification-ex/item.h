@@ -97,7 +97,7 @@ class EXPORT_API IconTextItem : public AbstractItem {
   void Deserialize(Bundle b) override;
   std::shared_ptr<AbstractItem> FindByID(std::string id) override;
   IconItem GetIconItem() const;
-  IconItem GetTextItem() const;
+  TextItem GetTextItem() const;
 
  private:
   std::string iconPath_ = nullptr;
