@@ -144,14 +144,14 @@ Header & package configuration files to support development of the notification.
 
 
 #################################################
-# notification_ex_unittests
+# notification-ex_unittests
 #################################################
-%package -n notification_ex_unittests
-Summary:    GTest for notification_ex
+%package -n notification-ex_unittests
+Summary:    GTest for notification-ex
 Group:      Development/Libraries
 
-%description -n notification_ex_unittests
-GTest for notification_ex
+%description -n notification-ex_unittests
+GTest for notification-ex
 
-%files -n notification_ex_unittests
-%{_bindir}/notification_ex_unittests
+%files -n notification-ex_unittests
+%{_bindir}/notification-ex_unittests
