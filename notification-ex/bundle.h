@@ -31,7 +31,18 @@ namespace item {
 class EXPORT_API Bundle {
  public:
   Bundle();
+  explicit Bundle(std::string raw);
+  explicit Bundle(bundle* raw);
   ~Bundle();
+
+  Bundle(const Bundle&);
+  Bundle& operator=(const Bundle&);
+
+  Bundle(Bundle && other);
+  Bundle& operator=(Bundle && other);
+
+  const bundle* GetConstRaw() const;
+  bundle* GetRaw();
   const char* ToString();
 
  private:

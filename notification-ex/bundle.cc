@@ -27,7 +27,61 @@ namespace notification {
 namespace item {
 
 Bundle::Bundle() {
-	raw_ = bundle_create();
+  raw_ = bundle_create();
+  if (raw_ == NULL)
+    THROW(NOTIFICATION_ERROR_OUT_OF_MEMORY);
+}
+
+Bundle::Bundle(std::string raw) {
+  if (!raw.empty()) {
+    raw_ = bundle_decode(reinterpret_cast<const bundle_raw*>(raw.c_str()),
+                         raw.length());
+    if (raw_ == NULL) {
+      int ret = get_last_result();
+      if (ret == BUNDLE_ERROR_OUT_OF_MEMORY)
+        THROW(NOTIFICATION_ERROR_OUT_OF_MEMORY);
+      else
+        THROW(NOTIFICATION_ERROR_INVALID_PARAMETER);
+    }
+  } else {
+    raw_ = bundle_create();
+    if (raw_ == NULL)
+      THROW(NOTIFICATION_ERROR_OUT_OF_MEMORY);
+  }
+}
+
+Bundle::Bundle(bundle* raw) {
+  raw_ = bundle_dup(raw);
+  if (raw_ == NULL)
+    THROW(NOTIFICATION_ERROR_OUT_OF_MEMORY);
+}
+
+Bundle::Bundle(Bundle&& b) : raw_(b.raw_) {
+  b.raw_ = nullptr;
+}
+
+Bundle& Bundle::operator = (Bundle&& b) {
+  raw_ = b.raw_;
+  b.raw_ = nullptr;
+  return *this;
+}
+
+Bundle::Bundle(const Bundle& b) : raw_(bundle_dup(b.raw_)) {
+}
+
+Bundle& Bundle::operator = (const Bundle& b) {
+  raw_ = bundle_dup(b.raw_);
+  if (raw_ == NULL)
+    THROW(NOTIFICATION_ERROR_OUT_OF_MEMORY);
+  return *this;
+}
+
+const bundle* Bundle::GetConstRaw() const {
+  return raw_;
+}
+
+bundle* Bundle::GetRaw() {
+  return raw_;
 }
 
 const char* Bundle::ToString() {
