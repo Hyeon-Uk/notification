@@ -17,7 +17,7 @@
 #ifndef NOTIFICATION_EX_OBSERVER_INTERFACE_H_
 #define NOTIFICATION_EX_OBSERVER_INTERFACE_H_
 
-#include "notification-ex/bundle.h"
+#include "notification-ex/ex_bundle.h"
 #include "notification-ex/event_info.h"
 
 #ifndef EXPORT_API

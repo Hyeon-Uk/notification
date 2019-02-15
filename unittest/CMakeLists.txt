@@ -29,6 +29,7 @@ TARGET_LINK_LIBRARIES(${PROJECT_NAME} ${notification-ex_unittests_LDFLAGS}
     ${pkgs_LDFLAGS}
     ${pkgs_LIBRARIES}
     gmock
+    notification-ex
 )
 
 INSTALL(TARGETS ${PROJECT_NAME} DESTINATION /usr/bin/)

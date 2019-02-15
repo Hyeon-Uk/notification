@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-#include "notification-ex/bundle.h"
+#include "notification-ex/ex_bundle.h"
 #include "notification-ex/exception.h"
 
 #ifdef LOG_TAG

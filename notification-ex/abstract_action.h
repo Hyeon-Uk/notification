@@ -22,7 +22,7 @@
 #include <memory>
 #include <string>
 
-#include "notification-ex/bundle.h"
+#include "notification-ex/ex_bundle.h"
 
 #ifndef EXPORT_API
 #define EXPORT_API __attribute__((visibility("default")))

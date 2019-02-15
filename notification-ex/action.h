@@ -23,7 +23,7 @@
 #include <string>
 
 #include "notification-ex/abstract_action.h"
-#include "notification-ex/bundle.h"
+#include "notification-ex/ex_bundle.h"
 
 namespace notification {
 namespace item {
