@@ -33,12 +33,27 @@ class EXPORT_API AppControlAction  : public AbstractAction {
   explicit AppControlAction(app_control_h control);
   virtual ~AppControlAction();
 
-  bool IsLocal() const override;
-  void Execute(std::shared_ptr<AbstractItem> item) override;
-  Bundle Serialize() override;
-  void Deserialize(Bundle b) override;
-  void SetAppControl(app_control_h control);
-  app_control_h GetAppControl() const;
+  bool IsLocal() const override {
+    return true;
+  }
+
+  void Execute(std::shared_ptr<AbstractItem> item) override {
+  }
+
+  Bundle Serialize() override {
+    Bundle b;
+    return b;
+  }
+
+  void Deserialize(Bundle b) override {
+  }
+
+  void SetAppControl(app_control_h control) {
+  }
+
+  app_control_h GetAppControl() const {
+    return control_;
+  }
 
  private:
   app_control_h control_ = nullptr;
@@ -49,10 +64,20 @@ class EXPORT_API ReplyAction  : public AbstractAction {
   ReplyAction();
   virtual ~ReplyAction();
 
-  bool IsLocal() const override;
-  void Execute(std::shared_ptr<AbstractItem> item) override;
-  Bundle Serialize() override;
-  void Deserialize(Bundle b) override;
+  bool IsLocal() const override {
+    return true;
+  }
+
+  void Execute(std::shared_ptr<AbstractItem> item) override {
+  }
+
+  Bundle Serialize() override {
+    Bundle b;
+    return b;
+  }
+
+  void Deserialize(Bundle b) override {
+  }
 };
 
 class EXPORT_API VisibilityAction  : public AbstractAction {
@@ -60,14 +85,28 @@ class EXPORT_API VisibilityAction  : public AbstractAction {
   VisibilityAction();
   virtual ~VisibilityAction();
 
-  bool IsLocal() const override;
-  void Execute(std::shared_ptr<AbstractItem> item) override;
-  Bundle Serialize() override;
-  void Deserialize(Bundle b) override;
-  void SetVisibility(std::string id, bool visible);
+  bool IsLocal() const override {
+    return true;
+  }
+
+  void Execute(std::shared_ptr<AbstractItem> item) override {
+  }
+
+  Bundle Serialize() override {
+    Bundle b;
+    return b;
+  }
+
+  void Deserialize(Bundle b) override {
+  }
+
+  void SetVisibility(std::string id, bool visible) {
+    id_ = id;
+    visible_ = visible;
+  }
 
  private:
-  std::string id_ = NULL;
+  std::string id_;
   bool visible_ = false;
 };
 

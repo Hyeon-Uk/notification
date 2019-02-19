@@ -15,6 +15,7 @@ pkg_check_modules(notification-ex REQUIRED
 	bundle
 	dlog
 	capi-appfw-app-control
+	capi-appfw-app-common
 )
 
 FOREACH(flag ${notification-ex_CFLAGS})

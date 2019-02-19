@@ -32,12 +32,8 @@ namespace notification {
 namespace item {
 
 class AbstractItem;
-
 class EXPORT_API AbstractAction {
  public:
-  AbstractAction();
-  virtual ~AbstractAction();
-
   virtual bool IsLocal() const = 0;
   virtual void Execute(std::shared_ptr<AbstractItem> item) = 0;
   virtual Bundle Serialize() = 0;

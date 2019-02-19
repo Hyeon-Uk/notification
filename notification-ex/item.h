@@ -33,32 +33,6 @@
 namespace notification {
 namespace item {
 
-class EXPORT_API GroupItem : public AbstractItem {
- public:
-  GroupItem();
-  virtual ~GroupItem();
-
-  Bundle Serialize() override;
-  void Deserialize(Bundle b) override;
-  std::shared_ptr<AbstractItem> FindByID(std::string id) override;
-  void AddChild(std::shared_ptr<AbstractItem> child);
-  void Remove(std::string itemId);
-  std::list<std::shared_ptr<AbstractItem>> GetChildren() const;
-  int GetChannel() const;
-  void SetChannel(int channel);
-  void SetDirection(bool vertical);
-  bool IsVertical() const;
-  std::string GetAppLabel() const;
-
-
- private:
-  bool Vertical_ = true;
-  std::string channel_ = nullptr;
-  std::string id_ = nullptr;
-  LEDInfo led_;
-  std::string itemId_ = nullptr;
-};  // class GroupItem
-
 class EXPORT_API TextItem : public AbstractItem {
  public:
   TextItem(std::string text);
@@ -117,20 +91,6 @@ class EXPORT_API ImageItem : public AbstractItem {
  private:
   std::string imagePath_ = nullptr;
 };  // class ImageItem
-
-class EXPORT_API ButtonItem : public AbstractItem {
- public:
-  ButtonItem(std::string title);
-  virtual ~ButtonItem();
-
-  Bundle Serialize() override;
-  void Deserialize(Bundle b) override;
-  std::shared_ptr<AbstractItem> FindByID(std::string id) override;
-  std::string GetTitle() const;
-
- private:
-  std::string title_ = nullptr;
-};  // class ButtonItem
 
 class EXPORT_API ProgressItem : public AbstractItem {
  public:

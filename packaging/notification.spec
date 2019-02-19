@@ -13,6 +13,7 @@ BuildRequires: pkgconfig(dbus-1)
 BuildRequires: pkgconfig(dlog)
 BuildRequires: pkgconfig(aul)
 BuildRequires: pkgconfig(capi-appfw-app-control)
+BuildRequires: pkgconfig(capi-appfw-app-common)
 BuildRequires: pkgconfig(capi-appfw-package-manager)
 BuildRequires: pkgconfig(pkgmgr-info)
 BuildRequires: pkgconfig(libtzplatform-config)
@@ -55,6 +56,10 @@ make %{?jobs:-j%jobs}
 %install
 rm -rf %{buildroot}
 %make_install
+
+
+%check
+ctest --output-on-failure %{?_smp_mflags}
 
 mkdir -p %{buildroot}%{upgrade_script_path}
 cp -f scripts/505.notification_upgrade.sh %{buildroot}%{upgrade_script_path}

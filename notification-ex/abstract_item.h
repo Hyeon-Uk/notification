@@ -43,7 +43,7 @@ class EXPORT_API Color {
   Color(unsigned char a, unsigned char r, unsigned char g, unsigned char b)
     : a_(a), r_(r), g_(g), b_(b) {
   }
-  virtual ~Color();
+  virtual ~Color() = default;
 
   unsigned char GetAVal() const {
     return a_;
@@ -76,7 +76,7 @@ class EXPORT_API Padding {
   Padding(int left, int top, int right, int bottom)
     : left_(left), top_(top), right_(right), bottom_(bottom) {
   }
-  virtual ~Padding();
+  virtual ~Padding() = default;
 
   int GeLeft() const {
     return left_;
@@ -108,7 +108,7 @@ class EXPORT_API Geometry {
   }
   Geometry(int x, int y, int w, int h) : x_(x), y_(y), w_(w), h_(h) {
   }
-  virtual ~Geometry();
+  virtual ~Geometry() = default;
 
   int GetX() const {
     return x_;
@@ -132,8 +132,10 @@ class EXPORT_API Geometry {
 
 class EXPORT_API Style {
  public:
+  Style() {
+  }
   Style(Color color, Padding padding, Geometry geometry);
-  virtual ~Style();
+  virtual ~Style() = default;
 
   Padding GetPadding() const;
   Color GetColor() const;
@@ -151,7 +153,7 @@ class EXPORT_API LEDInfo {
     Color(0, 0, 0, 0);
   }
   explicit LEDInfo(Color color);
-  virtual ~LEDInfo();
+  virtual ~LEDInfo() = default;
 
   void SetOffPeriod(int ms);
   void SetOnPeriod(int ms);
@@ -180,13 +182,18 @@ class EXPORT_API AbstractItem {
   };
 
   enum Policy {
+    None,
     OnBootClear,
     SimMode,
   };
 
  public:
   AbstractItem();
-  virtual ~AbstractItem();
+  AbstractItem(Type type,
+      std::shared_ptr<AbstractAction> action = std::shared_ptr<AbstractAction>({}));
+  AbstractItem(std::string id, Type type,
+      std::shared_ptr<AbstractAction> action = std::shared_ptr<AbstractAction>({}));
+  virtual ~AbstractItem() = 0;
 
   virtual Bundle Serialize() = 0;
   virtual void Deserialize(Bundle b) = 0;
@@ -194,21 +201,30 @@ class EXPORT_API AbstractItem {
   std::string GetId() const;
   void SetId(std::string id);
   std::shared_ptr<AbstractAction> GetAction() const;
-  Style GetStyle() const;
+  void SetAction(std::shared_ptr<AbstractAction> action) const;
+  std::shared_ptr<Style> GetStyle() const;
+  void SetStyle(std::shared_ptr<Style> style);
   Type GetType() const;
+  static AbstractItem::Type GetType(Bundle b);
   void SetVisible(bool visible);
   void SetEnable(bool enable);
   void AddReceiver(std::string receiver_group);
   void RemoveReceiver(std::string receiver_group);
   bool CanReceive(std::string id) const;
   void SetPolicy(Policy policy);
+  Policy GetPolicy() const;
   int GetVersion() const;
   void SetVersion(int ver);
   int GetHideTime() const;
   int GetDeleteTime() const;
+  std::string GetChannel() const;
+  void SetChannel(std::string channel);
+  void SetLEDInfo(std::shared_ptr<LEDInfo> led);
+  std::shared_ptr<LEDInfo> GetLEDInfo() const;
 
  private:
-  Style style_;
+  class Impl;
+  std::unique_ptr<Impl> impl_;
 };  // class AbstractItem
 
 }  // namespace item
