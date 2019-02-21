@@ -92,25 +92,6 @@ class EXPORT_API ImageItem : public AbstractItem {
   std::string imagePath_ = nullptr;
 };  // class ImageItem
 
-class EXPORT_API ProgressItem : public AbstractItem {
- public:
-  ProgressItem(float min, float max, float current);
-  virtual ~ProgressItem();
-
-  Bundle Serialize() override;
-  void Deserialize(Bundle b) override;
-  AbstractItem& FindByID(std::string id) override;
-  float GetCurrent() const;
-  void SetCurrent(float current);
-  float GetMin() const;
-  float GetMax() const;
-
- private:
-  float min_ = 0.0;
-  float max_ = 0.0;
-  float current_ = 0.0;
-};  // class ProgressItem
-
 class EXPORT_API CheckBoxItem : public AbstractItem {
  public:
   CheckBoxItem(bool checked);

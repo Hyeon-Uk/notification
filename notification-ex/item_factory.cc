@@ -24,6 +24,7 @@
 #include "notification-ex/null_item.h"
 #include "notification-ex/exception.h"
 #include "notification-ex/input_selector_item.h"
+#include "notification-ex/progress_item.h"
 
 #ifdef LOG_TAG
 #undef LOG_TAG
@@ -60,7 +61,7 @@ shared_ptr<AbstractItem> ItemFactory::CreateItem(AbstractItem::Type type) {
   case AbstractItem::Effect :
     return make_shared<ButtonItem>("");
   case AbstractItem::Progress :
-    return make_shared<ButtonItem>("");
+    return make_shared<ProgressItem>(0.0, 0.0, 0.0);
   case AbstractItem::Custom :
     return make_shared<ButtonItem>("");
   }
