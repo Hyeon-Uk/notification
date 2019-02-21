@@ -19,6 +19,7 @@
 #include <memory>
 
 #include "notification-ex/button_item.h"
+#include "notification-ex/item_factory.h"
 
 #ifdef LOG_TAG
 #undef LOG_TAG
@@ -53,10 +54,10 @@ void ButtonItem::Deserialize(Bundle b) {
   title_ = b.GetString(BUTTON_TITLE_KEY);
 }
 
-shared_ptr<AbstractItem> ButtonItem::FindByID(std::string id) {
+AbstractItem& ButtonItem::FindByID(std::string id) {
   if (GetId() == id)
-    return shared_ptr<AbstractItem>(this);
-  return nullptr;
+    return *this;
+  return ItemFactory::GetNullItem();
 }
 
 std::string ButtonItem::GetTitle() const {

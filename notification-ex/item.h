@@ -40,7 +40,7 @@ class EXPORT_API TextItem : public AbstractItem {
 
   Bundle Serialize() override;
   void Deserialize(Bundle b) override;
-  std::shared_ptr<AbstractItem> FindByID(std::string id) override;
+  AbstractItem& FindByID(std::string id) override;
   void SetContents(std::string contents);
   std::string GetContents() const;
   std::string GetHyperLink() const;
@@ -56,7 +56,7 @@ class EXPORT_API IconItem : public AbstractItem {
 
   Bundle Serialize() override;
   void Deserialize(Bundle b) override;
-  std::shared_ptr<AbstractItem> FindByID(std::string id) override;
+  AbstractItem& FindByID(std::string id) override;
 
  private:
   std::string iconPath_ = nullptr;
@@ -69,7 +69,7 @@ class EXPORT_API IconTextItem : public AbstractItem {
 
   Bundle Serialize() override;
   void Deserialize(Bundle b) override;
-  std::shared_ptr<AbstractItem> FindByID(std::string id) override;
+  AbstractItem& FindByID(std::string id) override;
   IconItem GetIconItem() const;
   TextItem GetTextItem() const;
 
@@ -85,7 +85,7 @@ class EXPORT_API ImageItem : public AbstractItem {
 
   Bundle Serialize() override;
   void Deserialize(Bundle b) override;
-  std::shared_ptr<AbstractItem> FindByID(std::string id) override;
+  AbstractItem& FindByID(std::string id) override;
   std::string GetImagePath() const;
 
  private:
@@ -99,7 +99,7 @@ class EXPORT_API ProgressItem : public AbstractItem {
 
   Bundle Serialize() override;
   void Deserialize(Bundle b) override;
-  std::shared_ptr<AbstractItem> FindByID(std::string id) override;
+  AbstractItem& FindByID(std::string id) override;
   float GetCurrent() const;
   void SetCurrent(float current);
   float GetMin() const;
@@ -118,7 +118,7 @@ class EXPORT_API CheckBoxItem : public AbstractItem {
 
   Bundle Serialize() override;
   void Deserialize(Bundle b) override;
-  std::shared_ptr<AbstractItem> FindByID(std::string id) override;
+  AbstractItem& FindByID(std::string id) override;
   bool IsChecked() const;
 
 private:
@@ -138,7 +138,7 @@ class EXPORT_API ChatMessageItem : public AbstractItem {
 
   Bundle Serialize() override;
   void Deserialize(Bundle b) override;
-  std::shared_ptr<AbstractItem> FindByID(std::string id) override;
+  AbstractItem& FindByID(std::string id) override;
   TextItem GetTextItem() const;
   TextItem GetDataItem() const;
   time_t GetTimeItem() const;
@@ -152,7 +152,7 @@ class EXPORT_API InputSelectorItem : public AbstractItem {
 
   Bundle Serialize() override;
   void Deserialize(Bundle b) override;
-  std::shared_ptr<AbstractItem> FindByID(std::string id) override;
+  AbstractItem& FindByID(std::string id) override;
   std::list<std::string> GetContents() const;
   void SetContents(std::list<std::string> contents);
 
@@ -167,7 +167,7 @@ class EXPORT_API EntryItem : public AbstractItem {
 
   Bundle Serialize() override;
   void Deserialize(Bundle b) override;
-  std::shared_ptr<AbstractItem> FindByID(std::string id) override;
+  AbstractItem& FindByID(std::string id) override;
   std::string GetText() const;
   void SetText(std::string text);
   void SetTextLimit(int size);
@@ -185,7 +185,7 @@ class EXPORT_API EffectItem : public AbstractItem {
 
   Bundle Serialize() override;
   void Deserialize(Bundle b) override;
-  std::shared_ptr<AbstractItem> FindByID(std::string id) override;
+  AbstractItem& FindByID(std::string id) override;
   std::string GetSoundPath() const;
   std::string GetVibrationPath() const;
 
@@ -201,7 +201,7 @@ class EXPORT_API CustomItem : public AbstractItem {
 
   Bundle Serialize() override;
   void Deserialize(Bundle b) override;
-  std::shared_ptr<AbstractItem> FindByID(std::string id) override;
+  AbstractItem& FindByID(std::string id) override;
 };  // class CustomItem
 
 }  // namespace item

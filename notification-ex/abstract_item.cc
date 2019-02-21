@@ -36,10 +36,6 @@ using namespace std;
 namespace notification {
 namespace item {
 
-AbstractItem::AbstractItem()
-  : impl_(new Impl(this)) {
-}
-
 AbstractItem::AbstractItem(AbstractItem::Type type,
     std::shared_ptr<AbstractAction> action)
   : impl_(new Impl(this, type, action)) {
@@ -59,11 +55,6 @@ AbstractItem::Impl::Impl(AbstractItem* parent, string id,
 AbstractItem::Impl::Impl(AbstractItem* parent,
     AbstractItem::Type type, std::shared_ptr<AbstractAction> action)
   : type_(type), action_(action), parent_(parent) {
-  LOGI("GroupItem created");
-}
-
-AbstractItem::Impl::Impl(AbstractItem* parent)
-  : parent_(parent) {
   LOGI("GroupItem created");
 }
 

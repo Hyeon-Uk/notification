@@ -70,9 +70,19 @@ TEST_F(GroupItemTest, FindByID) {
   item.AddChild(std::make_shared<ButtonItem>("btn2", "test2"));
   ASSERT_EQ(item.GetChildren().size(), 2);
 
-  shared_ptr<AbstractItem> child = item.FindByID("btn2");
-  ButtonItem* btn = static_cast<ButtonItem*>(child.get());
-  ASSERT_EQ(btn->GetTitle(), "test2");
+  AbstractItem& child = item.FindByID("btn2");
+  ButtonItem& btn = static_cast<ButtonItem&>(child);
+  ASSERT_EQ(btn.GetTitle(), "test2");
+}
+
+TEST_F(GroupItemTest, FindByIDNullItemReturn) {
+  GroupItem item("GROUP1");
+  item.AddChild(std::make_shared<ButtonItem>("btn1", "test1"));
+  item.AddChild(std::make_shared<ButtonItem>("btn2", "test2"));
+  ASSERT_EQ(item.GetChildren().size(), 2);
+
+  AbstractItem& child = item.FindByID("not_exist_button");
+  ASSERT_EQ(child.GetType(), AbstractItem::NullObject);
 }
 
 int __fake_app_get_name(char** app_name) {

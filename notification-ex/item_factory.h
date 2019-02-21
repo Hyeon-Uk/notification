@@ -29,6 +29,7 @@ namespace item {
 class EXPORT_API ItemFactory {
  public:
   std::shared_ptr<AbstractItem> CreateItem(AbstractItem::Type type);
+  static AbstractItem& GetNullItem();
 };
 
 }  // namespace item

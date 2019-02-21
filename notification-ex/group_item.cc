@@ -73,8 +73,7 @@ Bundle GroupItem::Serialize() {
     Bundle serialized = i.get()->Serialize();
     serialized.Add(
         GROUP_CHILDREN_TYPE_KEY, to_string((int)i.get()->GetType()));
-    char* str = strdup(reinterpret_cast<char*>(serialized.ToRaw().first.get()));
-    arr.push_back(str);
+    arr.push_back(reinterpret_cast<char*>(serialized.ToRaw().first.get()));
   }
   b.Add(GROUP_CHILDREN_KEY, arr);
 
@@ -103,12 +102,12 @@ void GroupItem::Deserialize(Bundle b) {
   }
 }
 
-shared_ptr<AbstractItem> GroupItem::FindByID(std::string id) {
+AbstractItem& GroupItem::FindByID(std::string id) {
   for (auto& i : impl_->children_list_) {
     if (i.get()->GetId() == id)
-      return i;
+      return *i;
   }
-  return nullptr;
+  return ItemFactory::GetNullItem();
 }
 
 void GroupItem::AddChild(shared_ptr<AbstractItem> child) {

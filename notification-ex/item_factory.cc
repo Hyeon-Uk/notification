@@ -21,6 +21,8 @@
 #include "notification-ex/item_factory.h"
 #include "notification-ex/button_item.h"
 #include "notification-ex/group_item.h"
+#include "notification-ex/null_item.h"
+#include "notification-ex/exception.h"
 
 #ifdef LOG_TAG
 #undef LOG_TAG
@@ -34,6 +36,8 @@ namespace item {
 
 shared_ptr<AbstractItem> ItemFactory::CreateItem(AbstractItem::Type type) {
   switch (type) {
+  case AbstractItem::NullObject :
+    THROW(NOTIFICATION_ERROR_INVALID_PARAMETER);
   case AbstractItem::Text :
     return make_shared<ButtonItem>("");
   case AbstractItem::Icon :
@@ -61,6 +65,10 @@ shared_ptr<AbstractItem> ItemFactory::CreateItem(AbstractItem::Type type) {
   }
 
   return nullptr;
+}
+AbstractItem& ItemFactory::GetNullItem() {
+  static NullItem item;
+  return item;
 }
 
 }  // namespace item

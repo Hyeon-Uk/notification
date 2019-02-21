@@ -18,6 +18,22 @@ class ButtonItemTest : public ::testing::Test {
   void TearDown() override {}
 };
 
+
+TEST_F(ButtonItemTest, FindByID) {
+  ButtonItem item("btn_id", "title");
+
+  AbstractItem& child = item.FindByID("btn_id");
+  ButtonItem& btn = static_cast<ButtonItem&>(child);
+  ASSERT_EQ(btn.GetTitle(), "title");
+}
+
+TEST_F(ButtonItemTest, FindByIDNullItemReturn) {
+  ButtonItem item("btn_id", "title");
+
+  AbstractItem& child = item.FindByID("not_exist_button");
+  ASSERT_EQ(child.GetType(), AbstractItem::NullObject);
+}
+
 TEST_F(ButtonItemTest, SerializeDeserializeGetTitle) {
   ButtonItem item("title");
   Bundle b = item.Serialize();

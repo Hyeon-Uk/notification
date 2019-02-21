@@ -167,6 +167,7 @@ class EXPORT_API LEDInfo {
 class EXPORT_API AbstractItem {
  public:
   enum Type {
+    NullObject,
     Text,
     Image,
     Icon,
@@ -197,7 +198,7 @@ class EXPORT_API AbstractItem {
 
   virtual Bundle Serialize() = 0;
   virtual void Deserialize(Bundle b) = 0;
-  virtual std::shared_ptr<AbstractItem> FindByID(std::string id) = 0;
+  virtual AbstractItem& FindByID(std::string id) = 0;
   std::string GetId() const;
   void SetId(std::string id);
   std::shared_ptr<AbstractAction> GetAction() const;

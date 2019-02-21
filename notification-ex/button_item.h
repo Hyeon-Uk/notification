@@ -37,7 +37,7 @@ class EXPORT_API ButtonItem : public AbstractItem {
 
   Bundle Serialize() override;
   void Deserialize(Bundle b) override;
-  std::shared_ptr<AbstractItem> FindByID(std::string id) override;
+  AbstractItem& FindByID(std::string id) override;
   std::string GetTitle() const;
 
  private:
