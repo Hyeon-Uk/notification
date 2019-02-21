@@ -179,6 +179,7 @@ class EXPORT_API AbstractItem {
     Group,
     Entry,
     Progress,
+    Time,
     Custom,
   };
 

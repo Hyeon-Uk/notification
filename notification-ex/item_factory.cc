@@ -27,6 +27,12 @@
 #include "notification-ex/exception.h"
 #include "notification-ex/input_selector_item.h"
 #include "notification-ex/progress_item.h"
+#include "notification-ex/icon_item.h"
+#include "notification-ex/icon_text_item.h"
+#include "notification-ex/image_item.h"
+#include "notification-ex/checkbox_item.h"
+#include "notification-ex/chat_message_item.h"
+#include "notification-ex/time_item.h"
 
 #ifdef LOG_TAG
 #undef LOG_TAG
@@ -45,17 +51,17 @@ shared_ptr<AbstractItem> ItemFactory::CreateItem(AbstractItem::Type type) {
   case AbstractItem::Text :
     return make_shared<TextItem>("");
   case AbstractItem::Icon :
-    return make_shared<ButtonItem>("");
+    return make_shared<IconItem>("");
   case AbstractItem::Image :
-    return make_shared<ButtonItem>("");
+    return make_shared<ImageItem>("");
   case AbstractItem::Button :
     return make_shared<ButtonItem>("");
   case AbstractItem::ChatMessage :
-    return make_shared<ButtonItem>("");
+    return make_shared<ChatMessageItem>("", nullptr, nullptr, nullptr, nullptr, ChatMessageItem::Type::user);
   case AbstractItem::CheckBox :
-    return make_shared<ButtonItem>("");
+    return make_shared<CheckBoxItem>("", "");
   case AbstractItem::IconText :
-    return make_shared<ButtonItem>("");
+    return make_shared<IconTextItem>("", nullptr, nullptr);
   case AbstractItem::InputSelector :
     return make_shared<InputSelectorItem>();
   case AbstractItem::Group :
@@ -64,6 +70,8 @@ shared_ptr<AbstractItem> ItemFactory::CreateItem(AbstractItem::Type type) {
     return make_shared<EntryItem>("");
   case AbstractItem::Progress :
     return make_shared<ProgressItem>(0.0, 0.0, 0.0);
+  case AbstractItem::Time :
+    return make_shared<TimeItem>();
   case AbstractItem::Custom :
     return make_shared<ButtonItem>("");
   }

@@ -38,5 +38,3 @@ TARGET_LINK_LIBRARIES(${PROJECT_NAME} ${notification-ex_unittests_LDFLAGS}
 )
 
 INSTALL(TARGETS ${PROJECT_NAME} DESTINATION /usr/bin/)
-
-
