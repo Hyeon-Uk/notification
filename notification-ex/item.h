@@ -145,21 +145,6 @@ class EXPORT_API ChatMessageItem : public AbstractItem {
   Type GetType() const;
 };  // class ChatMessageItem
 
-class EXPORT_API InputSelectorItem : public AbstractItem {
- public:
-  InputSelectorItem();
-  virtual ~InputSelectorItem();
-
-  Bundle Serialize() override;
-  void Deserialize(Bundle b) override;
-  AbstractItem& FindByID(std::string id) override;
-  std::list<std::string> GetContents() const;
-  void SetContents(std::list<std::string> contents);
-
- private:
-  std::list<std::string> contents_;
-};  // class InputSelectorItem
-
 class EXPORT_API EntryItem : public AbstractItem {
  public:
   EntryItem();

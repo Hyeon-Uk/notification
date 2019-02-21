@@ -23,6 +23,7 @@
 #include "notification-ex/group_item.h"
 #include "notification-ex/null_item.h"
 #include "notification-ex/exception.h"
+#include "notification-ex/input_selector_item.h"
 
 #ifdef LOG_TAG
 #undef LOG_TAG
@@ -53,7 +54,7 @@ shared_ptr<AbstractItem> ItemFactory::CreateItem(AbstractItem::Type type) {
   case AbstractItem::IconText :
     return make_shared<ButtonItem>("");
   case AbstractItem::InputSelector :
-    return make_shared<ButtonItem>("");
+    return make_shared<InputSelectorItem>();
   case AbstractItem::Group :
     return make_shared<GroupItem>();
   case AbstractItem::Effect :
@@ -66,6 +67,7 @@ shared_ptr<AbstractItem> ItemFactory::CreateItem(AbstractItem::Type type) {
 
   return nullptr;
 }
+
 AbstractItem& ItemFactory::GetNullItem() {
   static NullItem item;
   return item;

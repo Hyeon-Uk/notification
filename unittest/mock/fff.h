@@ -105,10 +105,10 @@ SOFTWARE.
 
 #ifdef __cplusplus
     #define FFF_EXTERN_C extern "C"{
-    #define FFF_END_EXTERN_C } 
+    #define FFF_END_EXTERN_C }
 #else  /* ansi c */
-    #define FFF_EXTERN_C 
-    #define FFF_END_EXTERN_C 
+    #define FFF_EXTERN_C
+    #define FFF_END_EXTERN_C
 #endif  /* cpp/ansi c */
 
 #define DEFINE_RESET_FUNCTION(FUNCNAME) \
@@ -119,7 +119,7 @@ SOFTWARE.
 /* -- END INTERNAL HELPER MACROS -- */
 
 typedef void (*fff_function_t)(void);
-typedef struct { 
+typedef struct {
     fff_function_t call_history[FFF_CALL_HISTORY_LEN];
     unsigned int call_history_idx;
 } fff_globals_t;
