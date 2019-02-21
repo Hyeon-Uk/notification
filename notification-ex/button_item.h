@@ -23,7 +23,6 @@
 
 #include "notification-ex/abstract_item.h"
 
-using namespace std;
 namespace notification {
 namespace item {
 
@@ -41,7 +40,8 @@ class EXPORT_API ButtonItem : public AbstractItem {
   std::string GetTitle() const;
 
  private:
-  std::string title_;
+  class Impl;
+  std::unique_ptr<Impl> impl_;
 };  // class ButtonItem
 
 }  // namespace item

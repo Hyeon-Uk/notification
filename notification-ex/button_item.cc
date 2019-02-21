@@ -19,6 +19,7 @@
 #include <memory>
 
 #include "notification-ex/button_item.h"
+#include "notification-ex/button_item_implementation.h"
 #include "notification-ex/item_factory.h"
 
 #ifdef LOG_TAG
@@ -28,30 +29,38 @@
 #define LOG_TAG "NOTIFICATION_EX"
 #define BUTTON_TITLE_KEY "__BUTTON_TITLE_KEY__"
 
+using namespace std;
 namespace notification {
 namespace item {
 
 ButtonItem::ButtonItem(string title,
       std::shared_ptr<AbstractAction> action)
-  : AbstractItem(AbstractItem::Button, action), title_(title) {
+  : AbstractItem(AbstractItem::Button, action), impl_(new Impl(this, title)) {
 }
 
 ButtonItem::ButtonItem(string id, string title,
       std::shared_ptr<AbstractAction> action)
-  : AbstractItem(id, AbstractItem::Button, action), title_(title) {
+  : AbstractItem(id, AbstractItem::Button, action), impl_(new Impl(this, title)) {
 }
+
 ButtonItem::~ButtonItem() = default;
+ButtonItem::Impl::~Impl() = default;
+
+ButtonItem::Impl::Impl(ButtonItem* parent, string title)
+  : title_(title), parent_(parent) {
+  LOGI("ButtonItem impl created");
+}
 
 Bundle ButtonItem::Serialize() {
   Bundle b;
   b = AbstractItem::Serialize();
-  b.Add(BUTTON_TITLE_KEY, title_);
+  b.Add(BUTTON_TITLE_KEY, impl_->title_);
   return b;
 }
 
 void ButtonItem::Deserialize(Bundle b) {
   AbstractItem::Deserialize(b);
-  title_ = b.GetString(BUTTON_TITLE_KEY);
+  impl_->title_ = b.GetString(BUTTON_TITLE_KEY);
 }
 
 AbstractItem& ButtonItem::FindByID(std::string id) {
@@ -61,7 +70,7 @@ AbstractItem& ButtonItem::FindByID(std::string id) {
 }
 
 std::string ButtonItem::GetTitle() const {
-  return title_;
+  return impl_->title_;
 }
 
 }  // namespace item
