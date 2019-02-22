@@ -177,7 +177,7 @@ class EXPORT_API AbstractItem {
     IconText,
     InputSelector,
     Group,
-    Effect,
+    Entry,
     Progress,
     Custom,
   };
@@ -222,6 +222,10 @@ class EXPORT_API AbstractItem {
   void SetChannel(std::string channel);
   void SetLEDInfo(std::shared_ptr<LEDInfo> led);
   std::shared_ptr<LEDInfo> GetLEDInfo() const;
+  void SetSoundPath(std::string path);
+  void SetVibrationPath(std::string path);
+  std::string GetSoundPath() const;
+  std::string GetVibrationPath() const;
 
  private:
   class Impl;

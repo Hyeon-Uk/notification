@@ -33,22 +33,6 @@
 namespace notification {
 namespace item {
 
-class EXPORT_API TextItem : public AbstractItem {
- public:
-  TextItem(std::string text);
-  virtual ~TextItem();
-
-  Bundle Serialize() override;
-  void Deserialize(Bundle b) override;
-  AbstractItem& FindByID(std::string id) override;
-  void SetContents(std::string contents);
-  std::string GetContents() const;
-  std::string GetHyperLink() const;
-
- private:
-  std::string text_ = nullptr;
-};  // class TextItem
-
 class EXPORT_API IconItem : public AbstractItem {
  public:
   IconItem(std::string iconpath);
@@ -125,40 +109,6 @@ class EXPORT_API ChatMessageItem : public AbstractItem {
   time_t GetTimeItem() const;
   Type GetType() const;
 };  // class ChatMessageItem
-
-class EXPORT_API EntryItem : public AbstractItem {
- public:
-  EntryItem();
-  virtual ~EntryItem();
-
-  Bundle Serialize() override;
-  void Deserialize(Bundle b) override;
-  AbstractItem& FindByID(std::string id) override;
-  std::string GetText() const;
-  void SetText(std::string text);
-  void SetTextLimit(int size);
-  int GetTextLimit() const;
-
- private:
-  std::string text_ = nullptr;
-  int limit_ = 160;
-};  // class EntryItem
-
-class EXPORT_API EffectItem : public AbstractItem {
- public:
-  EffectItem();
-  virtual ~EffectItem();
-
-  Bundle Serialize() override;
-  void Deserialize(Bundle b) override;
-  AbstractItem& FindByID(std::string id) override;
-  std::string GetSoundPath() const;
-  std::string GetVibrationPath() const;
-
- private:
-  std::string soundPath_ = nullptr;
-  std::string vibrationPath_ = nullptr;
-};  // class EffectItem
 
 class EXPORT_API CustomItem : public AbstractItem {
  public:

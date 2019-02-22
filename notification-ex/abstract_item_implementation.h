@@ -55,6 +55,8 @@ class AbstractItem::Impl {
   std::string can_receive_;
   std::shared_ptr<AbstractAction> action_;
   AbstractItem* parent_;
+  std::string sound_path_;
+  std::string vibration_path_;
 };
 
 }  // namespace item

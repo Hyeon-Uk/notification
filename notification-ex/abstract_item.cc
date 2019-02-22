@@ -167,5 +167,18 @@ void AbstractItem::SetChannel(string channel) {
   impl_->channel_ = channel;
 }
 
+void AbstractItem::SetSoundPath(std::string path) {
+  impl_->sound_path_ = path;
+}
+void AbstractItem::SetVibrationPath(std::string path) {
+  impl_->vibration_path_ = path;
+}
+std::string AbstractItem::GetSoundPath() const {
+  return impl_->sound_path_;
+}
+std::string AbstractItem::GetVibrationPath() const {
+  return impl_->vibration_path_;
+}
+
 }  // namespace item
 }  // namespace notification

@@ -22,6 +22,8 @@
 #include "notification-ex/button_item.h"
 #include "notification-ex/group_item.h"
 #include "notification-ex/null_item.h"
+#include "notification-ex/entry_item.h"
+#include "notification-ex/text_item.h"
 #include "notification-ex/exception.h"
 #include "notification-ex/input_selector_item.h"
 #include "notification-ex/progress_item.h"
@@ -41,7 +43,7 @@ shared_ptr<AbstractItem> ItemFactory::CreateItem(AbstractItem::Type type) {
   case AbstractItem::NullObject :
     THROW(NOTIFICATION_ERROR_INVALID_PARAMETER);
   case AbstractItem::Text :
-    return make_shared<ButtonItem>("");
+    return make_shared<TextItem>("");
   case AbstractItem::Icon :
     return make_shared<ButtonItem>("");
   case AbstractItem::Image :
@@ -58,8 +60,8 @@ shared_ptr<AbstractItem> ItemFactory::CreateItem(AbstractItem::Type type) {
     return make_shared<InputSelectorItem>();
   case AbstractItem::Group :
     return make_shared<GroupItem>();
-  case AbstractItem::Effect :
-    return make_shared<ButtonItem>("");
+  case AbstractItem::Entry :
+    return make_shared<EntryItem>("");
   case AbstractItem::Progress :
     return make_shared<ProgressItem>(0.0, 0.0, 0.0);
   case AbstractItem::Custom :

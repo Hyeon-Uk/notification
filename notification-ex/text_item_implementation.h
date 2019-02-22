@@ -14,15 +14,32 @@
  * limitations under the License.
  */
 
-#include <gtest/gtest.h>
-#include <gmock/gmock.h>
+#ifndef NOTIFICATION_EX_TEXT_ITEM_IMPLEMENTATION_H_
+#define NOTIFICATION_EX_TEXT_ITEM_IMPLEMENTATION_H_
 
-#include "notification-ex/item.h"
+#include <string>
+#include <memory>
 
-class ENTRY_ITEM : public ::testing::Test {
+#include "notification-ex/text_item.h"
+
+namespace notification {
+namespace item {
+
+class TextItem::Impl {
  public:
-  virtual void SetUp() {
-  }
-  virtual void TearDown() {
-  }
+  virtual ~Impl();
+
+ private:
+  Impl(std::string text);
+
+ private:
+  friend class TextItem;
+
+  std::string text_;
+  std::string hyperlink_;
 };
+
+}  // namespace item
+}  // namespace notification
+
+#endif  // NOTIFICATION_EX_TEXT_ITEM_IMPLEMENTATION_H_
