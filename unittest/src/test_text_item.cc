@@ -33,22 +33,22 @@ class TexttItemTest : public ::testing::Test {
 };
 
 TEST_F(TexttItemTest, FindByID) {
-  TextItem item("text_id", "default");
+  TextItem item("text_id", "contents", "hyperlink");
 
   AbstractItem& child = item.FindByID("text_id");
   TextItem& btn = static_cast<TextItem&>(child);
-  ASSERT_EQ(btn.GetContents(), "default");
+  ASSERT_EQ(btn.GetContents(), "contents");
 }
 
 TEST_F(TexttItemTest, FindByIDNullItemReturn) {
-  TextItem item("text_id", "default");
+  TextItem item("text_id", "contents", "hyperlink");
 
   AbstractItem& child = item.FindByID("not_existed_item");
   ASSERT_EQ(child.GetType(), TextItem::NullObject);
 }
 
 TEST_F(TexttItemTest, SerializeDeserializeGetContents) {
-  TextItem item("text_id", "default");
+  TextItem item("text_id", "contents");
   Bundle b = item.Serialize();
   ItemFactory factory;
   std::shared_ptr<AbstractItem> gen_item = ItemInflator::Create(factory, b);
@@ -59,16 +59,19 @@ TEST_F(TexttItemTest, SerializeDeserializeGetContents) {
 }
 
 TEST_F(TexttItemTest, SetContentsGetContents) {
-  TextItem item("text_id", "default");
-  item.SetContents("test");
+  TextItem item("text_id", "contents");
+  ASSERT_EQ(item.GetContents(), "contents");
 
-  ASSERT_EQ(item.GetContents(), "test");
+  item.SetContents("changed");
+  ASSERT_EQ(item.GetContents(), "changed");
 }
 
 TEST_F(TexttItemTest, GetHyperLink) {
-  TextItem item("text_id", "default");
+  TextItem item("text_id", "contents");
+  ASSERT_TRUE(item.GetHyperLink().empty());
 
-  ASSERT_EQ(item.GetHyperLink(), "");
+  TextItem item2("text_id", "contents", "hyperlink2");
+  ASSERT_EQ(item2.GetHyperLink(), "hyperlink2");
 }
 
 }  // namespace

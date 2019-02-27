@@ -31,9 +31,8 @@ namespace item {
 
 class EXPORT_API TextItem : public AbstractItem {
  public:
-  TextItem(std::string text,
-      std::shared_ptr<AbstractAction> action = std::shared_ptr<AbstractAction>({}));
-  TextItem(std::string id, std::string text,
+  TextItem(std::string id ,std::string text,
+      std::string hyperlink = std::string(),
       std::shared_ptr<AbstractAction> action = std::shared_ptr<AbstractAction>({}));
   virtual ~TextItem();
 

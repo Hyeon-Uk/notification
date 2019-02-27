@@ -43,7 +43,7 @@ shared_ptr<AbstractItem> ItemFactory::CreateItem(AbstractItem::Type type) {
   case AbstractItem::NullObject :
     THROW(NOTIFICATION_ERROR_INVALID_PARAMETER);
   case AbstractItem::Text :
-    return make_shared<TextItem>("");
+    return make_shared<TextItem>("","");
   case AbstractItem::Icon :
     return make_shared<ButtonItem>("");
   case AbstractItem::Image :

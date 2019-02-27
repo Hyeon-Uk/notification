@@ -30,7 +30,7 @@ class TextItem::Impl {
   virtual ~Impl();
 
  private:
-  Impl(std::string text);
+  Impl(std::string text, std::string hyperlink);
 
  private:
   friend class TextItem;
