@@ -17,8 +17,6 @@
 #ifndef NOTIFICATION_EX_ABSTRACT_ACTION_H_
 #define NOTIFICATION_EX_ABSTRACT_ACTION_H_
 
-#include <app_control.h>
-
 #include <memory>
 #include <string>
 
@@ -34,11 +32,19 @@ namespace item {
 class AbstractItem;
 class EXPORT_API AbstractAction {
  public:
-  virtual bool IsLocal() const = 0;
-  virtual void Execute(std::shared_ptr<AbstractItem> item) = 0;
+  AbstractAction(bool isLocal);
+  AbstractAction(bool isLocal, std::string extra);
+  virtual ~AbstractAction();
+
   virtual Bundle Serialize() = 0;
   virtual void Deserialize(Bundle b) = 0;
+  virtual bool IsLocal() const = 0;
+  virtual void Execute(std::shared_ptr<AbstractItem> item) = 0;
   virtual std::string GetExtra() const = 0;
+
+ private:
+  class Impl;
+  std::unique_ptr<Impl> impl_;
 };
 
 }  // namespace item

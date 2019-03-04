@@ -14,41 +14,30 @@
  * limitations under the License.
  */
 
-#include <string>
-#include <memory>
+#ifndef NOTIFICATION_EX_APP_CONTROL_ACTION_IMPLEMENTATION_H_
+#define NOTIFICATION_EX_APP_CONTROL_ACTION_IMPLEMENTATION_H_
 
-#include "notification-ex/action.h"
-#include "notification-ex/ex_bundle.h"
-#include "notification-ex/exception.h"
-
-#ifdef LOG_TAG
-#undef LOG_TAG
-#endif
-
-#define LOG_TAG "NOTIFICATION_EX"
+#include "notification-ex/app_control_action.h"
 
 namespace notification {
 namespace item {
 
-AppControlAction::AppControlAction(app_control_h control)
-  : control_(control) {
-}
+class AppControlAction::Impl {
+ public:
+  virtual ~Impl();
 
-AppControlAction::~AppControlAction() {
-}
+ private:
+  friend class AppControlAction;
+  Impl(AppControlAction* parent);
 
-ReplyAction::ReplyAction() {
-}
+ private:
+  AppControlAction* parent_;
 
-ReplyAction::~ReplyAction() {
-}
+  app_control_h control_ = nullptr;
+};
 
-VisibilityAction::VisibilityAction() {
-}
+}  // namespace item
+}  // namespace notification
 
-VisibilityAction::~VisibilityAction() {
-}
+#endif  // NOTIFICATION_EX_APP_CONTROL_ACTION_IMPLEMENTATION_H_
 
-
-} //namespace item
-}  //namespace notification
