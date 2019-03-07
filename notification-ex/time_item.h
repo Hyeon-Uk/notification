@@ -30,7 +30,8 @@ namespace item {
 
 class EXPORT_API TimeItem : public AbstractItem {
  public:
-  TimeItem();
+  TimeItem(
+    std::shared_ptr<AbstractAction> action = std::shared_ptr<AbstractAction>({}));
   TimeItem(time_t time,
     std::shared_ptr<AbstractAction> action = std::shared_ptr<AbstractAction>({}));
   TimeItem(std::string id, time_t time,

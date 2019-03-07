@@ -31,7 +31,8 @@
 namespace notification {
 namespace item {
 
-TimeItem::TimeItem() : AbstractItem(AbstractItem::Time) {
+TimeItem::TimeItem(std::shared_ptr<AbstractAction> action)
+  : AbstractItem(AbstractItem::Time, action), impl_(new Impl(this, 0)) {
   time_t current_time;
   time(&current_time);
 

@@ -63,14 +63,12 @@ TEST_F(ChatMessageItemTest, FindByIDNullItemReturn) {
 TEST_F(ChatMessageItemTest, SerializeDeserialize) {
   Bundle b = ChatMessageItemTest::item->Serialize();
 
-  //ChatMessageItemTest::item->Deserialize(b);
-  //ItemFactory factory;
-  //std::shared_ptr<AbstractItem> gen_item = ItemInflator::Create(factory, b);
-  //ASSERT_EQ(ChatMessageItemTest::item->GetType(), gen_item.get()->GetType());
-
-  //ChatMessageItem* gen_image = static_cast<ChatMessageItem*>(gen_item.get());
-  //ASSERT_EQ(ChatMessageItemTest::item->GetNameItem(), gen_image->GetNameItem());
-  //ASSERT_EQ(ChatMessageItemTest::item->GetTextItem(), gen_image->GetTextItem());
-  //ASSERT_EQ(ChatMessageItemTest::item->GetDataItem(), gen_image->GetDataItem());
-  //ASSERT_EQ(ChatMessageItemTest::item->GetType(), gen_image->GetType());
+  ItemFactory factory;
+  std::shared_ptr<AbstractItem> gen_item = ItemInflator::Create(factory, b);
+  ChatMessageItem* gen_message = static_cast<ChatMessageItem*>(gen_item.get());
+  ASSERT_EQ(gen_message->GetNameItem().GetContents(), "name");
+  ASSERT_EQ(gen_message->GetTextItem().GetContents(), "text");
+  ASSERT_EQ(gen_message->GetDataItem().GetContents(), "data");
+  ASSERT_EQ(gen_message->GetTimeItem().GetTime(), ChatMessageItemTest::current_time);
+  ASSERT_EQ(gen_message->GetType(), ChatMessageItemTest::type);
 }

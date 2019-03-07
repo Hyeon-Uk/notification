@@ -40,14 +40,12 @@ TEST_F(IconTextItemTest, create) {
   EXPECT_NE(IconTextItemTest::item, nullptr);
 }
 
-#if 0
 TEST_F(IconTextItemTest, FindByID) {
   AbstractItem& child = IconTextItemTest::item->FindByID(IconTextItemTest::id);
   IconTextItem& icontext = static_cast<IconTextItem&>(child);
   ASSERT_EQ(icontext.GetIconItem().GetImagePath(), "icon_path");
   ASSERT_EQ(icontext.GetTextItem().GetContents(), "title");
 }
-#endif
 
 TEST_F(IconTextItemTest, FindByIDNullItemReturn) {
   AbstractItem& child = IconTextItemTest::item->FindByID("not_existed_item");
@@ -57,9 +55,9 @@ TEST_F(IconTextItemTest, FindByIDNullItemReturn) {
 TEST_F(IconTextItemTest, SerializeDeserialize) {
   Bundle b = IconTextItemTest::item->Serialize();
 
-  //ItemFactory factory;
-  //std::shared_ptr<AbstractItem> gen_item = ItemInflator::Create(factory, b);
-  //IconTextItem* gen_icon = static_cast<IconTextItem*>(gen_item.get());
-  //ASSERT_EQ(IconTextItemTest::item->GetIconItem(), gen_icon->GetIconItem());
-  //ASSERT_EQ(IconTextItemTest::item->GetTextItem(), gen_icon->GetTextItem());
+  ItemFactory factory;
+  std::shared_ptr<AbstractItem> gen_item = ItemInflator::Create(factory, b);
+  IconTextItem* gen_icon = static_cast<IconTextItem*>(gen_item.get());
+  ASSERT_EQ(IconTextItemTest::item->GetIconItem().GetImagePath(), gen_icon->GetIconItem().GetImagePath());
+  ASSERT_EQ(IconTextItemTest::item->GetTextItem().GetContents(), gen_icon->GetTextItem().GetContents());
 }

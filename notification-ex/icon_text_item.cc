@@ -34,7 +34,7 @@ namespace item {
 
 IconTextItem::IconTextItem(std::string id, std::shared_ptr<IconItem> icon,
   std::shared_ptr<TextItem> text, std::shared_ptr<AbstractAction> action)
-  : AbstractItem(AbstractItem::IconText, action),
+  : AbstractItem(id, AbstractItem::IconText, action),
   impl_(new Impl(this, icon, text)) {
 }
 
