@@ -49,7 +49,7 @@ int VisibilityAction::GetType() const {
   return AbstractAction::Visibility;
 }
 
-Bundle VisibilityAction::Serialize() {
+Bundle VisibilityAction::Serialize() const {
   char buf_key[128];
   char buf_data[128];
   Bundle b;

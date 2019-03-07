@@ -21,6 +21,7 @@
 
 #include <memory>
 #include <string>
+#include <list>
 
 #include "notification-ex/abstract_action.h"
 #include "notification-ex/ex_bundle.h"
@@ -191,12 +192,12 @@ class EXPORT_API AbstractItem {
   };
 
  public:
-  AbstractItem(std::shared_ptr<AbstractAction> action =
-      std::shared_ptr<AbstractAction>({}));
-  AbstractItem(std::string id, std::shared_ptr<AbstractAction> action =
-      std::shared_ptr<AbstractAction>({}));
+  AbstractItem(
+      std::shared_ptr<AbstractAction> action = std::shared_ptr<AbstractAction>({}));
+  AbstractItem(std::string id,
+      std::shared_ptr<AbstractAction> action = std::shared_ptr<AbstractAction>({}));
   virtual ~AbstractItem() = 0;
-  virtual Bundle Serialize() = 0;
+  virtual Bundle Serialize() const = 0;
   virtual void Deserialize(Bundle b) = 0;
   virtual AbstractItem& FindByID(std::string id) = 0;
   virtual int GetType() const = 0;
@@ -211,6 +212,7 @@ class EXPORT_API AbstractItem {
   void SetEnable(bool enable);
   void AddReceiver(std::string receiver_group);
   void RemoveReceiver(std::string receiver_group);
+  std::list<std::string> GetReceiverList();
   bool CanReceive(std::string id) const;
   void SetPolicy(Policy policy);
   Policy GetPolicy() const;
@@ -223,6 +225,14 @@ class EXPORT_API AbstractItem {
   std::string GetSoundPath() const;
   std::string GetVibrationPath() const;
   std::shared_ptr<IItemInfo> GetInfo() const;
+  std::string GetSenderAppId() const;
+  void SetSenderAppId(std::string sender_appid);
+  std::string GetTag();
+  void SetTag();
+  time_t GetTime();
+  int GetUid();
+  void SetUid(int uid);
+  int GetRequestId();
 
  private:
   class Impl;

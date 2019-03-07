@@ -14,25 +14,34 @@
  * limitations under the License.
  */
 
-#ifndef NOTIFICATION_EX_OBSERVER_INTERFACE_H_
-#define NOTIFICATION_EX_OBSERVER_INTERFACE_H_
+#ifndef NOTIFICATION_EX_REPORTER_IMPLEMENTATION_H_
+#define NOTIFICATION_EX_REPORTER_IMPLEMENTATION_H_
 
-#include "notification-ex/ex_bundle.h"
-#include "notification-ex/event_info.h"
+#include <string>
+#include <memory>
+#include <list>
 
-#ifndef EXPORT_API
-#define EXPORT_API __attribute__((visibility("default")))
-#endif
+#include "notification-ex/reporter.h"
 
 namespace notification {
 
-class EXPORT_API IEventObserver {
+class Reporter::Impl {
  public:
-  virtual ~IEventObserver() = 0;
+  virtual ~Impl();
 
-  virtual void OnEvent(EventInfo info, std::shared_ptr<AbstractItem> noti) = 0;
+ private:
+  Impl(Reporter* parent,
+    IEventSender* sender, IEventListener* listener);
+
+ private:
+  friend class Reporter;
+  void SendNotify(std::shared_ptr<item::AbstractItem> noti,
+      EventInfo::EventType type);
+  IEventSender* sender_;
+  IEventListener* listener_;
+  Reporter* parent_;
 };
 
 }  // namespace notification
 
-#endif
+#endif  // NOTIFICATION_EX_REPORTER_IMPLEMENTATION_H_

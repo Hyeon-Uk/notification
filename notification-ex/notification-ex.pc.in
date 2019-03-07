@@ -6,6 +6,6 @@ includedir=@INCLUDEDIR@
 Name: notification-ex
 Description: Support development of the notification
 Version: @VERSION@
-Libs: -L${libdir}
+Libs: -L${libdir} -lnotification-ex
 Cflags: -I${includedir}
 cppflags: -I${includedir}

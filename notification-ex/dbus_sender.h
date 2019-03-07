@@ -17,7 +17,11 @@
 #ifndef NOTIFICATION_EX_DBUS_SENDER_H_
 #define NOTIFICATION_EX_DBUS_SENDER_H_
 
+#include <gio/gio.h>
+
 #include "notification-ex/ex_bundle.h"
+#include "notification-ex/event_sender_interface.h"
+#include "notification-ex/event_info.h"
 
 #ifndef EXPORT_API
 #define EXPORT_API __attribute__((visibility("default")))
@@ -25,12 +29,18 @@
 
 namespace notification {
 
-class EXPORT_API DBusSender : public IEventsSender {
+class EXPORT_API DBusSender : public IEventSender {
  public:
-  DBusSender();
+  DBusSender(std::string path);
   virtual ~DBusSender();
 
-  void Notify(Bundle serialized) override;
+  void Notify(const EventInfo& info, std::list<Bundle> serialized,
+      std::string dest_appid = "") override;
+  std::list<Bundle> Request(const EventInfo& info) override;
+
+ private:
+  class Impl;
+  std::unique_ptr<Impl> impl_;
 };
 
 }  // namespace notification

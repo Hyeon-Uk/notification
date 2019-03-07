@@ -49,7 +49,7 @@ int TextItem::GetType() const {
   return AbstractItem::Text;
 }
 
-Bundle TextItem::Serialize() {
+Bundle TextItem::Serialize() const {
   Bundle b;
   b = AbstractItem::Serialize();
 

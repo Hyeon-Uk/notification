@@ -50,7 +50,7 @@ int ImageItem::GetType() const {
   return AbstractItem::Image;
 }
 
-Bundle ImageItem::Serialize() {
+Bundle ImageItem::Serialize() const {
   Bundle b;
   b = AbstractItem::Serialize();
   b.Add(IMAGE_PATH_KEY, impl_->imagePath_);

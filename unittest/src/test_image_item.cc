@@ -20,6 +20,7 @@
 #include "notification-ex/image_item.h"
 #include "notification-ex/item_inflator.h"
 
+using namespace notification;
 using namespace notification::item;
 
 class ImageItemTest : public ::testing::Test {

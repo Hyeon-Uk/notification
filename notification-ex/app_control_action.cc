@@ -60,7 +60,7 @@ int AppControlAction::GetType() const {
   return AbstractAction::AppControl;
 }
 
-Bundle AppControlAction::Serialize() {
+Bundle AppControlAction::Serialize() const {
   Bundle b;
   bundle* control_b = NULL;
   bundle_raw* control_raw;

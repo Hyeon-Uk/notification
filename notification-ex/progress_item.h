@@ -35,7 +35,7 @@ class EXPORT_API ProgressItem : public AbstractItem {
   virtual ~ProgressItem();
 
  public:
-  virtual Bundle Serialize() override;
+  virtual Bundle Serialize() const override;
   virtual void Deserialize(Bundle b) override;
   virtual AbstractItem& FindByID(std::string id) override;
   int GetType() const override;

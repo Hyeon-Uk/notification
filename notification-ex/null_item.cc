@@ -44,7 +44,7 @@ int NullItem::GetType() const {
   return AbstractItem::NullObject;
 }
 
-Bundle NullItem::Serialize() {
+Bundle NullItem::Serialize() const {
   Bundle b;
   b = AbstractItem::Serialize();
   return b;

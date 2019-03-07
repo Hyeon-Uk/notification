@@ -14,23 +14,35 @@
  * limitations under the License.
  */
 
-#ifndef NOTIFICATION_EX_DBUS_LISTENER_H_
-#define NOTIFICATION_EX_DBUS_LISTENER_H_
+#ifndef NOTIFICATION_EX_MANAGER_IMPLEMENTATION_H_
+#define NOTIFICATION_EX_MANAGER_IMPLEMENTATION_H_
 
-#include "notification-ex/observer_interface.h"
+#include <string>
+#include <memory>
+#include <list>
+
+#include "notification-ex/manager.h"
 
 namespace notification {
 
-class EXPORT_API DBusEventsListener : public IEventListener {
+class Manager::Impl {
  public:
-  DBusEventsListener();
-  ~DBusEventsListener();
+  virtual ~Impl();
 
-  void RegisterObserver(IEventObserver observer) override;
-  void UnRegisterObserver(IEventObserver observer) override;
-  void NotifyAll() override;
+ private:
+  Impl(Manager* parent,
+    IEventSender* sender, IEventListener* listener, std::string receiver_group);
+
+ private:
+  friend class Manager;
+  void SendNotify(std::shared_ptr<item::AbstractItem> noti,
+      EventInfo::EventType type);
+  IEventSender* sender_;
+  IEventListener* listener_;
+  std::string receiver_group_;
+  Manager* parent_;
 };
 
 }  // namespace notification
 
-#endif  // NOTIFICATION_EX_DBUS_LISTENER_H_
+#endif  // NOTIFICATION_EX_MANAGER_IMPLEMENTATION_H_

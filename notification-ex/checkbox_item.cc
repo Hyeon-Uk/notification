@@ -46,7 +46,7 @@ int CheckBoxItem::GetType() const {
   return AbstractItem::CheckBox;
 }
 
-Bundle CheckBoxItem::Serialize() {
+Bundle CheckBoxItem::Serialize() const {
   Bundle b;
 
   b = AbstractItem::Serialize();

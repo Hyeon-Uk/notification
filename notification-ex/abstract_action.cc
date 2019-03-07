@@ -55,7 +55,7 @@ int AbstractAction::GetType(Bundle b) {
   return std::stoi(b.GetString(ABSTRACT_ACTION_TYPE_KEY));
 }
 
-Bundle AbstractAction::Serialize() {
+Bundle AbstractAction::Serialize() const {
   Bundle b;
 
   b.Add(ABSTRACT_ACTION_TYPE_KEY, std::to_string(GetType()));

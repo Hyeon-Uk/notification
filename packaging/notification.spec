@@ -22,6 +22,7 @@ BuildRequires: pkgconfig(iniparser)
 BuildRequires: pkgconfig(security-manager)
 BuildRequires: pkgconfig(libsmack)
 BuildRequires: pkgconfig(gmock)
+BuildRequires: pkgconfig(uuid)
 
 BuildRequires: cmake
 Requires(post): /sbin/ldconfig

@@ -62,7 +62,7 @@ int ProgressItem::GetType() const {
   return AbstractItem::Progress;
 }
 
-Bundle ProgressItem::Serialize() {
+Bundle ProgressItem::Serialize() const {
   Bundle b;
   b = AbstractItem::Serialize();
   b.Add(PROGRESS_MIN_KEY, to_string(impl_->min_));

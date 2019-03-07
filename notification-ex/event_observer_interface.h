@@ -14,13 +14,10 @@
  * limitations under the License.
  */
 
-#ifndef NOTIFICATION_EX_REPOTER_H_
-#define NOTIFICATION_EX_REPOTER_H_
+#ifndef NOTIFICATION_EX_OBSERVER_INTERFACE_H_
+#define NOTIFICATION_EX_OBSERVER_INTERFACE_H_
 
-#include <string>
-#include <list>
-
-#include "notification-ex/abstract_item.h"
+#include "notification-ex/ex_bundle.h"
 #include "notification-ex/event_info.h"
 
 #ifndef EXPORT_API
@@ -29,23 +26,13 @@
 
 namespace notification {
 
-class EXPORT_API Repoter : public IEventObserver {
+class EXPORT_API IEventObserver {
  public:
-  Repoter(IEventsSender* sender, IEventsListener* listener);
-  virtual ~Repoter();
-
-  void Post(std::shared_ptr<item::AbstractItem> noti);
-  void Post(std::list<std::shared_ptr<AbstractItem>> notiList);
-  void Update(std::shared_ptr<AbstractItem> noti);
-  void Remove(std::shared_ptr<AbstractItem> noti);
-  std::shared_ptr<AbstractItem> FindByRootID(std::string id);
-  void OnEvent(EventInfo info, std::shared_ptr<AbstractItem> notiList) override;
-
- private:
-  IEventsSender* sender_;
-  IEventsListener* receiver_;
+  virtual ~IEventObserver() = default;
+  virtual void OnEvent(const EventInfo& info, std::list<Bundle> serialized) = 0;
+  virtual std::list<Bundle> OnRequest(const EventInfo& info) = 0;
 };
 
 }  // namespace notification
 
-#endif  // NOTIFICATION_EX_REPOTER_H_
+#endif

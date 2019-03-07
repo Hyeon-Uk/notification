@@ -45,7 +45,7 @@ class EXPORT_API ChatMessageItem : public AbstractItem {
   virtual ~ChatMessageItem();
   int GetType() const override;
 
-  Bundle Serialize() override;
+  Bundle Serialize() const override;
   void Deserialize(Bundle b) override;
   AbstractItem& FindByID(std::string id) override;
   TextItem& GetNameItem() const;

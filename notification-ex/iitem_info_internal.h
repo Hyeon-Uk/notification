@@ -27,6 +27,9 @@ class IItemInfoInternal : public IItemInfo{
   virtual ~IItemInfoInternal() = default;
   virtual int GetHideTime() const = 0;
   virtual int GetDeleteTime() const = 0;
+  virtual void AddHideViewer(std::string appid) = 0;
+  virtual void RemoveHideViewer(std::string appid) = 0;
+  virtual std::list<std::string> GetHideViewerList() const = 0;
 };
 
 }  // namespace item

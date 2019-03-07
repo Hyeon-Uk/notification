@@ -19,7 +19,7 @@
 
 namespace notification {
 
-typedef enum _notification_error {
+enum NotificationError {
  NOTIFICATION_ERROR_NONE = TIZEN_ERROR_NONE, /**< Success */
  NOTIFICATION_ERROR_INVALID_PARAMETER = TIZEN_ERROR_INVALID_PARAMETER, /**< Invalid parameter */
  NOTIFICATION_ERROR_OUT_OF_MEMORY = TIZEN_ERROR_OUT_OF_MEMORY, /**< Out of memory */
@@ -32,7 +32,7 @@ typedef enum _notification_error {
  NOTIFICATION_ERROR_NOT_EXIST_ID = TIZEN_ERROR_NOTIFICATION | 0x04, /**< Not exist private ID */
  NOTIFICATION_ERROR_SERVICE_NOT_READY = TIZEN_ERROR_NOTIFICATION | 0x05, /**< No response from notification service */
  NOTIFICATION_ERROR_MAX_EXCEEDED = TIZEN_ERROR_NOTIFICATION | 0x06, /**< Max notification count exceeded (@b Since: 3.0) */
-} notification_error_e;
+};
 
 }  // namespace notification
 

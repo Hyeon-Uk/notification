@@ -39,7 +39,7 @@ class EXPORT_API TimeItem : public AbstractItem {
 
   virtual ~TimeItem();
   int GetType() const override;
-  Bundle Serialize() override;
+  Bundle Serialize() const override;
   void Deserialize(Bundle b) override;
   AbstractItem& FindByID(std::string id) override;
   time_t GetTime() const;

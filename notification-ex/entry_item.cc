@@ -53,7 +53,7 @@ int EntryItem::GetType() const {
   return AbstractItem::Entry;
 }
 
-Bundle EntryItem::Serialize() {
+Bundle EntryItem::Serialize() const {
   Bundle b;
   b = AbstractItem::Serialize();
 

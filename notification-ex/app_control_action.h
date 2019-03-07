@@ -31,7 +31,7 @@ class EXPORT_API AppControlAction : public AbstractAction {
   virtual ~AppControlAction();
 
   int GetType() const override;
-  Bundle Serialize() override;
+  Bundle Serialize() const override;
   void Deserialize(Bundle b) override;
   bool IsLocal() const override;
   void Execute(std::shared_ptr<AbstractItem> item) override;

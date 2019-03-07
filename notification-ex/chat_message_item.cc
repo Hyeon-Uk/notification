@@ -53,7 +53,7 @@ int ChatMessageItem::GetType() const {
   return AbstractItem::ChatMessage;
 }
 
-Bundle ChatMessageItem::Serialize() {
+Bundle ChatMessageItem::Serialize() const {
   Bundle b;
   b = AbstractItem::Serialize();
 

@@ -57,7 +57,7 @@ int TimeItem::GetType() const {
   return AbstractItem::Time;
 }
 
-Bundle TimeItem::Serialize() {
+Bundle TimeItem::Serialize() const {
   Bundle b;
   struct tm* timeinfo;
   char buf[80] = {0,};

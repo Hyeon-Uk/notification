@@ -16,6 +16,8 @@ pkg_check_modules(notification-ex REQUIRED
 	dlog
 	capi-appfw-app-control
 	capi-appfw-app-common
+	aul
+	uuid
 )
 
 FOREACH(flag ${notification-ex_CFLAGS})

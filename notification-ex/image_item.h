@@ -35,7 +35,7 @@ class EXPORT_API ImageItem : public AbstractItem {
   virtual ~ImageItem();
   int GetType() const override;
 
-  Bundle Serialize() override;
+  Bundle Serialize() const override;
   void Deserialize(Bundle b) override;
   AbstractItem& FindByID(std::string id) override;
   std::string GetImagePath() const;

@@ -17,19 +17,30 @@
 #ifndef NOTIFICATION_EX_DBUS_MANAGER_H_
 #define NOTIFICATION_EX_DBUS_MANAGER_H_
 
+#include <gio/gio.h>
+
 #include <string>
+
+#include "notification-ex/ex_bundle.h"
 
 namespace notification {
 
-class DBusConnectionManager {
+class EXPORT_API DBusConnectionManager {
  public:
   static DBusConnectionManager& GetInst();
-  GDbusConnection& GetConnection();
+  GDBusConnection* GetConnection();
+  bool IsDataProviderMaster(std::string appid) const;
+  std::string GetDataProviderMasterName() const;
+  std::string GetInterfaceName() const;
+  std::string GetBusName(std::string appid) const;
 
  private:
+  bool IsDataProviderMaster() const;
   DBusConnectionManager();
   ~DBusConnectionManager();
-  GDbusConnection connection_;
+  int Init();
+  GDBusConnection* connection_ = nullptr;
+  bool is_DPM_ = false;
 };
 
 }  // namespace notification

@@ -55,7 +55,7 @@ int InputSelectorItem::GetType() const {
   return AbstractItem::InputSelector;
 }
 
-Bundle InputSelectorItem::Serialize() {
+Bundle InputSelectorItem::Serialize() const {
   Bundle b;
   b = AbstractItem::Serialize();
   vector<string> contents_vector {

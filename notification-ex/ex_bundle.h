@@ -37,7 +37,6 @@
 #endif
 
 namespace notification {
-namespace item {
 class EXPORT_API Bundle final {
  public:
   using BundleRaw =
@@ -142,6 +141,20 @@ class EXPORT_API Bundle final {
     return bundle_add_byte(handle_, key.c_str(), val.data(), val.size());
   }
 
+  int Merge(Bundle& b) {
+    std::vector<KeyInfo> keys = b.GetKeys();
+    for (auto& k : keys) {
+      int ret;
+      if (k.IsArray())
+        ret = Add(k.GetName(), b.GetStringArray(k.GetName()));
+      else
+        ret = Add(k.GetName(), b.GetString(k.GetName()));
+      if (ret != 0)
+        return ret;
+    }
+    return 0;
+  }
+
   int Remove(const std::string& key) {
     return bundle_del(handle_, key.c_str());
   }
@@ -212,7 +225,6 @@ class EXPORT_API Bundle final {
   bool copy_ = true;
 };
 
-}  // namespace item
 }  // namespace notification
 
 #endif  // NOTIFICATION_EX_BUNDLE_H_

@@ -17,6 +17,7 @@
 #include <dlog.h>
 
 #include <memory>
+#include <algorithm>
 
 #include "notification-ex/item_info_internal.h"
 
@@ -47,6 +48,24 @@ int AbstractItem::Impl::ItemInfo::GetHideTime() const {
 int AbstractItem::Impl::ItemInfo::GetDeleteTime() const {
   return impl_->delete_time_;
 }
+
+void AbstractItem::Impl::ItemInfo::AddHideViewer(std::string appid) {
+  if (find(impl_->hide_viewer_list_.begin(),
+      impl_->hide_viewer_list_.end(), appid) !=
+      impl_->hide_viewer_list_.end()) {
+    return;
+  }
+  impl_->hide_viewer_list_.push_back(appid);
+}
+
+void AbstractItem::Impl::ItemInfo::RemoveHideViewer(std::string appid) {
+  impl_->hide_viewer_list_.remove(appid);
+}
+
+std::list<std::string> AbstractItem::Impl::ItemInfo::GetHideViewerList() const {
+  return impl_->hide_viewer_list_;
+}
+
 
 }  // namespace item
 }  // namespace notification

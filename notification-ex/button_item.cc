@@ -54,7 +54,7 @@ int ButtonItem::GetType() const {
   return AbstractItem::Button;
 }
 
-Bundle ButtonItem::Serialize() {
+Bundle ButtonItem::Serialize() const {
   Bundle b;
   b = AbstractItem::Serialize();
   b.Add(BUTTON_TITLE_KEY, impl_->title_);

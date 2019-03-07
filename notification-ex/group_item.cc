@@ -61,7 +61,7 @@ int GroupItem::GetType() const {
   return AbstractItem::Group;
 }
 
-Bundle GroupItem::Serialize() {
+Bundle GroupItem::Serialize() const {
   Bundle b;
   b = AbstractItem::Serialize();
   b.Add(GROUP_DIRECTION_KEY, impl_->is_vertical_ ?

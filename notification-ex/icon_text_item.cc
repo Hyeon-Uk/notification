@@ -48,7 +48,7 @@ int IconTextItem::GetType() const {
   return AbstractItem::IconText;
 }
 
-Bundle IconTextItem::Serialize() {
+Bundle IconTextItem::Serialize() const {
   Bundle b;
   b = AbstractItem::Serialize();
 

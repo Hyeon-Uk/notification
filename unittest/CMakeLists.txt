@@ -6,6 +6,8 @@ pkg_check_modules(notification-ex_unittests REQUIRED
     dlog
     gmock
     capi-appfw-app-control
+    glib-2.0
+    aul
 )
 
 FOREACH(flag ${notification-ex_unittests_CFLAGS})

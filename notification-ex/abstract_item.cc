@@ -15,6 +15,7 @@
  */
 
 #include <dlog.h>
+#include <uuid/uuid.h>
 
 #include <memory>
 #include <algorithm>
@@ -23,6 +24,7 @@
 #include "notification-ex/abstract_item.h"
 #include "notification-ex/abstract_item_implementation.h"
 #include "notification-ex/item_info_internal.h"
+#include "notification-ex/ex_util.h"
 
 #ifdef LOG_TAG
 #undef LOG_TAG
@@ -32,40 +34,60 @@
 
 #define ABSTRACT_ITEM_TYPE_KEY "__ABSTRACT_ITEM_TYPE_KEY__"
 #define ABSTRACT_ITEM_ID_KEY "__ABSTRACT_ITEM_ID_KEY__"
+#define ABSTRACT_ITEM_SENDER_APPID_KEY "__ABSTRACT_ITEM_SENDER_APPID_KEY__"
 
 using namespace std;
 namespace notification {
 namespace item {
 
-AbstractItem::AbstractItem(std::shared_ptr<AbstractAction> action)
-    : impl_(new Impl(this, action)) {
+string AbstractItem::Impl::GenerateItemId() {
+  char uuid[37];
+  uuid_t u;
+  uuid_generate(u);
+  uuid_unparse(u, uuid);
+  string id = util::GetAppId();
+  return string(uuid) + ":" + id;
+}
+
+AbstractItem::AbstractItem(
+    std::shared_ptr<AbstractAction> action)
+  : impl_(new Impl(this, action)) {
 }
 
 AbstractItem::AbstractItem(std::string id,
     std::shared_ptr<AbstractAction> action)
-    : impl_(new Impl(this, id, action)) {
+  : impl_(new Impl(this, id, action)) {
 }
 
 AbstractItem::Impl::Impl(AbstractItem* parent, string id,
     std::shared_ptr<AbstractAction> action)
-    : id_(id), action_(action), parent_(parent),
+  : id_(id), action_(action), parent_(parent),
     info_(std::make_shared<ItemInfo>(this)) {
-  LOGI("Item created");
+
+  if (id_.empty())
+    id_ = GenerateItemId();
+  sender_appid_ = util::GetAppId();
+  LOGI("GroupItem created (%s)", id_.c_str());
 }
 
 AbstractItem::Impl::Impl(AbstractItem* parent,
     std::shared_ptr<AbstractAction> action)
-    : action_(action), parent_(parent),
+  : action_(action), parent_(parent),
     info_(std::make_shared<ItemInfo>(this)) {
-  LOGI("Item created");
+  LOGI("GroupItem created");
+
+  id_ = GenerateItemId();
+  sender_appid_ = util::GetAppId();
+  LOGI("GroupItem created (%s)", id_.c_str());
 }
 
 AbstractItem::~AbstractItem() = default;
 
-Bundle AbstractItem::Serialize() {
+Bundle AbstractItem::Serialize() const {
   Bundle b;
   b.Add(ABSTRACT_ITEM_TYPE_KEY, to_string(GetType()));
   b.Add(ABSTRACT_ITEM_ID_KEY, impl_->id_);
+  b.Add(ABSTRACT_ITEM_SENDER_APPID_KEY, GetSenderAppId().c_str());
   return b;
 }
 
@@ -76,6 +98,7 @@ void AbstractItem::Deserialize(Bundle b) {
 
   string id_str = b.GetString(ABSTRACT_ITEM_ID_KEY);
   impl_->id_ = id_str;
+  impl_->sender_appid_ = b.GetString(ABSTRACT_ITEM_SENDER_APPID_KEY);
 }
 
 string AbstractItem::GetId() const {
@@ -125,7 +148,13 @@ void AbstractItem::RemoveReceiver(std::string receiver_group) {
   impl_->receiver_group_list_.remove(receiver_group);
 }
 
+list<string> AbstractItem::GetReceiverList() {
+  return impl_->receiver_group_list_;
+}
+
 bool AbstractItem::CanReceive(std::string id) const {
+  if (impl_->receiver_group_list_.size() == 0)
+    return true;
   list<string>::iterator iter =
     std::find(impl_->receiver_group_list_.begin(),
       impl_->receiver_group_list_.end(), id);
@@ -155,14 +184,41 @@ void AbstractItem::SetChannel(string channel) {
 void AbstractItem::SetSoundPath(std::string path) {
   impl_->sound_path_ = path;
 }
+
 void AbstractItem::SetVibrationPath(std::string path) {
   impl_->vibration_path_ = path;
 }
+
 std::string AbstractItem::GetSoundPath() const {
   return impl_->sound_path_;
 }
+
 std::string AbstractItem::GetVibrationPath() const {
   return impl_->vibration_path_;
+}
+
+std::string AbstractItem::GetSenderAppId() const {
+  return impl_->sender_appid_;
+}
+
+void AbstractItem::SetSenderAppId(std::string sender_appid) {
+  impl_->sender_appid_ = sender_appid;
+}
+
+time_t AbstractItem::GetTime() {
+  return impl_->time_;
+}
+
+int AbstractItem::GetUid() {
+  return impl_->uid_;
+}
+
+void AbstractItem::SetUid(int uid) {
+  impl_->uid_ = uid;
+}
+
+int AbstractItem::GetRequestId() {
+  return impl_->request_id_;
 }
 
 }  // namespace item

@@ -21,6 +21,9 @@
 #include <list>
 
 #include "notification-ex/abstract_item.h"
+#include "notification-ex/event_observer_interface.h"
+#include "notification-ex/event_sender_interface.h"
+#include "notification-ex/event_listener_interface.h"
 
 #ifndef EXPORT_API
 #define EXPORT_API __attribute__((visibility("default")))
@@ -30,24 +33,30 @@ namespace notification {
 
 class EXPORT_API Manager : public IEventObserver {
  public:
-  Manager(IEventsSender* sender, IEventsListener* listener);
+  Manager(IEventSender* sender, IEventListener* listener, std::string receiver_group = "");
   virtual ~Manager();
 
+  std::list<std::shared_ptr<item::AbstractItem>> Get();
   void Update(std::shared_ptr<item::AbstractItem> noti);
   void Remove(std::shared_ptr<item::AbstractItem> noti);
   void Hide(std::shared_ptr<item::AbstractItem> noti);
   std::shared_ptr<item::AbstractItem> FindByRootID(std::string id);
-  void SendEvent(EventInfo info, std::shared_ptr<item::AbstractItem> noti);
-  void OnEvent(EventInfo info, std::shared_ptr<AbstractItem> notiList) override;
+  void SendEvent(const EventInfo& info, std::shared_ptr<item::AbstractItem> noti);
+  void OnEvent(const EventInfo& info, std::list<Bundle> serialized) override;
+  std::list<Bundle> OnRequest(const EventInfo& info) override;
+  static std::string GetPath();
 
  protected:
-  virtual void OnAdd(std::list<std::shared_ptr<item::AbstractItem>> addedItem);
-  virtual void OnUpdate(shared_ptr<item::AbstractItem> updatedItem);
-  virtual void OnDelete(shared_ptr<item::AbstractItem> deletedItem);
+  virtual void OnAdd(const EventInfo& info, std::list<std::shared_ptr<item::AbstractItem>> addedItem);
+  virtual void OnUpdate(const EventInfo& info, std::shared_ptr<item::AbstractItem> updatedItem);
+  virtual void OnDelete(const EventInfo& info, std::shared_ptr<item::AbstractItem> deletedItem);
+  virtual std::list<std::shared_ptr<item::AbstractItem>> OnRequestEvent(
+      const EventInfo& info);
 
  private:
-  IEventsSender* sender_;
-  IEventsListener* receiver_;
+  class Impl;
+  std::unique_ptr<Impl> impl_;
+
 };
 
 }  // namespace notification

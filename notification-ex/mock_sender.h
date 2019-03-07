@@ -25,7 +25,7 @@
 
 namespace notification {
 
-class EXPORT_API MockSender : public IEventsSender {
+class EXPORT_API MockSender : public IEventSender {
  public:
   MockSender();
   virtual ~MockSender();

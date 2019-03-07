@@ -33,14 +33,14 @@ class AbstractItem::Impl {
 
  private:
   Impl(AbstractItem* parent);
-  Impl(AbstractItem* parent, std::shared_ptr<AbstractAction> action =
-      std::shared_ptr<AbstractAction>({}));
+  Impl(AbstractItem* parent,
+      std::shared_ptr<AbstractAction> action = std::shared_ptr<AbstractAction>({}));
   Impl(AbstractItem* parent, std::string id,
-      std::shared_ptr<AbstractAction> action =
-          std::shared_ptr<AbstractAction>({}));
+      std::shared_ptr<AbstractAction> action = std::shared_ptr<AbstractAction>({}));
 
  private:
   friend class AbstractItem;
+  std::string GenerateItemId();
   std::string channel_;
   std::string id_;
   std::shared_ptr<LEDInfo> led_ = nullptr;
@@ -57,7 +57,13 @@ class AbstractItem::Impl {
   AbstractItem* parent_;
   std::string sound_path_;
   std::string vibration_path_;
+  std::string sender_appid_;
   std::shared_ptr<IItemInfo> info_;
+  std::list<std::string> hide_viewer_list_;
+  std::string tag_;
+  time_t time_ = 0;
+  int uid_ = 0;
+  int request_id_ = 0;
 };
 
 }  // namespace item
