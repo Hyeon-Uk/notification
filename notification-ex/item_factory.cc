@@ -44,36 +44,37 @@ using namespace std;
 namespace notification {
 namespace item {
 
-shared_ptr<AbstractItem> ItemFactory::CreateItem(AbstractItem::Type type) {
+unique_ptr<AbstractItem> ItemFactory::CreateItem(AbstractItem::Type type) {
   switch (type) {
   case AbstractItem::NullObject :
     THROW(NOTIFICATION_ERROR_INVALID_PARAMETER);
   case AbstractItem::Text :
-    return make_shared<TextItem>("","");
+    return unique_ptr<AbstractItem>(new TextItem("",""));
   case AbstractItem::Icon :
-    return make_shared<IconItem>("");
+    return unique_ptr<AbstractItem>(new IconItem(""));
   case AbstractItem::Image :
-    return make_shared<ImageItem>("");
+    return unique_ptr<AbstractItem>(new ImageItem(""));
   case AbstractItem::Button :
-    return make_shared<ButtonItem>("");
+    return unique_ptr<AbstractItem>(new ButtonItem(""));
   case AbstractItem::ChatMessage :
-    return make_shared<ChatMessageItem>("", nullptr, nullptr, nullptr, nullptr, ChatMessageItem::Type::user);
+    return unique_ptr<AbstractItem>(new ChatMessageItem("",
+        nullptr, nullptr, nullptr, nullptr, ChatMessageItem::Type::user));
   case AbstractItem::CheckBox :
-    return make_shared<CheckBoxItem>("", "");
+    return unique_ptr<AbstractItem>(new CheckBoxItem("", ""));
   case AbstractItem::IconText :
-    return make_shared<IconTextItem>("", nullptr, nullptr);
+    return unique_ptr<AbstractItem>(new IconTextItem("", nullptr, nullptr));
   case AbstractItem::InputSelector :
-    return make_shared<InputSelectorItem>();
+    return unique_ptr<AbstractItem>(new InputSelectorItem());
   case AbstractItem::Group :
-    return make_shared<GroupItem>();
+    return unique_ptr<AbstractItem>(new GroupItem());
   case AbstractItem::Entry :
-    return make_shared<EntryItem>("");
+    return unique_ptr<AbstractItem>(new EntryItem(""));
   case AbstractItem::Progress :
-    return make_shared<ProgressItem>(0.0, 0.0, 0.0);
+    return unique_ptr<AbstractItem>(new ProgressItem(0.0, 0.0, 0.0));
   case AbstractItem::Time :
-    return make_shared<TimeItem>();
+    return unique_ptr<AbstractItem>(new TimeItem());
   case AbstractItem::Custom :
-    return make_shared<ButtonItem>("");
+    return unique_ptr<AbstractItem>(new ButtonItem(""));
   }
 
   return nullptr;
