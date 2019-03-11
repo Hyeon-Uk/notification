@@ -52,8 +52,7 @@ TEST_F(IconItemTest, FindByIDNullItemReturn) {
 TEST_F(IconItemTest, SerializeDeserialize) {
   Bundle b = IconItemTest::item->Serialize();
 
-  ItemFactory factory;
-  std::shared_ptr<AbstractItem> gen_item = ItemInflator::Create(factory, b);
+  std::shared_ptr<AbstractItem> gen_item = ItemInflator::Create(b);
   ASSERT_EQ(IconItemTest::item->GetType(), gen_item.get()->GetType());
 
   IconItem* gen_icon = static_cast<IconItem*>(gen_item.get());

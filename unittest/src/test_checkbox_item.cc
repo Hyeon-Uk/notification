@@ -55,8 +55,7 @@ TEST_F(CheckBoxItemTest, FindByIDNullItemReturn) {
 TEST_F(CheckBoxItemTest, SerializeDeserialize) {
   Bundle b = CheckBoxItemTest::item->Serialize();
 
-  ItemFactory factory;
-  std::shared_ptr<AbstractItem> gen_item = ItemInflator::Create(factory, b);
+  std::shared_ptr<AbstractItem> gen_item = ItemInflator::Create(b);
   ASSERT_EQ(CheckBoxItemTest::item->GetType(), gen_item.get()->GetType());
 
   CheckBoxItem* gen_checkbox = static_cast<CheckBoxItem*>(gen_item.get());

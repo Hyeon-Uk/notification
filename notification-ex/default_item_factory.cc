@@ -18,10 +18,9 @@
 
 #include <memory>
 
-#include "notification-ex/item_factory.h"
+#include "notification-ex/default_item_factory.h"
 #include "notification-ex/button_item.h"
 #include "notification-ex/group_item.h"
-#include "notification-ex/null_item.h"
 #include "notification-ex/entry_item.h"
 #include "notification-ex/text_item.h"
 #include "notification-ex/exception.h"
@@ -44,7 +43,7 @@ using namespace std;
 namespace notification {
 namespace item {
 
-unique_ptr<AbstractItem> ItemFactory::CreateItem(AbstractItem::Type type) {
+unique_ptr<AbstractItem> DefaultItemFactory::CreateItem(AbstractItem::Type type) {
   switch (type) {
   case AbstractItem::NullObject :
     THROW(NOTIFICATION_ERROR_INVALID_PARAMETER);
@@ -78,11 +77,6 @@ unique_ptr<AbstractItem> ItemFactory::CreateItem(AbstractItem::Type type) {
   }
 
   return nullptr;
-}
-
-AbstractItem& ItemFactory::GetNullItem() {
-  static NullItem item;
-  return item;
 }
 
 }  // namespace item

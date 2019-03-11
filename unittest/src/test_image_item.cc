@@ -53,8 +53,7 @@ TEST_F(ImageItemTest, FindByIDNullItemReturn) {
 TEST_F(ImageItemTest, SerializeDeserialize) {
   Bundle b = ImageItemTest::item->Serialize();
 
-  ItemFactory factory;
-  std::shared_ptr<AbstractItem> gen_item = ItemInflator::Create(factory, b);
+  std::shared_ptr<AbstractItem> gen_item = ItemInflator::Create(b);
   ASSERT_EQ(ImageItemTest::item->GetType(), gen_item.get()->GetType());
 
   ImageItem* gen_image = static_cast<ImageItem*>(gen_item.get());

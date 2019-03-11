@@ -37,8 +37,7 @@ TEST_F(ButtonItemTest, FindByIDNullItemReturn) {
 TEST_F(ButtonItemTest, SerializeDeserializeGetTitle) {
   ButtonItem item("title");
   Bundle b = item.Serialize();
-  ItemFactory factory;
-  shared_ptr<AbstractItem> gen_item = ItemInflator::Create(factory, b);
+  shared_ptr<AbstractItem> gen_item = ItemInflator::Create(b);
   ASSERT_EQ(gen_item.get()->GetType(), item.GetType());
 
   ButtonItem* gen_btn = static_cast<ButtonItem*>(gen_item.get());

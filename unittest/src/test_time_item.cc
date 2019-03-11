@@ -54,8 +54,7 @@ TEST_F(TimeItemTest, FindByIDNullItemReturn) {
 TEST_F(TimeItemTest, SerializeDeserialize) {
   Bundle b = TimeItemTest::item->Serialize();
 
-  ItemFactory factory;
-  std::shared_ptr<AbstractItem> gen_item = ItemInflator::Create(factory, b);
+  std::shared_ptr<AbstractItem> gen_item = ItemInflator::Create(b);
   ASSERT_EQ(TimeItemTest::item->GetType(), gen_item.get()->GetType());
 
   TimeItem* gen_time = static_cast<TimeItem*>(gen_item.get());

@@ -18,7 +18,7 @@
 
 #include "notification-ex/checkbox_item.h"
 #include "notification-ex/checkbox_item_implementation.h"
-#include "notification-ex/item_factory.h"
+#include "notification-ex/factory_manager.h"
 #include "notification-ex/exception.h"
 
 #ifdef LOG_TAG
@@ -64,7 +64,7 @@ AbstractItem& CheckBoxItem::FindByID(std::string id) {
   if (GetId() == id)
     return *this;
 
-  return ItemFactory::GetNullItem();
+  return FactoryManager::GetInst().GetNullItem();
 }
 
 std::string CheckBoxItem::GetTitle(void) const {

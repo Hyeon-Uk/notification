@@ -50,8 +50,7 @@ TEST_F(TexttItemTest, FindByIDNullItemReturn) {
 TEST_F(TexttItemTest, SerializeDeserializeGetContents) {
   TextItem item("text_id", "contents");
   Bundle b = item.Serialize();
-  ItemFactory factory;
-  std::shared_ptr<AbstractItem> gen_item = ItemInflator::Create(factory, b);
+  std::shared_ptr<AbstractItem> gen_item = ItemInflator::Create(b);
   ASSERT_EQ(gen_item.get()->GetType(), item.GetType());
 
   TextItem* gen_text = static_cast<TextItem*>(gen_item.get());

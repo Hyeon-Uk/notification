@@ -14,25 +14,23 @@
  * limitations under the License.
  */
 
-#ifndef NOTIFICATION_EX_ITEM_FACTORY_H_
-#define NOTIFICATION_EX_ITEM_FACTORY_H_
+#ifndef NOTIFICATION_EX_DEFAULT_ITEM_FACTORY_H_
+#define NOTIFICATION_EX_DEFAULT_ITEM_FACTORY_H_
 
-#include <string>
 #include <memory>
-#include <list>
 
-#include "notification-ex/abstract_item.h"
+#include "notification-ex/iitem_factory.h"
 
 namespace notification {
 namespace item {
 
-class EXPORT_API ItemFactory {
+class EXPORT_API DefaultItemFactory : public IItemFactory {
  public:
+  virtual ~DefaultItemFactory() = default;
   std::unique_ptr<AbstractItem> CreateItem(AbstractItem::Type type);
-  static AbstractItem& GetNullItem();
 };
 
 }  // namespace item
 }  // namespace notification
 
-#endif  // NOTIFICATION_EX_ITEM_FACTORY_H_
+#endif  // NOTIFICATION_EX_DEFAULT_ITEM_FACTORY_H_

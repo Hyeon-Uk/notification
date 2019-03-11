@@ -63,8 +63,7 @@ TEST_F(ChatMessageItemTest, FindByIDNullItemReturn) {
 TEST_F(ChatMessageItemTest, SerializeDeserialize) {
   Bundle b = ChatMessageItemTest::item->Serialize();
 
-  ItemFactory factory;
-  std::shared_ptr<AbstractItem> gen_item = ItemInflator::Create(factory, b);
+  std::shared_ptr<AbstractItem> gen_item = ItemInflator::Create(b);
   ChatMessageItem* gen_message = static_cast<ChatMessageItem*>(gen_item.get());
   ASSERT_EQ(gen_message->GetNameItem().GetContents(), "name");
   ASSERT_EQ(gen_message->GetTextItem().GetContents(), "text");

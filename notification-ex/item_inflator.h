@@ -22,14 +22,13 @@
 #include <list>
 
 #include "notification-ex/abstract_item.h"
-#include "notification-ex/item_factory.h"
 
 namespace notification {
 namespace item {
 
 class EXPORT_API ItemInflator {
  public:
-  static std::shared_ptr<AbstractItem> Create(ItemFactory factory, Bundle b);
+  static std::shared_ptr<AbstractItem> Create(Bundle b);
 };
 
 }  // namespace item

@@ -18,7 +18,7 @@
 
 #include "notification-ex/icon_text_item.h"
 #include "notification-ex/icon_text_item_implementation.h"
-#include "notification-ex/item_factory.h"
+#include "notification-ex/factory_manager.h"
 #include "notification-ex/exception.h"
 
 #ifdef LOG_TAG
@@ -56,15 +56,15 @@ Bundle IconTextItem::Serialize() {
 }
 
 void IconTextItem::Deserialize(Bundle b) {
-  ItemFactory factory;
-
   AbstractItem::Deserialize(b);
 
-  std::shared_ptr<AbstractItem> icon = factory.CreateItem(AbstractItem::Icon);
+  std::shared_ptr<AbstractItem> icon =
+      FactoryManager::GetInst().CreateItem(AbstractItem::Icon);
   icon.get()->Deserialize(Bundle(b.GetString(ICONTEXT_PATH_KEY)));
   impl_->icon_ = std::static_pointer_cast<IconItem>(icon);
 
-  std::shared_ptr<AbstractItem> text = factory.CreateItem(AbstractItem::Text);
+  std::shared_ptr<AbstractItem> text =
+    FactoryManager::GetInst().CreateItem(AbstractItem::Text);
   text.get()->Deserialize(Bundle(b.GetString(ICONTEXT_TITLE_KEY)));
   impl_->text_ = std::static_pointer_cast<TextItem>(text);
 }
@@ -73,7 +73,7 @@ AbstractItem& IconTextItem::FindByID(std::string id) {
   if (GetId() == id)
     return *this;
 
-  return ItemFactory::GetNullItem();
+  return FactoryManager::GetInst().GetNullItem();
 }
 
 IconItem& IconTextItem::GetIconItem() const {

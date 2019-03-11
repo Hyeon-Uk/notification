@@ -18,7 +18,7 @@
 
 #include "notification-ex/chat_message_item.h"
 #include "notification-ex/chat_message_item_implementation.h"
-#include "notification-ex/item_factory.h"
+#include "notification-ex/factory_manager.h"
 #include "notification-ex/exception.h"
 
 #ifdef LOG_TAG
@@ -66,23 +66,25 @@ Bundle ChatMessageItem::Serialize() {
 }
 
 void ChatMessageItem::Deserialize(Bundle b) {
-  ItemFactory factory;
-
   AbstractItem::Deserialize(b);
 
-  std::shared_ptr<AbstractItem> name = factory.CreateItem(AbstractItem::Text);
+  std::shared_ptr<AbstractItem> name =
+      FactoryManager::GetInst().CreateItem(AbstractItem::Text);
   name.get()->Deserialize(Bundle(b.GetString(CHATMESSAGE_NAME_KEY)));
   impl_->name_ = std::static_pointer_cast<TextItem>(name);
 
-  std::shared_ptr<AbstractItem> text = factory.CreateItem(AbstractItem::Text);
+  std::shared_ptr<AbstractItem> text =
+      FactoryManager::GetInst().CreateItem(AbstractItem::Text);
   text.get()->Deserialize(Bundle(b.GetString(CHATMESSAGE_TEXT_KEY)));
   impl_->text_ = std::static_pointer_cast<TextItem>(text);
 
-  std::shared_ptr<AbstractItem> data = factory.CreateItem(AbstractItem::Text);
+  std::shared_ptr<AbstractItem> data =
+      FactoryManager::GetInst().CreateItem(AbstractItem::Text);
   data.get()->Deserialize(Bundle(b.GetString(CHATMESSAGE_DATA_KEY)));
   impl_->data_ = std::static_pointer_cast<TextItem>(data);
 
-  std::shared_ptr<AbstractItem> time = factory.CreateItem(AbstractItem::Time);
+  std::shared_ptr<AbstractItem> time =
+      FactoryManager::GetInst().CreateItem(AbstractItem::Time);
   time.get()->Deserialize(Bundle(b.GetString(CHATMESSAGE_TIME_KEY)));
   impl_->time_ = std::static_pointer_cast<TimeItem>(time);
 
@@ -93,7 +95,7 @@ AbstractItem&  ChatMessageItem::FindByID(std::string id) {
   if (GetId() == id)
     return *this;
 
-  return ItemFactory::GetNullItem();
+  return FactoryManager::GetInst().GetNullItem();
 }
 
 TextItem& ChatMessageItem::GetNameItem() const {

@@ -43,8 +43,7 @@ TEST_F(GroupItemTest, SerializeDeserialize) {
   item.AddChild(std::make_shared<ButtonItem>("btn2", "test2"));
 
   Bundle b = item.Serialize();
-  ItemFactory factory;
-  shared_ptr<AbstractItem> gen_item = ItemInflator::Create(factory, b);
+  shared_ptr<AbstractItem> gen_item = ItemInflator::Create(b);
   ASSERT_EQ(gen_item.get()->GetType(), item.GetType());
 
   GroupItem* gen_group = static_cast<GroupItem*>(gen_item.get());

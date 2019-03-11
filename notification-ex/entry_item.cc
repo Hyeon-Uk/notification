@@ -20,7 +20,7 @@
 
 #include "notification-ex/entry_item.h"
 #include "notification-ex/entry_item_implementation.h"
-#include "notification-ex/item_factory.h"
+#include "notification-ex/factory_manager.h"
 
 #ifdef LOG_TAG
 #undef LOG_TAG
@@ -69,7 +69,7 @@ void EntryItem::Deserialize(Bundle b) {
 AbstractItem& EntryItem::FindByID(std::string id) {
   if (GetId() == id)
     return *this;
-  return ItemFactory::GetNullItem();
+  return FactoryManager::GetInst().GetNullItem();
 }
 
 std::string EntryItem::GetText() const {

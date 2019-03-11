@@ -21,8 +21,7 @@ class ProgressItemTest : public ::testing::Test {
 TEST_F(ProgressItemTest, SerializeDeserializeGetTitle) {
   ProgressItem item(1.0, 10.0, 100.0);
   Bundle b = item.Serialize();
-  ItemFactory factory;
-  shared_ptr<AbstractItem> gen_item = ItemInflator::Create(factory, b);
+  shared_ptr<AbstractItem> gen_item = ItemInflator::Create(b);
   ASSERT_EQ(gen_item.get()->GetType(), item.GetType());
 
   ProgressItem* gen_progress = static_cast<ProgressItem*>(gen_item.get());

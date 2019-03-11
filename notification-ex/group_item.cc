@@ -22,7 +22,7 @@
 
 #include "notification-ex/group_item.h"
 #include "notification-ex/group_item_implementation.h"
-#include "notification-ex/item_factory.h"
+#include "notification-ex/factory_manager.h"
 #include "notification-ex/exception.h"
 
 #ifdef LOG_TAG
@@ -90,13 +90,13 @@ void GroupItem::Deserialize(Bundle b) {
   if (str_arr.size() == 0)
     return;
 
-  ItemFactory factory;
   for (string str : str_arr) {
     Bundle serialized(str);
     string type_str = serialized.GetString(GROUP_CHILDREN_TYPE_KEY);
     AbstractItem::Type child_type =
         static_cast<AbstractItem::Type>(strtol(type_str.c_str(), NULL, 10));
-    shared_ptr<AbstractItem> child = factory.CreateItem(child_type);
+    shared_ptr<AbstractItem> child =
+        FactoryManager::GetInst().CreateItem(child_type);
     child.get()->Deserialize(serialized);
     AddChild(child);
   }
@@ -107,7 +107,7 @@ AbstractItem& GroupItem::FindByID(std::string id) {
     if (i.get()->GetId() == id)
       return *i;
   }
-  return ItemFactory::GetNullItem();
+  return FactoryManager::GetInst().GetNullItem();
 }
 
 void GroupItem::AddChild(shared_ptr<AbstractItem> child) {

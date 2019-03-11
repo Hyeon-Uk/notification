@@ -18,7 +18,7 @@
 
 #include <memory>
 
-#include "notification-ex/item_factory.h"
+#include "notification-ex/factory_manager.h"
 #include "notification-ex/item_inflator.h"
 
 #ifdef LOG_TAG
@@ -31,8 +31,9 @@ using namespace std;
 namespace notification {
 namespace item {
 
-shared_ptr<AbstractItem> ItemInflator::Create(ItemFactory factory, Bundle b) {
-  shared_ptr<AbstractItem> item = factory.CreateItem(AbstractItem::GetType(b));
+shared_ptr<AbstractItem> ItemInflator::Create(Bundle b) {
+  shared_ptr<AbstractItem> item =
+      FactoryManager::GetInst().CreateItem(AbstractItem::GetType(b));
   item.get()->Deserialize(b);
   return item;
 }

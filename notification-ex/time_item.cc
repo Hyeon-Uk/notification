@@ -18,7 +18,7 @@
 
 #include "notification-ex/time_item.h"
 #include "notification-ex/time_item_implementation.h"
-#include "notification-ex/item_factory.h"
+#include "notification-ex/factory_manager.h"
 #include "notification-ex/exception.h"
 
 #ifdef LOG_TAG
@@ -86,7 +86,7 @@ AbstractItem& TimeItem::FindByID(std::string id) {
   if (GetId() == id)
     return *this;
 
-  return ItemFactory::GetNullItem();
+  return FactoryManager::GetInst().GetNullItem();
 }
 
 time_t TimeItem::GetTime() const {
