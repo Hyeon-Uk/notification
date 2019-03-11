@@ -29,7 +29,9 @@ class AbstractItem::Impl::ItemInfo : public IItemInfoInternal {
   virtual ~ItemInfo() = default;
   int GetVersion() const override;
   void SetVersion(int ver) override;
+  void SetHideTime(int hide_time) override;
   int GetHideTime() const override;
+  void SetDeleteTime(int delete_time) override;
   int GetDeleteTime() const override;
   void AddHideViewer(std::string appid) override;
   void RemoveHideViewer(std::string appid) override;

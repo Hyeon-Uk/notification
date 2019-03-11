@@ -42,8 +42,16 @@ void AbstractItem::Impl::ItemInfo::SetVersion(int ver) {
   impl_->version_ = ver;
 }
 
+void AbstractItem::Impl::ItemInfo::SetHideTime(int hide_time) {
+  impl_->hide_time_ = hide_time;
+}
+
 int AbstractItem::Impl::ItemInfo::GetHideTime() const {
   return impl_->hide_time_;
+}
+
+void AbstractItem::Impl::ItemInfo::SetDeleteTime(int delete_time) {
+  impl_->delete_time_ = delete_time;
 }
 
 int AbstractItem::Impl::ItemInfo::GetDeleteTime() const {

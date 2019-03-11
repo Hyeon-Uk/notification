@@ -48,6 +48,7 @@ TEST_F(EntryItemTest, FindByIDNullItemReturn) {
 
 TEST_F(EntryItemTest, SerializeDeserialize) {
   EntryItem item("entry_id");
+
   Bundle b = item.Serialize();
   std::shared_ptr<AbstractItem> gen_item = ItemInflator::Create(b);
   ASSERT_EQ(gen_item->GetType(), item.GetType());

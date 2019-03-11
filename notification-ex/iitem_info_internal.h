@@ -29,7 +29,9 @@ namespace item {
 class EXPORT_API IItemInfoInternal : public IItemInfo {
  public:
   virtual ~IItemInfoInternal() = default;
+  virtual void SetHideTime(int hide_time) = 0;
   virtual int GetHideTime() const = 0;
+  virtual void SetDeleteTime(int delete_time)  = 0;
   virtual int GetDeleteTime() const = 0;
   virtual void AddHideViewer(std::string appid) = 0;
   virtual void RemoveHideViewer(std::string appid) = 0;

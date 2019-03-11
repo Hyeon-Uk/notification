@@ -80,7 +80,7 @@ class EXPORT_API Padding {
   }
   virtual ~Padding() = default;
 
-  int GeLeft() const {
+  int GetLeft() const {
     return left_;
   }
   int GetTop() const {
@@ -136,12 +136,20 @@ class EXPORT_API Style {
  public:
   Style() {
   }
-  Style(Color color, Padding padding, Geometry geometry);
+  Style(Color color, Padding padding, Geometry geometry)
+    : color_(color), padding_(padding), geometry_(geometry) {
+  }
   virtual ~Style() = default;
 
-  Padding GetPadding() const;
-  Color GetColor() const;
-  Geometry GetGeometry() const;
+  Padding GetPadding() const {
+    return padding_;
+  }
+  Color GetColor() const {
+    return color_;
+  }
+  Geometry GetGeometry() const {
+    return geometry_;
+  }
 
  private:
   Color color_;
@@ -154,16 +162,32 @@ class EXPORT_API LEDInfo {
   LEDInfo() {
     Color(0, 0, 0, 0);
   }
-  explicit LEDInfo(Color color);
+  explicit LEDInfo(Color color)
+    : color_(color) {
+  }
   virtual ~LEDInfo() = default;
 
-  void SetOffPeriod(int ms);
-  void SetOnPeriod(int ms);
-  Color GetColor() const;
+  void SetOnPeriod(int ms) {
+    on_period_ = ms;
+  }
+  int GetOnPeriod() const {
+    return on_period_;
+  }
+  void SetOffPeriod(int ms) {
+    off_period_ = ms;
+  }
+  int GetOffPeriod() const {
+    return off_period_;
+  }
+
+  Color GetColor() const {
+    return color_;
+  }
 
  private:
   Color color_;
-  int period_ = 0;
+  int on_period_ = 0;
+  int off_period_ = 0;
 };  // clss LEDInfo
 
 class EXPORT_API AbstractItem {
@@ -209,7 +233,9 @@ class EXPORT_API AbstractItem {
   std::shared_ptr<Style> GetStyle() const;
   void SetStyle(std::shared_ptr<Style> style);
   void SetVisible(bool visible);
+  bool GetVisible() const;
   void SetEnable(bool enable);
+  bool GetEnable() const;
   void AddReceiver(std::string receiver_group);
   void RemoveReceiver(std::string receiver_group);
   std::list<std::string> GetReceiverList();
