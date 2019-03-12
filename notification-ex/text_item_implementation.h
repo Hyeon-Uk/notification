@@ -30,11 +30,12 @@ class TextItem::Impl {
   virtual ~Impl();
 
  private:
-  Impl(std::string text, std::string hyperlink);
+  Impl(TextItem* parent, std::string text, std::string hyperlink);
 
  private:
   friend class TextItem;
 
+  TextItem* parent_;
   std::string text_;
   std::string hyperlink_;
 };

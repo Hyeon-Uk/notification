@@ -30,11 +30,12 @@ class EntryItem::Impl {
   virtual ~Impl();
 
  private:
-  Impl();
+  Impl(EntryItem* parent);
 
  private:
   friend class EntryItem;
 
+  EntryItem* parent_;
   std::string text_;
   int limit_ = 160;
 };
