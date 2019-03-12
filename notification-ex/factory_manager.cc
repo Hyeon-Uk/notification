@@ -18,6 +18,7 @@
 
 #include "notification-ex/factory_manager.h"
 #include "notification-ex/default_item_factory.h"
+#include "notification-ex/default_action_factory.h"
 #include "notification-ex/null_item.h"
 
 #ifdef LOG_TAG
@@ -37,15 +38,27 @@ FactoryManager& FactoryManager::GetInst() {
 }
 
 void FactoryManager::RegisterFactory(std::unique_ptr<IItemFactory> factory) {
-  factory_ = std::move(factory);
+  item_factory_ = std::move(factory);
+}
+
+void FactoryManager::RegisterFactory(std::unique_ptr<IActionFactory> factory) {
+  action_factory_ = std::move(factory);
 }
 
 std::unique_ptr<AbstractItem> FactoryManager::CreateItem(
     AbstractItem::Type type) {
-  if (factory_.get() == nullptr)
-    factory_.reset(new DefaultItemFactory());
+  if (item_factory_.get() == nullptr)
+    item_factory_.reset(new DefaultItemFactory());
 
-  return factory_->CreateItem(type);
+  return item_factory_->CreateItem(type);
+}
+
+std::unique_ptr<AbstractAction> FactoryManager::CreateAction(
+    AbstractAction::Type type) {
+  if (action_factory_.get() == nullptr)
+    action_factory_.reset(new DefaultActionFactory());
+
+  return action_factory_->CreateAction(type);
 }
 
 AbstractItem& FactoryManager::GetNullItem() {

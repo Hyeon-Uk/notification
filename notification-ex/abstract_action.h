@@ -32,10 +32,20 @@ namespace item {
 class AbstractItem;
 class EXPORT_API AbstractAction {
  public:
+  enum Type {
+    NullObject,
+    AppControl,
+    Visibility,
+    Custom,
+  };
+
+ public:
   AbstractAction(bool isLocal);
   AbstractAction(bool isLocal, std::string extra);
   virtual ~AbstractAction();
 
+  virtual Type GetType() const = 0;
+  static Type GetType(Bundle b);
   virtual Bundle Serialize() = 0;
   virtual void Deserialize(Bundle b) = 0;
   virtual bool IsLocal() const = 0;

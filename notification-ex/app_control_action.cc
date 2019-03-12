@@ -32,21 +32,21 @@ namespace notification {
 namespace item {
 
 AppControlAction::AppControlAction(app_control_h app_control)
-  : AbstractAction(true), impl_(new Impl(this)) {
+    : AbstractAction(true), impl_(new Impl(this)) {
   app_control_h control_;
   app_control_clone(&control_, app_control);
   impl_->control_ = control_;
 }
 
 AppControlAction::AppControlAction(app_control_h app_control, std::string extra)
-  : AbstractAction(true, extra), impl_(new Impl(this)) {
+    : AbstractAction(true, extra), impl_(new Impl(this)) {
   app_control_h control_;
   app_control_clone(&control_, app_control);
   impl_->control_ = control_;
 }
 
 AppControlAction::Impl::Impl(AppControlAction* parent)
-  : parent_(parent) {
+    : parent_(parent) {
   LOGI("AppControlAction created");
 }
 
@@ -54,6 +54,10 @@ AppControlAction::~AppControlAction() = default;
 AppControlAction::Impl::~Impl() {
   if (control_)
     app_control_destroy(control_);
+}
+
+AbstractAction::Type AppControlAction::GetType() const {
+  return AbstractAction::AppControl;
 }
 
 Bundle AppControlAction::Serialize() {

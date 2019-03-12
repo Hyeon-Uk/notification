@@ -18,6 +18,7 @@
 #include <gmock/gmock.h>
 
 #include "notification-ex/app_control_action.h"
+#include "notification-ex/action_inflator.h"
 
 using namespace notification;
 using namespace notification::item;
@@ -27,12 +28,13 @@ class AppControlActionTest : public ::testing::Test {
   AppControlAction* action;
   app_control_h app_control;
   const char* app_id = "test_appid";
+  std::string extra = "appcontrol_extra";
 
   virtual void SetUp() {
     app_control_create(&app_control);
     app_control_set_app_id(app_control, app_id);
 
-    action = new AppControlAction(app_control);
+    action = new AppControlAction(app_control, extra);
   }
   virtual void TearDown() {
     delete action;
@@ -48,28 +50,48 @@ TEST_F(AppControlActionTest, IsLocal) {
   ASSERT_EQ(AppControlActionTest::action->IsLocal(), 1);
 }
 
+TEST_F(AppControlActionTest, GetExtra) {
+  ASSERT_EQ(AppControlActionTest::action->GetExtra(),
+    AppControlActionTest::extra);
+}
+
 TEST_F(AppControlActionTest, SerializeDeserialize) {
   char* app_id = NULL;
 
   Bundle b = AppControlActionTest::action->Serialize();
-  AppControlActionTest::action->Deserialize(b);
 
-  app_control_get_app_id(AppControlActionTest::action->GetAppControl(), &app_id);
-  ASSERT_STREQ(AppControlActionTest::app_id, app_id);
+  std::shared_ptr<AbstractAction> gen_action = ActionInflator::Create(b);
+  ASSERT_EQ(gen_action->GetType(), AbstractAction::AppControl);
+
+  AppControlAction* gen_appcontrol_action =
+    static_cast<AppControlAction*>(gen_action.get());
+
+  app_control_get_app_id(gen_appcontrol_action->GetAppControl(), &app_id);
+  ASSERT_STREQ(app_id, AppControlActionTest::app_id);
+
+  if (app_id)
+    free(app_id);
 }
 
 TEST_F(AppControlActionTest, AppControl) {
+  app_control_h app_control;
   const char* app_id = "new_appid";
   char* app_id_ = NULL;
-  app_control_h app_control;
-  app_control_h app_control_;
 
   app_control_create(&app_control);
   app_control_set_app_id(app_control, app_id);
-
   AppControlActionTest::action->SetAppControl(app_control);
-  app_control_ = AppControlActionTest::action->GetAppControl();
-  app_control_get_app_id(app_control_, &app_id_);
+  app_control_destroy(app_control);
 
+  Bundle b = AppControlActionTest::action->Serialize();
+
+  std::shared_ptr<AbstractAction> gen_action = ActionInflator::Create(b);
+  AppControlAction* gen_appcontrol_action =
+    static_cast<AppControlAction*>(gen_action.get());
+
+  app_control_get_app_id(gen_appcontrol_action->GetAppControl(), &app_id_);
   EXPECT_STREQ(app_id, app_id_);
+
+  if (app_id_)
+    free(app_id_);
 }

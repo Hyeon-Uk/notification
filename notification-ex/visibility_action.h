@@ -28,6 +28,7 @@ class EXPORT_API VisibilityAction  : public AbstractAction {
   VisibilityAction(std::string extra);
   virtual ~VisibilityAction();
 
+  AbstractAction::Type GetType() const override;
   Bundle Serialize() override;
   void Deserialize(Bundle b) override;
   bool IsLocal() const override;

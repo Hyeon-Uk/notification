@@ -22,6 +22,7 @@
 #include <list>
 
 #include "notification-ex/iitem_factory.h"
+#include "notification-ex/iaction_factory.h"
 
 namespace notification {
 namespace item {
@@ -30,14 +31,17 @@ class EXPORT_API FactoryManager {
  public:
   static FactoryManager& GetInst();
   void RegisterFactory(std::unique_ptr<IItemFactory> factory);
+  void RegisterFactory(std::unique_ptr<IActionFactory> factory);
   std::unique_ptr<AbstractItem> CreateItem(AbstractItem::Type type);
+  std::unique_ptr<AbstractAction> CreateAction(AbstractAction::Type type);
   AbstractItem& GetNullItem();
 
  private:
   FactoryManager() {}
 
  private:
-  std::unique_ptr<IItemFactory> factory_;
+  std::unique_ptr<IItemFactory> item_factory_;
+  std::unique_ptr<IActionFactory> action_factory_;
 };
 
 }  // namespace item

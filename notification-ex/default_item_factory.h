@@ -27,7 +27,7 @@ namespace item {
 class EXPORT_API DefaultItemFactory : public IItemFactory {
  public:
   virtual ~DefaultItemFactory() = default;
-  std::unique_ptr<AbstractItem> CreateItem(AbstractItem::Type type);
+  std::unique_ptr<AbstractItem> CreateItem(AbstractItem::Type type) override;
 };
 
 }  // namespace item

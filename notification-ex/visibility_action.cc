@@ -31,20 +31,23 @@ namespace notification {
 namespace item {
 
 VisibilityAction::VisibilityAction()
-  : AbstractAction(true), impl_(new Impl(this)) {
+    : AbstractAction(true), impl_(new Impl(this)) {
 }
 
 VisibilityAction::VisibilityAction(std::string extra)
-  : AbstractAction(true, extra), impl_(new Impl(this)) {
+    : AbstractAction(true, extra), impl_(new Impl(this)) {
 }
 
-VisibilityAction::Impl::Impl(VisibilityAction* parent)
-  : parent_(parent) {
+VisibilityAction::Impl::Impl(VisibilityAction* parent) : parent_(parent) {
   LOGI("VisibilityAction created");
 }
 
 VisibilityAction::~VisibilityAction() = default;
 VisibilityAction::Impl::~Impl() = default;
+
+AbstractAction::Type VisibilityAction::GetType() const {
+  return AbstractAction::Visibility;
+}
 
 Bundle VisibilityAction::Serialize() {
   char buf_key[128];
@@ -123,8 +126,8 @@ std::string VisibilityAction::GetExtra() const {
 }
 
 void VisibilityAction::SetVisibility(std::string id, bool visible) {
-  impl_->entities_.emplace_back(new VisibilityAction::Impl::VisibilityEntity(id,
-    visible));
+  impl_->entities_.emplace_back(new VisibilityAction::Impl::VisibilityEntity(
+      id, visible));
 }
 
 } //namespace item

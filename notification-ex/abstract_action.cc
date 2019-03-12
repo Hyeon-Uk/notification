@@ -24,35 +24,42 @@
 #endif
 
 #define LOG_TAG "NOTIFICATION_EX"
+#define ABSTRACT_ACTION_TYPE_KEY "__ABSTRACT_ACTION_TYPE_KEY__"
 #define ABSTRACT_ACTION_IS_LOCAL_KEY "__ABSTRACT_ACTION_IS_LOCAL_KEY__"
 #define ABSTRACT_ACTION_EXTRA_KEY "__ABSTRACT_ACTION_EXTRA_KEY__"
 
 namespace notification {
 namespace item {
 AbstractAction::AbstractAction(bool isLocal)
-  : impl_(new Impl(this, isLocal)) {
+    : impl_(new Impl(this, isLocal)) {
 }
 
 AbstractAction::AbstractAction(bool isLocal, std::string extra)
-  : impl_(new Impl(this, isLocal, extra)) {
+    : impl_(new Impl(this, isLocal, extra)) {
 }
 
 AbstractAction::Impl::Impl(AbstractAction* parent, bool isLocal)
-  : parent_(parent) , isLocal_(isLocal) {
+    : parent_(parent) , isLocal_(isLocal) {
   LOGI("Action created");
 }
 
-AbstractAction::Impl::Impl(AbstractAction* parent, bool isLocal, std::string extra)
-  : parent_(parent) , isLocal_(isLocal), extra_(extra) {
+AbstractAction::Impl::Impl(AbstractAction* parent, bool isLocal,
+    std::string extra) : parent_(parent) , isLocal_(isLocal), extra_(extra) {
   LOGI("Action created");
 }
 
 AbstractAction::~AbstractAction() = default;
 AbstractAction::Impl::~Impl() = default;
 
+AbstractAction::Type AbstractAction::GetType(Bundle b) {
+  return static_cast<AbstractAction::Type>(
+      std::stoi(b.GetString(ABSTRACT_ACTION_TYPE_KEY)));
+}
+
 Bundle AbstractAction::Serialize() {
   Bundle b;
 
+  b.Add(ABSTRACT_ACTION_TYPE_KEY, std::to_string(GetType()));
   b.Add(ABSTRACT_ACTION_IS_LOCAL_KEY, std::to_string(impl_->isLocal_));
   if (!impl_->extra_.empty())
     b.Add(ABSTRACT_ACTION_EXTRA_KEY ,impl_->extra_);
