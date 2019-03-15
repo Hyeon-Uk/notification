@@ -36,11 +36,11 @@ namespace notification {
 namespace item {
 
 InputSelectorItem::InputSelectorItem(std::shared_ptr<AbstractAction> action)
-  : AbstractItem(AbstractItem::InputSelector, action), impl_(new Impl(this)) {
+  : AbstractItem(action), impl_(new Impl(this)) {
 }
 
 InputSelectorItem::InputSelectorItem(string id, std::shared_ptr<AbstractAction> action)
-  : AbstractItem(id, AbstractItem::InputSelector, action), impl_(new Impl(this)) {
+  : AbstractItem(id, action), impl_(new Impl(this)) {
 }
 
 InputSelectorItem::~InputSelectorItem() = default;
@@ -49,6 +49,10 @@ InputSelectorItem::Impl::~Impl() = default;
 InputSelectorItem::Impl::Impl(InputSelectorItem* parent)
   : parent_(parent) {
   LOGI("InputSelectorItem impl created");
+}
+
+int InputSelectorItem::GetType() const {
+  return AbstractItem::InputSelector;
 }
 
 Bundle InputSelectorItem::Serialize() {

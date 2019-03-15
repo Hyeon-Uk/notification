@@ -42,11 +42,11 @@ namespace notification {
 namespace item {
 
 GroupItem::GroupItem(string id, shared_ptr<AbstractAction> action)
-  : AbstractItem(id, AbstractItem::Group), impl_(new Impl(this)) {
+  : AbstractItem(id), impl_(new Impl(this)) {
 }
 
 GroupItem::GroupItem(shared_ptr<AbstractAction> action)
-  : AbstractItem(AbstractItem::Group), impl_(new Impl(this)) {
+  : AbstractItem(), impl_(new Impl(this)) {
 }
 
 GroupItem::Impl::Impl(GroupItem* parent)
@@ -55,6 +55,10 @@ GroupItem::Impl::Impl(GroupItem* parent)
 }
 
 GroupItem::~GroupItem() {
+}
+
+int GroupItem::GetType() const {
+  return AbstractItem::Group;
 }
 
 Bundle GroupItem::Serialize() {

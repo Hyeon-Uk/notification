@@ -38,7 +38,7 @@ class EXPORT_API TimeItem : public AbstractItem {
     std::shared_ptr<AbstractAction> action = std::shared_ptr<AbstractAction>({}));
 
   virtual ~TimeItem();
-
+  int GetType() const override;
   Bundle Serialize() override;
   void Deserialize(Bundle b) override;
   AbstractItem& FindByID(std::string id) override;

@@ -39,6 +39,8 @@ class EXPORT_API IconTextItem : public AbstractItem {
   Bundle Serialize() override;
   void Deserialize(Bundle b) override;
   AbstractItem& FindByID(std::string id) override;
+  int GetType() const override;
+
   IconItem& GetIconItem() const;
   TextItem& GetTextItem() const;
 

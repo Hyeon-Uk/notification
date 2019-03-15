@@ -33,14 +33,13 @@ using namespace std;
 namespace notification {
 namespace item {
 
-ButtonItem::ButtonItem(string title,
-      std::shared_ptr<AbstractAction> action)
-  : AbstractItem(AbstractItem::Button, action), impl_(new Impl(this, title)) {
+ButtonItem::ButtonItem(string title, std::shared_ptr<AbstractAction> action)
+    : AbstractItem(action), impl_(new Impl(this, title)) {
 }
 
 ButtonItem::ButtonItem(string id, string title,
-      std::shared_ptr<AbstractAction> action)
-  : AbstractItem(id, AbstractItem::Button, action), impl_(new Impl(this, title)) {
+    std::shared_ptr<AbstractAction> action)
+    : AbstractItem(id, action), impl_(new Impl(this, title)) {
 }
 
 ButtonItem::~ButtonItem() = default;
@@ -49,6 +48,10 @@ ButtonItem::Impl::~Impl() = default;
 ButtonItem::Impl::Impl(ButtonItem* parent, string title)
   : title_(title), parent_(parent) {
   LOGI("ButtonItem impl created");
+}
+
+int ButtonItem::GetType() const {
+  return AbstractItem::Button;
 }
 
 Bundle ButtonItem::Serialize() {

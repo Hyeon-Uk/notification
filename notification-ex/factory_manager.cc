@@ -45,16 +45,14 @@ void FactoryManager::RegisterFactory(std::unique_ptr<IActionFactory> factory) {
   action_factory_ = std::move(factory);
 }
 
-std::unique_ptr<AbstractItem> FactoryManager::CreateItem(
-    AbstractItem::Type type) {
+std::unique_ptr<AbstractItem> FactoryManager::CreateItem(int type) {
   if (item_factory_.get() == nullptr)
     item_factory_.reset(new DefaultItemFactory());
 
   return item_factory_->CreateItem(type);
 }
 
-std::unique_ptr<AbstractAction> FactoryManager::CreateAction(
-    AbstractAction::Type type) {
+std::unique_ptr<AbstractAction> FactoryManager::CreateAction(int type) {
   if (action_factory_.get() == nullptr)
     action_factory_.reset(new DefaultActionFactory());
 

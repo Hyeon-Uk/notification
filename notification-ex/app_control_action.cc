@@ -56,7 +56,7 @@ AppControlAction::Impl::~Impl() {
     app_control_destroy(control_);
 }
 
-AbstractAction::Type AppControlAction::GetType() const {
+int AppControlAction::GetType() const {
   return AbstractAction::AppControl;
 }
 

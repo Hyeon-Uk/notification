@@ -35,7 +35,7 @@ class EXPORT_API TextItem : public AbstractItem {
       std::string hyperlink = std::string(),
       std::shared_ptr<AbstractAction> action = std::shared_ptr<AbstractAction>({}));
   virtual ~TextItem();
-
+  int GetType() const override;
   Bundle Serialize() override;
   void Deserialize(Bundle b) override;
   AbstractItem& FindByID(std::string id) override;

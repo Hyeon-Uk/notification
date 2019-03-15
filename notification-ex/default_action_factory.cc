@@ -33,9 +33,7 @@ using namespace std;
 namespace notification {
 namespace item {
 
-unique_ptr<AbstractAction> DefaultActionFactory::CreateAction(
-    AbstractAction::Type type) {
-
+unique_ptr<AbstractAction> DefaultActionFactory::CreateAction(int type) {
   switch (type) {
   case AbstractAction::NullObject :
     THROW(NOTIFICATION_ERROR_INVALID_PARAMETER);

@@ -51,9 +51,8 @@ AbstractAction::Impl::Impl(AbstractAction* parent, bool isLocal,
 AbstractAction::~AbstractAction() = default;
 AbstractAction::Impl::~Impl() = default;
 
-AbstractAction::Type AbstractAction::GetType(Bundle b) {
-  return static_cast<AbstractAction::Type>(
-      std::stoi(b.GetString(ABSTRACT_ACTION_TYPE_KEY)));
+int AbstractAction::GetType(Bundle b) {
+  return std::stoi(b.GetString(ABSTRACT_ACTION_TYPE_KEY));
 }
 
 Bundle AbstractAction::Serialize() {

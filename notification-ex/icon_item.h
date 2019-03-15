@@ -33,6 +33,7 @@ class EXPORT_API IconItem : public ImageItem {
   IconItem(std::string id, std::string iconPath,
     std::shared_ptr<AbstractAction> action = std::shared_ptr<AbstractAction>({}));
   virtual ~IconItem();
+  int GetType() const override;
 
  private:
   class Impl;

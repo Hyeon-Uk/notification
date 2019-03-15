@@ -43,6 +43,7 @@ class EXPORT_API ChatMessageItem : public AbstractItem {
     std::shared_ptr<TimeItem> time, Type type,
     std::shared_ptr<AbstractAction> action = std::shared_ptr<AbstractAction>({}));
   virtual ~ChatMessageItem();
+  int GetType() const override;
 
   Bundle Serialize() override;
   void Deserialize(Bundle b) override;
@@ -51,7 +52,7 @@ class EXPORT_API ChatMessageItem : public AbstractItem {
   TextItem& GetTextItem() const;
   TextItem& GetDataItem() const;
   TimeItem& GetTimeItem() const;
-  Type GetType() const;
+  Type GetCurType() const;
 
  private:
   class Impl;

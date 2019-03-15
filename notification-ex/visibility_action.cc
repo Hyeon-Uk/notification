@@ -45,7 +45,7 @@ VisibilityAction::Impl::Impl(VisibilityAction* parent) : parent_(parent) {
 VisibilityAction::~VisibilityAction() = default;
 VisibilityAction::Impl::~Impl() = default;
 
-AbstractAction::Type VisibilityAction::GetType() const {
+int VisibilityAction::GetType() const {
   return AbstractAction::Visibility;
 }
 

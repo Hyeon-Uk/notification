@@ -36,7 +36,7 @@ class EXPORT_API AbstractAction {
     NullObject,
     AppControl,
     Visibility,
-    Custom,
+    Custom = 100
   };
 
  public:
@@ -44,8 +44,8 @@ class EXPORT_API AbstractAction {
   AbstractAction(bool isLocal, std::string extra);
   virtual ~AbstractAction();
 
-  virtual Type GetType() const = 0;
-  static Type GetType(Bundle b);
+  virtual int GetType() const = 0;
+  static int GetType(Bundle b);
   virtual Bundle Serialize() = 0;
   virtual void Deserialize(Bundle b) = 0;
   virtual bool IsLocal() const = 0;

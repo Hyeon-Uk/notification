@@ -31,14 +31,18 @@ namespace notification {
 namespace item {
 
 NullItem::NullItem(shared_ptr<AbstractAction> action)
-  : AbstractItem(AbstractItem::NullObject, action) {
+  : AbstractItem(action) {
 }
 
 NullItem::NullItem(string id,
       shared_ptr<AbstractAction> action)
-  : AbstractItem(id, AbstractItem::NullObject, action) {
+  : AbstractItem(id, action) {
 }
 NullItem::~NullItem() = default;
+
+int NullItem::GetType() const {
+  return AbstractItem::NullObject;
+}
 
 Bundle NullItem::Serialize() {
   Bundle b;

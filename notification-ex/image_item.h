@@ -33,6 +33,7 @@ class EXPORT_API ImageItem : public AbstractItem {
   ImageItem(std::string id, std::string imagePath,
     std::shared_ptr<AbstractAction> action = std::shared_ptr<AbstractAction>({}));
   virtual ~ImageItem();
+  int GetType() const override;
 
   Bundle Serialize() override;
   void Deserialize(Bundle b) override;

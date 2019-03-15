@@ -27,8 +27,7 @@ namespace item {
 class EXPORT_API DefaultActionFactory : public IActionFactory {
  public:
   virtual ~DefaultActionFactory() = default;
-  std::unique_ptr<AbstractAction> CreateAction(
-      AbstractAction::Type type) override;
+  std::unique_ptr<AbstractAction> CreateAction(int type) override;
 };
 
 }  // namespace item

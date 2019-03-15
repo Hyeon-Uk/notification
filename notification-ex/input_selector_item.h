@@ -37,6 +37,7 @@ class EXPORT_API InputSelectorItem : public AbstractItem {
   virtual Bundle Serialize() override;
   virtual void Deserialize(Bundle b) override;
   virtual AbstractItem& FindByID(std::string id) override;
+  int GetType() const override;
 
   std::list<std::string> GetContents() const;
   void SetContents(std::list<std::string> contents);

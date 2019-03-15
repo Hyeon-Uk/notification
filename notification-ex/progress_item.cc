@@ -38,13 +38,13 @@ namespace item {
 
 ProgressItem::ProgressItem(float min_val, float current, float max_val,
     std::shared_ptr<AbstractAction> action)
-  : AbstractItem(AbstractItem::Progress, action),
+  : AbstractItem(action),
     impl_(new Impl(min_val, current, max_val, this)) {
 }
 
 ProgressItem::ProgressItem(string id, float min_val, float current, float max_val,
     std::shared_ptr<AbstractAction> action)
-  : AbstractItem(id, AbstractItem::Progress, action),
+  : AbstractItem(id, action),
   impl_(new Impl(min_val, current, max_val, this)) {
 }
 
@@ -56,6 +56,10 @@ ProgressItem::Impl::Impl(float min_val, float current, float max_val, ProgressIt
   if (min_val > current || max_val < current)
     THROW(NOTIFICATION_ERROR_INVALID_PARAMETER);
   LOGI("ProgressItem impl created");
+}
+
+int ProgressItem::GetType() const {
+  return AbstractItem::Progress;
 }
 
 Bundle ProgressItem::Serialize() {

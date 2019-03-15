@@ -29,8 +29,7 @@ namespace item {
 class EXPORT_API IActionFactory {
  public:
   virtual ~IActionFactory() = default;
-  virtual std::unique_ptr<AbstractAction> CreateAction(
-      AbstractAction::Type type) = 0;
+  virtual std::unique_ptr<AbstractAction> CreateAction(int type) = 0;
 };
 
 }  // namespace item

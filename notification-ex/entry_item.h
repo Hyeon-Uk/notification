@@ -39,6 +39,7 @@ class EXPORT_API EntryItem : public AbstractItem {
   Bundle Serialize() override;
   void Deserialize(Bundle b) override;
   AbstractItem& FindByID(std::string id) override;
+  int GetType() const override;
   std::string GetText() const;
   void SetText(std::string text);
   int GetTextLimit() const;

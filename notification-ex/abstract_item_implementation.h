@@ -32,10 +32,11 @@ class AbstractItem::Impl {
 
  private:
   Impl(AbstractItem* parent);
-  Impl(AbstractItem* parent, AbstractItem::Type type,
-      std::shared_ptr<AbstractAction> action = std::shared_ptr<AbstractAction>({}));
-  Impl(AbstractItem* parent, std::string id, AbstractItem::Type type,
-      std::shared_ptr<AbstractAction> action = std::shared_ptr<AbstractAction>({}));
+  Impl(AbstractItem* parent, std::shared_ptr<AbstractAction> action =
+      std::shared_ptr<AbstractAction>({}));
+  Impl(AbstractItem* parent, std::string id,
+      std::shared_ptr<AbstractAction> action =
+          std::shared_ptr<AbstractAction>({}));
 
  private:
   friend class AbstractItem;
@@ -45,7 +46,6 @@ class AbstractItem::Impl {
   std::shared_ptr<LEDInfo> led_ = nullptr;
   Policy policy_ = None;
   std::shared_ptr<Style> style_ = nullptr;
-  AbstractItem::Type type_;
   bool visible_ = true;
   bool enable_ = true;
   int version_ = 1;

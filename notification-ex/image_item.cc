@@ -33,17 +33,21 @@ namespace item {
 
 ImageItem::ImageItem(std::string imagePath,
   std::shared_ptr<AbstractAction> action)
-  : AbstractItem(AbstractItem::Image, action), impl_(new Impl(this, imagePath)) {
+  : AbstractItem(action), impl_(new Impl(this, imagePath)) {
 }
 
 ImageItem::ImageItem(std::string id, std::string imagePath,
   std::shared_ptr<AbstractAction> action)
-  : AbstractItem(id, AbstractItem::Image, action), impl_(new Impl(this, imagePath)) {
+  : AbstractItem(id, action), impl_(new Impl(this, imagePath)) {
 }
 
 ImageItem::Impl::Impl(ImageItem* parent, std::string imagePath)
   : parent_(parent), imagePath_(imagePath) {
   LOGI("ImageItem impl created");
+}
+
+int ImageItem::GetType() const {
+  return AbstractItem::Image;
 }
 
 Bundle ImageItem::Serialize() {

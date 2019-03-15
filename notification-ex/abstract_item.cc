@@ -36,25 +36,24 @@ using namespace std;
 namespace notification {
 namespace item {
 
-AbstractItem::AbstractItem(AbstractItem::Type type,
-    std::shared_ptr<AbstractAction> action)
-  : impl_(new Impl(this, type, action)) {
+AbstractItem::AbstractItem(std::shared_ptr<AbstractAction> action)
+    : impl_(new Impl(this, action)) {
 }
 
-AbstractItem::AbstractItem(std::string id, AbstractItem::Type type,
+AbstractItem::AbstractItem(std::string id,
     std::shared_ptr<AbstractAction> action)
-  : impl_(new Impl(this, id, type, action)) {
+    : impl_(new Impl(this, id, action)) {
 }
 
 AbstractItem::Impl::Impl(AbstractItem* parent, string id,
-    AbstractItem::Type type, std::shared_ptr<AbstractAction> action)
-  : id_(id), type_(type), action_(action), parent_(parent) {
+    std::shared_ptr<AbstractAction> action)
+    : id_(id), action_(action), parent_(parent) {
   LOGI("GroupItem created");
 }
 
 AbstractItem::Impl::Impl(AbstractItem* parent,
-    AbstractItem::Type type, std::shared_ptr<AbstractAction> action)
-  : type_(type), action_(action), parent_(parent) {
+    std::shared_ptr<AbstractAction> action)
+    : action_(action), parent_(parent) {
   LOGI("GroupItem created");
 }
 
@@ -62,7 +61,7 @@ AbstractItem::~AbstractItem() = default;
 
 Bundle AbstractItem::Serialize() {
   Bundle b;
-  b.Add(ABSTRACT_ITEM_TYPE_KEY, to_string((int)impl_->type_));
+  b.Add(ABSTRACT_ITEM_TYPE_KEY, to_string(GetType()));
   b.Add(ABSTRACT_ITEM_ID_KEY, impl_->id_);
   return b;
 }
@@ -74,7 +73,6 @@ void AbstractItem::Deserialize(Bundle b) {
 
   string id_str = b.GetString(ABSTRACT_ITEM_ID_KEY);
   impl_->id_ = id_str;
-  impl_->type_ = static_cast<AbstractItem::Type>(strtol(type_str.c_str(), NULL, 10));
 }
 
 string AbstractItem::GetId() const {
@@ -101,15 +99,11 @@ std::shared_ptr<LEDInfo> AbstractItem::GetLEDInfo() const {
   return impl_->led_;
 }
 
-AbstractItem::Type AbstractItem::GetType() const {
-  return impl_->type_;
-}
-
-AbstractItem::Type AbstractItem::GetType(Bundle b) {
+int AbstractItem::GetType(Bundle b) {
   string type_str = b.GetString(ABSTRACT_ITEM_TYPE_KEY);
   if (type_str.empty())
     THROW(NOTIFICATION_ERROR_IO_ERROR);
-  return static_cast<AbstractItem::Type>(strtol(type_str.c_str(), NULL, 10));
+  return strtol(type_str.c_str(), NULL, 10);
 }
 
 void AbstractItem::SetVisible(bool visible) {

@@ -180,7 +180,7 @@ class EXPORT_API AbstractItem {
     Entry,
     Progress,
     Time,
-    Custom,
+    Custom = 100
   };
 
   enum Policy {
@@ -190,24 +190,22 @@ class EXPORT_API AbstractItem {
   };
 
  public:
-  AbstractItem();
-  AbstractItem(Type type,
-      std::shared_ptr<AbstractAction> action = std::shared_ptr<AbstractAction>({}));
-  AbstractItem(std::string id, Type type,
-      std::shared_ptr<AbstractAction> action = std::shared_ptr<AbstractAction>({}));
+  AbstractItem(std::shared_ptr<AbstractAction> action =
+      std::shared_ptr<AbstractAction>({}));
+  AbstractItem(std::string id, std::shared_ptr<AbstractAction> action =
+      std::shared_ptr<AbstractAction>({}));
   virtual ~AbstractItem() = 0;
-
   virtual Bundle Serialize() = 0;
   virtual void Deserialize(Bundle b) = 0;
   virtual AbstractItem& FindByID(std::string id) = 0;
+  virtual int GetType() const = 0;
+  static int GetType(Bundle b);
   std::string GetId() const;
   void SetId(std::string id);
   std::shared_ptr<AbstractAction> GetAction() const;
   void SetAction(std::shared_ptr<AbstractAction> action) const;
   std::shared_ptr<Style> GetStyle() const;
   void SetStyle(std::shared_ptr<Style> style);
-  Type GetType() const;
-  static AbstractItem::Type GetType(Bundle b);
   void SetVisible(bool visible);
   void SetEnable(bool enable);
   void AddReceiver(std::string receiver_group);

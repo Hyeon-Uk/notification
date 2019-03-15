@@ -29,7 +29,7 @@ namespace item {
 class EXPORT_API IItemFactory {
  public:
   virtual ~IItemFactory() = default;
-  virtual std::unique_ptr<AbstractItem> CreateItem(AbstractItem::Type type) = 0;
+  virtual std::unique_ptr<AbstractItem> CreateItem(int type) = 0;
 };
 
 }  // namespace item

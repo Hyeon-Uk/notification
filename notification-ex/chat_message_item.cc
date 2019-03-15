@@ -38,7 +38,7 @@ namespace item {
 ChatMessageItem::ChatMessageItem(std::string id, std::shared_ptr<TextItem> name,
   std::shared_ptr<TextItem> text, std::shared_ptr<TextItem> data,
   std::shared_ptr<TimeItem> time, Type type, std::shared_ptr<AbstractAction> action)
-  : AbstractItem(id, AbstractItem::ChatMessage, action),
+  : AbstractItem(id, action),
   impl_(new Impl(this, name, text, data, time, type)) {
 }
 
@@ -47,6 +47,10 @@ ChatMessageItem::Impl::Impl(ChatMessageItem* parent,
   std::shared_ptr<TextItem> data, std::shared_ptr<TimeItem> time, Type type)
   : parent_(parent), name_(name), text_(text), data_(data), time_(time), type_(type) {
   LOGI("ChatMessageItem impl created");
+}
+
+int ChatMessageItem::GetType() const {
+  return AbstractItem::ChatMessage;
 }
 
 Bundle ChatMessageItem::Serialize() {
@@ -104,7 +108,6 @@ TextItem& ChatMessageItem::GetNameItem() const {
 
 TextItem& ChatMessageItem::GetTextItem() const {
   return *(impl_->text_);
-
 }
 
 TextItem& ChatMessageItem::GetDataItem() const {
@@ -115,7 +118,7 @@ TimeItem& ChatMessageItem::GetTimeItem() const {
   return *(impl_->time_);
 }
 
-ChatMessageItem::Type ChatMessageItem::GetType() const {
+ChatMessageItem::Type ChatMessageItem::GetCurType() const {
   return impl_->type_;
 }
 

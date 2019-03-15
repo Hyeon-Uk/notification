@@ -32,8 +32,8 @@ class EXPORT_API FactoryManager {
   static FactoryManager& GetInst();
   void RegisterFactory(std::unique_ptr<IItemFactory> factory);
   void RegisterFactory(std::unique_ptr<IActionFactory> factory);
-  std::unique_ptr<AbstractItem> CreateItem(AbstractItem::Type type);
-  std::unique_ptr<AbstractAction> CreateAction(AbstractAction::Type type);
+  std::unique_ptr<AbstractItem> CreateItem(int type);
+  std::unique_ptr<AbstractAction> CreateAction(int type);
   AbstractItem& GetNullItem();
 
  private:

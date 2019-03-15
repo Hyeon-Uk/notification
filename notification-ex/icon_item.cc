@@ -46,6 +46,10 @@ IconItem::Impl::Impl(IconItem* parent, std::string iconPath)
 IconItem::~IconItem() = default;
 IconItem::Impl::~Impl() = default;
 
+int IconItem::GetType() const {
+  return AbstractItem::Icon;
+}
+
 }  // namespace item
 }  // namespace notification_ex
 

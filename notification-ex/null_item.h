@@ -32,11 +32,10 @@ class EXPORT_API NullItem : public AbstractItem {
   NullItem(std::string id,
       std::shared_ptr<AbstractAction> action = std::shared_ptr<AbstractAction>({}));
   virtual ~NullItem();
-
- public:
-  virtual Bundle Serialize() override;
-  virtual void Deserialize(Bundle b) override;
-  virtual AbstractItem& FindByID(std::string id) override;
+  int GetType() const override;
+  Bundle Serialize() override;
+  void Deserialize(Bundle b) override;
+  AbstractItem& FindByID(std::string id) override;
 };
 
 }  // namespace item
