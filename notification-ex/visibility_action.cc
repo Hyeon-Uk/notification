@@ -108,16 +108,10 @@ bool VisibilityAction::IsLocal() const {
 }
 
 void VisibilityAction::Execute(std::shared_ptr<AbstractItem> item) {
-  std::string id = item->GetId();
-  std::list<std::unique_ptr<Impl::VisibilityEntity>>::iterator it;
-
-  for (it = impl_->entities_.begin(); it != impl_->entities_.end(); it++) {
-    if (id == (*it)->id_) {
-      if ((*it)->visibility_)
-        (*it)->visibility_ = false;
-      else
-        (*it)->visibility_ = true;
-    }
+  for (const auto& entity : impl_->entities_) {
+    AbstractItem& item_ = item->FindByID(entity->id_);
+    if (item_.GetType() != AbstractItem::NullObject)
+      item_.SetVisible(entity->visibility_);
   }
 }
 
