@@ -28,6 +28,7 @@ namespace item {
 
 class AbstractItem::Impl {
  public:
+  class ItemInfo;
   virtual ~Impl() = default;
 
  private:
@@ -40,7 +41,6 @@ class AbstractItem::Impl {
 
  private:
   friend class AbstractItem;
-
   std::string channel_;
   std::string id_;
   std::shared_ptr<LEDInfo> led_ = nullptr;
@@ -57,6 +57,7 @@ class AbstractItem::Impl {
   AbstractItem* parent_;
   std::string sound_path_;
   std::string vibration_path_;
+  std::shared_ptr<IItemInfo> info_;
 };
 
 }  // namespace item

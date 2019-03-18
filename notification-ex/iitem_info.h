@@ -14,35 +14,19 @@
  * limitations under the License.
  */
 
-#ifndef NOTIFICATION_EX_ITEM_H_
-#define NOTIFICATION_EX_ITEM_H_
-
-#include <time.h>
-
-#include <memory>
-#include <string>
-#include <list>
-
-#include "notification-ex/abstract_item.h"
-#include "notification-ex/ex_bundle.h"
-
-#ifndef EXPORT_API
-#define EXPORT_API __attribute__((visibility("default")))
-#endif
+#ifndef NOTIFICATION_EX_IITEM_INFO_H_
+#define NOTIFICATION_EX_IITEM_INFO_H_
 
 namespace notification {
 namespace item {
 
-class EXPORT_API CustomItem : public AbstractItem {
+class EXPORT_API IItemInfo {
  public:
-  CustomItem();
-  virtual ~CustomItem();
-
-  Bundle Serialize() override;
-  void Deserialize(Bundle b) override;
-  AbstractItem& FindByID(std::string id) override;
-};  // class CustomItem
+  virtual ~IItemInfo() = default;
+  virtual int GetVersion() const = 0;
+  virtual void SetVersion(int ver) = 0;
+};
 
 }  // namespace item
 }  // nampace notification
-#endif  // NOTIFICATION_EX_ITEM_H_
+#endif  // NOTIFICATION_EX_IITEM_INFO_H_

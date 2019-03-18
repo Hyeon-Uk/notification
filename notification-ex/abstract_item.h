@@ -24,6 +24,7 @@
 
 #include "notification-ex/abstract_action.h"
 #include "notification-ex/ex_bundle.h"
+#include "notification-ex/iitem_info.h"
 
 #ifndef EXPORT_API
 #define EXPORT_API __attribute__((visibility("default")))
@@ -213,10 +214,6 @@ class EXPORT_API AbstractItem {
   bool CanReceive(std::string id) const;
   void SetPolicy(Policy policy);
   Policy GetPolicy() const;
-  int GetVersion() const;
-  void SetVersion(int ver);
-  int GetHideTime() const;
-  int GetDeleteTime() const;
   std::string GetChannel() const;
   void SetChannel(std::string channel);
   void SetLEDInfo(std::shared_ptr<LEDInfo> led);
@@ -225,6 +222,7 @@ class EXPORT_API AbstractItem {
   void SetVibrationPath(std::string path);
   std::string GetSoundPath() const;
   std::string GetVibrationPath() const;
+  std::shared_ptr<IItemInfo> GetInfo() const;
 
  private:
   class Impl;

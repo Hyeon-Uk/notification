@@ -22,6 +22,7 @@
 #include "notification-ex/exception.h"
 #include "notification-ex/abstract_item.h"
 #include "notification-ex/abstract_item_implementation.h"
+#include "notification-ex/item_info_internal.h"
 
 #ifdef LOG_TAG
 #undef LOG_TAG
@@ -47,14 +48,16 @@ AbstractItem::AbstractItem(std::string id,
 
 AbstractItem::Impl::Impl(AbstractItem* parent, string id,
     std::shared_ptr<AbstractAction> action)
-    : id_(id), action_(action), parent_(parent) {
-  LOGI("GroupItem created");
+    : id_(id), action_(action), parent_(parent),
+    info_(std::make_shared<ItemInfo>(this)) {
+  LOGI("Item created");
 }
 
 AbstractItem::Impl::Impl(AbstractItem* parent,
     std::shared_ptr<AbstractAction> action)
-    : action_(action), parent_(parent) {
-  LOGI("GroupItem created");
+    : action_(action), parent_(parent),
+    info_(std::make_shared<ItemInfo>(this)) {
+  LOGI("Item created");
 }
 
 AbstractItem::~AbstractItem() = default;
@@ -137,20 +140,8 @@ AbstractItem::Policy AbstractItem::GetPolicy() const {
   return impl_->policy_;
 }
 
-int AbstractItem::GetVersion() const {
-  return impl_->version_;
-}
-
-void AbstractItem::SetVersion(int ver) {
-  impl_->version_ = ver;
-}
-
-int AbstractItem::GetHideTime() const {
-  return impl_->hide_time_;
-}
-
-int AbstractItem::GetDeleteTime() const {
-  return impl_->delete_time_;
+std::shared_ptr<IItemInfo> AbstractItem::GetInfo() const {
+  return impl_->info_;
 }
 
 string AbstractItem::GetChannel() const {
