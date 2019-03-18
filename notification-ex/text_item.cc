@@ -34,7 +34,7 @@ namespace notification {
 namespace item {
 TextItem::TextItem(std::string id, std::string text, std::string hyperlink,
       std::shared_ptr<AbstractAction> action)
-  : AbstractItem(id, AbstractItem::Type::Text),
+  : AbstractItem(id, AbstractItem::Type::Text, action),
   impl_(new Impl(this, text, hyperlink)) {
 }
 

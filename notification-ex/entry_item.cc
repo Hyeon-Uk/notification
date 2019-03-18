@@ -34,11 +34,11 @@ namespace notification {
 namespace item {
 
 EntryItem::EntryItem(std::shared_ptr<AbstractAction> action)
-  : AbstractItem(AbstractItem::Type::Entry), impl_(new Impl(this)) {
+  : AbstractItem(AbstractItem::Type::Entry, action), impl_(new Impl(this)) {
 }
 
 EntryItem::EntryItem(std::string id, std::shared_ptr<AbstractAction> action)
-  : AbstractItem(id, AbstractItem::Type::Entry), impl_(new Impl(this)) {
+  : AbstractItem(id, AbstractItem::Type::Entry, action), impl_(new Impl(this)) {
 }
 
 EntryItem::Impl::Impl(EntryItem* parent)
