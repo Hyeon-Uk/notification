@@ -52,9 +52,9 @@ TEST_F(TexttItemTest, SerializeDeserializeGetContents) {
   TextItem item("text_id", "contents");
   Bundle b = item.Serialize();
   std::shared_ptr<AbstractItem> gen_item = ItemInflator::Create(b);
-  ASSERT_EQ(gen_item.get()->GetType(), item.GetType());
+  ASSERT_EQ(gen_item->GetType(), item.GetType());
 
-  TextItem* gen_text = static_cast<TextItem*>(gen_item.get());
+  auto gen_text = std::static_pointer_cast<TextItem>(gen_item);
   ASSERT_EQ(item.GetContents(), gen_text->GetContents());
 }
 

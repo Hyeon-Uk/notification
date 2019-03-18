@@ -45,16 +45,16 @@ TEST_F(GroupItemTest, SerializeDeserialize) {
 
   Bundle b = item.Serialize();
   shared_ptr<AbstractItem> gen_item = ItemInflator::Create(b);
-  ASSERT_EQ(gen_item.get()->GetType(), item.GetType());
+  ASSERT_EQ(gen_item->GetType(), item.GetType());
 
-  GroupItem* gen_group = static_cast<GroupItem*>(gen_item.get());
+  auto gen_group = static_pointer_cast<GroupItem>(gen_item);
   list<shared_ptr<AbstractItem>> gen_children_list = gen_group->GetChildren();
   list<shared_ptr<AbstractItem>> origin_children_list = item.GetChildren();
 
   list<shared_ptr<AbstractItem>>::iterator it = origin_children_list.begin();
   for (auto& i : gen_children_list) {
-    ASSERT_EQ(i.get()->GetType(), (*it).get()->GetType());
-    if (i.get()->GetType() == AbstractItem::Button) {
+    ASSERT_EQ(i->GetType(), (*it)->GetType());
+    if (i->GetType() == AbstractItem::Button) {
       ButtonItem* btn1 = static_cast<ButtonItem*>(i.get());
       ButtonItem* btn2 = static_cast<ButtonItem*>((*it).get());
       ASSERT_EQ(btn1->GetTitle(), btn2->GetTitle());

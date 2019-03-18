@@ -57,8 +57,8 @@ TEST_F(CheckBoxItemTest, SerializeDeserialize) {
   Bundle b = CheckBoxItemTest::item->Serialize();
 
   std::shared_ptr<AbstractItem> gen_item = ItemInflator::Create(b);
-  ASSERT_EQ(CheckBoxItemTest::item->GetType(), gen_item.get()->GetType());
+  ASSERT_EQ(CheckBoxItemTest::item->GetType(), gen_item->GetType());
 
-  CheckBoxItem* gen_checkbox = static_cast<CheckBoxItem*>(gen_item.get());
+  auto gen_checkbox = std::static_pointer_cast<CheckBoxItem>(gen_item);
   ASSERT_EQ(CheckBoxItemTest::item->GetTitle(), gen_checkbox->GetTitle());
 }

@@ -56,8 +56,6 @@ TEST_F(AppControlActionTest, GetExtra) {
 }
 
 TEST_F(AppControlActionTest, SerializeDeserialize) {
-  char* app_id = NULL;
-
   Bundle b = AppControlActionTest::action->Serialize();
 
   std::shared_ptr<AbstractAction> gen_action = ActionInflator::Create(b);
@@ -66,17 +64,15 @@ TEST_F(AppControlActionTest, SerializeDeserialize) {
   AppControlAction* gen_appcontrol_action =
     static_cast<AppControlAction*>(gen_action.get());
 
+  char* app_id = nullptr;
   app_control_get_app_id(gen_appcontrol_action->GetAppControl(), &app_id);
+  std::unique_ptr<char, decltype(std::free)*> ptr(app_id, std::free);
   ASSERT_STREQ(app_id, AppControlActionTest::app_id);
-
-  if (app_id)
-    free(app_id);
 }
 
 TEST_F(AppControlActionTest, AppControl) {
   app_control_h app_control;
   const char* app_id = "new_appid";
-  char* app_id_ = NULL;
 
   app_control_create(&app_control);
   app_control_set_app_id(app_control, app_id);
@@ -89,9 +85,8 @@ TEST_F(AppControlActionTest, AppControl) {
   AppControlAction* gen_appcontrol_action =
     static_cast<AppControlAction*>(gen_action.get());
 
+  char* app_id_ = nullptr;
   app_control_get_app_id(gen_appcontrol_action->GetAppControl(), &app_id_);
+  std::unique_ptr<char, decltype(std::free)*> ptr(app_id_, std::free);
   EXPECT_STREQ(app_id, app_id_);
-
-  if (app_id_)
-    free(app_id_);
 }

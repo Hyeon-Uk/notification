@@ -60,8 +60,8 @@ TEST_F(VisibilityActionTest, SerializeDeserialize) {
   std::shared_ptr<AbstractAction> gen_action = ActionInflator::Create(b);
   ASSERT_EQ(gen_action->GetType(), AbstractAction::Visibility);
 
-  VisibilityAction* gen_visibility_action =
-    static_cast<VisibilityAction*>(gen_action.get());
+  auto gen_visibility_action =
+    std::static_pointer_cast<VisibilityAction>(gen_action);
   EXPECT_NE(gen_visibility_action, nullptr);
   ASSERT_EQ(gen_visibility_action->IsLocal(), true);
   ASSERT_EQ(gen_visibility_action->GetExtra(), VisibilityActionTest::extra);
@@ -74,8 +74,8 @@ TEST_F(VisibilityActionTest, SetVisibility) {
   std::shared_ptr<AbstractAction> gen_action = ActionInflator::Create(b);
   ASSERT_EQ(gen_action->GetType(), AbstractAction::Visibility);
 
-  VisibilityAction* gen_visibility_action =
-    static_cast<VisibilityAction*>(gen_action.get());
+  auto gen_visibility_action =
+    std::static_pointer_cast<VisibilityAction>(gen_action);
   EXPECT_NE(gen_visibility_action, nullptr);
   ASSERT_EQ(gen_visibility_action->IsLocal(), true);
   ASSERT_EQ(gen_visibility_action->GetExtra(), VisibilityActionTest::extra);

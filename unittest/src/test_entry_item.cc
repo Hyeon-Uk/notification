@@ -50,9 +50,9 @@ TEST_F(EntryItemTest, SerializeDeserialize) {
   EntryItem item("entry_id");
   Bundle b = item.Serialize();
   std::shared_ptr<AbstractItem> gen_item = ItemInflator::Create(b);
-  ASSERT_EQ(gen_item.get()->GetType(), item.GetType());
+  ASSERT_EQ(gen_item->GetType(), item.GetType());
 
-  EntryItem* gen_effect = static_cast<EntryItem*>(gen_item.get());
+  auto gen_effect = std::static_pointer_cast<EntryItem>(gen_item);
   ASSERT_EQ(item.GetId(), gen_effect->GetId());
 }
 

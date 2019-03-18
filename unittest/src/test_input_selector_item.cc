@@ -29,9 +29,9 @@ TEST_F(InputSelectorItemTest, SerializeDeserialize) {
 
   Bundle b = item.Serialize();
   shared_ptr<AbstractItem> gen_item = ItemInflator::Create(b);
-  ASSERT_EQ(gen_item.get()->GetType(), item.GetType());
+  ASSERT_EQ(gen_item->GetType(), item.GetType());
 
-  InputSelectorItem* gen_input = static_cast<InputSelectorItem*>(gen_item.get());
+  auto gen_input = static_pointer_cast<InputSelectorItem>(gen_item);
 
   list<string> l1 = item.GetContents();
   list<string> l2 = gen_input->GetContents();

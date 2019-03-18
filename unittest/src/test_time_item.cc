@@ -56,8 +56,8 @@ TEST_F(TimeItemTest, SerializeDeserialize) {
   Bundle b = TimeItemTest::item->Serialize();
 
   std::shared_ptr<AbstractItem> gen_item = ItemInflator::Create(b);
-  ASSERT_EQ(TimeItemTest::item->GetType(), gen_item.get()->GetType());
+  ASSERT_EQ(TimeItemTest::item->GetType(), gen_item->GetType());
 
-  TimeItem* gen_time = static_cast<TimeItem*>(gen_item.get());
+  auto gen_time = std::static_pointer_cast<TimeItem>(gen_item);
   ASSERT_EQ(item->GetTime(), gen_time->GetTime());
 }

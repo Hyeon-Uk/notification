@@ -23,9 +23,9 @@ TEST_F(ProgressItemTest, SerializeDeserializeGetTitle) {
   ProgressItem item(1.0, 10.0, 100.0);
   Bundle b = item.Serialize();
   shared_ptr<AbstractItem> gen_item = ItemInflator::Create(b);
-  ASSERT_EQ(gen_item.get()->GetType(), item.GetType());
+  ASSERT_EQ(gen_item->GetType(), item.GetType());
 
-  ProgressItem* gen_progress = static_cast<ProgressItem*>(gen_item.get());
+  auto gen_progress = std::static_pointer_cast<ProgressItem>(gen_item);
   ASSERT_EQ(item.GetCurrent(), gen_progress->GetCurrent());
   ASSERT_EQ(item.GetMin(), gen_progress->GetMin());
   ASSERT_EQ(item.GetMax(), gen_progress->GetMax());

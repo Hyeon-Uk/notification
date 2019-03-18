@@ -54,8 +54,8 @@ TEST_F(IconItemTest, SerializeDeserialize) {
   Bundle b = IconItemTest::item->Serialize();
 
   std::shared_ptr<AbstractItem> gen_item = ItemInflator::Create(b);
-  ASSERT_EQ(IconItemTest::item->GetType(), gen_item.get()->GetType());
+  ASSERT_EQ(IconItemTest::item->GetType(), gen_item->GetType());
 
-  IconItem* gen_icon = static_cast<IconItem*>(gen_item.get());
+  auto gen_icon = std::static_pointer_cast<IconItem>(gen_item);
   ASSERT_EQ(IconItemTest::item->GetImagePath(), gen_icon->GetImagePath());
 }

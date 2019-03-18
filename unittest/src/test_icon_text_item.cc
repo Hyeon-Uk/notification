@@ -57,7 +57,7 @@ TEST_F(IconTextItemTest, SerializeDeserialize) {
   Bundle b = IconTextItemTest::item->Serialize();
 
   std::shared_ptr<AbstractItem> gen_item = ItemInflator::Create(b);
-  IconTextItem* gen_icon = static_cast<IconTextItem*>(gen_item.get());
+  auto gen_icon = std::static_pointer_cast<IconTextItem>(gen_item);
   ASSERT_EQ(IconTextItemTest::item->GetIconItem().GetImagePath(), gen_icon->GetIconItem().GetImagePath());
   ASSERT_EQ(IconTextItemTest::item->GetTextItem().GetContents(), gen_icon->GetTextItem().GetContents());
 }

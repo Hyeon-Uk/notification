@@ -55,8 +55,8 @@ TEST_F(ImageItemTest, SerializeDeserialize) {
   Bundle b = ImageItemTest::item->Serialize();
 
   std::shared_ptr<AbstractItem> gen_item = ItemInflator::Create(b);
-  ASSERT_EQ(ImageItemTest::item->GetType(), gen_item.get()->GetType());
+  ASSERT_EQ(ImageItemTest::item->GetType(), gen_item->GetType());
 
-  ImageItem* gen_image = static_cast<ImageItem*>(gen_item.get());
+  auto gen_image = std::static_pointer_cast<ImageItem>(gen_item);
   ASSERT_EQ(ImageItemTest::item->GetImagePath(), gen_image->GetImagePath());
 }

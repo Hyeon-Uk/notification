@@ -39,9 +39,9 @@ TEST_F(ButtonItemTest, SerializeDeserializeGetTitle) {
   ButtonItem item("title");
   Bundle b = item.Serialize();
   shared_ptr<AbstractItem> gen_item = ItemInflator::Create(b);
-  ASSERT_EQ(gen_item.get()->GetType(), item.GetType());
+  ASSERT_EQ(gen_item->GetType(), item.GetType());
 
-  ButtonItem* gen_btn = static_cast<ButtonItem*>(gen_item.get());
+  auto gen_btn = std::static_pointer_cast<ButtonItem>(gen_item);
   ASSERT_EQ(item.GetTitle(), gen_btn->GetTitle());
 }
 
