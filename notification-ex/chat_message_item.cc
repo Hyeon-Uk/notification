@@ -118,7 +118,7 @@ TimeItem& ChatMessageItem::GetTimeItem() const {
   return *(impl_->time_);
 }
 
-ChatMessageItem::Type ChatMessageItem::GetCurType() const {
+ChatMessageItem::Type ChatMessageItem::GetMessageType() const {
   return impl_->type_;
 }
 

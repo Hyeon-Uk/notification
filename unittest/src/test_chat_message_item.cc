@@ -53,7 +53,7 @@ TEST_F(ChatMessageItemTest, FindByID) {
   ASSERT_EQ(message.GetNameItem().GetContents(), "name");
   ASSERT_EQ(message.GetTextItem().GetContents(), "text");
   ASSERT_EQ(message.GetDataItem().GetContents(), "data");
-  ASSERT_EQ(message.GetCurType(), ChatMessageItemTest::type);
+  ASSERT_EQ(message.GetMessageType(), ChatMessageItemTest::type);
 }
 
 TEST_F(ChatMessageItemTest, FindByIDNullItemReturn) {
@@ -70,5 +70,5 @@ TEST_F(ChatMessageItemTest, SerializeDeserialize) {
   ASSERT_EQ(gen_message->GetTextItem().GetContents(), "text");
   ASSERT_EQ(gen_message->GetDataItem().GetContents(), "data");
   ASSERT_EQ(gen_message->GetTimeItem().GetTime(), ChatMessageItemTest::current_time);
-  ASSERT_EQ(gen_message->GetCurType(), ChatMessageItemTest::type);
+  ASSERT_EQ(gen_message->GetMessageType(), ChatMessageItemTest::type);
 }

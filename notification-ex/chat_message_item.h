@@ -52,7 +52,7 @@ class EXPORT_API ChatMessageItem : public AbstractItem {
   TextItem& GetTextItem() const;
   TextItem& GetDataItem() const;
   TimeItem& GetTimeItem() const;
-  Type GetCurType() const;
+  Type GetMessageType() const;
 
  private:
   class Impl;
