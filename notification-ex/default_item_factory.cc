@@ -45,35 +45,35 @@ namespace item {
 
 unique_ptr<AbstractItem> DefaultItemFactory::CreateItem(int type) {
   switch (type) {
-  case AbstractItem::NullObject :
-    THROW(NOTIFICATION_ERROR_INVALID_PARAMETER);
-  case AbstractItem::Text :
-    return unique_ptr<AbstractItem>(new TextItem("",""));
-  case AbstractItem::Icon :
-    return unique_ptr<AbstractItem>(new IconItem(""));
-  case AbstractItem::Image :
-    return unique_ptr<AbstractItem>(new ImageItem(""));
-  case AbstractItem::Button :
-    return unique_ptr<AbstractItem>(new ButtonItem(""));
-  case AbstractItem::ChatMessage :
-    return unique_ptr<AbstractItem>(new ChatMessageItem("",
+    case AbstractItem::NullObject :
+      THROW(NOTIFICATION_ERROR_INVALID_PARAMETER);
+    case AbstractItem::Text :
+      return unique_ptr<AbstractItem>(new TextItem("",""));
+    case AbstractItem::Icon :
+      return unique_ptr<AbstractItem>(new IconItem(""));
+    case AbstractItem::Image :
+      return unique_ptr<AbstractItem>(new ImageItem(""));
+    case AbstractItem::Button :
+      return unique_ptr<AbstractItem>(new ButtonItem(""));
+    case AbstractItem::ChatMessage :
+      return unique_ptr<AbstractItem>(new ChatMessageItem("",
         nullptr, nullptr, nullptr, nullptr, ChatMessageItem::Type::user));
-  case AbstractItem::CheckBox :
-    return unique_ptr<AbstractItem>(new CheckBoxItem("", ""));
-  case AbstractItem::IconText :
-    return unique_ptr<AbstractItem>(new IconTextItem("", nullptr, nullptr));
-  case AbstractItem::InputSelector :
-    return unique_ptr<AbstractItem>(new InputSelectorItem());
-  case AbstractItem::Group :
-    return unique_ptr<AbstractItem>(new GroupItem());
-  case AbstractItem::Entry :
-    return unique_ptr<AbstractItem>(new EntryItem(""));
-  case AbstractItem::Progress :
-    return unique_ptr<AbstractItem>(new ProgressItem(0.0, 0.0, 0.0));
-  case AbstractItem::Time :
-    return unique_ptr<AbstractItem>(new TimeItem());
-  case AbstractItem::Custom :
-    return unique_ptr<AbstractItem>(new ButtonItem(""));
+    case AbstractItem::CheckBox :
+      return unique_ptr<AbstractItem>(new CheckBoxItem("", ""));
+    case AbstractItem::IconText :
+      return unique_ptr<AbstractItem>(new IconTextItem("", nullptr, nullptr));
+    case AbstractItem::InputSelector :
+      return unique_ptr<AbstractItem>(new InputSelectorItem());
+    case AbstractItem::Group :
+      return unique_ptr<AbstractItem>(new GroupItem());
+    case AbstractItem::Entry :
+      return unique_ptr<AbstractItem>(new EntryItem(""));
+    case AbstractItem::Progress :
+      return unique_ptr<AbstractItem>(new ProgressItem(0.0, 0.0, 0.0));
+    case AbstractItem::Time :
+      return unique_ptr<AbstractItem>(new TimeItem());
+    case AbstractItem::Custom :
+      return unique_ptr<AbstractItem>(new ButtonItem(""));
   }
 
   return nullptr;

@@ -36,6 +36,7 @@ namespace notification {
 
 DBusConnectionManager::DBusConnectionManager() = default;
 DBusConnectionManager::~DBusConnectionManager() = default;
+
 DBusConnectionManager& DBusConnectionManager::GetInst() {
   static DBusConnectionManager w_inst;
   int ret;

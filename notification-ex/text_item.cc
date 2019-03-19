@@ -33,12 +33,12 @@
 namespace notification {
 namespace item {
 TextItem::TextItem(std::string id, std::string text, std::string hyperlink,
-      std::shared_ptr<AbstractAction> action)
-  : AbstractItem(id, action), impl_(new Impl(this, text, hyperlink)) {
+    std::shared_ptr<AbstractAction> action)
+    : AbstractItem(id, action), impl_(new Impl(this, text, hyperlink)) {
 }
 
 TextItem::Impl::Impl(TextItem* parent, std::string text, std::string hyperlink)
-  : parent_(parent), text_(text), hyperlink_(hyperlink) {
+    : parent_(parent), text_(text), hyperlink_(hyperlink) {
   LOGI("TextItem created");
 }
 

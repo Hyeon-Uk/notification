@@ -42,15 +42,15 @@ namespace notification {
 namespace item {
 
 GroupItem::GroupItem(string id, shared_ptr<AbstractAction> action)
-  : AbstractItem(id), impl_(new Impl(this)) {
+    : AbstractItem(id), impl_(new Impl(this)) {
 }
 
 GroupItem::GroupItem(shared_ptr<AbstractAction> action)
-  : AbstractItem(), impl_(new Impl(this)) {
+    : AbstractItem(), impl_(new Impl(this)) {
 }
 
 GroupItem::Impl::Impl(GroupItem* parent)
-  : parent_(parent) {
+    : parent_(parent) {
   LOGI("GroupItem created");
 }
 

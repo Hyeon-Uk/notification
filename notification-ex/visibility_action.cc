@@ -124,5 +124,5 @@ void VisibilityAction::SetVisibility(std::string id, bool visible) {
       id, visible));
 }
 
-} //namespace item
+}  //namespace item
 }  //namespace notification

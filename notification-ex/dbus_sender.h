@@ -17,8 +17,6 @@
 #ifndef NOTIFICATION_EX_DBUS_SENDER_H_
 #define NOTIFICATION_EX_DBUS_SENDER_H_
 
-#include <gio/gio.h>
-
 #include "notification-ex/ex_bundle.h"
 #include "notification-ex/event_sender_interface.h"
 #include "notification-ex/event_info.h"

@@ -29,14 +29,13 @@
 #endif
 
 #define LOG_TAG "NOTIFICATION_EX"
-
 #define MAX_PACKAGE_STR_SIZE 512
 
 using namespace std;
 namespace notification {
 
 DBusEventListener::DBusEventListener(string path)
-  : impl_(new Impl(this, path)) {
+    : impl_(new Impl(this, path)) {
   LOGW("Created (%s)", path.c_str());
 }
 
@@ -47,7 +46,7 @@ DBusEventListener::~DBusEventListener() {
 DBusEventListener::Impl::~Impl() = default;
 
 DBusEventListener::Impl::Impl(DBusEventListener* parent, string path)
-  : subscribe_id_(0), registration_id_(0), path_(path), parent_(parent) {
+    : subscribe_id_(0), registration_id_(0), path_(path), parent_(parent) {
   LOGI("ButtonItem impl created");
 }
 

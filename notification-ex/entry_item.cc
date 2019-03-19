@@ -34,15 +34,15 @@ namespace notification {
 namespace item {
 
 EntryItem::EntryItem(std::shared_ptr<AbstractAction> action)
-  : AbstractItem(action), impl_(new Impl(this)) {
+    : AbstractItem(action), impl_(new Impl(this)) {
 }
 
 EntryItem::EntryItem(std::string id, std::shared_ptr<AbstractAction> action)
-  : AbstractItem(id, action), impl_(new Impl(this)) {
+    : AbstractItem(id, action), impl_(new Impl(this)) {
 }
 
 EntryItem::Impl::Impl(EntryItem* parent)
-  : parent_(parent) {
+    : parent_(parent) {
   LOGI("EntryItem created");
 }
 

@@ -31,7 +31,6 @@
 #endif
 
 #define LOG_TAG "NOTIFICATION_EX"
-
 #define ABSTRACT_ITEM_TYPE_KEY "__ABSTRACT_ITEM_TYPE_KEY__"
 #define ABSTRACT_ITEM_ID_KEY "__ABSTRACT_ITEM_ID_KEY__"
 #define ABSTRACT_ITEM_SENDER_APPID_KEY "__ABSTRACT_ITEM_SENDER_APPID_KEY__"
@@ -49,21 +48,19 @@ string AbstractItem::Impl::GenerateItemId() {
   return string(uuid) + ":" + id;
 }
 
-AbstractItem::AbstractItem(
-    std::shared_ptr<AbstractAction> action)
-  : impl_(new Impl(this, action)) {
+AbstractItem::AbstractItem(std::shared_ptr<AbstractAction> action)
+    : impl_(new Impl(this, action)) {
 }
 
 AbstractItem::AbstractItem(std::string id,
     std::shared_ptr<AbstractAction> action)
-  : impl_(new Impl(this, id, action)) {
+    : impl_(new Impl(this, id, action)) {
 }
 
 AbstractItem::Impl::Impl(AbstractItem* parent, string id,
     std::shared_ptr<AbstractAction> action)
-  : id_(id), action_(action), parent_(parent),
+    : id_(id), action_(action), parent_(parent),
     info_(std::make_shared<ItemInfo>(this)) {
-
   if (id_.empty())
     id_ = GenerateItemId();
   sender_appid_ = util::GetAppId();
@@ -72,7 +69,7 @@ AbstractItem::Impl::Impl(AbstractItem* parent, string id,
 
 AbstractItem::Impl::Impl(AbstractItem* parent,
     std::shared_ptr<AbstractAction> action)
-  : action_(action), parent_(parent),
+    : action_(action), parent_(parent),
     info_(std::make_shared<ItemInfo>(this)) {
   LOGI("GroupItem created");
 
@@ -102,7 +99,7 @@ void AbstractItem::Deserialize(Bundle b) {
 }
 
 string AbstractItem::GetId() const {
- return impl_->id_;
+  return impl_->id_;
 }
 
 shared_ptr<AbstractAction> AbstractItem::GetAction() const {

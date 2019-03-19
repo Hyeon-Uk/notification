@@ -33,7 +33,6 @@ namespace item {
 
 FactoryManager& FactoryManager::GetInst() {
   static FactoryManager manager;
-
   return manager;
 }
 

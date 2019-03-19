@@ -31,12 +31,12 @@ namespace notification {
 namespace item {
 
 NullItem::NullItem(shared_ptr<AbstractAction> action)
-  : AbstractItem(action) {
+    : AbstractItem(action) {
 }
 
 NullItem::NullItem(string id,
       shared_ptr<AbstractAction> action)
-  : AbstractItem(id, action) {
+    : AbstractItem(id, action) {
 }
 NullItem::~NullItem() = default;
 

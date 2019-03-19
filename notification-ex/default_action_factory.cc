@@ -35,16 +35,16 @@ namespace item {
 
 unique_ptr<AbstractAction> DefaultActionFactory::CreateAction(int type) {
   switch (type) {
-  case AbstractAction::NullObject :
-    THROW(NOTIFICATION_ERROR_INVALID_PARAMETER);
-  case AbstractAction::AppControl :
-    app_control_h control;
-    app_control_create(&control);
-    return unique_ptr<AbstractAction>(new AppControlAction(control));
-  case AbstractAction::Visibility :
-    return unique_ptr<AbstractAction>(new VisibilityAction());
-  case AbstractAction::Custom :
-    return nullptr;
+    case AbstractAction::NullObject :
+      THROW(NOTIFICATION_ERROR_INVALID_PARAMETER);
+    case AbstractAction::AppControl :
+      app_control_h control;
+      app_control_create(&control);
+      return unique_ptr<AbstractAction>(new AppControlAction(control));
+    case AbstractAction::Visibility :
+      return unique_ptr<AbstractAction>(new VisibilityAction());
+    case AbstractAction::Custom :
+      return nullptr;
   }
 
   return nullptr;

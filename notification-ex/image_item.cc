@@ -32,17 +32,17 @@ namespace notification {
 namespace item {
 
 ImageItem::ImageItem(std::string imagePath,
-  std::shared_ptr<AbstractAction> action)
-  : AbstractItem(action), impl_(new Impl(this, imagePath)) {
+    std::shared_ptr<AbstractAction> action)
+    : AbstractItem(action), impl_(new Impl(this, imagePath)) {
 }
 
 ImageItem::ImageItem(std::string id, std::string imagePath,
-  std::shared_ptr<AbstractAction> action)
-  : AbstractItem(id, action), impl_(new Impl(this, imagePath)) {
+    std::shared_ptr<AbstractAction> action)
+    : AbstractItem(id, action), impl_(new Impl(this, imagePath)) {
 }
 
 ImageItem::Impl::Impl(ImageItem* parent, std::string imagePath)
-  : parent_(parent), imagePath_(imagePath) {
+    : parent_(parent), imagePath_(imagePath) {
   LOGI("ImageItem impl created");
 }
 
@@ -60,7 +60,6 @@ Bundle ImageItem::Serialize() const {
 
 void ImageItem::Deserialize(Bundle b) {
   AbstractItem::Deserialize(b);
-
   impl_->imagePath_ = b.GetString(IMAGE_PATH_KEY);
 }
 
@@ -77,7 +76,6 @@ std::string ImageItem::GetImagePath() const {
 
 ImageItem::~ImageItem() = default;
 ImageItem::Impl::~Impl() = default;
-
 
 }  // namespace item
 }  // namespace notification

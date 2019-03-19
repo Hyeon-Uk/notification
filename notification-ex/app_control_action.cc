@@ -143,5 +143,5 @@ app_control_h AppControlAction::GetAppControl() const {
   return impl_->control_;
 }
 
-} //namespace item
+}  //namespace item
 }  //namespace notification

@@ -42,16 +42,17 @@ using namespace notification::item;
 namespace notification {
 
 Manager::Manager(IEventSender* sender, IEventListener* listener, string receiver_group)
-  : impl_(new Impl(this, sender, listener, receiver_group)) {
+    : impl_(new Impl(this, sender, listener, receiver_group)) {
 }
 Manager::~Manager() = default;
 
 Manager::Impl::~Impl() {
   listener_->UnRegisterObserver(parent_);
 }
+
 Manager::Impl::Impl(Manager* parent,
     IEventSender* sender, IEventListener* listener, string receiver_group)
-  : sender_(sender), listener_(listener), receiver_group_(receiver_group),
+    : sender_(sender), listener_(listener), receiver_group_(receiver_group),
     parent_(parent) {
   LOGI("impl created");
   listener_->RegisterObserver(parent_);
@@ -81,8 +82,7 @@ void Manager::Hide(shared_ptr<item::AbstractItem> noti) {
 }
 
 shared_ptr<item::AbstractItem> Manager::FindByRootID(string id) {
-  EventInfo info(EventInfo::Get,
-     util::GetAppId(), "", id);
+  EventInfo info(EventInfo::Get, util::GetAppId(), "", id);
   list<Bundle> result = impl_->sender_->Request(info);
   if (result.size() == 0) {
     LOGE("Fail to get noti");
@@ -104,7 +104,8 @@ list<shared_ptr<item::AbstractItem>> Manager::Get() {
   return gen_list;
 }
 
-void Manager::SendEvent(const EventInfo& info, shared_ptr<item::AbstractItem> noti) {
+void Manager::SendEvent(const EventInfo& info,
+    shared_ptr<item::AbstractItem> noti) {
   Bundle serialized = noti->Serialize();
   Bundle serialized_info = info.Serialize();
   list<Bundle> serialized_list {serialized};
@@ -124,46 +125,48 @@ void Manager::OnEvent(const EventInfo& info, list<Bundle> serialized) {
   shared_ptr<AbstractItem> gen_item;
   const EventInfo::EventType type = info.GetEventType();
   switch(type) {
-  case EventInfo::Post:
-  {
-    list<shared_ptr<item::AbstractItem>> added;
-    for (auto& i : serialized) {
-      gen_item = ItemInflator::Create(i);
-      if (gen_item->CanReceive(impl_->receiver_group_))
-        added.emplace_back(gen_item);
+    case EventInfo::Post: {
+      list<shared_ptr<item::AbstractItem>> added;
+      for (auto& i : serialized) {
+        gen_item = ItemInflator::Create(i);
+        if (gen_item->CanReceive(impl_->receiver_group_))
+          added.emplace_back(gen_item);
+      }
+      if (added.size() > 0)
+        OnAdd(info, added);
+      break;
     }
-    if (added.size() > 0)
-      OnAdd(info, added);
-    break;
-  }
-  case EventInfo::Update:
-  {
-    for (auto& i : serialized) {
-      gen_item = ItemInflator::Create(i);
-      if (gen_item->CanReceive(impl_->receiver_group_))
-        OnUpdate(info, gen_item);
+    case EventInfo::Update: {
+      for (auto& i : serialized) {
+        gen_item = ItemInflator::Create(i);
+        if (gen_item->CanReceive(impl_->receiver_group_))
+          OnUpdate(info, gen_item);
+      }
+      break;
     }
-    break;
-  }
-  case EventInfo::Delete:
-    for (auto& i : serialized) {
-      gen_item = ItemInflator::Create(i);
-      if (gen_item->CanReceive(impl_->receiver_group_))
-        OnDelete(info, gen_item);
+    case EventInfo::Delete: {
+      for (auto& i : serialized) {
+        gen_item = ItemInflator::Create(i);
+        if (gen_item->CanReceive(impl_->receiver_group_))
+          OnDelete(info, gen_item);
+      }
+      break;
     }
-    break;
-  case EventInfo::Get:
-    break;
+    case EventInfo::Get:
+      break;
   }
 }
 
-void Manager::OnAdd(const EventInfo& info, list<shared_ptr<item::AbstractItem>> addedItem) {
+void Manager::OnAdd(const EventInfo& info,
+      list<shared_ptr<item::AbstractItem>> addedItem) {
 }
 
-void Manager::OnUpdate(const EventInfo& info, shared_ptr<item::AbstractItem> updatedItem) {
+void Manager::OnUpdate(const EventInfo& info,
+      shared_ptr<item::AbstractItem> updatedItem) {
 }
 
-void Manager::OnDelete(const EventInfo& info, shared_ptr<item::AbstractItem> deletedItem) {
+void Manager::OnDelete(const EventInfo& info,
+      shared_ptr<item::AbstractItem> deletedItem) {
 }
 
 list<shared_ptr<item::AbstractItem>> Manager::OnRequestEvent(const EventInfo& info) {

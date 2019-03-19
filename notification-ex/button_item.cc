@@ -46,7 +46,7 @@ ButtonItem::~ButtonItem() = default;
 ButtonItem::Impl::~Impl() = default;
 
 ButtonItem::Impl::Impl(ButtonItem* parent, string title)
-  : title_(title), parent_(parent) {
+    : title_(title), parent_(parent) {
   LOGI("ButtonItem impl created");
 }
 

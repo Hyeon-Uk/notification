@@ -36,16 +36,18 @@ namespace notification {
 namespace item {
 
 ChatMessageItem::ChatMessageItem(std::string id, std::shared_ptr<TextItem> name,
-  std::shared_ptr<TextItem> text, std::shared_ptr<TextItem> data,
-  std::shared_ptr<TimeItem> time, Type type, std::shared_ptr<AbstractAction> action)
-  : AbstractItem(id, action),
-  impl_(new Impl(this, name, text, data, time, type)) {
+    std::shared_ptr<TextItem> text, std::shared_ptr<TextItem> data,
+    std::shared_ptr<TimeItem> time, Type type,
+    std::shared_ptr<AbstractAction> action)
+    : AbstractItem(id, action),
+    impl_(new Impl(this, name, text, data, time, type)) {
 }
 
 ChatMessageItem::Impl::Impl(ChatMessageItem* parent,
-  std::shared_ptr<TextItem> name, std::shared_ptr<TextItem> text,
-  std::shared_ptr<TextItem> data, std::shared_ptr<TimeItem> time, Type type)
-  : parent_(parent), name_(name), text_(text), data_(data), time_(time), type_(type) {
+    std::shared_ptr<TextItem> name, std::shared_ptr<TextItem> text,
+    std::shared_ptr<TextItem> data, std::shared_ptr<TimeItem> time, Type type)
+    : parent_(parent), name_(name), text_(text), data_(data), time_(time),
+    type_(type) {
   LOGI("ChatMessageItem impl created");
 }
 

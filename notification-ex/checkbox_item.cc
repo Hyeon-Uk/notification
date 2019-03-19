@@ -33,12 +33,12 @@ namespace notification {
 namespace item {
 
 CheckBoxItem::CheckBoxItem(std::string id, std::string title, bool checked,
-  std::shared_ptr<AbstractAction> action)
-  : AbstractItem(id, action), impl_(new Impl(this, title, checked)) {
+    std::shared_ptr<AbstractAction> action)
+    : AbstractItem(id, action), impl_(new Impl(this, title, checked)) {
 }
 
 CheckBoxItem::Impl::Impl(CheckBoxItem* parent, std::string title, bool checked)
-  : parent_(parent), title_(title), checked_(checked) {
+    : parent_(parent), title_(title), checked_(checked) {
   LOGI("CheckBoxItem impl created");
 }
 

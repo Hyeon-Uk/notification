@@ -17,8 +17,6 @@
 #ifndef NOTIFICATION_EX_DBUS_LISTENER_H_
 #define NOTIFICATION_EX_DBUS_LISTENER_H_
 
-#include <gio/gio.h>
-
 #include "notification-ex/event_listener_interface.h"
 
 namespace notification {

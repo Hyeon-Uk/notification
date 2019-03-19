@@ -32,7 +32,6 @@
 #endif
 
 #define LOG_TAG "NOTIFICATION_EX"
-
 #define MAX_PACKAGE_STR_SIZE 512
 #define NOTIFICATION_EX_REPORTER_OBJECT_PATH "/org/tizen/notification_ex_reporter"
 
@@ -41,16 +40,17 @@ using namespace notification::item;
 namespace notification {
 
 Reporter::Reporter(IEventSender* sender, IEventListener* listener)
-  : impl_(new Impl(this, sender, listener)) {
+    : impl_(new Impl(this, sender, listener)) {
 }
 Reporter::~Reporter() = default;
 
 Reporter::Impl::~Impl() {
   listener_->UnRegisterObserver(parent_);
 }
+
 Reporter::Impl::Impl(Reporter* parent,
     IEventSender* sender, IEventListener* listener)
-  : sender_(sender), listener_(listener), parent_(parent) {
+    : sender_(sender), listener_(listener), parent_(parent) {
   LOGI("impl created");
   listener_->RegisterObserver(parent_);
 }
@@ -88,8 +88,7 @@ void Reporter::Remove(std::shared_ptr<AbstractItem> noti) {
 
 std::shared_ptr<AbstractItem> Reporter::FindByRootID(std::string id) {
   Bundle serialized;
-  EventInfo info(EventInfo::Get,
-     util::GetAppId(), "", id);
+  EventInfo info(EventInfo::Get, util::GetAppId(), "", id);
   list<Bundle> result = impl_->sender_->Request(info);
   if (result.size() == 0) {
     LOGE("Fail to get noti");
@@ -100,7 +99,8 @@ std::shared_ptr<AbstractItem> Reporter::FindByRootID(std::string id) {
   return gen_item;
 }
 
-void Reporter::SendEvent(const EventInfo& info, shared_ptr<item::AbstractItem> noti) {
+void Reporter::SendEvent(const EventInfo& info,
+    shared_ptr<item::AbstractItem> noti) {
   Bundle serialized = noti->Serialize();
   list<Bundle> serialized_list {serialized};
   impl_->sender_->Notify(info, serialized_list);

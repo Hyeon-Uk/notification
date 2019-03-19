@@ -31,21 +31,19 @@
 #endif
 
 #define LOG_TAG "NOTIFICATION_EX"
-
 #define MAX_PACKAGE_STR_SIZE 512
 
 using namespace std;
 namespace notification {
 
-DBusSender::DBusSender(string path)
-  : impl_(new Impl(this, path)) {
+DBusSender::DBusSender(string path) : impl_(new Impl(this, path)) {
   LOGW("Created (%s)", path.c_str());
 }
 
 DBusSender::Impl::~Impl() = default;
 
 DBusSender::Impl::Impl(DBusSender* parent, string path)
-  : path_(path), parent_(parent) {
+    : path_(path), parent_(parent) {
   LOGI("ButtonItem impl created");
 }
 
@@ -53,8 +51,8 @@ DBusSender::~DBusSender() {
   LOGW("Destroyed");
 }
 
-bool DBusSender::Impl::EmitSignal(string bus_name,
-    string signal_name, GVariant* data) {
+bool DBusSender::Impl::EmitSignal(string bus_name, string signal_name,
+    GVariant* data) {
   GError* err = NULL;
   gboolean result = TRUE;
 
@@ -78,8 +76,8 @@ bool DBusSender::Impl::EmitSignal(string bus_name,
   return result;
 }
 
-void DBusSender::Notify(const EventInfo& info,
-    list<Bundle> serialized, string dest_appid) {
+void DBusSender::Notify(const EventInfo& info, list<Bundle> serialized,
+    string dest_appid) {
   string signal_name = EventInfo::GetString(info.GetEventType());
   string appid = util::GetAppId();
   string bus_name = "";
@@ -104,8 +102,8 @@ void DBusSender::Notify(const EventInfo& info,
   g_variant_builder_unref(builder);
 }
 
-GDBusMessage* DBusSender::Impl::MethodCall(string appid,
-    string method_name, Bundle serialized) {
+GDBusMessage* DBusSender::Impl::MethodCall(string appid, string method_name,
+    Bundle serialized) {
   GError* err = nullptr;
   GDBusMessage* msg = g_dbus_message_new_method_call(
       DBusConnectionManager::GetInst().GetDataProviderMasterName().c_str(),

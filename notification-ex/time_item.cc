@@ -32,7 +32,7 @@ namespace notification {
 namespace item {
 
 TimeItem::TimeItem(std::shared_ptr<AbstractAction> action)
-  : AbstractItem(action), impl_(new Impl(this, 0)) {
+    : AbstractItem(action), impl_(new Impl(this, 0)) {
   time_t current_time;
   time(&current_time);
 
@@ -40,16 +40,16 @@ TimeItem::TimeItem(std::shared_ptr<AbstractAction> action)
 }
 
 TimeItem::TimeItem(time_t time, std::shared_ptr<AbstractAction> action)
-  : AbstractItem(action), impl_(new Impl(this, time)) {
+    : AbstractItem(action), impl_(new Impl(this, time)) {
 }
 
 TimeItem::TimeItem(std::string id, time_t time,
-  std::shared_ptr<AbstractAction> action)
-  : AbstractItem(id, action), impl_(new Impl(this, time)) {
+    std::shared_ptr<AbstractAction> action)
+    : AbstractItem(id, action), impl_(new Impl(this, time)) {
 }
 
 TimeItem::Impl::Impl(TimeItem* parent, time_t time)
-  : parent_(parent), time_(time) {
+    : parent_(parent), time_(time) {
   LOGI("TimeItem impl created");
 }
 

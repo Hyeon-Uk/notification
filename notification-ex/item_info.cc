@@ -31,7 +31,8 @@ using namespace std;
 namespace notification {
 namespace item {
 
-AbstractItem::Impl::ItemInfo::ItemInfo(AbstractItem::Impl* impl) : impl_(impl) {}
+AbstractItem::Impl::ItemInfo::ItemInfo(AbstractItem::Impl* impl) : impl_(impl) {
+}
 
 int AbstractItem::Impl::ItemInfo::GetVersion() const {
   return impl_->version_;
@@ -65,7 +66,6 @@ void AbstractItem::Impl::ItemInfo::RemoveHideViewer(std::string appid) {
 std::list<std::string> AbstractItem::Impl::ItemInfo::GetHideViewerList() const {
   return impl_->hide_viewer_list_;
 }
-
 
 }  // namespace item
 }  // namespace notification

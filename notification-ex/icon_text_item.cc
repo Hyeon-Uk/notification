@@ -33,14 +33,13 @@ namespace notification {
 namespace item {
 
 IconTextItem::IconTextItem(std::string id, std::shared_ptr<IconItem> icon,
-  std::shared_ptr<TextItem> text, std::shared_ptr<AbstractAction> action)
-  : AbstractItem(id, action),
-  impl_(new Impl(this, icon, text)) {
+    std::shared_ptr<TextItem> text, std::shared_ptr<AbstractAction> action)
+    : AbstractItem(id, action), impl_(new Impl(this, icon, text)) {
 }
 
 IconTextItem::Impl::Impl(IconTextItem* parent, std::shared_ptr<IconItem> icon,
-  std::shared_ptr<TextItem> text)
-  : parent_(parent), icon_(icon), text_(text) {
+    std::shared_ptr<TextItem> text)
+    : parent_(parent), icon_(icon), text_(text) {
   LOGI("IconTextItem impl created");
 }
 

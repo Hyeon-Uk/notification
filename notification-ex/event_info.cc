@@ -37,14 +37,14 @@ namespace notification {
 
 EventInfo::EventInfo(EventInfo::EventType type, std::string owner,
     std::string channel, std::string item_id, std::string tag)
-  : impl_(new Impl(this, type, owner, channel, item_id, tag)) {
+    : impl_(new Impl(this, type, owner, channel, item_id, tag)) {
 }
 EventInfo::~EventInfo() = default;
 EventInfo::Impl::~Impl() = default;
 
 EventInfo::Impl::Impl(EventInfo* parent, EventInfo::EventType type, std::string owner,
     std::string channel, std::string item_id, std::string tag)
-  : type_(type), owner_(owner), channel_(channel), item_id_(item_id),
+    : type_(type), owner_(owner), channel_(channel), item_id_(item_id),
     tag_(tag), parent_(parent) {
   LOGI("EventInfo impl created");
 }
@@ -60,18 +60,18 @@ EventInfo::EventInfo(Bundle serialized) {
 
 string EventInfo::GetString(EventInfo::EventType type) {
   switch(type) {
-  case Post:
-    return "Post";
-    break;
-  case Update:
-    return "Update";
-    break;
-  case Delete:
-    return "Delete";
-    break;
-  case Get:
-    return "Get";
-    break;
+    case Post:
+      return "Post";
+      break;
+    case Update:
+      return "Update";
+      break;
+    case Delete:
+      return "Delete";
+      break;
+    case Get:
+      return "Get";
+      break;
   }
   return "";
 }
