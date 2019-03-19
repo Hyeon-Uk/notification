@@ -19,6 +19,7 @@
 
 #include <string>
 #include <list>
+#include <memory>
 
 #include "notification-ex/event_info.h"
 #include "notification-ex/event_observer_interface.h"
@@ -34,7 +35,8 @@ namespace notification {
 
 class EXPORT_API Reporter : public IEventObserver {
  public:
-  Reporter(IEventSender* sender, IEventListener* listener);
+  Reporter(std::unique_ptr<IEventSender> sender,
+        std::unique_ptr<IEventListener> listener);
   virtual ~Reporter();
 
   void SendEvent(const EventInfo& info, std::shared_ptr<item::AbstractItem> noti);

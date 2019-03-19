@@ -96,4 +96,4 @@ string GetAppId() {
 }
 
 }  // namespace util
-}  // namespace watchface_complication
+}  // namespace notification

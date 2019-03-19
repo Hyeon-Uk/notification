@@ -30,15 +30,15 @@ class Manager::Impl {
   virtual ~Impl();
 
  private:
-  Impl(Manager* parent,
-    IEventSender* sender, IEventListener* listener, std::string receiver_group);
+  Impl(Manager* parent, std::unique_ptr<IEventSender> sender,
+      std::unique_ptr<IEventListener> listener, std::string receiver_group);
 
  private:
   friend class Manager;
   void SendNotify(std::shared_ptr<item::AbstractItem> noti,
       EventInfo::EventType type);
-  IEventSender* sender_;
-  IEventListener* listener_;
+  std::unique_ptr<IEventSender> sender_;
+  std::unique_ptr<IEventListener> listener_;
   std::string receiver_group_;
   Manager* parent_;
 };

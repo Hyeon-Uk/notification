@@ -30,15 +30,15 @@ class Reporter::Impl {
   virtual ~Impl();
 
  private:
-  Impl(Reporter* parent,
-    IEventSender* sender, IEventListener* listener);
+  Impl(Reporter* parent, std::unique_ptr<IEventSender> sender,
+      std::unique_ptr<IEventListener> listener);
 
  private:
   friend class Reporter;
   void SendNotify(std::shared_ptr<item::AbstractItem> noti,
       EventInfo::EventType type);
-  IEventSender* sender_;
-  IEventListener* listener_;
+  std::unique_ptr<IEventSender> sender_;
+  std::unique_ptr<IEventListener> listener_;
   Reporter* parent_;
 };
 

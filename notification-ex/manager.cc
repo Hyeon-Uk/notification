@@ -41,18 +41,20 @@ using namespace std;
 using namespace notification::item;
 namespace notification {
 
-Manager::Manager(IEventSender* sender, IEventListener* listener, string receiver_group)
-    : impl_(new Impl(this, sender, listener, receiver_group)) {
+Manager::Manager(unique_ptr<IEventSender> sender,
+    unique_ptr<IEventListener> listener, string receiver_group)
+  : impl_(new Impl(this, move(sender), move(listener), receiver_group)) {
 }
 Manager::~Manager() = default;
 
 Manager::Impl::~Impl() {
   listener_->UnRegisterObserver(parent_);
 }
-
 Manager::Impl::Impl(Manager* parent,
-    IEventSender* sender, IEventListener* listener, string receiver_group)
-    : sender_(sender), listener_(listener), receiver_group_(receiver_group),
+    unique_ptr<IEventSender> sender,
+    unique_ptr<IEventListener> listener, string receiver_group)
+  : sender_(move(sender)), listener_(move(listener)),
+    receiver_group_(receiver_group),
     parent_(parent) {
   LOGI("impl created");
   listener_->RegisterObserver(parent_);

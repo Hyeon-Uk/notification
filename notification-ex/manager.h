@@ -19,6 +19,7 @@
 
 #include <string>
 #include <list>
+#include <memory>
 
 #include "notification-ex/abstract_item.h"
 #include "notification-ex/event_observer_interface.h"
@@ -33,7 +34,8 @@ namespace notification {
 
 class EXPORT_API Manager : public IEventObserver {
  public:
-  Manager(IEventSender* sender, IEventListener* listener, std::string receiver_group = "");
+  Manager(std::unique_ptr<IEventSender> sender,
+      std::unique_ptr<IEventListener> listener, std::string receiver_group = "");
   virtual ~Manager();
 
   std::list<std::shared_ptr<item::AbstractItem>> Get();

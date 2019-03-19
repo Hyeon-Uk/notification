@@ -39,18 +39,18 @@ using namespace std;
 using namespace notification::item;
 namespace notification {
 
-Reporter::Reporter(IEventSender* sender, IEventListener* listener)
-    : impl_(new Impl(this, sender, listener)) {
+Reporter::Reporter(
+    unique_ptr<IEventSender> sender, unique_ptr<IEventListener> listener)
+  : impl_(new Impl(this, move(sender), move(listener))) {
 }
 Reporter::~Reporter() = default;
 
 Reporter::Impl::~Impl() {
   listener_->UnRegisterObserver(parent_);
 }
-
 Reporter::Impl::Impl(Reporter* parent,
-    IEventSender* sender, IEventListener* listener)
-    : sender_(sender), listener_(listener), parent_(parent) {
+    unique_ptr<IEventSender> sender, unique_ptr<IEventListener> listener)
+  : sender_(move(sender)), listener_(move(listener)), parent_(parent) {
   LOGI("impl created");
   listener_->RegisterObserver(parent_);
 }

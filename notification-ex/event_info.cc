@@ -49,9 +49,10 @@ EventInfo::Impl::Impl(EventInfo* parent, EventInfo::EventType type, std::string 
   LOGI("EventInfo impl created");
 }
 
-EventInfo::EventInfo(Bundle serialized) {
+EventInfo::EventInfo(Bundle serialized)
+  : impl_(new Impl(this, EventInfo::Post, "", "", "", "")) {
   string event_str = serialized.GetString(NOTIFICATION_EX_EVENT_TYPE_KEY);
-  impl_->type_ = static_cast<EventInfo::EventType>(strtol(event_str.c_str(), NULL, 10));
+  impl_->type_ = (EventInfo::EventType)(int)strtol(event_str.c_str(), NULL, 10);
   impl_->owner_ = serialized.GetString(NOTIFICATION_EX_EVENT_OWNER_KEY);
   impl_->channel_ = serialized.GetString(NOTIFICATION_EX_EVENT_CHANNEL_KEY);
   impl_->item_id_ = serialized.GetString(NOTIFICATION_EX_EVENT_ITEM_ID_KEY);

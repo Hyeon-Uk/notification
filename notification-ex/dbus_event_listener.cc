@@ -57,7 +57,7 @@ void DBusEventListener::Impl::SignalCb(GDBusConnection* connection,
                       const gchar* signal_name,
                       GVariant* parameters,
                       void* user_data) {
-  DBusEventListener* dl = static_cast<DBusEventListener*>(user_data);
+  DBusEventListener::Impl* dl = static_cast<DBusEventListener::Impl*>(user_data);
   char* appid = nullptr;
   GVariantIter *iter = nullptr;
   char* event_info_raw = nullptr;
@@ -84,7 +84,7 @@ void DBusEventListener::Impl::SignalCb(GDBusConnection* connection,
 
   Bundle b(event_info_raw);
   EventInfo info(b);
-  dl->NotifyObserver(info, ret_list);
+  dl->parent_->NotifyObserver(info, ret_list);
 }
 
 void DBusEventListener::Impl::OnMethodCall(
@@ -93,7 +93,7 @@ void DBusEventListener::Impl::OnMethodCall(
     GVariant *parameters, GDBusMethodInvocation *invocation,
     gpointer user_data) {
   LOGI("method_name[%s] sender[%s]", method_name, sender);
-  DBusEventListener* dl = static_cast<DBusEventListener*>(user_data);
+  DBusEventListener::Impl* dl = static_cast<DBusEventListener::Impl*>(user_data);
   GVariant *reply_body = NULL;
   if (g_strcmp0(method_name, "Get") == 0) {
     char* appid = NULL;
@@ -102,7 +102,7 @@ void DBusEventListener::Impl::OnMethodCall(
 
     Bundle b(serialized);
     EventInfo info(b);
-    list<Bundle> result = dl->NotifyObserver(info);
+    list<Bundle> result = dl->parent_->NotifyObserver(info);
     GVariantBuilder* builder = g_variant_builder_new(G_VARIANT_TYPE("a(s)"));
     for (auto& i : result) {
       g_variant_builder_add(builder, "(s)",
