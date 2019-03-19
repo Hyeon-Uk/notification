@@ -19,10 +19,14 @@
 
 #include "notification-ex/iitem_info.h"
 
+#ifndef EXPORT_API
+#define EXPORT_API __attribute__((visibility("default")))
+#endif
+
 namespace notification {
 namespace item {
 
-class IItemInfoInternal : public IItemInfo{
+class EXPORT_API IItemInfoInternal : public IItemInfo {
  public:
   virtual ~IItemInfoInternal() = default;
   virtual int GetHideTime() const = 0;

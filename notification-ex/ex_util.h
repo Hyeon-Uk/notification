@@ -24,7 +24,6 @@
 namespace notification {
 namespace util {
   std::string GetAppId();
-  std::string GetAppId();
   GQuark GetQuarkFromString(std::string str);
   std::string GetQuarkToString(GQuark quark);
 }  // namespace util
