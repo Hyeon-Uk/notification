@@ -14,13 +14,14 @@
  * limitations under the License.
  */
 
-#ifndef NOTIFICATION_EX_EVENT_INFO_H_
-#define NOTIFICATION_EX_EVENT_INFO_H_
+#ifndef NOTIFICATION_EX_EVENT_INFO_INTERNAL_H_
+#define NOTIFICATION_EX_EVENT_INFO_INTERNAL_H_
 
 #include <string>
 #include <list>
 
 #include "notification-ex/ex_bundle.h"
+#include "notification-ex/ievent_info_internal.h"
 
 #ifndef EXPORT_API
 #define EXPORT_API __attribute__((visibility("default")))
@@ -28,28 +29,23 @@
 
 namespace notification {
 
-class EXPORT_API EventInfo {
+class EventInfo : public IEventInfoInternal {
  public:
-  enum EventType {
-    Post,
-    Update,
-    Delete,
-    Get,
-  };
-  EventInfo(EventType type, std::string owner,
+  EventInfo(IEventInfo::EventType type, std::string owner,
       std::string channel = "",
       std::string item_id = "",
       std::string tag = "");
   EventInfo(Bundle serialized);
-  ~EventInfo();
-
+  virtual ~EventInfo();
+  uid_t GetUid() const override;
+  void SetUid(uid_t uid) override;
+  EventType GetEventType() const override;
+  std::string GetOwner() const override;
+  std::string GetChannel() const override;
+  std::string GetItemId() const override;
+  std::string GetTag() const override;
+  Bundle Serialize() const override;
   static std::string GetString(EventType type);
-  EventType GetEventType() const;
-  std::string GetOwner() const;
-  std::string GetChannel() const;
-  std::string GetItemId() const;
-  std::string GetTag() const;
-  Bundle Serialize() const;
 
  private:
   class Impl;
@@ -58,4 +54,4 @@ class EXPORT_API EventInfo {
 
 }  // namespace notification
 
-#endif  // NOTIFICATION_EX_EVENT_INFO_H_
+#endif  // NOTIFICATION_EX_EVENT_INFO_INTERNAL_H_

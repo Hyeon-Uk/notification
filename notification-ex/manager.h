@@ -43,17 +43,17 @@ class EXPORT_API Manager : public IEventObserver {
   void Remove(std::shared_ptr<item::AbstractItem> noti);
   void Hide(std::shared_ptr<item::AbstractItem> noti);
   std::shared_ptr<item::AbstractItem> FindByRootID(std::string id);
-  void SendEvent(const EventInfo& info, std::shared_ptr<item::AbstractItem> noti);
-  void OnEvent(const EventInfo& info, std::list<Bundle> serialized) override;
-  std::list<Bundle> OnRequest(const EventInfo& info) override;
+  void SendEvent(const IEventInfo& info, std::shared_ptr<item::AbstractItem> noti);
+  void OnEvent(const IEventInfo& info, std::list<Bundle> serialized) override;
+  std::list<Bundle> OnRequest(const IEventInfo& info) override;
   static std::string GetPath();
 
  protected:
-  virtual void OnAdd(const EventInfo& info, std::list<std::shared_ptr<item::AbstractItem>> addedItem);
-  virtual void OnUpdate(const EventInfo& info, std::shared_ptr<item::AbstractItem> updatedItem);
-  virtual void OnDelete(const EventInfo& info, std::shared_ptr<item::AbstractItem> deletedItem);
+  virtual void OnAdd(const IEventInfo& info, std::list<std::shared_ptr<item::AbstractItem>> addedItem);
+  virtual void OnUpdate(const IEventInfo& info, std::shared_ptr<item::AbstractItem> updatedItem);
+  virtual void OnDelete(const IEventInfo& info, std::shared_ptr<item::AbstractItem> deletedItem);
   virtual std::list<std::shared_ptr<item::AbstractItem>> OnRequestEvent(
-      const EventInfo& info);
+      const IEventInfo& info);
 
  private:
   class Impl;

@@ -4,7 +4,7 @@
 
 #include <gmock/gmock.h>
 
-#include "notification-ex/event_info.h"
+#include "notification-ex/event_info_internal.h"
 
 using namespace notification;
 using namespace std;
@@ -26,6 +26,7 @@ TEST_F(EventInfoTest, SerializeDeserialize) {
   ASSERT_EQ(serialized.GetChannel(), info.GetChannel());
   ASSERT_EQ(serialized.GetItemId(), info.GetItemId());
   ASSERT_EQ(serialized.GetTag(), info.GetTag());
+  ASSERT_EQ(serialized.GetUid(), info.GetUid());
 }
 
 TEST_F(EventInfoTest, GetString) {

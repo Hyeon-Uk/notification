@@ -23,6 +23,7 @@
 #include "notification-ex/dbus_event_listener_implementation.h"
 #include "notification-ex/exception.h"
 #include "notification-ex/ex_util.h"
+#include "notification-ex/event_info_internal.h"
 
 #ifdef LOG_TAG
 #undef LOG_TAG
@@ -206,11 +207,11 @@ void DBusEventListener::UnRegisterObserver(IEventObserver* observer) {
 }
 
 void DBusEventListener::NotifyObserver(
-    const EventInfo& info, list<Bundle> serialized) {
+    const IEventInfo& info, list<Bundle> serialized) {
   impl_->observer_->OnEvent(info, serialized);
 }
 
-list<Bundle> DBusEventListener::NotifyObserver(const EventInfo& info) {
+list<Bundle> DBusEventListener::NotifyObserver(const IEventInfo& info) {
   return impl_->observer_->OnRequest(info);
 }
 

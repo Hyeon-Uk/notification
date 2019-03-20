@@ -19,7 +19,7 @@
 
 #include "notification-ex/ex_bundle.h"
 #include "notification-ex/event_sender_interface.h"
-#include "notification-ex/event_info.h"
+#include "notification-ex/ievent_info.h"
 
 #ifndef EXPORT_API
 #define EXPORT_API __attribute__((visibility("default")))
@@ -32,9 +32,9 @@ class EXPORT_API DBusSender : public IEventSender {
   DBusSender(std::string path);
   virtual ~DBusSender();
 
-  void Notify(const EventInfo& info, std::list<Bundle> serialized,
+  void Notify(const IEventInfo& info, std::list<Bundle> serialized,
       std::string dest_appid = "") override;
-  std::list<Bundle> Request(const EventInfo& info) override;
+  std::list<Bundle> Request(const IEventInfo& info) override;
 
  private:
   class Impl;

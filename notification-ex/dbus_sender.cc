@@ -23,7 +23,7 @@
 #include "notification-ex/dbus_connection_manager.h"
 #include "notification-ex/dbus_sender.h"
 #include "notification-ex/dbus_sender_implementation.h"
-#include "notification-ex/event_info.h"
+#include "notification-ex/event_info_internal.h"
 #include "notification-ex/ex_util.h"
 
 #ifdef LOG_TAG
@@ -76,7 +76,7 @@ bool DBusSender::Impl::EmitSignal(string bus_name, string signal_name,
   return result;
 }
 
-void DBusSender::Notify(const EventInfo& info, list<Bundle> serialized,
+void DBusSender::Notify(const IEventInfo& info, list<Bundle> serialized,
     string dest_appid) {
   string signal_name = EventInfo::GetString(info.GetEventType());
   string appid = util::GetAppId();
@@ -131,7 +131,7 @@ GDBusMessage* DBusSender::Impl::MethodCall(string appid, string method_name,
   return reply;
 }
 
-std::list<Bundle> DBusSender::Request(const EventInfo& info) {
+std::list<Bundle> DBusSender::Request(const IEventInfo& info) {
   string appid = util::GetAppId();
   string method_name = EventInfo::GetString(info.GetEventType());
   Bundle serialized = info.Serialize();

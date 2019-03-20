@@ -17,8 +17,10 @@
 #ifndef NOTIFICATION_EX_EVENT_LISTENER_INTERFACE_H_
 #define NOTIFICATION_EX_EVENT_LISTENER_INTERFACE_H_
 
+#include <list>
+
 #include "notification-ex/event_observer_interface.h"
-#include "notification-ex/event_info.h"
+#include "notification-ex/ievent_info.h"
 
 #ifndef EXPORT_API
 #define EXPORT_API __attribute__((visibility("default")))
@@ -31,8 +33,8 @@ class EXPORT_API IEventListener {
   virtual ~IEventListener() = default;
   virtual void RegisterObserver(IEventObserver* observer) = 0;
   virtual void UnRegisterObserver(IEventObserver* observer) = 0;
-  virtual void NotifyObserver(const EventInfo& info, std::list<Bundle> serialized) = 0;
-  virtual std::list<Bundle> NotifyObserver(const EventInfo& info) = 0;
+  virtual void NotifyObserver(const IEventInfo& info, std::list<Bundle> serialized) = 0;
+  virtual std::list<Bundle> NotifyObserver(const IEventInfo& info) = 0;
 };
 
 }  // namespace notification

@@ -22,7 +22,7 @@
 
 #include "notification-ex/reporter.h"
 #include "notification-ex/reporter_implementation.h"
-#include "notification-ex/event_info.h"
+#include "notification-ex/event_info_internal.h"
 #include "notification-ex/item_inflator.h"
 #include "notification-ex/dbus_connection_manager.h"
 #include "notification-ex/ex_util.h"
@@ -56,7 +56,7 @@ Reporter::Impl::Impl(Reporter* parent,
 }
 
 void Reporter::Impl::SendNotify(shared_ptr<item::AbstractItem> noti,
-    EventInfo::EventType type) {
+    IEventInfo::EventType type) {
   Bundle serialized = noti->Serialize();
   EventInfo info(type, util::GetAppId(), noti->GetChannel());
   list<Bundle> serialized_list {serialized};
@@ -99,14 +99,14 @@ std::shared_ptr<AbstractItem> Reporter::FindByRootID(std::string id) {
   return gen_item;
 }
 
-void Reporter::SendEvent(const EventInfo& info,
+void Reporter::SendEvent(const IEventInfo& info,
     shared_ptr<item::AbstractItem> noti) {
   Bundle serialized = noti->Serialize();
   list<Bundle> serialized_list {serialized};
   impl_->sender_->Notify(info, serialized_list);
 }
 
-void Reporter::OnEvent(const EventInfo& info, list<Bundle> serialized) {
+void Reporter::OnEvent(const IEventInfo& info, list<Bundle> serialized) {
   list<shared_ptr<item::AbstractItem>> item_list;
   for (auto& i : serialized) {
     shared_ptr<AbstractItem> gen_item = ItemInflator::Create(i);
@@ -115,11 +115,11 @@ void Reporter::OnEvent(const EventInfo& info, list<Bundle> serialized) {
   OnEvent(info, item_list);
 }
 
-list<shared_ptr<item::AbstractItem>> Reporter::OnRequestEvent(const EventInfo& info) {
+list<shared_ptr<item::AbstractItem>> Reporter::OnRequestEvent(const IEventInfo& info) {
   return list<shared_ptr<item::AbstractItem>>({});
 }
 
-list<Bundle> Reporter::OnRequest(const EventInfo& info) {
+list<Bundle> Reporter::OnRequest(const IEventInfo& info) {
   list<shared_ptr<item::AbstractItem>> item_list = OnRequestEvent(info);
   list<Bundle> serialized_list;
   for (auto& i : item_list) {
@@ -129,7 +129,7 @@ list<Bundle> Reporter::OnRequest(const EventInfo& info) {
 }
 
 void Reporter::OnEvent(
-    const EventInfo& info, list<shared_ptr<item::AbstractItem>> notiList) {
+    const IEventInfo& info, list<shared_ptr<item::AbstractItem>> notiList) {
 }
 
 string Reporter::GetPath() {

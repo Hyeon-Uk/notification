@@ -21,7 +21,7 @@
 #include <list>
 #include <memory>
 
-#include "notification-ex/event_info.h"
+#include "notification-ex/ievent_info.h"
 #include "notification-ex/event_observer_interface.h"
 #include "notification-ex/event_sender_interface.h"
 #include "notification-ex/event_listener_interface.h"
@@ -39,18 +39,18 @@ class EXPORT_API Reporter : public IEventObserver {
         std::unique_ptr<IEventListener> listener);
   virtual ~Reporter();
 
-  void SendEvent(const EventInfo& info, std::shared_ptr<item::AbstractItem> noti);
+  void SendEvent(const IEventInfo& info, std::shared_ptr<item::AbstractItem> noti);
   void Post(std::shared_ptr<item::AbstractItem> noti);
   void Post(std::list<std::shared_ptr<item::AbstractItem>> notiList);
   void Update(std::shared_ptr<item::AbstractItem> noti);
   void Remove(std::shared_ptr<item::AbstractItem> noti);
   std::shared_ptr<item::AbstractItem> FindByRootID(std::string id);
-  virtual void OnEvent(const EventInfo& info,
+  virtual void OnEvent(const IEventInfo& info,
       std::list<std::shared_ptr<item::AbstractItem>> notiList);
   virtual std::list<std::shared_ptr<item::AbstractItem>> OnRequestEvent(
-      const EventInfo& info);
-  void OnEvent(const EventInfo& info, std::list<Bundle> serialized) override;
-  std::list<Bundle> OnRequest(const EventInfo& info) override;
+      const IEventInfo& info);
+  void OnEvent(const IEventInfo& info, std::list<Bundle> serialized) override;
+  std::list<Bundle> OnRequest(const IEventInfo& info) override;
   static std::string GetPath();
 
  private:

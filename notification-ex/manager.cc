@@ -23,7 +23,7 @@
 #include "notification-ex/item_inflator.h"
 #include "notification-ex/manager.h"
 #include "notification-ex/manager_implementation.h"
-#include "notification-ex/event_info.h"
+#include "notification-ex/event_info_internal.h"
 #include "notification-ex/dbus_connection_manager.h"
 #include "notification-ex/ex_util.h"
 #include "notification-ex/item_info_internal.h"
@@ -61,7 +61,7 @@ Manager::Impl::Impl(Manager* parent,
 }
 
 void Manager::Impl::SendNotify(shared_ptr<item::AbstractItem> noti,
-    EventInfo::EventType type) {
+    IEventInfo::EventType type) {
   Bundle serialized = noti->Serialize();
   EventInfo info(type, util::GetAppId(), noti->GetChannel());
   list<Bundle> serialized_list {serialized};
@@ -106,7 +106,7 @@ list<shared_ptr<item::AbstractItem>> Manager::Get() {
   return gen_list;
 }
 
-void Manager::SendEvent(const EventInfo& info,
+void Manager::SendEvent(const IEventInfo& info,
     shared_ptr<item::AbstractItem> noti) {
   Bundle serialized = noti->Serialize();
   Bundle serialized_info = info.Serialize();
@@ -114,7 +114,7 @@ void Manager::SendEvent(const EventInfo& info,
   impl_->sender_->Notify(info, serialized_list, noti->GetSenderAppId());
 }
 
-list<Bundle> Manager::OnRequest(const EventInfo& info) {
+list<Bundle> Manager::OnRequest(const IEventInfo& info) {
   list<shared_ptr<item::AbstractItem>> item_list = OnRequestEvent(info);
   list<Bundle> serialized_list;
   for (auto& i : item_list) {
@@ -123,9 +123,9 @@ list<Bundle> Manager::OnRequest(const EventInfo& info) {
   return serialized_list;
 }
 
-void Manager::OnEvent(const EventInfo& info, list<Bundle> serialized) {
+void Manager::OnEvent(const IEventInfo& info, list<Bundle> serialized) {
   shared_ptr<AbstractItem> gen_item;
-  const EventInfo::EventType type = info.GetEventType();
+  const IEventInfo::EventType type = info.GetEventType();
   switch(type) {
     case EventInfo::Post: {
       list<shared_ptr<item::AbstractItem>> added;
@@ -159,19 +159,19 @@ void Manager::OnEvent(const EventInfo& info, list<Bundle> serialized) {
   }
 }
 
-void Manager::OnAdd(const EventInfo& info,
+void Manager::OnAdd(const IEventInfo& info,
       list<shared_ptr<item::AbstractItem>> addedItem) {
 }
 
-void Manager::OnUpdate(const EventInfo& info,
+void Manager::OnUpdate(const IEventInfo& info,
       shared_ptr<item::AbstractItem> updatedItem) {
 }
 
-void Manager::OnDelete(const EventInfo& info,
+void Manager::OnDelete(const IEventInfo& info,
       shared_ptr<item::AbstractItem> deletedItem) {
 }
 
-list<shared_ptr<item::AbstractItem>> Manager::OnRequestEvent(const EventInfo& info) {
+list<shared_ptr<item::AbstractItem>> Manager::OnRequestEvent(const IEventInfo& info) {
   return list<shared_ptr<item::AbstractItem>>({});
 }
 
