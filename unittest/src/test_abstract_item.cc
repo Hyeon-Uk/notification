@@ -84,6 +84,7 @@ TEST_F(AbstractItemTest, SerializeDeserialize) {
   /* Serialize */
   app_control_h app_control;
   char* app_id = NULL;
+  time_t current_time;
 
   app_control_create(&app_control);
   app_control_set_app_id(app_control, "new_appid");
@@ -101,15 +102,20 @@ TEST_F(AbstractItemTest, SerializeDeserialize) {
   item.SetEnable(false);
   item.AddReceiver("receiver_1");
   item.AddReceiver("receiver_2");
+  std::static_pointer_cast<IItemInfoInternal>(item.GetInfo())->AddHideViewer("hide_1");
+  std::static_pointer_cast<IItemInfoInternal>(item.GetInfo())->AddHideViewer("hide_2");
   item.SetPolicy(AbstractItem::Policy::OnBootClear);
-  item.GetInfo()->SetVersion(3);
-  std::static_pointer_cast<IItemInfoInternal>(item.GetInfo())->SetHideTime(5);
-  std::static_pointer_cast<IItemInfoInternal>(item.GetInfo())->SetDeleteTime(9);
+  std::static_pointer_cast<IItemInfoInternal>(item.GetInfo())->SetVersion(3);
+  item.GetInfo()->SetHideTime(5);
+  item.GetInfo()->SetDeleteTime(9);
   item.SetChannel("channel99");
   item.SetSoundPath("soundpath");
   item.SetVibrationPath("vibrationpath");
-  item.SetUid(3);
+  std::static_pointer_cast<IItemInfoInternal>(item.GetInfo())->SetUid(3);
   item.SetSenderAppId("sender");
+
+  time(&current_time);
+  std::static_pointer_cast<IItemInfoInternal>(item.GetInfo())->SetTime(current_time);
 
   Color color2(150, 160, 170, 180);
 
@@ -127,18 +133,18 @@ TEST_F(AbstractItemTest, SerializeDeserialize) {
 
   ASSERT_EQ(gen_test->GetId(), "test_id");
   ASSERT_EQ(gen_test->GetType(), MY_ITEM_TYPE);
-  ASSERT_EQ(gen_test->GetUid(), 3);
+  ASSERT_EQ(std::static_pointer_cast<IItemInfoInternal>(gen_test->GetInfo())->GetUid(), 3);
   ASSERT_EQ(gen_test->GetEnable(), false);
   ASSERT_EQ(gen_test->GetVisible(),false);
   ASSERT_EQ(gen_test->GetPolicy(), AbstractItem::Policy::OnBootClear);
-  ASSERT_EQ(gen_test->GetInfo()->GetVersion(), 3);
-  ASSERT_EQ(std::static_pointer_cast<IItemInfoInternal>(gen_test->GetInfo())->GetHideTime(), 5);
-  ASSERT_EQ(std::static_pointer_cast<IItemInfoInternal>(gen_test->GetInfo())->GetDeleteTime(), 9);
+  ASSERT_EQ(std::static_pointer_cast<IItemInfoInternal>(gen_test->GetInfo())->GetVersion(), 3);
+  ASSERT_EQ(gen_test->GetInfo()->GetHideTime(), 5);
+  ASSERT_EQ(gen_test->GetInfo()->GetDeleteTime(), 9);
   ASSERT_EQ(gen_test->GetChannel(), "channel99");
   ASSERT_EQ(gen_test->GetSoundPath(), "soundpath");
   ASSERT_EQ(gen_test->GetVibrationPath(), "vibrationpath");
   ASSERT_EQ(gen_test->GetSenderAppId(), "sender");
-  ASSERT_EQ(gen_test->GetTime(), 0);
+  ASSERT_EQ(gen_test->GetInfo()->GetTime(), current_time);
 
   ASSERT_EQ(gen_test->GetStyle()->GetPadding().GetLeft(), 10);
   ASSERT_EQ(gen_test->GetStyle()->GetPadding().GetTop(), 20);
@@ -171,6 +177,19 @@ TEST_F(AbstractItemTest, SerializeDeserialize) {
     ASSERT_EQ(receiver1.front(), receiver2.front());
     receiver1.pop_front();
     receiver2.pop_front();
+  }
+
+  std::list<std::string> hide1 =
+      std::static_pointer_cast<IItemInfoInternal>(item.GetInfo())->GetHideViewerList();
+  std::list<std::string> hide2 =
+      std::static_pointer_cast<IItemInfoInternal>(gen_test->GetInfo())->GetHideViewerList();
+
+  ASSERT_EQ(hide1.size(), hide2.size());
+
+  for (unsigned int i = 0; i < hide1.size(); i++) {
+    ASSERT_EQ(hide1.front(), hide2.front());
+    hide1.pop_front();
+    hide2.pop_front();
   }
 
   ASSERT_EQ(gen_test->GetAction()->GetType(), AbstractAction::Type::AppControl);

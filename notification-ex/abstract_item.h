@@ -255,9 +255,6 @@ class EXPORT_API AbstractItem {
   void SetSenderAppId(std::string sender_appid);
   std::string GetTag();
   void SetTag();
-  time_t GetTime();
-  int GetUid();
-  void SetUid(int uid);
 
  private:
   class Impl;

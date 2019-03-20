@@ -33,6 +33,21 @@ namespace item {
 
 AbstractItem::Impl::ItemInfo::ItemInfo(AbstractItem::Impl* impl) : impl_(impl) {
 }
+int AbstractItem::Impl::ItemInfo::GetUid() const {
+  return impl_->uid_;
+}
+
+void AbstractItem::Impl::ItemInfo::SetUid(int uid) {
+  impl_->uid_ = uid;
+}
+
+time_t AbstractItem::Impl::ItemInfo::GetTime() const {
+  return impl_->time_;
+}
+
+void AbstractItem::Impl::ItemInfo::SetTime(time_t time) {
+  impl_->time_ = time;
+}
 
 int AbstractItem::Impl::ItemInfo::GetVersion() const {
   return impl_->version_;
@@ -65,10 +80,6 @@ void AbstractItem::Impl::ItemInfo::AddHideViewer(std::string appid) {
     return;
   }
   impl_->hide_viewer_list_.push_back(appid);
-}
-
-void AbstractItem::Impl::ItemInfo::RemoveHideViewer(std::string appid) {
-  impl_->hide_viewer_list_.remove(appid);
 }
 
 std::list<std::string> AbstractItem::Impl::ItemInfo::GetHideViewerList() const {

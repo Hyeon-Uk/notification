@@ -29,13 +29,13 @@ namespace item {
 class EXPORT_API IItemInfoInternal : public IItemInfo {
  public:
   virtual ~IItemInfoInternal() = default;
-  virtual void SetHideTime(int hide_time) = 0;
-  virtual int GetHideTime() const = 0;
-  virtual void SetDeleteTime(int delete_time)  = 0;
-  virtual int GetDeleteTime() const = 0;
+  virtual int GetUid() const = 0;
+  virtual void SetUid(int uid) = 0;
+  virtual int GetVersion() const = 0;
+  virtual void SetVersion(int ver) = 0;
   virtual void AddHideViewer(std::string appid) = 0;
-  virtual void RemoveHideViewer(std::string appid) = 0;
   virtual std::list<std::string> GetHideViewerList() const = 0;
+  virtual void SetTime(time_t time) = 0;
 };
 
 }  // namespace item

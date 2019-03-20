@@ -17,14 +17,19 @@
 #ifndef NOTIFICATION_EX_IITEM_INFO_H_
 #define NOTIFICATION_EX_IITEM_INFO_H_
 
+#include <time.h>
+
 namespace notification {
 namespace item {
 
 class EXPORT_API IItemInfo {
  public:
   virtual ~IItemInfo() = default;
-  virtual int GetVersion() const = 0;
-  virtual void SetVersion(int ver) = 0;
+  virtual int GetHideTime() const = 0;
+  virtual void SetHideTime(int hide_time) = 0;
+  virtual int GetDeleteTime() const = 0;
+  virtual void SetDeleteTime(int delete_time)  = 0;
+  virtual time_t GetTime() const = 0;
 };
 
 }  // namespace item

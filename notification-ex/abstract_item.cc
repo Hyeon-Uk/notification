@@ -35,7 +35,6 @@
 #define ABSTRACT_ITEM_TYPE_KEY "__ABSTRACT_ITEM_TYPE_KEY__"
 #define ABSTRACT_ITEM_ID_KEY "__ABSTRACT_ITEM_ID_KEY__"
 #define ABSTRACT_ITEM_UID_KEY "__ABSTRACT_ITEM_UID_KEY__"
-#define ABSTRACT_ITEM_REQUEST_ID_KEY "__ABSTRACT_ITEM_REQUEST_ID_KEY__"
 #define ABSTRACT_ITEM_TIME_KEY "__ABSTRACT_ITEM_TIME_KEY__"
 #define ABSTRACT_ITEM_SENDER_APPID_KEY "__ABSTRACT_ITEM_SENDER_APPID_KEY__"
 #define ABSTRACT_ITEM_CHANNEL_KEY "__ABSTRACT_ITEM_CHANNEL_KEY__"
@@ -70,6 +69,7 @@
 #define ABSTRACT_ITEM_LED_COLOR_B_KEY "__ABSTRACT_ITEM_LED_COLOR_B_KEY__"
 #define ABSTRACT_ITEM_LED_IS_EXIST_KEY "__ABSTRACT_ITEM_LED_IS_EXIST_KEY__"
 #define ABSTRACT_ITEM_ACTION_KEY "__ABSTRACT_ITEM_ACTION_KEY__"
+#define ABSTRACT_ITEM_HIDE_VIEWER_KEY "__ABSTRACT_ITEM_HIDE_VIEWER_KEY__"
 #define ABSTRACT_ITEM_TRUE "TRUE"
 
 using namespace std;
@@ -132,7 +132,6 @@ Bundle AbstractItem::Serialize() const {
   b.Add(ABSTRACT_ITEM_HIDE_TIME_KEY, to_string(impl_->hide_time_));
   b.Add(ABSTRACT_ITEM_DELETE_TIME_KEY, to_string(impl_->delete_time_));
   b.Add(ABSTRACT_ITEM_UID_KEY, to_string(impl_->uid_));
-  b.Add(ABSTRACT_ITEM_REQUEST_ID_KEY, to_string(impl_->request_id_));
 
   timeinfo = localtime(&impl_->time_);
   strftime (buf, sizeof(buf), "%s", timeinfo);
@@ -148,9 +147,7 @@ Bundle AbstractItem::Serialize() const {
     b.Add(ABSTRACT_ITEM_VIBRATION_PATH_KEY, impl_->vibration_path_);
 
   b.Add(ABSTRACT_ITEM_VISIBLE_KEY, to_string((int)impl_->visible_));
-
   b.Add(ABSTRACT_ITEM_ENABLE_KEY, to_string((int)impl_->enable_));
-
   b.Add(ABSTRACT_ITEM_POLICY_KEY, to_string((int)impl_->policy_));
 
   if (impl_->receiver_group_list_.size() != 0) {
@@ -209,6 +206,17 @@ Bundle AbstractItem::Serialize() const {
       reinterpret_cast<char*>(impl_->action_->Serialize().ToRaw().first.get()));
   }
 
+  if (impl_->hide_viewer_list_.size() != 0) {
+    vector<string> arr;
+
+    for (auto& i : impl_->hide_viewer_list_) {
+      string viewer = i;
+
+      arr.push_back(viewer);
+    }
+    b.Add(ABSTRACT_ITEM_HIDE_VIEWER_KEY, arr);
+  }
+
   return b;
 }
 
@@ -230,7 +238,6 @@ void AbstractItem::Deserialize(Bundle b) {
   impl_->sound_path_ = b.GetString(ABSTRACT_ITEM_SOUND_PATH_KEY);
   impl_->vibration_path_ = b.GetString(ABSTRACT_ITEM_VIBRATION_PATH_KEY);
   impl_->uid_ = stoi(b.GetString(ABSTRACT_ITEM_UID_KEY));
-  impl_->request_id_ = stoi(b.GetString(ABSTRACT_ITEM_REQUEST_ID_KEY));
 
   time_s = b.GetString(ABSTRACT_ITEM_TIME_KEY);
   strptime(time_s.c_str(), "%s", &timeinfo);
@@ -244,10 +251,9 @@ void AbstractItem::Deserialize(Bundle b) {
 
   impl_->enable_ = (bool)stoi(b.GetString(ABSTRACT_ITEM_ENABLE_KEY));
 
-  vector<string> str_arr = b.GetStringArray(ABSTRACT_ITEM_RECEIVER_GROUP_KEY);
-
-  if (str_arr.size() != 0) {
-    for (string str : str_arr) {
+  vector<string> receiver_group = b.GetStringArray(ABSTRACT_ITEM_RECEIVER_GROUP_KEY);
+  if (receiver_group.size() != 0) {
+    for (string str : receiver_group) {
       impl_->receiver_group_list_.push_back(str);
     }
   }
@@ -285,9 +291,15 @@ void AbstractItem::Deserialize(Bundle b) {
   }
 
   string action_str = b.GetString(ABSTRACT_ITEM_ACTION_KEY);
-
   if (!action_str.empty())
     impl_->action_ = ActionInflator::Create(Bundle(action_str));
+
+  vector<string> hide_viewer = b.GetStringArray(ABSTRACT_ITEM_HIDE_VIEWER_KEY);
+  if (hide_viewer.size() != 0) {
+    for (string str : hide_viewer) {
+      impl_->hide_viewer_list_.push_back(str);
+    }
+  }
 }
 
 string AbstractItem::GetId() const {
@@ -400,18 +412,6 @@ std::string AbstractItem::GetSenderAppId() const {
 
 void AbstractItem::SetSenderAppId(std::string sender_appid) {
   impl_->sender_appid_ = sender_appid;
-}
-
-time_t AbstractItem::GetTime() {
-  return impl_->time_;
-}
-
-int AbstractItem::GetUid() {
-  return impl_->uid_;
-}
-
-void AbstractItem::SetUid(int uid) {
-  impl_->uid_ = uid;
 }
 
 }  // namespace item
