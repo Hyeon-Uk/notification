@@ -3,7 +3,7 @@ Name:       notification
 Summary:    Notification library
 Version:    0.4.19
 Release:    1
-Group:      TBD
+Group:      Applications/Core Applications
 License:    Apache-2.0
 Source0:    %{name}-%{version}.tar.gz
 BuildRequires: pkgconfig(sqlite3)
