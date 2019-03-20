@@ -151,4 +151,4 @@ std::list<Bundle> DBusSender::Request(const IEventInfo& info) {
   return ret_list;
 }
 
-}  // nampace notification
+}  // namespace notification

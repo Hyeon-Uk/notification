@@ -82,4 +82,4 @@ CheckBoxItem::~CheckBoxItem() = default;
 CheckBoxItem::Impl::~Impl() = default;
 
 }  // namespace item
-}  // namespace notification_ex
+}  // namespace notification

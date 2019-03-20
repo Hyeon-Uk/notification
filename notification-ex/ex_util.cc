@@ -41,6 +41,12 @@ std::string GetQuarkToString(GQuark quark) {
   return g_quark_to_string(quark);
 }
 
+int GetRequestId() {
+  static int id = 0;
+  g_atomic_int_inc(&id);
+  return id;
+}
+
 string GetAppId() {
   static string appid = "";
   char appid_buf[MAX_PACKAGE_STR_SIZE] = {0, };

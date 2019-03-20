@@ -93,12 +93,12 @@ TEST(Bundle, GetCount) {
   EXPECT_EQ(bundle.GetCount(), 2);
 }
 
-TEST(Bundle, Remove) {
+TEST(Bundle, Delete) {
   Bundle bundle;
   int r = bundle.Add("TestKey1", "TestVal1");
   EXPECT_EQ(r, 0);
 
-  r = bundle.Remove("TestKey1");
+  r = bundle.Delete("TestKey1");
   EXPECT_EQ(r, 0);
 
   EXPECT_EQ(bundle.GetString("TestKey1"), "");

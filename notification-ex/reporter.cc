@@ -55,20 +55,21 @@ Reporter::Impl::Impl(Reporter* parent,
   listener_->RegisterObserver(parent_);
 }
 
-void Reporter::Impl::SendNotify(shared_ptr<item::AbstractItem> noti,
+int Reporter::Impl::SendNotify(shared_ptr<item::AbstractItem> noti,
     IEventInfo::EventType type) {
   Bundle serialized = noti->Serialize();
   EventInfo info(type, util::GetAppId(), noti->GetChannel());
   list<Bundle> serialized_list {serialized};
   sender_->Notify(info, serialized_list);
+  return info.GetRequestId();
 }
 
-void Reporter::Post(std::shared_ptr<item::AbstractItem> noti) {
+int Reporter::Post(std::shared_ptr<item::AbstractItem> noti) {
   LOGI("Post noti");
-  impl_->SendNotify(noti, EventInfo::Post);
+  return impl_->SendNotify(noti, EventInfo::Post);
 }
 
-void Reporter::Post(std::list<std::shared_ptr<AbstractItem>> notiList) {
+int Reporter::Post(std::list<std::shared_ptr<AbstractItem>> notiList) {
   EventInfo info(EventInfo::Post, util::GetAppId(), "");
   list<Bundle> serialized_list;
   for (auto& i : notiList) {
@@ -76,14 +77,15 @@ void Reporter::Post(std::list<std::shared_ptr<AbstractItem>> notiList) {
     serialized_list.push_back(b);
   }
   impl_->sender_->Notify(info, serialized_list);
+  return info.GetRequestId();
 }
 
-void Reporter::Update(std::shared_ptr<AbstractItem> noti) {
-  impl_->SendNotify(noti, EventInfo::Update);
+int Reporter::Update(std::shared_ptr<AbstractItem> noti) {
+  return impl_->SendNotify(noti, EventInfo::Update);
 }
 
-void Reporter::Remove(std::shared_ptr<AbstractItem> noti) {
-  impl_->SendNotify(noti, EventInfo::Delete);
+int Reporter::Delete(std::shared_ptr<AbstractItem> noti) {
+  return impl_->SendNotify(noti, EventInfo::Delete);
 }
 
 std::shared_ptr<AbstractItem> Reporter::FindByRootID(std::string id) {
@@ -99,11 +101,12 @@ std::shared_ptr<AbstractItem> Reporter::FindByRootID(std::string id) {
   return gen_item;
 }
 
-void Reporter::SendEvent(const IEventInfo& info,
+int Reporter::SendEvent(const IEventInfo& info,
     shared_ptr<item::AbstractItem> noti) {
   Bundle serialized = noti->Serialize();
   list<Bundle> serialized_list {serialized};
   impl_->sender_->Notify(info, serialized_list);
+  return info.GetRequestId();
 }
 
 void Reporter::OnEvent(const IEventInfo& info, list<Bundle> serialized) {
@@ -136,4 +139,4 @@ string Reporter::GetPath() {
   return NOTIFICATION_EX_REPORTER_OBJECT_PATH;
 }
 
-}  // nampace notification
+}  // namespace notification

@@ -101,4 +101,4 @@ TimeItem::~TimeItem() = default;
 TimeItem::Impl::~Impl() = default;
 
 }  // namespace item
-}  // namespace notification_ex
+}  // namespace notification

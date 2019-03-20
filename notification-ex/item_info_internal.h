@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-#ifndef NOTIFICATION_EX_ITEM_INFO_H_
-#define NOTIFICATION_EX_ITEM_INFO_H_
+#ifndef NOTIFICATION_EX_ITEM_INFO_INTERNAL_H_
+#define NOTIFICATION_EX_ITEM_INFO_INTERNAL_H_
 
 #include "notification-ex/abstract_item_implementation.h"
 #include "notification-ex/iitem_info_internal.h"
@@ -42,5 +42,5 @@ class AbstractItem::Impl::ItemInfo : public IItemInfoInternal {
 };
 
 }  // namespace item
-}  // nampace notification
-#endif  // NOTIFICATION_EX_ITEM_INFO_H_
+}  // namespace notification
+#endif  // NOTIFICATION_EX_ITEM_INFO_INTERNAL_H_

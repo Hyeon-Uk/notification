@@ -39,5 +39,5 @@ class EXPORT_API IItemInfoInternal : public IItemInfo {
 };
 
 }  // namespace item
-}  // nampace notification
+}  // namespace notification
 #endif  // NOTIFICATION_EX_IITEM_INFO_INTERNAL_H_

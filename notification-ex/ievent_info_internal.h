@@ -28,5 +28,5 @@ class IEventInfoInternal : public IEventInfo {
   virtual void SetUid(uid_t uid) = 0;
 };
 
-}  // nampace notification
+}  // namespace notification
 #endif  // NOTIFICATION_EX_IEVENT_INFO_INTERNAL_H_

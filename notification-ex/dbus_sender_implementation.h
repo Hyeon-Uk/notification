@@ -40,5 +40,5 @@ class DBusSender::Impl {
   DBusSender* parent_;
 };
 
-}  // nampace notification
+}  // namespace notification
 #endif  // NOTIFICATION_EX_DBUS_SENDER_IMPLEMENTATION_H_

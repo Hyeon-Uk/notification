@@ -215,4 +215,4 @@ list<Bundle> DBusEventListener::NotifyObserver(const IEventInfo& info) {
   return impl_->observer_->OnRequest(info);
 }
 
-}  // nampace notification
+}  // namespace notification

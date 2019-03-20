@@ -45,5 +45,5 @@ private:
 };  // class CheckBoxItem
 
 }  // namespace item
-}  // nampace notification
+}  // namespace notification
 #endif  // NOTIFICATION_EX_CHECKBOX_ITEM_H_

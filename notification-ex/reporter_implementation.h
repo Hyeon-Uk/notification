@@ -35,7 +35,7 @@ class Reporter::Impl {
 
  private:
   friend class Reporter;
-  void SendNotify(std::shared_ptr<item::AbstractItem> noti,
+  int SendNotify(std::shared_ptr<item::AbstractItem> noti,
       IEventInfo::EventType type);
   std::unique_ptr<IEventSender> sender_;
   std::unique_ptr<IEventListener> listener_;

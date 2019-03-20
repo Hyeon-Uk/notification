@@ -116,4 +116,4 @@ int DBusConnectionManager::Init() {
   return NOTIFICATION_ERROR_NONE;
 }
 
-}  // nampace notification
+}  // namespace notification

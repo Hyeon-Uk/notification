@@ -26,6 +26,7 @@ namespace util {
   std::string GetAppId();
   GQuark GetQuarkFromString(std::string str);
   std::string GetQuarkToString(GQuark quark);
+  int GetRequestId();
 }  // namespace util
 }  // namespace notification
 

@@ -41,5 +41,5 @@ class EXPORT_API IconItem : public ImageItem {
 };  // class IconItem
 
 }  // namespace item
-}  // nampace notification
+}  // namespace notification
 #endif  // NOTIFICATION_EX_ICON_ITEM_H_

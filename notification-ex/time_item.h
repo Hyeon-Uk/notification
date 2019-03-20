@@ -50,5 +50,5 @@ class EXPORT_API TimeItem : public AbstractItem {
 };  // class TimeItem
 
 }  // namespace item
-}  // nampace notification
+}  // namespace notification
 #endif  // NOTIFICATION_EX_TIME_ITEM_H_

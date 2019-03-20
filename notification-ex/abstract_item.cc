@@ -414,9 +414,5 @@ void AbstractItem::SetUid(int uid) {
   impl_->uid_ = uid;
 }
 
-int AbstractItem::GetRequestId() {
-  return impl_->request_id_;
-}
-
 }  // namespace item
 }  // namespace notification

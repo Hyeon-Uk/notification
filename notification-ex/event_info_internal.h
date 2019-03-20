@@ -44,6 +44,7 @@ class EventInfo : public IEventInfoInternal {
   std::string GetChannel() const override;
   std::string GetItemId() const override;
   std::string GetTag() const override;
+  int GetRequestId() const override;
   Bundle Serialize() const override;
   static std::string GetString(EventType type);
 

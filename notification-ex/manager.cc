@@ -60,7 +60,7 @@ Manager::Impl::Impl(Manager* parent,
   listener_->RegisterObserver(parent_);
 }
 
-void Manager::Impl::SendNotify(shared_ptr<item::AbstractItem> noti,
+int Manager::Impl::SendNotify(shared_ptr<item::AbstractItem> noti,
     IEventInfo::EventType type) {
   Bundle serialized = noti->Serialize();
   EventInfo info(type, util::GetAppId(), noti->GetChannel());
@@ -68,19 +68,20 @@ void Manager::Impl::SendNotify(shared_ptr<item::AbstractItem> noti,
 
   /* Reply to Sender */
   sender_->Notify(info, serialized_list, noti->GetSenderAppId());
+  return info.GetRequestId();
 }
 
-void Manager::Update(shared_ptr<item::AbstractItem> noti) {
-  impl_->SendNotify(noti, EventInfo::Update);
+int Manager::Update(shared_ptr<item::AbstractItem> noti) {
+  return impl_->SendNotify(noti, EventInfo::Update);
 }
 
-void Manager::Remove(shared_ptr<item::AbstractItem> noti) {
-  impl_->SendNotify(noti, EventInfo::Delete);
+int Manager::Delete(shared_ptr<item::AbstractItem> noti) {
+  return impl_->SendNotify(noti, EventInfo::Delete);
 }
 
-void Manager::Hide(shared_ptr<item::AbstractItem> noti) {
+int Manager::Hide(shared_ptr<item::AbstractItem> noti) {
   ((IItemInfoInternal*)noti->GetInfo().get())->AddHideViewer(util::GetAppId());
-  impl_->SendNotify(noti, EventInfo::Update);
+  return impl_->SendNotify(noti, EventInfo::Update);
 }
 
 shared_ptr<item::AbstractItem> Manager::FindByRootID(string id) {
@@ -106,12 +107,13 @@ list<shared_ptr<item::AbstractItem>> Manager::Get() {
   return gen_list;
 }
 
-void Manager::SendEvent(const IEventInfo& info,
+int Manager::SendEvent(const IEventInfo& info,
     shared_ptr<item::AbstractItem> noti) {
   Bundle serialized = noti->Serialize();
   Bundle serialized_info = info.Serialize();
   list<Bundle> serialized_list {serialized};
   impl_->sender_->Notify(info, serialized_list, noti->GetSenderAppId());
+  return info.GetRequestId();
 }
 
 list<Bundle> Manager::OnRequest(const IEventInfo& info) {
@@ -179,4 +181,4 @@ string Manager::GetPath() {
   return NOTIFICATION_EX_MANAGER_OBJECT_PATH;
 }
 
-}  // nampace notification
+}  // namespace notification

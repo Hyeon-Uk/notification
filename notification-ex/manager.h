@@ -21,6 +21,7 @@
 #include <list>
 #include <memory>
 
+#include "notification-ex/common.h"
 #include "notification-ex/abstract_item.h"
 #include "notification-ex/event_observer_interface.h"
 #include "notification-ex/event_sender_interface.h"
@@ -39,11 +40,11 @@ class EXPORT_API Manager : public IEventObserver {
   virtual ~Manager();
 
   std::list<std::shared_ptr<item::AbstractItem>> Get();
-  void Update(std::shared_ptr<item::AbstractItem> noti);
-  void Remove(std::shared_ptr<item::AbstractItem> noti);
-  void Hide(std::shared_ptr<item::AbstractItem> noti);
+  int Update(std::shared_ptr<item::AbstractItem> noti);
+  int Delete(std::shared_ptr<item::AbstractItem> noti);
+  int Hide(std::shared_ptr<item::AbstractItem> noti);
   std::shared_ptr<item::AbstractItem> FindByRootID(std::string id);
-  void SendEvent(const IEventInfo& info, std::shared_ptr<item::AbstractItem> noti);
+  int SendEvent(const IEventInfo& info, std::shared_ptr<item::AbstractItem> noti);
   void OnEvent(const IEventInfo& info, std::list<Bundle> serialized) override;
   std::list<Bundle> OnRequest(const IEventInfo& info) override;
   static std::string GetPath();

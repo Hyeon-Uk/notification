@@ -59,5 +59,5 @@ class DBusEventListener::Impl {
   DBusEventListener* parent_;
 };
 
-}  // nampace notification
+}  // namespace notification
 #endif  // NOTIFICATION_EX_DBUS_EVENT_LISTENER_IMPLEMENTATION_H_

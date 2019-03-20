@@ -49,5 +49,5 @@ class EXPORT_API TextItem : public AbstractItem {
 };  // class TextItem
 
 }  // namespace item
-}  // nampace notification
+}  // namespace notification
 #endif  // NOTIFICATION_EX_TEXT_ITEM_H_

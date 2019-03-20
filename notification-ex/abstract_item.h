@@ -258,7 +258,6 @@ class EXPORT_API AbstractItem {
   time_t GetTime();
   int GetUid();
   void SetUid(int uid);
-  int GetRequestId();
 
  private:
   class Impl;

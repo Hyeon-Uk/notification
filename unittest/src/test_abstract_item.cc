@@ -128,7 +128,6 @@ TEST_F(AbstractItemTest, SerializeDeserialize) {
   ASSERT_EQ(gen_test->GetId(), "test_id");
   ASSERT_EQ(gen_test->GetType(), MY_ITEM_TYPE);
   ASSERT_EQ(gen_test->GetUid(), 3);
-  ASSERT_EQ(gen_test->GetRequestId(), 0);
   ASSERT_EQ(gen_test->GetEnable(), false);
   ASSERT_EQ(gen_test->GetVisible(),false);
   ASSERT_EQ(gen_test->GetPolicy(), AbstractItem::Policy::OnBootClear);

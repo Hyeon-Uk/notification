@@ -60,5 +60,5 @@ class EXPORT_API ChatMessageItem : public AbstractItem {
 };  // class ChatMessageItem
 
 }  // namespace item
-}  // nampace notification
+}  // namespace notification
 #endif  // NOTIFICATION_EX_CHAT_MESSAGE_ITEM_H_

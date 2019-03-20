@@ -34,8 +34,9 @@ class EventInfo::Impl {
 
  private:
   friend class EventInfo;
-  Impl(EventInfo* parent, IEventInfo::EventType type, std::string owner,
-    std::string channel, std::string item_id, std::string tag);
+  Impl(EventInfo* parent, IEventInfo::EventType type,
+    std::string owner, std::string channel,
+    std::string item_id, std::string tag);
 
  private:
   EventType type_;
@@ -44,8 +45,9 @@ class EventInfo::Impl {
   std::string item_id_;
   std::string tag_;
   uid_t uid_;
+  int request_id_;
   EventInfo* parent_;
 };
 
-}  // nampace notification
+}  // namespace notification
 #endif  // NOTIFICATION_EX_EVENT_INFO_IMPLEMENTATION_H_

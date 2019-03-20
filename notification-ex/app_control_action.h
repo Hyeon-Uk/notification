@@ -48,4 +48,3 @@ class EXPORT_API AppControlAction : public AbstractAction {
 }  // namespace notification
 
 #endif  // NOTIFICATION_EX_APP_CONTROL_ACTION_H_
-

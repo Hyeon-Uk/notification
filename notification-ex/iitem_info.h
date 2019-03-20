@@ -28,5 +28,5 @@ class EXPORT_API IItemInfo {
 };
 
 }  // namespace item
-}  // nampace notification
+}  // namespace notification
 #endif  // NOTIFICATION_EX_IITEM_INFO_H_

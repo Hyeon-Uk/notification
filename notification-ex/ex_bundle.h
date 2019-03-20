@@ -155,7 +155,7 @@ class EXPORT_API Bundle final {
     return 0;
   }
 
-  int Remove(const std::string& key) {
+  int Delete(const std::string& key) {
     return bundle_del(handle_, key.c_str());
   }
 

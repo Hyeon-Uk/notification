@@ -51,5 +51,4 @@ int IconItem::GetType() const {
 }
 
 }  // namespace item
-}  // namespace notification_ex
-
+}  // namespace notification

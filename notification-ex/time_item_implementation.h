@@ -42,5 +42,5 @@ class TimeItem::Impl {
 };
 
 }  // namespace item
-}  // nampace notification
+}  // namespace notification
 #endif  // NOTIFICATION_EX_TIME_ITEM_IMPLEMENTATION_H_
