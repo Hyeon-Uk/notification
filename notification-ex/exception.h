@@ -17,10 +17,18 @@
 #ifndef NOTIFICATION_EX_EXCEPTION_H_
 #define NOTIFICATION_EX_EXCEPTION_H_
 
+#include <dlog.h>
+
 #include <string>
 #include <exception>
 
 #include "notification-ex/common.h"
+
+#ifdef LOG_TAG
+#undef LOG_TAG
+#endif
+
+#define LOG_TAG "NOTIFICATION_EX"
 
 #define THROW(error_code) throw Exception(error_code, __FILE__, __LINE__)
 
@@ -33,6 +41,7 @@ class Exception : public std::exception {
     error_code_ = error_code;
     message_ = file.substr(file.find_last_of("/") + 1) + ":"
         + std::to_string(line) + GetErrorString(error_code);
+    LOGE("%s", message_.c_str());
   }
   virtual ~Exception() {}
   virtual const char *what(void) const noexcept {
