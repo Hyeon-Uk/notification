@@ -350,7 +350,7 @@ list<string> AbstractItem::GetReceiverList() {
 }
 
 bool AbstractItem::CanReceive(std::string id) const {
-  if (impl_->receiver_group_list_.size() == 0)
+  if (impl_->receiver_group_list_.size() == 0 || id.empty())
     return true;
   list<string>::iterator iter =
     std::find(impl_->receiver_group_list_.begin(),
