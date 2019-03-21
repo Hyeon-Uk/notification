@@ -64,6 +64,14 @@ int Reporter::Impl::SendNotify(shared_ptr<item::AbstractItem> noti,
   return info.GetRequestId();
 }
 
+void Reporter::SendError(const IEventInfo& info, NotificationError error) {
+  list<Bundle> serialized_list {};
+  IEventInfo& i = const_cast<IEventInfo&>(info);
+  static_cast<IEventInfoInternal&>(i).SetError(error);
+  static_cast<IEventInfoInternal&>(i).SetEventType(EventInfo::Error);
+  impl_->sender_->Notify(info, serialized_list, info.GetOwner());
+}
+
 int Reporter::Post(std::shared_ptr<item::AbstractItem> noti) {
   LOGI("Post noti");
   return impl_->SendNotify(noti, EventInfo::Post);
@@ -110,6 +118,13 @@ int Reporter::SendEvent(const IEventInfo& info,
 }
 
 void Reporter::OnEvent(const IEventInfo& info, list<Bundle> serialized) {
+  NotificationError error =
+      (static_cast<const IEventInfoInternal&>(info)).GetError();
+  if (info.GetEventType() == EventInfo::Error) {
+    OnError(error, info.GetRequestId());
+    return;
+  }
+
   list<shared_ptr<item::AbstractItem>> item_list;
   for (auto& i : serialized) {
     shared_ptr<AbstractItem> gen_item = ItemInflator::Create(i);
@@ -133,6 +148,9 @@ list<Bundle> Reporter::OnRequest(const IEventInfo& info) {
 
 void Reporter::OnEvent(
     const IEventInfo& info, list<shared_ptr<item::AbstractItem>> notiList) {
+}
+
+void Reporter::OnError(NotificationError error, int requestId) {
 }
 
 string Reporter::GetPath() {

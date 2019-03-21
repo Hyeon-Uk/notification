@@ -71,6 +71,14 @@ int Manager::Impl::SendNotify(shared_ptr<item::AbstractItem> noti,
   return info.GetRequestId();
 }
 
+void Manager::SendError(const IEventInfo& info, NotificationError error) {
+  list<Bundle> serialized_list {};
+  IEventInfo& i = const_cast<IEventInfo&>(info);
+  static_cast<IEventInfoInternal&>(i).SetError(error);
+  static_cast<IEventInfoInternal&>(i).SetEventType(EventInfo::Error);
+  impl_->sender_->Notify(info, serialized_list, info.GetOwner());
+}
+
 int Manager::Update(shared_ptr<item::AbstractItem> noti) {
   return impl_->SendNotify(noti, EventInfo::Update);
 }
@@ -128,6 +136,14 @@ list<Bundle> Manager::OnRequest(const IEventInfo& info) {
 void Manager::OnEvent(const IEventInfo& info, list<Bundle> serialized) {
   shared_ptr<AbstractItem> gen_item;
   const IEventInfo::EventType type = info.GetEventType();
+  NotificationError error =
+      (static_cast<const IEventInfoInternal&>(info)).GetError();
+  if (error != NOTIFICATION_ERROR_NONE) {
+    LOGE("Handling error event (%d)", error);
+    OnError(error, info.GetRequestId());
+    return;
+  }
+
   switch(type) {
     case EventInfo::Post: {
       list<shared_ptr<item::AbstractItem>> added;
@@ -158,6 +174,8 @@ void Manager::OnEvent(const IEventInfo& info, list<Bundle> serialized) {
     }
     case EventInfo::Get:
       break;
+    case EventInfo::Error:
+      break;
   }
 }
 
@@ -171,6 +189,9 @@ void Manager::OnUpdate(const IEventInfo& info,
 
 void Manager::OnDelete(const IEventInfo& info,
       shared_ptr<item::AbstractItem> deletedItem) {
+}
+
+void Manager::OnError(NotificationError error, int requestId) {
 }
 
 list<shared_ptr<item::AbstractItem>> Manager::OnRequestEvent(const IEventInfo& info) {

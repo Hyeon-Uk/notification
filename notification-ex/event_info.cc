@@ -35,6 +35,7 @@
 #define NOTIFICATION_EX_EVENT_TAG_KEY "__NOTIFICATION_EX_EVENT_TAG_KEY__"
 #define NOTIFICATION_EX_EVENT_UID_KEY "__NOTIFICATION_EX_EVENT_UID_KEY__"
 #define NOTIFICATION_EX_EVENT_REQUEST_ID_KEY "__NOTIFICATION_EX_EVENT_REQUEST_ID_KEY__"
+#define NOTIFICATION_EX_EVENT_ERROR_KEY "__NOTIFICATION_EX_EVENT_ERROR_KEY__"
 
 using namespace std;
 namespace notification {
@@ -53,6 +54,7 @@ EventInfo::Impl::Impl(EventInfo* parent,
     item_id_(item_id), tag_(tag), parent_(parent) {
   uid_ = getuid();
   request_id_ = util::GetRequestId();
+  error_ = NOTIFICATION_ERROR_NONE;
   LOGI("EventInfo impl created");
 }
 
@@ -69,6 +71,9 @@ EventInfo::EventInfo(Bundle serialized)
   string request_id_str =
       serialized.GetString(NOTIFICATION_EX_EVENT_REQUEST_ID_KEY);
   impl_->request_id_ = (int)strtol(request_id_str.c_str(), NULL, 10);
+  string error_str =
+      serialized.GetString(NOTIFICATION_EX_EVENT_ERROR_KEY);
+  impl_->error_ = (NotificationError)strtol(error_str.c_str(), NULL, 10);
 }
 
 string EventInfo::GetString(IEventInfo::EventType type) {
@@ -85,6 +90,9 @@ string EventInfo::GetString(IEventInfo::EventType type) {
     case Get:
       return "Get";
       break;
+    case Error:
+      return "Error";
+      break;
   }
   return "";
 }
@@ -99,12 +107,18 @@ Bundle EventInfo::Serialize() const {
   serialized.Add(NOTIFICATION_EX_EVENT_UID_KEY, to_string((int)impl_->uid_));
   serialized.Add(
       NOTIFICATION_EX_EVENT_REQUEST_ID_KEY, to_string(impl_->request_id_));
+  serialized.Add(
+      NOTIFICATION_EX_EVENT_ERROR_KEY, to_string(impl_->error_));
 
   return serialized;
 }
 
 IEventInfo::EventType EventInfo::GetEventType() const {
   return impl_->type_;
+}
+
+void EventInfo::SetEventType(EventInfo::EventType type) {
+  impl_->type_ = type;
 }
 
 string EventInfo::GetOwner() const {
@@ -133,6 +147,14 @@ void EventInfo::SetUid(uid_t uid) {
 
 int EventInfo::GetRequestId() const {
   return impl_->request_id_;
+}
+
+NotificationError EventInfo::GetError() const {
+  return impl_->error_;
+}
+
+void EventInfo::SetError(NotificationError error) {
+  impl_->error_ = error;
 }
 
 }  // namespace notification

@@ -25,6 +25,7 @@
 
 #include "notification-ex/dbus_sender.h"
 #include "notification-ex/ievent_info.h"
+#include "notification-ex/common.h"
 
 namespace notification {
 
@@ -46,6 +47,7 @@ class EventInfo::Impl {
   std::string tag_;
   uid_t uid_;
   int request_id_;
+  NotificationError error_;
   EventInfo* parent_;
 };
 

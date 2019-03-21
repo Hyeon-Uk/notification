@@ -76,11 +76,17 @@ bool DBusSender::Impl::EmitSignal(string bus_name, string signal_name,
   return result;
 }
 
+string DBusSender::Impl::GetBusName(string appid, string dest_appid) const {
+  if (!DBusConnectionManager::GetInst().IsDataProviderMaster(appid))
+    return DBusConnectionManager::GetInst().GetDataProviderMasterName();
+
+  return DBusConnectionManager::GetInst().GetBusName(dest_appid);
+}
+
 void DBusSender::Notify(const IEventInfo& info, list<Bundle> serialized,
     string dest_appid) {
   string signal_name = EventInfo::GetString(info.GetEventType());
   string appid = util::GetAppId();
-  string bus_name = "";
 
   GVariantBuilder* builder = g_variant_builder_new(G_VARIANT_TYPE("a(s)"));
   for (auto& i : serialized) {
@@ -91,14 +97,9 @@ void DBusSender::Notify(const IEventInfo& info, list<Bundle> serialized,
   GVariant* data = g_variant_new("(ssa(s))",
         appid.c_str(),
         reinterpret_cast<char*>(info.Serialize().ToRaw().first.get()), builder);
-  if (!DBusConnectionManager::GetInst().IsDataProviderMaster(appid)) {
-    bus_name = DBusConnectionManager::GetInst().GetDataProviderMasterName();
-    impl_->EmitSignal(bus_name, signal_name, data);
-  }  else {
-    bus_name = DBusConnectionManager::GetInst().GetBusName(dest_appid);
-    LOGE("bus name %s, %s", dest_appid.c_str(), bus_name.c_str());
-    impl_->EmitSignal(bus_name, signal_name, data);
-  }
+  string bus_name = impl_->GetBusName(appid, dest_appid);
+  LOGI("bus name %s, %s", dest_appid.c_str(), bus_name.c_str());
+  impl_->EmitSignal(bus_name, signal_name, data);
   g_variant_builder_unref(builder);
 }
 

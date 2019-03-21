@@ -17,6 +17,8 @@
 #ifndef NOTIFICATION_EX_COMMON_H_
 #define NOTIFICATION_EX_COMMON_H_
 
+#include <tizen.h>
+
 namespace notification {
 
 enum NotificationError {

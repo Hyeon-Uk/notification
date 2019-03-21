@@ -17,6 +17,7 @@
 #ifndef NOTIFICATION_EX_IEVENT_INFO_INTERNAL_H_
 #define NOTIFICATION_EX_IEVENT_INFO_INTERNAL_H_
 
+#include "notification-ex/common.h"
 #include "notification-ex/ievent_info.h"
 
 namespace notification {
@@ -26,6 +27,9 @@ class IEventInfoInternal : public IEventInfo {
   virtual ~IEventInfoInternal() = default;
   virtual uid_t GetUid() const = 0;
   virtual void SetUid(uid_t uid) = 0;
+  virtual NotificationError GetError() const = 0;
+  virtual void SetError(NotificationError error) = 0;
+  virtual void SetEventType(EventType type) = 0;
 };
 
 }  // namespace notification

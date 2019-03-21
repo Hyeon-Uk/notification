@@ -34,6 +34,8 @@ class DBusSender::Impl {
   Impl(DBusSender* parent, std::string path);
 
  private:
+  std::string GetBusName(
+      std::string appid, std::string dest_appid) const;
   bool EmitSignal(std::string bus_name, std::string signal_name, GVariant* data);
   GDBusMessage* MethodCall(std::string appid, std::string method_name, Bundle serialized);
   std::string path_;

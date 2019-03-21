@@ -21,6 +21,7 @@
 #include <list>
 #include <memory>
 
+#include "notification-ex/common.h"
 #include "notification-ex/ievent_info.h"
 #include "notification-ex/event_observer_interface.h"
 #include "notification-ex/event_sender_interface.h"
@@ -40,6 +41,7 @@ class EXPORT_API Reporter : public IEventObserver {
   virtual ~Reporter();
 
   int SendEvent(const IEventInfo& info, std::shared_ptr<item::AbstractItem> noti);
+  void SendError(const IEventInfo& info, NotificationError error);
   int Post(std::shared_ptr<item::AbstractItem> noti);
   int Post(std::list<std::shared_ptr<item::AbstractItem>> notiList);
   int Update(std::shared_ptr<item::AbstractItem> noti);
@@ -49,6 +51,7 @@ class EXPORT_API Reporter : public IEventObserver {
       std::list<std::shared_ptr<item::AbstractItem>> notiList);
   virtual std::list<std::shared_ptr<item::AbstractItem>> OnRequestEvent(
       const IEventInfo& info);
+  virtual void OnError(NotificationError error, int requestId);
   void OnEvent(const IEventInfo& info, std::list<Bundle> serialized) override;
   std::list<Bundle> OnRequest(const IEventInfo& info) override;
   static std::string GetPath();

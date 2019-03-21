@@ -31,7 +31,6 @@ class EXPORT_API DBusSender : public IEventSender {
  public:
   DBusSender(std::string path);
   virtual ~DBusSender();
-
   void Notify(const IEventInfo& info, std::list<Bundle> serialized,
       std::string dest_appid = "") override;
   std::list<Bundle> Request(const IEventInfo& info) override;

@@ -32,6 +32,7 @@ class EXPORT_API IEventInfo {
     Update,
     Delete,
     Get,
+    Error,
   };
   virtual ~IEventInfo() = default;
   virtual EventType GetEventType() const = 0;

@@ -20,6 +20,7 @@
 #include <string>
 #include <list>
 
+#include "notification-ex/common.h"
 #include "notification-ex/ex_bundle.h"
 #include "notification-ex/ievent_info_internal.h"
 
@@ -39,7 +40,10 @@ class EventInfo : public IEventInfoInternal {
   virtual ~EventInfo();
   uid_t GetUid() const override;
   void SetUid(uid_t uid) override;
+  NotificationError GetError() const override;
+  void SetError(NotificationError error) override;
   EventType GetEventType() const override;
+  void SetEventType(EventType type) override;
   std::string GetOwner() const override;
   std::string GetChannel() const override;
   std::string GetItemId() const override;
