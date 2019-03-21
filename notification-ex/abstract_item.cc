@@ -101,18 +101,18 @@ AbstractItem::Impl::Impl(AbstractItem* parent, string id,
   if (id_.empty())
     id_ = GenerateItemId();
   sender_appid_ = util::GetAppId();
-  LOGI("GroupItem created (%s)", id_.c_str());
+  LOGI("AbstractItem created (%s)", id_.c_str());
 }
 
 AbstractItem::Impl::Impl(AbstractItem* parent,
     std::shared_ptr<AbstractAction> action)
     : action_(action), parent_(parent),
     info_(std::make_shared<ItemInfo>(this)) {
-  LOGI("GroupItem created");
+  LOGI("AbstractItem created");
 
   id_ = GenerateItemId();
   sender_appid_ = util::GetAppId();
-  LOGI("GroupItem created (%s)", id_.c_str());
+  LOGI("AbstractItem created (%s)", id_.c_str());
 }
 
 AbstractItem::~AbstractItem() = default;
