@@ -128,7 +128,8 @@ list<Bundle> Manager::OnRequest(const IEventInfo& info) {
   list<shared_ptr<item::AbstractItem>> item_list = OnRequestEvent(info);
   list<Bundle> serialized_list;
   for (auto& i : item_list) {
-    serialized_list.push_back(i->Serialize());
+    if (i->CanReceive(impl_->receiver_group_))
+      serialized_list.push_back(i->Serialize());
   }
   return serialized_list;
 }
