@@ -16,6 +16,7 @@
 
 #include <dlog.h>
 #include <uuid/uuid.h>
+#include <unistd.h>
 
 #include <memory>
 #include <algorithm>
@@ -121,6 +122,9 @@ Bundle AbstractItem::Serialize() const {
   Bundle b;
   struct tm* timeinfo;
   char buf[80] = {0,};
+
+  if (impl_->uid_ == 0)
+    impl_->uid_ = getuid();
 
   if (!impl_->channel_.empty())
     b.Add(ABSTRACT_ITEM_CHANNEL_KEY, impl_->channel_);
