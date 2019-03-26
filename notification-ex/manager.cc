@@ -136,7 +136,7 @@ list<Bundle> Manager::OnRequest(const IEventInfo& info) {
 
 void Manager::OnEvent(const IEventInfo& info, list<Bundle> serialized) {
   shared_ptr<AbstractItem> gen_item;
-  const IEventInfo::EventType type = info.GetEventType();
+  int type = info.GetEventType();
   NotificationError error =
       (static_cast<const IEventInfoInternal&>(info)).GetError();
   if (error != NOTIFICATION_ERROR_NONE) {
@@ -176,6 +176,8 @@ void Manager::OnEvent(const IEventInfo& info, list<Bundle> serialized) {
     case EventInfo::Get:
       break;
     case EventInfo::Error:
+      break;
+    case EventInfo::Custom:
       break;
   }
 }

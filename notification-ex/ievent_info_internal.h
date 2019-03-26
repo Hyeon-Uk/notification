@@ -29,7 +29,7 @@ class IEventInfoInternal : public IEventInfo {
   virtual void SetUid(uid_t uid) = 0;
   virtual NotificationError GetError() const = 0;
   virtual void SetError(NotificationError error) = 0;
-  virtual void SetEventType(EventType type) = 0;
+  virtual void SetEventType(int type) = 0;
 };
 
 }  // namespace notification

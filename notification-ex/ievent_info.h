@@ -33,9 +33,10 @@ class EXPORT_API IEventInfo {
     Delete,
     Get,
     Error,
+    Custom = 100
   };
   virtual ~IEventInfo() = default;
-  virtual EventType GetEventType() const = 0;
+  virtual int GetEventType() const = 0;
   virtual std::string GetOwner() const = 0;
   virtual std::string GetChannel() const = 0;
   virtual std::string GetItemId() const = 0;

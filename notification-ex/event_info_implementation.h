@@ -35,12 +35,11 @@ class EventInfo::Impl {
 
  private:
   friend class EventInfo;
-  Impl(EventInfo* parent, IEventInfo::EventType type,
-    std::string owner, std::string channel,
+  Impl(EventInfo* parent, int type, std::string owner, std::string channel,
     std::string item_id, std::string tag);
 
  private:
-  EventType type_;
+  int type_;
   std::string owner_;
   std::string channel_;
   std::string item_id_;

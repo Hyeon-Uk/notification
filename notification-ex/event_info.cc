@@ -40,15 +40,15 @@
 using namespace std;
 namespace notification {
 
-EventInfo::EventInfo(IEventInfo::EventType type,
-    std::string owner, std::string channel, std::string item_id, std::string tag)
+EventInfo::EventInfo(int type, std::string owner, std::string channel,
+    std::string item_id, std::string tag)
     : impl_(new Impl(this, type, owner, channel, item_id, tag)) {
 }
 EventInfo::~EventInfo() = default;
 EventInfo::Impl::~Impl() = default;
 
 EventInfo::Impl::Impl(EventInfo* parent,
-    IEventInfo::EventType type, std::string owner, std::string channel,
+    int type, std::string owner, std::string channel,
     std::string item_id, std::string tag)
     : type_(type), owner_(owner), channel_(channel),
     item_id_(item_id), tag_(tag), parent_(parent) {
@@ -61,7 +61,7 @@ EventInfo::Impl::Impl(EventInfo* parent,
 EventInfo::EventInfo(Bundle serialized)
   : impl_(new Impl(this, EventInfo::Post, "", "", "", "")) {
   string event_str = serialized.GetString(NOTIFICATION_EX_EVENT_TYPE_KEY);
-  impl_->type_ = (IEventInfo::EventType)(int)strtol(event_str.c_str(), NULL, 10);
+  impl_->type_ = (int)strtol(event_str.c_str(), NULL, 10);
   impl_->owner_ = serialized.GetString(NOTIFICATION_EX_EVENT_OWNER_KEY);
   impl_->channel_ = serialized.GetString(NOTIFICATION_EX_EVENT_CHANNEL_KEY);
   impl_->item_id_ = serialized.GetString(NOTIFICATION_EX_EVENT_ITEM_ID_KEY);
@@ -76,25 +76,21 @@ EventInfo::EventInfo(Bundle serialized)
   impl_->error_ = (NotificationError)strtol(error_str.c_str(), NULL, 10);
 }
 
-string EventInfo::GetString(IEventInfo::EventType type) {
+string EventInfo::GetString(int type) {
   switch(type) {
     case Post:
       return "Post";
-      break;
     case Update:
       return "Update";
-      break;
     case Delete:
       return "Delete";
-      break;
     case Get:
       return "Get";
-      break;
     case Error:
       return "Error";
-      break;
+    default:
+      return "Custom" + std::to_string(Custom);
   }
-  return "";
 }
 
 Bundle EventInfo::Serialize() const {
@@ -113,11 +109,11 @@ Bundle EventInfo::Serialize() const {
   return serialized;
 }
 
-IEventInfo::EventType EventInfo::GetEventType() const {
+int EventInfo::GetEventType() const {
   return impl_->type_;
 }
 
-void EventInfo::SetEventType(EventInfo::EventType type) {
+void EventInfo::SetEventType(int type) {
   impl_->type_ = type;
 }
 
