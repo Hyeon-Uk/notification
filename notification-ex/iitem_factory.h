@@ -26,9 +26,23 @@
 namespace notification {
 namespace item {
 
+/**
+ * @brief The interface class for ItemFactory.
+ * @since_tizen 5.5
+ */
 class EXPORT_API IItemFactory {
  public:
+  /**
+   * @brief Destructor
+   * @since_tizen 5.5
+   */
   virtual ~IItemFactory() = default;
+
+  /**
+   * @brief Creates the AbstractItem from type
+   * @since_tizen 5.5
+   * @param[in] type The type of notification item
+   */
   virtual std::unique_ptr<AbstractItem> CreateItem(int type) = 0;
 };
 

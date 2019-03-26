@@ -26,23 +26,98 @@
 namespace notification {
 namespace item {
 
+/**
+ * @brief The class for ProgressItem type notification.
+ * @details
+ * @since_tizen 5.5
+ */
 class EXPORT_API ProgressItem : public AbstractItem {
  public:
+  /**
+   * @brief Constructor
+   * @since_tizen 5.5
+   * @param[in] min The minimum value of ProgressItem
+   * @param[in] current The current value ProgressItem
+   * @param[in] max The maximum value of ProgressItem
+   * @param[in] action The action for ProgressItem
+   */
   ProgressItem(float min, float current, float max,
       std::shared_ptr<AbstractAction> action = std::shared_ptr<AbstractAction>({}));
+
+  /**
+   * @brief Constructor
+   * @since_tizen 5.5
+   * @param[in] id The ProgressItem id
+   * @param[in] min The minimum value of ProgressItem
+   * @param[in] current The current value ProgressItem
+   * @param[in] max The maximum value of ProgressItem
+   * @param[in] action The action for ProgressItem
+   */
   ProgressItem(std::string id, float min, float current, float max,
       std::shared_ptr<AbstractAction> action = std::shared_ptr<AbstractAction>({}));
+
+  /**
+   * @brief Destructor
+   * @since_tizen 5.5
+   */
   virtual ~ProgressItem();
 
  public:
+  /**
+   * @brief Serialize the data of ProgressItem.
+   * @since_tizen 5.5
+   * @return Bundle type data
+   */
   virtual Bundle Serialize() const override;
+
+  /**
+   * @brief Deserialize the serialized data.
+   * @since_tizen 5.5
+   * @param[in] b The serialized Bundle data
+   */
   virtual void Deserialize(Bundle b) override;
+
+  /**
+   * @brief Finds the AbstractItem using by notification item id.
+   * @since_tizen 5.5
+   * @param[in] id notification item id
+   * @return AbstractItem object
+   */
   virtual AbstractItem& FindByID(std::string id) override;
+
+  /**
+   * @brief Gets the type of ProgressItem.
+   * @since_tizen 5.5
+   * @return AbstractItem::Type::Progress
+   */
   int GetType() const override;
 
+  /**
+   * @brief Gets the current value of progress.
+   * @since_tizen 5.5
+   * @return The current value of progress
+   */
   float GetCurrent() const;
+
+  /**
+   * @brief Sets the current value of progress.
+   * @since_tizen 5.5
+   * @param[in] current The current value of progress
+   */
   void SetCurrent(float current);
+
+  /**
+   * @brief Gets the minimum value of progress.
+   * @since_tizen 5.5
+   * @return The minimum value of progress
+   */
   float GetMin() const;
+
+  /**
+   * @brief Gets the maximum value of progress.
+   * @since_tizen 5.5
+   * @return The maximum value of progress
+   */
   float GetMax() const;
 
  private:

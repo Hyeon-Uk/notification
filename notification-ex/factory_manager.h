@@ -27,13 +27,53 @@
 namespace notification {
 namespace item {
 
+/**
+ * @brief The class for FactoryManager.
+ * @details The class to manage creation of action and item.
+ * @since_tizen 5.5
+ */
 class EXPORT_API FactoryManager {
  public:
+  /**
+   * @brief Gets the instance of FactoryManager
+   * @since_tizen 5.5
+   * @return The FactoryManager instance
+   */
   static FactoryManager& GetInst();
+
+  /**
+   * @brief Resgisters the IItemFactory
+   * @since_tizen 5.5
+   * @param[in] factory The IItemFactory for noitfication item
+   */
   void RegisterFactory(std::unique_ptr<IItemFactory> factory);
+
+  /**
+   * @brief Registers the IActionFactory
+   * @since_tizen 5.5
+   * @param[in] factory The IActionFactory for noitfication action
+   */
   void RegisterFactory(std::unique_ptr<IActionFactory> factory);
+
+  /**
+   * @brief Creates the notification item from type.
+   * @since_tizen 5.5
+   * @return AbstractItem object
+   */
   std::unique_ptr<AbstractItem> CreateItem(int type);
+
+  /**
+   * @brief Creates the notification action from type.
+   * @since_tizen 5.5
+   * @return AbstractAction object
+   */
   std::unique_ptr<AbstractAction> CreateAction(int type);
+
+  /**
+   * @brief Gets NullItem
+   * @since_tizen 5.5
+   * @return NullItem object
+   */
   AbstractItem& GetNullItem();
 
  private:

@@ -22,13 +22,51 @@
 namespace notification {
 namespace item {
 
+/**
+ * @brief The interface class for ItemInfo
+ * @since_tizen 5.5
+ */
 class EXPORT_API IItemInfo {
  public:
+  /**
+   * @brief Destructor
+   * @since_tizen 5.5
+   */
   virtual ~IItemInfo() = default;
+
+  /**
+   * @brief Gets hide time of notification
+   * @since_tizen 5.5
+   * @return The hide time value
+   */
   virtual int GetHideTime() const = 0;
+
+  /**
+   * @brief Sets hide time of notification
+   * @since_tizen 5.5
+   * @param[in] hide_time The hide time
+   */
   virtual void SetHideTime(int hide_time) = 0;
+
+  /**
+   * @brief Gets delete time of notification
+   * @since_tizen 5.5
+   * @return The delete time value
+   */
   virtual int GetDeleteTime() const = 0;
+
+  /**
+   * @brief Sets delete time of notification
+   * @since_tizen 5.5
+   * @param[in] delete_time The delete time
+   */
   virtual void SetDeleteTime(int delete_time)  = 0;
+
+  /**
+   * @brief Gets time information
+   * @since_tizen 5.5
+   * @return The time information
+   */
   virtual time_t GetTime() const = 0;
 };
 

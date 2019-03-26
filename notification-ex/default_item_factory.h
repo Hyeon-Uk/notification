@@ -24,9 +24,24 @@
 namespace notification {
 namespace item {
 
+/**
+ * @brief The class for predefined item.
+ * @details The DefaultItemFactory is registered in factory manager default.
+ * @since_tizen 5.5
+ */
 class EXPORT_API DefaultItemFactory : public IItemFactory {
  public:
+  /**
+   * @brief Destructor
+   * @since_tizen 5.5
+   */
   virtual ~DefaultItemFactory() = default;
+
+  /**
+   * @brief Creates AbstractItem
+   * @since_tizen 5.5
+   * @param[in] type The type of notification item.
+   */
   std::unique_ptr<AbstractItem> CreateItem(int type) override;
 };
 

@@ -24,9 +24,24 @@
 namespace notification {
 namespace item {
 
+/**
+ * @brief The class for predefined action.
+ * @details The DefaultActionFactory is registered in factory manager default.
+ * @since_tizen 5.5
+ */
 class EXPORT_API DefaultActionFactory : public IActionFactory {
  public:
+  /**
+   * @brief Destructor
+   * @since_tizen 5.5
+   */
   virtual ~DefaultActionFactory() = default;
+
+  /**
+   * @brief Creates AbstractAction
+   * @since_tizen 5.5
+   * @param[in] type The type of notification action
+   */
   std::unique_ptr<AbstractAction> CreateAction(int type) override;
 };
 

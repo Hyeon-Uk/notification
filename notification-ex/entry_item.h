@@ -29,19 +29,83 @@
 namespace notification {
 namespace item {
 
+/**
+ * @brief The class for EntryItem type notification.
+ * @details The class to make the notification with text input.
+ * @since_tizen 5.5
+ */
 class EXPORT_API EntryItem : public AbstractItem {
  public:
+  /**
+   * @brief Constructor
+   * @since_tizen 5.5
+   * @param[in] action The action for EntryItem
+   */
   EntryItem(std::shared_ptr<AbstractAction> action = std::shared_ptr<AbstractAction>({}));
+
+  /**
+   * @brief Constructor
+   * @since_tizen 5.5
+   * @param[in] id The EntryItem id
+   * @param[in] action The action for EntryItem
+   */
   EntryItem(std::string id,
       std::shared_ptr<AbstractAction> action = std::shared_ptr<AbstractAction>({}));
+
+  /**
+   * @brief Destructor
+   * @since_tizen 5.5
+   */
   virtual ~EntryItem();
 
+  /**
+   * @brief Serialize the data of EntryItem.
+   * @since_tizen 5.5
+   * @return Bundle type data
+   */
   Bundle Serialize() const override;
+
+  /**
+   * @brief Deserialize the serialized data.
+   * @since_tizen 5.5
+   * @param[in] b The serialized Bundle data
+   */
   void Deserialize(Bundle b) override;
+
+  /**
+   * @brief Finds the AbstractItem using by notification item id.
+   * @since_tizen 5.5
+   * @param[in] id notification item id
+   * @return AbstractItem object
+   */
   AbstractItem& FindByID(std::string id) override;
+
+  /**
+   * @brief Gets the type of EntryItem.
+   * @since_tizen 5.5
+   * @return AbstractItem::Type::Entry
+   */
   int GetType() const override;
+
+  /**
+   * @brief Gets the text data of EntryItem.
+   * @since_tizen 5.5
+   * @return The text data
+   */;
   std::string GetText() const;
+
+  /**
+   * @brief Sets the text data of EntryItem.
+   * @since_tizen 5.5
+   * @param[in] The text data
+   */
   void SetText(std::string text);
+
+  /**
+   * @brief Gets the limit of text size.
+   * @since_tizen 5.5
+   * @return The limit of text size
+   */
   int GetTextLimit() const;
 
  private:

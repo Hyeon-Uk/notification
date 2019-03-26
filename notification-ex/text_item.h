@@ -29,18 +29,80 @@
 namespace notification {
 namespace item {
 
+
+/**
+ * @brief The class for TextItem type notification.
+ * @details The class to make the notification with text.
+ * @since_tizen 5.5
+ */
 class EXPORT_API TextItem : public AbstractItem {
  public:
+  /**
+   * @brief Constructor
+   * @since_tizen 5.5
+   * @param[in] id The TextItem id
+   * @param[in] text The text of TextItem
+   * @param[in] hyperlink The hyperlink of TextItem
+   * @param[in] action The action for TextItem
+   */
   TextItem(std::string id ,std::string text,
       std::string hyperlink = std::string(),
       std::shared_ptr<AbstractAction> action = std::shared_ptr<AbstractAction>({}));
+
+  /**
+   * @brief Destructor
+   * @since_tizen 5.5
+   */
   virtual ~TextItem();
+
+  /**
+   * @brief Gets the type of TextItem.
+   * @since_tizen 5.5
+   * @return AbstractItem::Type::Text
+   */
   int GetType() const override;
+
+  /**
+   * @brief Serialize the data of TextItem.
+   * @since_tizen 5.5
+   * @return Bundle type data
+   */
   Bundle Serialize() const override;
+
+  /**
+   * @brief Deserialize the serialized data.
+   * @since_tizen 5.5
+   * @param[in] b The serialized Bundle data
+   */
   void Deserialize(Bundle b) override;
+
+  /**
+   * @brief Finds the AbstractItem using by notification item id.
+   * @since_tizen 5.5
+   * @param[in] id notification item id
+   * @return AbstractItem object
+   */
   AbstractItem& FindByID(std::string id) override;
+
+  /**
+   * @brief Sets the contents of TextItem.
+   * @since_tizen 5.5
+   * @return The text contents
+   */
   void SetContents(std::string contents);
+
+  /**
+   * @brief Gets the contents of TextItem.
+   * @since_tizen 5.5
+   * @return The text contents
+   */
   std::string GetContents() const;
+
+  /**
+   * @brief Gets the hyperlink data of TextItem.
+   * @since_tizen 5.5
+   * @return The hyperlink data of TextItem
+   */
   std::string GetHyperLink() const;
 
  private:

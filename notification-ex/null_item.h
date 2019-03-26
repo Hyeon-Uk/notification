@@ -26,15 +26,62 @@
 namespace notification {
 namespace item {
 
+/**
+ * @brief The class for IconTextItem type notification.
+ * @details The NullItem is used to notify the item is null object.
+ * @since_tizen 5.5
+ */
 class EXPORT_API NullItem : public AbstractItem {
  public:
+  /**
+   * @brief Constructor
+   * @since_tizen 5.5
+   * @param[in] action The action for ImageItem
+   */
   NullItem(std::shared_ptr<AbstractAction> action = std::shared_ptr<AbstractAction>({}));
+
+  /**
+   * @brief Constructor
+   * @since_tizen 5.5
+   * @param[in] id The NullItem id
+   * @param[in] action The action for ImageItem
+   */
   NullItem(std::string id,
       std::shared_ptr<AbstractAction> action = std::shared_ptr<AbstractAction>({}));
+
+  /**
+   * @brief Destructor
+   * @since_tizen 5.5
+   */
   virtual ~NullItem();
+
+  /**
+   * @brief Gets the type of NullItem.
+   * @since_tizen 5.5
+   * @return AbstractItem::Type::NullObject
+   */
   int GetType() const override;
+
+  /**
+   * @brief Serialize the data of NullItem.
+   * @since_tizen 5.5
+   * @return Bundle type data
+   */
   Bundle Serialize() const override;
+
+  /**
+   * @brief Deserialize the serialized data.
+   * @since_tizen 5.5
+   * @param[in] b The serialized Bundle data
+   */
   void Deserialize(Bundle b) override;
+
+  /**
+   * @brief Finds the AbstractItem using by notification item id.
+   * @since_tizen 5.5
+   * @param[in] id notification item id
+   * @return AbstractItem object
+   */
   AbstractItem& FindByID(std::string id) override;
 };
 

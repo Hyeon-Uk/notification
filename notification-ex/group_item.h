@@ -26,25 +26,114 @@
 namespace notification {
 namespace item {
 
+/**
+ * @brief The class for GroupItem type notification.
+ * @details The class to make the group of notifications.
+ * @since_tizen 5.5
+ */
 class EXPORT_API GroupItem : public AbstractItem {
  public:
+  /**
+   * @brief Constructor
+   * @since_tizen 5.5
+   * @param[in] action The action for GroupItem
+   */
   GroupItem(std::shared_ptr<AbstractAction> action = std::shared_ptr<AbstractAction>({}));
+
+  /**
+   * @brief Constructor
+   * @since_tizen 5.5
+   * @param[in] id The GroupItem id
+   * @param[in] action The action for GroupItem
+   */
   GroupItem(std::string id,
       std::shared_ptr<AbstractAction> action = std::shared_ptr<AbstractAction>({}));
+
+  /**
+   * @brief Deserialize
+   * @since_tizen 5.5
+   */
   virtual ~GroupItem();
 
  public:
+  /**
+   * @brief Serialize the data of GroupItem.
+   * @since_tizen 5.5
+   * @return Bundle type data
+   */
   Bundle Serialize() const override;
+
+  /**
+   * @brief Deserialize the serialized data.
+   * @since_tizen 5.5
+   * @param[in] b The serialized Bundle data
+   */
   void Deserialize(Bundle b) override;
+
+  /**
+   * @brief Finds the AbstractItem using by notification item id.
+   * @since_tizen 5.5
+   * @param[in] id notification item id
+   * @return AbstractItem object
+   */
   AbstractItem& FindByID(std::string id) override;
+
+  /**
+   * @brief Gets the type of GroupItem.
+   * @since_tizen 5.5
+   * @return AbstractItem::Type::Group
+   */
   int GetType() const override;
+
+  /**
+   * @brief Gets the path of shared file location.
+   * @since_tizen 5.5
+   * @return The list of shared path.
+   */
   std::list<std::string> GetSharedPath() const override;
 
+  /**
+   * @brief Sets the vertical state.
+   * @details The vertical state is true, the children of GroupItem are associated vertically.
+   *          And if it is false, the children are associated horizontally.
+   * @since_tizen 5.5
+   * @param[in] The vertical state
+   */
   void SetDirection(bool vertical);
+
+  /**
+   * @brief Gets whether the vertical state is true or not.
+   * @since_tizen 5.5
+   * @return true if vertical is true, or false
+   */
   bool IsVertical();
+
+  /**
+   * @brief Gets app label data of GroupItem.
+   * @since_tizen 5.5
+   * @return The app label data
+   */
   std::string GetAppLabel();
+
+  /**
+   * @brief Adds child notification item.
+   * @since_tizen 5.5
+   * @param[in] AbstractItem object
+   */
   void AddChild(std::shared_ptr<AbstractItem> child);
+
+  /**
+   * @brief Removes child notification item.
+   * @since_tizen 5.5
+   * @param[in] The notification id
+   */
   void RemoveChild(std::string itemId);
+
+  /**
+   * @brief Gets the list of children item of GroupItem.
+   * @since_tizen 5.5
+   * @return The list of AbstractItem
+   */
   std::list<std::shared_ptr<AbstractItem>> GetChildren();
 
  private:

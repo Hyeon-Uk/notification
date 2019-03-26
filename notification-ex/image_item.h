@@ -26,18 +26,72 @@
 namespace notification {
 namespace item {
 
+/**
+ * @brief The class for ImageItem type notification.
+ * @details The class to make the notification with image.
+ * @since_tizen 5.5
+ */
 class EXPORT_API ImageItem : public AbstractItem {
  public:
+  /**
+   * @brief Constructor
+   * @since_tizen 5.5
+   * @param[in] imagePath The image path of ImageItem
+   * @param[in] action The action for ImageItem
+   */
   ImageItem(std::string imagePath,
     std::shared_ptr<AbstractAction> action = std::shared_ptr<AbstractAction>({}));
+
+  /**
+   * @brief Constructor
+   * @since_tizen 5.5
+   * @param[in] id The ImageItem id
+   * @param[in] imagePath The image path of ImageItem
+   * @param[in] action The action for ImageItem
+   */
   ImageItem(std::string id, std::string imagePath,
     std::shared_ptr<AbstractAction> action = std::shared_ptr<AbstractAction>({}));
+
+  /**
+   * @brief Destructor
+   * @since_tizen 5.5
+   */
   virtual ~ImageItem();
+
+  /**
+   * @brief Gets the type of ImageItem.
+   * @since_tizen 5.5
+   * @return AbstractItem::Type::Image
+   */
   int GetType() const override;
 
+  /**
+   * @brief Serialize the data of ImageItem.
+   * @since_tizen 5.5
+   * @return Bundle type data
+   */
   Bundle Serialize() const override;
+
+  /**
+   * @brief Deserialize the serialized data.
+   * @since_tizen 5.5
+   * @param[in] b The serialized Bundle data
+   */
   void Deserialize(Bundle b) override;
+
+  /**
+   * @brief Finds the AbstractItem using by notification item id.
+   * @since_tizen 5.5
+   * @param[in] id notification item id
+   * @return AbstractItem object
+   */
   AbstractItem& FindByID(std::string id) override;
+
+  /**
+   * @brief Gets the path of image.
+   * @since_tizen 5.5
+   * @return The path of image
+   */
   std::string GetImagePath() const;
 
  private:

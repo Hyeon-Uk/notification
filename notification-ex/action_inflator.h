@@ -26,8 +26,17 @@
 namespace notification {
 namespace item {
 
+/**
+ * @brief The class to create action
+ * @since_tizen 5.5
+ */
 class EXPORT_API ActionInflator {
  public:
+   /**
+   * @brief Creates AbstractAction from Bundle data
+   * @since_tizen 5.5
+   * @param[in] b Bundle type data
+   */
   static std::shared_ptr<AbstractAction> Create(Bundle b);
 };
 
