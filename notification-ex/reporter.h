@@ -46,6 +46,7 @@ class EXPORT_API Reporter : public IEventObserver {
   int Post(std::list<std::shared_ptr<item::AbstractItem>> notiList);
   int Update(std::shared_ptr<item::AbstractItem> noti);
   int Delete(std::shared_ptr<item::AbstractItem> noti);
+  int DeleteAll();
   std::shared_ptr<item::AbstractItem> FindByRootID(std::string id);
   virtual void OnEvent(const IEventInfo& info,
       std::list<std::shared_ptr<item::AbstractItem>> notiList);

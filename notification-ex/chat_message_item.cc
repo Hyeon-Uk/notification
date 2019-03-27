@@ -55,6 +55,33 @@ int ChatMessageItem::GetType() const {
   return AbstractItem::ChatMessage;
 }
 
+std::list<std::string> ChatMessageItem::GetSharedPath() const {
+  std::list<std::string> ret;
+
+  auto name = impl_->name_->GetSharedPath();
+  auto text = impl_->text_->GetSharedPath();
+  auto image = impl_->image_->GetSharedPath();
+  auto time = impl_->time_->GetSharedPath();
+
+  for (auto& i : name) {
+    ret.push_back(std::move(i));
+  }
+
+  for (auto& i : text) {
+    ret.push_back(std::move(i));
+  }
+
+  for (auto& i : image) {
+    ret.push_back(std::move(i));
+  }
+
+  for (auto& i : time) {
+    ret.push_back(std::move(i));
+  }
+
+  return ret;
+}
+
 Bundle ChatMessageItem::Serialize() const {
   Bundle b;
   b = AbstractItem::Serialize();

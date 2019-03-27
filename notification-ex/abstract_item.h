@@ -226,6 +226,7 @@ class EXPORT_API AbstractItem {
   virtual AbstractItem& FindByID(std::string id) = 0;
   virtual int GetType() const = 0;
   static int GetType(Bundle b);
+  virtual std::list<std::string> GetSharedPath() const;
   std::string GetId() const;
   void SetId(std::string id);
   std::shared_ptr<AbstractAction> GetAction() const;

@@ -34,10 +34,11 @@ class EXPORT_API GroupItem : public AbstractItem {
   virtual ~GroupItem();
 
  public:
-  virtual Bundle Serialize() const override;
-  virtual void Deserialize(Bundle b) override;
-  virtual AbstractItem& FindByID(std::string id) override;
+  Bundle Serialize() const override;
+  void Deserialize(Bundle b) override;
+  AbstractItem& FindByID(std::string id) override;
   int GetType() const override;
+  std::list<std::string> GetSharedPath() const override;
 
   void SetDirection(bool vertical);
   bool IsVertical();

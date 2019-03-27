@@ -49,6 +49,7 @@ class EXPORT_API ChatMessageItem : public AbstractItem {
   Bundle Serialize() const override;
   void Deserialize(Bundle b) override;
   AbstractItem& FindByID(std::string id) override;
+  std::list<std::string> GetSharedPath() const override;
   TextItem& GetNameItem() const;
   TextItem& GetTextItem() const;
   ImageItem& GetImageItem() const;

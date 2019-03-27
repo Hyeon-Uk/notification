@@ -96,6 +96,11 @@ int Reporter::Delete(std::shared_ptr<AbstractItem> noti) {
   return impl_->SendNotify(noti, EventInfo::Delete);
 }
 
+int Reporter::DeleteAll() {
+  //TODO
+  return -1;
+}
+
 std::shared_ptr<AbstractItem> Reporter::FindByRootID(std::string id) {
   Bundle serialized;
   EventInfo info(EventInfo::Get, util::GetAppId(), "", id);

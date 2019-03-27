@@ -87,6 +87,16 @@ int Manager::Delete(shared_ptr<item::AbstractItem> noti) {
   return impl_->SendNotify(noti, EventInfo::Delete);
 }
 
+int Manager::DeleteAll() {
+  //TODO
+  return -1;
+}
+
+int Manager::GetCount() const {
+  //TODO
+  return -1;
+}
+
 int Manager::Hide(shared_ptr<item::AbstractItem> noti) {
   ((IItemInfoInternal*)noti->GetInfo().get())->AddHideViewer(util::GetAppId());
   return impl_->SendNotify(noti, EventInfo::Update);

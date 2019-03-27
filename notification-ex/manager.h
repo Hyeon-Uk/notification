@@ -42,12 +42,14 @@ class EXPORT_API Manager : public IEventObserver {
   std::list<std::shared_ptr<item::AbstractItem>> Get();
   int Update(std::shared_ptr<item::AbstractItem> noti);
   int Delete(std::shared_ptr<item::AbstractItem> noti);
+  int DeleteAll();
   int Hide(std::shared_ptr<item::AbstractItem> noti);
   std::shared_ptr<item::AbstractItem> FindByRootID(std::string id);
   int SendEvent(const IEventInfo& info, std::shared_ptr<item::AbstractItem> noti);
   void OnEvent(const IEventInfo& info, std::list<Bundle> serialized) override;
   std::list<Bundle> OnRequest(const IEventInfo& info) override;
   void SendError(const IEventInfo& info, NotificationError error);
+  int GetCount() const;
   static std::string GetPath();
 
  protected:

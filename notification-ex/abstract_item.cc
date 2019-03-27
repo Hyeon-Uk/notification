@@ -310,6 +310,10 @@ string AbstractItem::GetId() const {
   return impl_->id_;
 }
 
+std::list<std::string> AbstractItem::GetSharedPath() const {
+  return {};
+}
+
 shared_ptr<AbstractAction> AbstractItem::GetAction() const {
   return impl_->action_;
 }

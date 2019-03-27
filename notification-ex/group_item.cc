@@ -114,6 +114,19 @@ AbstractItem& GroupItem::FindByID(std::string id) {
   return FactoryManager::GetInst().GetNullItem();
 }
 
+list<string> GroupItem::GetSharedPath() const {
+  list<string> ret;
+
+  for (auto& i : impl_->children_list_) {
+    auto s = i->GetSharedPath();
+    for (auto& j : s) {
+      ret.push_back(move(j));
+    }
+  }
+
+  return ret;
+}
+
 void GroupItem::AddChild(shared_ptr<AbstractItem> child) {
   impl_->children_list_.emplace_back(child);
 }
