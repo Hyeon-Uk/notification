@@ -35,14 +35,14 @@ class ChatMessageItem::Impl {
  private:
   friend class ChatMessageItem;
   Impl(ChatMessageItem* parent, std::shared_ptr<TextItem> name,
-    std::shared_ptr<TextItem> text, std::shared_ptr<TextItem> data,
+    std::shared_ptr<TextItem> text, std::shared_ptr<ImageItem> image,
     std::shared_ptr<TimeItem> time, Type type);
 
  private:
   ChatMessageItem* parent_;
   std::shared_ptr<TextItem> name_;
   std::shared_ptr<TextItem> text_;
-  std::shared_ptr<TextItem> data_;
+  std::shared_ptr<ImageItem> image_;
   std::shared_ptr<TimeItem> time_;
   Type type_;
 };

@@ -28,25 +28,25 @@
 #define LOG_TAG "NOTIFICATION_EX"
 #define CHATMESSAGE_NAME_KEY "__CHATMESSAGE_NAME_KEY__"
 #define CHATMESSAGE_TEXT_KEY "__CHATMESSAGE_TEXT_KEY__"
-#define CHATMESSAGE_DATA_KEY "__CHATMESSAGE_DATA_KEY__"
+#define CHATMESSAGE_IMAGE_KEY "__CHATMESSAGE_IMAGE_KEY__"
 #define CHATMESSAGE_TIME_KEY "__CHATMESSAGE_TIME_KEY__"
 #define CHATMESSAGE_TYPE_KEY "__CHATMESSAGE_TYPE_KEY__"
 
 namespace notification {
 namespace item {
 
-ChatMessageItem::ChatMessageItem(std::string id, std::shared_ptr<TextItem> name,
-    std::shared_ptr<TextItem> text, std::shared_ptr<TextItem> data,
-    std::shared_ptr<TimeItem> time, Type type,
-    std::shared_ptr<AbstractAction> action)
+ChatMessageItem::ChatMessageItem(std::string id,
+    std::shared_ptr<TextItem> name, std::shared_ptr<TextItem> text,
+    std::shared_ptr<ImageItem> image, std::shared_ptr<TimeItem> time,
+    Type type, std::shared_ptr<AbstractAction> action)
     : AbstractItem(id, action),
-    impl_(new Impl(this, name, text, data, time, type)) {
+    impl_(new Impl(this, name, text, image, time, type)) {
 }
 
 ChatMessageItem::Impl::Impl(ChatMessageItem* parent,
     std::shared_ptr<TextItem> name, std::shared_ptr<TextItem> text,
-    std::shared_ptr<TextItem> data, std::shared_ptr<TimeItem> time, Type type)
-    : parent_(parent), name_(name), text_(text), data_(data), time_(time),
+    std::shared_ptr<ImageItem> image, std::shared_ptr<TimeItem> time, Type type)
+    : parent_(parent), name_(name), text_(text), image_(image), time_(time),
     type_(type) {
   LOGI("ChatMessageItem impl created");
 }
@@ -63,8 +63,8 @@ Bundle ChatMessageItem::Serialize() const {
     reinterpret_cast<char*>(impl_->name_->Serialize().ToRaw().first.get()));
   b.Add(CHATMESSAGE_TEXT_KEY,
     reinterpret_cast<char*>(impl_->text_->Serialize().ToRaw().first.get()));
-  b.Add(CHATMESSAGE_DATA_KEY,
-    reinterpret_cast<char*>(impl_->data_->Serialize().ToRaw().first.get()));
+  b.Add(CHATMESSAGE_IMAGE_KEY,
+    reinterpret_cast<char*>(impl_->image_->Serialize().ToRaw().first.get()));
   b.Add(CHATMESSAGE_TIME_KEY,
     reinterpret_cast<char*>(impl_->time_->Serialize().ToRaw().first.get()));
   b.Add(CHATMESSAGE_TYPE_KEY, std::to_string((int)impl_->type_));
@@ -84,10 +84,10 @@ void ChatMessageItem::Deserialize(Bundle b) {
   text.get()->Deserialize(Bundle(b.GetString(CHATMESSAGE_TEXT_KEY)));
   impl_->text_ = std::static_pointer_cast<TextItem>(text);
 
-  std::shared_ptr<AbstractItem> data =
-      FactoryManager::GetInst().CreateItem(AbstractItem::Text);
-  data.get()->Deserialize(Bundle(b.GetString(CHATMESSAGE_DATA_KEY)));
-  impl_->data_ = std::static_pointer_cast<TextItem>(data);
+  std::shared_ptr<AbstractItem> image =
+      FactoryManager::GetInst().CreateItem(AbstractItem::Image);
+  image.get()->Deserialize(Bundle(b.GetString(CHATMESSAGE_IMAGE_KEY)));
+  impl_->image_ = std::static_pointer_cast<ImageItem>(image);
 
   std::shared_ptr<AbstractItem> time =
       FactoryManager::GetInst().CreateItem(AbstractItem::Time);
@@ -112,8 +112,8 @@ TextItem& ChatMessageItem::GetTextItem() const {
   return *(impl_->text_);
 }
 
-TextItem& ChatMessageItem::GetDataItem() const {
-  return *(impl_->data_);
+ImageItem& ChatMessageItem::GetImageItem() const {
+  return *(impl_->image_);
 }
 
 TimeItem& ChatMessageItem::GetTimeItem() const {

@@ -25,6 +25,7 @@
 
 #include "notification-ex/abstract_item.h"
 #include "notification-ex/text_item.h"
+#include "notification-ex/image_item.h"
 #include "notification-ex/time_item.h"
 
 namespace notification {
@@ -39,7 +40,7 @@ class EXPORT_API ChatMessageItem : public AbstractItem {
 
  public:
   ChatMessageItem(std::string id, std::shared_ptr<TextItem> name,
-    std::shared_ptr<TextItem> text, std::shared_ptr<TextItem> data,
+    std::shared_ptr<TextItem> text, std::shared_ptr<ImageItem> image,
     std::shared_ptr<TimeItem> time, Type type,
     std::shared_ptr<AbstractAction> action = std::shared_ptr<AbstractAction>({}));
   virtual ~ChatMessageItem();
@@ -50,7 +51,7 @@ class EXPORT_API ChatMessageItem : public AbstractItem {
   AbstractItem& FindByID(std::string id) override;
   TextItem& GetNameItem() const;
   TextItem& GetTextItem() const;
-  TextItem& GetDataItem() const;
+  ImageItem& GetImageItem() const;
   TimeItem& GetTimeItem() const;
   Type GetMessageType() const;
 

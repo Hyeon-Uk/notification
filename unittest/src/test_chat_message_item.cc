@@ -35,7 +35,7 @@ class ChatMessageItemTest : public ::testing::Test {
     item = new ChatMessageItem(id,
       std::make_shared<TextItem>("name_id", "name"),
       std::make_shared<TextItem>("text_id", "text"),
-      std::make_shared<TextItem>("data_id", "data"),
+      std::make_shared<ImageItem>("image_id", "path"),
       std::make_shared<TimeItem>(current_time),type);
   }
   virtual void TearDown() {
@@ -52,7 +52,7 @@ TEST_F(ChatMessageItemTest, FindByID) {
   ChatMessageItem& message = static_cast<ChatMessageItem&>(child);
   ASSERT_EQ(message.GetNameItem().GetContents(), "name");
   ASSERT_EQ(message.GetTextItem().GetContents(), "text");
-  ASSERT_EQ(message.GetDataItem().GetContents(), "data");
+  ASSERT_EQ(message.GetImageItem().GetImagePath(), "path");
   ASSERT_EQ(message.GetMessageType(), ChatMessageItemTest::type);
 }
 
@@ -68,7 +68,7 @@ TEST_F(ChatMessageItemTest, SerializeDeserialize) {
   auto gen_message = std::static_pointer_cast<ChatMessageItem>(gen_item);
   ASSERT_EQ(gen_message->GetNameItem().GetContents(), "name");
   ASSERT_EQ(gen_message->GetTextItem().GetContents(), "text");
-  ASSERT_EQ(gen_message->GetDataItem().GetContents(), "data");
+  ASSERT_EQ(gen_message->GetImageItem().GetImagePath(), "path");
   ASSERT_EQ(gen_message->GetTimeItem().GetTime(), ChatMessageItemTest::current_time);
   ASSERT_EQ(gen_message->GetMessageType(), ChatMessageItemTest::type);
 }
