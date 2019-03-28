@@ -82,7 +82,7 @@ class AbstractItemTest : public ::testing::Test {
 
 TEST_F(AbstractItemTest, SerializeDeserialize) {
   /* Serialize */
-  app_control_h app_control;
+  app_control_h app_control, app_control_1;
   char* app_id = NULL;
   time_t current_time;
 
@@ -90,6 +90,11 @@ TEST_F(AbstractItemTest, SerializeDeserialize) {
   app_control_set_app_id(app_control, "new_appid");
   std::shared_ptr<AppControlAction> action = std::make_shared<AppControlAction>(app_control);
   app_control_destroy(app_control);
+
+  app_control_create(&app_control_1);
+  app_control_set_app_id(app_control_1, "new_appid_1");
+  std::shared_ptr<AppControlAction> action_1 = std::make_shared<AppControlAction>(app_control_1);
+  app_control_destroy(app_control_1);
 
   TestItem item("test_id", action);
 
@@ -199,6 +204,17 @@ TEST_F(AbstractItemTest, SerializeDeserialize) {
   app_control_get_app_id(ac->GetAppControl(), &app_id);
 
   ASSERT_STREQ(app_id, "new_appid");
+
+  item.SetAction(action_1);
+
+  b = item.Serialize();
+  gen_item = ItemInflator::Create(b);
+  gen_test = static_cast<TestItem*>(gen_item.get());
+
+  ac = std::static_pointer_cast<AppControlAction>(gen_test->GetAction());
+  app_control_get_app_id(ac->GetAppControl(), &app_id);
+
+  ASSERT_STREQ(app_id, "new_appid_1");
 }
 
 }  // namespace
