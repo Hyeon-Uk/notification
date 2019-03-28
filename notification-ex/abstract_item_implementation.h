@@ -44,7 +44,7 @@ class AbstractItem::Impl {
   std::string channel_;
   std::string id_;
   std::shared_ptr<LEDInfo> led_ = nullptr;
-  Policy policy_ = None;
+  int policy_ = None;
   std::shared_ptr<Style> style_ = nullptr;
   bool visible_ = true;
   bool enable_ = true;

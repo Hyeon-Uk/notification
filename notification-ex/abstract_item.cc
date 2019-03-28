@@ -393,11 +393,11 @@ bool AbstractItem::CanReceive(std::string id) const {
   return true;
 }
 
-void AbstractItem::SetPolicy(AbstractItem::Policy policy) {
+void AbstractItem::SetPolicy(int policy) {
   impl_->policy_ = policy;
 }
 
-AbstractItem::Policy AbstractItem::GetPolicy() const {
+int AbstractItem::GetPolicy() const {
   return impl_->policy_;
 }
 

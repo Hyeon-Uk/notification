@@ -210,9 +210,9 @@ class EXPORT_API AbstractItem {
   };
 
   enum Policy {
-    None,
-    OnBootClear,
-    SimMode,
+    None = 0,
+    OnBootClear = 1 << 0,
+    SimMode = 1 << 1,
   };
 
  public:
@@ -241,8 +241,8 @@ class EXPORT_API AbstractItem {
   void RemoveReceiver(std::string receiver_group);
   std::list<std::string> GetReceiverList();
   bool CanReceive(std::string id) const;
-  void SetPolicy(Policy policy);
-  Policy GetPolicy() const;
+  void SetPolicy(int policy);
+  int GetPolicy() const;
   std::string GetChannel() const;
   void SetChannel(std::string channel);
   void SetLEDInfo(std::shared_ptr<LEDInfo> led);
