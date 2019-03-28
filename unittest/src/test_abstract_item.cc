@@ -118,6 +118,7 @@ TEST_F(AbstractItemTest, SerializeDeserialize) {
   item.SetVibrationPath("vibrationpath");
   std::static_pointer_cast<IItemInfoInternal>(item.GetInfo())->SetUid(3);
   item.SetSenderAppId("sender");
+  item.SetTag("tag");
 
   time(&current_time);
   std::static_pointer_cast<IItemInfoInternal>(item.GetInfo())->SetTime(current_time);
@@ -149,6 +150,7 @@ TEST_F(AbstractItemTest, SerializeDeserialize) {
   ASSERT_EQ(gen_test->GetSoundPath(), "soundpath");
   ASSERT_EQ(gen_test->GetVibrationPath(), "vibrationpath");
   ASSERT_EQ(gen_test->GetSenderAppId(), "sender");
+  ASSERT_EQ(gen_test->GetTag(), "tag");
   ASSERT_EQ(gen_test->GetInfo()->GetTime(), current_time);
 
   ASSERT_EQ(gen_test->GetStyle()->GetPadding().GetLeft(), 10);

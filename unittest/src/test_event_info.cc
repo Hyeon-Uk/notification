@@ -18,14 +18,13 @@ class EventInfoTest : public ::testing::Test {
 };
 
 TEST_F(EventInfoTest, SerializeDeserialize) {
-  EventInfo info(EventInfo::Get, "test", "channel", "id", "tag");
+  EventInfo info(EventInfo::Get, "test", "channel", "id");
   Bundle b = info.Serialize();
   EventInfo serialized(b);
   ASSERT_EQ(serialized.GetEventType(), info.GetEventType());
   ASSERT_EQ(serialized.GetOwner(), info.GetOwner());
   ASSERT_EQ(serialized.GetChannel(), info.GetChannel());
   ASSERT_EQ(serialized.GetItemId(), info.GetItemId());
-  ASSERT_EQ(serialized.GetTag(), info.GetTag());
   ASSERT_EQ(serialized.GetUid(), info.GetUid());
 }
 

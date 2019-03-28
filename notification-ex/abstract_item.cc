@@ -38,6 +38,7 @@
 #define ABSTRACT_ITEM_UID_KEY "__ABSTRACT_ITEM_UID_KEY__"
 #define ABSTRACT_ITEM_TIME_KEY "__ABSTRACT_ITEM_TIME_KEY__"
 #define ABSTRACT_ITEM_SENDER_APPID_KEY "__ABSTRACT_ITEM_SENDER_APPID_KEY__"
+#define ABSTRACT_ITEM_TAG_KEY "__ABSTRACT_ITEM_TAG_KEY__"
 #define ABSTRACT_ITEM_CHANNEL_KEY "__ABSTRACT_ITEM_CHANNEL_KEY__"
 #define ABSTRACT_ITEM_VERSION_KEY "__ABSTRACT_ITEM_VERSION_KEY__"
 #define ABSTRACT_ITEM_HIDE_TIME_KEY "__ABSTRACT_ITEM_HIDE_TIME_KEY__"
@@ -142,6 +143,7 @@ Bundle AbstractItem::Serialize() const {
   b.Add(ABSTRACT_ITEM_HIDE_TIME_KEY, to_string(impl_->hide_time_));
   b.Add(ABSTRACT_ITEM_DELETE_TIME_KEY, to_string(impl_->delete_time_));
   b.Add(ABSTRACT_ITEM_UID_KEY, to_string(impl_->uid_));
+  b.Add(ABSTRACT_ITEM_TAG_KEY, impl_->tag_);
 
   timeinfo = localtime(&impl_->time_);
   strftime (buf, sizeof(buf), "%s", timeinfo);
@@ -248,6 +250,7 @@ void AbstractItem::Deserialize(Bundle b) {
   impl_->sound_path_ = b.GetString(ABSTRACT_ITEM_SOUND_PATH_KEY);
   impl_->vibration_path_ = b.GetString(ABSTRACT_ITEM_VIBRATION_PATH_KEY);
   impl_->uid_ = stoi(b.GetString(ABSTRACT_ITEM_UID_KEY));
+  impl_->tag_ = b.GetString(ABSTRACT_ITEM_TAG_KEY);
 
   time_s = b.GetString(ABSTRACT_ITEM_TIME_KEY);
   strptime(time_s.c_str(), "%s", &timeinfo);
@@ -445,6 +448,14 @@ std::string AbstractItem::GetSenderAppId() const {
 
 void AbstractItem::SetSenderAppId(std::string sender_appid) {
   impl_->sender_appid_ = sender_appid;
+}
+
+std::string AbstractItem::GetTag() const {
+  return impl_->tag_;
+}
+
+void AbstractItem::SetTag(std::string tag) {
+  impl_->tag_ = tag;
 }
 
 }  // namespace item

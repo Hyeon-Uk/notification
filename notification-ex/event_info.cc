@@ -32,7 +32,6 @@
 #define NOTIFICATION_EX_EVENT_OWNER_KEY "__NOTIFICATION_EX_EVENT_OWNER_KEY__"
 #define NOTIFICATION_EX_EVENT_CHANNEL_KEY "__NOTIFICATION_EX_EVENT_CHANNEL_KEY__"
 #define NOTIFICATION_EX_EVENT_ITEM_ID_KEY "__NOTIFICATION_EX_EVENT_ITEM_ID_KEY__"
-#define NOTIFICATION_EX_EVENT_TAG_KEY "__NOTIFICATION_EX_EVENT_TAG_KEY__"
 #define NOTIFICATION_EX_EVENT_UID_KEY "__NOTIFICATION_EX_EVENT_UID_KEY__"
 #define NOTIFICATION_EX_EVENT_REQUEST_ID_KEY "__NOTIFICATION_EX_EVENT_REQUEST_ID_KEY__"
 #define NOTIFICATION_EX_EVENT_ERROR_KEY "__NOTIFICATION_EX_EVENT_ERROR_KEY__"
@@ -41,17 +40,16 @@ using namespace std;
 namespace notification {
 
 EventInfo::EventInfo(int type, std::string owner, std::string channel,
-    std::string item_id, std::string tag)
-    : impl_(new Impl(this, type, owner, channel, item_id, tag)) {
+    std::string item_id)
+    : impl_(new Impl(this, type, owner, channel, item_id)) {
 }
 EventInfo::~EventInfo() = default;
 EventInfo::Impl::~Impl() = default;
 
-EventInfo::Impl::Impl(EventInfo* parent,
-    int type, std::string owner, std::string channel,
-    std::string item_id, std::string tag)
-    : type_(type), owner_(owner), channel_(channel),
-    item_id_(item_id), tag_(tag), parent_(parent) {
+EventInfo::Impl::Impl(EventInfo* parent, int type, std::string owner,
+    std::string channel, std::string item_id)
+    : type_(type), owner_(owner), channel_(channel), item_id_(item_id),
+    parent_(parent) {
   uid_ = getuid();
   request_id_ = util::GetRequestId();
   error_ = NOTIFICATION_ERROR_NONE;
@@ -59,13 +57,12 @@ EventInfo::Impl::Impl(EventInfo* parent,
 }
 
 EventInfo::EventInfo(Bundle serialized)
-  : impl_(new Impl(this, EventInfo::Post, "", "", "", "")) {
+  : impl_(new Impl(this, EventInfo::Post, "", "", "")) {
   string event_str = serialized.GetString(NOTIFICATION_EX_EVENT_TYPE_KEY);
   impl_->type_ = (int)strtol(event_str.c_str(), NULL, 10);
   impl_->owner_ = serialized.GetString(NOTIFICATION_EX_EVENT_OWNER_KEY);
   impl_->channel_ = serialized.GetString(NOTIFICATION_EX_EVENT_CHANNEL_KEY);
   impl_->item_id_ = serialized.GetString(NOTIFICATION_EX_EVENT_ITEM_ID_KEY);
-  impl_->tag_ = serialized.GetString(NOTIFICATION_EX_EVENT_TAG_KEY);
   string uid_str = serialized.GetString(NOTIFICATION_EX_EVENT_UID_KEY);
   impl_->uid_ = (uid_t)strtol(uid_str.c_str(), NULL, 10);
   string request_id_str =
@@ -99,7 +96,6 @@ Bundle EventInfo::Serialize() const {
   serialized.Add(NOTIFICATION_EX_EVENT_OWNER_KEY, impl_->owner_);
   serialized.Add(NOTIFICATION_EX_EVENT_CHANNEL_KEY, impl_->channel_);
   serialized.Add(NOTIFICATION_EX_EVENT_ITEM_ID_KEY, impl_->item_id_);
-  serialized.Add(NOTIFICATION_EX_EVENT_TAG_KEY, impl_->tag_);
   serialized.Add(NOTIFICATION_EX_EVENT_UID_KEY, to_string((int)impl_->uid_));
   serialized.Add(
       NOTIFICATION_EX_EVENT_REQUEST_ID_KEY, to_string(impl_->request_id_));
@@ -127,10 +123,6 @@ string EventInfo::GetChannel() const {
 
 string EventInfo::GetItemId() const {
   return impl_->item_id_;
-}
-
-string EventInfo::GetTag() const {
-  return impl_->tag_;
 }
 
 uid_t EventInfo::GetUid() const {

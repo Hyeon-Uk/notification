@@ -33,7 +33,7 @@ namespace notification {
 class EventInfo : public IEventInfoInternal {
  public:
   EventInfo(int type, std::string owner, std::string channel = "",
-      std::string item_id = "", std::string tag = "");
+      std::string item_id = "");
   EventInfo(Bundle serialized);
   virtual ~EventInfo();
   uid_t GetUid() const override;
@@ -45,7 +45,6 @@ class EventInfo : public IEventInfoInternal {
   std::string GetOwner() const override;
   std::string GetChannel() const override;
   std::string GetItemId() const override;
-  std::string GetTag() const override;
   int GetRequestId() const override;
   Bundle Serialize() const override;
   static std::string GetString(int type);

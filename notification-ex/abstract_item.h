@@ -263,8 +263,8 @@ class EXPORT_API AbstractItem {
   std::shared_ptr<IItemInfo> GetInfo() const;
   std::string GetSenderAppId() const;
   void SetSenderAppId(std::string sender_appid);
-  std::string GetTag();
-  void SetTag();
+  std::string GetTag() const;
+  void SetTag(std::string tag);
 
  private:
   class Impl;

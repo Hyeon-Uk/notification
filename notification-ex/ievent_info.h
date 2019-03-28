@@ -40,7 +40,6 @@ class EXPORT_API IEventInfo {
   virtual std::string GetOwner() const = 0;
   virtual std::string GetChannel() const = 0;
   virtual std::string GetItemId() const = 0;
-  virtual std::string GetTag() const = 0;
   virtual int GetRequestId() const = 0;
   virtual Bundle Serialize() const = 0;
 };
