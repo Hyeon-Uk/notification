@@ -56,14 +56,13 @@ make %{?jobs:-j%jobs}
 
 %install
 rm -rf %{buildroot}
-%make_install
 
+%make_install
+mkdir -p %{buildroot}%{upgrade_script_path}
+cp -f scripts/505.notification_upgrade.sh %{buildroot}%{upgrade_script_path}
 
 %check
 ctest --output-on-failure %{?_smp_mflags}
-
-mkdir -p %{buildroot}%{upgrade_script_path}
-cp -f scripts/505.notification_upgrade.sh %{buildroot}%{upgrade_script_path}
 
 %clean
 rm -rf %{buildroot}
