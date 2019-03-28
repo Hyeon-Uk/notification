@@ -77,6 +77,12 @@ using namespace std;
 namespace notification {
 namespace item {
 
+const string ReceiverGroup::Panel = "tizen.org/receiver/panel";
+const string ReceiverGroup::Ticker = "tizen.org/receiver/ticker";
+const string ReceiverGroup::LockScreen = "tizen.org/receiver/lockscreen";
+const string ReceiverGroup::Indicator = "tizen.org/receiver/indicator";
+const string ReceiverGroup::Popup = "tizen.org/receiver/popup";
+
 string AbstractItem::Impl::GenerateItemId() {
   char uuid[37];
   uuid_t u;

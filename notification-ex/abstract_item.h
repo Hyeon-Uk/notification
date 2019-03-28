@@ -34,6 +34,15 @@
 namespace notification {
 namespace item {
 
+class EXPORT_API ReceiverGroup {
+ public:
+  static const std::string Panel;
+  static const std::string Ticker;
+  static const std::string LockScreen;
+  static const std::string Indicator;
+  static const std::string Popup;
+};
+
 class EXPORT_API Color {
  public:
   Color() {
