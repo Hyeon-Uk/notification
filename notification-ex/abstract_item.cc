@@ -318,6 +318,10 @@ shared_ptr<AbstractAction> AbstractItem::GetAction() const {
   return impl_->action_;
 }
 
+void AbstractItem::SetAction(std::shared_ptr<AbstractAction> action) {
+  impl_->action_ = action;
+}
+
 shared_ptr<Style> AbstractItem::GetStyle() const {
   return impl_->style_;
 }

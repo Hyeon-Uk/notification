@@ -230,7 +230,7 @@ class EXPORT_API AbstractItem {
   std::string GetId() const;
   void SetId(std::string id);
   std::shared_ptr<AbstractAction> GetAction() const;
-  void SetAction(std::shared_ptr<AbstractAction> action) const;
+  void SetAction(std::shared_ptr<AbstractAction> action);
   std::shared_ptr<Style> GetStyle() const;
   void SetStyle(std::shared_ptr<Style> style);
   void SetVisible(bool visible);
