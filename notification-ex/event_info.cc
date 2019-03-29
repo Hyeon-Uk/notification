@@ -52,7 +52,7 @@ EventInfo::Impl::Impl(EventInfo* parent, int type, std::string owner,
     parent_(parent) {
   uid_ = getuid();
   request_id_ = util::GetRequestId();
-  error_ = NOTIFICATION_ERROR_NONE;
+  error_ = ERROR_NONE;
   LOGI("EventInfo impl created");
 }
 

@@ -46,7 +46,7 @@ namespace item {
 unique_ptr<AbstractItem> DefaultItemFactory::CreateItem(int type) {
   switch (type) {
     case AbstractItem::NullObject :
-      THROW(NOTIFICATION_ERROR_INVALID_PARAMETER);
+      THROW(ERROR_INVALID_PARAMETER);
     case AbstractItem::Text :
       return unique_ptr<AbstractItem>(new TextItem("",""));
     case AbstractItem::Icon :

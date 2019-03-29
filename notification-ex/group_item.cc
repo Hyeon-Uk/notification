@@ -157,7 +157,7 @@ string GroupItem::GetAppLabel() {
    char* name;
    int ret = app_get_name(&name);
    if (ret != APP_ERROR_NONE)
-     THROW(NOTIFICATION_ERROR_IO_ERROR);
+     THROW(ERROR_IO_ERROR);
    impl_->app_label_ = string(name);
  }
  return impl_->app_label_;

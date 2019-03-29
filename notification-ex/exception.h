@@ -56,27 +56,27 @@ class Exception : public std::exception {
   std::string message_;
   std::string GetErrorString(int error_code) {
     switch (error_code) {
-    case NOTIFICATION_ERROR_INVALID_PARAMETER:
+    case ERROR_INVALID_PARAMETER:
       return ": INVALID_PARAMETER";
-    case NOTIFICATION_ERROR_OUT_OF_MEMORY:
+    case ERROR_OUT_OF_MEMORY:
       return ": OUT_OF_MEMORY";
-    case NOTIFICATION_ERROR_IO_ERROR:
+    case ERROR_IO_ERROR:
       return ": IO_ERROR";
-    case NOTIFICATION_ERROR_PERMISSION_DENIED:
+    case ERROR_PERMISSION_DENIED:
       return ": PERMISSION_DENIED";
-    case NOTIFICATION_ERROR_INVALID_OPERATION:
+    case ERROR_INVALID_OPERATION:
       return ": INVALID_OPERATION";
-    case NOTIFICATION_ERROR_FROM_DB:
+    case ERROR_FROM_DB:
       return ": ERROR_FROM_DB";
-    case NOTIFICATION_ERROR_ALREADY_EXIST_ID:
+    case ERROR_ALREADY_EXIST_ID:
       return ": ALREADY_EXIST_ID";
-    case NOTIFICATION_ERROR_FROM_DBUS:
+    case ERROR_FROM_DBUS:
       return ": ERROR_FROM_DBUS";
-    case NOTIFICATION_ERROR_NOT_EXIST_ID:
+    case ERROR_NOT_EXIST_ID:
       return ": NOT_EXIST_ID";
-    case NOTIFICATION_ERROR_SERVICE_NOT_READY:
+    case ERROR_SERVICE_NOT_READY:
       return ": SERVICE_NOT_READY";
-    case NOTIFICATION_ERROR_MAX_EXCEEDED:
+    case ERROR_MAX_EXCEEDED:
       return ": MAX_EXCEEDED";
     default:
       return "";

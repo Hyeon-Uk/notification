@@ -36,7 +36,7 @@ namespace item {
 unique_ptr<AbstractAction> DefaultActionFactory::CreateAction(int type) {
   switch (type) {
     case AbstractAction::NullObject :
-      THROW(NOTIFICATION_ERROR_INVALID_PARAMETER);
+      THROW(ERROR_INVALID_PARAMETER);
     case AbstractAction::AppControl :
       app_control_h control;
       app_control_create(&control);

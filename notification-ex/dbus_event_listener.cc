@@ -140,7 +140,7 @@ int DBusEventListener::Impl::RegisterGDBusInterface() {
       LOGE("g_dbus_node_info_new_for_xml err [%s]", error->message);
       g_error_free(error);
     }
-    return NOTIFICATION_ERROR_IO_ERROR;
+    return ERROR_IO_ERROR;
   }
 
   registration_id_ = g_dbus_connection_register_object(
@@ -150,11 +150,11 @@ int DBusEventListener::Impl::RegisterGDBusInterface() {
   g_dbus_node_info_unref(introspection_data);
   if (registration_id_ == 0) {
     LOGE("register object fail");
-    return NOTIFICATION_ERROR_IO_ERROR;
+    return ERROR_IO_ERROR;
   }
 
   LOGI("RegisterGDBusInterface success");
-  return NOTIFICATION_ERROR_NONE;
+  return ERROR_NONE;
 }
 
 void DBusEventListener::Impl::UnRegisterGDBusInterface() {

@@ -238,7 +238,7 @@ void AbstractItem::Deserialize(Bundle b) {
 
   string type_str = b.GetString(ABSTRACT_ITEM_TYPE_KEY);
   if (type_str.empty())
-    THROW(NOTIFICATION_ERROR_IO_ERROR);
+    THROW(ERROR_IO_ERROR);
 
   impl_->id_ = b.GetString(ABSTRACT_ITEM_ID_KEY);
   impl_->sender_appid_ = b.GetString(ABSTRACT_ITEM_SENDER_APPID_KEY);
@@ -350,7 +350,7 @@ std::shared_ptr<LEDInfo> AbstractItem::GetLEDInfo() const {
 int AbstractItem::GetType(Bundle b) {
   string type_str = b.GetString(ABSTRACT_ITEM_TYPE_KEY);
   if (type_str.empty())
-    THROW(NOTIFICATION_ERROR_IO_ERROR);
+    THROW(ERROR_IO_ERROR);
   return strtol(type_str.c_str(), NULL, 10);
 }
 

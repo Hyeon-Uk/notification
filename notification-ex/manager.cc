@@ -149,7 +149,7 @@ void Manager::OnEvent(const IEventInfo& info, list<Bundle> serialized) {
   int type = info.GetEventType();
   NotificationError error =
       (static_cast<const IEventInfoInternal&>(info)).GetError();
-  if (error != NOTIFICATION_ERROR_NONE) {
+  if (error != ERROR_NONE) {
     LOGE("Handling error event (%d)", error);
     OnError(error, info.GetRequestId());
     return;

@@ -93,17 +93,17 @@ void DBManager::CloseDB(sqlite3* db) {
 }
 
 int DBManager::ExecuteQuery(sqlite3* db, const char* query, int* num_changes) {
-  int ret = NOTIFICATION_ERROR_NONE;
+  int ret = ERROR_NONE;
   sqlite3_stmt *stmt;
 
   if (db == nullptr || query == nullptr)
-    return NOTIFICATION_ERROR_INVALID_PARAMETER;
+    return ERROR_INVALID_PARAMETER;
 
   ret = sqlite3_prepare_v2(db, query, strlen(query), &stmt, nullptr);
   if (ret != SQLITE_OK) {
     /* LCOV_EXCL_START */
     LOGE("Sqlite3 err[%d][%s]", ret, sqlite3_errmsg(db));
-    return NOTIFICATION_ERROR_FROM_DB;
+    return ERROR_FROM_DB;
     /* LCOV_EXCL_STOP */
   }
 
@@ -111,11 +111,11 @@ int DBManager::ExecuteQuery(sqlite3* db, const char* query, int* num_changes) {
   if (ret == SQLITE_OK || ret == SQLITE_DONE) {
     if (num_changes != nullptr)
     *num_changes = sqlite3_changes(db);
-    ret = NOTIFICATION_ERROR_NONE;
+    ret = ERROR_NONE;
   } else {
     /* LCOV_EXCL_START */
     LOGE("Sqlite err[%d][%s]", ret, sqlite3_errmsg(db));
-    ret = NOTIFICATION_ERROR_FROM_DB;
+    ret = ERROR_FROM_DB;
     /* LCOV_EXCL_STOP */
   }
 
@@ -127,11 +127,11 @@ int DBManager::ExecuteQuery(const char* query, int* num_changes) {
   int ret;
 
   if (query == nullptr)
-    return NOTIFICATION_ERROR_INVALID_PARAMETER;
+    return ERROR_INVALID_PARAMETER;
 
   sqlite3* db = OpenDB();
   if (db == nullptr)
-    return NOTIFICATION_ERROR_FROM_DB;
+    return ERROR_FROM_DB;
 
   ret = ExecuteQuery(db, query, num_changes);
   CloseDB(db);
@@ -154,7 +154,7 @@ int DBManager::CheckDBIntegrity(void* user_data, int argc,
 }
 
 int DBManager::RecoverCorruptedDB(sqlite3* db) {
-  int ret = NOTIFICATION_ERROR_NONE;
+  int ret = ERROR_NONE;
   char* errmsg = nullptr;
 
   LOGI("DB is corrupted, start to recover corrupted db");
@@ -167,14 +167,14 @@ int DBManager::RecoverCorruptedDB(sqlite3* db) {
   if (ret != SQLITE_OK) {
     LOGE("Failed to open db[%d]", ret);
     unlink(DBPATH);
-    ret = NOTIFICATION_ERROR_FROM_DB;
+    ret = ERROR_FROM_DB;
     goto out;
   }
 
   ret = sqlite3_exec(db, CREATE_NOTIFICATION_TABLE, nullptr, nullptr, &errmsg);
   if (ret != SQLITE_OK) {
     LOGE("Failed to exec query[%d][%s]", ret, errmsg);
-    ret = NOTIFICATION_ERROR_FROM_DB;
+    ret = ERROR_FROM_DB;
   }
 
 out:
@@ -185,7 +185,7 @@ out:
 }
 
 int DBManager::InitializeDB() {
-  int ret = NOTIFICATION_ERROR_NONE;
+  int ret = ERROR_NONE;
   int sql_ret;
   sqlite3* db;
   char *errmsg = nullptr;
@@ -195,21 +195,21 @@ int DBManager::InitializeDB() {
                  SQLITE_OPEN_CREATE | SQLITE_OPEN_READWRITE, nullptr);
   if (sql_ret != SQLITE_OK) {
     LOGE("Failed to open db[%d]", ret);
-    ret = NOTIFICATION_ERROR_FROM_DB;
+    ret = ERROR_FROM_DB;
     goto out;
   }
 
   sql_ret = sqlite3_exec(db, CREATE_NOTIFICATION_TABLE, nullptr, nullptr, &errmsg);
   if (sql_ret != SQLITE_OK) {
     LOGE("Failed to exec sqlite[%d][%s]", ret, errmsg);
-    ret = NOTIFICATION_ERROR_FROM_DB;
+    ret = ERROR_FROM_DB;
     goto out;
   }
 
   sql_ret = sqlite3_exec(db, "PRAGMA foreign_keys = ON", NULL, NULL, NULL);
   if (sql_ret != SQLITE_OK) {
     LOGE("Failed to exec sqlite[%d][%s]", ret, errmsg);
-    ret = NOTIFICATION_ERROR_FROM_DB;
+    ret = ERROR_FROM_DB;
     goto out;
   }
 
@@ -217,7 +217,7 @@ int DBManager::InitializeDB() {
               CheckDBIntegrity, &is_db_corrupted, &errmsg);
   if (sql_ret != SQLITE_OK || is_db_corrupted) {
     LOGE("Failed to exec query[%d][%s]", sql_ret, errmsg);
-    ret = NOTIFICATION_ERROR_FROM_DB;
+    ret = ERROR_FROM_DB;
   }
 
 out:
@@ -253,7 +253,7 @@ void DBManager::CheckLimit(shared_ptr<item::AbstractItem> addedItem, sqlite3* db
   int uid = static_pointer_cast<IItemInfoInternal>(addedItem->GetInfo())->GetUid();
 
   ret = GetCount(addedItem->GetSenderAppId(), uid, &count);
-  if (ret != NOTIFICATION_ERROR_NONE || count <= NOTI_LIMIT)
+  if (ret != ERROR_NONE || count <= NOTI_LIMIT)
     return;
 
   query = sqlite3_mprintf("SELECT root_id FROM noti_ex_list WHERE uid = %d"
@@ -338,13 +338,13 @@ int DBManager::UpdateReceiverList
             uid);
   if (!query) {
     LOGE("OOM - sql query");
-    return NOTIFICATION_ERROR_OUT_OF_MEMORY;
+    return ERROR_OUT_OF_MEMORY;
   }
 
   ret = ExecuteQuery(db, query, nullptr);
   sqlite3_free(query);
 
-  if (ret != NOTIFICATION_ERROR_NONE)
+  if (ret != ERROR_NONE)
     return ret;
 
   for (auto& i : updatedItem->GetReceiverList()) {
@@ -358,16 +358,16 @@ int DBManager::UpdateReceiverList
 
     if (!query) {
       LOGE("OOM - sql query");
-      return NOTIFICATION_ERROR_OUT_OF_MEMORY;
+      return ERROR_OUT_OF_MEMORY;
     }
 
     ret = ExecuteQuery(db, query, nullptr);
     sqlite3_free(query);
 
-    if (ret != NOTIFICATION_ERROR_NONE)
+    if (ret != ERROR_NONE)
       return ret;
   }
-  return NOTIFICATION_ERROR_NONE;
+  return ERROR_NONE;
 }
 
 int DBManager::InsertNotification(list<shared_ptr<item::AbstractItem>> addedItem) {
@@ -376,24 +376,24 @@ int DBManager::InsertNotification(list<shared_ptr<item::AbstractItem>> addedItem
   sqlite3* db = OpenDB();
 
   if (db == nullptr)
-    return NOTIFICATION_ERROR_FROM_DB;
+    return ERROR_FROM_DB;
 
   if (sqlite3_exec(db, "BEGIN TRANSACTION", nullptr, nullptr, nullptr)) {
     LOGE("begin transaction error : %s", sqlite3_errmsg(db));
     CloseDB(db);
-    return NOTIFICATION_ERROR_FROM_DB;
+    return ERROR_FROM_DB;
   }
 
   for (auto& i : addedItem) {
     int uid = static_pointer_cast<IItemInfoInternal>(i->GetInfo())->GetUid();
     ret = GetCount(i->GetId(), i->GetSenderAppId(), uid, &count);
-    if (ret != NOTIFICATION_ERROR_NONE)
+    if (ret != ERROR_NONE)
        break;
 
     if (count > 0) {
       LOGE("already exist id :[%s] appid[%s]",
                i->GetId().c_str(), i->GetSenderAppId().c_str());
-      ret = NOTIFICATION_ERROR_ALREADY_EXIST_ID;
+      ret = ERROR_ALREADY_EXIST_ID;
       break;
     }
 
@@ -412,25 +412,25 @@ int DBManager::InsertNotification(list<shared_ptr<item::AbstractItem>> addedItem
 
     if (!query) {
       LOGE("OOM - sql query");
-      ret = NOTIFICATION_ERROR_OUT_OF_MEMORY;
+      ret = ERROR_OUT_OF_MEMORY;
       break;
     }
 
     ret = ExecuteQuery(db, query, nullptr);
     sqlite3_free(query);
-    if (ret != NOTIFICATION_ERROR_NONE)
+    if (ret != ERROR_NONE)
       break;
 
     ret = UpdateReceiverList(i, db);
-    if (ret != NOTIFICATION_ERROR_NONE)
+    if (ret != ERROR_NONE)
       break;
   }
 
-  if (ret == NOTIFICATION_ERROR_NONE) {
+  if (ret == ERROR_NONE) {
     CheckLimit(*(addedItem.begin()), db);
     if (sqlite3_exec(db, "END TRANSACTION", nullptr, nullptr, nullptr)) {
       LOGE("end transaction error : %s", sqlite3_errmsg(db));
-      ret = NOTIFICATION_ERROR_FROM_DB;
+      ret = ERROR_FROM_DB;
     }
   } else {
     if (sqlite3_exec(db, "ROLLBACK TRANSACTION", nullptr, nullptr, nullptr))
@@ -504,13 +504,13 @@ int DBManager::GetCount(const string& root_id, const string& app_id,
   }
   if (!query) {
     LOGE("OOM - sql query");
-    return NOTIFICATION_ERROR_OUT_OF_MEMORY;
+    return ERROR_OUT_OF_MEMORY;
   }
 
   db = OpenDB();
   if (db == nullptr) {
     sqlite3_free(query);
-    return NOTIFICATION_ERROR_FROM_DB;
+    return ERROR_FROM_DB;
   }
 
   ret = sqlite3_prepare_v2(db, query, strlen(query), &stmt, nullptr);
@@ -518,7 +518,7 @@ int DBManager::GetCount(const string& root_id, const string& app_id,
     LOGE("Failed to sqlite3_prepare [%d][%s]", ret,	sqlite3_errmsg(db));
     sqlite3_free(query);
     CloseDB(db);
-    return NOTIFICATION_ERROR_FROM_DB;
+    return ERROR_FROM_DB;
   }
   sqlite3_free(query);
 
@@ -530,7 +530,7 @@ int DBManager::GetCount(const string& root_id, const string& app_id,
 
   sqlite3_finalize(stmt);
   CloseDB(db);
-  return NOTIFICATION_ERROR_NONE;
+  return ERROR_NONE;
 }
 
 int DBManager::UpdateHideList(shared_ptr<item::AbstractItem> updatedItem,
@@ -545,7 +545,7 @@ int DBManager::UpdateHideList(shared_ptr<item::AbstractItem> updatedItem,
             static_pointer_cast<IItemInfoInternal>(updatedItem->GetInfo())->GetUid());
   if (!query) {
     LOGE("OOM - sql query");
-    return NOTIFICATION_ERROR_OUT_OF_MEMORY;
+    return ERROR_OUT_OF_MEMORY;
   }
 
   ret = ExecuteQuery(query, nullptr);
@@ -560,15 +560,15 @@ int DBManager::UpdateNotification(shared_ptr<item::AbstractItem> updatedItem) {
   int uid = static_pointer_cast<IItemInfoInternal>(updatedItem->GetInfo())->GetUid();
 
   ret = GetCount(updatedItem->GetId(), updatedItem->GetSenderAppId(), uid, &count);
-  if (ret != NOTIFICATION_ERROR_NONE)
+  if (ret != ERROR_NONE)
     return ret;
 
   if (count <= 0)
-    return NOTIFICATION_ERROR_NOT_EXIST_ID;
+    return ERROR_NOT_EXIST_ID;
 
   sqlite3* db = OpenDB();
   if (db == nullptr)
-    return NOTIFICATION_ERROR_FROM_DB;
+    return ERROR_FROM_DB;
 
   Bundle b = updatedItem->Serialize();
   query = sqlite3_mprintf("UPDATE noti_ex_list SET"
@@ -586,28 +586,28 @@ int DBManager::UpdateNotification(shared_ptr<item::AbstractItem> updatedItem) {
   if (!query) {
     LOGE("OOM - sql query");
     CloseDB(db);
-    return NOTIFICATION_ERROR_OUT_OF_MEMORY;
+    return ERROR_OUT_OF_MEMORY;
   }
 
   if (sqlite3_exec(db, "BEGIN TRANSACTION", nullptr, nullptr, nullptr)) {
     LOGE("begin transaction error : %s", sqlite3_errmsg(db));
     sqlite3_free(query);
     CloseDB(db);
-    return NOTIFICATION_ERROR_FROM_DB;
+    return ERROR_FROM_DB;
   }
 
   ret = ExecuteQuery(db, query, nullptr);
   sqlite3_free(query);
-  if (ret != NOTIFICATION_ERROR_NONE)
+  if (ret != ERROR_NONE)
     goto out;
 
   ret = UpdateReceiverList(updatedItem, db);
 
 out:
-  if (ret == NOTIFICATION_ERROR_NONE) {
+  if (ret == ERROR_NONE) {
     if (sqlite3_exec(db, "END TRANSACTION", nullptr, nullptr, nullptr)) {
       LOGE("end transaction error : %s", sqlite3_errmsg(db));
-      ret = NOTIFICATION_ERROR_FROM_DB;
+      ret = ERROR_FROM_DB;
     }
   } else {
     if (sqlite3_exec(db, "ROLLBACK TRANSACTION", nullptr, nullptr, nullptr))
@@ -734,12 +734,12 @@ int DBManager::DeleteNotification(shared_ptr<item::AbstractItem> deletedItem) {
             uid);
   if (!query) {
     LOGE("OOM - sql query");
-    return NOTIFICATION_ERROR_OUT_OF_MEMORY;
+    return ERROR_OUT_OF_MEMORY;
   }
 
   ret = ExecuteQuery(query, nullptr);
   sqlite3_free(query);
-  if (ret != NOTIFICATION_ERROR_NONE)
+  if (ret != ERROR_NONE)
     return ret;
 
   query = sqlite3_mprintf("DELETE FROM receiver_list"
@@ -748,7 +748,7 @@ int DBManager::DeleteNotification(shared_ptr<item::AbstractItem> deletedItem) {
                 uid);
   if (!query) {
     LOGE("OOM - sql query");
-    return NOTIFICATION_ERROR_OUT_OF_MEMORY;
+    return ERROR_OUT_OF_MEMORY;
   }
 
   ret = ExecuteQuery(query, nullptr);

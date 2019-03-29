@@ -42,7 +42,7 @@ DBusConnectionManager& DBusConnectionManager::GetInst() {
   int ret;
   if (w_inst.connection_ == nullptr) {
     ret = w_inst.Init();
-    if (ret != NOTIFICATION_ERROR_NONE)
+    if (ret != ERROR_NONE)
       THROW(ret);
   }
   return w_inst;
@@ -93,12 +93,12 @@ int DBusConnectionManager::Init() {
       LOGE("Failed to get dbus [%s]", error->message);
       g_error_free(error);
     }
-    return NOTIFICATION_ERROR_IO_ERROR;
+    return ERROR_IO_ERROR;
   }
 
   string appid = util::GetAppId();
   if (appid.empty())
-    return NOTIFICATION_ERROR_IO_ERROR;
+    return ERROR_IO_ERROR;
 
   if (IsDataProviderMaster(appid))
     is_DPM_ = true;
@@ -111,9 +111,9 @@ int DBusConnectionManager::Init() {
   if (!owner_id) {
     g_object_unref(connection_);
     LOGE("g_bus_own_name_on_connection, error");
-    return NOTIFICATION_ERROR_IO_ERROR;
+    return ERROR_IO_ERROR;
   }
-  return NOTIFICATION_ERROR_NONE;
+  return ERROR_NONE;
 }
 
 }  // namespace notification
