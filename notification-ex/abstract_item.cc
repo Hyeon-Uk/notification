@@ -373,13 +373,13 @@ list<string> AbstractItem::GetReceiverList() {
   return impl_->receiver_group_list_;
 }
 
-bool AbstractItem::CanReceive(std::string id) const {
-  if (impl_->receiver_group_list_.size() != 0 && !id.empty()) {
+bool AbstractItem::CanReceive(std::string receiver_group) const {
+  if (impl_->receiver_group_list_.size() != 0 && !receiver_group.empty()) {
     list<string>::iterator iter =
       std::find(impl_->receiver_group_list_.begin(),
-        impl_->receiver_group_list_.end(), id);
+        impl_->receiver_group_list_.end(), receiver_group);
 
-    if (iter != impl_->receiver_group_list_.end())
+    if (iter == impl_->receiver_group_list_.end())
       return false;
   }
 
