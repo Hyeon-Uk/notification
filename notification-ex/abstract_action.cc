@@ -28,6 +28,8 @@
 #define ABSTRACT_ACTION_IS_LOCAL_KEY "__ABSTRACT_ACTION_IS_LOCAL_KEY__"
 #define ABSTRACT_ACTION_EXTRA_KEY "__ABSTRACT_ACTION_EXTRA_KEY__"
 
+using namespace tizen_base;
+
 namespace notification {
 namespace item {
 AbstractAction::AbstractAction(bool isLocal)

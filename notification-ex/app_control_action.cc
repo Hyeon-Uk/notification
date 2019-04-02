@@ -28,6 +28,8 @@
 #define LOG_TAG "NOTIFICATION_EX"
 #define APPCONTROL_ACTION_KEY "__APPCONTROL_ACTION_KEY__"
 
+using namespace tizen_base;
+
 namespace notification {
 namespace item {
 
@@ -69,13 +71,13 @@ Bundle AppControlAction::Serialize() const {
   app_control_export_as_bundle(impl_->control_, &control_b);
   if (control_b == NULL) {
     LOGE("failed to get bundle from app_control");
-    return nullptr;
+    return {};
   }
 
   bundle_encode(control_b, &control_raw, &len);
   if (len <= 0) {
     LOGE("bundle encode failed");
-    return nullptr;
+    return {};
   }
 
   b = AbstractAction::Serialize();

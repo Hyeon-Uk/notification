@@ -22,6 +22,7 @@
 #include "notification-ex/visibility_action.h"
 #include "notification-ex/action_inflator.h"
 
+using namespace tizen_base;
 using namespace notification;
 using namespace notification::item;
 

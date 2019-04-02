@@ -32,6 +32,8 @@
 #define INPUT_SELECTOR_CONTENTS_KEY "__INPUT_SELECTOR_CONTENTS_KEY__"
 
 using namespace std;
+using namespace tizen_base;
+
 namespace notification {
 namespace item {
 

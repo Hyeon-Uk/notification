@@ -6,6 +6,7 @@
 
 #include "notification-ex/event_info_internal.h"
 
+using namespace tizen_base;
 using namespace notification;
 using namespace std;
 

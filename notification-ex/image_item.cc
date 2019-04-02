@@ -28,6 +28,8 @@
 #define LOG_TAG "NOTIFICATION_EX"
 #define IMAGE_PATH_KEY "__IMAGE_PATH_KEY__"
 
+using namespace tizen_base;
+
 namespace notification {
 namespace item {
 
