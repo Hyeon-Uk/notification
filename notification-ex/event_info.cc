@@ -90,6 +90,10 @@ string EventInfo::GetString(int type) {
       return "Count";
     case DeleteAll:
       return "DeleteAll";
+    case Register:
+      return "Register";
+    case Unregister:
+      return "Unregister";
     default:
       return "Custom" + std::to_string(Custom);
   }

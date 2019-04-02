@@ -60,6 +60,7 @@ class EXPORT_API Reporter : public IEventObserver {
   std::list<tizen_base::Bundle> OnRequest(const IEventInfo& info) override;
   int OnRequestNumber(const IEventInfo& info) override;
   static std::string GetPath();
+  virtual void OnRegister(const IEventInfo& info);
 
  private:
   class Impl;

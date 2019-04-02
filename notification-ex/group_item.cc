@@ -155,6 +155,24 @@ list<string> GroupItem::GetSharedPath() const {
   return ret;
 }
 
+void GroupItem::SetSharedPath() {
+  for (auto& i : impl_->children_list_)
+    i->SetSharedPath();
+}
+
+list<map<string, string>> GroupItem::GetPathMapList() const {
+  list<map<string, string>> path_map_list;
+
+  for (auto& i : impl_->children_list_) {
+    auto path_map_list_ = i->GetPathMapList();
+    for (auto& path_map : path_map_list_) {
+      path_map_list.push_back(move(path_map));
+    }
+  }
+
+  return path_map_list;
+}
+
 void GroupItem::AddChild(shared_ptr<AbstractItem> child) {
   impl_->children_list_.emplace_back(child);
 }

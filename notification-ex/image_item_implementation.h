@@ -37,6 +37,7 @@ class ImageItem::Impl {
  private:
   ImageItem* parent_;
   std::string image_path_;
+  std::string priv_image_path_;
 };
 
 }  // namespace item

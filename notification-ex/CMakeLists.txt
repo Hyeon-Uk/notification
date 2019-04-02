@@ -20,6 +20,9 @@ pkg_check_modules(notification-ex REQUIRED
 	pkgmgr-info
 	aul
 	uuid
+	libsmack
+	libtzplatform-config
+	security-manager
 )
 
 FOREACH(flag ${notification-ex_CFLAGS})
