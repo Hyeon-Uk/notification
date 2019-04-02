@@ -137,12 +137,14 @@ static const char *__last_index_of(const char *path, const char *search)
 	index = path + strlen(path) - search_len;
 
 	while (index >= path) {
-		for (i = 0; i < search_len; i++)
+		for (i = 0; i < search_len; i++) {
 			if (index[i] != search[i])
 				break;
+		}
 
 		if (i == search_len)
 			return index;
+
 		index--;
 	}
 
