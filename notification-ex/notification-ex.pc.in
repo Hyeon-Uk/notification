@@ -7,5 +7,5 @@ Name: notification-ex
 Description: Support development of the notification
 Version: @VERSION@
 Libs: -L${libdir} -lnotification-ex
-Cflags: -I${includedir}
+Cflags: -I${includedir} -I${includedir}/api
 cppflags: -I${includedir}

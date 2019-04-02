@@ -143,7 +143,7 @@ Header & package configuration files to support development of the notification.
 %license LICENSE
 
 %files -n %{name}-ex-devel
-%{_includedir}/notification-ex/*.h
+%{_includedir}/notification-ex/*
 %{_libdir}/pkgconfig/notification-ex.pc
 %attr(0644,root,root) %{_libdir}/libnotification-ex.so
 
