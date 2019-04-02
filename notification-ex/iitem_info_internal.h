@@ -36,6 +36,7 @@ class EXPORT_API IItemInfoInternal : public IItemInfo {
   virtual void AddHideViewer(std::string appid) = 0;
   virtual std::list<std::string> GetHideViewerList() const = 0;
   virtual void SetTime(time_t time) = 0;
+  virtual bool CanReceive(std::string receiver_group) const = 0;
 };
 
 }  // namespace item

@@ -382,30 +382,6 @@ list<string> AbstractItem::GetReceiverList() {
   return impl_->receiver_group_list_;
 }
 
-bool AbstractItem::CanReceive(std::string receiver_group) const {
-  if (impl_->receiver_group_list_.size() != 0 && !receiver_group.empty()) {
-    list<string>::iterator iter =
-      std::find(impl_->receiver_group_list_.begin(),
-        impl_->receiver_group_list_.end(), receiver_group);
-
-    if (iter == impl_->receiver_group_list_.end())
-      return false;
-  }
-
-  if (impl_->hide_viewer_list_.size() == 0)
-    return true;
-
-  string app_id = util::GetAppId();
-  list<string>::iterator iter =
-    std::find(impl_->hide_viewer_list_.begin(),
-    impl_->hide_viewer_list_.end(), app_id);
-
-  if (iter != impl_->hide_viewer_list_.end())
-    return false;
-
-  return true;
-}
-
 void AbstractItem::SetPolicy(int policy) {
   impl_->policy_ = policy;
 }

@@ -219,4 +219,15 @@ TEST_F(AbstractItemTest, SerializeDeserialize) {
   ASSERT_STREQ(app_id, "new_appid_1");
 }
 
+TEST_F(AbstractItemTest, ItemInfoCanReceive) {
+  TestItem item("test_id");
+
+  item.AddReceiver(ReceiverGroup::Panel);
+  item.AddReceiver(ReceiverGroup::LockScreen);
+
+  ASSERT_TRUE(std::static_pointer_cast<IItemInfoInternal>(item.GetInfo())->CanReceive(ReceiverGroup::Panel));
+  ASSERT_TRUE(std::static_pointer_cast<IItemInfoInternal>(item.GetInfo())->CanReceive(ReceiverGroup::LockScreen));
+  ASSERT_FALSE(std::static_pointer_cast<IItemInfoInternal>(item.GetInfo())->CanReceive(ReceiverGroup::Popup));
+}
+
 }  // namespace

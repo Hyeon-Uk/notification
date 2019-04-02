@@ -249,7 +249,6 @@ class EXPORT_API AbstractItem {
   void AddReceiver(std::string receiver_group);
   void RemoveReceiver(std::string receiver_group);
   std::list<std::string> GetReceiverList();
-  bool CanReceive(std::string receiver_group) const;
   void SetPolicy(int policy);
   int GetPolicy() const;
   std::string GetChannel() const;

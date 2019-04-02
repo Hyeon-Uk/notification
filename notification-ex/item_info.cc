@@ -20,6 +20,7 @@
 #include <algorithm>
 
 #include "notification-ex/item_info_internal.h"
+#include "notification-ex/ex_util.h"
 
 #ifdef LOG_TAG
 #undef LOG_TAG
@@ -80,6 +81,30 @@ void AbstractItem::Impl::ItemInfo::AddHideViewer(std::string appid) {
     return;
   }
   impl_->hide_viewer_list_.push_back(appid);
+}
+
+bool AbstractItem::Impl::ItemInfo::CanReceive(std::string receiver_group) const {
+  if (impl_->receiver_group_list_.size() != 0 && !receiver_group.empty()) {
+    list<string>::iterator iter =
+      std::find(impl_->receiver_group_list_.begin(),
+        impl_->receiver_group_list_.end(), receiver_group);
+
+    if (iter == impl_->receiver_group_list_.end())
+      return false;
+  }
+
+  if (impl_->hide_viewer_list_.size() == 0)
+    return true;
+
+  string app_id = util::GetAppId();
+  list<string>::iterator iter =
+    std::find(impl_->hide_viewer_list_.begin(),
+    impl_->hide_viewer_list_.end(), app_id);
+
+  if (iter != impl_->hide_viewer_list_.end())
+    return false;
+
+  return true;
 }
 
 std::list<std::string> AbstractItem::Impl::ItemInfo::GetHideViewerList() const {

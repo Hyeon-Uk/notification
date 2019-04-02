@@ -138,7 +138,8 @@ list<Bundle> Manager::OnRequest(const IEventInfo& info) {
   list<shared_ptr<item::AbstractItem>> item_list = OnRequestEvent(info);
   list<Bundle> serialized_list;
   for (auto& i : item_list) {
-    if (i->CanReceive(impl_->receiver_group_))
+    if (std::static_pointer_cast<IItemInfoInternal>(i->GetInfo())
+          ->CanReceive(impl_->receiver_group_))
       serialized_list.push_back(i->Serialize());
   }
   return serialized_list;
@@ -160,7 +161,8 @@ void Manager::OnEvent(const IEventInfo& info, list<Bundle> serialized) {
       list<shared_ptr<item::AbstractItem>> added;
       for (auto& i : serialized) {
         gen_item = ItemInflator::Create(i);
-        if (gen_item->CanReceive(impl_->receiver_group_))
+        if (std::static_pointer_cast<IItemInfoInternal>(gen_item->GetInfo())
+              ->CanReceive(impl_->receiver_group_))
           added.emplace_back(gen_item);
       }
       if (added.size() > 0)
@@ -170,7 +172,8 @@ void Manager::OnEvent(const IEventInfo& info, list<Bundle> serialized) {
     case EventInfo::Update: {
       for (auto& i : serialized) {
         gen_item = ItemInflator::Create(i);
-        if (gen_item->CanReceive(impl_->receiver_group_))
+        if (std::static_pointer_cast<IItemInfoInternal>(gen_item->GetInfo())
+              ->CanReceive(impl_->receiver_group_))
           OnUpdate(info, gen_item);
       }
       break;
@@ -178,7 +181,8 @@ void Manager::OnEvent(const IEventInfo& info, list<Bundle> serialized) {
     case EventInfo::Delete: {
       for (auto& i : serialized) {
         gen_item = ItemInflator::Create(i);
-        if (gen_item->CanReceive(impl_->receiver_group_))
+        if (std::static_pointer_cast<IItemInfoInternal>(gen_item->GetInfo())
+              ->CanReceive(impl_->receiver_group_))
           OnDelete(info, gen_item);
       }
       break;
