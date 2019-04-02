@@ -127,7 +127,7 @@ AbstractItem::~AbstractItem() = default;
 
 Bundle AbstractItem::Serialize() const {
   Bundle b;
-  struct tm* timeinfo;
+  struct tm timeinfo;
   char buf[80] = {0,};
 
   if (impl_->uid_ == 0)
@@ -145,8 +145,8 @@ Bundle AbstractItem::Serialize() const {
   b.Add(ABSTRACT_ITEM_UID_KEY, to_string(impl_->uid_));
   b.Add(ABSTRACT_ITEM_TAG_KEY, impl_->tag_);
 
-  timeinfo = localtime(&impl_->time_);
-  strftime (buf, sizeof(buf), "%s", timeinfo);
+  localtime_r(&impl_->time_, &timeinfo);
+  strftime (buf, sizeof(buf), "%s", &timeinfo);
   b.Add(ABSTRACT_ITEM_TIME_KEY, string(buf));
 
   if (!impl_->can_receive_.empty())

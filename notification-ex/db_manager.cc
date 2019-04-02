@@ -280,6 +280,7 @@ void DBManager::CheckLimit(shared_ptr<item::AbstractItem> addedItem, sqlite3* db
                           addedItem->GetSenderAppId().c_str(), uid);
   if (query == nullptr) {
     LOGE("OOM - sql query");
+    sqlite3_finalize(stmt);
     return;
   }
 

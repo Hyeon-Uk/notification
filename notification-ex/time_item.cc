@@ -59,15 +59,15 @@ int TimeItem::GetType() const {
 
 Bundle TimeItem::Serialize() const {
   Bundle b;
-  struct tm* timeinfo;
+  struct tm timeinfo;
   char buf[80] = {0,};
 
   b = AbstractItem::Serialize();
 
   //timt_t to tm
-  timeinfo = localtime(&impl_->time_);
+  localtime_r(&impl_->time_, &timeinfo);
   //tm to str
-  strftime (buf, sizeof(buf), "%s", timeinfo);
+  strftime (buf, sizeof(buf), "%s", &timeinfo);
   b.Add(TIME_KEY, std::string(buf));
 
   return b;
