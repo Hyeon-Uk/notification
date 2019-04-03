@@ -23,8 +23,14 @@
 extern "C" {
 #endif
 
+#define RECEIVERGROUP_PANEL = "tizen.org/receiver/panel";
+#define RECEIVERGROUP_TICKER = "tizen.org/receiver/ticker";
+#define RECEIVERGROUP_LOCKSCREEN = "tizen.org/receiver/lockscreen";
+#define RECEIVERGROUP_INDICATOR = "tizen.org/receiver/indicator";
+#define RECEIVERGROUP_POPUP = "tizen.org/receiver/popup";
+
 typedef enum _noti_ex_item_type {
-	NOTI_EX_ITEM_TYPE_NULL_OBJECT,
+	NOTI_EX_ITEM_TYPE_NULL,
 	NOTI_EX_ITEM_TYPE_TEXT,
 	NOTI_EX_ITEM_TYPE_IMAGE,
 	NOTI_EX_ITEM_TYPE_ICON,
@@ -37,8 +43,15 @@ typedef enum _noti_ex_item_type {
 	NOTI_EX_ITEM_TYPE_ENTRY,
 	NOTI_EX_ITEM_TYPE_PROGRESS,
 	NOTI_EX_ITEM_TYPE_TIME,
-	NOTI_EX_ITEM_TYPE_CUSTOM = 100
+	NOTI_EX_ITEM_TYPE_CUSTOM = 100,
 } noti_ex_item_type_e;
+
+typedef enum _noti_ex_action_type {
+	NOTI_EX_ACTION_TYPE_NULL,
+	NOTI_EX_ACTION_TYPE_APP_CONTROL,
+	NOTI_EX_ACTION_TYPE_VISIBILITY,
+	NOTI_EX_ACTION_TYPE_CUSTOM = 100,
+} noti_ex_action_type;
 
 typedef enum _noti_ex_item_policy {
 	NOTI_EX_ITEM_POLICY_NONE = 0,

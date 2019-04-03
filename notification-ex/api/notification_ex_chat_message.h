@@ -28,13 +28,14 @@ typedef enum _noti_ex_item_chat_message_type {
 	NOTI_EX_ITEM_CHAT_MESSAGE_TYPE_SENDER,
 } noti_ex_item_chat_message_type_e;
 
-int noti_ex_item_chat_message_create(noti_ex_item_h *handle, const char *id, noti_ex_item_h name,
-		noti_ex_item_h text, noti_ex_item_h image, noti_ex_item_h time, noti_ex_item_chat_message_type_e message_type);
-int noti_ex_item_chat_message_get_name(const noti_ex_item_h *text);
-int noti_ex_item_chat_message_get_text(const noti_ex_item_h *text);
-int noti_ex_item_chat_message_get_image(const noti_ex_item_h *image);
-int noti_ex_item_chat_message_get_time(const noti_ex_item_h *time);
-int noti_ex_item_chat_message_get_message_type(noti_ex_item_chat_message_type_e *message_type);
+int noti_ex_item_chat_message_create(noti_ex_item_h *handle, const char *id,
+		noti_ex_item_h name, noti_ex_item_h text, noti_ex_item_h image,
+		noti_ex_item_h time, noti_ex_item_chat_message_type_e message_type);
+int noti_ex_item_chat_message_get_name(noti_ex_item_h handle, noti_ex_item_h *name);
+int noti_ex_item_chat_message_get_text(noti_ex_item_h handle, noti_ex_item_h *text);
+int noti_ex_item_chat_message_get_image(noti_ex_item_h handle, noti_ex_item_h *image);
+int noti_ex_item_chat_message_get_time(noti_ex_item_h handle, noti_ex_item_h *time);
+int noti_ex_item_chat_message_get_message_type(noti_ex_item_h handle, noti_ex_item_chat_message_type_e *message_type);
 
 #ifdef __cplusplus
 }

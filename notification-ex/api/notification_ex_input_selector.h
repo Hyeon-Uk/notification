@@ -25,7 +25,7 @@ extern "C" {
 
 int noti_ex_item_input_selector_create(noti_ex_item_h *handle, const char *id);
 int noti_ex_item_input_selector_get_contents(noti_ex_item_h handle, char ***list, int *count);
-int noti_ex_item_input_selector_set_contents(const char **contents, int count);
+int noti_ex_item_input_selector_set_contents(noti_ex_item_h handle, const char **contents, int count);
 
 #ifdef __cplusplus
 }
