@@ -601,7 +601,8 @@ typedef void* noti_ex_style_h;
 }
  * @endcode
  */
-int noti_ex_style_create(noti_ex_style_h *handle, noti_ex_color_h color, noti_ex_padding_h padding, noti_ex_geometry_h geometry);
+int noti_ex_style_create(noti_ex_style_h *handle, noti_ex_color_h color,
+		noti_ex_padding_h padding, noti_ex_geometry_h geometry);
 
 /**
  * @brief Releases the notification_ex style handle.

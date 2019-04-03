@@ -34,7 +34,7 @@ extern "C" {
  * @param[out] handle The notification_ex item handle
  * @param[in] id The id of notification_ex item
  * @param[in] text The text of text item
- * @param[in] hyper_link The hyperlink of text item
+ * @param[in] hyperlink The hyperlink of text item
  * @return #NOTI_EX_ERROR_NONE On success, other value on failure
  * @retval #NOTI_EX_ERROR_NONE Success
  * @retval #NOTI_EX_ERROR_INVALID_PARAMETER Invalid parameter
@@ -53,7 +53,7 @@ extern "C" {
 }
  * @endcode
  */
-int noti_ex_item_text_create(noti_ex_item_h *handle, const char *id, const char *text, const char *hyper_link);
+int noti_ex_item_text_create(noti_ex_item_h *handle, const char *id, const char *text, const char *hyperlink);
 
 /**
  * @brief Sets the text contents of the text item.

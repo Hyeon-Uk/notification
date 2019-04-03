@@ -195,7 +195,7 @@ int noti_ex_event_info_get_channel(noti_ex_event_info_h handle, char **channel);
 int noti_ex_event_info_get_item_id(noti_ex_event_info_h handle, char **item_id);
 
 /**
- * @brief Gets the id of reqest for an event.
+ * @brief Gets the id of request for an event.
  * @since_tizen 5.5
  * @param[in] handle The notification_ex event info handle
  * @param[out] req_id The id of reqeust for event
