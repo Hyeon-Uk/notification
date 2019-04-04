@@ -24,7 +24,57 @@
 extern "C" {
 #endif
 
+/**
+ * @brief Creates the notification_ex action handle to control visibility.
+ * @details The notification_ex can define the action with noti_ex_action_h.
+ *          If it is necessary to control visibility of notification_ex item,
+ *          notification_ex action handle have to be made as visibility action. .
+ * @since_tizen 5.5
+ * @remarks @a handle must be released using noti_ex_action_destroy().
+ * @param[out] handle The notification_ex action handle
+ * @param[in] extra The extra data
+ * @return #NOTI_EX_ERROR_NONE On success, other value on failure
+ * @retval #NOTI_EX_ERROR_NONE Success
+ * @retval #NOTI_EX_ERROR_INVALID_PARAMETER Invalid parameter
+ * @retval #NOTI_EX_ERROR_OUT_OF_MEMORY out of memory
+ * @see #noti_ex_action_h
+ * @see #noti_ex_action_destroy
+ * @par Sample code:
+ * @code
+#include <notification_ex_visibility_action.h>
+
+{
+	int ret;
+	noti_ex_action_h visibility_action = NULL;
+
+	ret = noti_ex_action_visibility_create(&visibility_action, NULL);
+}
+ * @endcode
+ */
 int noti_ex_action_visibility_create(noti_ex_action_h *handle, const char *extra);
+
+/**
+ * @brief Sets the visible state for notification_ex item.
+ * @since_tizen 5.5
+ * @param[in] handle The notification_ex action handle
+ * @param[in] id The id of notification_ex item
+ * @param[in] visible The visible state
+ * @return #NOTI_EX_ERROR_NONE On success, other value on failure
+ * @retval #NOTI_EX_ERROR_NONE Success
+ * @retval #NOTI_EX_ERROR_INVALID_PARAMETER Invalid parameter
+ * @see #noti_ex_action_h
+ * @see #noti_ex_action_visibility_create
+ * @par Sample code:
+ * @code
+#include <notification_ex_visibility_action.h>
+
+{
+	int ret;
+
+	ret = noti_ex_action_visibility_set(&visibility_action, "item_id", true);
+}
+ * @endcode
+ */
 int noti_ex_action_visibility_set(noti_ex_action_h handle, const char *id, bool visible);
 
 #ifdef __cplusplus

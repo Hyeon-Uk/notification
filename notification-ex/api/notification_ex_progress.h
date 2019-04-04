@@ -23,10 +23,131 @@
 extern "C" {
 #endif
 
+/**
+ * @brief Creates the notification_ex item handle with progress.
+ * @details The notification_ex is made with notification_ex items.
+ *          If the user wants to be displayed with progress,
+ *          notification_ex handle have to be made as progress item.
+ * @since_tizen 5.5
+ * @remarks @a handle must be released using noti_ex_item_destroy().
+ * @param[out] handle The notification_ex item handle
+ * @param[in] id The id of notification_ex item
+ * @param[in] min The minimun value of progress
+ * @param[in] current The current value of progress
+ * @param[in] max The maximum value of progress
+ * @return #NOTI_EX_ERROR_NONE On success, other value on failure
+ * @retval #NOTI_EX_ERROR_NONE Success
+ * @retval #NOTI_EX_ERROR_INVALID_PARAMETER Invalid parameter
+ * @retval #NOTI_EX_ERROR_OUT_OF_MEMORY out of memory
+ * @see #noti_ex_item_h
+ * @see #noti_ex_item_destroy
+ * @par Sample code:
+ * @code
+#include <notification_ex_progress.h>
+
+{
+	int ret;
+	noti_ex_item_h progress_item = NULL;
+
+	ret = noti_ex_item_progress_create(&progress_item, "progress_id", 0, 50, 100);
+}
+ * @endcode
+ */
 int noti_ex_item_progress_create(noti_ex_item_h *handle, const char *id, float min, float current, float max);
+
+/**
+ * @brief Gets the current value of progress
+ * @since_tizen 5.5
+ * @param[in] handle The notification_ex item handle
+ * @param[out] current The current value of progress
+ * @return #NOTI_EX_ERROR_NONE On success, other value on failure
+ * @retval #NOTI_EX_ERROR_NONE Success
+ * @retval #NOTI_EX_ERROR_INVALID_PARAMETER Invalid parameter
+ * @see #noti_ex_item_h
+ * @see #noti_ex_item_progress_create
+ * @par Sample code:
+ * @code
+#include <notification_ex_progress.h>
+
+{
+	int ret;
+    float current;
+
+	ret = noti_ex_item_progress_get_current(progress_item, &current);
+}
+ * @endcode
+ */
 int noti_ex_item_progress_get_current(noti_ex_item_h handle, float *current);
+
+/**
+ * @brief Sets the current value of progress
+ * @since_tizen 5.5
+ * @param[in] handle The notification_ex item handle
+ * @param[in] current The current value of progress
+ * @return #NOTI_EX_ERROR_NONE On success, other value on failure
+ * @retval #NOTI_EX_ERROR_NONE Success
+ * @retval #NOTI_EX_ERROR_INVALID_PARAMETER Invalid parameter
+ * @see #noti_ex_item_h
+ * @see #noti_ex_item_progress_create
+ * @par Sample code:
+ * @code
+#include <notification_ex_progress.h>
+
+{
+	int ret;
+
+	ret = noti_ex_item_progress_set_current(progress_item, 70);
+}
+ * @endcode
+ */
 int noti_ex_item_progress_set_current(noti_ex_item_h handle, float current);
+
+/**
+ * @brief Gets the minimum value of progress
+ * @since_tizen 5.5
+ * @param[in] handle The notification_ex item handle
+ * @param[out] min The minimum value of progress
+ * @return #NOTI_EX_ERROR_NONE On success, other value on failure
+ * @retval #NOTI_EX_ERROR_NONE Success
+ * @retval #NOTI_EX_ERROR_INVALID_PARAMETER Invalid parameter
+ * @see #noti_ex_item_h
+ * @see #noti_ex_item_progress_create
+ * @par Sample code:
+ * @code
+#include <notification_ex_progress.h>
+
+{
+	int ret;
+    float min;
+
+	ret = noti_ex_item_progress_get_min(progress_item, &min);
+}
+ * @endcode
+ */
 int noti_ex_item_progress_get_min(noti_ex_item_h handle, float *min);
+
+/**
+ * @brief Gets the maximum value of progress
+ * @since_tizen 5.5
+ * @param[in] handle The notification_ex item handle
+ * @param[out] max The maximum value of progress
+ * @return #NOTI_EX_ERROR_NONE On success, other value on failure
+ * @retval #NOTI_EX_ERROR_NONE Success
+ * @retval #NOTI_EX_ERROR_INVALID_PARAMETER Invalid parameter
+ * @see #noti_ex_item_h
+ * @see #noti_ex_item_progress_create
+ * @par Sample code:
+ * @code
+#include <notification_ex_progress.h>
+
+{
+	int ret;
+    float max;
+
+	ret = noti_ex_item_progress_get_max(progress_item, &max);
+}
+ * @endcode
+ */
 int noti_ex_item_progress_get_max(noti_ex_item_h handle, float *max);
 
 #ifdef __cplusplus

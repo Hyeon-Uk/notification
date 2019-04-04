@@ -21,24 +21,145 @@
 extern "C" {
 #endif
 
+/**
+ * @brief Enumeration for the type of notifrication_ex event.
+ * @since_tizen 5.5
+ */
 typedef enum _noti_ex_event_info_type {
-	Post,
-	Update,
-	Delete,
-	Get,
-	Error,
+	NOTI_EX_EVENT_POST, /**< Post the notification */
+	NOTI_EX_EVENT_UPDATE, /**< Update the notification */
+	NOTI_EX_EVENT_DELETE, /**< Delete the notification */
+	NOTI_EX_EVENT_GET, /**< Get the notification */
+	NOTI_EX_EVENT_ERROR, /**< Error occurs */
 } noti_ex_event_info_type_e;
 
+/**
+ * @brief The handle for the notification_ex event information.
+ * @since_tizen 5.5
+ */
 typedef void* noti_ex_event_info_h;
 
-int noti_ex_event_info_create(noti_ex_event_info_h *handle,
-		noti_ex_event_info_type_e type, const char *owner,
-		const char *channel, const char *item_id);
-int noti_ex_event_info_destroy(noti_ex_event_info_h handle);
+/**
+ * @brief Gets the type of event.
+ * @since_tizen 5.5
+ * @param[in] handle The notification_ex event info handle
+ * @param[out] event_type The type of event
+ * @return #NOTI_EX_ERROR_NONE On success, other value on failure
+ * @retval #NOTI_EX_ERROR_NONE Success
+ * @retval #NOTI_EX_ERROR_INVALID_PARAMETER Invalid parameter
+ * @see #noti_ex_event_info_h
+ * @see #noti_ex_event_info_create
+ * @par Sample code:
+ * @code
+#include <notification_ex_event_info.h>
+
+{
+	int ret;
+	noti_ex_event_info_type_e type;
+
+	ret = noti_ex_event_info_get_event_type(event_handle, &type);
+}
+ * @endcode
+ */
 int noti_ex_event_info_get_event_type(noti_ex_event_info_h handle, noti_ex_event_info_type_e *event_type);
+
+/**
+ * @brief Gets the owner of event.
+ * @since_tizen 5.5
+ * @remarks @a owner must be released using free().
+ * @param[in] handle The notification_ex event info handle
+ * @param[out] owner The owner of event
+ * @return #NOTI_EX_ERROR_NONE On success, other value on failure
+ * @retval #NOTI_EX_ERROR_NONE Success
+ * @retval #NOTI_EX_ERROR_INVALID_PARAMETER Invalid parameter
+ * @see #noti_ex_event_info_h
+ * @see #noti_ex_event_info_create
+ * @par Sample code:
+ * @code
+#include <notification_ex_event_info.h>
+
+{
+	int ret;
+	char *owner = NULL;
+
+	ret = noti_ex_event_info_get_owner(event_handle, &owner);
+}
+ * @endcode
+ */
 int noti_ex_event_info_get_owner(noti_ex_event_info_h handle, char **owner);
+
+/**
+ * @brief Gets the channel of event.
+ * @since_tizen 5.5
+ * @remarks @a channel must be released using free().
+ * @param[in] handle The notification_ex event info handle
+ * @param[out] channel The channel of event
+ * @return #NOTI_EX_ERROR_NONE On success, other value on failure
+ * @retval #NOTI_EX_ERROR_NONE Success
+ * @retval #NOTI_EX_ERROR_INVALID_PARAMETER Invalid parameter
+ * @see #noti_ex_event_info_h
+ * @see #noti_ex_event_info_create
+ * @par Sample code:
+ * @code
+#include <notification_ex_event_info.h>
+
+{
+	int ret;
+	char *channel = NULL;
+
+	ret = noti_ex_event_info_get_channel(event_handle, &channel);
+}
+ * @endcode
+ */
 int noti_ex_event_info_get_channel(noti_ex_event_info_h handle, char **channel);
+
+/**
+ * @brief Gets the id of notification_ex item.
+ * @since_tizen 5.5
+ * @remarks @a item_id must be released using free().
+ * @param[in] handle The notification_ex event info handle
+ * @param[out] item_id The id of notification_ex item
+ * @return #NOTI_EX_ERROR_NONE On success, other value on failure
+ * @retval #NOTI_EX_ERROR_NONE Success
+ * @retval #NOTI_EX_ERROR_INVALID_PARAMETER Invalid parameter
+ * @see #noti_ex_event_info_h
+ * @see #noti_ex_event_info_create
+ * @par Sample code:
+ * @code
+#include <notification_ex_event_info.h>
+
+{
+	int ret;
+	char *item_id = NULL;
+
+	ret = noti_ex_event_info_get_item_id(event_handle, &item_id);
+}
+ * @endcode
+ */
 int noti_ex_event_info_get_item_id(noti_ex_event_info_h handle, char **item_id);
+
+/**
+ * @brief Gets the id of reqest for event
+ * @since_tizen 5.5
+ * @param[in] handle The notification_ex event info handle
+ * @param[out] req_id The id of reqeust for event
+ * @return #NOTI_EX_ERROR_NONE On success, other value on failure
+ * @retval #NOTI_EX_ERROR_NONE Success
+ * @retval #NOTI_EX_ERROR_INVALID_PARAMETER Invalid parameter
+ * @see #noti_ex_event_info_h
+ * @see #noti_ex_event_info_create
+ * @par Sample code:
+ * @code
+#include <notification_ex_event_info.h>
+
+{
+	int ret;
+	int reqeust_id;
+
+	ret = noti_ex_event_info_get_request_id(event_handle, &reqeust_id);
+}
+ * @endcode
+ */
 int noti_ex_event_info_get_request_id(noti_ex_event_info_h handle, int *req_id);
 
 #ifdef __cplusplus

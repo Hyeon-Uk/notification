@@ -24,8 +24,89 @@
 extern "C" {
 #endif
 
+/**
+ * @brief Creates the notification_ex action handle with app control handle.
+ * @details The notification_ex can define the action with noti_ex_action_h.
+ *          If it is necessary to use app control handle for action,
+ *          app control handle must be set in notification_ex action handle.
+ * @since_tizen 5.5
+ * @remarks @a handle must be released using noti_ex_action_destroy().
+ * @param[out] handle The notification_ex action handle
+ * @param[in] app_control The app control handle
+ * @param[in] extra The extra data
+ * @return #NOTI_EX_ERROR_NONE On success, other value on failure
+ * @retval #NOTI_EX_ERROR_NONE Success
+ * @retval #NOTI_EX_ERROR_INVALID_PARAMETER Invalid parameter
+ * @retval #NOTI_EX_ERROR_OUT_OF_MEMORY out of memory
+ * @see #noti_ex_action_h
+ * @see #noti_ex_action_destroy
+ * @par Sample code:
+ * @code
+#include <notification_ex_app_control_action.h>
+
+{
+	int ret;
+	app_control_h app_control = NULL;
+	noti_ex_action_h appcontrol_action = NULL;
+
+	app_control_create(&app_control);
+	app_control_set_app_id(app_control, "temp_appid");
+
+	ret = noti_ex_action_app_control_create(&appcontrol_action, app_control, NULL);
+}
+ * @endcode
+ */
 int noti_ex_action_app_control_create(noti_ex_action_h *handle, app_control_h app_control, const char *extra);
+
+/**
+ * @brief Sets the app control handle for notification_ex action.
+ * @since_tizen 5.5
+ * @param[in] handle The notification_ex action handle
+ * @param[in] app_control The app control handle
+ * @return #NOTI_EX_ERROR_NONE On success, other value on failure
+ * @retval #NOTI_EX_ERROR_NONE Success
+ * @retval #NOTI_EX_ERROR_INVALID_PARAMETER Invalid parameter
+ * @see #noti_ex_action_h
+ * @see #noti_ex_action_app_control_create
+ * @par Sample code:
+ * @code
+#include <notification_ex_app_control_action.h>
+
+{
+	int ret;
+	app_control_h app_control = NULL;
+
+	app_control_create(&app_control);
+	app_control_set_app_id(app_control, "new_appid");
+
+	ret = noti_ex_action_app_control_set(appcontrol_action, app_control);
+}
+ * @endcode
+ */
 int noti_ex_action_app_control_set(noti_ex_action_h handle, app_control_h app_control);
+
+/**
+ * @brief Gets the app control handle from notification_ex action.
+ * @since_tizen 5.5
+ * @param[in] handle The notification_ex action handle
+ * @param[out] app_control The app control handle
+ * @return #NOTI_EX_ERROR_NONE On success, other value on failure
+ * @retval #NOTI_EX_ERROR_NONE Success
+ * @retval #NOTI_EX_ERROR_INVALID_PARAMETER Invalid parameter
+ * @see #noti_ex_action_h
+ * @see #noti_ex_action_app_control_create
+ * @par Sample code:
+ * @code
+#include <notification_ex_app_control_action.h>
+
+{
+	int ret;
+	app_control_h app_control = NULL;
+
+	ret = noti_ex_action_app_control_get(appcontrol_action, &app_control);
+}
+ * @endcode
+ */
 int noti_ex_action_app_control_get(noti_ex_action_h handle, app_control_h *app_control);
 
 #ifdef __cplusplus

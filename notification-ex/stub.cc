@@ -43,6 +43,11 @@
 #include "notification-ex/checkbox_item.h"
 #include "notification-ex/entry_item.h"
 #include "notification-ex/group_item.h"
+#include "notification-ex/input_selector_item.h"
+#include "notification-ex/abstract_item.h"
+#include "notification-ex/progress_item.h"
+#include "notification-ex/time_item.h"
+#include "notification-ex/visibility_action.h"
 
 #ifdef LOG_TAG
 #undef LOG_TAG
@@ -149,21 +154,21 @@ extern "C" EXPORT_API int noti_ex_item_chat_message_create(
     noti_ex_item_h *handle, const char *id, noti_ex_item_h name,
     noti_ex_item_h text, noti_ex_item_h image, noti_ex_item_h time,
     noti_ex_item_chat_message_type_e message_type) {
-// To do
-#if 0
-  ChatMessageItem* p;
-
-  if (handle == nullptr || message_type < NOTI_EX_ITEM_CHAT_MESSAGE_TYPE_USER
-      || message_type > NOTI_EX_ITEM_CHAT_MESSAGE_TYPE_SENDER) {
+  if (handle == nullptr || message_type > NOTI_EX_ITEM_CHAT_MESSAGE_TYPE_SENDER) {
     LOGE("Invalid parameter");
     return NOTI_EX_ERROR_INVALID_PARAMETER;
   }
 
-  p = new (std::nothrow) ChatMessageItem(id,
-                static_cast<TextItem*>(name),
-                static_cast<TextItem*>(text),
-                static_cast<ImageItem*>(image),
-                static_cast<TimeItem*>(time),
+  TextItem* name_ = static_cast<TextItem*>(name);
+  TextItem* text_ = static_cast<TextItem*>(text);
+  ImageItem* image_ = static_cast<ImageItem*>(image);
+  TimeItem* time_ = static_cast<TimeItem*>(time);
+
+  auto* p = new (std::nothrow) ChatMessageItem(id,
+                static_cast<std::shared_ptr<TextItem>>(name_),
+                static_cast<std::shared_ptr<TextItem>>(text_),
+                static_cast<std::shared_ptr<ImageItem>>(image_),
+                static_cast<std::shared_ptr<TimeItem>>(time_),
                 static_cast<ChatMessageItem::Type>((int)message_type));
   if (p == nullptr) {
     LOGE("Out-of-memory");
@@ -173,9 +178,6 @@ extern "C" EXPORT_API int noti_ex_item_chat_message_create(
   *handle = p;
 
   return NOTI_EX_ERROR_NONE;
-#else
-  return NOTI_EX_ERROR_NONE;
-#endif
 }
 
 extern "C" EXPORT_API int noti_ex_item_chat_message_get_name(
@@ -237,9 +239,8 @@ extern "C" EXPORT_API int noti_ex_item_chat_message_get_message_type(
     return NOTI_EX_ERROR_INVALID_PARAMETER;
   }
 
-  // To do
-  //ChatMessageItem* p = static_cast<ChatMessageItem*>(handle);
-  //*message_type = p->GetMessageType();
+  ChatMessageItem* p = static_cast<ChatMessageItem*>(handle);
+  *message_type = (noti_ex_item_chat_message_type_e)(p->GetMessageType());
 
   return NOTI_EX_ERROR_NONE;
 }
@@ -460,9 +461,10 @@ extern "C" EXPORT_API int noti_ex_item_group_add_child(noti_ex_item_h handle,
     return NOTI_EX_ERROR_INVALID_PARAMETER;
   }
 
-  // To do
-  //GroupItem* p = static_cast<GroupItem*>(handle);
-  //p->AddChild(static_cast<AbstractItem*>(child));
+  GroupItem* p = static_cast<GroupItem*>(handle);
+
+  AbstractItem* child_ = static_cast<AbstractItem*>(child);
+  p->AddChild(static_cast<std::shared_ptr<AbstractItem>>(child_));
 
   return NOTI_EX_ERROR_NONE;
 }
@@ -482,6 +484,13 @@ extern "C" EXPORT_API int noti_ex_item_group_remove_child(noti_ex_item_h handle,
 
 extern "C" EXPORT_API int noti_ex_item_group_foreach(
     noti_ex_item_group_foreach_cb callback, void *data) {
+  if (callback == nullptr) {
+    LOGE("Invalid parameter");
+    return NOTI_EX_ERROR_INVALID_PARAMETER;
+  }
+
+  // To do
+
   return 0;
 }
 
@@ -530,188 +539,562 @@ extern "C" EXPORT_API int noti_ex_item_image_get_image_path(
 
 extern "C" EXPORT_API int noti_ex_item_input_selector_create(
     noti_ex_item_h *handle, const char *id) {
-  return 0;
+  InputSelectorItem* p;
+
+  if (handle == nullptr) {
+    LOGE("Invalid parameter");
+    return NOTI_EX_ERROR_INVALID_PARAMETER;
+  }
+
+  if (id)
+    p = new (std::nothrow) InputSelectorItem(id);
+  else
+    p = new (std::nothrow) InputSelectorItem();
+
+  if (p == nullptr) {
+    LOGE("Out-of-memory");
+    return NOTI_EX_ERROR_OUT_OF_MEMORY;
+  }
+
+  *handle = p;
+
+  return NOTI_EX_ERROR_NONE;
 }
 
 extern "C" EXPORT_API int noti_ex_item_input_selector_get_contents(
     noti_ex_item_h handle, char ***list, int *count) {
-  return 0;
+  if (handle == nullptr || list == nullptr || count == nullptr) {
+    LOGE("Invalid parameter");
+    return NOTI_EX_ERROR_INVALID_PARAMETER;
+  }
+
+  // To do
+
+  return NOTI_EX_ERROR_NONE;
 }
 
 extern "C" EXPORT_API int noti_ex_item_input_selector_set_contents(
     noti_ex_item_h handle, const char **contents, int count) {
-  return 0;
+  if (handle == nullptr || contents == nullptr) {
+    LOGE("Invalid parameter");
+    return NOTI_EX_ERROR_INVALID_PARAMETER;
+  }
+
+  // To do
+
+  return NOTI_EX_ERROR_NONE;
 }
 
 extern "C" EXPORT_API int noti_ex_color_create(noti_ex_color_h *handle,
     unsigned char a, unsigned char r, unsigned char g, unsigned char b) {
-  return 0;
+  if (handle == nullptr) {
+    LOGE("Invalid parameter");
+    return NOTI_EX_ERROR_INVALID_PARAMETER;
+  }
+
+  auto* p = new (std::nothrow) Color(a, r, g, b);
+  if (p == nullptr) {
+    LOGE("Out-of-memory");
+    return NOTI_EX_ERROR_OUT_OF_MEMORY;
+  }
+
+  *handle = p;
+
+  return NOTI_EX_ERROR_NONE;
 }
 
 extern "C" EXPORT_API int noti_ex_color_destroy(noti_ex_color_h handle) {
-  return 0;
+  if (handle == nullptr) {
+    LOGE("Invalid parameter");
+    return NOTI_EX_ERROR_INVALID_PARAMETER;
+  }
+
+  Color* p = static_cast<Color*>(handle);
+  p->~Color();
+
+  return NOTI_EX_ERROR_NONE;
 }
 
 extern "C" EXPORT_API int noti_ex_color_get_alpha(noti_ex_color_h handle,
     unsigned char *val) {
-  return 0;
+  if (handle == nullptr || val == nullptr) {
+    LOGE("Invalid parameter");
+    return NOTI_EX_ERROR_INVALID_PARAMETER;
+  }
+
+  Color* p = static_cast<Color*>(handle);
+  *val = p->GetAVal();
+
+  return NOTI_EX_ERROR_NONE;
 }
 
 extern "C" EXPORT_API int noti_ex_color_get_red(noti_ex_color_h handle,
     unsigned char *val) {
-  return 0;
+  if (handle == nullptr || val == nullptr) {
+    LOGE("Invalid parameter");
+    return NOTI_EX_ERROR_INVALID_PARAMETER;
+  }
+
+  Color* p = static_cast<Color*>(handle);
+  *val = p->GetRVal();
+
+  return NOTI_EX_ERROR_NONE;
 }
 
 extern "C" EXPORT_API int noti_ex_color_get_green(noti_ex_color_h handle,
     unsigned char *val) {
-  return 0;
+  if (handle == nullptr || val == nullptr) {
+    LOGE("Invalid parameter");
+    return NOTI_EX_ERROR_INVALID_PARAMETER;
+  }
+
+  Color* p = static_cast<Color*>(handle);
+  *val = p->GetGVal();
+
+  return NOTI_EX_ERROR_NONE;
 }
 
 extern "C" EXPORT_API int noti_ex_color_get_blue(noti_ex_color_h handle,
     unsigned char *val) {
-  return 0;
+  if (handle == nullptr || val == nullptr) {
+    LOGE("Invalid parameter");
+    return NOTI_EX_ERROR_INVALID_PARAMETER;
+  }
+
+  Color* p = static_cast<Color*>(handle);
+  *val = p->GetBVal();
+
+  return NOTI_EX_ERROR_NONE;
 }
 
 extern "C" EXPORT_API int noti_ex_padding_create(noti_ex_padding_h *handle,
     int left, int top, int right, int bottom) {
-  return 0;
+  if (handle == nullptr) {
+    LOGE("Invalid parameter");
+    return NOTI_EX_ERROR_INVALID_PARAMETER;
+  }
+
+  auto* p = new (std::nothrow) Padding(left, top, right, bottom);
+  if (p == nullptr) {
+    LOGE("Out-of-memory");
+    return NOTI_EX_ERROR_OUT_OF_MEMORY;
+  }
+
+  *handle = p;
+
+  return NOTI_EX_ERROR_NONE;
 }
 
 extern "C" EXPORT_API int noti_ex_padding_destroy(noti_ex_padding_h handle) {
-  return 0;
+  if (handle == nullptr) {
+    LOGE("Invalid parameter");
+    return NOTI_EX_ERROR_INVALID_PARAMETER;
+  }
+
+  Padding* p = static_cast<Padding*>(handle);
+  p->~Padding();
+
+  return NOTI_EX_ERROR_NONE;
 }
 
 extern "C" EXPORT_API int noti_ex_padding_get_left(noti_ex_padding_h handle,
     int *val) {
-  return 0;
+  if (handle == nullptr || val == nullptr) {
+    LOGE("Invalid parameter");
+    return NOTI_EX_ERROR_INVALID_PARAMETER;
+  }
+
+  Padding* p = static_cast<Padding*>(handle);
+  *val = p->GetLeft();
+
+  return NOTI_EX_ERROR_NONE;
 }
 
 extern "C" EXPORT_API int noti_ex_padding_get_top(noti_ex_padding_h handle,
     int *val) {
-  return 0;
+  if (handle == nullptr || val == nullptr) {
+    LOGE("Invalid parameter");
+    return NOTI_EX_ERROR_INVALID_PARAMETER;
+  }
+
+  Padding* p = static_cast<Padding*>(handle);
+  *val = p->GetTop();
+
+  return NOTI_EX_ERROR_NONE;
 }
 
 extern "C" EXPORT_API int noti_ex_padding_get_right(noti_ex_padding_h handle,
     int *val) {
+  if (handle == nullptr || val == nullptr) {
+    LOGE("Invalid parameter");
+    return NOTI_EX_ERROR_INVALID_PARAMETER;
+  }
+
+  Padding* p = static_cast<Padding*>(handle);
+  *val = p->GetRight();
+
   return 0;
 }
 
 extern "C" EXPORT_API int noti_ex_padding_get_bottom(noti_ex_padding_h handle,
     int *val) {
+  if (handle == nullptr || val == nullptr) {
+    LOGE("Invalid parameter");
+    return NOTI_EX_ERROR_INVALID_PARAMETER;
+  }
+
+  Padding* p = static_cast<Padding*>(handle);
+  *val = p->GetBottom();
+
   return 0;
 }
 
 extern "C" EXPORT_API int noti_ex_geometry_create(noti_ex_geometry_h *handle,
     int x, int y, int w, int h) {
-  return 0;
+  if (handle == nullptr) {
+    LOGE("Invalid parameter");
+    return NOTI_EX_ERROR_INVALID_PARAMETER;
+  }
+
+  auto* p = new (std::nothrow) Geometry(x, y, w, h);
+  if (p == nullptr) {
+    LOGE("Out-of-memory");
+    return NOTI_EX_ERROR_OUT_OF_MEMORY;
+  }
+
+  *handle = p;
+
+  return NOTI_EX_ERROR_NONE;
 }
 
 extern "C" EXPORT_API int noti_ex_geometry_destroy(noti_ex_geometry_h handle) {
-  return 0;
+  if (handle == nullptr) {
+    LOGE("Invalid parameter");
+    return NOTI_EX_ERROR_INVALID_PARAMETER;
+  }
+
+  Geometry* p = static_cast<Geometry*>(handle);
+  p->~Geometry();
+
+  return NOTI_EX_ERROR_NONE;
 }
 
 extern "C" EXPORT_API int noti_ex_geometry_get_x(noti_ex_geometry_h handle,
     int *val) {
-  return 0;
+  if (handle == nullptr || val == nullptr) {
+    LOGE("Invalid parameter");
+    return NOTI_EX_ERROR_INVALID_PARAMETER;
+  }
+
+  Geometry* p = static_cast<Geometry*>(handle);
+  *val = p->GetX();
+
+  return NOTI_EX_ERROR_NONE;
 }
 
 extern "C" EXPORT_API int noti_ex_geometry_get_y(noti_ex_geometry_h handle,
     int *val) {
-  return 0;
+  if (handle == nullptr || val == nullptr) {
+    LOGE("Invalid parameter");
+    return NOTI_EX_ERROR_INVALID_PARAMETER;
+  }
+
+  Geometry* p = static_cast<Geometry*>(handle);
+  *val = p->GetY();
+
+  return NOTI_EX_ERROR_NONE;
 }
 
 extern "C" EXPORT_API int noti_ex_geometry_get_width(noti_ex_geometry_h handle,
     int *val) {
-  return 0;
+  if (handle == nullptr || val == nullptr) {
+    LOGE("Invalid parameter");
+    return NOTI_EX_ERROR_INVALID_PARAMETER;
+  }
+
+  Geometry* p = static_cast<Geometry*>(handle);
+  *val = p->GetWidth();
+
+  return NOTI_EX_ERROR_NONE;
 }
 
 extern "C" EXPORT_API int noti_ex_geometry_get_height(noti_ex_geometry_h handle,
     int *val) {
-  return 0;
+  if (handle == nullptr || val == nullptr) {
+    LOGE("Invalid parameter");
+    return NOTI_EX_ERROR_INVALID_PARAMETER;
+  }
+
+  Geometry* p = static_cast<Geometry*>(handle);
+  *val = p->GetHeight();
+
+  return NOTI_EX_ERROR_NONE;
 }
 
 extern "C" EXPORT_API int noti_ex_style_create(noti_ex_style_h *handle,
     noti_ex_color_h color,
     noti_ex_padding_h padding,
     noti_ex_geometry_h geometry) {
-  return 0;
+  if (handle == nullptr) {
+    LOGE("Invalid parameter");
+    return NOTI_EX_ERROR_INVALID_PARAMETER;
+  }
+
+  Color* color_ = static_cast<Color*>(color);
+  Padding* padding_ = static_cast<Padding*>(padding);
+  Geometry* geo_ = static_cast<Geometry*>(geometry);
+
+  auto* p = new (std::nothrow) Style(*color_, *padding_, *geo_);
+  if (p == nullptr) {
+    LOGE("Out-of-memory");
+    return NOTI_EX_ERROR_OUT_OF_MEMORY;
+  }
+
+  *handle = p;
+
+  return NOTI_EX_ERROR_NONE;
 }
 
 extern "C" EXPORT_API int noti_ex_style_destroy(noti_ex_style_h handle) {
-  return 0;
+  if (handle == nullptr) {
+    LOGE("Invalid parameter");
+    return NOTI_EX_ERROR_INVALID_PARAMETER;
+  }
+
+  Style* p = static_cast<Style*>(handle);
+  p->~Style();
+
+  return NOTI_EX_ERROR_NONE;
 }
 
 extern "C" EXPORT_API int noti_ex_style_get_padding(noti_ex_style_h handle,
-    const noti_ex_padding_h *padding) {
-  return 0;
+    noti_ex_padding_h *padding) {
+  if (handle == nullptr || padding == nullptr) {
+    LOGE("Invalid parameter");
+    return NOTI_EX_ERROR_INVALID_PARAMETER;
+  }
+
+  Style* p = static_cast<Style*>(handle);
+  Padding* padding_ = new (std::nothrow) Padding(p->GetPadding());
+  if (padding_ == nullptr) {
+    LOGE("Out-of-memory");
+    return NOTI_EX_ERROR_OUT_OF_MEMORY;
+  }
+
+  *padding = padding_;
+
+  return NOTI_EX_ERROR_NONE;
 }
 
 extern "C" EXPORT_API int noti_ex_style_get_color(noti_ex_style_h handle,
-    const noti_ex_color_h *color) {
-  return 0;
+    noti_ex_color_h *color) {
+  if (handle == nullptr || color == nullptr) {
+    LOGE("Invalid parameter");
+    return NOTI_EX_ERROR_INVALID_PARAMETER;
+  }
+
+  Style* p = static_cast<Style*>(handle);
+  Color* color_ = new (std::nothrow) Color(p->GetColor());
+  if (color_ == nullptr) {
+    LOGE("Out-of-memory");
+    return NOTI_EX_ERROR_OUT_OF_MEMORY;
+  }
+
+  *color = color_;
+
+  return NOTI_EX_ERROR_NONE;
 }
 
 extern "C" EXPORT_API int noti_ex_style_get_geometry(noti_ex_style_h handle,
-    const noti_ex_geometry_h *geometry) {
-  return 0;
+    noti_ex_geometry_h *geometry) {
+  if (handle == nullptr || geometry == nullptr) {
+    LOGE("Invalid parameter");
+    return NOTI_EX_ERROR_INVALID_PARAMETER;
+  }
+
+  Style* p = static_cast<Style*>(handle);
+  Geometry* geo_ = new (std::nothrow) Geometry(p->GetGeometry());
+  if (geo_ == nullptr) {
+    LOGE("Out-of-memory");
+    return NOTI_EX_ERROR_OUT_OF_MEMORY;
+  }
+
+  *geometry = geo_;
+
+  return NOTI_EX_ERROR_NONE;
 }
 
 extern "C" EXPORT_API int noti_ex_led_info_create(noti_ex_led_info_h *handle,
     noti_ex_color_h color) {
-  return 0;
+  if (handle == nullptr) {
+    LOGE("Invalid parameter");
+    return NOTI_EX_ERROR_INVALID_PARAMETER;
+  }
+
+  Color* color_ = static_cast<Color*>(color);
+  auto* p = new (std::nothrow) LEDInfo(*color_);
+  if (p == nullptr) {
+    LOGE("Out-of-memory");
+    return NOTI_EX_ERROR_OUT_OF_MEMORY;
+  }
+
+  *handle = p;
+
+  return NOTI_EX_ERROR_NONE;
 }
 
 extern "C" EXPORT_API int noti_ex_led_info_destroy(noti_ex_led_info_h handle) {
-  return 0;
+  if (handle == nullptr) {
+    LOGE("Invalid parameter");
+    return NOTI_EX_ERROR_INVALID_PARAMETER;
+  }
+
+  LEDInfo* p = static_cast<LEDInfo*>(handle);
+  p->~LEDInfo();
+
+  return NOTI_EX_ERROR_NONE;
 }
 
 extern "C" EXPORT_API int noti_ex_led_info_set_on_period(
     noti_ex_led_info_h handle, int ms) {
-  return 0;
+  if (handle == nullptr) {
+    LOGE("Invalid parameter");
+    return NOTI_EX_ERROR_INVALID_PARAMETER;
+  }
+
+  LEDInfo* p = static_cast<LEDInfo*>(handle);
+  p->SetOnPeriod(ms);
+
+  return NOTI_EX_ERROR_NONE;
 }
 
 extern "C" EXPORT_API int noti_ex_led_info_get_on_period(
     noti_ex_led_info_h handle, int *ms) {
-  return 0;
+  if (handle == nullptr || ms == nullptr) {
+    LOGE("Invalid parameter");
+    return NOTI_EX_ERROR_INVALID_PARAMETER;
+  }
+
+  LEDInfo* p = static_cast<LEDInfo*>(handle);
+  *ms = p->GetOnPeriod();
+
+  return NOTI_EX_ERROR_NONE;
 }
 
 extern "C" EXPORT_API int noti_ex_led_info_set_off_period(
     noti_ex_led_info_h handle, int ms) {
-  return 0;
+  if (handle == nullptr) {
+    LOGE("Invalid parameter");
+    return NOTI_EX_ERROR_INVALID_PARAMETER;
+  }
+
+  LEDInfo* p = static_cast<LEDInfo*>(handle);
+  p->SetOffPeriod(ms);
+
+  return NOTI_EX_ERROR_NONE;
 }
 
 extern "C" EXPORT_API int noti_ex_led_info_get_off_period(
     noti_ex_led_info_h handle, int *ms) {
-  return 0;
+  if (handle == nullptr) {
+    LOGE("Invalid parameter");
+    return NOTI_EX_ERROR_INVALID_PARAMETER;
+  }
+
+  LEDInfo* p = static_cast<LEDInfo*>(handle);
+  *ms = p->GetOffPeriod();
+
+  return NOTI_EX_ERROR_NONE;
 }
 
 extern "C" EXPORT_API int noti_ex_led_info_get_color(
     noti_ex_led_info_h handle, noti_ex_color_h *color) {
-  return 0;
+  if (handle == nullptr) {
+    LOGE("Invalid parameter");
+    return NOTI_EX_ERROR_INVALID_PARAMETER;
+  }
+
+  LEDInfo* p = static_cast<LEDInfo*>(handle);
+  Color* color_ = new (std::nothrow) Color(p->GetColor());
+  if (color_ == nullptr) {
+    LOGE("Out-of-memory");
+    return NOTI_EX_ERROR_OUT_OF_MEMORY;
+  }
+
+  *color = color_;
+
+  return NOTI_EX_ERROR_NONE;
 }
 
 extern "C" EXPORT_API int noti_ex_action_destroy(noti_ex_action_h handle) {
-  return 0;
+  if (handle == nullptr) {
+    LOGE("Invalid parameter");
+    return NOTI_EX_ERROR_INVALID_PARAMETER;
+  }
+
+  AbstractAction* p = static_cast<AbstractAction*>(handle);
+  p->~AbstractAction();
+
+  return NOTI_EX_ERROR_NONE;
 }
 
 extern "C" EXPORT_API int noti_ex_action_get_type(noti_ex_action_h handle,
     int *type) {
-  return 0;
+  if (handle == nullptr || type == nullptr) {
+    LOGE("Invalid parameter");
+    return NOTI_EX_ERROR_INVALID_PARAMETER;
+  }
+
+  AbstractAction* p = static_cast<AbstractAction*>(handle);
+  *type = p->GetType();
+
+  return NOTI_EX_ERROR_NONE;
 }
 
 extern "C" EXPORT_API int noti_ex_action_is_local(noti_ex_action_h handle,
     bool *local) {
-  return 0;
+  if (handle == nullptr || local == nullptr) {
+    LOGE("Invalid parameter");
+    return NOTI_EX_ERROR_INVALID_PARAMETER;
+  }
+
+  AbstractAction* p = static_cast<AbstractAction*>(handle);
+  *local = p->IsLocal();
+
+  return NOTI_EX_ERROR_NONE;
 }
 
 extern "C" EXPORT_API int noti_ex_action_execute(noti_ex_action_h handle,
     noti_ex_item_h item) {
-  return 0;
+  if (handle == nullptr || item==nullptr) {
+    LOGE("Invalid parameter");
+    return NOTI_EX_ERROR_INVALID_PARAMETER;
+  }
+
+  AbstractAction* p = static_cast<AbstractAction*>(handle);
+  AbstractItem* item_ = static_cast<AbstractItem*>(item);
+  p->Execute(static_cast<std::shared_ptr<AbstractItem>>(item_));
+
+  return NOTI_EX_ERROR_NONE;
 }
 
 extern "C" EXPORT_API int noti_ex_action_get_extra(noti_ex_action_h handle,
     char **extra) {
-  return 0;
+  if (handle == nullptr || extra == nullptr) {
+    LOGE("Invalid parameter");
+    return NOTI_EX_ERROR_INVALID_PARAMETER;
+  }
+
+  AbstractAction* p = static_cast<AbstractAction*>(handle);
+  if (!p->GetExtra().empty()) {
+    *extra = strdup(p->GetExtra().c_str());
+    if (*extra == nullptr) {
+      LOGE("Out-of-memory");
+      return NOTI_EX_ERROR_OUT_OF_MEMORY;
+    }
+  }
+
+  return NOTI_EX_ERROR_NONE;
 }
 
 extern "C" EXPORT_API int noti_ex_item_info_get_hide_time(
@@ -744,7 +1127,7 @@ extern "C" EXPORT_API int noti_ex_item_destroy(noti_ex_item_h handle) {
 }
 
 extern "C" EXPORT_API int noti_ex_item_find_by_id(noti_ex_item_h handle,
-    const char *id, const noti_ex_item_h *item) {
+    const char *id, noti_ex_item_h *item) {
   return 0;
 }
 
@@ -899,7 +1282,8 @@ extern "C" EXPORT_API int noti_ex_item_set_tag(noti_ex_item_h handle,
 }
 
 extern "C" EXPORT_API int noti_ex_manager_create(noti_ex_manager_h *handle,
-    const char *receiver_group, noti_ex_manager_events_s ev, void *data) {
+    const char *receiver_group, noti_ex_manager_events_s event_callbacks,
+    void *data) {
   return 0;
 }
 
@@ -908,41 +1292,37 @@ extern "C" EXPORT_API int noti_ex_manager_deatroy(noti_ex_manager_h handle) {
 }
 
 extern "C" EXPORT_API int noti_ex_manager_get(noti_ex_manager_h handle,
-    noti_ex_item_h *items, int *cnt) {
+    noti_ex_item_h **items, int *count) {
   return 0;
 }
 
 extern "C" EXPORT_API int noti_ex_manager_update(noti_ex_manager_h handle,
-    noti_ex_item_h noti) {
+    noti_ex_item_h noti, int *request_id) {
   return 0;
 }
 
 extern "C" EXPORT_API int noti_ex_manager_delete(noti_ex_manager_h handle,
-    noti_ex_item_h noti) {
+    noti_ex_item_h noti, int *request_id) {
   return 0;
 }
 
-extern "C" EXPORT_API int noti_ex_manager_delete_all(noti_ex_manager_h handle) {
+extern "C" EXPORT_API int noti_ex_manager_delete_all(noti_ex_manager_h handle,
+    int *request_id) {
   return 0;
 }
 
 extern "C" EXPORT_API int noti_ex_manager_hide(noti_ex_manager_h handle,
-    noti_ex_item_h noti) {
+    noti_ex_item_h noti, int *request_id) {
   return 0;
 }
 
 extern "C" EXPORT_API int noti_ex_manager_find_by_root_id(
-    noti_ex_manager_h handle, const char *id, noti_ex_item_h *item) {
-  return 0;
-}
-
-extern "C" EXPORT_API int noti_ex_manager_send_event(noti_ex_manager_h handle,
-    noti_ex_event_info_h info, noti_ex_item_h noti) {
+    noti_ex_manager_h handle, const char *root_id, noti_ex_item_h *item) {
   return 0;
 }
 
 extern "C" EXPORT_API int noti_ex_manager_send_error(noti_ex_manager_h handle,
-    noti_ex_event_info_h info, noti_ex_error_e error) {
+    noti_ex_event_info_h info, noti_ex_error_e error, int *request_id) {
   return 0;
 }
 
@@ -953,105 +1333,262 @@ extern "C" EXPORT_API int noti_ex_manager_get_count(noti_ex_manager_h handle,
 
 extern "C" EXPORT_API int noti_ex_item_progress_create(noti_ex_item_h *handle,
     const char *id, float min, float current, float max) {
-  return 0;
+  ProgressItem* p;
+
+  if (handle == nullptr) {
+    LOGE("Invalid parameter");
+    return NOTI_EX_ERROR_INVALID_PARAMETER;
+  }
+
+  if (id)
+    p = new (std::nothrow) ProgressItem(id, min, current, max);
+  else
+    p = new (std::nothrow) ProgressItem(min, current, max);
+
+  if (p == nullptr) {
+    LOGE("Out-of-memory");
+    return NOTI_EX_ERROR_OUT_OF_MEMORY;
+  }
+
+  *handle = p;
+
+  return NOTI_EX_ERROR_NONE;
 }
 
 extern "C" EXPORT_API int noti_ex_item_progress_get_current(
     noti_ex_item_h handle, float *current) {
-  return 0;
+  if (handle == nullptr || current == nullptr) {
+    LOGE("Invalid parameter");
+    return NOTI_EX_ERROR_INVALID_PARAMETER;
+  }
+
+  ProgressItem* p = static_cast<ProgressItem*>(handle);
+  *current = p->GetCurrent();
+
+  return NOTI_EX_ERROR_NONE;
 }
 
 extern "C" EXPORT_API int noti_ex_item_progress_set_current(
     noti_ex_item_h handle, float current) {
-  return 0;
+  if (handle == nullptr) {
+    LOGE("Invalid parameter");
+    return NOTI_EX_ERROR_INVALID_PARAMETER;
+  }
+
+  ProgressItem* p = static_cast<ProgressItem*>(handle);
+  p->SetCurrent(current);
+
+  return NOTI_EX_ERROR_NONE;
 }
 
 extern "C" EXPORT_API int noti_ex_item_progress_get_min(noti_ex_item_h handle,
     float *min) {
-  return 0;
+  if (handle == nullptr || min == nullptr) {
+    LOGE("Invalid parameter");
+    return NOTI_EX_ERROR_INVALID_PARAMETER;
+  }
+
+  ProgressItem* p = static_cast<ProgressItem*>(handle);
+  *min = p->GetMin();
+
+  return NOTI_EX_ERROR_NONE;
 }
 
 extern "C" EXPORT_API int noti_ex_item_progress_get_max(noti_ex_item_h handle,
     float *max) {
-  return 0;
+  if (handle == nullptr || max == nullptr) {
+    LOGE("Invalid parameter");
+    return NOTI_EX_ERROR_INVALID_PARAMETER;
+  }
+
+  ProgressItem* p = static_cast<ProgressItem*>(handle);
+  *max = p->GetMax();
+
+  return NOTI_EX_ERROR_NONE;
 }
 
-extern "C" EXPORT_API int noti_ex_reporter_send_event(noti_ex_reporter_h handle,
-    noti_ex_event_info_h info, noti_ex_item_h noti) {
-  return 0;
+extern "C" EXPORT_API int noti_ex_reporter_create(noti_ex_reporter_h *handle,
+    noti_ex_reporter_events_s event_callbacks, void *data) {
+  return NOTI_EX_ERROR_NONE;
+}
+
+extern "C" EXPORT_API int noti_ex_reporter_destroy(noti_ex_reporter_h handle) {
+  return NOTI_EX_ERROR_NONE;
 }
 
 extern "C" EXPORT_API int noti_ex_reporter_send_error(noti_ex_reporter_h handle,
-    noti_ex_event_info_h info, noti_ex_error_e error) {
+    noti_ex_event_info_h info, noti_ex_error_e error, int *request_id) {
   return 0;
 }
 
 extern "C" EXPORT_API int noti_ex_reporter_post(noti_ex_reporter_h handle,
-    noti_ex_item_h noti) {
+    noti_ex_item_h noti, int *request_id) {
   return 0;
 }
 
 extern "C" EXPORT_API int noti_ex_reporter_post_list(noti_ex_reporter_h handle,
-    noti_ex_item_h *notiList, int cnt) {
+    noti_ex_item_h *noti_list, int count, int *request_id) {
   return 0;
 }
 
 extern "C" EXPORT_API int noti_ex_reporter_update(noti_ex_reporter_h handle,
-    noti_ex_item_h noti) {
+    noti_ex_item_h noti, int *request_id) {
   return 0;
 }
 
 extern "C" EXPORT_API int noti_ex_reporter_delete(noti_ex_reporter_h handle,
-    noti_ex_item_h noti) {
+    noti_ex_item_h noti, int *request_id) {
   return 0;
 }
 
 extern "C" EXPORT_API int noti_ex_reporter_delete_all(
-    noti_ex_reporter_h handle) {
+    noti_ex_reporter_h handle, int *request_id) {
   return 0;
 }
 
 extern "C" EXPORT_API int noti_ex_reporter_find_by_root_id(
-    noti_ex_reporter_h handle, const char *id, const noti_ex_item_h *item) {
+    noti_ex_reporter_h handle, const char *root_id, noti_ex_item_h *item) {
   return 0;
 }
 
 extern "C" EXPORT_API int noti_ex_item_text_create(noti_ex_item_h *handle,
     const char *id, const char *text, const char *hyper_link) {
-  return 0;
+  if (handle == nullptr) {
+    LOGE("Invalid parameter");
+    return NOTI_EX_ERROR_INVALID_PARAMETER;
+  }
+
+  auto* p = new (std::nothrow) TextItem(id, std::string(text),
+                std::string(hyper_link));
+  if (p == nullptr) {
+    LOGE("Out-of-memory");
+    return NOTI_EX_ERROR_OUT_OF_MEMORY;
+  }
+
+  *handle = p;
+
+  return NOTI_EX_ERROR_NONE;
 }
 
 extern "C" EXPORT_API int noti_ex_item_text_set_contents(noti_ex_item_h handle,
     const char *contents) {
-  return 0;
+  if (handle == nullptr) {
+    LOGE("Invalid parameter");
+    return NOTI_EX_ERROR_INVALID_PARAMETER;
+  }
+
+  TextItem* p = static_cast<TextItem*>(handle);
+  p->SetContents(std::string(contents));
+
+  return NOTI_EX_ERROR_NONE;
 }
 
 extern "C" EXPORT_API int noti_ex_item_text_get_contents(noti_ex_item_h handle,
     char **contents) {
-  return 0;
+  if (handle == nullptr || contents == nullptr) {
+    LOGE("Invalid parameter");
+    return NOTI_EX_ERROR_INVALID_PARAMETER;
+  }
+
+  TextItem* p = static_cast<TextItem*>(handle);
+  if (!p->GetContents().empty()) {
+    *contents = strdup(p->GetContents().c_str());
+    if (*contents == nullptr) {
+      LOGE("Out-of-memory");
+      return NOTI_EX_ERROR_OUT_OF_MEMORY;
+    }
+  }
+
+  return NOTI_EX_ERROR_NONE;
 }
 
 extern "C" EXPORT_API int noti_ex_item_text_get_hyper_link(
     noti_ex_item_h handle, char **hyper_link) {
-  return 0;
+  if (handle == nullptr || hyper_link == nullptr) {
+    LOGE("Invalid parameter");
+    return NOTI_EX_ERROR_INVALID_PARAMETER;
+  }
+
+  TextItem* p = static_cast<TextItem*>(handle);
+  if (!p->GetHyperLink().empty()) {
+    *hyper_link = strdup(p->GetHyperLink().c_str());
+    if (*hyper_link == nullptr) {
+      LOGE("Out-of-memory");
+      return NOTI_EX_ERROR_OUT_OF_MEMORY;
+    }
+  }
+
+  return NOTI_EX_ERROR_NONE;
 }
 
 extern "C" EXPORT_API int noti_ex_item_time_create(noti_ex_item_h *handle,
     const char *id, time_t time) {
-  return 0;
+  TimeItem* p;
+
+  if (handle == nullptr) {
+    LOGE("Invalid parameter");
+    return NOTI_EX_ERROR_INVALID_PARAMETER;
+  }
+
+  if (time) {
+    if (id)
+      p = new (std::nothrow) TimeItem(id, time);
+    else
+      p = new (std::nothrow) TimeItem(time);
+  } else {
+      p = new (std::nothrow) TimeItem();
+  }
+
+  if (p == nullptr) {
+    LOGE("Out-of-memory");
+    return NOTI_EX_ERROR_OUT_OF_MEMORY;
+  }
+
+  *handle = p;
+
+  return NOTI_EX_ERROR_NONE;
 }
 
 extern "C" EXPORT_API int noti_ex_item_time_get_time(noti_ex_item_h handle,
     time_t *time) {
-  return 0;
+  if (handle == nullptr || time == nullptr) {
+    LOGE("Invalid parameter");
+    return NOTI_EX_ERROR_INVALID_PARAMETER;
+  }
+
+  TimeItem*p = static_cast<TimeItem*>(handle);
+  *time = p->GetTime();
+
+  return NOTI_EX_ERROR_NONE;
 }
 
 extern "C" EXPORT_API int noti_ex_action_visibility_create(
     noti_ex_action_h *handle, const char *extra) {
-  return 0;
+  if (handle == nullptr) {
+    LOGE("Invalid parameter");
+    return NOTI_EX_ERROR_INVALID_PARAMETER;
+  }
+
+  auto* p = new (std::nothrow) VisibilityAction(extra);
+  if (p == nullptr) {
+    LOGE("Out-of-memory");
+    return NOTI_EX_ERROR_OUT_OF_MEMORY;
+  }
+
+  *handle = p;
+
+  return NOTI_EX_ERROR_NONE;
 }
 
 extern "C" EXPORT_API int noti_ex_action_visibility_set(noti_ex_action_h handle,
     const char *id, bool visible) {
+  if (handle == nullptr || id == nullptr) {
+    LOGE("Invalid parameter");
+    return NOTI_EX_ERROR_INVALID_PARAMETER;
+  }
+
+  VisibilityAction* p = static_cast<VisibilityAction*>(handle);
+  p->SetVisibility(id, visible);
+
   return 0;
 }

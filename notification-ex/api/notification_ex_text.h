@@ -23,9 +23,108 @@
 extern "C" {
 #endif
 
+/**
+ * @brief Creates the notification_ex item handle with text.
+ * @details The notification_ex is made with notification_ex items.
+ *          If the user wants to be displayed with text,
+ *          notification_ex handle have to be made as text item.
+ * @since_tizen 5.5
+ * @remarks @a handle must be released using noti_ex_item_destroy().
+ * @param[out] handle The notification_ex item handle
+ * @param[in] id The id of notification_ex item
+ * @param[in] text The text of text item
+ * @param[in] hyper_link The hyperlink of text item
+ * @return #NOTI_EX_ERROR_NONE On success, other value on failure
+ * @retval #NOTI_EX_ERROR_NONE Success
+ * @retval #NOTI_EX_ERROR_INVALID_PARAMETER Invalid parameter
+ * @retval #NOTI_EX_ERROR_OUT_OF_MEMORY out of memory
+ * @see #noti_ex_item_h
+ * @see #noti_ex_item_destroy
+ * @par Sample code:
+ * @code
+#include <notification_ex_text.h>
+
+{
+	int ret;
+	noti_ex_item_h text_item = NULL;
+
+	ret = noti_ex_item_text_create(&text_item, "text_id", "text", "hyperlink");
+}
+ * @endcode
+ */
 int noti_ex_item_text_create(noti_ex_item_h *handle, const char *id, const char *text, const char *hyper_link);
+
+/**
+ * @brief Sets the text contents of text item
+ * @since_tizen 5.5
+ * @param[in] handle The notification_ex item handle
+ * @param[in] contents The text contents of text item
+ * @return #NOTI_EX_ERROR_NONE On success, other value on failure
+ * @retval #NOTI_EX_ERROR_NONE Success
+ * @retval #NOTI_EX_ERROR_INVALID_PARAMETER Invalid parameter
+ * @see #noti_ex_item_h
+ * @see #noti_ex_item_text_create
+ * @par Sample code:
+ * @code
+#include <notification_ex_text.h>
+
+{
+	int ret;
+
+	ret = noti_ex_item_text_set_contents(text_item, "text_contents");
+}
+ * @endcode
+ */
 int noti_ex_item_text_set_contents(noti_ex_item_h handle, const char *contents);
+
+/**
+ * @brief Gets the text contents of text item
+ * @since_tizen 5.5
+ * @remarks @a contents must be released using free().
+ * @param[in] handle The notification_ex item handle
+ * @param[out] contents The text contents of text item
+ * @return #NOTI_EX_ERROR_NONE On success, other value on failure
+ * @retval #NOTI_EX_ERROR_NONE Success
+ * @retval #NOTI_EX_ERROR_INVALID_PARAMETER Invalid parameter
+ * @see #noti_ex_item_h
+ * @see #noti_ex_item_text_create
+ * @par Sample code:
+ * @code
+#include <notification_ex_text.h>
+
+{
+	int ret;
+    char *contents = NULL;
+
+	ret = noti_ex_item_text_get_contents(text_item, &contents);
+}
+ * @endcode
+ */
 int noti_ex_item_text_get_contents(noti_ex_item_h handle, char **contents);
+
+/**
+ * @brief Gets the hyperlink of text item
+ * @since_tizen 5.5
+ * @remarks @a hyper_link must be released using free().
+ * @param[in] handle The notification_ex item handle
+ * @param[out] hyper_link The hyperlink of text item
+ * @return #NOTI_EX_ERROR_NONE On success, other value on failure
+ * @retval #NOTI_EX_ERROR_NONE Success
+ * @retval #NOTI_EX_ERROR_INVALID_PARAMETER Invalid parameter
+ * @see #noti_ex_item_h
+ * @see #noti_ex_item_text_create
+ * @par Sample code:
+ * @code
+#include <notification_ex_text.h>
+
+{
+	int ret;
+    char *hyper_link = NULL;
+
+	ret = noti_ex_item_text_get_hyper_link(text_item, &hyper_link);
+}
+ * @endcode
+ */
 int noti_ex_item_text_get_hyper_link(noti_ex_item_h handle, char **hyper_link);
 
 #ifdef __cplusplus
