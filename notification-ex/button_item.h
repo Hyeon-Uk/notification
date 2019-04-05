@@ -26,18 +26,74 @@
 namespace notification {
 namespace item {
 
+/**
+ * @brief The class for ButtonItem type notification.
+ * @details The class to make the notification with button.
+ * @since_tizen 5.5
+ */
 class EXPORT_API ButtonItem : public AbstractItem {
  public:
+  /**
+   * @brief Constructor
+   * @since_tizen 5.5
+   * @param[in] id The ButtonItem id
+   * @param[in] title The title of ButtonItem
+   * @param[in] action The action for ButtonItem
+   */
+
   ButtonItem(std::string id, std::string title,
       std::shared_ptr<AbstractAction> action = std::shared_ptr<AbstractAction>({}));
+
+  /**
+   * @brief Constructor
+   * @since_tizen 5.5
+   * @param[in] title The title of ButtonItem
+   * @param[in] action The action for ButtonItem
+   */
+
   ButtonItem(std::string title,
       std::shared_ptr<AbstractAction> action = std::shared_ptr<AbstractAction>({}));
+
+  /**
+   * @brief Destructor
+   * @since_tizen 5.5
+   */
   virtual ~ButtonItem();
 
+  /**
+   * @brief Serialize the data of ButtonItem.
+   * @since_tizen 5.5
+   * @return Bundle type data
+   */
   Bundle Serialize() const override;
+
+  /**
+   * @brief Deserialize the serialized data.
+   * @since_tizen 5.5
+   * @param[in] b The serialized Bundle data
+   */
   void Deserialize(Bundle b) override;
+
+  /**
+   * @brief Finds the AbstractItem using by notification item id.
+   * @since_tizen 5.5
+   * @param[in] id notification item id
+   * @return AbstractItem object
+   */
   AbstractItem& FindByID(std::string id) override;
+
+  /**
+   * @brief Gets the type of ButtonItem.
+   * @since_tizen 5.5
+   * @return AbstractItem::Type::Button
+   */
   int GetType() const override;
+
+  /**
+   * @brief Gets the title of ButtonItem.
+   * @since_tizen 5.5
+   * @return The title of ButtonItem
+   */
   std::string GetTitle() const;
 
  private:

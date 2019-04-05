@@ -26,20 +26,77 @@
 namespace notification {
 namespace item {
 
+/**
+ * @brief The class for InputSelectorItem type notification.
+ * @details The class to make the notification with selector.
+ * @since_tizen 5.5
+ */
 class EXPORT_API InputSelectorItem : public AbstractItem {
  public:
+  /**
+   * @brief Constructor
+   * @since_tizen 5.5
+   * @param[in] action The action for InputSelectorItem
+   */
   InputSelectorItem(std::shared_ptr<AbstractAction> action = std::shared_ptr<AbstractAction>({}));
+
+  /**
+   * @brief Constructor
+   * @since_tizen 5.5
+   * @param[in] id The InputSelectorItem id
+   * @param[in] action The action for InputSelectorItem
+   */
   InputSelectorItem(std::string id,
       std::shared_ptr<AbstractAction> action = std::shared_ptr<AbstractAction>({}));
+
+  /**
+   * @brief Destructor
+   * @since_tizen 5.5
+   */
   virtual ~InputSelectorItem();
 
  public:
+  /**
+   * @brief Serialize the data of InputSelectorItem.
+   * @since_tizen 5.5
+   * @return Bundle type data
+   */
   virtual Bundle Serialize() const override;
+
+  /**
+   * @brief Deserialize the serialized data.
+   * @since_tizen 5.5
+   * @param[in] b The serialized Bundle data
+   */
   virtual void Deserialize(Bundle b) override;
+
+  /**
+   * @brief Finds the AbstractItem using by notification item id.
+   * @since_tizen 5.5
+   * @param[in] id notification item id
+   * @return AbstractItem object
+   */
   virtual AbstractItem& FindByID(std::string id) override;
+
+  /**
+   * @brief Gets the type of InputSelectorItem.
+   * @since_tizen 5.5
+   * @return AbstractItem::Type::InputSelector
+   */
   int GetType() const override;
 
+  /**
+   * @brief Gets the contents of InputSelectorItem.
+   * @since_tizen 5.5
+   * @return The list of string
+   */
   std::list<std::string> GetContents() const;
+
+  /**
+   * @brief Sets the contents of InputSelectorItem.
+   * @since_tizen 5.5
+   * @param[in] contents The list of string
+   */
   void SetContents(std::list<std::string> contents);
 
  private:

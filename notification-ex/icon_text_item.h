@@ -28,20 +28,72 @@
 namespace notification {
 namespace item {
 
+/**
+ * @brief The class for IconTextItem type notification.
+ * @details The class to make the notification with icon and text.
+ * @since_tizen 5.5
+ */
 class EXPORT_API IconTextItem : public AbstractItem {
  public:
+  /**
+   * @brief Constructor
+   * @since_tizen 5.5
+   * @param[in] id The IconTextItem id
+   * @param[in] icon The icon of IconTextItem
+   * @param[in] text The text of IconTextItem
+   * @param[in] action The action for IconTextItem
+   */
   IconTextItem(std::string id, std::shared_ptr<IconItem> icon,
     std::shared_ptr<TextItem> text,
     std::shared_ptr<AbstractAction> action = std::shared_ptr<AbstractAction>({}));
 
+  /**
+   * @brief Destructor
+   * @since_tizen 5.5
+   */
   virtual ~IconTextItem();
 
+  /**
+   * @brief Serialize the data of IconTextItem.
+   * @since_tizen 5.5
+   * @return Bundle type data
+   */
   Bundle Serialize() const override;
+
+  /**
+   * @brief Deserialize the serialized data.
+   * @since_tizen 5.5
+   * @param[in] b The serialized Bundle data
+   */
   void Deserialize(Bundle b) override;
+
+  /**
+   * @brief Finds the AbstractItem using by notification item id.
+   * @since_tizen 5.5
+   * @param[in] id notification item id
+   * @return AbstractItem object
+   */
   AbstractItem& FindByID(std::string id) override;
+
+  /**
+   * @brief Gets the type of IconTextItem.
+   * @since_tizen 5.5
+   * @return AbstractItem::Type::IconText
+   */
   int GetType() const override;
 
+  /**
+   * @brief Gets the IconItem of IconTextItem.
+   * @since_tizen 5.5
+   * @return The IconItem object
+   */
   IconItem& GetIconItem() const;
+
+  /**
+   * @brief Gets the TextItem of IconTextItem.
+   * @since_tizen 5.5
+   * @return The TextItem object
+   */
   TextItem& GetTextItem() const;
 
  private:

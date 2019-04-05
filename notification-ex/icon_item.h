@@ -23,16 +23,46 @@
 
 #include "notification-ex/image_item.h"
 
+/**
+ * @brief The class for IconItem type notification.
+ * @details The class to make the notification with icon.
+ * @since_tizen 5.5
+ */
 namespace notification {
 namespace item {
 
 class EXPORT_API IconItem : public ImageItem {
  public:
+  /**
+   * @brief Constructor
+   * @since_tizen 5.5
+   * @param[in] iconpath The icon path of IconItem
+   * @param[in] action The action for IconItem
+   */
   IconItem(std::string iconPath,
     std::shared_ptr<AbstractAction> action = std::shared_ptr<AbstractAction>({}));
+
+  /**
+   * @brief Constructor
+   * @since_tizen 5.5
+   * @param[in] id The IconItem id
+   * @param[in] iconpath The icon path of IconItem
+   * @param[in] action The action for IconItem
+   */
   IconItem(std::string id, std::string iconPath,
     std::shared_ptr<AbstractAction> action = std::shared_ptr<AbstractAction>({}));
+
+  /**
+   * @brief Destructor
+   * @since_tizen 5.5
+   */
   virtual ~IconItem();
+
+  /**
+   * @brief Gets the type of IconItem.
+   * @since_tizen 5.5
+   * @return AbstractItem::Type::Icon
+   */
   int GetType() const override;
 
  private:

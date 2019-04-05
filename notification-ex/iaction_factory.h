@@ -26,9 +26,23 @@
 namespace notification {
 namespace item {
 
+/**
+ * @brief The interface class for ActionFactory.
+ * @since_tizen 5.5
+ */
 class EXPORT_API IActionFactory {
  public:
+  /**
+   * @brief Destructor
+   * @since_tizen 5.5
+   */
   virtual ~IActionFactory() = default;
+
+  /**
+   * @brief Creates the AbstractAction from type
+   * @since_tizen 5.5
+   * @param[in] type The type of notification action
+   */
   virtual std::unique_ptr<AbstractAction> CreateAction(int type) = 0;
 };
 

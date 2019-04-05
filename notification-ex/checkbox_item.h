@@ -26,17 +26,71 @@
 namespace notification {
 namespace item {
 
+/**
+ * @brief The class for CheckBoxItem type notification.
+ * @details The class to make the notification with checkbox.
+ * @since_tizen 5.5
+ */
 class EXPORT_API CheckBoxItem : public AbstractItem {
  public:
+  /**
+   * @brief Constructor
+   * @since_tizen 5.5
+   * @param[in] id The CheckBoxItem id
+   * @param[in] title The title of CheckBoxItem
+   * @param[in] checked The check state of CheckBoxItem
+   * @param[in] action The action for ChatMessageItem
+   */
   CheckBoxItem(std::string id, std::string title, bool checked = false,
     std::shared_ptr<AbstractAction> action = std::shared_ptr<AbstractAction>({}));
+
+  /**
+   * @brief Deserialize
+   * @since_tizen 5.5
+   */
   virtual ~CheckBoxItem();
 
+  /**
+   * @brief Serialize the data of CheckBoxItem.
+   * @since_tizen 5.5
+   * @return Bundle type data
+   */
   Bundle Serialize() const override;
+
+  /**
+   * @brief Deserialize the serialized data.
+   * @since_tizen 5.5
+   * @param[in] b The serialized Bundle data
+   */
   void Deserialize(Bundle b) override;
+
+  /**
+   * @brief Finds the AbstractItem using by notification item id.
+   * @since_tizen 5.5
+   * @param[in] id notification item id
+   * @return AbstractItem object
+   */
   AbstractItem& FindByID(std::string id) override;
+
+  /**
+   * @brief Gets the type of CheckBoxItem.
+   * @since_tizen 5.5
+   * @return AbstractItem::Type::CheckBox
+   */
   int GetType() const override;
+
+  /**
+   * @brief Gets the title of CheckBoxItem.
+   * @since_tizen 5.5
+   * @return The title of CheckBoxItem
+   */
   std::string GetTitle() const;
+
+  /**
+   * @brief Gets the check state of CheckBoxItem.
+   * @since_tizen 5.5
+   * @return true if checked, or false
+   */
   bool IsChecked() const;
 
 private:

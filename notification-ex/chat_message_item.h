@@ -31,6 +31,11 @@
 namespace notification {
 namespace item {
 
+/**
+ * @brief The class for ChatMessageItem type notification.
+ * @details The class to make the chat message type notification.
+ * @since_tizen 5.5
+ */
 class EXPORT_API ChatMessageItem : public AbstractItem {
  public:
   enum Type {
@@ -39,21 +44,97 @@ class EXPORT_API ChatMessageItem : public AbstractItem {
   };
 
  public:
+  /**
+   * @brief Constructor
+   * @since_tizen 5.5
+   * @param[in] id The ChatMessageItem id
+   * @param[in] name The name of chat message
+   * @param[in] text The text of chat message
+   * @param[in] image The image of chat message
+   * @param[in] time The time of chat message
+   * @param[in] type The type of chat message
+   * @param[in] action The action for ChatMessageItem
+   */
   ChatMessageItem(std::string id, std::shared_ptr<TextItem> name,
     std::shared_ptr<TextItem> text, std::shared_ptr<ImageItem> image,
     std::shared_ptr<TimeItem> time, Type type,
     std::shared_ptr<AbstractAction> action = std::shared_ptr<AbstractAction>({}));
+
+  /**
+   * @brief Destructor
+   * @since_tizen 5.5
+   */
   virtual ~ChatMessageItem();
+
+  /**
+   * @brief Gets the type of ChatMessageItem.
+   * @since_tizen 5.5
+   * @return AbstractItem::Type::ChatMessage
+   */
   int GetType() const override;
 
+  /**
+   * @brief Serialize the data of ChatMessageItem.
+   * @since_tizen 5.5
+   * @return Bundle type data
+   */
   Bundle Serialize() const override;
+
+  /**
+   * @brief Deserialize the serialized data.
+   * @since_tizen 5.5
+   * @param[in] b The serialized Bundle data
+   */
   void Deserialize(Bundle b) override;
+
+  /**
+   * @brief Finds the AbstractItem using by notification item id.
+   * @since_tizen 5.5
+   * @param[in] id notification item id
+   * @return AbstractItem object
+   */
   AbstractItem& FindByID(std::string id) override;
+
+  /**
+   * @brief Gets the path of shared file location.
+   * @since_tizen 5.5
+   * @return The list of shared path.
+   */
   std::list<std::string> GetSharedPath() const override;
+
+  /**
+   * @brief Gets the name data of ChatMessageItem.
+   * @since_tizen 5.5
+   * @return The TextItem type name data
+   */
   TextItem& GetNameItem() const;
+
+  /**
+   * @brief Gets the text data of ChatMessageItem.
+   * @since_tizen 5.5
+   * @return The TextItem type text data
+   */
   TextItem& GetTextItem() const;
+
+  /**
+   * @brief Gets the image data of ChatMessageItem.
+   * @since_tizen 5.5
+   * @return The ImageItem type image data
+   */
   ImageItem& GetImageItem() const;
+
+  /**
+   * @brief Gets the time data of ChantMessageItem.
+   * @since_tizen 5.5
+   * @return The TimeItem type time data
+   */
   TimeItem& GetTimeItem() const;
+
+  /**
+   * @brief Gets the type of message.
+   * @since_tizen 5.5
+   * @return ChatMessageItem::Type::sender or ChatMessageItem::Type::user
+   */
   Type GetMessageType() const;
 
  private:

@@ -28,20 +28,80 @@
 namespace notification {
 namespace item {
 
+/**
+ * @brief The class for TimeItem type notification.
+ * @details The class to make the notification with time.
+ * @since_tizen 5.5
+ */
 class EXPORT_API TimeItem : public AbstractItem {
  public:
+  /**
+   * @brief Constructor
+   * @since_tizen 5.5
+   * @param[in] action The action for TimeItem
+   */
   TimeItem(
     std::shared_ptr<AbstractAction> action = std::shared_ptr<AbstractAction>({}));
+
+  /**
+   * @brief Constructor
+   * @since_tizen 5.5
+   * @param[in] time The time data of TimeItem
+   * @param[in] action The action for TimeItem
+   */
   TimeItem(time_t time,
     std::shared_ptr<AbstractAction> action = std::shared_ptr<AbstractAction>({}));
+
+  /**
+   * @brief Constructor
+   * @since_tizen 5.5
+   * @param[in] id The TimeItem id
+   * @param[in] time The time data of TimeItem
+   * @param[in] action The action for TimeItem
+   */
   TimeItem(std::string id, time_t time,
     std::shared_ptr<AbstractAction> action = std::shared_ptr<AbstractAction>({}));
 
+  /**
+   * @brief Destructor
+   * @since_tizen 5.5
+   */
   virtual ~TimeItem();
+
+  /**
+   * @brief Gets the type of TimeItem.
+   * @since_tizen 5.5
+   * @return AbstractItem::Type::Time
+   */
   int GetType() const override;
+
+  /**
+   * @brief Serialize the data of TimeItem.
+   * @since_tizen 5.5
+   * @return Bundle type data
+   */
   Bundle Serialize() const override;
+
+  /**
+   * @brief Deserialize the serialized data.
+   * @since_tizen 5.5
+   * @param[in] b The serialized Bundle data
+   */
   void Deserialize(Bundle b) override;
+
+  /**
+   * @brief Finds the AbstractItem using by notification item id.
+   * @since_tizen 5.5
+   * @param[in] id notification item id
+   * @return AbstractItem object
+   */
   AbstractItem& FindByID(std::string id) override;
+
+  /**
+   * @brief Gets the time state of TimeItem.
+   * @since_tizen 5.5
+   * @return The time state of TimeItem.
+   */
   time_t GetTime() const;
 
  private:
