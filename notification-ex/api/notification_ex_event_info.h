@@ -40,6 +40,62 @@ typedef enum _noti_ex_event_info_type {
 typedef void* noti_ex_event_info_h;
 
 /**
+ * @brief Clones the notification_ex event info handle.
+ * @details The event for notification_ex item is defined as
+ *          notification_ex event info handle.
+ * @since_tizen 5.5
+ * @remarks @a cloned_handle must be released using noti_ex_event_info_destroy().
+ * @param[in] handle The notification_ex event info handle to be cloned
+ * @param[out] cloned_handle The notification_ex event info handle
+ * @return #NOTI_EX_ERROR_NONE On success, other value on failure
+ * @retval #NOTI_EX_ERROR_NONE Success
+ * @retval #NOTI_EX_ERROR_INVALID_PARAMETER Invalid parameter
+ * @retval #NOTI_EX_ERROR_OUT_OF_MEMORY out of memory
+ * @see #noti_ex_event_info_h
+ * @see #noti_ex_event_info_destroy
+ * @par Sample code:
+ * @code
+#include <notification_ex_event_info.h>
+
+void _manager_events_update_cb(noti_ex_manager_h handle,
+		noti_ex_event_info_h info, noti_ex_item_h updated_item, void *data) {
+
+	int ret;
+	noti_ex_event_info_h cloned = NULL;
+
+	ret = noti_ex_event_info_clone(info, &cloned);
+}
+ * @endcode
+ */
+int noti_ex_event_info_clone(noti_ex_event_info_h handle,
+		noti_ex_event_info_h *cloned_handle);
+
+/**
+ * @brief Releases the notification_ex event info handle.
+ * @since_tizen 5.5
+ * @param[in] handle The notification_ex event info handle
+ * @return #NOTI_EX_ERROR_NONE On success, other value on failure
+ * @retval #NOTI_EX_ERROR_NONE Success
+ * @retval #NOTI_EX_ERROR_INVALID_PARAMETER Invalid parameter
+ * @see #noti_ex_event_info_h
+ * @par Sample code:
+ * @code
+#include <notification_ex_event_info.h>
+
+void _manager_events_update_cb(noti_ex_manager_h handle,
+		noti_ex_event_info_h info, noti_ex_item_h updated_item, void *data) {
+
+	int ret;
+	noti_ex_event_info_h cloned = NULL;
+
+	ret = noti_ex_event_info_clone(info, &cloned);
+	ret = noti_ex_event_info_destroy(cloned);
+}
+ * @endcode
+ */
+int noti_ex_event_info_destroy(noti_ex_event_info_h handle);
+
+/**
  * @brief Gets the type of event.
  * @since_tizen 5.5
  * @param[in] handle The notification_ex event info handle

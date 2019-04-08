@@ -39,12 +39,12 @@ class EXPORT_API Manager : public IEventObserver {
       std::unique_ptr<IEventListener> listener, std::string receiver_group = "");
   virtual ~Manager();
 
-  std::list<std::shared_ptr<item::AbstractItem>> Get();
+  std::list<std::unique_ptr<item::AbstractItem>> Get();
   int Update(std::shared_ptr<item::AbstractItem> noti);
   int Delete(std::shared_ptr<item::AbstractItem> noti);
   int DeleteAll();
   int Hide(std::shared_ptr<item::AbstractItem> noti);
-  std::shared_ptr<item::AbstractItem> FindByRootID(std::string id);
+  std::unique_ptr<item::AbstractItem> FindByRootID(std::string id);
   int SendEvent(const IEventInfo& info, std::shared_ptr<item::AbstractItem> noti);
   void OnEvent(const IEventInfo& info, std::list<Bundle> serialized) override;
   std::list<Bundle> OnRequest(const IEventInfo& info) override;

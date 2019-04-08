@@ -194,6 +194,7 @@ typedef int (*noti_ex_item_group_foreach_cb)(noti_ex_item_h handle, void *data);
  * @brief Gets the data of children from the group item.
  * @details The noti_ex_item_group_foreach_cb is called each child of group item.
  * @since_tizen 5.5
+ * @param[in] handle The notification_ex item handle
  * @param[in] callback The callback function to get the children data
  * @param[in] data The data to be passed to the callback function
  * @return #NOTI_EX_ERROR_NONE On success, other value on failure
@@ -205,14 +206,25 @@ typedef int (*noti_ex_item_group_foreach_cb)(noti_ex_item_h handle, void *data);
  * @code
 #include <notification_ex_group.h>
 
+int _ex_item_group_foreach_cb(noti_ex_item_h handle, void *data) {
+	return 0;
+}
+
 {
 	int ret;
+	noti_ex_item_h group_item = NULL;
+	noti_ex_item_h child_item = NULL;
 
-	ret = noti_ex_item_group_foreach(noti_ex_item_group_foreach_cb_function, NULL);
+	ret = noti_ex_item_group_create(&group_item, "group_id");
+	ret = noti_ex_item_button_create(&child_item, "button_id", "button_title");
+	ret = noti_ex_item_group_add_child(group_item, child_item);
+
+	ret = noti_ex_item_group_foreach(_ex_item_group_foreach_cb, NULL);
 }
  * @endcode
  */
-int noti_ex_item_group_foreach(noti_ex_item_group_foreach_cb callback, void *data);
+int noti_ex_item_group_foreach(noti_ex_item_h handle,
+		noti_ex_item_group_foreach_cb callback, void *data);
 
 #ifdef __cplusplus
 }

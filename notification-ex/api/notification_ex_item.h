@@ -23,11 +23,11 @@
 extern "C" {
 #endif
 
-#define RECEIVERGROUP_PANEL = "tizen.org/receiver/panel"; /**< Panel */
-#define RECEIVERGROUP_TICKER = "tizen.org/receiver/ticker"; /**< Ticker */
-#define RECEIVERGROUP_LOCKSCREEN = "tizen.org/receiver/lockscreen"; /**< Lockscreen */
-#define RECEIVERGROUP_INDICATOR = "tizen.org/receiver/indicator"; /**< Indicator */
-#define RECEIVERGROUP_POPUP = "tizen.org/receiver/popup"; /**< Popup */
+#define RECEIVERGROUP_PANEL "tizen.org/receiver/panel" /**< Panel */
+#define RECEIVERGROUP_TICKER "tizen.org/receiver/ticker" /**< Ticker */
+#define RECEIVERGROUP_LOCKSCREEN "tizen.org/receiver/lockscreen" /**< Lockscreen */
+#define RECEIVERGROUP_INDICATOR "tizen.org/receiver/indicator" /**< Indicator */
+#define RECEIVERGROUP_POPUP "tizen.org/receiver/popup" /**< Popup */
 
 /**
  * @brief Enumeration for notification_ex item types.

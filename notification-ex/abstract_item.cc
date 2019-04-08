@@ -315,6 +315,10 @@ void AbstractItem::Deserialize(Bundle b) {
   }
 }
 
+void AbstractItem::SetId(std::string id) {
+  impl_->id_ = id;
+}
+
 string AbstractItem::GetId() const {
   return impl_->id_;
 }

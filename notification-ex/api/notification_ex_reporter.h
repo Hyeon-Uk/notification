@@ -44,7 +44,7 @@ typedef void* noti_ex_reporter_h;
  * @see #noti_ex_reporter_h
  * @see #noti_ex_error_e
  */
-typedef void (*noti_ex_reporter_events_error_cb)(noti_ex_reporter_h *handle,
+typedef void (*noti_ex_reporter_events_error_cb)(noti_ex_reporter_h handle,
 		noti_ex_error_e err, int request_id, void *data);
 
 /**
@@ -67,7 +67,7 @@ typedef void (*noti_ex_reporter_events_error_cb)(noti_ex_reporter_h *handle,
  * @see #noti_ex_item_h
  * @see #noti_ex_event_info_clone
  */
-typedef void (*noti_ex_reporter_events_event_cb)(noti_ex_reporter_h *handle,
+typedef void (*noti_ex_reporter_events_event_cb)(noti_ex_reporter_h handle,
 		noti_ex_event_info_h info, const noti_ex_item_h *items, int count,
 		void *data);
 
@@ -186,7 +186,6 @@ void _reporter_events_error_cb(noti_ex_reporter_h handle, noti_ex_error_e error,
  */
 int noti_ex_reporter_destroy(noti_ex_reporter_h handle);
 
-
 /**
  * @brief Sends error.
  * @since_tizen 5.5
@@ -196,11 +195,11 @@ int noti_ex_reporter_destroy(noti_ex_reporter_h handle);
  * @param[in] receiver_group The notification group name of reporter
  * @param[in] info The handle that contains event information
  * @param[in] error The error type
- * @param[out] request_id The id of request
  * @return #NOTI_EX_ERROR_NONE On success, other value on failure
  * @retval #NOTI_EX_ERROR_NONE Success
  * @retval #NOTI_EX_ERROR_INVALID_PARAMETER Invalid parameter
  * @retval #NOTI_EX_ERROR_PERMISSION_DENIED Permission deny
+ * @retval #NOTI_EX_ERROR_IO_ERROR IO error
  * @see #noti_ex_event_info_h
  * @see #noti_ex_manager_events_s
  * @see #noti_ex_error_e
@@ -237,7 +236,7 @@ void _reporter_events_request_cb(noti_ex_reporter_h handle,
  * @endcode
  */
 int noti_ex_reporter_send_error(noti_ex_reporter_h handle,
-		noti_ex_event_info_h info, noti_ex_error_e error, int *request_id);
+		noti_ex_event_info_h info, noti_ex_error_e error);
 
 /**
  * @brief Posts notification.
@@ -249,6 +248,7 @@ int noti_ex_reporter_send_error(noti_ex_reporter_h handle,
  * @return #NOTI_EX_ERROR_NONE On success, other value on failure
  * @retval #NOTI_EX_ERROR_NONE Success
  * @retval #NOTI_EX_ERROR_INVALID_PARAMETER Invalid parameter
+ * @retval #NOTI_EX_ERROR_IO_ERROR IO error
  * @see #noti_ex_reporter_create
  * @par Sample code:
  * @code
@@ -289,6 +289,7 @@ int noti_ex_reporter_post(noti_ex_reporter_h handle, noti_ex_item_h noti,
  * @return #NOTI_EX_ERROR_NONE On success, other value on failure
  * @retval #NOTI_EX_ERROR_NONE Success
  * @retval #NOTI_EX_ERROR_INVALID_PARAMETER Invalid parameter
+ * @retval #NOTI_EX_ERROR_IO_ERROR IO error
  * @see #noti_ex_reporter_create
  * @par Sample code:
  * @code
@@ -334,6 +335,7 @@ int noti_ex_reporter_post_list(noti_ex_reporter_h handle, noti_ex_item_h *noti_l
  * @return #NOTI_EX_ERROR_NONE On success, other value on failure
  * @retval #NOTI_EX_ERROR_NONE Success
  * @retval #NOTI_EX_ERROR_INVALID_PARAMETER Invalid parameter
+ * @retval #NOTI_EX_ERROR_IO_ERROR IO error
  * @see #noti_ex_reporter_create
  * @par Sample code:
  * @code
@@ -372,6 +374,7 @@ int noti_ex_reporter_update(noti_ex_reporter_h handle, noti_ex_item_h noti,
  * @return #NOTI_EX_ERROR_NONE On success, other value on failure
  * @retval #NOTI_EX_ERROR_NONE Success
  * @retval #NOTI_EX_ERROR_INVALID_PARAMETER Invalid parameter
+ * @retval #NOTI_EX_ERROR_IO_ERROR IO error
  * @see #noti_ex_reporter_create
  * @par Sample code:
  * @code
@@ -408,6 +411,7 @@ int noti_ex_reporter_delete(noti_ex_reporter_h handle, noti_ex_item_h noti,
  * @return #NOTI_EX_ERROR_NONE On success, other value on failure
  * @retval #NOTI_EX_ERROR_NONE Success
  * @retval #NOTI_EX_ERROR_INVALID_PARAMETER Invalid parameter
+ * @retval #NOTI_EX_ERROR_IO_ERROR IO error
  * @see #noti_ex_reporter_create
  * @par Sample code:
  * @code
@@ -444,6 +448,7 @@ int noti_ex_reporter_delete_all(noti_ex_reporter_h handle,
  * @return #NOTI_EX_ERROR_NONE On success, other value on failure
  * @retval #NOTI_EX_ERROR_NONE Success
  * @retval #NOTI_EX_ERROR_INVALID_PARAMETER Invalid parameter
+ * @retval #NOTI_EX_ERROR_IO_ERROR IO error
  * @see #noti_ex_reporter_create
  * @par Sample code:
  * @code

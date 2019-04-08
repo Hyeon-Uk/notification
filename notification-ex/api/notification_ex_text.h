@@ -121,11 +121,11 @@ int noti_ex_item_text_get_contents(noti_ex_item_h handle, char **contents);
 	int ret;
     char *hyper_link = NULL;
 
-	ret = noti_ex_item_text_get_hyper_link(text_item, &hyper_link);
+	ret = noti_ex_item_text_get_hyperlink(text_item, &hyper_link);
 }
  * @endcode
  */
-int noti_ex_item_text_get_hyper_link(noti_ex_item_h handle, char **hyper_link);
+int noti_ex_item_text_get_hyperlink(noti_ex_item_h handle, char **hyper_link);
 
 #ifdef __cplusplus
 }

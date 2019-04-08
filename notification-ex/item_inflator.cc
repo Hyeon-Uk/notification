@@ -31,8 +31,8 @@ using namespace std;
 namespace notification {
 namespace item {
 
-shared_ptr<AbstractItem> ItemInflator::Create(Bundle b) {
-  shared_ptr<AbstractItem> item =
+unique_ptr<AbstractItem> ItemInflator::Create(Bundle b) {
+  unique_ptr<AbstractItem> item =
       FactoryManager::GetInst().CreateItem(AbstractItem::GetType(b));
   item.get()->Deserialize(b);
   return item;

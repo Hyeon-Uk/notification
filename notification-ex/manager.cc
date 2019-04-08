@@ -102,27 +102,27 @@ int Manager::Hide(shared_ptr<item::AbstractItem> noti) {
   return impl_->SendNotify(noti, EventInfo::Update);
 }
 
-shared_ptr<item::AbstractItem> Manager::FindByRootID(string id) {
+unique_ptr<item::AbstractItem> Manager::FindByRootID(string id) {
   EventInfo info(EventInfo::Get, util::GetAppId(), "", id);
   list<Bundle> result = impl_->sender_->Request(info);
   if (result.size() == 0) {
     LOGE("Fail to get noti");
-    return shared_ptr<item::AbstractItem>({});
+    return unique_ptr<item::AbstractItem>{};
   }
   Bundle b = result.front();
-  shared_ptr<AbstractItem> gen_item = ItemInflator::Create(b);
-  return gen_item;
+  unique_ptr<AbstractItem> gen_item = ItemInflator::Create(b);
+  return move(gen_item);
 }
 
-list<shared_ptr<item::AbstractItem>> Manager::Get() {
+list<unique_ptr<item::AbstractItem>> Manager::Get() {
   EventInfo info(EventInfo::Get, util::GetAppId(), "");
   list<Bundle> result = impl_->sender_->Request(info);
-  list<shared_ptr<item::AbstractItem>> gen_list;
+  list<unique_ptr<item::AbstractItem>> gen_list;
   for (auto& i : result) {
-    shared_ptr<AbstractItem> gen_item = ItemInflator::Create(i);
-    gen_list.emplace_back(gen_item);
+    unique_ptr<AbstractItem> gen_item = ItemInflator::Create(i);
+    gen_list.push_back(move(gen_item));
   }
-  return gen_list;
+  return move(gen_list);
 }
 
 int Manager::SendEvent(const IEventInfo& info,

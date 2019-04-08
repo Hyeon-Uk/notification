@@ -267,6 +267,7 @@ int noti_ex_manager_destroy(noti_ex_manager_h handle);
  * @retval #NOTI_EX_ERROR_NONE Success
  * @retval #NOTI_EX_ERROR_INVALID_PARAMETER Invalid parameter
  * @retval #NOTI_EX_ERROR_PERMISSION_DENIED Permission deny
+ * @retval #NOTI_EX_ERROR_IO_ERROR IO error
  * @see #noti_ex_item_h
  * @see #noti_ex_manager_h
  * @par Sample code:
@@ -310,6 +311,7 @@ int noti_ex_manager_get(noti_ex_manager_h handle,
  * @retval #NOTI_EX_ERROR_NONE Success
  * @retval #NOTI_EX_ERROR_INVALID_PARAMETER Invalid parameter
  * @retval #NOTI_EX_ERROR_PERMISSION_DENIED Permission deny
+ * @retval #NOTI_EX_ERROR_IO_ERROR IO error
  * @see #noti_ex_item_h
  * @see #noti_ex_manager_h
  * @par Sample code:
@@ -356,6 +358,7 @@ int noti_ex_manager_update(noti_ex_manager_h handle, noti_ex_item_h item,
  * @retval #NOTI_EX_ERROR_NONE Success
  * @retval #NOTI_EX_ERROR_INVALID_PARAMETER Invalid parameter
  * @retval #NOTI_EX_ERROR_PERMISSION_DENIED Permission deny
+ * @retval #NOTI_EX_ERROR_IO_ERROR IO error
  * @see #noti_ex_manager_h
  * @see #noti_ex_error_e
  * @par Sample code:
@@ -399,6 +402,7 @@ int noti_ex_manager_delete(noti_ex_manager_h handle, noti_ex_item_h noti,
  * @retval #NOTI_EX_ERROR_NONE Success
  * @retval #NOTI_EX_ERROR_INVALID_PARAMETER Invalid parameter
  * @retval #NOTI_EX_ERROR_PERMISSION_DENIED Permission deny
+ * @retval #NOTI_EX_ERROR_IO_ERROR IO error
  * @see #noti_ex_manager_h
  * @see #noti_ex_error_e
  * @par Sample code:
@@ -439,6 +443,7 @@ int noti_ex_manager_delete_all(noti_ex_manager_h handle,
  * @retval #NOTI_EX_ERROR_NONE Success
  * @retval #NOTI_EX_ERROR_INVALID_PARAMETER Invalid parameter
  * @retval #NOTI_EX_ERROR_PERMISSION_DENIED Permission deny
+ * @retval #NOTI_EX_ERROR_IO_ERROR IO error
  * @see #noti_ex_item_h
  * @see #noti_ex_manager_h
  * @par Sample code:
@@ -482,6 +487,7 @@ int noti_ex_manager_hide(noti_ex_manager_h handle, noti_ex_item_h item,
  * @retval #NOTI_EX_ERROR_NONE Success
  * @retval #NOTI_EX_ERROR_INVALID_PARAMETER Invalid parameter
  * @retval #NOTI_EX_ERROR_PERMISSION_DENIED Permission deny
+ * @retval #NOTI_EX_ERROR_IO_ERROR IO error
  * @see #noti_ex_manager_h
  * @see #noti_ex_item_h
  * @par Sample code:
@@ -515,11 +521,11 @@ int noti_ex_manager_find_by_root_id(noti_ex_manager_h handle,
  * @param[in] handle The notification manager handle
  * @param[in] info The handle that contains event information
  * @param[in] error The error type
- * @param[out] request_id The id of request
  * @return #NOTI_EX_ERROR_NONE On success, other value on failure
  * @retval #NOTI_EX_ERROR_NONE Success
  * @retval #NOTI_EX_ERROR_INVALID_PARAMETER Invalid parameter
  * @retval #NOTI_EX_ERROR_PERMISSION_DENIED Permission deny
+ * @retval #NOTI_EX_ERROR_IO_ERROR IO error
  * @see #noti_ex_event_info_h
  * @see #noti_ex_manager_h
  * @see #noti_ex_error_e
@@ -533,9 +539,8 @@ void _manager_events_add_cb(noti_ex_manager_h handle, noti_ex_event_info_h info,
 
 void _manager_events_update_cb(noti_ex_manager_h handle, noti_ex_event_info_h info,
 		noti_ex_item_h updated_item, void *data) {
-	int request_id;
 	// if something wrong about process
-	noti_ex_manager_send_error(handle, info, NOTI_EX_ERROR_IO_ERROR, &request_id);
+	noti_ex_manager_send_error(handle, info, NOTI_EX_ERROR_IO_ERROR);
 }
 
 void _manager_events_delete_cb(noti_ex_manager_h handle, noti_ex_event_info_h info,
@@ -565,7 +570,7 @@ void _manager_events_request_cb(noti_ex_manager_h handle, noti_ex_event_info_h i
  * @endcode
  */
 int noti_ex_manager_send_error(noti_ex_manager_h handle,
-		noti_ex_event_info_h info, noti_ex_error_e error, int *request_id);
+		noti_ex_event_info_h info, noti_ex_error_e error);
 
 /**
  * @brief Gets the count of notifications for the manager.
@@ -580,6 +585,7 @@ int noti_ex_manager_send_error(noti_ex_manager_h handle,
  * @retval #NOTI_EX_ERROR_NONE Success
  * @retval #NOTI_EX_ERROR_INVALID_PARAMETER Invalid parameter
  * @retval #NOTI_EX_ERROR_PERMISSION_DENIED Permission deny
+ * @retval #NOTI_EX_ERROR_IO_ERROR IO error
  * @see #noti_ex_manager_h
  * @see #RECEIVERGROUP_PANEL
  * @see #RECEIVERGROUP_TICKER

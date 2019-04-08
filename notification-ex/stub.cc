@@ -48,6 +48,12 @@
 #include "notification-ex/progress_item.h"
 #include "notification-ex/time_item.h"
 #include "notification-ex/visibility_action.h"
+#include "notification-ex/ex_bundle.h"
+#include "notification-ex/event_info_internal.h"
+#include "notification-ex/manager.h"
+#include "notification-ex/dbus_sender.h"
+#include "notification-ex/dbus_event_listener.h"
+#include "notification-ex/exception.h"
 
 #ifdef LOG_TAG
 #undef LOG_TAG
@@ -61,6 +67,255 @@
 
 using namespace std;
 using namespace notification::item;
+using namespace notification;
+
+namespace {
+class Handle {
+ public:
+  Handle(item::AbstractItem* ref) : ref_(ref) { }
+  Handle(std::shared_ptr<item::AbstractItem> ptr)
+      : ref_(nullptr), ptr_(move(ptr)) { }
+  virtual ~Handle() = default;
+  item::AbstractItem* Get() const {
+    if (ptr_ == nullptr)
+      return ref_;
+    return ptr_.get();
+  }
+
+  bool IsValidType(int type) const {
+    return (Get()->GetType() == type
+        || Get()->GetType() >= AbstractItem::Custom);
+  }
+
+  std::shared_ptr<item::AbstractItem> GetPtr() const {
+    if (ptr_ == nullptr)
+      return std::shared_ptr<item::AbstractItem>({});
+    return ptr_;
+  }
+
+ private:
+  item::AbstractItem* ref_;
+  std::shared_ptr<item::AbstractItem> ptr_;
+
+};
+
+class ManagerCallbackInfo {
+ public:
+  ManagerCallbackInfo(noti_ex_manager_events_s cb, void* user_data)
+    : user_data_(user_data) {
+    cb_.added = cb.added;
+    cb_.updated = cb.updated;
+    cb_.deleted = cb.deleted;
+    cb_.error = cb.error;
+    cb_.requested = cb.requested;
+  }
+
+  void InvokeAdded(Manager* manager, const IEventInfo& info,
+      list<shared_ptr<AbstractItem>> addedItem) {
+
+    noti_ex_item_h* added_item =
+        (noti_ex_item_h*)calloc(addedItem.size(), sizeof(noti_ex_item_h));
+    if (added_item == nullptr) {
+      LOGE("Out of memory");
+      return;
+    }
+
+    int idx = 0;
+    for (auto& i : addedItem) {
+      added_item[idx++] =
+          static_cast<noti_ex_item_h>(new Handle(shared_ptr<AbstractItem>(i)));
+    }
+
+    IEventInfo* c_info = const_cast<IEventInfo*>(&info);
+    cb_.added(static_cast<noti_ex_manager_h>(manager),
+        static_cast<noti_ex_event_info_h>(c_info), added_item,
+        addedItem.size(), user_data_);
+    free(added_item);
+  }
+
+  void InvokeUpdated(Manager* manager, const IEventInfo& info,
+      shared_ptr<item::AbstractItem> updatedItem) {
+    IEventInfo* c_info = const_cast<IEventInfo*>(&info);
+    cb_.updated(static_cast<noti_ex_manager_h>(manager),
+        static_cast<noti_ex_event_info_h>(c_info),
+        static_cast<noti_ex_item_h>(new Handle(updatedItem)), user_data_);
+  }
+
+  void InvokeDeleted(Manager* manager, const IEventInfo& info,
+      shared_ptr<item::AbstractItem> deletedItem) {
+    IEventInfo* c_info = const_cast<IEventInfo*>(&info);
+    cb_.deleted(static_cast<noti_ex_manager_h>(manager),
+        static_cast<noti_ex_event_info_h>(c_info),
+        static_cast<noti_ex_item_h>(
+            new Handle(deletedItem)), user_data_);
+  }
+
+  void InvokeError(Manager* manager, NotificationError error, int requestId) {
+    cb_.error(static_cast<noti_ex_manager_h>(manager),
+        static_cast<noti_ex_error_e>(error), requestId, user_data_);
+  }
+
+  list<shared_ptr<item::AbstractItem>> InvokeRequested(
+      Manager* manager, const IEventInfo& info) {
+    IEventInfo* c_info = const_cast<IEventInfo*>(&info);
+    noti_ex_item_h* items = nullptr;
+    int cnt;
+    cb_.requested(static_cast<noti_ex_manager_h>(manager),
+        static_cast<noti_ex_event_info_h>(c_info),
+        &items, &cnt, user_data_);
+    list<shared_ptr<item::AbstractItem>> ret_list;
+    for (int i = 0; i < cnt; i++) {
+      Handle* item = static_cast<Handle*>(items[i]);
+      ret_list.emplace_back(item->GetPtr());
+    }
+    return ret_list;
+  }
+
+ private:
+  noti_ex_manager_events_s cb_;
+  void* user_data_;
+};
+
+class ManagerStub : public Manager {
+ public:
+  ManagerStub(std::unique_ptr<IEventSender> sender,
+      std::unique_ptr<IEventListener> listener, std::string receiver_group = "")
+    : Manager(move(sender), move(listener), receiver_group) {
+  }
+
+  void OnAdd(const IEventInfo& info,
+      list<shared_ptr<AbstractItem>> addedItem) override {
+    cb_->InvokeAdded(this, info, addedItem);
+
+  }
+
+  void OnUpdate(const IEventInfo& info,
+      std::shared_ptr<item::AbstractItem> updatedItem) override {
+    cb_->InvokeUpdated(this, info, updatedItem);
+  }
+
+  void OnDelete(const IEventInfo& info,
+      shared_ptr<item::AbstractItem> deletedItem) override {
+    cb_->InvokeDeleted(this, info, deletedItem);
+  }
+
+  void OnError(NotificationError error, int requestId) override {
+    cb_->InvokeError(this, error, requestId);
+  }
+
+  list<shared_ptr<item::AbstractItem>> OnRequestEvent(
+      const IEventInfo& info) override {
+    return cb_->InvokeRequested(this, info);
+  }
+
+  int SetManagerCallbackInfo(unique_ptr<ManagerCallbackInfo> ci) {
+    cb_ = move(ci);
+    return NOTI_EX_ERROR_NONE;
+  }
+
+  int ClearManagerCallbackInfo() {
+    cb_.reset();
+    return NOTI_EX_ERROR_NONE;
+  }
+
+ private:
+  unique_ptr<ManagerCallbackInfo> cb_;
+};
+
+
+class ReporterCallbackInfo {
+ public:
+  ReporterCallbackInfo(noti_ex_reporter_events_s cb, void* user_data)
+    : user_data_(user_data) {
+    cb_.event = cb.event;
+    cb_.error = cb.error;
+    cb_.requested = cb.requested;
+  }
+
+  void InvokeEvent(Reporter* reporter, const IEventInfo& info,
+      list<shared_ptr<AbstractItem>> notiList) {
+
+    noti_ex_item_h* noti_list =
+        (noti_ex_item_h*)calloc(notiList.size(), sizeof(noti_ex_item_h));
+    if (noti_list == nullptr) {
+      LOGE("Out of memory");
+      return;
+    }
+
+    int idx = 0;
+    for (auto& i : notiList) {
+      noti_list[idx++] =
+          static_cast<noti_ex_item_h>(new Handle(i));
+    }
+
+    IEventInfo* c_info = const_cast<IEventInfo*>(&info);
+    cb_.event(static_cast<noti_ex_reporter_h>(reporter),
+        static_cast<noti_ex_event_info_h>(c_info), noti_list,
+        notiList.size(), user_data_);
+    free(noti_list);
+  }
+
+  void InvokeError(Reporter* reporter, NotificationError error, int requestId) {
+    cb_.error(static_cast<noti_ex_reporter_h>(reporter),
+        static_cast<noti_ex_error_e>(error), requestId, user_data_);
+  }
+
+  list<shared_ptr<item::AbstractItem>> InvokeRequested(Reporter* reporter,
+      const IEventInfo& info) {
+    IEventInfo* c_info = const_cast<IEventInfo*>(&info);
+    noti_ex_item_h* items = nullptr;
+    int cnt;
+    cb_.requested(static_cast<noti_ex_reporter_h>(reporter),
+        static_cast<noti_ex_event_info_h>(c_info),
+        &items, &cnt, user_data_);
+    list<shared_ptr<item::AbstractItem>> ret_list;
+    for (int i = 0; i < cnt; i++) {
+      Handle* item = static_cast<Handle*>(items[i]);
+      ret_list.emplace_back(item->GetPtr());
+    }
+    return ret_list;
+  }
+
+ private:
+  noti_ex_reporter_events_s cb_;
+  void* user_data_;
+};
+
+class ReporterStub : public Reporter {
+ public:
+  ReporterStub(std::unique_ptr<IEventSender> sender,
+      std::unique_ptr<IEventListener> listener)
+    : Reporter(move(sender), move(listener)) {
+  }
+
+  void OnEvent(const IEventInfo& info,
+      std::list<std::shared_ptr<item::AbstractItem>> notiList) override {
+    cb_->InvokeEvent(this, info, notiList);
+  }
+
+  list<shared_ptr<item::AbstractItem>> OnRequestEvent(
+      const IEventInfo& info) override {
+    return cb_->InvokeRequested(this, info);
+  }
+
+  void OnError(NotificationError error, int requestId) override {
+    cb_->InvokeError(this, error, requestId);
+  }
+
+  int SetReporterCallbackInfo(unique_ptr<ReporterCallbackInfo> ci) {
+    cb_ = move(ci);
+    return NOTI_EX_ERROR_NONE;
+  }
+
+  int ClearReporterCallbackInfo() {
+    cb_.reset();
+    return NOTI_EX_ERROR_NONE;
+  }
+
+ private:
+  unique_ptr<ReporterCallbackInfo> cb_;
+};
+}
 
 extern "C" EXPORT_API int noti_ex_action_app_control_create(
     noti_ex_action_h *handle, app_control_h app_control,
@@ -125,8 +380,7 @@ extern "C" EXPORT_API int noti_ex_item_button_create(noti_ex_item_h *handle,
     LOGE("Out-of-memory");
     return NOTI_EX_ERROR_OUT_OF_MEMORY;
   }
-
-  *handle = p;
+  *handle = new Handle(shared_ptr<AbstractItem>(p));
 
   return NOTI_EX_ERROR_NONE;
 }
@@ -138,7 +392,12 @@ extern "C" EXPORT_API int noti_ex_item_button_get_title(noti_ex_item_h handle,
     return NOTI_EX_ERROR_INVALID_PARAMETER;
   }
 
-  ButtonItem* p = static_cast<ButtonItem*>(handle);
+  Handle* sp = static_cast<Handle*>(handle);
+  if (!sp->IsValidType(AbstractItem::Button)) {
+    LOGE("Invalid handle type");
+    return NOTI_EX_ERROR_INVALID_PARAMETER;
+  }
+  ButtonItem* p = static_cast<ButtonItem*>(sp->Get());
   if (!p->GetTitle().empty()) {
     *title = strdup(p->GetTitle().c_str());
     if (*title == nullptr) {
@@ -159,23 +418,18 @@ extern "C" EXPORT_API int noti_ex_item_chat_message_create(
     return NOTI_EX_ERROR_INVALID_PARAMETER;
   }
 
-  TextItem* name_ = static_cast<TextItem*>(name);
-  TextItem* text_ = static_cast<TextItem*>(text);
-  ImageItem* image_ = static_cast<ImageItem*>(image);
-  TimeItem* time_ = static_cast<TimeItem*>(time);
-
   auto* p = new (std::nothrow) ChatMessageItem(id,
-                static_cast<std::shared_ptr<TextItem>>(name_),
-                static_cast<std::shared_ptr<TextItem>>(text_),
-                static_cast<std::shared_ptr<ImageItem>>(image_),
-                static_cast<std::shared_ptr<TimeItem>>(time_),
-                static_cast<ChatMessageItem::Type>((int)message_type));
+          dynamic_pointer_cast<TextItem>(static_cast<Handle*>(name)->GetPtr()),
+          dynamic_pointer_cast<TextItem>(static_cast<Handle*>(text)->GetPtr()),
+          dynamic_pointer_cast<ImageItem>(static_cast<Handle*>(image)->GetPtr()),
+          dynamic_pointer_cast<TimeItem>(static_cast<Handle*>(time)->GetPtr()),
+          static_cast<ChatMessageItem::Type>((int)message_type));
   if (p == nullptr) {
     LOGE("Out-of-memory");
     return NOTI_EX_ERROR_OUT_OF_MEMORY;
   }
 
-  *handle = p;
+  *handle = new Handle(shared_ptr<AbstractItem>(p));
 
   return NOTI_EX_ERROR_NONE;
 }
@@ -186,9 +440,13 @@ extern "C" EXPORT_API int noti_ex_item_chat_message_get_name(
     LOGE("Invalid parameter");
     return NOTI_EX_ERROR_INVALID_PARAMETER;
   }
-
-  ChatMessageItem* p = static_cast<ChatMessageItem*>(handle);
-  *name = &(p->GetNameItem());
+  Handle* h = static_cast<Handle*>(handle);
+  if (!h->IsValidType(AbstractItem::ChatMessage)) {
+    LOGE("Invalid handle type");
+    return NOTI_EX_ERROR_INVALID_PARAMETER;
+  }
+  ChatMessageItem* p = static_cast<ChatMessageItem*>(h->Get());
+  *name = new Handle(&(p->GetNameItem()));
 
   return NOTI_EX_ERROR_NONE;
 }
@@ -200,8 +458,13 @@ extern "C" EXPORT_API int noti_ex_item_chat_message_get_text(
     return NOTI_EX_ERROR_INVALID_PARAMETER;
   }
 
-  ChatMessageItem* p = static_cast<ChatMessageItem*>(handle);
-  *text = &(p->GetTextItem());
+  Handle* h = static_cast<Handle*>(handle);
+  if (!h->IsValidType(AbstractItem::ChatMessage)) {
+    LOGE("Invalid handle type");
+    return NOTI_EX_ERROR_INVALID_PARAMETER;
+  }
+  ChatMessageItem* p = static_cast<ChatMessageItem*>(h->Get());
+  *text = new Handle(&(p->GetTextItem()));
 
   return NOTI_EX_ERROR_NONE;
 }
@@ -213,8 +476,13 @@ extern "C" EXPORT_API int noti_ex_item_chat_message_get_image(
     return NOTI_EX_ERROR_INVALID_PARAMETER;
   }
 
-  ChatMessageItem* p = static_cast<ChatMessageItem*>(handle);
-  *image =  &(p->GetImageItem());
+  Handle* h = static_cast<Handle*>(handle);
+  if (!h->IsValidType(AbstractItem::ChatMessage)) {
+    LOGE("Invalid handle type");
+    return NOTI_EX_ERROR_INVALID_PARAMETER;
+  }
+  ChatMessageItem* p = static_cast<ChatMessageItem*>(h->Get());
+  *image =  new Handle(&(p->GetImageItem()));
 
   return NOTI_EX_ERROR_NONE;
 }
@@ -226,8 +494,13 @@ extern "C" EXPORT_API int noti_ex_item_chat_message_get_time(
     return NOTI_EX_ERROR_INVALID_PARAMETER;
   }
 
-  ChatMessageItem* p = static_cast<ChatMessageItem*>(handle);
-  *time = &(p->GetTimeItem());
+  Handle* h = static_cast<Handle*>(handle);
+  if (!h->IsValidType(AbstractItem::ChatMessage)) {
+    LOGE("Invalid handle type");
+    return NOTI_EX_ERROR_INVALID_PARAMETER;
+  }
+  ChatMessageItem* p = static_cast<ChatMessageItem*>(h->Get());
+  *time = new Handle(&(p->GetTimeItem()));
 
   return NOTI_EX_ERROR_NONE;
 }
@@ -239,7 +512,12 @@ extern "C" EXPORT_API int noti_ex_item_chat_message_get_message_type(
     return NOTI_EX_ERROR_INVALID_PARAMETER;
   }
 
-  ChatMessageItem* p = static_cast<ChatMessageItem*>(handle);
+  Handle* h = static_cast<Handle*>(handle);
+  if (!h->IsValidType(AbstractItem::ChatMessage)) {
+    LOGE("Invalid handle type");
+    return NOTI_EX_ERROR_INVALID_PARAMETER;
+  }
+  ChatMessageItem* p = static_cast<ChatMessageItem*>(h->Get());
   *message_type = (noti_ex_item_chat_message_type_e)(p->GetMessageType());
 
   return NOTI_EX_ERROR_NONE;
@@ -260,7 +538,7 @@ extern "C" EXPORT_API int noti_ex_item_checkbox_create(noti_ex_item_h *handle,
     return NOTI_EX_ERROR_OUT_OF_MEMORY;
   }
 
-  *handle = p;
+  *handle = new Handle(p);
 
   return NOTI_EX_ERROR_NONE;
 }
@@ -271,8 +549,12 @@ extern "C" EXPORT_API int noti_ex_item_checkbox_get_title(noti_ex_item_h handle,
     LOGE("Invalid parameter");
     return NOTI_EX_ERROR_INVALID_PARAMETER;
   }
-
-  CheckBoxItem* p = static_cast<CheckBoxItem*>(handle);
+  Handle* h = static_cast<Handle*>(handle);
+  if (!h->IsValidType(AbstractItem::CheckBox)) {
+    LOGE("Invalid handle type");
+    return NOTI_EX_ERROR_INVALID_PARAMETER;
+  }
+  CheckBoxItem* p = static_cast<CheckBoxItem*>(h->Get());
   if (!p->GetTitle().empty()) {
     *title = strdup(p->GetTitle().c_str());
     if (*title == nullptr) {
@@ -290,8 +572,12 @@ extern "C" EXPORT_API int noti_ex_item_checkbox_is_checked(noti_ex_item_h handle
     LOGE("Invalid parameter");
     return NOTI_EX_ERROR_INVALID_PARAMETER;
   }
-
-  CheckBoxItem* p = static_cast<CheckBoxItem*>(handle);
+  Handle* h = static_cast<Handle*>(handle);
+  if (!h->IsValidType(AbstractItem::CheckBox)) {
+    LOGE("Invalid handle type");
+    return NOTI_EX_ERROR_INVALID_PARAMETER;
+  }
+  CheckBoxItem* p = static_cast<CheckBoxItem*>(h->Get());
   *checked = p->IsChecked();
 
   return NOTI_EX_ERROR_NONE;
@@ -312,7 +598,7 @@ extern "C" EXPORT_API int noti_ex_item_entry_create(noti_ex_item_h *handle,
     return NOTI_EX_ERROR_OUT_OF_MEMORY;
   }
 
-  *handle = p;
+  *handle = new Handle(p);
 
   return NOTI_EX_ERROR_NONE;
 }
@@ -324,7 +610,12 @@ extern "C" EXPORT_API int noti_ex_item_entry_get_text(noti_ex_item_h handle,
     return NOTI_EX_ERROR_INVALID_PARAMETER;
   }
 
-  EntryItem* p = static_cast<EntryItem*>(handle);
+  Handle* h = static_cast<Handle*>(handle);
+  if (!h->IsValidType(AbstractItem::Entry)) {
+    LOGE("Invalid handle type");
+    return NOTI_EX_ERROR_INVALID_PARAMETER;
+  }
+  EntryItem* p = static_cast<EntryItem*>(h->Get());
   if (!p->GetText().empty()) {
     *text = strdup(p->GetText().c_str());
     if (*text == nullptr) {
@@ -342,46 +633,94 @@ extern "C" EXPORT_API int noti_ex_item_entry_set_text(noti_ex_item_h handle,
     LOGE("Invalid parameter");
     return NOTI_EX_ERROR_INVALID_PARAMETER;
   }
-
-  EntryItem* p = static_cast<EntryItem*>(handle);
+  Handle* h = static_cast<Handle*>(handle);
+  if (!h->IsValidType(AbstractItem::Entry)) {
+    LOGE("Invalid handle type");
+    return NOTI_EX_ERROR_INVALID_PARAMETER;
+  }
+  EntryItem* p = static_cast<EntryItem*>(h->Get());
   p->SetText(std::string(text));
 
   return NOTI_EX_ERROR_NONE;
 }
 
-extern "C" EXPORT_API int noti_ex_event_info_create(noti_ex_event_info_h *handle,
-    noti_ex_event_info_type_e type, const char *owner,
-    const char *channel, const char *item_id) {
+extern "C" EXPORT_API int noti_ex_event_info_clone(noti_ex_event_info_h handle,
+		noti_ex_event_info_h* cloned_handle) {
+  if (handle == nullptr || cloned_handle == nullptr) {
+    LOGE("Invalid parameter");
+    return NOTI_EX_ERROR_INVALID_PARAMETER;
+  }
+
+  Bundle cloned = static_cast<EventInfo*>(handle)->Serialize();
+  EventInfo* info = new EventInfo(cloned);
+  *cloned_handle = info;
   return NOTI_EX_ERROR_NONE;
 }
 
 extern "C" EXPORT_API int noti_ex_event_info_destroy(
     noti_ex_event_info_h handle) {
+  if (handle == nullptr) {
+    LOGE("Invalid parameter");
+    return NOTI_EX_ERROR_INVALID_PARAMETER;
+  }
+  EventInfo* info = static_cast<EventInfo*>(handle);
+  delete info;
   return NOTI_EX_ERROR_NONE;
 }
 
 extern "C" EXPORT_API int noti_ex_event_info_get_event_type(
     noti_ex_event_info_h handle, noti_ex_event_info_type_e *event_type) {
+  if (handle == nullptr || event_type == nullptr) {
+    LOGE("Invalid parameter");
+    return NOTI_EX_ERROR_INVALID_PARAMETER;
+  }
+  EventInfo* info = static_cast<EventInfo*>(handle);
+  *event_type = static_cast<noti_ex_event_info_type_e>(info->GetEventType());
+
   return NOTI_EX_ERROR_NONE;
 }
 
 extern "C" EXPORT_API int noti_ex_event_info_get_owner(
     noti_ex_event_info_h handle, char **owner) {
+  if (handle == nullptr || owner == nullptr) {
+    LOGE("Invalid parameter");
+    return NOTI_EX_ERROR_INVALID_PARAMETER;
+  }
+  EventInfo* info = static_cast<EventInfo*>(handle);
+  *owner = strdup(info->GetOwner().c_str());
   return NOTI_EX_ERROR_NONE;
 }
 
 extern "C" EXPORT_API int noti_ex_event_info_get_channel(
     noti_ex_event_info_h handle, char **channel) {
+  if (handle == nullptr || channel == nullptr) {
+    LOGE("Invalid parameter");
+    return NOTI_EX_ERROR_INVALID_PARAMETER;
+  }
+  EventInfo* info = static_cast<EventInfo*>(handle);
+  *channel = strdup(info->GetChannel().c_str());
   return NOTI_EX_ERROR_NONE;
 }
 
 extern "C" EXPORT_API int noti_ex_event_info_get_item_id(
     noti_ex_event_info_h handle, char **item_id) {
+  if (handle == nullptr || item_id == nullptr) {
+    LOGE("Invalid parameter");
+    return NOTI_EX_ERROR_INVALID_PARAMETER;
+  }
+  EventInfo* info = static_cast<EventInfo*>(handle);
+  *item_id = strdup(info->GetItemId().c_str());
   return NOTI_EX_ERROR_NONE;
 }
 
 extern "C" EXPORT_API int noti_ex_event_info_get_request_id(
     noti_ex_event_info_h handle, int *req_id) {
+  if (handle == nullptr || req_id == nullptr) {
+    LOGE("Invalid parameter");
+    return NOTI_EX_ERROR_INVALID_PARAMETER;
+  }
+  EventInfo* info = static_cast<EventInfo*>(handle);
+  *req_id = info->GetRequestId();
   return NOTI_EX_ERROR_NONE;
 }
 
@@ -404,7 +743,7 @@ extern "C" EXPORT_API int noti_ex_item_group_create(noti_ex_item_h *handle,
     return NOTI_EX_ERROR_OUT_OF_MEMORY;
   }
 
-  *handle = p;
+  *handle = new Handle(shared_ptr<AbstractItem>(p));
 
   return NOTI_EX_ERROR_NONE;
 }
@@ -415,8 +754,12 @@ extern "C" EXPORT_API int noti_ex_item_group_set_direction(noti_ex_item_h handle
     LOGE("Invalid parameter");
     return NOTI_EX_ERROR_INVALID_PARAMETER;
   }
-
-  GroupItem* p = static_cast<GroupItem*>(handle);
+  Handle* h = static_cast<Handle*>(handle);
+  if (!h->IsValidType(AbstractItem::Group)) {
+    LOGE("Invalid handle type");
+    return NOTI_EX_ERROR_INVALID_PARAMETER;
+  }
+  GroupItem* p = static_cast<GroupItem*>(h->Get());
   p->SetDirection(vertical);
 
   return NOTI_EX_ERROR_NONE;
@@ -428,8 +771,12 @@ extern "C" EXPORT_API int noti_ex_item_group_is_vertical(noti_ex_item_h handle,
     LOGE("Invalid parameter");
     return NOTI_EX_ERROR_INVALID_PARAMETER;
   }
-
-  GroupItem* p = static_cast<GroupItem*>(handle);
+  Handle* h = static_cast<Handle*>(handle);
+  if (!h->IsValidType(AbstractItem::Group)) {
+    LOGE("Invalid handle type");
+    return NOTI_EX_ERROR_INVALID_PARAMETER;
+  }
+  GroupItem* p = static_cast<GroupItem*>(h->Get());
   *vertical = p->IsVertical();
 
   return NOTI_EX_ERROR_NONE;
@@ -441,8 +788,12 @@ extern "C" EXPORT_API int noti_ex_item_group_get_app_label(noti_ex_item_h handle
     LOGE("Invalid parameter");
     return NOTI_EX_ERROR_INVALID_PARAMETER;
   }
-
-  GroupItem* p = static_cast<GroupItem*>(handle);
+  Handle* h = static_cast<Handle*>(handle);
+  if (!h->IsValidType(AbstractItem::Group)) {
+    LOGE("Invalid handle type");
+    return NOTI_EX_ERROR_INVALID_PARAMETER;
+  }
+  GroupItem* p = static_cast<GroupItem*>(h->Get());
   if (!p->GetAppLabel().empty()) {
     *label = strdup(p->GetAppLabel().c_str());
     if (*label == nullptr) {
@@ -460,11 +811,13 @@ extern "C" EXPORT_API int noti_ex_item_group_add_child(noti_ex_item_h handle,
     LOGE("Invalid parameter");
     return NOTI_EX_ERROR_INVALID_PARAMETER;
   }
-
-  GroupItem* p = static_cast<GroupItem*>(handle);
-
-  AbstractItem* child_ = static_cast<AbstractItem*>(child);
-  p->AddChild(static_cast<std::shared_ptr<AbstractItem>>(child_));
+  Handle* h = static_cast<Handle*>(handle);
+  if (!h->IsValidType(AbstractItem::Group)) {
+    LOGE("Invalid handle type");
+    return NOTI_EX_ERROR_INVALID_PARAMETER;
+  }
+  auto p = static_cast<GroupItem*>(h->Get());
+  p->AddChild((static_cast<Handle*>(child))->GetPtr());
 
   return NOTI_EX_ERROR_NONE;
 }
@@ -475,21 +828,40 @@ extern "C" EXPORT_API int noti_ex_item_group_remove_child(noti_ex_item_h handle,
     LOGE("Invalid parameter");
     return NOTI_EX_ERROR_INVALID_PARAMETER;
   }
-
-  GroupItem* p = static_cast<GroupItem*>(handle);
+  Handle* h = static_cast<Handle*>(handle);
+  if (!h->IsValidType(AbstractItem::Group)) {
+    LOGE("Invalid handle type");
+    return NOTI_EX_ERROR_INVALID_PARAMETER;
+  }
+  GroupItem* p = static_cast<GroupItem*>(h->Get());
   p->RemoveChild(std::string(item_id));
 
   return NOTI_EX_ERROR_NONE;
 }
 
-extern "C" EXPORT_API int noti_ex_item_group_foreach(
+extern "C" EXPORT_API int noti_ex_item_group_foreach(noti_ex_item_h handle,
     noti_ex_item_group_foreach_cb callback, void *data) {
-  if (callback == nullptr) {
+  if (handle == nullptr || callback == nullptr) {
     LOGE("Invalid parameter");
     return NOTI_EX_ERROR_INVALID_PARAMETER;
   }
 
-  // To do
+  Handle* h = static_cast<Handle*>(handle);
+  if (!h->IsValidType(AbstractItem::Group)) {
+    LOGE("Invalid handle type");
+    return NOTI_EX_ERROR_INVALID_PARAMETER;
+  }
+  GroupItem* p = static_cast<GroupItem*>(h->Get());
+  list<shared_ptr<AbstractItem>> children = p->GetChildren();
+  LOGI("Retrive (%d)", children.size());
+  for (auto i : children) {
+    int ret = callback(
+        static_cast<noti_ex_item_h>(new Handle(i)), data);
+    if (ret != NOTI_EX_ERROR_NONE) {
+      LOGW("callback return (%d) stop foreach", ret);
+      break;
+    }
+  }
 
   return 0;
 }
@@ -513,7 +885,7 @@ extern "C" EXPORT_API int noti_ex_item_image_create(noti_ex_item_h *handle,
     return NOTI_EX_ERROR_OUT_OF_MEMORY;
   }
 
-  *handle = p;
+  *handle = new Handle(p);
 
   return NOTI_EX_ERROR_NONE;
 }
@@ -524,8 +896,12 @@ extern "C" EXPORT_API int noti_ex_item_image_get_image_path(
     LOGE("Invalid parameter");
     return NOTI_EX_ERROR_INVALID_PARAMETER;
   }
-
-  ImageItem* p = static_cast<ImageItem*>(handle);
+  Handle* h = static_cast<Handle*>(handle);
+  if (!h->IsValidType(AbstractItem::Image)) {
+    LOGE("Invalid handle type");
+    return NOTI_EX_ERROR_INVALID_PARAMETER;
+  }
+  ImageItem* p = static_cast<ImageItem*>(h->Get());
   if (!p->GetImagePath().empty()) {
     *image_path = strdup(p->GetImagePath().c_str());
     if (*image_path == nullptr) {
@@ -556,19 +932,31 @@ extern "C" EXPORT_API int noti_ex_item_input_selector_create(
     return NOTI_EX_ERROR_OUT_OF_MEMORY;
   }
 
-  *handle = p;
+  *handle = new Handle(p);
 
   return NOTI_EX_ERROR_NONE;
 }
 
 extern "C" EXPORT_API int noti_ex_item_input_selector_get_contents(
-    noti_ex_item_h handle, char ***list, int *count) {
-  if (handle == nullptr || list == nullptr || count == nullptr) {
+    noti_ex_item_h handle, char ***contents_list, int *count) {
+  if (handle == nullptr || contents_list == nullptr || count == nullptr) {
     LOGE("Invalid parameter");
     return NOTI_EX_ERROR_INVALID_PARAMETER;
   }
 
-  // To do
+  Handle* h = static_cast<Handle*>(handle);
+  if (!h->IsValidType(AbstractItem::InputSelector)) {
+    LOGE("Invalid handle type");
+    return NOTI_EX_ERROR_INVALID_PARAMETER;
+  }
+  InputSelectorItem* p = static_cast<InputSelectorItem*>(h->Get());
+  list<string> contents = p->GetContents();
+  *contents_list = (char**)calloc(contents.size(), sizeof(char*));
+  int idx = 0;
+  for (auto& i : contents) {
+    *contents_list[idx++] = strdup(i.c_str());
+  }
+  *count = contents.size();
 
   return NOTI_EX_ERROR_NONE;
 }
@@ -580,7 +968,17 @@ extern "C" EXPORT_API int noti_ex_item_input_selector_set_contents(
     return NOTI_EX_ERROR_INVALID_PARAMETER;
   }
 
-  // To do
+  list<string> new_contents;
+  Handle* h = static_cast<Handle*>(handle);
+  if (!h->IsValidType(AbstractItem::InputSelector)) {
+    LOGE("Invalid handle type");
+    return NOTI_EX_ERROR_INVALID_PARAMETER;
+  }
+  InputSelectorItem* p = static_cast<InputSelectorItem*>(h->Get());
+  for (int i = 0; i < count; i++) {
+    new_contents.push_back(contents[i]);
+  }
+  p->SetContents(move(new_contents));
 
   return NOTI_EX_ERROR_NONE;
 }
@@ -1070,10 +1468,9 @@ extern "C" EXPORT_API int noti_ex_action_execute(noti_ex_action_h handle,
     LOGE("Invalid parameter");
     return NOTI_EX_ERROR_INVALID_PARAMETER;
   }
-
   AbstractAction* p = static_cast<AbstractAction*>(handle);
-  AbstractItem* item_ = static_cast<AbstractItem*>(item);
-  p->Execute(static_cast<std::shared_ptr<AbstractItem>>(item_));
+  Handle* ih = static_cast<Handle*>(item);
+  p->Execute(ih->GetPtr());
 
   return NOTI_EX_ERROR_NONE;
 }
@@ -1099,235 +1496,693 @@ extern "C" EXPORT_API int noti_ex_action_get_extra(noti_ex_action_h handle,
 
 extern "C" EXPORT_API int noti_ex_item_info_get_hide_time(
     noti_ex_item_info_h handle, int *hide_time) {
+  if (handle == nullptr || hide_time == nullptr) {
+    LOGE("Invalid parameter");
+    return NOTI_EX_ERROR_INVALID_PARAMETER;
+  }
+  IItemInfo* p = static_cast<IItemInfo*>(handle);
+  *hide_time = p->GetHideTime();
   return 0;
 }
 
 extern "C" EXPORT_API int noti_ex_item_info_set_hide_time(
     noti_ex_item_info_h handle, int hide_time) {
+  if (handle == nullptr) {
+    LOGE("Invalid parameter");
+    return NOTI_EX_ERROR_INVALID_PARAMETER;
+  }
+  IItemInfo* p = static_cast<IItemInfo*>(handle);
+  p->SetHideTime(hide_time);
   return 0;
 }
 
 extern "C" EXPORT_API int noti_ex_item_info_get_delete_time(
     noti_ex_item_info_h handle, int *delete_time) {
+  if (handle == nullptr || delete_time == nullptr) {
+    LOGE("Invalid parameter");
+    return NOTI_EX_ERROR_INVALID_PARAMETER;
+  }
+  IItemInfo* p = static_cast<IItemInfo*>(handle);
+  *delete_time = p->GetDeleteTime();
   return 0;
 }
 
 extern "C" EXPORT_API int noti_ex_item_info_set_delete_time(
     noti_ex_item_info_h handle, int delete_time) {
+  if (handle == nullptr) {
+    LOGE("Invalid parameter");
+    return NOTI_EX_ERROR_INVALID_PARAMETER;
+  }
+  IItemInfo* p = static_cast<IItemInfo*>(handle);
+  p->SetDeleteTime(delete_time);
   return 0;
 }
 
 extern "C" EXPORT_API int noti_ex_item_info_get_time(
     noti_ex_item_info_h handle, time_t *time) {
+  if (handle == nullptr || time == nullptr) {
+    LOGE("Invalid parameter");
+    return NOTI_EX_ERROR_INVALID_PARAMETER;
+  }
+
+  IItemInfo* p = static_cast<IItemInfo*>(handle);
+  *time = p->GetTime();
   return 0;
 }
 
 extern "C" EXPORT_API int noti_ex_item_destroy(noti_ex_item_h handle) {
+  if (handle == nullptr) {
+    LOGE("Invalid parameter");
+    return NOTI_EX_ERROR_INVALID_PARAMETER;
+  }
+
+  Handle* h = static_cast<Handle*>(handle);
+  delete h;
   return 0;
 }
 
 extern "C" EXPORT_API int noti_ex_item_find_by_id(noti_ex_item_h handle,
     const char *id, noti_ex_item_h *item) {
+  if (handle == nullptr) {
+    LOGE("Invalid parameter");
+    return NOTI_EX_ERROR_INVALID_PARAMETER;
+  }
+
+  Handle* p = static_cast<Handle*>(handle);
+  AbstractItem& find_item = p->Get()->FindByID(string(id));
+  *item = new Handle(&find_item);
   return 0;
 }
 
 extern "C" EXPORT_API int noti_ex_item_get_type(noti_ex_item_h handle,
     int *type) {
+  if (handle == nullptr || type == nullptr) {
+    LOGE("Invalid parameter");
+    return NOTI_EX_ERROR_INVALID_PARAMETER;
+  }
+
+  Handle* h = static_cast<Handle*>(handle);
+  AbstractItem* p = h->Get();
+  *type = p->GetType();
   return 0;
 }
 
 extern "C" EXPORT_API int noti_ex_item_get_shared_path(noti_ex_item_h handle,
     char ***path, int *count) {
+  if (handle == nullptr || path == nullptr || count == nullptr) {
+    LOGE("Invalid parameter");
+    return NOTI_EX_ERROR_INVALID_PARAMETER;
+  }
+  Handle* p = static_cast<Handle*>(handle);
+  list<string> shared_path = p->Get()->GetSharedPath();
+  *path = (char**)calloc(shared_path.size(), sizeof(char*));
+  int idx = 0;
+  for (auto& i : shared_path) {
+    *path[idx++] = strdup(i.c_str());
+  }
+  *count = shared_path.size();
   return 0;
 }
 
 extern "C" EXPORT_API int noti_ex_item_get_id(noti_ex_item_h handle,
     char **id) {
+  if (handle == nullptr || id == nullptr) {
+    LOGE("Invalid parameter");
+    return NOTI_EX_ERROR_INVALID_PARAMETER;
+  }
+  Handle* h = static_cast<Handle*>(handle);
+  AbstractItem* p = h->Get();
+  *id = strdup(p->GetId().c_str());
   return 0;
 }
 
 extern "C" EXPORT_API int noti_ex_item_set_id(noti_ex_item_h handle,
     const char *id) {
+  if (handle == nullptr || id == nullptr) {
+    LOGE("Invalid parameter");
+    return NOTI_EX_ERROR_INVALID_PARAMETER;
+  }
+  Handle* p = static_cast<Handle*>(handle);
+  p->Get()->SetId(id);
   return 0;
 }
 
 extern "C" EXPORT_API int noti_ex_item_get_action(noti_ex_item_h handle,
     noti_ex_action_h *action) {
+  if (handle == nullptr || action == nullptr) {
+    LOGE("Invalid parameter");
+    return NOTI_EX_ERROR_INVALID_PARAMETER;
+  }
+  Handle* p = static_cast<Handle*>(handle);
+  if (p->Get()->GetAction() == nullptr) {
+    *action = nullptr;
+    return 0;
+  }
+  *action = static_cast<noti_ex_action_h>(p->Get()->GetAction().get());
+
   return 0;
 }
 
 extern "C" EXPORT_API int noti_ex_item_set_action(noti_ex_item_h handle,
     noti_ex_action_h action) {
+  if (handle == nullptr || action == nullptr) {
+    LOGE("Invalid parameter");
+    return NOTI_EX_ERROR_INVALID_PARAMETER;
+  }
+
+  Handle* p = static_cast<Handle*>(handle);
+  AbstractAction* a = static_cast<AbstractAction*>(action);
+  p->Get()->SetAction(shared_ptr<AbstractAction>(a));
   return 0;
 }
 
 extern "C" EXPORT_API int noti_ex_item_get_style(noti_ex_item_h handle,
     noti_ex_style_h *style) {
+  if (handle == nullptr || style == nullptr) {
+    LOGE("Invalid parameter");
+    return NOTI_EX_ERROR_INVALID_PARAMETER;
+  }
+
+  Handle* p = static_cast<Handle*>(handle);
+  shared_ptr<Style> s = p->Get()->GetStyle();
+  *style = static_cast<noti_ex_style_h>(s.get());
   return 0;
 }
 
 extern "C" EXPORT_API int noti_ex_item_set_style(noti_ex_item_h handle,
     noti_ex_style_h style) {
+  if (handle == nullptr || style == nullptr) {
+    LOGE("Invalid parameter");
+    return NOTI_EX_ERROR_INVALID_PARAMETER;
+  }
+
+  Handle* p = static_cast<Handle*>(handle);
+  Style* s = static_cast<Style*>(style);
+  p->Get()->SetStyle(shared_ptr<Style>(s));
   return 0;
 }
 
 extern "C" EXPORT_API int noti_ex_item_set_visible(noti_ex_item_h handle,
     bool visible) {
+  if (handle == nullptr) {
+    LOGE("Invalid parameter");
+    return NOTI_EX_ERROR_INVALID_PARAMETER;
+  }
+
+  Handle* p = static_cast<Handle*>(handle);
+  p->Get()->SetVisible(visible);
   return 0;
 }
 
 extern "C" EXPORT_API int noti_ex_item_get_visible(noti_ex_item_h handle,
     bool *visible) {
+  if (handle == nullptr || visible == nullptr) {
+    LOGE("Invalid parameter");
+    return NOTI_EX_ERROR_INVALID_PARAMETER;
+  }
+
+  Handle* p = static_cast<Handle*>(handle);
+  *visible = p->Get()->GetVisible();
   return 0;
 }
 
 extern "C" EXPORT_API int noti_ex_item_set_enable(noti_ex_item_h handle,
     bool enable) {
+  if (handle == nullptr) {
+    LOGE("Invalid parameter");
+    return NOTI_EX_ERROR_INVALID_PARAMETER;
+  }
+
+  Handle* p = static_cast<Handle*>(handle);
+  p->Get()->SetEnable(enable);
   return 0;
 }
 
 extern "C" EXPORT_API int noti_ex_item_get_enable(noti_ex_item_h handle,
     bool *enable) {
+  if (handle == nullptr || enable == nullptr) {
+    LOGE("Invalid parameter");
+    return NOTI_EX_ERROR_INVALID_PARAMETER;
+  }
+
+  Handle* p = static_cast<Handle*>(handle);
+  *enable = p->Get()->GetEnable();
   return 0;
 }
 
 extern "C" EXPORT_API int noti_ex_item_add_receiver(noti_ex_item_h handle,
     const char *receiver_group) {
+  if (handle == nullptr || receiver_group == nullptr) {
+    LOGE("Invalid parameter");
+    return NOTI_EX_ERROR_INVALID_PARAMETER;
+  }
+
+  Handle* p = static_cast<Handle*>(handle);
+  p->Get()->AddReceiver(receiver_group);
   return 0;
 }
 
 extern "C" EXPORT_API int noti_ex_item_remove_receiver(noti_ex_item_h handle,
     const char *receiver_group) {
+  if (handle == nullptr || receiver_group == nullptr) {
+    LOGE("Invalid parameter");
+    return NOTI_EX_ERROR_INVALID_PARAMETER;
+  }
+
+  Handle* p = static_cast<Handle*>(handle);
+  p->Get()->RemoveReceiver(receiver_group);
   return 0;
 }
 
 extern "C" EXPORT_API int noti_ex_item_get_receiver_list(noti_ex_item_h handle,
-    char ***list, int *count) {
+    char ***receiver_list, int *count) {
+  if (handle == nullptr || receiver_list == nullptr || count == nullptr) {
+    LOGE("Invalid parameter");
+    return NOTI_EX_ERROR_INVALID_PARAMETER;
+  }
+
+  Handle* p = static_cast<Handle*>(handle);
+  list<string> receivers = p->Get()->GetReceiverList();
+  *receiver_list = (char**)calloc(receivers.size(), sizeof(char*));
+  int idx = 0;
+  for (auto& i : receivers) {
+    *receiver_list[idx++] = strdup(i.c_str());
+  }
+  *count = receivers.size();
   return 0;
 }
 
 extern "C" EXPORT_API int noti_ex_item_set_policy(noti_ex_item_h handle,
     int policy) {
+  if (handle == nullptr) {
+    LOGE("Invalid parameter");
+    return NOTI_EX_ERROR_INVALID_PARAMETER;
+  }
+
+  Handle* p = static_cast<Handle*>(handle);
+  p->Get()->SetPolicy(policy);
   return 0;
 }
 
 extern "C" EXPORT_API int noti_ex_item_get_policy(noti_ex_item_h handle,
     int *policy) {
+  if (handle == nullptr || policy == nullptr) {
+    LOGE("Invalid parameter");
+    return NOTI_EX_ERROR_INVALID_PARAMETER;
+  }
+
+  Handle* p = static_cast<Handle*>(handle);
+  *policy = p->Get()->GetPolicy();
   return 0;
 }
 
 extern "C" EXPORT_API int noti_ex_item_get_channel(noti_ex_item_h handle,
     char **channel) {
+  if (handle == nullptr || channel == nullptr) {
+    LOGE("Invalid parameter");
+    return NOTI_EX_ERROR_INVALID_PARAMETER;
+  }
+
+  Handle* p = static_cast<Handle*>(handle);
+  if (!p->Get()->GetChannel().empty())
+    *channel = strdup(p->Get()->GetChannel().c_str());
+  else
+    *channel = nullptr;
+
   return 0;
 }
 
 extern "C" EXPORT_API int noti_ex_item_set_channel(noti_ex_item_h handle,
     const char *channel) {
+  if (handle == nullptr) {
+    LOGE("Invalid parameter");
+    return NOTI_EX_ERROR_INVALID_PARAMETER;
+  }
+
+  Handle* p = static_cast<Handle*>(handle);
+  p->Get()->SetChannel(channel);
   return 0;
 }
 
 extern "C" EXPORT_API int noti_ex_item_set_led_info(noti_ex_item_h handle,
     noti_ex_led_info_h led) {
+  if (handle == nullptr) {
+    LOGE("Invalid parameter");
+    return NOTI_EX_ERROR_INVALID_PARAMETER;
+  }
+
+  Handle* p = static_cast<Handle*>(handle);
+  LEDInfo* led_info = static_cast<LEDInfo*>(led);
+  p->Get()->SetLEDInfo(shared_ptr<LEDInfo>(led_info));
   return 0;
 }
 
 extern "C" EXPORT_API int noti_ex_item_get_led_info(noti_ex_item_h handle,
     noti_ex_led_info_h *led) {
+  if (handle == nullptr) {
+    LOGE("Invalid parameter");
+    return NOTI_EX_ERROR_INVALID_PARAMETER;
+  }
+
+  Handle* p = static_cast<Handle*>(handle);
+  if (p->Get()->GetLEDInfo() != nullptr)
+    *led = static_cast<noti_ex_led_info_h>(p->Get()->GetLEDInfo().get());
+  else
+    *led = nullptr;
   return 0;
 }
 
 extern "C" EXPORT_API int noti_ex_item_set_sound_path(noti_ex_item_h handle,
     const char *path) {
+  if (handle == nullptr) {
+    LOGE("Invalid parameter");
+    return NOTI_EX_ERROR_INVALID_PARAMETER;
+  }
+
+  Handle* p = static_cast<Handle*>(handle);
+  if (path == nullptr)
+    p->Get()->SetSoundPath("");
+  else
+    p->Get()->SetSoundPath(path);
   return 0;
 }
 
 extern "C" EXPORT_API int noti_ex_item_set_vibration_path(noti_ex_item_h handle,
     const char *path) {
+  if (handle == nullptr) {
+    LOGE("Invalid parameter");
+    return NOTI_EX_ERROR_INVALID_PARAMETER;
+  }
+
+  Handle* p = static_cast<Handle*>(handle);
+  if (path == nullptr)
+    p->Get()->SetVibrationPath("");
+  else
+    p->Get()->SetVibrationPath(path);
   return 0;
 }
 
 extern "C" EXPORT_API int noti_ex_item_get_sound_path(noti_ex_item_h handle,
     char **path) {
+  if (handle == nullptr || path == nullptr) {
+    LOGE("Invalid parameter");
+    return NOTI_EX_ERROR_INVALID_PARAMETER;
+  }
+
+  Handle* p = static_cast<Handle*>(handle);
+  if (p->Get()->GetSoundPath().empty())
+    *path = nullptr;
+  else
+    *path = strdup(p->Get()->GetSoundPath().c_str());
   return 0;
 }
 
 extern "C" EXPORT_API int noti_ex_item_get_vibration_path(noti_ex_item_h handle,
     char **path) {
+  if (handle == nullptr || path == nullptr) {
+    LOGE("Invalid parameter");
+    return NOTI_EX_ERROR_INVALID_PARAMETER;
+  }
+
+  Handle* p = static_cast<Handle*>(handle);
+  if (p->Get()->GetVibrationPath().empty())
+    *path = nullptr;
+  else
+    *path = strdup(p->Get()->GetVibrationPath().c_str());
   return 0;
 }
 
 extern "C" EXPORT_API int noti_ex_item_get_info(noti_ex_item_h handle,
     noti_ex_item_info_h *info) {
+  if (handle == nullptr || info == nullptr) {
+    LOGE("Invalid parameter");
+    return NOTI_EX_ERROR_INVALID_PARAMETER;
+  }
+
+  Handle* p = static_cast<Handle*>(handle);
+  if (p->Get()->GetInfo() == nullptr)
+    *info = nullptr;
+  else
+    *info = static_cast<noti_ex_item_info_h>(p->Get()->GetInfo().get());
   return 0;
 }
 
 extern "C" EXPORT_API int noti_ex_item_get_sender_app_id(noti_ex_item_h handle,
     char **id) {
+  if (handle == nullptr || id == nullptr) {
+    LOGE("Invalid parameter");
+    return NOTI_EX_ERROR_INVALID_PARAMETER;
+  }
+
+  Handle* p = static_cast<Handle*>(handle);
+  if (p->Get()->GetSenderAppId().empty())
+    *id = nullptr;
+  else
+    *id = strdup(p->Get()->GetSenderAppId().c_str());
   return 0;
 }
 
 extern "C" EXPORT_API int noti_ex_item_set_sender_app_id(noti_ex_item_h handle,
     const char *id) {
+  if (handle == nullptr) {
+    LOGE("Invalid parameter");
+    return NOTI_EX_ERROR_INVALID_PARAMETER;
+  }
+
+  Handle* p = static_cast<Handle*>(handle);
+  if (id == nullptr)
+    p->Get()->SetSenderAppId("");
+  else
+    p->Get()->SetSenderAppId(id);
   return 0;
 }
 
 extern "C" EXPORT_API int noti_ex_item_get_tag(noti_ex_item_h handle,
     char **tag) {
+  if (handle == nullptr || tag == nullptr) {
+    LOGE("Invalid parameter");
+    return NOTI_EX_ERROR_INVALID_PARAMETER;
+  }
+
+  Handle* p = static_cast<Handle*>(handle);
+  if (p->Get()->GetTag().empty())
+    *tag = nullptr;
+  else
+    *tag = strdup(p->Get()->GetTag().c_str());
   return 0;
 }
 
 extern "C" EXPORT_API int noti_ex_item_set_tag(noti_ex_item_h handle,
     const char *tag) {
+  if (handle == nullptr) {
+    LOGE("Invalid parameter");
+    return NOTI_EX_ERROR_INVALID_PARAMETER;
+  }
+
+  Handle* p = static_cast<Handle*>(handle);
+  if (tag == nullptr)
+    p->Get()->SetTag("");
+  else
+    p->Get()->SetTag(tag);
   return 0;
 }
 
 extern "C" EXPORT_API int noti_ex_manager_create(noti_ex_manager_h *handle,
     const char *receiver_group, noti_ex_manager_events_s event_callbacks,
     void *data) {
+  if (handle == nullptr) {
+    LOGE("Invalid parameter");
+    return NOTI_EX_ERROR_INVALID_PARAMETER;
+  }
+
+  ManagerStub* stub = new (std::nothrow) ManagerStub(
+      unique_ptr<DBusSender>(new DBusSender(Reporter::GetPath())),
+      unique_ptr<DBusEventListener>(new DBusEventListener(Manager::GetPath())),
+      receiver_group);
+  if (stub == nullptr) {
+    LOGE("Fail to create manager");
+    return NOTI_EX_ERROR_IO_ERROR;
+  }
+  stub->SetManagerCallbackInfo(unique_ptr<ManagerCallbackInfo>(
+      new ManagerCallbackInfo(event_callbacks, data)));
+  *handle = static_cast<noti_ex_manager_h>(stub);
+
   return 0;
 }
 
 extern "C" EXPORT_API int noti_ex_manager_deatroy(noti_ex_manager_h handle) {
-  return 0;
+  if (handle == nullptr) {
+    LOGE("Invalid parameter");
+    return NOTI_EX_ERROR_INVALID_PARAMETER;
+  }
+  ManagerStub* stub = static_cast<ManagerStub*>(handle);
+  delete stub;
+  return NOTI_EX_ERROR_INVALID_PARAMETER;
 }
 
 extern "C" EXPORT_API int noti_ex_manager_get(noti_ex_manager_h handle,
     noti_ex_item_h **items, int *count) {
+  if (handle == nullptr || items == nullptr || count == nullptr) {
+    LOGE("Invalid parameter");
+    return NOTI_EX_ERROR_INVALID_PARAMETER;
+  }
+
+  try {
+    ManagerStub* stub = static_cast<ManagerStub*>(handle);
+    list<unique_ptr<item::AbstractItem>> item_list = stub->Get();
+    if (item_list.size() == 0) {
+      *items = nullptr;
+      *count = 0;
+      return NOTI_EX_ERROR_NONE;
+    }
+    *items = (noti_ex_item_h*)calloc(item_list.size(), sizeof(noti_ex_item_h));
+    if (*items == nullptr) {
+      LOGE("Fail to create items");
+      return NOTI_EX_ERROR_OUT_OF_MEMORY;
+    }
+
+    int idx = 0;
+    for (auto& i : item_list) {
+      *items[idx++] = new Handle(move(i));
+    }
+    *count = item_list.size();
+  } catch (Exception &ex) {
+    LOGE("%s %d", ex.what(), ex.GetErrorCode());
+    return NOTI_EX_ERROR_IO_ERROR;
+  }
   return 0;
 }
 
 extern "C" EXPORT_API int noti_ex_manager_update(noti_ex_manager_h handle,
     noti_ex_item_h noti, int *request_id) {
+  if (handle == nullptr || noti == nullptr || request_id == nullptr) {
+    LOGE("Invalid parameter");
+    return NOTI_EX_ERROR_INVALID_PARAMETER;
+  }
+  try {
+    ManagerStub* stub = static_cast<ManagerStub*>(handle);
+    Handle* sp = static_cast<Handle*>(noti);
+    if (sp->GetPtr().get() == nullptr) {
+      LOGE("Invalid noti reference can not be sended");
+      return NOTI_EX_ERROR_INVALID_PARAMETER;
+    } else {
+      *request_id = stub->Update(sp->GetPtr());
+    }
+  } catch (Exception &ex) {
+    LOGE("%s %d", ex.what(), ex.GetErrorCode());
+    return NOTI_EX_ERROR_IO_ERROR;
+  }
   return 0;
 }
 
 extern "C" EXPORT_API int noti_ex_manager_delete(noti_ex_manager_h handle,
     noti_ex_item_h noti, int *request_id) {
+  if (handle == nullptr || noti == nullptr || request_id == nullptr) {
+    LOGE("Invalid parameter");
+    return NOTI_EX_ERROR_INVALID_PARAMETER;
+  }
+  try {
+    ManagerStub* stub = static_cast<ManagerStub*>(handle);
+    Handle* item = static_cast<Handle*>(noti);
+    if (item->GetPtr().get() == nullptr) {
+      LOGE("Invalid noti reference can not be sended");
+      return NOTI_EX_ERROR_INVALID_PARAMETER;
+    } else {
+      *request_id = stub->Delete(item->GetPtr());
+    }
+  } catch (Exception &ex) {
+    LOGE("%s %d", ex.what(), ex.GetErrorCode());
+    return NOTI_EX_ERROR_IO_ERROR;
+  }
   return 0;
 }
 
 extern "C" EXPORT_API int noti_ex_manager_delete_all(noti_ex_manager_h handle,
     int *request_id) {
+  if (handle == nullptr || request_id == nullptr) {
+    LOGE("Invalid parameter");
+    return NOTI_EX_ERROR_INVALID_PARAMETER;
+  }
+  try {
+    ManagerStub* stub = static_cast<ManagerStub*>(handle);
+    *request_id = stub->DeleteAll();
+  } catch (Exception &ex) {
+    LOGE("%s %d", ex.what(), ex.GetErrorCode());
+    return NOTI_EX_ERROR_IO_ERROR;
+  }
   return 0;
 }
 
 extern "C" EXPORT_API int noti_ex_manager_hide(noti_ex_manager_h handle,
     noti_ex_item_h noti, int *request_id) {
+  if (handle == nullptr || noti == nullptr || request_id == nullptr) {
+    LOGE("Invalid parameter");
+    return NOTI_EX_ERROR_INVALID_PARAMETER;
+  }
+  try {
+    ManagerStub* stub = static_cast<ManagerStub*>(handle);
+    Handle* item = static_cast<Handle*>(noti);
+    if (item->GetPtr().get() == nullptr) {
+      LOGE("Invalid noti reference can not be sended");
+      return NOTI_EX_ERROR_INVALID_PARAMETER;
+    } else {
+      *request_id = stub->Hide(item->GetPtr());
+    }
+  } catch (Exception &ex) {
+    LOGE("%s %d", ex.what(), ex.GetErrorCode());
+    return NOTI_EX_ERROR_IO_ERROR;
+  }
   return 0;
 }
 
 extern "C" EXPORT_API int noti_ex_manager_find_by_root_id(
     noti_ex_manager_h handle, const char *root_id, noti_ex_item_h *item) {
+  if (handle == nullptr || root_id == nullptr || item == nullptr) {
+    LOGE("Invalid parameter");
+    return NOTI_EX_ERROR_INVALID_PARAMETER;
+  }
+  try {
+    ManagerStub* stub = static_cast<ManagerStub*>(handle);
+    *item = new Handle(stub->FindByRootID(root_id));
+  } catch (Exception &ex) {
+    LOGE("%s %d", ex.what(), ex.GetErrorCode());
+    return NOTI_EX_ERROR_IO_ERROR;
+  }
   return 0;
 }
 
 extern "C" EXPORT_API int noti_ex_manager_send_error(noti_ex_manager_h handle,
-    noti_ex_event_info_h info, noti_ex_error_e error, int *request_id) {
+    noti_ex_event_info_h info, noti_ex_error_e error) {
+  if (handle == nullptr || info == nullptr) {
+    LOGE("Invalid parameter");
+    return NOTI_EX_ERROR_INVALID_PARAMETER;
+  }
+  try {
+    ManagerStub* stub = static_cast<ManagerStub*>(handle);
+    IEventInfo* c_info = static_cast<IEventInfo*>(info);
+    stub->SendError(static_cast<const IEventInfo&>(*c_info),
+        static_cast<NotificationError>(error));
+  } catch (Exception &ex) {
+    LOGE("%s %d", ex.what(), ex.GetErrorCode());
+    return NOTI_EX_ERROR_IO_ERROR;
+  }
   return 0;
 }
 
 extern "C" EXPORT_API int noti_ex_manager_get_count(noti_ex_manager_h handle,
     int *cnt) {
+
+  if (handle == nullptr || cnt == nullptr) {
+    LOGE("Invalid parameter");
+    return NOTI_EX_ERROR_INVALID_PARAMETER;
+  }
+  try {
+    ManagerStub* stub = static_cast<ManagerStub*>(handle);
+    *cnt = stub->GetCount();
+  } catch (Exception &ex) {
+    LOGE("%s %d", ex.what(), ex.GetErrorCode());
+    return NOTI_EX_ERROR_IO_ERROR;
+  }
   return 0;
 }
 
@@ -1350,7 +2205,7 @@ extern "C" EXPORT_API int noti_ex_item_progress_create(noti_ex_item_h *handle,
     return NOTI_EX_ERROR_OUT_OF_MEMORY;
   }
 
-  *handle = p;
+  *handle = new Handle(p);
 
   return NOTI_EX_ERROR_NONE;
 }
@@ -1362,7 +2217,12 @@ extern "C" EXPORT_API int noti_ex_item_progress_get_current(
     return NOTI_EX_ERROR_INVALID_PARAMETER;
   }
 
-  ProgressItem* p = static_cast<ProgressItem*>(handle);
+  Handle *h = static_cast<Handle*>(handle);
+  if (!h->IsValidType(AbstractItem::Progress)) {
+    LOGE("Invalid handle type");
+    return NOTI_EX_ERROR_INVALID_PARAMETER;
+  }
+  ProgressItem* p = static_cast<ProgressItem*>(h->Get());
   *current = p->GetCurrent();
 
   return NOTI_EX_ERROR_NONE;
@@ -1375,7 +2235,12 @@ extern "C" EXPORT_API int noti_ex_item_progress_set_current(
     return NOTI_EX_ERROR_INVALID_PARAMETER;
   }
 
-  ProgressItem* p = static_cast<ProgressItem*>(handle);
+  Handle *h = static_cast<Handle*>(handle);
+  if (!h->IsValidType(AbstractItem::Progress)) {
+    LOGE("Invalid handle type");
+    return NOTI_EX_ERROR_INVALID_PARAMETER;
+  }
+  ProgressItem* p = static_cast<ProgressItem*>(h->Get());
   p->SetCurrent(current);
 
   return NOTI_EX_ERROR_NONE;
@@ -1388,7 +2253,12 @@ extern "C" EXPORT_API int noti_ex_item_progress_get_min(noti_ex_item_h handle,
     return NOTI_EX_ERROR_INVALID_PARAMETER;
   }
 
-  ProgressItem* p = static_cast<ProgressItem*>(handle);
+  Handle *h = static_cast<Handle*>(handle);
+  if (!h->IsValidType(AbstractItem::Progress)) {
+    LOGE("Invalid handle type");
+    return NOTI_EX_ERROR_INVALID_PARAMETER;
+  }
+  ProgressItem* p = static_cast<ProgressItem*>(h->Get());
   *min = p->GetMin();
 
   return NOTI_EX_ERROR_NONE;
@@ -1401,7 +2271,12 @@ extern "C" EXPORT_API int noti_ex_item_progress_get_max(noti_ex_item_h handle,
     return NOTI_EX_ERROR_INVALID_PARAMETER;
   }
 
-  ProgressItem* p = static_cast<ProgressItem*>(handle);
+  Handle *h = static_cast<Handle*>(handle);
+  if (!h->IsValidType(AbstractItem::Progress)) {
+    LOGE("Invalid handle type");
+    return NOTI_EX_ERROR_INVALID_PARAMETER;
+  }
+  ProgressItem* p = static_cast<ProgressItem*>(h->Get());
   *max = p->GetMax();
 
   return NOTI_EX_ERROR_NONE;
@@ -1409,45 +2284,171 @@ extern "C" EXPORT_API int noti_ex_item_progress_get_max(noti_ex_item_h handle,
 
 extern "C" EXPORT_API int noti_ex_reporter_create(noti_ex_reporter_h *handle,
     noti_ex_reporter_events_s event_callbacks, void *data) {
+  if (handle == nullptr) {
+    LOGE("Invalid parameter");
+    return NOTI_EX_ERROR_INVALID_PARAMETER;
+  }
+
+  ReporterStub* stub = new (std::nothrow) ReporterStub(
+      unique_ptr<DBusSender>(new DBusSender(Manager::GetPath())),
+      unique_ptr<DBusEventListener>(new DBusEventListener(Reporter::GetPath())));
+  if (stub == nullptr) {
+    LOGE("Fail to create manager");
+    return NOTI_EX_ERROR_IO_ERROR;
+  }
+  stub->SetReporterCallbackInfo(unique_ptr<ReporterCallbackInfo>(
+      new ReporterCallbackInfo(event_callbacks, data)));
+
+  *handle = static_cast<noti_ex_reporter_h>(stub);
+
   return NOTI_EX_ERROR_NONE;
 }
 
 extern "C" EXPORT_API int noti_ex_reporter_destroy(noti_ex_reporter_h handle) {
+  if (handle == nullptr) {
+    LOGE("Invalid parameter");
+    return NOTI_EX_ERROR_INVALID_PARAMETER;
+  }
+  ReporterStub* stub = static_cast<ReporterStub*>(handle);
+  delete stub;
   return NOTI_EX_ERROR_NONE;
 }
 
 extern "C" EXPORT_API int noti_ex_reporter_send_error(noti_ex_reporter_h handle,
-    noti_ex_event_info_h info, noti_ex_error_e error, int *request_id) {
+    noti_ex_event_info_h info, noti_ex_error_e error) {
+  if (handle == nullptr || info == nullptr) {
+    LOGE("Invalid parameter");
+    return NOTI_EX_ERROR_INVALID_PARAMETER;
+  }
+  try {
+    ReporterStub* stub = static_cast<ReporterStub*>(handle);
+    IEventInfo* c_info = static_cast<IEventInfo*>(info);
+    stub->SendError(static_cast<const IEventInfo&>(*c_info),
+        static_cast<NotificationError>(error));
+  } catch (Exception &ex) {
+    LOGE("%s %d", ex.what(), ex.GetErrorCode());
+    return NOTI_EX_ERROR_IO_ERROR;
+  }
   return 0;
 }
 
 extern "C" EXPORT_API int noti_ex_reporter_post(noti_ex_reporter_h handle,
     noti_ex_item_h noti, int *request_id) {
+  if (handle == nullptr || noti == nullptr || request_id == nullptr) {
+    LOGE("Invalid parameter");
+    return NOTI_EX_ERROR_INVALID_PARAMETER;
+  }
+  try {
+    ReporterStub* stub = static_cast<ReporterStub*>(handle);
+    Handle* h = static_cast<Handle*>(noti);
+    if (h->GetPtr().get() == nullptr) {
+      LOGE("Invalid noti reference can not be sended");
+      return NOTI_EX_ERROR_INVALID_PARAMETER;
+    } else {
+      *request_id = stub->Post(h->GetPtr());
+    }
+  } catch (Exception &ex) {
+    LOGE("%s %d", ex.what(), ex.GetErrorCode());
+    return NOTI_EX_ERROR_IO_ERROR;
+  }
   return 0;
 }
 
 extern "C" EXPORT_API int noti_ex_reporter_post_list(noti_ex_reporter_h handle,
     noti_ex_item_h *noti_list, int count, int *request_id) {
+
+  if (handle == nullptr || noti_list == nullptr || request_id == nullptr) {
+    LOGE("Invalid parameter");
+    return NOTI_EX_ERROR_INVALID_PARAMETER;
+  }
+  try {
+    ReporterStub* stub = static_cast<ReporterStub*>(handle);
+    list<shared_ptr<item::AbstractItem>> notiList;
+    for (int i = 0; i < count; i++) {
+      Handle* item = static_cast<Handle*>(noti_list[i]);
+      notiList.emplace_back(item->GetPtr());
+    }
+    *request_id = stub->Post(notiList);
+  } catch (Exception &ex) {
+    LOGE("%s %d", ex.what(), ex.GetErrorCode());
+    return NOTI_EX_ERROR_IO_ERROR;
+  }
   return 0;
 }
 
 extern "C" EXPORT_API int noti_ex_reporter_update(noti_ex_reporter_h handle,
     noti_ex_item_h noti, int *request_id) {
+  if (handle == nullptr || noti == nullptr || request_id == nullptr) {
+    LOGE("Invalid parameter");
+    return NOTI_EX_ERROR_INVALID_PARAMETER;
+  }
+  try {
+    ReporterStub* stub = static_cast<ReporterStub*>(handle);
+    Handle* item = static_cast<Handle*>(noti);
+    if (item->GetPtr().get() == nullptr) {
+      LOGE("Invalid noti reference can not be sended");
+      return NOTI_EX_ERROR_INVALID_PARAMETER;
+    } else {
+      *request_id = stub->Update(item->GetPtr());
+    }
+  } catch (Exception &ex) {
+    LOGE("%s %d", ex.what(), ex.GetErrorCode());
+    return NOTI_EX_ERROR_IO_ERROR;
+  }
   return 0;
 }
 
 extern "C" EXPORT_API int noti_ex_reporter_delete(noti_ex_reporter_h handle,
     noti_ex_item_h noti, int *request_id) {
+  if (handle == nullptr || noti == nullptr || request_id == nullptr) {
+    LOGE("Invalid parameter");
+    return NOTI_EX_ERROR_INVALID_PARAMETER;
+  }
+  try {
+    ReporterStub* stub = static_cast<ReporterStub*>(handle);
+    Handle* item = static_cast<Handle*>(noti);
+    if (item->GetPtr().get() == nullptr) {
+      LOGE("Invalid noti reference can not be sended");
+      return NOTI_EX_ERROR_INVALID_PARAMETER;
+    } else {
+      *request_id = stub->Delete(item->GetPtr());
+    }
+  } catch (Exception &ex) {
+    LOGE("%s %d", ex.what(), ex.GetErrorCode());
+    return NOTI_EX_ERROR_IO_ERROR;
+  }
   return 0;
 }
 
 extern "C" EXPORT_API int noti_ex_reporter_delete_all(
     noti_ex_reporter_h handle, int *request_id) {
+  if (handle == nullptr || request_id == nullptr) {
+    LOGE("Invalid parameter");
+    return NOTI_EX_ERROR_INVALID_PARAMETER;
+  }
+  try {
+    ReporterStub* stub = static_cast<ReporterStub*>(handle);
+    *request_id = stub->DeleteAll();
+  } catch (Exception &ex) {
+    LOGE("%s %d", ex.what(), ex.GetErrorCode());
+    return NOTI_EX_ERROR_IO_ERROR;
+  }
   return 0;
 }
 
 extern "C" EXPORT_API int noti_ex_reporter_find_by_root_id(
     noti_ex_reporter_h handle, const char *root_id, noti_ex_item_h *item) {
+  if (handle == nullptr || root_id == nullptr || item == nullptr) {
+    LOGE("Invalid parameter");
+    return NOTI_EX_ERROR_INVALID_PARAMETER;
+  }
+  try {
+    ReporterStub* stub = static_cast<ReporterStub*>(handle);
+    *item = new Handle(stub->FindByRootID(root_id));
+  } catch (Exception &ex) {
+    LOGE("%s %d", ex.what(), ex.GetErrorCode());
+    return NOTI_EX_ERROR_IO_ERROR;
+  }
   return 0;
 }
 
@@ -1465,7 +2466,7 @@ extern "C" EXPORT_API int noti_ex_item_text_create(noti_ex_item_h *handle,
     return NOTI_EX_ERROR_OUT_OF_MEMORY;
   }
 
-  *handle = p;
+  *handle = new Handle(p);
 
   return NOTI_EX_ERROR_NONE;
 }
@@ -1477,8 +2478,13 @@ extern "C" EXPORT_API int noti_ex_item_text_set_contents(noti_ex_item_h handle,
     return NOTI_EX_ERROR_INVALID_PARAMETER;
   }
 
-  TextItem* p = static_cast<TextItem*>(handle);
-  p->SetContents(std::string(contents));
+  Handle* p = static_cast<Handle*>(handle);
+  if (!p->IsValidType(AbstractItem::Text)) {
+    LOGE("Invalid handle type");
+    return NOTI_EX_ERROR_INVALID_PARAMETER;
+  }
+  TextItem* ti = static_cast<TextItem*>(p->Get());
+  ti->SetContents(std::string(contents));
 
   return NOTI_EX_ERROR_NONE;
 }
@@ -1490,9 +2496,14 @@ extern "C" EXPORT_API int noti_ex_item_text_get_contents(noti_ex_item_h handle,
     return NOTI_EX_ERROR_INVALID_PARAMETER;
   }
 
-  TextItem* p = static_cast<TextItem*>(handle);
-  if (!p->GetContents().empty()) {
-    *contents = strdup(p->GetContents().c_str());
+  Handle* p = static_cast<Handle*>(handle);
+  if (!p->IsValidType(AbstractItem::Text)) {
+    LOGE("Invalid handle type");
+    return NOTI_EX_ERROR_INVALID_PARAMETER;
+  }
+  TextItem* ti = static_cast<TextItem*>(p->Get());
+  if (!ti->GetContents().empty()) {
+    *contents = strdup(ti->GetContents().c_str());
     if (*contents == nullptr) {
       LOGE("Out-of-memory");
       return NOTI_EX_ERROR_OUT_OF_MEMORY;
@@ -1502,16 +2513,21 @@ extern "C" EXPORT_API int noti_ex_item_text_get_contents(noti_ex_item_h handle,
   return NOTI_EX_ERROR_NONE;
 }
 
-extern "C" EXPORT_API int noti_ex_item_text_get_hyper_link(
+extern "C" EXPORT_API int noti_ex_item_text_get_hyperlink(
     noti_ex_item_h handle, char **hyper_link) {
   if (handle == nullptr || hyper_link == nullptr) {
     LOGE("Invalid parameter");
     return NOTI_EX_ERROR_INVALID_PARAMETER;
   }
 
-  TextItem* p = static_cast<TextItem*>(handle);
-  if (!p->GetHyperLink().empty()) {
-    *hyper_link = strdup(p->GetHyperLink().c_str());
+  Handle* p = static_cast<Handle*>(handle);
+  if (!p->IsValidType(AbstractItem::Text)) {
+    LOGE("Invalid handle type");
+    return NOTI_EX_ERROR_INVALID_PARAMETER;
+  }
+  TextItem* ti = static_cast<TextItem*>(p->Get());
+  if (!ti->GetHyperLink().empty()) {
+    *hyper_link = strdup(ti->GetHyperLink().c_str());
     if (*hyper_link == nullptr) {
       LOGE("Out-of-memory");
       return NOTI_EX_ERROR_OUT_OF_MEMORY;
@@ -1544,7 +2560,7 @@ extern "C" EXPORT_API int noti_ex_item_time_create(noti_ex_item_h *handle,
     return NOTI_EX_ERROR_OUT_OF_MEMORY;
   }
 
-  *handle = p;
+  *handle = new Handle(p);
 
   return NOTI_EX_ERROR_NONE;
 }
@@ -1555,8 +2571,12 @@ extern "C" EXPORT_API int noti_ex_item_time_get_time(noti_ex_item_h handle,
     LOGE("Invalid parameter");
     return NOTI_EX_ERROR_INVALID_PARAMETER;
   }
-
-  TimeItem*p = static_cast<TimeItem*>(handle);
+  Handle* h = static_cast<Handle*>(handle);
+  if (!h->IsValidType(AbstractItem::Time)) {
+    LOGE("Invalid handle type");
+    return NOTI_EX_ERROR_INVALID_PARAMETER;
+  }
+  TimeItem* p = static_cast<TimeItem*>(h->Get());
   *time = p->GetTime();
 
   return NOTI_EX_ERROR_NONE;

@@ -101,17 +101,17 @@ int Reporter::DeleteAll() {
   return -1;
 }
 
-std::shared_ptr<AbstractItem> Reporter::FindByRootID(std::string id) {
+std::unique_ptr<AbstractItem> Reporter::FindByRootID(std::string id) {
   Bundle serialized;
   EventInfo info(EventInfo::Get, util::GetAppId(), "", id);
   list<Bundle> result = impl_->sender_->Request(info);
   if (result.size() == 0) {
     LOGE("Fail to get noti");
-    return shared_ptr<item::AbstractItem>({});
+    return unique_ptr<item::AbstractItem>{};
   }
   Bundle b = result.front();
-  shared_ptr<AbstractItem> gen_item = ItemInflator::Create(b);
-  return gen_item;
+  unique_ptr<AbstractItem> gen_item = ItemInflator::Create(b);
+  return move(gen_item);
 }
 
 int Reporter::SendEvent(const IEventInfo& info,

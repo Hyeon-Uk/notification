@@ -561,11 +561,16 @@ int DBManager::UpdateNotification(shared_ptr<item::AbstractItem> updatedItem) {
   int uid = static_pointer_cast<IItemInfoInternal>(updatedItem->GetInfo())->GetUid();
 
   ret = GetCount(updatedItem->GetId(), updatedItem->GetSenderAppId(), uid, &count);
-  if (ret != ERROR_NONE)
+  if (ret != ERROR_NONE) {
+    LOGE("fail to get count");
     return ret;
+  }
 
-  if (count <= 0)
+  if (count <= 0) {
+    LOGE("not exist id(%s) for appid(%s)",
+        updatedItem->GetId().c_str(), updatedItem->GetSenderAppId().c_str());
     return ERROR_NOT_EXIST_ID;
+  }
 
   sqlite3* db = OpenDB();
   if (db == nullptr)
