@@ -853,7 +853,7 @@ extern "C" EXPORT_API int noti_ex_item_group_foreach(noti_ex_item_h handle,
   }
   GroupItem* p = static_cast<GroupItem*>(h->Get());
   list<shared_ptr<AbstractItem>> children = p->GetChildren();
-  LOGI("Retrive (%d)", children.size());
+  LOGI("Retrive (%zd)", children.size());
   for (auto i : children) {
     int ret = callback(
         static_cast<noti_ex_item_h>(new Handle(i)), data);
