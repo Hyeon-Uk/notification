@@ -863,7 +863,7 @@ extern "C" EXPORT_API int noti_ex_item_group_foreach(noti_ex_item_h handle,
     }
   }
 
-  return 0;
+  return NOTI_EX_ERROR_NONE;
 }
 
 extern "C" EXPORT_API int noti_ex_item_image_create(noti_ex_item_h *handle,
@@ -1131,7 +1131,7 @@ extern "C" EXPORT_API int noti_ex_padding_get_right(noti_ex_padding_h handle,
   Padding* p = static_cast<Padding*>(handle);
   *val = p->GetRight();
 
-  return 0;
+  return NOTI_EX_ERROR_NONE;
 }
 
 extern "C" EXPORT_API int noti_ex_padding_get_bottom(noti_ex_padding_h handle,
@@ -1144,7 +1144,7 @@ extern "C" EXPORT_API int noti_ex_padding_get_bottom(noti_ex_padding_h handle,
   Padding* p = static_cast<Padding*>(handle);
   *val = p->GetBottom();
 
-  return 0;
+  return NOTI_EX_ERROR_NONE;
 }
 
 extern "C" EXPORT_API int noti_ex_geometry_create(noti_ex_geometry_h *handle,
@@ -1502,7 +1502,7 @@ extern "C" EXPORT_API int noti_ex_item_info_get_hide_time(
   }
   IItemInfo* p = static_cast<IItemInfo*>(handle);
   *hide_time = p->GetHideTime();
-  return 0;
+  return NOTI_EX_ERROR_NONE;
 }
 
 extern "C" EXPORT_API int noti_ex_item_info_set_hide_time(
@@ -1513,7 +1513,7 @@ extern "C" EXPORT_API int noti_ex_item_info_set_hide_time(
   }
   IItemInfo* p = static_cast<IItemInfo*>(handle);
   p->SetHideTime(hide_time);
-  return 0;
+  return NOTI_EX_ERROR_NONE;
 }
 
 extern "C" EXPORT_API int noti_ex_item_info_get_delete_time(
@@ -1524,7 +1524,7 @@ extern "C" EXPORT_API int noti_ex_item_info_get_delete_time(
   }
   IItemInfo* p = static_cast<IItemInfo*>(handle);
   *delete_time = p->GetDeleteTime();
-  return 0;
+  return NOTI_EX_ERROR_NONE;
 }
 
 extern "C" EXPORT_API int noti_ex_item_info_set_delete_time(
@@ -1535,7 +1535,7 @@ extern "C" EXPORT_API int noti_ex_item_info_set_delete_time(
   }
   IItemInfo* p = static_cast<IItemInfo*>(handle);
   p->SetDeleteTime(delete_time);
-  return 0;
+  return NOTI_EX_ERROR_NONE;
 }
 
 extern "C" EXPORT_API int noti_ex_item_info_get_time(
@@ -1547,7 +1547,7 @@ extern "C" EXPORT_API int noti_ex_item_info_get_time(
 
   IItemInfo* p = static_cast<IItemInfo*>(handle);
   *time = p->GetTime();
-  return 0;
+  return NOTI_EX_ERROR_NONE;
 }
 
 extern "C" EXPORT_API int noti_ex_item_destroy(noti_ex_item_h handle) {
@@ -1558,7 +1558,7 @@ extern "C" EXPORT_API int noti_ex_item_destroy(noti_ex_item_h handle) {
 
   Handle* h = static_cast<Handle*>(handle);
   delete h;
-  return 0;
+  return NOTI_EX_ERROR_NONE;
 }
 
 extern "C" EXPORT_API int noti_ex_item_find_by_id(noti_ex_item_h handle,
@@ -1571,7 +1571,7 @@ extern "C" EXPORT_API int noti_ex_item_find_by_id(noti_ex_item_h handle,
   Handle* p = static_cast<Handle*>(handle);
   AbstractItem& find_item = p->Get()->FindByID(string(id));
   *item = new Handle(&find_item);
-  return 0;
+  return NOTI_EX_ERROR_NONE;
 }
 
 extern "C" EXPORT_API int noti_ex_item_get_type(noti_ex_item_h handle,
@@ -1584,7 +1584,7 @@ extern "C" EXPORT_API int noti_ex_item_get_type(noti_ex_item_h handle,
   Handle* h = static_cast<Handle*>(handle);
   AbstractItem* p = h->Get();
   *type = p->GetType();
-  return 0;
+  return NOTI_EX_ERROR_NONE;
 }
 
 extern "C" EXPORT_API int noti_ex_item_get_shared_path(noti_ex_item_h handle,
@@ -1601,7 +1601,7 @@ extern "C" EXPORT_API int noti_ex_item_get_shared_path(noti_ex_item_h handle,
     *path[idx++] = strdup(i.c_str());
   }
   *count = shared_path.size();
-  return 0;
+  return NOTI_EX_ERROR_NONE;
 }
 
 extern "C" EXPORT_API int noti_ex_item_get_id(noti_ex_item_h handle,
@@ -1613,7 +1613,7 @@ extern "C" EXPORT_API int noti_ex_item_get_id(noti_ex_item_h handle,
   Handle* h = static_cast<Handle*>(handle);
   AbstractItem* p = h->Get();
   *id = strdup(p->GetId().c_str());
-  return 0;
+  return NOTI_EX_ERROR_NONE;
 }
 
 extern "C" EXPORT_API int noti_ex_item_set_id(noti_ex_item_h handle,
@@ -1624,7 +1624,7 @@ extern "C" EXPORT_API int noti_ex_item_set_id(noti_ex_item_h handle,
   }
   Handle* p = static_cast<Handle*>(handle);
   p->Get()->SetId(id);
-  return 0;
+  return NOTI_EX_ERROR_NONE;
 }
 
 extern "C" EXPORT_API int noti_ex_item_get_action(noti_ex_item_h handle,
@@ -1636,11 +1636,11 @@ extern "C" EXPORT_API int noti_ex_item_get_action(noti_ex_item_h handle,
   Handle* p = static_cast<Handle*>(handle);
   if (p->Get()->GetAction() == nullptr) {
     *action = nullptr;
-    return 0;
+    return NOTI_EX_ERROR_NONE;
   }
   *action = static_cast<noti_ex_action_h>(p->Get()->GetAction().get());
 
-  return 0;
+  return NOTI_EX_ERROR_NONE;
 }
 
 extern "C" EXPORT_API int noti_ex_item_set_action(noti_ex_item_h handle,
@@ -1653,7 +1653,7 @@ extern "C" EXPORT_API int noti_ex_item_set_action(noti_ex_item_h handle,
   Handle* p = static_cast<Handle*>(handle);
   AbstractAction* a = static_cast<AbstractAction*>(action);
   p->Get()->SetAction(shared_ptr<AbstractAction>(a));
-  return 0;
+  return NOTI_EX_ERROR_NONE;
 }
 
 extern "C" EXPORT_API int noti_ex_item_get_style(noti_ex_item_h handle,
@@ -1666,7 +1666,7 @@ extern "C" EXPORT_API int noti_ex_item_get_style(noti_ex_item_h handle,
   Handle* p = static_cast<Handle*>(handle);
   shared_ptr<Style> s = p->Get()->GetStyle();
   *style = static_cast<noti_ex_style_h>(s.get());
-  return 0;
+  return NOTI_EX_ERROR_NONE;
 }
 
 extern "C" EXPORT_API int noti_ex_item_set_style(noti_ex_item_h handle,
@@ -1679,7 +1679,7 @@ extern "C" EXPORT_API int noti_ex_item_set_style(noti_ex_item_h handle,
   Handle* p = static_cast<Handle*>(handle);
   Style* s = static_cast<Style*>(style);
   p->Get()->SetStyle(shared_ptr<Style>(s));
-  return 0;
+  return NOTI_EX_ERROR_NONE;
 }
 
 extern "C" EXPORT_API int noti_ex_item_set_visible(noti_ex_item_h handle,
@@ -1691,7 +1691,7 @@ extern "C" EXPORT_API int noti_ex_item_set_visible(noti_ex_item_h handle,
 
   Handle* p = static_cast<Handle*>(handle);
   p->Get()->SetVisible(visible);
-  return 0;
+  return NOTI_EX_ERROR_NONE;
 }
 
 extern "C" EXPORT_API int noti_ex_item_get_visible(noti_ex_item_h handle,
@@ -1703,7 +1703,7 @@ extern "C" EXPORT_API int noti_ex_item_get_visible(noti_ex_item_h handle,
 
   Handle* p = static_cast<Handle*>(handle);
   *visible = p->Get()->GetVisible();
-  return 0;
+  return NOTI_EX_ERROR_NONE;
 }
 
 extern "C" EXPORT_API int noti_ex_item_set_enable(noti_ex_item_h handle,
@@ -1715,7 +1715,7 @@ extern "C" EXPORT_API int noti_ex_item_set_enable(noti_ex_item_h handle,
 
   Handle* p = static_cast<Handle*>(handle);
   p->Get()->SetEnable(enable);
-  return 0;
+  return NOTI_EX_ERROR_NONE;
 }
 
 extern "C" EXPORT_API int noti_ex_item_get_enable(noti_ex_item_h handle,
@@ -1727,7 +1727,7 @@ extern "C" EXPORT_API int noti_ex_item_get_enable(noti_ex_item_h handle,
 
   Handle* p = static_cast<Handle*>(handle);
   *enable = p->Get()->GetEnable();
-  return 0;
+  return NOTI_EX_ERROR_NONE;
 }
 
 extern "C" EXPORT_API int noti_ex_item_add_receiver(noti_ex_item_h handle,
@@ -1739,7 +1739,7 @@ extern "C" EXPORT_API int noti_ex_item_add_receiver(noti_ex_item_h handle,
 
   Handle* p = static_cast<Handle*>(handle);
   p->Get()->AddReceiver(receiver_group);
-  return 0;
+  return NOTI_EX_ERROR_NONE;
 }
 
 extern "C" EXPORT_API int noti_ex_item_remove_receiver(noti_ex_item_h handle,
@@ -1751,7 +1751,7 @@ extern "C" EXPORT_API int noti_ex_item_remove_receiver(noti_ex_item_h handle,
 
   Handle* p = static_cast<Handle*>(handle);
   p->Get()->RemoveReceiver(receiver_group);
-  return 0;
+  return NOTI_EX_ERROR_NONE;
 }
 
 extern "C" EXPORT_API int noti_ex_item_get_receiver_list(noti_ex_item_h handle,
@@ -1769,7 +1769,7 @@ extern "C" EXPORT_API int noti_ex_item_get_receiver_list(noti_ex_item_h handle,
     *receiver_list[idx++] = strdup(i.c_str());
   }
   *count = receivers.size();
-  return 0;
+  return NOTI_EX_ERROR_NONE;
 }
 
 extern "C" EXPORT_API int noti_ex_item_set_policy(noti_ex_item_h handle,
@@ -1781,7 +1781,7 @@ extern "C" EXPORT_API int noti_ex_item_set_policy(noti_ex_item_h handle,
 
   Handle* p = static_cast<Handle*>(handle);
   p->Get()->SetPolicy(policy);
-  return 0;
+  return NOTI_EX_ERROR_NONE;
 }
 
 extern "C" EXPORT_API int noti_ex_item_get_policy(noti_ex_item_h handle,
@@ -1793,7 +1793,7 @@ extern "C" EXPORT_API int noti_ex_item_get_policy(noti_ex_item_h handle,
 
   Handle* p = static_cast<Handle*>(handle);
   *policy = p->Get()->GetPolicy();
-  return 0;
+  return NOTI_EX_ERROR_NONE;
 }
 
 extern "C" EXPORT_API int noti_ex_item_get_channel(noti_ex_item_h handle,
@@ -1809,7 +1809,7 @@ extern "C" EXPORT_API int noti_ex_item_get_channel(noti_ex_item_h handle,
   else
     *channel = nullptr;
 
-  return 0;
+  return NOTI_EX_ERROR_NONE;
 }
 
 extern "C" EXPORT_API int noti_ex_item_set_channel(noti_ex_item_h handle,
@@ -1821,7 +1821,7 @@ extern "C" EXPORT_API int noti_ex_item_set_channel(noti_ex_item_h handle,
 
   Handle* p = static_cast<Handle*>(handle);
   p->Get()->SetChannel(channel);
-  return 0;
+  return NOTI_EX_ERROR_NONE;
 }
 
 extern "C" EXPORT_API int noti_ex_item_set_led_info(noti_ex_item_h handle,
@@ -1834,7 +1834,7 @@ extern "C" EXPORT_API int noti_ex_item_set_led_info(noti_ex_item_h handle,
   Handle* p = static_cast<Handle*>(handle);
   LEDInfo* led_info = static_cast<LEDInfo*>(led);
   p->Get()->SetLEDInfo(shared_ptr<LEDInfo>(led_info));
-  return 0;
+  return NOTI_EX_ERROR_NONE;
 }
 
 extern "C" EXPORT_API int noti_ex_item_get_led_info(noti_ex_item_h handle,
@@ -1849,7 +1849,7 @@ extern "C" EXPORT_API int noti_ex_item_get_led_info(noti_ex_item_h handle,
     *led = static_cast<noti_ex_led_info_h>(p->Get()->GetLEDInfo().get());
   else
     *led = nullptr;
-  return 0;
+  return NOTI_EX_ERROR_NONE;
 }
 
 extern "C" EXPORT_API int noti_ex_item_set_sound_path(noti_ex_item_h handle,
@@ -1864,7 +1864,7 @@ extern "C" EXPORT_API int noti_ex_item_set_sound_path(noti_ex_item_h handle,
     p->Get()->SetSoundPath("");
   else
     p->Get()->SetSoundPath(path);
-  return 0;
+  return NOTI_EX_ERROR_NONE;
 }
 
 extern "C" EXPORT_API int noti_ex_item_set_vibration_path(noti_ex_item_h handle,
@@ -1879,7 +1879,7 @@ extern "C" EXPORT_API int noti_ex_item_set_vibration_path(noti_ex_item_h handle,
     p->Get()->SetVibrationPath("");
   else
     p->Get()->SetVibrationPath(path);
-  return 0;
+  return NOTI_EX_ERROR_NONE;
 }
 
 extern "C" EXPORT_API int noti_ex_item_get_sound_path(noti_ex_item_h handle,
@@ -1894,7 +1894,7 @@ extern "C" EXPORT_API int noti_ex_item_get_sound_path(noti_ex_item_h handle,
     *path = nullptr;
   else
     *path = strdup(p->Get()->GetSoundPath().c_str());
-  return 0;
+  return NOTI_EX_ERROR_NONE;
 }
 
 extern "C" EXPORT_API int noti_ex_item_get_vibration_path(noti_ex_item_h handle,
@@ -1909,7 +1909,7 @@ extern "C" EXPORT_API int noti_ex_item_get_vibration_path(noti_ex_item_h handle,
     *path = nullptr;
   else
     *path = strdup(p->Get()->GetVibrationPath().c_str());
-  return 0;
+  return NOTI_EX_ERROR_NONE;
 }
 
 extern "C" EXPORT_API int noti_ex_item_get_info(noti_ex_item_h handle,
@@ -1924,7 +1924,7 @@ extern "C" EXPORT_API int noti_ex_item_get_info(noti_ex_item_h handle,
     *info = nullptr;
   else
     *info = static_cast<noti_ex_item_info_h>(p->Get()->GetInfo().get());
-  return 0;
+  return NOTI_EX_ERROR_NONE;
 }
 
 extern "C" EXPORT_API int noti_ex_item_get_sender_app_id(noti_ex_item_h handle,
@@ -1939,7 +1939,7 @@ extern "C" EXPORT_API int noti_ex_item_get_sender_app_id(noti_ex_item_h handle,
     *id = nullptr;
   else
     *id = strdup(p->Get()->GetSenderAppId().c_str());
-  return 0;
+  return NOTI_EX_ERROR_NONE;
 }
 
 extern "C" EXPORT_API int noti_ex_item_set_sender_app_id(noti_ex_item_h handle,
@@ -1954,7 +1954,7 @@ extern "C" EXPORT_API int noti_ex_item_set_sender_app_id(noti_ex_item_h handle,
     p->Get()->SetSenderAppId("");
   else
     p->Get()->SetSenderAppId(id);
-  return 0;
+  return NOTI_EX_ERROR_NONE;
 }
 
 extern "C" EXPORT_API int noti_ex_item_get_tag(noti_ex_item_h handle,
@@ -1969,7 +1969,7 @@ extern "C" EXPORT_API int noti_ex_item_get_tag(noti_ex_item_h handle,
     *tag = nullptr;
   else
     *tag = strdup(p->Get()->GetTag().c_str());
-  return 0;
+  return NOTI_EX_ERROR_NONE;
 }
 
 extern "C" EXPORT_API int noti_ex_item_set_tag(noti_ex_item_h handle,
@@ -1984,7 +1984,7 @@ extern "C" EXPORT_API int noti_ex_item_set_tag(noti_ex_item_h handle,
     p->Get()->SetTag("");
   else
     p->Get()->SetTag(tag);
-  return 0;
+  return NOTI_EX_ERROR_NONE;
 }
 
 extern "C" EXPORT_API int noti_ex_manager_create(noti_ex_manager_h *handle,
@@ -2007,17 +2007,17 @@ extern "C" EXPORT_API int noti_ex_manager_create(noti_ex_manager_h *handle,
       new ManagerCallbackInfo(event_callbacks, data)));
   *handle = static_cast<noti_ex_manager_h>(stub);
 
-  return 0;
+  return NOTI_EX_ERROR_NONE;
 }
 
-extern "C" EXPORT_API int noti_ex_manager_deatroy(noti_ex_manager_h handle) {
+extern "C" EXPORT_API int noti_ex_manager_destroy(noti_ex_manager_h handle) {
   if (handle == nullptr) {
     LOGE("Invalid parameter");
     return NOTI_EX_ERROR_INVALID_PARAMETER;
   }
   ManagerStub* stub = static_cast<ManagerStub*>(handle);
   delete stub;
-  return NOTI_EX_ERROR_INVALID_PARAMETER;
+  return NOTI_EX_ERROR_NONE;
 }
 
 extern "C" EXPORT_API int noti_ex_manager_get(noti_ex_manager_h handle,
@@ -2050,7 +2050,7 @@ extern "C" EXPORT_API int noti_ex_manager_get(noti_ex_manager_h handle,
     LOGE("%s %d", ex.what(), ex.GetErrorCode());
     return NOTI_EX_ERROR_IO_ERROR;
   }
-  return 0;
+  return NOTI_EX_ERROR_NONE;
 }
 
 extern "C" EXPORT_API int noti_ex_manager_update(noti_ex_manager_h handle,
@@ -2072,7 +2072,7 @@ extern "C" EXPORT_API int noti_ex_manager_update(noti_ex_manager_h handle,
     LOGE("%s %d", ex.what(), ex.GetErrorCode());
     return NOTI_EX_ERROR_IO_ERROR;
   }
-  return 0;
+  return NOTI_EX_ERROR_NONE;
 }
 
 extern "C" EXPORT_API int noti_ex_manager_delete(noti_ex_manager_h handle,
@@ -2094,7 +2094,7 @@ extern "C" EXPORT_API int noti_ex_manager_delete(noti_ex_manager_h handle,
     LOGE("%s %d", ex.what(), ex.GetErrorCode());
     return NOTI_EX_ERROR_IO_ERROR;
   }
-  return 0;
+  return NOTI_EX_ERROR_NONE;
 }
 
 extern "C" EXPORT_API int noti_ex_manager_delete_all(noti_ex_manager_h handle,
@@ -2110,7 +2110,7 @@ extern "C" EXPORT_API int noti_ex_manager_delete_all(noti_ex_manager_h handle,
     LOGE("%s %d", ex.what(), ex.GetErrorCode());
     return NOTI_EX_ERROR_IO_ERROR;
   }
-  return 0;
+  return NOTI_EX_ERROR_NONE;
 }
 
 extern "C" EXPORT_API int noti_ex_manager_hide(noti_ex_manager_h handle,
@@ -2132,7 +2132,7 @@ extern "C" EXPORT_API int noti_ex_manager_hide(noti_ex_manager_h handle,
     LOGE("%s %d", ex.what(), ex.GetErrorCode());
     return NOTI_EX_ERROR_IO_ERROR;
   }
-  return 0;
+  return NOTI_EX_ERROR_NONE;
 }
 
 extern "C" EXPORT_API int noti_ex_manager_find_by_root_id(
@@ -2148,7 +2148,7 @@ extern "C" EXPORT_API int noti_ex_manager_find_by_root_id(
     LOGE("%s %d", ex.what(), ex.GetErrorCode());
     return NOTI_EX_ERROR_IO_ERROR;
   }
-  return 0;
+  return NOTI_EX_ERROR_NONE;
 }
 
 extern "C" EXPORT_API int noti_ex_manager_send_error(noti_ex_manager_h handle,
@@ -2166,7 +2166,7 @@ extern "C" EXPORT_API int noti_ex_manager_send_error(noti_ex_manager_h handle,
     LOGE("%s %d", ex.what(), ex.GetErrorCode());
     return NOTI_EX_ERROR_IO_ERROR;
   }
-  return 0;
+  return NOTI_EX_ERROR_NONE;
 }
 
 extern "C" EXPORT_API int noti_ex_manager_get_count(noti_ex_manager_h handle,
@@ -2183,7 +2183,7 @@ extern "C" EXPORT_API int noti_ex_manager_get_count(noti_ex_manager_h handle,
     LOGE("%s %d", ex.what(), ex.GetErrorCode());
     return NOTI_EX_ERROR_IO_ERROR;
   }
-  return 0;
+  return NOTI_EX_ERROR_NONE;
 }
 
 extern "C" EXPORT_API int noti_ex_item_progress_create(noti_ex_item_h *handle,
@@ -2329,7 +2329,7 @@ extern "C" EXPORT_API int noti_ex_reporter_send_error(noti_ex_reporter_h handle,
     LOGE("%s %d", ex.what(), ex.GetErrorCode());
     return NOTI_EX_ERROR_IO_ERROR;
   }
-  return 0;
+  return NOTI_EX_ERROR_NONE;
 }
 
 extern "C" EXPORT_API int noti_ex_reporter_post(noti_ex_reporter_h handle,
@@ -2351,7 +2351,7 @@ extern "C" EXPORT_API int noti_ex_reporter_post(noti_ex_reporter_h handle,
     LOGE("%s %d", ex.what(), ex.GetErrorCode());
     return NOTI_EX_ERROR_IO_ERROR;
   }
-  return 0;
+  return NOTI_EX_ERROR_NONE;
 }
 
 extern "C" EXPORT_API int noti_ex_reporter_post_list(noti_ex_reporter_h handle,
@@ -2373,7 +2373,7 @@ extern "C" EXPORT_API int noti_ex_reporter_post_list(noti_ex_reporter_h handle,
     LOGE("%s %d", ex.what(), ex.GetErrorCode());
     return NOTI_EX_ERROR_IO_ERROR;
   }
-  return 0;
+  return NOTI_EX_ERROR_NONE;
 }
 
 extern "C" EXPORT_API int noti_ex_reporter_update(noti_ex_reporter_h handle,
@@ -2395,7 +2395,7 @@ extern "C" EXPORT_API int noti_ex_reporter_update(noti_ex_reporter_h handle,
     LOGE("%s %d", ex.what(), ex.GetErrorCode());
     return NOTI_EX_ERROR_IO_ERROR;
   }
-  return 0;
+  return NOTI_EX_ERROR_NONE;
 }
 
 extern "C" EXPORT_API int noti_ex_reporter_delete(noti_ex_reporter_h handle,
@@ -2417,7 +2417,7 @@ extern "C" EXPORT_API int noti_ex_reporter_delete(noti_ex_reporter_h handle,
     LOGE("%s %d", ex.what(), ex.GetErrorCode());
     return NOTI_EX_ERROR_IO_ERROR;
   }
-  return 0;
+  return NOTI_EX_ERROR_NONE;
 }
 
 extern "C" EXPORT_API int noti_ex_reporter_delete_all(
@@ -2433,7 +2433,7 @@ extern "C" EXPORT_API int noti_ex_reporter_delete_all(
     LOGE("%s %d", ex.what(), ex.GetErrorCode());
     return NOTI_EX_ERROR_IO_ERROR;
   }
-  return 0;
+  return NOTI_EX_ERROR_NONE;
 }
 
 extern "C" EXPORT_API int noti_ex_reporter_find_by_root_id(
@@ -2449,7 +2449,7 @@ extern "C" EXPORT_API int noti_ex_reporter_find_by_root_id(
     LOGE("%s %d", ex.what(), ex.GetErrorCode());
     return NOTI_EX_ERROR_IO_ERROR;
   }
-  return 0;
+  return NOTI_EX_ERROR_NONE;
 }
 
 extern "C" EXPORT_API int noti_ex_item_text_create(noti_ex_item_h *handle,
@@ -2610,5 +2610,5 @@ extern "C" EXPORT_API int noti_ex_action_visibility_set(noti_ex_action_h handle,
   VisibilityAction* p = static_cast<VisibilityAction*>(handle);
   p->SetVisibility(id, visible);
 
-  return 0;
+  return NOTI_EX_ERROR_NONE;
 }
