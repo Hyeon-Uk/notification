@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-#ifndef CAPI_NOTIFICATION_EX_REPORTER_H_
-#define CAPI_NOTIFICATION_EX_REPORTER_H_
+#ifndef __TIZEN_APPFW_NOTIFICATION_EX_REPORTER_H__
+#define __TIZEN_APPFW_NOTIFICATION_EX_REPORTER_H__
 
 #include <notification_ex_error.h>
 #include <notification_ex_item.h>
@@ -32,79 +32,54 @@ extern "C" {
 typedef void* noti_ex_reporter_h;
 
 /**
- * @brief Called when the error event is receved.
+ * @brief Called when the error event is received.
+ * @details The errors are passed from noti_ex_manager_send_error().
  * @since_tizen 5.5
- * @param[in] handle The reporter handle
- *            The @a handle can be used only in the callback.
- *            The @a handle will be freed right after callback finished.
+ * @param[in] handle The reporter handle \n
+ *            The @a handle can be used only in the callback. \n
+ *            The @a handle will be freed after the callback exits.
  * @param[in] error The error type
  * @param[in] request_id The id of the request that occurred error
- * @param[in] data The user data which was registered with callback
- *            The @a data can be used only in the callback. To use outside, make a copy.
+ * @param[in] user_data The user data which was registered with callback
  * @see #noti_ex_reporter_h
  * @see #noti_ex_error_e
  */
 typedef void (*noti_ex_reporter_events_error_cb)(noti_ex_reporter_h handle,
-		noti_ex_error_e err, int request_id, void *data);
+		noti_ex_error_e error, int request_id, void *user_data);
 
 /**
- * @brief Called when the notification event is receved.
+ * @brief Called when the notification event is received.
  * @since_tizen 5.5
- * @param[in] handle The reporter handle
- *            The @a handle can be used only in the callback.
- *            The @a handle will be freed right after callback finished.
- * @param[in] info The handle that contains event information
- *            The @a info can be used only in the callback. To use outside, make a copy.
- *            The @a info will be freed right after callback finished.
- * @param[in] items The target items of event
- *            The @a items can be used only in the callback.
- *            The @a items will be freed right after callback finished.
+ * @param[in] handle The reporter handle \n
+ *            The @a handle can be used only in the callback. \n
+ *            The @a handle will be freed after the callback exits.
+ * @param[in] info The handle that contains event information \n
+ *            The @a info can be used only in the callback. To use outside, make a copy. \n
+ *            The @a info will be freed after the callback exits.
+ * @param[in] items The target items of event \n
+ *            The @a items must be released using free() after releasing each item using noti_ex_item_destroy().
  * @param[in] count The count of @a items
- * @param[in] data The user data which was registered with callback
- *            The @a data can be used only in the callback. To use outside, make a copy.
+ * @param[in] user_data The user data which was registered with callback
  * @see #noti_ex_reporter_h
  * @see #noti_ex_event_info_h
  * @see #noti_ex_item_h
  * @see #noti_ex_event_info_clone
+ * @see #noti_ex_item_destroy
  */
 typedef void (*noti_ex_reporter_events_event_cb)(noti_ex_reporter_h handle,
-		noti_ex_event_info_h info, const noti_ex_item_h *items, int count,
-		void *data);
-
-/**
- * @brief Called when the notification request event is receved.
- * @since_tizen 5.5
- * @param[in] handle The reporter handle
- *            The @a handle can be used only in the callback.
- *            The @a handle will be freed right after callback finished.
- * @param[in] info The handle that contains event information
- *            The @a info can be used only in the callback. To use outside, make a copy.
- *            The @a info will be freed right after callback finished.
- * @param[out] items The item handle to be responded to the requester
- * @param[out] cnt The count of items which will be responded to the requester.
- * @param[in] data The user data which was registered with callback
- *            The @a data can be used only in the callback. To use outside, make a copy.
- * @see #noti_ex_reporter_h
- * @see #noti_ex_event_info_h
- * @see #noti_ex_item_h
- * @see #noti_ex_event_info_clone
- */
-typedef void (*noti_ex_reporter_events_request_cb)(noti_ex_reporter_h handle,
-		noti_ex_event_info_h info, noti_ex_item_h **items, int *cnt,
-		void *data);
+		noti_ex_event_info_h info, noti_ex_item_h *items, int count,
+		void *user_data);
 
 /**
  * @brief The structure type to contain the set of callback functions for handling the notification events.
  * @since_tizen 5.5
  *
- * @see noti_ex_reporter_events_request_cb()
  * @see noti_ex_reporter_events_event_cb()
  * @see noti_ex_reporter_events_error_cb()
  */
 typedef struct {
-	noti_ex_reporter_events_event_cb event;
-	noti_ex_reporter_events_request_cb requested;
-	noti_ex_reporter_events_error_cb error;
+	noti_ex_reporter_events_event_cb event; /**< Called when a notification event is received */
+	noti_ex_reporter_events_error_cb error; /**< Called when an error event is received */
 } noti_ex_reporter_events_s;
 
 /**
@@ -117,7 +92,7 @@ typedef struct {
  * @remarks @a handle must be released using noti_ex_reporter_destroy().
  * @param[out] handle The notification reporter handle
  * @param[in] event_callbacks The callbacks for notification_ex events
- * @param[in] data The user data for @a event_callbacks
+ * @param[in] user_data The user data for @a event_callbacks
  * @return #NOTI_EX_ERROR_NONE On success, other value on failure
  * @retval #NOTI_EX_ERROR_NONE Success
  * @retval #NOTI_EX_ERROR_INVALID_PARAMETER Invalid parameter
@@ -130,15 +105,11 @@ typedef struct {
 #include <notification_ex_reporter.h>
 
 void _reporter_events_event_cb(noti_ex_reporter_h handle, noti_ex_event_info_h info,
-		noti_ex_item_h *items, int cnt, void *data) {
+		noti_ex_item_h *items, int cnt, void *user_data) {
 }
 
 void _reporter_events_error_cb(noti_ex_reporter_h handle,
-		noti_ex_error_e error, int req_id, void *data) {
-}
-
-void _reporter_events_request_cb(noti_ex_reporter_h handle,
-		noti_ex_event_info_h info, noti_ex_item_h **items, int *cnt, void *data) {
+		noti_ex_error_e error, int req_id, void *user_data) {
 }
 
 {
@@ -146,7 +117,6 @@ void _reporter_events_request_cb(noti_ex_reporter_h handle,
 	noti_ex_reporter_h handle;
 	noti_ex_reporter_events_s ev;
 
-	ev.requested = _reporter_events_request_cb;
 	ev.event = _reporter_events_event_cb;
 	ev.error = _reporter_events_error_cb;
 	ret = noti_ex_reporter_create(&handle, ev, NULL);
@@ -154,12 +124,11 @@ void _reporter_events_request_cb(noti_ex_reporter_h handle,
  * @endcode
  */
 int noti_ex_reporter_create(noti_ex_reporter_h *handle,
-		noti_ex_reporter_events_s event_callbacks, void *data);
+		noti_ex_reporter_events_s event_callbacks, void *user_data);
 
 /**
  * @brief Destroys the notification_ex reporter handle.
  * @since_tizen 5.5
- * @privlevel public
  * @param[in] handle The notification reporter handle
  * @return #NOTI_EX_ERROR_NONE On success, other value on failure
  * @retval #NOTI_EX_ERROR_NONE Success
@@ -170,7 +139,7 @@ int noti_ex_reporter_create(noti_ex_reporter_h *handle,
 #include <notification_ex_reporter.h>
 
 void _reporter_events_error_cb(noti_ex_reporter_h handle, noti_ex_error_e error,
-		int req_id, void *data) {
+		int req_id, void *user_data) {
 }
 
 {
@@ -187,12 +156,11 @@ void _reporter_events_error_cb(noti_ex_reporter_h handle, noti_ex_error_e error,
 int noti_ex_reporter_destroy(noti_ex_reporter_h handle);
 
 /**
- * @brief Sends error.
+ * @brief Sends error to the manager.
  * @since_tizen 5.5
  * @privlevel public
  * @privilege %http://tizen.org/privilege/notification
  * @param[out] handle The notification reporter handle
- * @param[in] receiver_group The notification group name of reporter
  * @param[in] info The handle that contains event information
  * @param[in] error The error type
  * @return #NOTI_EX_ERROR_NONE On success, other value on failure
@@ -208,18 +176,14 @@ int noti_ex_reporter_destroy(noti_ex_reporter_h handle);
 #include <notification_ex_reporter.h>
 
 void _reporter_events_event_cb(noti_ex_reporter_h handle, noti_ex_event_info_h info,
-		noti_ex_item_h *items, int cnt, void *data) {
+		noti_ex_item_h *items, int cnt, void *user_data) {
 
 	// if something wrong about process
 	noti_ex_reporter_send_error(handle, info, NOTI_EX_ERROR_IO_ERROR);
 }
 
 void _reporter_events_error_cb(noti_ex_reporter_h handle,
-		noti_ex_error_e error, int req_id, void *data) {
-}
-
-void _reporter_events_request_cb(noti_ex_reporter_h handle,
-		noti_ex_event_info_h info, noti_ex_item_h **items, int *cnt, void *data) {
+		noti_ex_error_e error, int req_id, void *user_data) {
 }
 
 {
@@ -228,7 +192,6 @@ void _reporter_events_request_cb(noti_ex_reporter_h handle,
 	noti_ex_reporter_events_s ev;
 	int request_id;
 
-	ev.requested = _reporter_events_request_cb;
 	ev.event = _reporter_events_event_cb;
 	ev.error = _reporter_events_error_cb;
 	ret = noti_ex_reporter_create(&handle, ev, NULL, &request_id);
@@ -239,9 +202,8 @@ int noti_ex_reporter_send_error(noti_ex_reporter_h handle,
 		noti_ex_event_info_h info, noti_ex_error_e error);
 
 /**
- * @brief Posts notification.
+ * @brief Posts a notification.
  * @since_tizen 5.5
- * @privlevel public
  * @param[in] handle The notification reporter handle
  * @param[in] noti The notification handle to be posted
  * @param[out] request_id The id of request
@@ -255,7 +217,7 @@ int noti_ex_reporter_send_error(noti_ex_reporter_h handle,
 #include <notification_ex_reporter.h>
 
 void _reporter_events_error_cb(noti_ex_reporter_h handle, noti_ex_error_e error,
-		int req_id, void *data) {
+		int req_id, void *user_data) {
 }
 
 {
@@ -279,9 +241,8 @@ int noti_ex_reporter_post(noti_ex_reporter_h handle, noti_ex_item_h noti,
 		int *request_id);
 
 /**
- * @brief Posts notification list.
+ * @brief Posts notifications contained in a list.
  * @since_tizen 5.5
- * @privlevel public
  * @param[in] handle The notification reporter handle
  * @param[in] noti_list The notification handle list to be posted
  * @param[in] count The count of notifications in @a noti_list
@@ -296,7 +257,7 @@ int noti_ex_reporter_post(noti_ex_reporter_h handle, noti_ex_item_h noti,
 #include <notification_ex_reporter.h>
 
 void _reporter_events_error_cb(noti_ex_reporter_h handle, noti_ex_error_e error,
-		int req_id, void *data) {
+		int req_id, void *user_data) {
 }
 
 {
@@ -326,9 +287,8 @@ int noti_ex_reporter_post_list(noti_ex_reporter_h handle, noti_ex_item_h *noti_l
 		int *request_id);
 
 /**
- * @brief Updates notification.
+ * @brief Updates a notification.
  * @since_tizen 5.5
- * @privlevel public
  * @param[in] handle The notification reporter handle
  * @param[in] noti The notification handle to be updated
  * @param[out] request_id The id of request
@@ -342,7 +302,7 @@ int noti_ex_reporter_post_list(noti_ex_reporter_h handle, noti_ex_item_h *noti_l
 #include <notification_ex_reporter.h>
 
 void _reporter_events_error_cb(noti_ex_reporter_h handle, noti_ex_error_e error,
-		int req_id, void *data) {
+		int req_id, void *user_data) {
 }
 
 {
@@ -365,9 +325,8 @@ int noti_ex_reporter_update(noti_ex_reporter_h handle, noti_ex_item_h noti,
 		int *request_id);
 
 /**
- * @brief Deletes notification.
+ * @brief Deletes a notification.
  * @since_tizen 5.5
- * @privlevel public
  * @param[in] handle The notification reporter handle
  * @param[in] noti The notification handle to be updated
  * @param[out] request_id The id of request
@@ -381,7 +340,7 @@ int noti_ex_reporter_update(noti_ex_reporter_h handle, noti_ex_item_h noti,
 #include <notification_ex_reporter.h>
 
 void _reporter_events_error_cb(noti_ex_reporter_h handle, noti_ex_error_e error,
-		int req_id, void *data) {
+		int req_id, void *user_data) {
 }
 
 {
@@ -405,7 +364,6 @@ int noti_ex_reporter_delete(noti_ex_reporter_h handle, noti_ex_item_h noti,
 /**
  * @brief Deletes all notifications.
  * @since_tizen 5.5
- * @privlevel public
  * @param[in] handle The notification reporter handle
  * @param[out] request_id The id of request
  * @return #NOTI_EX_ERROR_NONE On success, other value on failure
@@ -418,7 +376,7 @@ int noti_ex_reporter_delete(noti_ex_reporter_h handle, noti_ex_item_h noti,
 #include <notification_ex_reporter.h>
 
 void _reporter_events_error_cb(noti_ex_reporter_h handle, noti_ex_error_e error,
-		int req_id, void *data) {
+		int req_id, void *user_data) {
 }
 
 {
@@ -441,10 +399,10 @@ int noti_ex_reporter_delete_all(noti_ex_reporter_h handle,
 /**
  * @brief Finds notification by root id.
  * @since_tizen 5.5
- * @privlevel public
  * @param[in] handle The notification reporter handle
  * @param[in] root_id The id of the foremost notification item to be retrived
- * @param[out] item The result of the find operation
+ * @param[out] item The result of the find operation \n
+ *             The @a item must be released using noti_ex_item_destroy().
  * @return #NOTI_EX_ERROR_NONE On success, other value on failure
  * @retval #NOTI_EX_ERROR_NONE Success
  * @retval #NOTI_EX_ERROR_INVALID_PARAMETER Invalid parameter
@@ -455,7 +413,7 @@ int noti_ex_reporter_delete_all(noti_ex_reporter_h handle,
 #include <notification_ex_reporter.h>
 
 void _reporter_events_error_cb(noti_ex_reporter_h handle, noti_ex_error_e error,
-		int req_id, void *data) {
+		int req_id, void *user_data) {
 }
 
 {
@@ -478,4 +436,4 @@ int noti_ex_reporter_find_by_root_id(noti_ex_reporter_h handle, const char *root
 #ifdef __cplusplus
 }
 #endif
-#endif  // CAPI_NOTIFICATION_EX_REPORTER_H_
+#endif  /* __TIZEN_APPFW_NOTIFICATION_EX_REPORTER_H__ */

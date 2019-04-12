@@ -107,7 +107,6 @@ class ManagerCallbackInfo {
     cb_.updated = cb.updated;
     cb_.deleted = cb.deleted;
     cb_.error = cb.error;
-    cb_.requested = cb.requested;
   }
 
   void InvokeAdded(Manager* manager, const IEventInfo& info,
@@ -155,22 +154,6 @@ class ManagerCallbackInfo {
         static_cast<noti_ex_error_e>(error), requestId, user_data_);
   }
 
-  list<shared_ptr<item::AbstractItem>> InvokeRequested(
-      Manager* manager, const IEventInfo& info) {
-    IEventInfo* c_info = const_cast<IEventInfo*>(&info);
-    noti_ex_item_h* items = nullptr;
-    int cnt;
-    cb_.requested(static_cast<noti_ex_manager_h>(manager),
-        static_cast<noti_ex_event_info_h>(c_info),
-        &items, &cnt, user_data_);
-    list<shared_ptr<item::AbstractItem>> ret_list;
-    for (int i = 0; i < cnt; i++) {
-      Handle* item = static_cast<Handle*>(items[i]);
-      ret_list.emplace_back(item->GetPtr());
-    }
-    return ret_list;
-  }
-
  private:
   noti_ex_manager_events_s cb_;
   void* user_data_;
@@ -203,11 +186,6 @@ class ManagerStub : public Manager {
     cb_->InvokeError(this, error, requestId);
   }
 
-  list<shared_ptr<item::AbstractItem>> OnRequestEvent(
-      const IEventInfo& info) override {
-    return cb_->InvokeRequested(this, info);
-  }
-
   int SetManagerCallbackInfo(unique_ptr<ManagerCallbackInfo> ci) {
     cb_ = move(ci);
     return NOTI_EX_ERROR_NONE;
@@ -229,7 +207,6 @@ class ReporterCallbackInfo {
     : user_data_(user_data) {
     cb_.event = cb.event;
     cb_.error = cb.error;
-    cb_.requested = cb.requested;
   }
 
   void InvokeEvent(Reporter* reporter, const IEventInfo& info,
@@ -260,22 +237,6 @@ class ReporterCallbackInfo {
         static_cast<noti_ex_error_e>(error), requestId, user_data_);
   }
 
-  list<shared_ptr<item::AbstractItem>> InvokeRequested(Reporter* reporter,
-      const IEventInfo& info) {
-    IEventInfo* c_info = const_cast<IEventInfo*>(&info);
-    noti_ex_item_h* items = nullptr;
-    int cnt;
-    cb_.requested(static_cast<noti_ex_reporter_h>(reporter),
-        static_cast<noti_ex_event_info_h>(c_info),
-        &items, &cnt, user_data_);
-    list<shared_ptr<item::AbstractItem>> ret_list;
-    for (int i = 0; i < cnt; i++) {
-      Handle* item = static_cast<Handle*>(items[i]);
-      ret_list.emplace_back(item->GetPtr());
-    }
-    return ret_list;
-  }
-
  private:
   noti_ex_reporter_events_s cb_;
   void* user_data_;
@@ -291,11 +252,6 @@ class ReporterStub : public Reporter {
   void OnEvent(const IEventInfo& info,
       std::list<std::shared_ptr<item::AbstractItem>> notiList) override {
     cb_->InvokeEvent(this, info, notiList);
-  }
-
-  list<shared_ptr<item::AbstractItem>> OnRequestEvent(
-      const IEventInfo& info) override {
-    return cb_->InvokeRequested(this, info);
   }
 
   void OnError(NotificationError error, int requestId) override {
