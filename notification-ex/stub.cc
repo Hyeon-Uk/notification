@@ -1951,10 +1951,14 @@ extern "C" EXPORT_API int noti_ex_manager_create(noti_ex_manager_h *handle,
     return NOTI_EX_ERROR_INVALID_PARAMETER;
   }
 
+  string receiver_group_str = "";
+  if (receiver_group)
+    receiver_group_str = string(receiver_group);
+
   ManagerStub* stub = new (std::nothrow) ManagerStub(
       unique_ptr<DBusSender>(new DBusSender(Reporter::GetPath())),
       unique_ptr<DBusEventListener>(new DBusEventListener(Manager::GetPath())),
-      receiver_group);
+      receiver_group_str);
   if (stub == nullptr) {
     LOGE("Fail to create manager");
     return NOTI_EX_ERROR_IO_ERROR;
@@ -2322,7 +2326,7 @@ extern "C" EXPORT_API int noti_ex_reporter_post_list(noti_ex_reporter_h handle,
     list<shared_ptr<item::AbstractItem>> notiList;
     for (int i = 0; i < count; i++) {
       Handle* item = static_cast<Handle*>(noti_list[i]);
-      notiList.emplace_back(item->GetPtr());
+      notiList.push_back(item->GetPtr());
     }
     *request_id = stub->Post(notiList);
   } catch (Exception &ex) {
@@ -2545,7 +2549,11 @@ extern "C" EXPORT_API int noti_ex_action_visibility_create(
     return NOTI_EX_ERROR_INVALID_PARAMETER;
   }
 
-  auto* p = new (std::nothrow) VisibilityAction(extra);
+  string extra_str = "";
+  if (extra != NULL)
+    extra_str = string(extra);
+
+  auto* p = new (std::nothrow) VisibilityAction(extra_str);
   if (p == nullptr) {
     LOGE("Out-of-memory");
     return NOTI_EX_ERROR_OUT_OF_MEMORY;
