@@ -907,12 +907,13 @@ extern "C" EXPORT_API int noti_ex_item_input_selector_get_contents(
   }
   InputSelectorItem* p = static_cast<InputSelectorItem*>(h->Get());
   list<string> contents = p->GetContents();
-  *contents_list = (char**)calloc(contents.size(), sizeof(char*));
+  char **list = (char**)calloc(contents.size(), sizeof(char*));
   int idx = 0;
   for (auto& i : contents) {
-    *contents_list[idx++] = strdup(i.c_str());
+    list[idx++] = strdup(i.c_str());
   }
   *count = contents.size();
+  *contents_list = list;
 
   return NOTI_EX_ERROR_NONE;
 }
