@@ -14,15 +14,15 @@
  * limitations under the License.
  */
 
-#ifndef CAPI_NOTIFICATION_EX_EVENT_INFO_H_
-#define CAPI_NOTIFICATION_EX_EVENT_INFO_H_
+#ifndef __TIZEN_APPFW_NOTIFICATION_EX_EVENT_INFO_H__
+#define __TIZEN_APPFW_NOTIFICATION_EX_EVENT_INFO_H__
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 /**
- * @brief Enumeration for the type of notifrication_ex event.
+ * @brief Enumeration for the type of notification_ex event.
  * @since_tizen 5.5
  */
 typedef enum _noti_ex_event_info_type {
@@ -52,13 +52,13 @@ typedef void* noti_ex_event_info_h;
  * @retval #NOTI_EX_ERROR_INVALID_PARAMETER Invalid parameter
  * @retval #NOTI_EX_ERROR_OUT_OF_MEMORY out of memory
  * @see #noti_ex_event_info_h
- * @see #noti_ex_event_info_destroy
+ * @see #noti_ex_event_info_destroy()
  * @par Sample code:
  * @code
 #include <notification_ex_event_info.h>
 
 void _manager_events_update_cb(noti_ex_manager_h handle,
-		noti_ex_event_info_h info, noti_ex_item_h updated_item, void *data) {
+		noti_ex_event_info_h info, noti_ex_item_h updated_item, void *user_data) {
 
 	int ret;
 	noti_ex_event_info_h cloned = NULL;
@@ -83,7 +83,7 @@ int noti_ex_event_info_clone(noti_ex_event_info_h handle,
 #include <notification_ex_event_info.h>
 
 void _manager_events_update_cb(noti_ex_manager_h handle,
-		noti_ex_event_info_h info, noti_ex_item_h updated_item, void *data) {
+		noti_ex_event_info_h info, noti_ex_item_h updated_item, void *user_data) {
 
 	int ret;
 	noti_ex_event_info_h cloned = NULL;
@@ -96,7 +96,7 @@ void _manager_events_update_cb(noti_ex_manager_h handle,
 int noti_ex_event_info_destroy(noti_ex_event_info_h handle);
 
 /**
- * @brief Gets the type of event.
+ * @brief Gets the type of an event.
  * @since_tizen 5.5
  * @param[in] handle The notification_ex event info handle
  * @param[out] event_type The type of event
@@ -104,7 +104,7 @@ int noti_ex_event_info_destroy(noti_ex_event_info_h handle);
  * @retval #NOTI_EX_ERROR_NONE Success
  * @retval #NOTI_EX_ERROR_INVALID_PARAMETER Invalid parameter
  * @see #noti_ex_event_info_h
- * @see #noti_ex_event_info_create
+ * @see #noti_ex_event_info_create()
  * @par Sample code:
  * @code
 #include <notification_ex_event_info.h>
@@ -120,16 +120,16 @@ int noti_ex_event_info_destroy(noti_ex_event_info_h handle);
 int noti_ex_event_info_get_event_type(noti_ex_event_info_h handle, noti_ex_event_info_type_e *event_type);
 
 /**
- * @brief Gets the owner of event.
+ * @brief Gets the app id of event owner
  * @since_tizen 5.5
  * @remarks @a owner must be released using free().
  * @param[in] handle The notification_ex event info handle
- * @param[out] owner The owner of event
+ * @param[out] owner The app id of event owner
  * @return #NOTI_EX_ERROR_NONE On success, other value on failure
  * @retval #NOTI_EX_ERROR_NONE Success
  * @retval #NOTI_EX_ERROR_INVALID_PARAMETER Invalid parameter
  * @see #noti_ex_event_info_h
- * @see #noti_ex_event_info_create
+ * @see #noti_ex_event_info_create()
  * @par Sample code:
  * @code
 #include <notification_ex_event_info.h>
@@ -145,7 +145,7 @@ int noti_ex_event_info_get_event_type(noti_ex_event_info_h handle, noti_ex_event
 int noti_ex_event_info_get_owner(noti_ex_event_info_h handle, char **owner);
 
 /**
- * @brief Gets the channel of event.
+ * @brief Gets the channel of an event.
  * @since_tizen 5.5
  * @remarks @a channel must be released using free().
  * @param[in] handle The notification_ex event info handle
@@ -154,7 +154,7 @@ int noti_ex_event_info_get_owner(noti_ex_event_info_h handle, char **owner);
  * @retval #NOTI_EX_ERROR_NONE Success
  * @retval #NOTI_EX_ERROR_INVALID_PARAMETER Invalid parameter
  * @see #noti_ex_event_info_h
- * @see #noti_ex_event_info_create
+ * @see #noti_ex_event_info_create()
  * @par Sample code:
  * @code
 #include <notification_ex_event_info.h>
@@ -170,7 +170,7 @@ int noti_ex_event_info_get_owner(noti_ex_event_info_h handle, char **owner);
 int noti_ex_event_info_get_channel(noti_ex_event_info_h handle, char **channel);
 
 /**
- * @brief Gets the id of notification_ex item.
+ * @brief Gets the id of a notification_ex item.
  * @since_tizen 5.5
  * @remarks @a item_id must be released using free().
  * @param[in] handle The notification_ex event info handle
@@ -179,7 +179,7 @@ int noti_ex_event_info_get_channel(noti_ex_event_info_h handle, char **channel);
  * @retval #NOTI_EX_ERROR_NONE Success
  * @retval #NOTI_EX_ERROR_INVALID_PARAMETER Invalid parameter
  * @see #noti_ex_event_info_h
- * @see #noti_ex_event_info_create
+ * @see #noti_ex_event_info_create()
  * @par Sample code:
  * @code
 #include <notification_ex_event_info.h>
@@ -195,7 +195,7 @@ int noti_ex_event_info_get_channel(noti_ex_event_info_h handle, char **channel);
 int noti_ex_event_info_get_item_id(noti_ex_event_info_h handle, char **item_id);
 
 /**
- * @brief Gets the id of reqest for event
+ * @brief Gets the id of reqest for an event.
  * @since_tizen 5.5
  * @param[in] handle The notification_ex event info handle
  * @param[out] req_id The id of reqeust for event
@@ -203,16 +203,16 @@ int noti_ex_event_info_get_item_id(noti_ex_event_info_h handle, char **item_id);
  * @retval #NOTI_EX_ERROR_NONE Success
  * @retval #NOTI_EX_ERROR_INVALID_PARAMETER Invalid parameter
  * @see #noti_ex_event_info_h
- * @see #noti_ex_event_info_create
+ * @see #noti_ex_event_info_create()
  * @par Sample code:
  * @code
 #include <notification_ex_event_info.h>
 
 {
 	int ret;
-	int reqeust_id;
+	int request_id;
 
-	ret = noti_ex_event_info_get_request_id(event_handle, &reqeust_id);
+	ret = noti_ex_event_info_get_request_id(event_handle, &request_id);
 }
  * @endcode
  */
@@ -221,4 +221,4 @@ int noti_ex_event_info_get_request_id(noti_ex_event_info_h handle, int *req_id);
 #ifdef __cplusplus
 }
 #endif
-#endif  // CAPI_NOTIFICATION_EX_EVENT_INFO_H_
+#endif  /* __TIZEN_APPFW_NOTIFICATION_EX_EVENT_INFO_H__ */

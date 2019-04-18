@@ -32,34 +32,34 @@ extern "C" {
 typedef void* noti_ex_manager_h;
 
 /**
- * @brief Called when the notification add event is received.
+ * @brief Called when a notification addition event is received.
+ * @details If this callback is set to NULL in #event_callbacks, addition events cannot be received.
  * @since_tizen 5.5
  * @param[in] handle The manager handle \n
- *            The @a handle can be used only in the callback. \n
- *            The @a handle will be freed after the callback exits.
+ *            The @a handle is the same handle for which the callback was set
  * @param[in] info The handle that contains event information \n
  *            The @a info can be used only in the callback. To use outside, make a copy. \n
  *            The @a info will be freed after the callback exits.
- * @param[in] added_item The item handle to be added \n
- *            The @a added_item must be released using noti_ex_item_destroy().
+ * @param[in] added_items The item handles to be added \n
+ *            Each item in @a added_items should be destroyed with using noti_ex_item_destroy(), then @a added_items should be released with free().
  * @param[in] count The count of the item to be added
  * @param[in] user_data The user data which was registered with callback
  * @see #noti_ex_manager_h
  * @see #noti_ex_event_info_h
  * @see #noti_ex_item_h
  * @see #noti_ex_event_info_clone
- * @see #noti_ex_item_destroy
+ * @see #noti_ex_item_destroy()
  */
 typedef void (*noti_ex_manager_events_add_cb)(noti_ex_manager_h handle,
-		noti_ex_event_info_h info, noti_ex_item_h *added_item,
+		noti_ex_event_info_h info, noti_ex_item_h *added_items,
 		int count, void *user_data);
 
 /**
- * @brief Called when the notification update event is received.
+ * @brief Called when a notification update event is received.
+ * @details If this callback is set to NULL in #event_callbacks, update events cannot be received.
  * @since_tizen 5.5
  * @param[in] handle The manager handle \n
- *            The @a handle can be used only in the callback. \n
- *            The @a handle will be freed after the callback exits.
+ *            The @a handle is the same handle for which the callback was set
  * @param[in] info The handle that contains event information \n
  *            The @a info can be used only in the callback. To use outside, make a copy. \n
  *            The @a info will be freed after the callback exits.
@@ -70,18 +70,18 @@ typedef void (*noti_ex_manager_events_add_cb)(noti_ex_manager_h handle,
  * @see #noti_ex_event_info_h
  * @see #noti_ex_item_h
  * @see #noti_ex_event_info_clone
- * @see #noti_ex_item_destroy
+ * @see #noti_ex_item_destroy()
  */
 typedef void (*noti_ex_manager_events_update_cb)(noti_ex_manager_h handle,
 		noti_ex_event_info_h info, noti_ex_item_h updated_item,
 		void *user_data);
 
 /**
- * @brief Called when the notification delete event is received.
+ * @brief Called when a notification deletion event is received.
+ * @details If this callback is set to NULL in #event_callbacks, deletion events cannot be received.
  * @since_tizen 5.5
  * @param[in] handle The manager handle \n
- *            The @a handle can be used only in the callback. \n
- *            The @a handle will be freed after the callback exits.
+ *            The @a handle is the same handle for which the callback was set
  * @param[in] info The handle that contains event information \n
  *            The @a info can be used only in the callback. To use outside, make a copy. \n
  *            The @a info will be freed after the callback exits.
@@ -92,19 +92,19 @@ typedef void (*noti_ex_manager_events_update_cb)(noti_ex_manager_h handle,
  * @see #noti_ex_event_info_h
  * @see #noti_ex_item_h
  * @see #noti_ex_event_info_clone
- * @see #noti_ex_item_destroy
+ * @see #noti_ex_item_destroy()
  */
 typedef void (*noti_ex_manager_events_delete_cb)(noti_ex_manager_h handle,
 		noti_ex_event_info_h info, noti_ex_item_h deleted_item,
 		void *user_data);
 
 /**
- * @brief Called when the error event is received.
+ * @brief Called when an error event is received.
  * @details The errors are passed from #noti_ex_reporter_send_error().
+ *          If this callback is set to NULL in #event_callbacks, error events cannot be received.
  * @since_tizen 5.5
  * @param[in] handle The manager handle \n
- *            The @a handle can be used only in the callback. \n
- *            The @a handle will be freed after the callback exits.
+ *            The @a handle is the same handle for which the callback was set
  * @param[in] error The error type
  * @param[in] request_id The id of the request that occurred error
  * @param[in] user_data The user data which was registered with callback
@@ -132,10 +132,11 @@ typedef struct {
 
 /**
  * @brief Creates the notification_ex manager handle.
- * @details The manager handle is created with a events callback and
- *          the user can listen notification events through the events callback.
+ * @details The manager handle is created with event callbacks and
+ *          the user can listen to notification events through the event callbacks.
  *          If the user wants to manage notifications for specific group
  *          the user should identify it with @a receiver_group
+ *          Callbacks in @a event_callbacks can be set to NULL, which will result in the corresponding events not being received.
  * @since_tizen 5.5
  * @privlevel public
  * @privilege %http://tizen.org/privilege/notification
@@ -155,6 +156,7 @@ typedef struct {
  * @see #NOTI_EX_RECEIVER_GROUP_LOCKSCREEN
  * @see #NOTI_EX_RECEIVER_GROUP_INDICATOR
  * @see #NOTI_EX_RECEIVER_GROUP_POPUP
+ * @see #noti_ex_manager_destroy()
  * @par Sample code:
  * @code
 #include <notification_ex_manager.h>
@@ -229,7 +231,7 @@ int noti_ex_manager_destroy(noti_ex_manager_h handle);
  * @privilege %http://tizen.org/privilege/notification
  * @param[in] handle The notification manager handle
  * @param[out] items The result of the get request \n
- *             The @a items must be released using free() after releasing each item using noti_ex_item_destroy().
+ *             Each item in @a items must be released using noti_ex_item_destroy(), then @a items must be released using free().
  * @param[out] count The count of retrieved notification items
  * @return #NOTI_EX_ERROR_NONE On success, other value on failure
  * @retval #NOTI_EX_ERROR_NONE Success
@@ -238,6 +240,7 @@ int noti_ex_manager_destroy(noti_ex_manager_h handle);
  * @retval #NOTI_EX_ERROR_IO_ERROR IO error
  * @see #noti_ex_item_h
  * @see #noti_ex_manager_h
+ * @see #noti_ex_item_destroy()
  * @par Sample code:
  * @code
 #include <notification_ex_manager.h>
@@ -392,7 +395,7 @@ void _manager_events_error_cb(noti_ex_manager_h handle, noti_ex_error_e error,
 
 	ev.error = _manager_events_error_cb;
 	ret = noti_ex_manager_create(&handle, NOTI_EX_RECEIVER_GROUP_INDICATOR, ev, NULL);
-	ret = noti_ex_manager_delete_all(handle, request_id);
+	ret = noti_ex_manager_delete_all(handle, &request_id);
 }
  * @endcode
  */
@@ -418,7 +421,8 @@ int noti_ex_manager_delete_all(noti_ex_manager_h handle,
  * @code
 #include <notification_ex_manager.h>
 
-void _manager_events_error_cb(noti_ex_error_e error, int req_id, void *user_data) {
+void _manager_events_error_cb(noti_ex_manager_h handle, noti_ex_error_e error,
+		int req_id, void *user_data) {
 }
 
 {
@@ -459,11 +463,13 @@ int noti_ex_manager_hide(noti_ex_manager_h handle, noti_ex_item_h item,
  * @retval #NOTI_EX_ERROR_IO_ERROR IO error
  * @see #noti_ex_manager_h
  * @see #noti_ex_item_h
+ * @see #noti_ex_item_destroy()
  * @par Sample code:
  * @code
 #include <notification_ex_manager.h>
 
-void _manager_events_error_cb(noti_ex_error_e error, int req_id, void *user_data) {
+void _manager_events_error_cb(noti_ex_manager_h handle, noti_ex_error_e error,
+		int req_id, void *user_data) {
 }
 
 {
@@ -568,11 +574,11 @@ void _manager_events_error_cb(noti_ex_manager_h handle, noti_ex_error_e error,
 
 	ev.error = _manager_events_error_cb;
 	ret = noti_ex_manager_create(&handle, NOTI_EX_RECEIVER_GROUP_INDICATOR, ev, NULL);
-	ret = noti_ex_manager_get_count(handle, &cnt);
+	ret = noti_ex_manager_get_notification_count(handle, &cnt);
 }
  * @endcode
  */
-int noti_ex_manager_get_count(noti_ex_manager_h handle, int *cnt);
+int noti_ex_manager_get_notification_count(noti_ex_manager_h handle, int *cnt);
 
 #ifdef __cplusplus
 }

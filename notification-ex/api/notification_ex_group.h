@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-#ifndef CAPI_NOTIFICATION_EX_GROUP_H_
-#define CAPI_NOTIFICATION_EX_GROUP_H_
+#ifndef __TIZEN_APPFW_NOTIFICATION_EX_GROUP_H__
+#define __TIZEN_APPFW_NOTIFICATION_EX_GROUP_H__
 
 #include <notification_ex_item.h>
 
@@ -25,9 +25,10 @@ extern "C" {
 
 /**
  * @brief Creates the group of notification_ex items.
- * @details The notification_ex is made with notification_ex items.
+ * @details The notification_ex item is the predefined type of notifications.
+ *          The notification can be created with one item or group of items.
  *          If the user wants to make the group of notification_ex items,
- *          notification_ex handle have to be made as group item.
+ *          the notification_ex handle has to be created as a group item.
  * @since_tizen 5.5
  * @remarks @a handle must be released using noti_ex_item_destroy().
  * @param[out] handle The notification_ex item handle
@@ -37,7 +38,7 @@ extern "C" {
  * @retval #NOTI_EX_ERROR_INVALID_PARAMETER Invalid parameter
  * @retval #NOTI_EX_ERROR_OUT_OF_MEMORY out of memory
  * @see #noti_ex_item_h
- * @see #noti_ex_item_destroy
+ * @see #noti_ex_item_destroy()
  * @par Sample code:
  * @code
 #include <notification_ex_group.h>
@@ -63,7 +64,8 @@ int noti_ex_item_group_create(noti_ex_item_h *handle, const char *id);
  * @retval #NOTI_EX_ERROR_NONE Success
  * @retval #NOTI_EX_ERROR_INVALID_PARAMETER Invalid parameter
  * @see #noti_ex_item_h
- * @see #noti_ex_item_group_create
+ * @see #noti_ex_item_group_create()
+ * @see #noti_ex_item_group_is_vertical().
  * @par Sample code:
  * @code
 #include <notification_ex_group.h>
@@ -84,9 +86,10 @@ int noti_ex_item_group_set_direction(noti_ex_item_h handle, bool vertical);
  * @param[out] vertical The vertical state of group item
  * @return #NOTI_EX_ERROR_NONE On success, other value on failure
  * @retval #NOTI_EX_ERROR_NONE Success
- * @retval #NOTI_EX_ERROR_INVALID_PARAMETER Invalid parameter
+ * @retval #NOTI_EX_ERROR_INVALID_PARAMETER Invalid parameter, if the item type is not correct, this error is returned
  * @see #noti_ex_item_h
- * @see #noti_ex_item_group_create
+ * @see #noti_ex_item_group_create()
+ * @see #noti_ex_item_group_set_direction()
  * @par Sample code:
  * @code
 #include <notification_ex_group.h>
@@ -109,9 +112,9 @@ int noti_ex_item_group_is_vertical(noti_ex_item_h handle, bool *vertical);
  * @param[out] label The label of application
  * @return #NOTI_EX_ERROR_NONE On success, other value on failure
  * @retval #NOTI_EX_ERROR_NONE Success
- * @retval #NOTI_EX_ERROR_INVALID_PARAMETER Invalid parameter
+ * @retval #NOTI_EX_ERROR_INVALID_PARAMETER Invalid parameter, if the item type is not correct, this error is returned
  * @see #noti_ex_item_h
- * @see #noti_ex_item_group_create
+ * @see #noti_ex_item_group_create()
  * @par Sample code:
  * @code
 #include <notification_ex_group.h>
@@ -127,7 +130,7 @@ int noti_ex_item_group_is_vertical(noti_ex_item_h handle, bool *vertical);
 int noti_ex_item_group_get_app_label(noti_ex_item_h handle, char **label);
 
 /**
- * @brief Add the child to the group item.
+ * @brief Adds the child to the group item.
  * @since_tizen 5.5
  * @remarks @a child must not be released after calling this function
  * @param[in] handle The notification_ex item handle
@@ -136,7 +139,7 @@ int noti_ex_item_group_get_app_label(noti_ex_item_h handle, char **label);
  * @retval #NOTI_EX_ERROR_NONE Success
  * @retval #NOTI_EX_ERROR_INVALID_PARAMETER Invalid parameter
  * @see #noti_ex_item_h
- * @see #noti_ex_item_group_create
+ * @see #noti_ex_item_group_create()
  * @par Sample code:
  * @code
 #include <notification_ex_group.h>
@@ -163,7 +166,7 @@ int noti_ex_item_group_add_child(noti_ex_item_h handle, noti_ex_item_h child);
  * @retval #NOTI_EX_ERROR_NONE Success
  * @retval #NOTI_EX_ERROR_INVALID_PARAMETER Invalid parameter
  * @see #noti_ex_item_h
- * @see #noti_ex_item_group_create
+ * @see #noti_ex_item_group_create()
  * @par Sample code:
  * @code
 #include <notification_ex_group.h>
@@ -181,32 +184,34 @@ int noti_ex_item_group_remove_child(noti_ex_item_h handle, const char *item_id);
  * @brief Called to get the data of child item for each child of the group item.
  * @since_tizen 5.5
  * @remarks @a handle must not be released
+ * @remarks @a handle can be used only in the callback.
+ *          @a handle will be freed after the callback exists.
  * @param[in] handle The notification_ex item handle
- * @param[in] data The data of child passed from foreach function
+ * @param[in] user_data The user data
  * @return #NOTI_EX_ERROR_NONE On success, other value on failure
  * @retval #NOTI_EX_ERROR_NONE Success
  * @see #noti_ex_item_h
- * @see #noti_ex_item_group_foreach
+ * @see #noti_ex_item_group_foreach()
  */
-typedef int (*noti_ex_item_group_foreach_cb)(noti_ex_item_h handle, void *data);
+typedef int (*noti_ex_item_group_foreach_child_cb)(noti_ex_item_h handle, void *user_data);
 
 /**
  * @brief Gets the data of children from the group item.
- * @details The noti_ex_item_group_foreach_cb is called each child of group item.
+ * @details The noti_ex_item_group_foreach_cb() is called for each child of the group item.
  * @since_tizen 5.5
  * @param[in] handle The notification_ex item handle
  * @param[in] callback The callback function to get the children data
- * @param[in] data The data to be passed to the callback function
+ * @param[in] user_data The user data to be passed to the callback function
  * @return #NOTI_EX_ERROR_NONE On success, other value on failure
  * @retval #NOTI_EX_ERROR_NONE Success
  * @retval #NOTI_EX_ERROR_INVALID_PARAMETER Invalid parameter
  * @see #noti_ex_item_h
- * @see #noti_ex_item_group_foreach_cb
+ * @see #noti_ex_item_group_foreach_cb()
  * @par Sample code:
  * @code
 #include <notification_ex_group.h>
 
-int _ex_item_group_foreach_cb(noti_ex_item_h handle, void *data) {
+int _ex_item_group_foreach_child_cb(noti_ex_item_h handle, void *user_data) {
 	return 0;
 }
 
@@ -219,14 +224,14 @@ int _ex_item_group_foreach_cb(noti_ex_item_h handle, void *data) {
 	ret = noti_ex_item_button_create(&child_item, "button_id", "button_title");
 	ret = noti_ex_item_group_add_child(group_item, child_item);
 
-	ret = noti_ex_item_group_foreach(_ex_item_group_foreach_cb, NULL);
+	ret = noti_ex_item_group_foreach(group_item, _ex_item_group_foreach_child_cb, NULL);
 }
  * @endcode
  */
-int noti_ex_item_group_foreach(noti_ex_item_h handle,
-		noti_ex_item_group_foreach_cb callback, void *data);
+int noti_ex_item_group_foreach_child(noti_ex_item_h handle,
+		noti_ex_item_group_foreach_child_cb callback, void *user_data);
 
 #ifdef __cplusplus
 }
 #endif
-#endif  // CAPI_NOTIFICATION_EX_GROUP_H_
+#endif  /* __TIZEN_APPFW_NOTIFICATION_EX_GROUP_H__ */

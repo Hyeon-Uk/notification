@@ -795,8 +795,8 @@ extern "C" EXPORT_API int noti_ex_item_group_remove_child(noti_ex_item_h handle,
   return NOTI_EX_ERROR_NONE;
 }
 
-extern "C" EXPORT_API int noti_ex_item_group_foreach(noti_ex_item_h handle,
-    noti_ex_item_group_foreach_cb callback, void *data) {
+extern "C" EXPORT_API int noti_ex_item_group_foreach_child(noti_ex_item_h handle,
+    noti_ex_item_group_foreach_child_cb callback, void *data) {
   if (handle == nullptr || callback == nullptr) {
     LOGE("Invalid parameter");
     return NOTI_EX_ERROR_INVALID_PARAMETER;
@@ -1544,7 +1544,7 @@ extern "C" EXPORT_API int noti_ex_item_get_type(noti_ex_item_h handle,
   return NOTI_EX_ERROR_NONE;
 }
 
-extern "C" EXPORT_API int noti_ex_item_get_shared_path(noti_ex_item_h handle,
+extern "C" EXPORT_API int noti_ex_item_get_shared_paths(noti_ex_item_h handle,
     char ***path, int *count) {
   if (handle == nullptr || path == nullptr || count == nullptr) {
     LOGE("Invalid parameter");
@@ -1899,21 +1899,6 @@ extern "C" EXPORT_API int noti_ex_item_get_sender_app_id(noti_ex_item_h handle,
   return NOTI_EX_ERROR_NONE;
 }
 
-extern "C" EXPORT_API int noti_ex_item_set_sender_app_id(noti_ex_item_h handle,
-    const char *id) {
-  if (handle == nullptr) {
-    LOGE("Invalid parameter");
-    return NOTI_EX_ERROR_INVALID_PARAMETER;
-  }
-
-  Handle* p = static_cast<Handle*>(handle);
-  if (id == nullptr)
-    p->Get()->SetSenderAppId("");
-  else
-    p->Get()->SetSenderAppId(id);
-  return NOTI_EX_ERROR_NONE;
-}
-
 extern "C" EXPORT_API int noti_ex_item_get_tag(noti_ex_item_h handle,
     char **tag) {
   if (handle == nullptr || tag == nullptr) {
@@ -2130,8 +2115,8 @@ extern "C" EXPORT_API int noti_ex_manager_send_error(noti_ex_manager_h handle,
   return NOTI_EX_ERROR_NONE;
 }
 
-extern "C" EXPORT_API int noti_ex_manager_get_count(noti_ex_manager_h handle,
-    int *cnt) {
+extern "C" EXPORT_API int noti_ex_manager_get_notification_count(
+    noti_ex_manager_h handle, int *cnt) {
 
   if (handle == nullptr || cnt == nullptr) {
     LOGE("Invalid parameter");

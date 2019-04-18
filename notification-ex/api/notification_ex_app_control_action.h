@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-#ifndef CAPI_NOTIFICATION_EX_APP_CONTROL_ACTION_H_
-#define CAPI_NOTIFICATION_EX_APP_CONTROL_ACTION_H_
+#ifndef __TIZEN_APPFW_NOTIFICATION_EX_APP_CONTROL_ACTION_H__
+#define __TIZEN_APPFW_NOTIFICATION_EX_APP_CONTROL_ACTION_H__
 
 #include <app_control.h>
 #include <notification_ex_item.h>
@@ -27,10 +27,13 @@ extern "C" {
 /**
  * @brief Creates the notification_ex action handle with app control handle.
  * @details The notification_ex can define the action with noti_ex_action_h.
- *          If it is necessary to use app control handle for action,
- *          app control handle must be set in notification_ex action handle.
+ *          If it is necessary to use app control handle for an action,
+ *          the app control handle must be set in notification_ex action handle.
+ *          @a extra can be used to pass user defined data
+ *          and the extra data can be obtained from an action handle using #noti_ex_action_get_extra().
  * @since_tizen 5.5
  * @remarks @a handle must be released using noti_ex_action_destroy().
+ *          @a app_control must be released after noti_ex_action_app_control_create() function is called.
  * @param[out] handle The notification_ex action handle
  * @param[in] app_control The app control handle
  * @param[in] extra The extra data
@@ -39,7 +42,8 @@ extern "C" {
  * @retval #NOTI_EX_ERROR_INVALID_PARAMETER Invalid parameter
  * @retval #NOTI_EX_ERROR_OUT_OF_MEMORY out of memory
  * @see #noti_ex_action_h
- * @see #noti_ex_action_destroy
+ * @see #noti_ex_action_destroy()
+ * @see #noti_ex_action_get_extra()
  * @par Sample code:
  * @code
 #include <notification_ex_app_control_action.h>
@@ -53,6 +57,8 @@ extern "C" {
 	app_control_set_app_id(app_control, "temp_appid");
 
 	ret = noti_ex_action_app_control_create(&appcontrol_action, app_control, NULL);
+
+	app_control_destroy(app_control);
 }
  * @endcode
  */
@@ -67,7 +73,7 @@ int noti_ex_action_app_control_create(noti_ex_action_h *handle, app_control_h ap
  * @retval #NOTI_EX_ERROR_NONE Success
  * @retval #NOTI_EX_ERROR_INVALID_PARAMETER Invalid parameter
  * @see #noti_ex_action_h
- * @see #noti_ex_action_app_control_create
+ * @see #noti_ex_action_app_control_create()
  * @par Sample code:
  * @code
 #include <notification_ex_app_control_action.h>
@@ -88,13 +94,14 @@ int noti_ex_action_app_control_set(noti_ex_action_h handle, app_control_h app_co
 /**
  * @brief Gets the app control handle from notification_ex action.
  * @since_tizen 5.5
+ * @remarks The @a app_control should be released using app_control_destroy().
  * @param[in] handle The notification_ex action handle
  * @param[out] app_control The app control handle
  * @return #NOTI_EX_ERROR_NONE On success, other value on failure
  * @retval #NOTI_EX_ERROR_NONE Success
  * @retval #NOTI_EX_ERROR_INVALID_PARAMETER Invalid parameter
  * @see #noti_ex_action_h
- * @see #noti_ex_action_app_control_create
+ * @see #noti_ex_action_app_control_create()
  * @par Sample code:
  * @code
 #include <notification_ex_app_control_action.h>
@@ -112,4 +119,4 @@ int noti_ex_action_app_control_get(noti_ex_action_h handle, app_control_h *app_c
 #ifdef __cplusplus
 }
 #endif
-#endif  // CAPI_NOTIFICATION_EX_APP_CONTROL_ACTION_H_
+#endif  /* __TIZEN_APPFW_NOTIFICATION_EX_APP_CONTROL_ACTION_H__ */

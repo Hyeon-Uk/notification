@@ -14,20 +14,39 @@
  * limitations under the License.
  */
 
-#ifndef CAPI_NOTIFICATION_EX_ITEM_H_
-#define CAPI_NOTIFICATION_EX_ITEM_H_
+#ifndef __TIZEN_APPFW_NOTIFICATION_EX_ITEM_H__
+#define __TIZEN_APPFW_NOTIFICATION_EX_ITEM_H__
 
 #include <bundle.h>
+#include <time.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-#define RECEIVERGROUP_PANEL "tizen.org/receiver/panel" /**< Panel */
-#define RECEIVERGROUP_TICKER "tizen.org/receiver/ticker" /**< Ticker */
-#define RECEIVERGROUP_LOCKSCREEN "tizen.org/receiver/lockscreen" /**< Lockscreen */
-#define RECEIVERGROUP_INDICATOR "tizen.org/receiver/indicator" /**< Indicator */
-#define RECEIVERGROUP_POPUP "tizen.org/receiver/popup" /**< Popup */
+/**
+ * @brief Predefined receiver group for the Ticker.
+ * @since_tizen 5.5
+ */
+#define NOTI_EX_RECEIVER_GROUP_TICKER "tizen.org/receiver/ticker"
+
+/**
+ * @brief Predefined receiver group for the Lockscreen.
+ * @since_tizen 5.5
+ */
+#define NOTI_EX_RECEIVER_GROUP_LOCKSCREEN "tizen.org/receiver/lockscreen"
+
+/**
+ * @brief Predefined receiver group for the Indicator.
+ * @since_tizen 5.5
+ */
+#define NOTI_EX_RECEIVER_GROUP_INDICATOR "tizen.org/receiver/indicator"
+
+/**
+ * @brief Predefined receiver group for the Popup.
+ * @since_tizen 5.5
+ */
+#define NOTI_EX_RECEIVER_GROUP_POPUP "tizen.org/receiver/popup"
 
 /**
  * @brief Enumeration for notification_ex item types.
@@ -35,19 +54,19 @@ extern "C" {
  */
 typedef enum _noti_ex_item_type {
 	NOTI_EX_ITEM_TYPE_NULL, /**< notification_ex item is null */
-	NOTI_EX_ITEM_TYPE_TEXT, /**< notificatin_ex item for text */
-	NOTI_EX_ITEM_TYPE_IMAGE, /**< notificatin_ex item for image */
-	NOTI_EX_ITEM_TYPE_ICON, /**< notificatin_ex item for icon */
-	NOTI_EX_ITEM_TYPE_BUTTON, /**< notificatin_ex item for button */
-	NOTI_EX_ITEM_TYPE_CHAT_MESSAGE, /**< notificatin_ex item for chat message */
-	NOTI_EX_ITEM_TYPE_CHECKBOX, /**< notificatin_ex item for check box */
-	NOTI_EX_ITEM_TYPE_ICON_TEXT, /**< notificatin_ex item for icon and text */
-	NOTI_EX_ITEM_TYPE_INPUT_SELECTOR, /**< notificatin_ex item for input selector */
-	NOTI_EX_ITEM_TYPE_GROUP, /**< notificatin_ex item for group */
-	NOTI_EX_ITEM_TYPE_ENTRY, /**< notificatin_ex item for entry */
-	NOTI_EX_ITEM_TYPE_PROGRESS, /**< notificatin_ex item for progress */
-	NOTI_EX_ITEM_TYPE_TIME, /**< notificatin_ex item for time */
-	NOTI_EX_ITEM_TYPE_CUSTOM = 100 /**< notificatin_ex item for custom item */
+	NOTI_EX_ITEM_TYPE_TEXT, /**< notification_ex item for text */
+	NOTI_EX_ITEM_TYPE_IMAGE, /**< notification_ex item for image */
+	NOTI_EX_ITEM_TYPE_ICON, /**< notification_ex item for icon */
+	NOTI_EX_ITEM_TYPE_BUTTON, /**< notification_ex item for button */
+	NOTI_EX_ITEM_TYPE_CHAT_MESSAGE, /**< notification_ex item for chat message */
+	NOTI_EX_ITEM_TYPE_CHECKBOX, /**< notification_ex item for check box */
+	NOTI_EX_ITEM_TYPE_ICON_TEXT, /**< notification_ex item for icon and text */
+	NOTI_EX_ITEM_TYPE_INPUT_SELECTOR, /**< notification_ex item for input selector */
+	NOTI_EX_ITEM_TYPE_GROUP, /**< notification_ex item for group */
+	NOTI_EX_ITEM_TYPE_ENTRY, /**< notification_ex item for entry */
+	NOTI_EX_ITEM_TYPE_PROGRESS, /**< notification_ex item for progress */
+	NOTI_EX_ITEM_TYPE_TIME, /**< notification_ex item for time */
+	NOTI_EX_ITEM_TYPE_CUSTOM = 100 /**< notification_ex item for custom item */
 } noti_ex_item_type_e;
 
 /**
@@ -59,7 +78,7 @@ typedef enum _noti_ex_action_type {
 	NOTI_EX_ACTION_TYPE_APP_CONTROL, /**< notification_ex action with app control */
 	NOTI_EX_ACTION_TYPE_VISIBILITY, /**< notification_ex action for visibility */
 	NOTI_EX_ACTION_TYPE_CUSTOM = 100, /**< notification_ex action for custom action */
-} noti_ex_action_type;
+} noti_ex_action_type_e;
 
 /**
  * @brief Enumeration for notification_ex item policy.
@@ -68,7 +87,7 @@ typedef enum _noti_ex_action_type {
 typedef enum _noti_ex_item_policy {
 	NOTI_EX_ITEM_POLICY_NONE = 0, /**< no policy */
 	NOTI_EX_ITEM_POLICY_ON_BOOT_CLEAR = 1 << 0, /**< on boot clear */
-	NOTI_EX_ITEM_POLICY_SIM_MODE = 1 << 1, /**< sim mode */
+	NOTI_EX_ITEM_POLICY_SIM_MODE = 1 << 1, /**< SIM mode */
 } noti_ex_item_policy_e;
 
 /**
@@ -79,7 +98,7 @@ typedef void* noti_ex_color_h;
 
 /**
  * @brief Creates the notification_ex color handle.
- * @details Color information can be defined as notification_ex color handle
+ * @details Color information can be defined as a notification_ex color handle
  *          with alpha, red, green, blue value.
  * @since_tizen 5.5
  * @remarks @a handle must be released using noti_ex_color_destroy().
@@ -93,7 +112,7 @@ typedef void* noti_ex_color_h;
  * @retval #NOTI_EX_ERROR_INVALID_PARAMETER Invalid parameter
  * @retval #NOTI_EX_ERROR_OUT_OF_MEMORY out of memory
  * @see #noti_ex_color_h
- * @see #noti_ex_color_destroy
+ * @see #noti_ex_color_destroy()
  * @par Sample code:
  * @code
 #include <notification_ex_item.h>
@@ -109,7 +128,7 @@ typedef void* noti_ex_color_h;
 int noti_ex_color_create(noti_ex_color_h *handle, unsigned char a, unsigned char r, unsigned char g, unsigned char b);
 
 /**
- * @brief Releases notification_ex color handle.
+ * @brief Releases a notification_ex color handle.
  * @since_tizen 5.5
  * @param[in] handle The notification_ex color handle
  * @return #NOTI_EX_ERROR_NONE On success, other value on failure
@@ -130,7 +149,7 @@ int noti_ex_color_create(noti_ex_color_h *handle, unsigned char a, unsigned char
 int noti_ex_color_destroy(noti_ex_color_h handle);
 
 /**
- * @brief Gets the alpha value of color.
+ * @brief Gets the alpha value of a color.
  * @since_tizen 5.5
  * @param[in] handle The notification_ex color handle
  * @param[out] val The alpha value
@@ -138,7 +157,7 @@ int noti_ex_color_destroy(noti_ex_color_h handle);
  * @retval #NOTI_EX_ERROR_NONE Success
  * @retval #NOTI_EX_ERROR_INVALID_PARAMETER Invalid parameter
  * @see #noti_ex_color_h
- * @see #noti_ex_color_create
+ * @see #noti_ex_color_create()
  * @par Sample code:
  * @code
 #include <notification_ex_item.h>
@@ -154,7 +173,7 @@ int noti_ex_color_destroy(noti_ex_color_h handle);
 int noti_ex_color_get_alpha(noti_ex_color_h handle, unsigned char *val);
 
 /**
- * @brief Gets the red value of color.
+ * @brief Gets the red value of a color.
  * @since_tizen 5.5
  * @param[in] handle The notification_ex color handle
  * @param[out] val The red value
@@ -162,7 +181,7 @@ int noti_ex_color_get_alpha(noti_ex_color_h handle, unsigned char *val);
  * @retval #NOTI_EX_ERROR_NONE Success
  * @retval #NOTI_EX_ERROR_INVALID_PARAMETER Invalid parameter
  * @see #noti_ex_color_h
- * @see #noti_ex_color_create
+ * @see #noti_ex_color_create()
  * @par Sample code:
  * @code
 #include <notification_ex_item.h>
@@ -178,7 +197,7 @@ int noti_ex_color_get_alpha(noti_ex_color_h handle, unsigned char *val);
 int noti_ex_color_get_red(noti_ex_color_h handle, unsigned char *val);
 
 /**
- * @brief Gets the green value of color.
+ * @brief Gets the green value of a color.
  * @since_tizen 5.5
  * @param[in] handle The notification_ex color handle
  * @param[out] val The green value
@@ -186,7 +205,7 @@ int noti_ex_color_get_red(noti_ex_color_h handle, unsigned char *val);
  * @retval #NOTI_EX_ERROR_NONE Success
  * @retval #NOTI_EX_ERROR_INVALID_PARAMETER Invalid parameter
  * @see #noti_ex_color_h
- * @see #noti_ex_color_create
+ * @see #noti_ex_color_create()
  * @par Sample code:
  * @code
 #include <notification_ex_item.h>
@@ -202,7 +221,7 @@ int noti_ex_color_get_red(noti_ex_color_h handle, unsigned char *val);
 int noti_ex_color_get_green(noti_ex_color_h handle, unsigned char *val);
 
 /**
- * @brief Gets the blue value of color.
+ * @brief Gets the blue value of a color.
  * @since_tizen 5.5
  * @param[in] handle The notification_ex color handle
  * @param[out] val The blue value
@@ -210,7 +229,7 @@ int noti_ex_color_get_green(noti_ex_color_h handle, unsigned char *val);
  * @retval #NOTI_EX_ERROR_NONE Success
  * @retval #NOTI_EX_ERROR_INVALID_PARAMETER Invalid parameter
  * @see #noti_ex_color_h
- * @see #noti_ex_color_create
+ * @see #noti_ex_color_create()
  * @par Sample code:
  * @code
 #include <notification_ex_item.h>
@@ -233,8 +252,8 @@ typedef void* noti_ex_padding_h;
 
 /**
  * @brief Creates the notification_ex padding handle.
- * @details Padding information can be defined as notification_ex padding handle
- *          with left, top, right, bottom value.
+ * @details Padding information can be defined as a notification_ex padding handle
+ *          with left, right, top and bottom values.
  * @since_tizen 5.5
  * @remarks @a handle must be released using noti_ex_padding_destroy().
  * @param[out] handle The notification_ex padding handle
@@ -247,7 +266,7 @@ typedef void* noti_ex_padding_h;
  * @retval #NOTI_EX_ERROR_INVALID_PARAMETER Invalid parameter
  * @retval #NOTI_EX_ERROR_OUT_OF_MEMORY out of memory
  * @see #noti_ex_padding_h
- * @see #noti_ex_padding_destroy
+ * @see #noti_ex_padding_destroy()
  * @par Sample code:
  * @code
 #include <notification_ex_item.h>
@@ -263,7 +282,7 @@ typedef void* noti_ex_padding_h;
 int noti_ex_padding_create(noti_ex_padding_h *handle, int left, int top, int right, int bottom);
 
 /**
- * @brief Releases notification_ex padding handle.
+ * @brief Releases a notification_ex padding handle.
  * @since_tizen 5.5
  * @param[in] handle The notification_ex padding handle
  * @return #NOTI_EX_ERROR_NONE On success, other value on failure
@@ -292,7 +311,7 @@ int noti_ex_padding_destroy(noti_ex_padding_h handle);
  * @retval #NOTI_EX_ERROR_NONE Success
  * @retval #NOTI_EX_ERROR_INVALID_PARAMETER Invalid parameter
  * @see #noti_ex_padding_h
- * @see #@see #noti_ex_padding_create
+ * @see #@see #noti_ex_padding_create()
  * @par Sample code:
  * @code
 #include <notification_ex_item.h>
@@ -316,7 +335,7 @@ int noti_ex_padding_get_left(noti_ex_padding_h handle, int *val);
  * @retval #NOTI_EX_ERROR_NONE Success
  * @retval #NOTI_EX_ERROR_INVALID_PARAMETER Invalid parameter
  * @see #noti_ex_padding_h
- * @see #@see #noti_ex_padding_create
+ * @see #@see #noti_ex_padding_create()
  * @par Sample code:
  * @code
 #include <notification_ex_item.h>
@@ -340,7 +359,7 @@ int noti_ex_padding_get_top(noti_ex_padding_h handle, int *val);
  * @retval #NOTI_EX_ERROR_NONE Success
  * @retval #NOTI_EX_ERROR_INVALID_PARAMETER Invalid parameter
  * @see #noti_ex_padding_h
- * @see #@see #noti_ex_padding_create
+ * @see #@see #noti_ex_padding_create()
  * @par Sample code:
  * @code
 #include <notification_ex_item.h>
@@ -364,7 +383,7 @@ int noti_ex_padding_get_right(noti_ex_padding_h handle, int *val);
  * @retval #NOTI_EX_ERROR_NONE Success
  * @retval #NOTI_EX_ERROR_INVALID_PARAMETER Invalid parameter
  * @see #noti_ex_padding_h
- * @see #@see #noti_ex_padding_create
+ * @see #@see #noti_ex_padding_create()
  * @par Sample code:
  * @code
 #include <notification_ex_item.h>
@@ -387,8 +406,8 @@ typedef void* noti_ex_geometry_h;
 
 /**
  * @brief Creates the notification_ex geometry handle.
- * @details Geometry information can be defined as notification_ex geometry handle
- *          with x, y, width, height value.
+ * @details Geometry information can be defined as a notification_ex geometry handle
+ *          with x, y, width and height value.
  * @since_tizen 5.5
  * @remarks @a handle must be released using noti_ex_geometry_destroy().
  * @param[out] handle The notification_ex geometry handle
@@ -401,7 +420,7 @@ typedef void* noti_ex_geometry_h;
  * @retval #NOTI_EX_ERROR_INVALID_PARAMETER Invalid parameter
  * @retval #NOTI_EX_ERROR_OUT_OF_MEMORY out of memory
  * @see #noti_ex_geometry_h
- * @see #noti_ex_geometry_destroy
+ * @see #noti_ex_geometry_destroy()
  * @par Sample code:
  * @code
 #include <notification_ex_item.h>
@@ -446,7 +465,7 @@ int noti_ex_geometry_destroy(noti_ex_geometry_h handle);
  * @retval #NOTI_EX_ERROR_NONE Success
  * @retval #NOTI_EX_ERROR_INVALID_PARAMETER Invalid parameter
  * @see #noti_ex_geometry_h
- * @see #noti_ex_geometry_create
+ * @see #noti_ex_geometry_create()
  * @par Sample code:
  * @code
 #include <notification_ex_item.h>
@@ -470,7 +489,7 @@ int noti_ex_geometry_get_x(noti_ex_geometry_h handle, int *val);
  * @retval #NOTI_EX_ERROR_NONE Success
  * @retval #NOTI_EX_ERROR_INVALID_PARAMETER Invalid parameter
  * @see #noti_ex_geometry_h
- * @see #noti_ex_geometry_create
+ * @see #noti_ex_geometry_create()
  * @par Sample code:
  * @code
 #include <notification_ex_item.h>
@@ -494,7 +513,7 @@ int noti_ex_geometry_get_y(noti_ex_geometry_h handle, int *val);
  * @retval #NOTI_EX_ERROR_NONE Success
  * @retval #NOTI_EX_ERROR_INVALID_PARAMETER Invalid parameter
  * @see #noti_ex_geometry_h
- * @see #noti_ex_geometry_create
+ * @see #noti_ex_geometry_create()
  * @par Sample code:
  * @code
 #include <notification_ex_item.h>
@@ -518,7 +537,7 @@ int noti_ex_geometry_get_width(noti_ex_geometry_h handle, int *val);
  * @retval #NOTI_EX_ERROR_NONE Success
  * @retval #NOTI_EX_ERROR_INVALID_PARAMETER Invalid parameter
  * @see #noti_ex_geometry_h
- * @see #noti_ex_geometry_create
+ * @see #noti_ex_geometry_create()
  * @par Sample code:
  * @code
 #include <notification_ex_item.h>
@@ -541,13 +560,15 @@ typedef void* noti_ex_style_h;
 
 /**
  * @brief Creates the notification_ex style handle.
- * @details Style information can be defined as notification_ex style handle
- *          with color, padding, geometry information.
- *          The color is defined notification_ex color handle.
- *          The padding is defined notification_ex padding handle.
- *          The geometry is defined notification_ex geometry handle.
+ * @details Style information can be defined as a notification_ex style handle
+ *          with color, padding and geometry information.
+ *          The color is the defined notification_ex color handle.
+ *          The padding is the defined notification_ex padding handle.
+ *          The geometry is the defined notification_ex geometry handle.
  * @since_tizen 5.5
  * @remarks @a handle must be released using noti_ex_style_destroy().
+ *          @a color, @a padding and @a geometry must not be released if the function returns #NOTI_EX_ERROR_NONE.
+ *          @a color, @a padding and @a geometry will be released when @a handle is released.
  * @param[out] handle The notification_ex padding handle
  * @param[in] color The notification_ex color handle
  * @param[in] padding The notification_ex padding handle
@@ -560,7 +581,7 @@ typedef void* noti_ex_style_h;
  * @see #noti_ex_color_h
  * @see #noti_ex_padding_h
  * @see #noti_ex_geometry_h
- * @see #noti_ex_style_destroy
+ * @see #noti_ex_style_destroy()
  * @par Sample code:
  * @code
 #include <notification_ex_item.h>
@@ -604,7 +625,7 @@ int noti_ex_style_create(noti_ex_style_h *handle, noti_ex_color_h color, noti_ex
 int noti_ex_style_destroy(noti_ex_style_h handle);
 
 /**
- * @brief Gets the padding information.
+ * @brief Gets the padding information from a style.
  * @since_tizen 5.5
  * @remarks @a padding must be released using noti_ex_padding_destroy().
  * @param[in] handle The notification_ex style handle
@@ -614,7 +635,7 @@ int noti_ex_style_destroy(noti_ex_style_h handle);
  * @retval #NOTI_EX_ERROR_INVALID_PARAMETER Invalid parameter
  * @see #noti_ex_style_h
  * @see #noti_ex_padding_h
- * @see #noti_ex_style_create
+ * @see #noti_ex_style_create()
  * @par Sample code:
  * @code
 #include <notification_ex_item.h>
@@ -630,7 +651,7 @@ int noti_ex_style_destroy(noti_ex_style_h handle);
 int noti_ex_style_get_padding(noti_ex_style_h handle, noti_ex_padding_h *padding);
 
 /**
- * @brief Gets the color information.
+ * @brief Gets the color information from a style.
  * @since_tizen 5.5
  * @remarks @a color must be released using noti_ex_color_destroy().
  * @param[in] handle The notification_ex style handle
@@ -640,7 +661,7 @@ int noti_ex_style_get_padding(noti_ex_style_h handle, noti_ex_padding_h *padding
  * @retval #NOTI_EX_ERROR_INVALID_PARAMETER Invalid parameter
  * @see #noti_ex_style_h
  * @see #noti_ex_color_h
- * @see #noti_ex_style_create
+ * @see #noti_ex_style_create()
  * @par Sample code:
  * @code
 #include <notification_ex_item.h>
@@ -656,7 +677,7 @@ int noti_ex_style_get_padding(noti_ex_style_h handle, noti_ex_padding_h *padding
 int noti_ex_style_get_color(noti_ex_style_h handle, noti_ex_color_h *color);
 
 /**
- * @brief Gets the geometry information.
+ * @brief Gets the geometry information from style.
  * @since_tizen 5.5
  * @remarks @a geometry must be released using noti_ex_geometry_destroy().
  * @param[in] handle The notification_ex style handle
@@ -666,7 +687,7 @@ int noti_ex_style_get_color(noti_ex_style_h handle, noti_ex_color_h *color);
  * @retval #NOTI_EX_ERROR_INVALID_PARAMETER Invalid parameter
  * @see #noti_ex_style_h
  * @see #noti_ex_geometry_h
- * @see #noti_ex_style_create
+ * @see #noti_ex_style_create()
  * @par Sample code:
  * @code
 #include <notification_ex_item.h>
@@ -682,19 +703,21 @@ int noti_ex_style_get_color(noti_ex_style_h handle, noti_ex_color_h *color);
 int noti_ex_style_get_geometry(noti_ex_style_h handle, noti_ex_geometry_h *geometry);
 
 /**
- * @brief The handle for the led information.
+ * @brief The handle for the LED information.
  * @since_tizen 5.5
  */
 typedef void* noti_ex_led_info_h;
 
 /**
- * @brief Creates the notification_ex led info handle.
- * @details LED information can be defined as notification_ex led handle
+ * @brief Creates the notification_ex LED info handle.
+ * @details LED information can be defined as a notification_ex LED handle
  *          with color information.
- *          The color is defined notification_ex color handle.
+ *          The color is the defined notification_ex color handle.
  * @since_tizen 5.5
  * @remarks @a handle must be released using noti_ex_led_info_destroy().
- * @param[out] handle The notification_ex led info handle
+ *          @a color must not be released if the function returns #NOTI_EX_ERROR_NONE.
+ *          @a color will be released when @a handle is released.
+ * @param[out] handle The notification_ex LED info handle
  * @param[in] color The notification_ex color handle
  * @return #NOTI_EX_ERROR_NONE On success, other value on failure
  * @retval #NOTI_EX_ERROR_NONE Success
@@ -702,7 +725,7 @@ typedef void* noti_ex_led_info_h;
  * @retval #NOTI_EX_ERROR_OUT_OF_MEMORY out of memory
  * @see #noti_ex_led_info_h
  * @see #noti_ex_color_h
- * @see #noti_ex_led_info_destroy
+ * @see #noti_ex_led_info_destroy()
  * @par Sample code:
  * @code
 #include <notification_ex_item.h>
@@ -721,9 +744,9 @@ typedef void* noti_ex_led_info_h;
 int noti_ex_led_info_create(noti_ex_led_info_h *handle, noti_ex_color_h color);
 
 /**
- * @brief Releases the notification_ex led info handle.
+ * @brief Releases the notification_ex LED info handle.
  * @since_tizen 5.5
- * @param[in] handle The notification_ex led info handle
+ * @param[in] handle The notification_ex LED info handle
  * @return #NOTI_EX_ERROR_NONE On success, other value on failure
  * @retval #NOTI_EX_ERROR_NONE Success
  * @retval #NOTI_EX_ERROR_INVALID_PARAMETER Invalid parameter
@@ -742,15 +765,15 @@ int noti_ex_led_info_create(noti_ex_led_info_h *handle, noti_ex_color_h color);
 int noti_ex_led_info_destroy(noti_ex_led_info_h handle);
 
 /**
- * @brief Sets the time period for turning on the led.
+ * @brief Sets the time period for turning on the LED.
  * @since_tizen 5.5
- * @param[in] handle The notification_ex led info handle
- * @param[in] ms The time for turning on the led
+ * @param[in] handle The notification_ex LED info handle
+ * @param[in] ms The time for turning on the LED, in milliseconds
  * @return #NOTI_EX_ERROR_NONE On success, other value on failure
  * @retval #NOTI_EX_ERROR_NONE Success
  * @retval #NOTI_EX_ERROR_INVALID_PARAMETER Invalid parameter
  * @see #noti_ex_led_info_h
- * @see #noti_ex_led_info_create
+ * @see #noti_ex_led_info_create()
  * @par Sample code:
  * @code
 #include <notification_ex_item.h>
@@ -765,15 +788,15 @@ int noti_ex_led_info_destroy(noti_ex_led_info_h handle);
 int noti_ex_led_info_set_on_period(noti_ex_led_info_h handle, int ms);
 
 /**
- * @brief Gets the time period for turning on the led.
+ * @brief Gets the time period for turning on the LED.
  * @since_tizen 5.5
- * @param[in] handle The notification_ex led info handle
- * @param[out] ms The time for turning on the led
+ * @param[in] handle The notification_ex LED info handle
+ * @param[out] ms The time for turning on the LED, in milliseconds
  * @return #NOTI_EX_ERROR_NONE On success, other value on failure
  * @retval #NOTI_EX_ERROR_NONE Success
  * @retval #NOTI_EX_ERROR_INVALID_PARAMETER Invalid parameter
  * @see #noti_ex_led_info_h
- * @see #noti_ex_led_info_create
+ * @see #noti_ex_led_info_create()
  * @par Sample code:
  * @code
 #include <notification_ex_item.h>
@@ -789,15 +812,15 @@ int noti_ex_led_info_set_on_period(noti_ex_led_info_h handle, int ms);
 int noti_ex_led_info_get_on_period(noti_ex_led_info_h handle, int *ms);
 
 /**
- * @brief Sets the time period for turning off the led.
+ * @brief Sets the time period for turning off the LED.
  * @since_tizen 5.5
- * @param[in] handle The notification_ex led info handle
- * @param[in] ms The time for turning off the led
+ * @param[in] handle The notification_ex LED info handle
+ * @param[in] ms The time for turning off the LED, in milliseconds
  * @return #NOTI_EX_ERROR_NONE On success, other value on failure
  * @retval #NOTI_EX_ERROR_NONE Success
  * @retval #NOTI_EX_ERROR_INVALID_PARAMETER Invalid parameter
  * @see #noti_ex_led_info_h
- * @see #noti_ex_led_info_create
+ * @see #noti_ex_led_info_create()
  * @par Sample code:
  * @code
 #include <notification_ex_item.h>
@@ -812,15 +835,15 @@ int noti_ex_led_info_get_on_period(noti_ex_led_info_h handle, int *ms);
 int noti_ex_led_info_set_off_period(noti_ex_led_info_h handle, int ms);
 
 /**
- * @brief Gets the time period for turning off the led.
+ * @brief Gets the time period for turning off the LED.
  * @since_tizen 5.5
- * @param[in] handle The notification_ex led info handle
- * @param[out] ms The time for turning off the led
+ * @param[in] handle The notification_ex LED info handle
+ * @param[out] ms The time for turning off the LED, in milliseconds
  * @return #NOTI_EX_ERROR_NONE On success, other value on failure
  * @retval #NOTI_EX_ERROR_NONE Success
  * @retval #NOTI_EX_ERROR_INVALID_PARAMETER Invalid parameter
  * @see #noti_ex_led_info_h
- * @see #noti_ex_led_info_create
+ * @see #noti_ex_led_info_create()
  * @par Sample code:
  * @code
 #include <notification_ex_item.h>
@@ -836,16 +859,17 @@ int noti_ex_led_info_set_off_period(noti_ex_led_info_h handle, int ms);
 int noti_ex_led_info_get_off_period(noti_ex_led_info_h handle, int *ms);
 
 /**
- * @brief Gets the color information.
+ * @brief Gets the color information from LED info.
  * @since_tizen 5.5
- * @param[in] handle The notification_ex led info handle
+ * @remarks @a color must be released using noti_ex_color_destroy().
+ * @param[in] handle The notification_ex LED info handle
  * @param[out] color The notification_ex color handle
  * @return #NOTI_EX_ERROR_NONE On success, other value on failure
  * @retval #NOTI_EX_ERROR_NONE Success
  * @retval #NOTI_EX_ERROR_INVALID_PARAMETER Invalid parameter
  * @see #noti_ex_led_info_h
  * @see #noti_ex_color_h
- * @see #noti_ex_led_info_create
+ * @see #noti_ex_led_info_create()
  * @par Sample code:
  * @code
 #include <notification_ex_item.h>
@@ -861,19 +885,19 @@ int noti_ex_led_info_get_off_period(noti_ex_led_info_h handle, int *ms);
 int noti_ex_led_info_get_color(noti_ex_led_info_h handle, noti_ex_color_h *color);
 
 /**
- * @brief The notification_ex action handle
+ * @brief The notification_ex action handle.
  * @since_tizen 5.5
  */
 typedef void* noti_ex_action_h;
 
 /**
- * @brief The notification_ex item handle
+ * @brief The notification_ex item handle.
  * @since_tizen 5.5
  */
 typedef void* noti_ex_item_h;
 
 /**
- * @brief The notification_ex item_info handle
+ * @brief The notification_ex item_info handle.
  * @since_tizen 5.5
  */
 typedef void* noti_ex_item_info_h;
@@ -900,30 +924,36 @@ typedef void* noti_ex_item_info_h;
 int noti_ex_action_destroy(noti_ex_action_h handle);
 
 /**
- * @brief Gets the type of action.
+ * @brief Gets the type of an action.
+ * @details The action type is equal to one of the values of #noti_ex_action_type_e
  * @since_tizen 5.5
  * @param[in] handle The notification_ex action handle
- * @param[out] type The type of action
+ * @param[out] type The type of action \n
  * @return #NOTI_EX_ERROR_NONE On success, other value on failure
  * @retval #NOTI_EX_ERROR_NONE Success
  * @retval #NOTI_EX_ERROR_INVALID_PARAMETER Invalid parameter
  * @see #noti_ex_action_h
+ * @see #noti_ex_action_type_e
  * @par Sample code:
  * @code
 #include <notification_ex_item.h>
 
 {
 	int ret;
-	int type;
+	int type = NOTI_EX_ACTION_TYPE_NULL;
 
-	ret = noti_ex_action_get_type(action,&type);
+	ret = noti_ex_action_get_type(action, &type);
+
+	if (type == NOTI_EX_ACTION_TYPE_VISIBILITY) {
+		// Do something
+	}
 }
  * @endcode
  */
 int noti_ex_action_get_type(noti_ex_action_h handle, int *type);
 
 /**
- * @brief Gets the local state of action.
+ * @brief Gets the local state of an action.
  * @since_tizen 5.5
  * @param[in] handle The notification_ex action handle
  * @param[out] local The local state of action
@@ -946,7 +976,7 @@ int noti_ex_action_get_type(noti_ex_action_h handle, int *type);
 int noti_ex_action_is_local(noti_ex_action_h handle, bool *local);
 
 /**
- * @brief Executes the action for notification_ex item.
+ * @brief Executes the action for a notification_ex item.
  * @since_tizen 5.5
  * @param[in] handle The notification_ex action handle
  * @param[in] item The notification_ex item handle
@@ -975,7 +1005,7 @@ int noti_ex_action_is_local(noti_ex_action_h handle, bool *local);
 int noti_ex_action_execute(noti_ex_action_h handle, noti_ex_item_h item);
 
 /**
- * @brief Gets the extra data for action.
+ * @brief Gets the extra data for an action.
  * @since_tizen 5.5
  * @remarks @a extra must be released using free().
  * @param[in] handle The notification_ex action handle
@@ -1002,12 +1032,12 @@ int noti_ex_action_get_extra(noti_ex_action_h handle, char **extra);
  * @brief Gets the time to hide the notification_ex item.
  * @since_tizen 5.5
  * @param[in] handle The notification_ex item info handle
- * @param[out] hide_time The time to hide notification
+ * @param[out] hide_time The time to hide notification, in seconds
  * @return #NOTI_EX_ERROR_NONE On success, other value on failure
  * @retval #NOTI_EX_ERROR_NONE Success
  * @retval #NOTI_EX_ERROR_INVALID_PARAMETER Invalid parameter
  * @see #noti_ex_item_info_h
- * @see #noti_ex_item_get_info
+ * @see #noti_ex_item_get_info()
  * @par Sample code:
  * @code
 #include <notification_ex_item.h>
@@ -1029,12 +1059,12 @@ int noti_ex_item_info_get_hide_time(noti_ex_item_info_h handle, int *hide_time);
  * @brief Sets the time to hide the notification_ex item.
  * @since_tizen 5.5
  * @param[in] handle The notification_ex item info handle
- * @param[in] hide_time The time to hide notification
+ * @param[in] hide_time The time to hide notification, in seconds
  * @return #NOTI_EX_ERROR_NONE On success, other value on failure
  * @retval #NOTI_EX_ERROR_NONE Success
  * @retval #NOTI_EX_ERROR_INVALID_PARAMETER Invalid parameter
  * @see #noti_ex_item_info_h
- * @see #noti_ex_item_get_info
+ * @see #noti_ex_item_get_info()
  * @par Sample code:
  * @code
 #include <notification_ex_item.h>
@@ -1055,12 +1085,12 @@ int noti_ex_item_info_set_hide_time(noti_ex_item_info_h handle, int hide_time);
  * @brief Gets the time to delete the notification_ex item.
  * @since_tizen 5.5
  * @param[in] handle The notification_ex item info handle
- * @param[out] delete_time The time to delete notification
+ * @param[out] delete_time The time to delete notification, in seconds
  * @return #NOTI_EX_ERROR_NONE On success, other value on failure
  * @retval #NOTI_EX_ERROR_NONE Success
  * @retval #NOTI_EX_ERROR_INVALID_PARAMETER Invalid parameter
  * @see #noti_ex_item_info_h
- * @see #noti_ex_item_get_info
+ * @see #noti_ex_item_get_info()
  * @par Sample code:
  * @code
 #include <notification_ex_item.h>
@@ -1082,12 +1112,12 @@ int noti_ex_item_info_get_delete_time(noti_ex_item_info_h handle, int *delete_ti
  * @brief Sets the time to delete the notification_ex item.
  * @since_tizen 5.5
  * @param[in] handle The notification_ex item info handle
- * @param[out] delete_time The time to delete notification
+ * @param[out] delete_time The time to delete notification, in seconds
  * @return #NOTI_EX_ERROR_NONE On success, other value on failure
  * @retval #NOTI_EX_ERROR_NONE Success
  * @retval #NOTI_EX_ERROR_INVALID_PARAMETER Invalid parameter
  * @see #noti_ex_item_info_h
- * @see #noti_ex_item_get_info
+ * @see #noti_ex_item_get_info()
  * @par Sample code:
  * @code
 #include <notification_ex_item.h>
@@ -1113,7 +1143,7 @@ int noti_ex_item_info_set_delete_time(noti_ex_item_info_h handle, int delete_tim
  * @retval #NOTI_EX_ERROR_NONE Success
  * @retval #NOTI_EX_ERROR_INVALID_PARAMETER Invalid parameter
  * @see #noti_ex_item_info_h
- * @see #noti_ex_item_get_info
+ * @see #noti_ex_item_get_info()
  * @par Sample code:
  * @code
 #include <notification_ex_item.h>
@@ -1178,6 +1208,7 @@ int noti_ex_item_find_by_id(noti_ex_item_h handle, const char *id, noti_ex_item_
 
 /**
  * @brief Gets the type of notification_ex item.
+ * @details The item type is equal to one of the values of #noti_ex_item_type_e.
  * @since_tizen 5.5
  * @param[in] handle The notification_ex item handle
  * @param[out] type The type of notification_ex item
@@ -1185,27 +1216,32 @@ int noti_ex_item_find_by_id(noti_ex_item_h handle, const char *id, noti_ex_item_
  * @retval #NOTI_EX_ERROR_NONE Success
  * @retval #NOTI_EX_ERROR_INVALID_PARAMETER Invalid parameter
  * @see #noti_ex_item_h
+ * @see #noti_ex_item_type_e
  * @par Sample code:
  * @code
 #include <notification_ex_item.h>
 
 {
 	int ret;
-	int type;
+	int type = NOTI_EX_ITEM_TYPE_NULL;
 
 	ret = noti_ex_item_get_type(item_handle, &type);
+
+	if (type == NOTI_EX_ITEM_TYPE_BUTTON) {
+		// Do something
+	}
 }
  * @endcode
  */
 int noti_ex_item_get_type(noti_ex_item_h handle, int *type);
 
 /**
- * @brief Gets the path of shared file.
+ * @brief Gets the path of shared files.
  * @since_tizen 5.5
- * @remarks @a path must be released after releasing all paths using free()
+ * @remarks Each path in the @a paths must be released using free(), then the @a paths must be released using free().
  * @param[in] handle The notification_ex item handle
- * @param[out] path The path of shared file
- * @param[out] count The count of path
+ * @param[out] paths The absolute paths of shared files
+ * @param[out] count The number of paths
  * @return #NOTI_EX_ERROR_NONE On success, other value on failure
  * @retval #NOTI_EX_ERROR_NONE Success
  * @retval #NOTI_EX_ERROR_INVALID_PARAMETER Invalid parameter
@@ -1216,17 +1252,17 @@ int noti_ex_item_get_type(noti_ex_item_h handle, int *type);
 
 {
 	int ret;
-	char **path = NULL;
+	char **paths = NULL;
 	int count;
 
-	ret = noti_ex_item_get_shared_path(item_handle, &path, &count);
+	ret = noti_ex_item_get_shared_paths(item_handle, &paths, &count);
 }
  * @endcode
  */
-int noti_ex_item_get_shared_path(noti_ex_item_h handle, char ***path, int *count);
+int noti_ex_item_get_shared_paths(noti_ex_item_h handle, char ***paths, int *count);
 
 /**
- * @brief Gets the id of notification_ex item.
+ * @brief Gets the id of a notification_ex item.
  * @since_tizen 5.5
  * @remarks @a id must be released using free().
  * @param[in] handle The notification_ex item handle
@@ -1250,7 +1286,7 @@ int noti_ex_item_get_shared_path(noti_ex_item_h handle, char ***path, int *count
 int noti_ex_item_get_id(noti_ex_item_h handle, char **id);
 
 /**
- * @brief Sets the id of notification_ex item.
+ * @brief Sets the id of a notification_ex item.
  * @since_tizen 5.5
  * @param[in] handle The notification_ex item handle
  * @param[in] id The id of notification_ex item
@@ -1272,9 +1308,10 @@ int noti_ex_item_get_id(noti_ex_item_h handle, char **id);
 int noti_ex_item_set_id(noti_ex_item_h handle, const char *id);
 
 /**
- * @brief Gets the action for notification_ex item.
+ * @brief Gets the action for a notification_ex item.
  * @details The action is defined as notification_ex action handle.
  * @since_tizen 5.5
+ * @remarks @a action must be released using noti_ex_action_destroy().
  * @param[in] handle The notification_ex item handle
  * @param[out] action The notification_ex action handle
  * @return #NOTI_EX_ERROR_NONE On success, other value on failure
@@ -1297,7 +1334,7 @@ int noti_ex_item_set_id(noti_ex_item_h handle, const char *id);
 int noti_ex_item_get_action(noti_ex_item_h handle, noti_ex_action_h *action);
 
 /**
- * @brief Sets the action for notification_ex item.
+ * @brief Sets the action of a notification_ex item.
  * @details The action is defined as notification_ex action handle.
  * @since_tizen 5.5
  * @param[in] handle The notification_ex item handle
@@ -1326,9 +1363,10 @@ int noti_ex_item_get_action(noti_ex_item_h handle, noti_ex_action_h *action);
 int noti_ex_item_set_action(noti_ex_item_h handle, noti_ex_action_h action);
 
 /**
- * @brief Gets the style for notification_ex item.
+ * @brief Gets the style of a notification_ex item.
  * @details The style is defined as notification_ex style handle.
  * @since_tizen 5.5
+ * @remarks @a style must be released using noti_ex_style_destroy().
  * @param[in] handle The notification_ex item handle
  * @param[out] style The notification_ex style handle
  * @return #NOTI_EX_ERROR_NONE On success, other value on failure
@@ -1351,7 +1389,7 @@ int noti_ex_item_set_action(noti_ex_item_h handle, noti_ex_action_h action);
 int noti_ex_item_get_style(noti_ex_item_h handle, noti_ex_style_h *style);
 
 /**
- * @brief Sets the style for notification_ex item.
+ * @brief Sets the style of a notification_ex item.
  * @details The style is defined as notification_ex style handle.
  * @since_tizen 5.5
  * @param[in] handle The notification_ex item handle
@@ -1361,7 +1399,7 @@ int noti_ex_item_get_style(noti_ex_item_h handle, noti_ex_style_h *style);
  * @retval #NOTI_EX_ERROR_INVALID_PARAMETER Invalid parameter
  * @see #noti_ex_item_h
  * @see #noti_ex_style_h
- * @see #noti_ex_style_create
+ * @see #noti_ex_style_create()
  * @par Sample code:
  * @code
 #include <notification_ex_item.h>
@@ -1376,7 +1414,7 @@ int noti_ex_item_get_style(noti_ex_item_h handle, noti_ex_style_h *style);
 int noti_ex_item_set_style(noti_ex_item_h handle, noti_ex_style_h style);
 
 /**
- * @brief Sets the visible state for notification_ex item.
+ * @brief Sets the visibility state of a notification_ex item.
  * @since_tizen 5.5
  * @param[in] handle The notification_ex item handle
  * @param[in] visible The visible state
@@ -1398,7 +1436,7 @@ int noti_ex_item_set_style(noti_ex_item_h handle, noti_ex_style_h style);
 int noti_ex_item_set_visible(noti_ex_item_h handle, bool visible);
 
 /**
- * @brief Gets the visible state for notification_ex item.
+ * @brief Gets the visibility state of a notification_ex item.
  * @since_tizen 5.5
  * @param[in] handle The notification_ex item handle
  * @param[out] visible The visible state
@@ -1421,7 +1459,7 @@ int noti_ex_item_set_visible(noti_ex_item_h handle, bool visible);
 int noti_ex_item_get_visible(noti_ex_item_h handle, bool *visible);
 
 /**
- * @brief Sets the enable state for notification_ex item.
+ * @brief Sets the enabled state of a notification_ex item.
  * @since_tizen 5.5
  * @param[in] handle The notification_ex item handle
  * @param[in] enable The enable state
@@ -1443,7 +1481,7 @@ int noti_ex_item_get_visible(noti_ex_item_h handle, bool *visible);
 int noti_ex_item_set_enable(noti_ex_item_h handle, bool enable);
 
 /**
- * @brief Gets the enable state for notification_ex item.
+ * @brief Gets the enabled state of a notification_ex item.
  * @since_tizen 5.5
  * @param[in] handle The notification_ex item handle
  * @param[in] enable The enable state
@@ -1466,7 +1504,7 @@ int noti_ex_item_set_enable(noti_ex_item_h handle, bool enable);
 int noti_ex_item_get_enable(noti_ex_item_h handle, bool *enable);
 
 /**
- * @brief Adds the receiver group for notification_ex item.
+ * @brief Adds the receiver group of a notification_ex item.
  * @since_tizen 5.5
  * @param[in] handle The notification_ex item handle
  * @param[in] receiver_group The receiver group
@@ -1481,14 +1519,14 @@ int noti_ex_item_get_enable(noti_ex_item_h handle, bool *enable);
 {
 	int ret;
 
-	ret = noti_ex_item_add_receiver(item_handle, RECEIVERGROUP_PANEL);
+	ret = noti_ex_item_add_receiver(item_handle, NOTI_EX_RECEIVER_GROUP_INDICATOR);
 }
  * @endcode
  */
 int noti_ex_item_add_receiver(noti_ex_item_h handle, const char *receiver_group);
 
 /**
- * @brief Removes the receiver group of notification_ex item.
+ * @brief Removes the receiver group from a notification_ex item.
  * @since_tizen 5.5
  * @param[in] handle The notification_ex item handle
  * @param[in] receiver_group The receiver group
@@ -1503,16 +1541,16 @@ int noti_ex_item_add_receiver(noti_ex_item_h handle, const char *receiver_group)
 {
 	int ret;
 
-	ret = noti_ex_item_remove_receiver(item_handle, RECEIVERGROUP_PANEL);
+	ret = noti_ex_item_remove_receiver(item_handle, NOTI_EX_RECEIVER_GROUP_INDICATOR);
 }
  * @endcode
  */
 int noti_ex_item_remove_receiver(noti_ex_item_h handle, const char *receiver_group);
 
 /**
- * @brief Gets the list of receiver group for notification_ex item.
+ * @brief Gets the list of receiver group of a notification_ex item.
  * @since_tizen 5.5
- * @remarks @a list must be released after releasing all members of list using free()
+ * @remarks Each member of the list must be released using free(), then the @a list must be released using free().
  * @param[in] handle The notification_ex item handle
  * @param[out] list The list of receiver group
  * @param[out] count The count of list
@@ -1536,14 +1574,16 @@ int noti_ex_item_remove_receiver(noti_ex_item_h handle, const char *receiver_gro
 int noti_ex_item_get_receiver_list(noti_ex_item_h handle, char ***list, int *count);
 
 /**
- * @brief Sets the policy for notification_ex item.
+ * @brief Sets the policy of a notification_ex item.
+ * @details @a policy should be set to values of #noti_ex_item_policy_e combined with bitwise 'or'.
  * @since_tizen 5.5
  * @param[in] handle The notification_ex item handle
- * @param[in] policy The policy for notification_ex item
+ * @param[in] policy The policy of a notification_ex item
  * @return #NOTI_EX_ERROR_NONE On success, other value on failure
  * @retval #NOTI_EX_ERROR_NONE Success
  * @retval #NOTI_EX_ERROR_INVALID_PARAMETER Invalid parameter
  * @see #noti_ex_item_h
+ * @see #noti_ex_item_policy_e
  * @par Sample code:
  * @code
 #include <notification_ex_item.h>
@@ -1551,21 +1591,24 @@ int noti_ex_item_get_receiver_list(noti_ex_item_h handle, char ***list, int *cou
 {
 	int ret;
 
-	ret = noti_ex_item_set_policy(item_handle, NOTI_EX_ITEM_POLICY_ON_BOOT_CLEAR);
+	ret = noti_ex_item_set_policy(item_handle,
+			NOTI_EX_ITEM_POLICY_ON_BOOT_CLEAR | NOTI_EX_ITEM_POLICY_SIM_MODE);
 }
  * @endcode
  */
 int noti_ex_item_set_policy(noti_ex_item_h handle, int policy);
 
 /**
- * @brief Gets the policy for notification_ex item.
+ * @brief Gets the policy of a notification_ex item.
+ * @details @a policy is equal to values of #noti_ex_item_policy_e combined with bitwise 'or'.
  * @since_tizen 5.5
  * @param[in] handle The notification_ex item handle
- * @param[out] policy The policy for notification_ex item
+ * @param[out] policy The policy of a notification_ex item
  * @return #NOTI_EX_ERROR_NONE On success, other value on failure
  * @retval #NOTI_EX_ERROR_NONE Success
  * @retval #NOTI_EX_ERROR_INVALID_PARAMETER Invalid parameter
  * @see #noti_ex_item_h
+ * @see #noti_ex_item_policy_e
  * @par Sample code:
  * @code
 #include <notification_ex_item.h>
@@ -1581,11 +1624,11 @@ int noti_ex_item_set_policy(noti_ex_item_h handle, int policy);
 int noti_ex_item_get_policy(noti_ex_item_h handle, int *policy);
 
 /**
- * @brief Gets the channel for notification_ex item.
+ * @brief Gets the channel of a notification_ex item.
  * @since_tizen 5.5
  * @remarks @a channel must be released using free().
  * @param[in] handle The notification_ex item handle
- * @param[out] channel The channel for notification_ex item
+ * @param[out] channel The channel of a notification_ex item
  * @return #NOTI_EX_ERROR_NONE On success, other value on failure
  * @retval #NOTI_EX_ERROR_NONE Success
  * @retval #NOTI_EX_ERROR_INVALID_PARAMETER Invalid parameter
@@ -1605,10 +1648,10 @@ int noti_ex_item_get_policy(noti_ex_item_h handle, int *policy);
 int noti_ex_item_get_channel(noti_ex_item_h handle, char **channel);
 
 /**
- * @brief Sets the channel for notification_ex item.
+ * @brief Sets the channel of a notification_ex item.
  * @since_tizen 5.5
  * @param[in] handle The notification_ex item handle
- * @param[in] channel The channel for notification_ex item
+ * @param[in] channel The channel of a notification_ex item
  * @return #NOTI_EX_ERROR_NONE On success, other value on failure
  * @retval #NOTI_EX_ERROR_NONE Success
  * @retval #NOTI_EX_ERROR_INVALID_PARAMETER Invalid parameter
@@ -1627,17 +1670,17 @@ int noti_ex_item_get_channel(noti_ex_item_h handle, char **channel);
 int noti_ex_item_set_channel(noti_ex_item_h handle, const char *channel);
 
 /**
- * @brief Sets the led for notification_ex item.
- * @details The LED information is defined as notification_ex led info handle
+ * @brief Sets the LED information of a notification_ex item.
+ * @details The LED information is defined as notification_ex LED info handle
  * @since_tizen 5.5
  * @param[in] handle The notification_ex item handle
- * @param[in] led The notification_ex led info item
+ * @param[in] led The notification_ex LED info item
  * @return #NOTI_EX_ERROR_NONE On success, other value on failure
  * @retval #NOTI_EX_ERROR_NONE Success
  * @retval #NOTI_EX_ERROR_INVALID_PARAMETER Invalid parameter
  * @see #noti_ex_item_h
  * @see #noti_ex_led_info_h
- * @see #noti_ex_led_info_create
+ * @see #noti_ex_led_info_create()
  * @par Sample code:
  * @code
 #include <notification_ex_item.h>
@@ -1652,11 +1695,12 @@ int noti_ex_item_set_channel(noti_ex_item_h handle, const char *channel);
 int noti_ex_item_set_led_info(noti_ex_item_h handle, noti_ex_led_info_h led);
 
 /**
- * @brief Gets the led option for notification_ex item.
- * @details The LED information is defined as notification_ex led info handle
+ * @brief Gets the LED information of a notification_ex item.
+ * @details The LED information is defined as notification_ex LED info handle
  * @since_tizen 5.5
+ * @remarks @a led must be released using noti_ex_led_info_destroy().
  * @param[in] handle The notification_ex item handle
- * @param[out] led The notification_ex led info item
+ * @param[out] led The notification_ex LED info item
  * @return #NOTI_EX_ERROR_NONE On success, other value on failure
  * @retval #NOTI_EX_ERROR_NONE Success
  * @retval #NOTI_EX_ERROR_INVALID_PARAMETER Invalid parameter
@@ -1677,10 +1721,10 @@ int noti_ex_item_set_led_info(noti_ex_item_h handle, noti_ex_led_info_h led);
 int noti_ex_item_get_led_info(noti_ex_item_h handle, noti_ex_led_info_h *led);
 
 /**
- * @brief Sets the sound path for notification_ex item.
+ * @brief Sets the sound path of a notification_ex item.
  * @since_tizen 5.5
  * @param[in] handle The notification_ex item handle
- * @param[in] path The sound path for notification_ex item
+ * @param[in] path The absolute path of sound for notification_ex item
  * @return #NOTI_EX_ERROR_NONE On success, other value on failure
  * @retval #NOTI_EX_ERROR_NONE Success
  * @retval #NOTI_EX_ERROR_INVALID_PARAMETER Invalid parameter
@@ -1699,10 +1743,34 @@ int noti_ex_item_get_led_info(noti_ex_item_h handle, noti_ex_led_info_h *led);
 int noti_ex_item_set_sound_path(noti_ex_item_h handle, const char *path);
 
 /**
- * @brief Sets the vibration path for notification_ex item.
+ * @brief Gets the sound path of a notification_ex item.
+ * @since_tizen 5.5
+ * @remarks @a path must be released using free().
+ * @param[in] handle The notification_ex item handle
+ * @param[out] path The absolute path of sound for notification_ex item
+ * @return #NOTI_EX_ERROR_NONE On success, other value on failure
+ * @retval #NOTI_EX_ERROR_NONE Success
+ * @retval #NOTI_EX_ERROR_INVALID_PARAMETER Invalid parameter
+ * @see #noti_ex_item_h
+ * @par Sample code:
+ * @code
+#include <notification_ex_item.h>
+
+{
+	int ret;
+	char *path = NULL;
+
+	ret = noti_ex_item_get_sound_path(item_handle, &path);
+}
+ * @endcode
+ */
+int noti_ex_item_get_sound_path(noti_ex_item_h handle, char **path);
+
+/**
+ * @brief Sets the vibration path of a notification_ex item.
  * @since_tizen 5.5
  * @param[in] handle The notification_ex item handle
- * @param[in] path The vibration path for notification_ex item
+ * @param[in] path The absolute path of vibration for notification_ex item
  * @return #NOTI_EX_ERROR_NONE On success, other value on failure
  * @retval #NOTI_EX_ERROR_NONE Success
  * @retval #NOTI_EX_ERROR_INVALID_PARAMETER Invalid parameter
@@ -1721,11 +1789,11 @@ int noti_ex_item_set_sound_path(noti_ex_item_h handle, const char *path);
 int noti_ex_item_set_vibration_path(noti_ex_item_h handle, const char *path);
 
 /**
- * @brief Gets the sound path for notification_ex item.
+ * @brief Gets the vibration path of a notification_ex item.
  * @since_tizen 5.5
  * @remarks @a path must be released using free().
  * @param[in] handle The notification_ex item handle
- * @param[out] path The sound path for notification_ex item
+ * @param[out] path The absolute path of vibration for a notification_ex item
  * @return #NOTI_EX_ERROR_NONE On success, other value on failure
  * @retval #NOTI_EX_ERROR_NONE Success
  * @retval #NOTI_EX_ERROR_INVALID_PARAMETER Invalid parameter
@@ -1736,31 +1804,7 @@ int noti_ex_item_set_vibration_path(noti_ex_item_h handle, const char *path);
 
 {
 	int ret;
-	char *path = NULL
-
-	ret = noti_ex_item_get_sound_path(item_handle, &path);
-}
- * @endcode
- */
-int noti_ex_item_get_sound_path(noti_ex_item_h handle, char **path);
-
-/**
- * @brief Gets the vibration path for notification_ex item.
- * @since_tizen 5.5
- * @remarks @a path must be released using free().
- * @param[in] handle The notification_ex item handle
- * @param[out] path The vibration path for notification_ex item
- * @return #NOTI_EX_ERROR_NONE On success, other value on failure
- * @retval #NOTI_EX_ERROR_NONE Success
- * @retval #NOTI_EX_ERROR_INVALID_PARAMETER Invalid parameter
- * @see #noti_ex_item_h
- * @par Sample code:
- * @code
-#include <notification_ex_item.h>
-
-{
-	int ret;
-	char *path = NULL
+	char *path = NULL;
 
 	ret = noti_ex_item_get_vibration_path(item_handle, &path);
 }
@@ -1769,10 +1813,12 @@ int noti_ex_item_get_sound_path(noti_ex_item_h handle, char **path);
 int noti_ex_item_get_vibration_path(noti_ex_item_h handle, char **path);
 
 /**
- * @brief Gets the information for notification_ex item.
+ * @brief Gets the information of a notification_ex item.
  * @details The information of notificaction_ex item is defined as
  *          notification_ex item info handle.
  * @since_tizen 5.5
+ * @remarks @a info should not be released.
+ * @remarks @a info is available until @a handle is released.
  * @param[in] handle The notification_ex item handle
  * @param[out] info The notification_ex item info handle
  * @return #NOTI_EX_ERROR_NONE On success, other value on failure
@@ -1795,11 +1841,11 @@ int noti_ex_item_get_vibration_path(noti_ex_item_h handle, char **path);
 int noti_ex_item_get_info(noti_ex_item_h handle, noti_ex_item_info_h *info);
 
 /**
- * @brief Gets the sender app id of notification_ex item.
+ * @brief Gets the sender app id of a notification_ex item.
  * @since_tizen 5.5
  * @remarks @a id must be released using free().
  * @param[in] handle The notification_ex item handle
- * @param[out] id The sender app id of notification_ex item
+ * @param[out] id The sender app id of a notification_ex item
  * @return #NOTI_EX_ERROR_NONE On success, other value on failure
  * @retval #NOTI_EX_ERROR_NONE Success
  * @retval #NOTI_EX_ERROR_INVALID_PARAMETER Invalid parameter
@@ -1819,33 +1865,11 @@ int noti_ex_item_get_info(noti_ex_item_h handle, noti_ex_item_info_h *info);
 int noti_ex_item_get_sender_app_id(noti_ex_item_h handle, char **id);
 
 /**
- * @brief Sets the sender app id of notification_ex item.
- * @since_tizen 5.5
- * @param[in] handle The notification_ex item handle
- * @param[in] id The sender app id of notification_ex item
- * @return #NOTI_EX_ERROR_NONE On success, other value on failure
- * @retval #NOTI_EX_ERROR_NONE Success
- * @retval #NOTI_EX_ERROR_INVALID_PARAMETER Invalid parameter
- * @see #noti_ex_item_h
- * @par Sample code:
- * @code
-#include <notification_ex_item.h>
-
-{
-	int ret;
-
-	ret = noti_ex_item_set_sender_app_id(item_handle, "sender_appid");
-}
- * @endcode
- */
-int noti_ex_item_set_sender_app_id(noti_ex_item_h handle, const char *id);
-
-/**
- * @brief Gets the tag of notification_ex item.
+ * @brief Gets the tag of a notification_ex item.
  * @since_tizen 5.5
  * @remarks @a tag must be released using free().
  * @param[in] handle The notification_ex item handle
- * @param[out] tag The tag of notification_ex item
+ * @param[out] tag The tag of a notification_ex item
  * @return #NOTI_EX_ERROR_NONE On success, other value on failure
  * @retval #NOTI_EX_ERROR_NONE Success
  * @retval #NOTI_EX_ERROR_INVALID_PARAMETER Invalid parameter
@@ -1865,10 +1889,10 @@ int noti_ex_item_set_sender_app_id(noti_ex_item_h handle, const char *id);
 int noti_ex_item_get_tag(noti_ex_item_h handle, char **tag);
 
 /**
- * @brief Sets the tag of notification_ex item.
+ * @brief Sets the tag of a notification_ex item.
  * @since_tizen 5.5
  * @param[in] handle The notification_ex item handle
- * @param[int] tag The tag of notification_ex item
+ * @param[in] tag The tag of a notification_ex item
  * @return #NOTI_EX_ERROR_NONE On success, other value on failure
  * @retval #NOTI_EX_ERROR_NONE Success
  * @retval #NOTI_EX_ERROR_INVALID_PARAMETER Invalid parameter
@@ -1889,4 +1913,4 @@ int noti_ex_item_set_tag(noti_ex_item_h handle, const char *tag);
 #ifdef __cplusplus
 }
 #endif
-#endif  // CAPI_NOTIFICATION_EX_ITEM_H_
+#endif  /* __TIZEN_APPFW_NOTIFICATION_EX_ITEM_H__ */

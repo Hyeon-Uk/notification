@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-#ifndef CAPI_NOTIFICATION_EX_INPUT_SELECTOR_H_
-#define CAPI_NOTIFICATION_EX_INPUT_SELECTOR_H_
+#ifndef __TIZEN_APPFW_NOTIFICATION_EX_INPUT_SELECTOR_H__
+#define __TIZEN_APPFW_NOTIFICATION_EX_INPUT_SELECTOR_H__
 
 #include <notification_ex_item.h>
 
@@ -25,9 +25,10 @@ extern "C" {
 
 /**
  * @brief Creates the notification_ex item handle with input selector.
- * @details The notification_ex is made with notification_ex items.
- *          If the user wants to be displayed with selector to select predefined input,
- *          notification_ex handle have to be made as input selector item.
+ * @details The notification_ex item is the predefined type of notifications.
+ *          The notification can be created with one item or group of items.
+ *          If the user wants to be display the notification with selector to select predefined input,
+ *          the notification_ex handle has to be created as an input selector item.
  * @since_tizen 5.5
  * @remarks @a handle must be released using noti_ex_item_destroy().
  * @param[out] handle The notification_ex item handle
@@ -37,7 +38,7 @@ extern "C" {
  * @retval #NOTI_EX_ERROR_INVALID_PARAMETER Invalid parameter
  * @retval #NOTI_EX_ERROR_OUT_OF_MEMORY out of memory
  * @see #noti_ex_item_h
- * @see #noti_ex_item_destroy
+ * @see #noti_ex_item_destroy()
  * @par Sample code:
  * @code
 #include <notification_ex_input_selector.h>
@@ -55,25 +56,26 @@ int noti_ex_item_input_selector_create(noti_ex_item_h *handle, const char *id);
 /**
  * @brief Gets the contents that can be selected by input selector.
  * @since_tizen 5.5
- * @remarks @a list must be released after releasing all contents using free().
+ * @remarks Each item in the @a list must be released using free(), then the @a list must be released using free().
  * @param[in] handle The notification_ex item handle
  * @param[out] list The list of contents
  * @param[out] count The count of contents
  * @return #NOTI_EX_ERROR_NONE On success, other value on failure
  * @retval #NOTI_EX_ERROR_NONE Success
- * @retval #NOTI_EX_ERROR_INVALID_PARAMETER Invalid parameter
+ * @retval #NOTI_EX_ERROR_INVALID_PARAMETER Invalid parameter, if the item type is not correct, this error is returned
  * @see #noti_ex_item_h
- * @see #noti_ex_item_input_selector_create
+ * @see #noti_ex_item_input_selector_create()
+ * @see #noti_ex_item_input_selector_set_contents()
  * @par Sample code:
  * @code
 #include <notification_ex_input_selector.h>
 
 {
 	int ret;
-    char **list = NULL;
-    int count = 0;
+	char **list = NULL;
+	int count = 0;
 
-	ret = noti_ex_item_input_selector_get_contents(&selector_item, &list, &count);
+	ret = noti_ex_item_input_selector_get_contents(selector_item, &list, &count);
 }
  * @endcode
  */
@@ -83,21 +85,23 @@ int noti_ex_item_input_selector_get_contents(noti_ex_item_h handle, char ***list
  * @brief Sets the contents for input selector item.
  * @since_tizen 5.5
  * @param[in] handle The notification_ex item handle
- * @param[out] contents The list of contents
- * @param[out] count The count of contents
+ * @param[in] contents The list of contents
+ * @param[in] count The count of contents
  * @return #NOTI_EX_ERROR_NONE On success, other value on failure
  * @retval #NOTI_EX_ERROR_NONE Success
  * @retval #NOTI_EX_ERROR_INVALID_PARAMETER Invalid parameter
  * @see #noti_ex_item_h
- * @see #noti_ex_item_input_selector_create
+ * @see #noti_ex_item_input_selector_create()
  * @par Sample code:
  * @code
 #include <notification_ex_input_selector.h>
 
 {
 	int ret;
+	const char *contents[] = {"content_1", "content_2", "content_3"};
+	int count = 3;
 
-	ret = noti_ex_item_input_selector_set_contents(&selector_item, list, count);
+	ret = noti_ex_item_input_selector_set_contents(selector_item, contents, count);
 }
  * @endcode
  */
@@ -106,4 +110,4 @@ int noti_ex_item_input_selector_set_contents(noti_ex_item_h handle, const char *
 #ifdef __cplusplus
 }
 #endif
-#endif  // CAPI_NOTIFICATION_EX_INPUT_SELECTOR_H_
+#endif  /* __TIZEN_APPFW_NOTIFICATION_EX_INPUT_SELECTOR_H__ */

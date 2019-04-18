@@ -34,10 +34,10 @@ typedef void* noti_ex_reporter_h;
 /**
  * @brief Called when the error event is received.
  * @details The errors are passed from noti_ex_manager_send_error().
+ *          If this callback is set to NULL in #event_callbacks, error events cannot be received.
  * @since_tizen 5.5
  * @param[in] handle The reporter handle \n
- *            The @a handle can be used only in the callback. \n
- *            The @a handle will be freed after the callback exits.
+ *            The @a handle is the same handle for which the callback was set
  * @param[in] error The error type
  * @param[in] request_id The id of the request that occurred error
  * @param[in] user_data The user data which was registered with callback
@@ -49,22 +49,22 @@ typedef void (*noti_ex_reporter_events_error_cb)(noti_ex_reporter_h handle,
 
 /**
  * @brief Called when the notification event is received.
+ * @details If this callback is set to NULL in #event_callbacks, notification events cannot be received.
  * @since_tizen 5.5
  * @param[in] handle The reporter handle \n
- *            The @a handle can be used only in the callback. \n
- *            The @a handle will be freed after the callback exits.
+ *            The @a handle is the same handle for which the callback was set
  * @param[in] info The handle that contains event information \n
  *            The @a info can be used only in the callback. To use outside, make a copy. \n
  *            The @a info will be freed after the callback exits.
  * @param[in] items The target items of event \n
- *            The @a items must be released using free() after releasing each item using noti_ex_item_destroy().
+ *            Each item in @a items must be released using noti_ex_item_destroy(), then @a items must be released using free().
  * @param[in] count The count of @a items
  * @param[in] user_data The user data which was registered with callback
  * @see #noti_ex_reporter_h
  * @see #noti_ex_event_info_h
  * @see #noti_ex_item_h
  * @see #noti_ex_event_info_clone
- * @see #noti_ex_item_destroy
+ * @see #noti_ex_item_destroy()
  */
 typedef void (*noti_ex_reporter_events_event_cb)(noti_ex_reporter_h handle,
 		noti_ex_event_info_h info, noti_ex_item_h *items, int count,
@@ -84,8 +84,9 @@ typedef struct {
 
 /**
  * @brief Creates the notification_ex reporter handle.
- * @details The reporter handle is created with a events callback and
- *          the user can listen notification events through the events callback.
+ * @details The reporter handle is created with event callbacks and
+ *          the user can listen notification events through the event callbacks.
+ *          Callbacks in @a event_callbacks can be set to NULL, which will result in the corresponding events not being received.
  * @since_tizen 5.5
  * @privlevel public
  * @privilege %http://tizen.org/privilege/notification
@@ -100,6 +101,7 @@ typedef struct {
  * @retval #NOTI_EX_ERROR_OUT_OF_MEMORY Out of memory
  * @see #noti_ex_item_h
  * @see #noti_ex_reporter_events_s
+ * @see #noti_ex_reporter_destroy()
  * @par Sample code:
  * @code
 #include <notification_ex_reporter.h>
@@ -190,11 +192,10 @@ void _reporter_events_error_cb(noti_ex_reporter_h handle,
 	int ret;
 	noti_ex_reporter_h handle;
 	noti_ex_reporter_events_s ev;
-	int request_id;
 
 	ev.event = _reporter_events_event_cb;
 	ev.error = _reporter_events_error_cb;
-	ret = noti_ex_reporter_create(&handle, ev, NULL, &request_id);
+	ret = noti_ex_reporter_create(&handle, ev, NULL);
 }
  * @endcode
  */
@@ -204,6 +205,8 @@ int noti_ex_reporter_send_error(noti_ex_reporter_h handle,
 /**
  * @brief Posts a notification.
  * @since_tizen 5.5
+ * @privlevel public
+ * @privilege %http://tizen.org/privilege/notification
  * @param[in] handle The notification reporter handle
  * @param[in] noti The notification handle to be posted
  * @param[out] request_id The id of request
@@ -243,6 +246,8 @@ int noti_ex_reporter_post(noti_ex_reporter_h handle, noti_ex_item_h noti,
 /**
  * @brief Posts notifications contained in a list.
  * @since_tizen 5.5
+ * @privlevel public
+ * @privilege %http://tizen.org/privilege/notification
  * @param[in] handle The notification reporter handle
  * @param[in] noti_list The notification handle list to be posted
  * @param[in] count The count of notifications in @a noti_list
@@ -289,6 +294,8 @@ int noti_ex_reporter_post_list(noti_ex_reporter_h handle, noti_ex_item_h *noti_l
 /**
  * @brief Updates a notification.
  * @since_tizen 5.5
+ * @privlevel public
+ * @privilege %http://tizen.org/privilege/notification
  * @param[in] handle The notification reporter handle
  * @param[in] noti The notification handle to be updated
  * @param[out] request_id The id of request
@@ -327,6 +334,8 @@ int noti_ex_reporter_update(noti_ex_reporter_h handle, noti_ex_item_h noti,
 /**
  * @brief Deletes a notification.
  * @since_tizen 5.5
+ * @privlevel public
+ * @privilege %http://tizen.org/privilege/notification
  * @param[in] handle The notification reporter handle
  * @param[in] noti The notification handle to be updated
  * @param[out] request_id The id of request
@@ -364,6 +373,8 @@ int noti_ex_reporter_delete(noti_ex_reporter_h handle, noti_ex_item_h noti,
 /**
  * @brief Deletes all notifications.
  * @since_tizen 5.5
+ * @privlevel public
+ * @privilege %http://tizen.org/privilege/notification
  * @param[in] handle The notification reporter handle
  * @param[out] request_id The id of request
  * @return #NOTI_EX_ERROR_NONE On success, other value on failure
@@ -399,6 +410,8 @@ int noti_ex_reporter_delete_all(noti_ex_reporter_h handle,
 /**
  * @brief Finds notification by root id.
  * @since_tizen 5.5
+ * @privlevel public
+ * @privilege %http://tizen.org/privilege/notification
  * @param[in] handle The notification reporter handle
  * @param[in] root_id The id of the foremost notification item to be retrived
  * @param[out] item The result of the find operation \n
@@ -408,6 +421,7 @@ int noti_ex_reporter_delete_all(noti_ex_reporter_h handle,
  * @retval #NOTI_EX_ERROR_INVALID_PARAMETER Invalid parameter
  * @retval #NOTI_EX_ERROR_IO_ERROR IO error
  * @see #noti_ex_reporter_create
+ * @see #noti_ex_item_destroy()
  * @par Sample code:
  * @code
 #include <notification_ex_reporter.h>
@@ -422,11 +436,12 @@ void _reporter_events_error_cb(noti_ex_reporter_h handle, noti_ex_error_e error,
 	noti_ex_reporter_events_s ev;
 	noti_ex_item_h group_item = NULL;
 	noti_ex_item_h child_item = NULL;
+	int request_id;
 
 	ev.error = _reporter_events_error_cb;
 	ret = noti_ex_reporter_create(&handle, ev, NULL);
 	ret = noti_ex_reporter_find_by_root_id(handle, "group_id", &group_item);
-	ret = noti_ex_reporter_delete(handle, group_item);
+	ret = noti_ex_reporter_delete(handle, group_item, &request_id);
 }
  * @endcode
  */

@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-#ifndef CAPI_NOTIFICATION_EX_CHECKBOX_H_
-#define CAPI_NOTIFICATION_EX_CHECKBOX_H_
+#ifndef __TIZEN_APPFW_NOTIFICATION_EX_CHECKBOX_H__
+#define __TIZEN_APPFW_NOTIFICATION_EX_CHECKBOX_H__
 
 #include <notification_ex_item.h>
 
@@ -25,9 +25,10 @@ extern "C" {
 
 /**
  * @brief Creates the notification_ex item handle with checkbox.
- * @details The notification_ex is made with notification_ex items.
- *          If the user wants to be displayed with checkbox,
- *          notification_ex handle have to be made as checkbox item.
+ * @details The notification_ex item is the predefined type of notifications.
+ *          The notification can be created with one item or group of items.
+ *          If the user wants to display the notification with a checkbox,
+ *          the notification_ex handle has to be created as a checkbox item.
  * @since_tizen 5.5
  * @remarks @a handle must be released using noti_ex_item_destroy().
  * @param[out] handle The notification_ex item handle
@@ -39,7 +40,7 @@ extern "C" {
  * @retval #NOTI_EX_ERROR_INVALID_PARAMETER Invalid parameter
  * @retval #NOTI_EX_ERROR_OUT_OF_MEMORY out of memory
  * @see #noti_ex_item_h
- * @see #noti_ex_item_destroy
+ * @see #noti_ex_item_destroy()
  * @par Sample code:
  * @code
 #include <notification_ex_checkbox.h>
@@ -55,16 +56,16 @@ extern "C" {
 int noti_ex_item_checkbox_create(noti_ex_item_h *handle, const char *id, const char *title, bool checked);
 
 /**
- * @brief Gets the title of checkbox item.
+ * @brief Gets the title of a checkbox.
  * @since_tizen 5.5
  * @remarks @a title must be released using free().
  * @param[in] handle The notification_ex item handle
  * @param[out] title The title of notification_ex item
  * @return #NOTI_EX_ERROR_NONE On success, other value on failure
  * @retval #NOTI_EX_ERROR_NONE Success
- * @retval #NOTI_EX_ERROR_INVALID_PARAMETER Invalid parameter
+ * @retval #NOTI_EX_ERROR_INVALID_PARAMETER Invalid parameter, if the item type is not correct, this error is returned
  * @see #noti_ex_item_h
- * @see #noti_ex_item_checkbox_create
+ * @see #noti_ex_item_checkbox_create()
  * @par Sample code:
  * @code
 #include <notification_ex_checkbox.h>
@@ -80,15 +81,15 @@ int noti_ex_item_checkbox_create(noti_ex_item_h *handle, const char *id, const c
 int noti_ex_item_checkbox_get_title(noti_ex_item_h handle, char **title);
 
 /**
- * @brief Gets the check state of checkbox.
+ * @brief Gets the check state of a checkbox.
  * @since_tizen 5.5
  * @param[in] handle The notification_ex item handle
- * @param[out] checked The check state of checkbox
+ * @param[out] checked The check state of a checkbox
  * @return #NOTI_EX_ERROR_NONE On success, other value on failure
  * @retval #NOTI_EX_ERROR_NONE Success
- * @retval #NOTI_EX_ERROR_INVALID_PARAMETER Invalid parameter
+ * @retval #NOTI_EX_ERROR_INVALID_PARAMETER Invalid parameter, if the item type is not correct, this error is returned
  * @see #noti_ex_item_h
- * @see #noti_ex_item_checkbox_create
+ * @see #noti_ex_item_checkbox_create()
  * @par Sample code:
  * @code
 #include <notification_ex_checkbox.h>
@@ -106,4 +107,4 @@ int noti_ex_item_checkbox_is_checked(noti_ex_item_h handle, bool *checked);
 #ifdef __cplusplus
 }
 #endif
-#endif  // CAPI_NOTIFICATION_EX_CHECKBOX_H_
+#endif  /* __TIZEN_APPFW_NOTIFICATION_EX_CHECKBOX_H__ */

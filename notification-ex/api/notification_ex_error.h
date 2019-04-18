@@ -15,8 +15,8 @@
  */
 
 
-#ifndef __NOTIFICATION_EX_ERROR_H__
-#define __NOTIFICATION_EX_ERROR_H__
+#ifndef __TIZEN_APPFW_NOTIFICATION_EX_ERROR_H__
+#define __TIZEN_APPFW_NOTIFICATION_EX_ERROR_H__
 
 
 #include <tizen.h>
@@ -43,13 +43,13 @@ typedef enum _noti_ex_error {
 	NOTI_EX_ERROR_OUT_OF_MEMORY = TIZEN_ERROR_OUT_OF_MEMORY, /**< Out of memory */
 	NOTI_EX_ERROR_IO_ERROR = TIZEN_ERROR_IO_ERROR, /**< I/O error */
 	NOTI_EX_ERROR_PERMISSION_DENIED = TIZEN_ERROR_PERMISSION_DENIED, /**< Permission denied */
-	NOTI_EX_ERROR_INVALID_OPERATION = TIZEN_ERROR_INVALID_OPERATION, /**< Function not implemented (@b Since: @if MOBILE 2.4 @elseif WEARABLE 3.0 @endif) */
+	NOTI_EX_ERROR_INVALID_OPERATION = TIZEN_ERROR_INVALID_OPERATION, /**< Function not implemented */
 	NOTI_EX_ERROR_FROM_DB = TIZEN_ERROR_NOTIFICATION | 0x01, /**< Error from DB query */
-	NOTI_EX_ERROR_ALREADY_EXIST_ID = TIZEN_ERROR_NOTIFICATION | 0x02, /**< Already exist private ID */
+	NOTI_EX_ERROR_ALREADY_EXIST_ID = TIZEN_ERROR_NOTIFICATION | 0x02, /**< Private ID already exists */
 	NOTI_EX_ERROR_FROM_DBUS = TIZEN_ERROR_NOTIFICATION | 0x03, /**< Error from DBus */
-	NOTI_EX_ERROR_NOT_EXIST_ID = TIZEN_ERROR_NOTIFICATION | 0x04, /**< Not exist private ID */
+	NOTI_EX_ERROR_NOT_EXIST_ID = TIZEN_ERROR_NOTIFICATION | 0x04, /**< Private ID does not exist */
 	NOTI_EX_ERROR_SERVICE_NOT_READY = TIZEN_ERROR_NOTIFICATION | 0x05, /**< No response from notification service */
-	NOTI_EX_ERROR_MAX_EXCEEDED = TIZEN_ERROR_NOTIFICATION | 0x06, /**< Max notification count exceeded (@b Since: 3.0) */
+	NOTI_EX_ERROR_MAX_EXCEEDED = TIZEN_ERROR_NOTIFICATION | 0x06, /**< Max notification count exceeded */
 } noti_ex_error_e;
 
 
@@ -58,5 +58,5 @@ typedef enum _noti_ex_error {
  */
 
 
-#endif /* __NOTIFICATION_EX_ERROR_H__ */
+#endif /* __TIZEN_APPFW_NOTIFICATION_EX_ERROR_H__ */
 
