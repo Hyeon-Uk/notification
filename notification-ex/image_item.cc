@@ -31,18 +31,18 @@
 namespace notification {
 namespace item {
 
-ImageItem::ImageItem(std::string imagePath,
+ImageItem::ImageItem(std::string image_path,
     std::shared_ptr<AbstractAction> action)
-    : AbstractItem(action), impl_(new Impl(this, imagePath)) {
+    : AbstractItem(action), impl_(new Impl(this, image_path)) {
 }
 
-ImageItem::ImageItem(std::string id, std::string imagePath,
+ImageItem::ImageItem(std::string id, std::string image_path,
     std::shared_ptr<AbstractAction> action)
-    : AbstractItem(id, action), impl_(new Impl(this, imagePath)) {
+    : AbstractItem(id, action), impl_(new Impl(this, image_path)) {
 }
 
-ImageItem::Impl::Impl(ImageItem* parent, std::string imagePath)
-    : parent_(parent), imagePath_(imagePath) {
+ImageItem::Impl::Impl(ImageItem* parent, std::string image_path)
+    : parent_(parent), image_path_(image_path) {
   LOGI("ImageItem impl created");
 }
 
@@ -53,14 +53,14 @@ int ImageItem::GetType() const {
 Bundle ImageItem::Serialize() const {
   Bundle b;
   b = AbstractItem::Serialize();
-  b.Add(IMAGE_PATH_KEY, impl_->imagePath_);
+  b.Add(IMAGE_PATH_KEY, impl_->image_path_);
 
   return b;
 }
 
 void ImageItem::Deserialize(Bundle b) {
   AbstractItem::Deserialize(b);
-  impl_->imagePath_ = b.GetString(IMAGE_PATH_KEY);
+  impl_->image_path_ = b.GetString(IMAGE_PATH_KEY);
 }
 
 AbstractItem& ImageItem::FindByID(std::string id) {
@@ -71,7 +71,7 @@ AbstractItem& ImageItem::FindByID(std::string id) {
 }
 
 std::string ImageItem::GetImagePath() const {
-  return impl_->imagePath_;
+  return impl_->image_path_;
 }
 
 ImageItem::~ImageItem() = default;

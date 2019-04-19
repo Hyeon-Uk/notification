@@ -36,20 +36,20 @@ class EXPORT_API ImageItem : public AbstractItem {
   /**
    * @brief Constructor
    * @since_tizen 5.5
-   * @param[in] imagePath The image path of ImageItem
+   * @param[in] image_path The image path of ImageItem
    * @param[in] action The action for ImageItem
    */
-  ImageItem(std::string imagePath,
+  ImageItem(std::string image_path,
     std::shared_ptr<AbstractAction> action = std::shared_ptr<AbstractAction>({}));
 
   /**
    * @brief Constructor
    * @since_tizen 5.5
    * @param[in] id The ImageItem id
-   * @param[in] imagePath The image path of ImageItem
+   * @param[in] image_path The image path of ImageItem
    * @param[in] action The action for ImageItem
    */
-  ImageItem(std::string id, std::string imagePath,
+  ImageItem(std::string id, std::string image_path,
     std::shared_ptr<AbstractAction> action = std::shared_ptr<AbstractAction>({}));
 
   /**

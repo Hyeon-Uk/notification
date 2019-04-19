@@ -32,11 +32,11 @@ class IconItem::Impl {
 
  private:
   friend class IconItem;
-  Impl(IconItem* parent, std::string iconPath);
+  Impl(IconItem* parent, std::string icon_path);
 
  private:
   IconItem* parent_;
-  std::string iconPath_;
+  std::string icon_path_;
 };
 
 }  // namespace item

@@ -32,11 +32,11 @@ class ImageItem::Impl {
 
  private:
   friend class ImageItem;
-  Impl(ImageItem* parent, std::string imagePath);
+  Impl(ImageItem* parent, std::string image_path);
 
  private:
   ImageItem* parent_;
-  std::string imagePath_;
+  std::string image_path_;
 };
 
 }  // namespace item
