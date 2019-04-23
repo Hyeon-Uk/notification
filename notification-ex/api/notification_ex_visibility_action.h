@@ -25,6 +25,11 @@ extern "C" {
 #endif
 
 /**
+ * @addtogroup NOTIFICATION_EX_MODULE
+ * @{
+ */
+
+/**
  * @brief Creates the notification_ex action handle to control visibility.
  * @details The notification_ex can define the action with noti_ex_action_h.
  *          If it is necessary to control visibility of the notification_ex item,
@@ -87,6 +92,10 @@ int noti_ex_action_visibility_create(noti_ex_action_h *handle, const char *extra
  * @endcode
  */
 int noti_ex_action_visibility_set(noti_ex_action_h handle, const char *id, bool visible);
+
+/**
+ * @}
+ */
 
 #ifdef __cplusplus
 }

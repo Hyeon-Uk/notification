@@ -24,6 +24,11 @@ extern "C" {
 #endif
 
 /**
+ * @addtogroup NOTIFICATION_EX_MODULE
+ * @{
+ */
+
+/**
  * @brief Creates the notification_ex item handle with time.
  * @details The notification_ex item is the predefined type of notifications.
  *          The notification can be created with one item or group of items.
@@ -80,6 +85,10 @@ int noti_ex_item_time_create(noti_ex_item_h *handle, const char *id, time_t time
  * @endcode
  */
 int noti_ex_item_time_get_time(noti_ex_item_h handle, time_t *time);
+
+/**
+ * @}
+ */
 
 #ifdef __cplusplus
 }

@@ -39,8 +39,17 @@ extern "C" {
 #endif
 
 /**
+ * @addtogroup NOTIFICATION_EX_MODULE
+ * @{
+ */
+
+/**
  * @brief Header for all notification_ex APIs.
  * @since_tizen 5.5
+ */
+
+/**
+ * @}
  */
 
 #ifdef __cplusplus

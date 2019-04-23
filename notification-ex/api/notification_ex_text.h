@@ -24,6 +24,11 @@ extern "C" {
 #endif
 
 /**
+ * @addtogroup NOTIFICATION_EX_MODULE
+ * @{
+ */
+
+/**
  * @brief Creates the notification_ex item handle with text.
  * @details The notification_ex item is the predefined type of notifications.
  *          The notification can be created with one item or group of items.
@@ -127,6 +132,10 @@ int noti_ex_item_text_get_contents(noti_ex_item_h handle, char **contents);
  * @endcode
  */
 int noti_ex_item_text_get_hyperlink(noti_ex_item_h handle, char **hyperlink);
+
+/**
+ * @}
+ */
 
 #ifdef __cplusplus
 }
