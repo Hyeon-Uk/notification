@@ -213,6 +213,7 @@ int noti_ex_reporter_send_error(noti_ex_reporter_h handle,
  * @return #NOTI_EX_ERROR_NONE On success, other value on failure
  * @retval #NOTI_EX_ERROR_NONE Success
  * @retval #NOTI_EX_ERROR_INVALID_PARAMETER Invalid parameter
+ * @retval #NOTI_EX_ERROR_PERMISSION_DENIED Permission deny
  * @retval #NOTI_EX_ERROR_IO_ERROR IO error
  * @see #noti_ex_reporter_create
  * @par Sample code:
@@ -255,6 +256,7 @@ int noti_ex_reporter_post(noti_ex_reporter_h handle, noti_ex_item_h noti,
  * @return #NOTI_EX_ERROR_NONE On success, other value on failure
  * @retval #NOTI_EX_ERROR_NONE Success
  * @retval #NOTI_EX_ERROR_INVALID_PARAMETER Invalid parameter
+ * @retval #NOTI_EX_ERROR_PERMISSION_DENIED Permission deny
  * @retval #NOTI_EX_ERROR_IO_ERROR IO error
  * @see #noti_ex_reporter_create
  * @par Sample code:
@@ -302,6 +304,7 @@ int noti_ex_reporter_post_list(noti_ex_reporter_h handle, noti_ex_item_h *noti_l
  * @return #NOTI_EX_ERROR_NONE On success, other value on failure
  * @retval #NOTI_EX_ERROR_NONE Success
  * @retval #NOTI_EX_ERROR_INVALID_PARAMETER Invalid parameter
+ * @retval #NOTI_EX_ERROR_PERMISSION_DENIED Permission deny
  * @retval #NOTI_EX_ERROR_IO_ERROR IO error
  * @see #noti_ex_reporter_create
  * @par Sample code:
@@ -342,6 +345,7 @@ int noti_ex_reporter_update(noti_ex_reporter_h handle, noti_ex_item_h noti,
  * @return #NOTI_EX_ERROR_NONE On success, other value on failure
  * @retval #NOTI_EX_ERROR_NONE Success
  * @retval #NOTI_EX_ERROR_INVALID_PARAMETER Invalid parameter
+ * @retval #NOTI_EX_ERROR_PERMISSION_DENIED Permission deny
  * @retval #NOTI_EX_ERROR_IO_ERROR IO error
  * @see #noti_ex_reporter_create
  * @par Sample code:
@@ -380,6 +384,7 @@ int noti_ex_reporter_delete(noti_ex_reporter_h handle, noti_ex_item_h noti,
  * @return #NOTI_EX_ERROR_NONE On success, other value on failure
  * @retval #NOTI_EX_ERROR_NONE Success
  * @retval #NOTI_EX_ERROR_INVALID_PARAMETER Invalid parameter
+ * @retval #NOTI_EX_ERROR_PERMISSION_DENIED Permission deny
  * @retval #NOTI_EX_ERROR_IO_ERROR IO error
  * @see #noti_ex_reporter_create
  * @par Sample code:
@@ -413,12 +418,13 @@ int noti_ex_reporter_delete_all(noti_ex_reporter_h handle,
  * @privlevel public
  * @privilege %http://tizen.org/privilege/notification
  * @param[in] handle The notification reporter handle
- * @param[in] root_id The id of the foremost notification item to be retrived
+ * @param[in] root_id The id of the foremost notification item to be retrieved
  * @param[out] item The result of the find operation \n
  *             The @a item must be released using noti_ex_item_destroy().
  * @return #NOTI_EX_ERROR_NONE On success, other value on failure
  * @retval #NOTI_EX_ERROR_NONE Success
  * @retval #NOTI_EX_ERROR_INVALID_PARAMETER Invalid parameter
+ * @retval #NOTI_EX_ERROR_PERMISSION_DENIED Permission deny
  * @retval #NOTI_EX_ERROR_IO_ERROR IO error
  * @see #noti_ex_reporter_create
  * @see #noti_ex_item_destroy()

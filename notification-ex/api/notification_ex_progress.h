@@ -33,7 +33,7 @@ extern "C" {
  * @remarks @a handle must be released using noti_ex_item_destroy().
  * @param[out] handle The notification_ex item handle
  * @param[in] id The id of notification_ex item
- * @param[in] min The minimun value of progress
+ * @param[in] min The minimum value of progress
  * @param[in] current The current value of progress
  * @param[in] max The maximum value of progress
  * @return #NOTI_EX_ERROR_NONE On success, other value on failure

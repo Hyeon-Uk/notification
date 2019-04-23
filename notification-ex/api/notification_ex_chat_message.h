@@ -29,7 +29,7 @@ extern "C" {
  */
 typedef enum _noti_ex_item_chat_message_type {
 	NOTI_EX_ITEM_CHAT_MESSAGE_TYPE_USER, /**< The user of chat message */
-	NOTI_EX_ITEM_CHAT_MESSAGE_TYPE_SENDER, /**< The sender of chat messasge */
+	NOTI_EX_ITEM_CHAT_MESSAGE_TYPE_SENDER, /**< The sender of chat message */
 } noti_ex_item_chat_message_type_e;
 
 /**

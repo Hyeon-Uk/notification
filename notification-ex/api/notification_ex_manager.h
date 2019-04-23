@@ -453,7 +453,7 @@ int noti_ex_manager_hide(noti_ex_manager_h handle, noti_ex_item_h item,
  * @privilege %http://tizen.org/privilege/notification
  * @remarks @a root_id is the id of the foremost notification item.
  * @param[in] handle The notification manager handle
- * @param[in] root_id The id of the foremost notification item to be retrived
+ * @param[in] root_id The id of the foremost notification item to be retrieved
  * @param[out] item The result of the find operation \n
  *             The @a item must be released using noti_ex_item_destroy().
  * @return #NOTI_EX_ERROR_NONE On success, other value on failure

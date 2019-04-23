@@ -120,7 +120,7 @@ int noti_ex_event_info_destroy(noti_ex_event_info_h handle);
 int noti_ex_event_info_get_event_type(noti_ex_event_info_h handle, noti_ex_event_info_type_e *event_type);
 
 /**
- * @brief Gets the app id of event owner
+ * @brief Gets the app id of event owner.
  * @since_tizen 5.5
  * @remarks @a owner must be released using free().
  * @param[in] handle The notification_ex event info handle
@@ -198,7 +198,7 @@ int noti_ex_event_info_get_item_id(noti_ex_event_info_h handle, char **item_id);
  * @brief Gets the id of request for an event.
  * @since_tizen 5.5
  * @param[in] handle The notification_ex event info handle
- * @param[out] req_id The id of reqeust for event
+ * @param[out] req_id The id of request for event
  * @return #NOTI_EX_ERROR_NONE On success, other value on failure
  * @retval #NOTI_EX_ERROR_NONE Success
  * @retval #NOTI_EX_ERROR_INVALID_PARAMETER Invalid parameter
