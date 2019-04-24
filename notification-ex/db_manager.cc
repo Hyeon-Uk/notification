@@ -20,6 +20,7 @@
 #include <vconf.h>
 #include <pkgmgr-info.h>
 #include <tzplatform_config.h>
+
 #include <string.h>
 #include <list>
 #include <map>

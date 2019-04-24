@@ -18,6 +18,7 @@
 #include <glib.h>
 #include <unistd.h>
 
+#include <string>
 #include <list>
 
 #include "notification-ex/dbus_connection_manager.h"

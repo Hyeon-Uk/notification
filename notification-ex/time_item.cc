@@ -60,13 +60,13 @@ int TimeItem::GetType() const {
 Bundle TimeItem::Serialize() const {
   Bundle b;
   struct tm timeinfo;
-  char buf[80] = {0,};
+  char buf[80] = {0, };
 
   b = AbstractItem::Serialize();
 
-  //timt_t to tm
+  // timt_t to tm
   localtime_r(&impl_->time_, &timeinfo);
-  //tm to str
+  // tm to str
   strftime (buf, sizeof(buf), "%s", &timeinfo);
   b.Add(TIME_KEY, std::string(buf));
 
@@ -80,9 +80,9 @@ void TimeItem::Deserialize(Bundle b) {
   AbstractItem::Deserialize(b);
   time_s = b.GetString(TIME_KEY);
 
-  //str to tm
+  // str to tm
   strptime(time_s.c_str(), "%s", &timeinfo);
-  //tm to time_t
+  // tm to time_t
   impl_->time_ = mktime(&timeinfo);
 }
 

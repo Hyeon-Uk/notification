@@ -59,22 +59,22 @@ EventInfo::Impl::Impl(EventInfo* parent, int type, std::string owner,
 EventInfo::EventInfo(Bundle serialized)
   : impl_(new Impl(this, EventInfo::Post, "", "", "")) {
   string event_str = serialized.GetString(NOTIFICATION_EX_EVENT_TYPE_KEY);
-  impl_->type_ = (int)strtol(event_str.c_str(), NULL, 10);
+  impl_->type_ = std::stoi(event_str, nullptr, 10);
   impl_->owner_ = serialized.GetString(NOTIFICATION_EX_EVENT_OWNER_KEY);
   impl_->channel_ = serialized.GetString(NOTIFICATION_EX_EVENT_CHANNEL_KEY);
   impl_->item_id_ = serialized.GetString(NOTIFICATION_EX_EVENT_ITEM_ID_KEY);
   string uid_str = serialized.GetString(NOTIFICATION_EX_EVENT_UID_KEY);
-  impl_->uid_ = (uid_t)strtol(uid_str.c_str(), NULL, 10);
+  impl_->uid_ = (uid_t)std::stoi(uid_str, nullptr, 10);
   string request_id_str =
       serialized.GetString(NOTIFICATION_EX_EVENT_REQUEST_ID_KEY);
-  impl_->request_id_ = (int)strtol(request_id_str.c_str(), NULL, 10);
+  impl_->request_id_ = std::stoi(request_id_str, nullptr, 10);
   string error_str =
       serialized.GetString(NOTIFICATION_EX_EVENT_ERROR_KEY);
   impl_->error_ = (NotificationError)strtol(error_str.c_str(), NULL, 10);
 }
 
 string EventInfo::GetString(int type) {
-  switch(type) {
+  switch (type) {
     case Post:
       return "Post";
     case Update:
@@ -92,11 +92,11 @@ string EventInfo::GetString(int type) {
 
 Bundle EventInfo::Serialize() const {
   Bundle serialized;
-  serialized.Add(NOTIFICATION_EX_EVENT_TYPE_KEY, to_string((int)impl_->type_));
+  serialized.Add(NOTIFICATION_EX_EVENT_TYPE_KEY, to_string(static_cast<int>(impl_->type_)));
   serialized.Add(NOTIFICATION_EX_EVENT_OWNER_KEY, impl_->owner_);
   serialized.Add(NOTIFICATION_EX_EVENT_CHANNEL_KEY, impl_->channel_);
   serialized.Add(NOTIFICATION_EX_EVENT_ITEM_ID_KEY, impl_->item_id_);
-  serialized.Add(NOTIFICATION_EX_EVENT_UID_KEY, to_string((int)impl_->uid_));
+  serialized.Add(NOTIFICATION_EX_EVENT_UID_KEY, to_string(static_cast<int>(impl_->uid_)));
   serialized.Add(
       NOTIFICATION_EX_EVENT_REQUEST_ID_KEY, to_string(impl_->request_id_));
   serialized.Add(

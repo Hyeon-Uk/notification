@@ -20,6 +20,7 @@
 
 #include <memory>
 #include <algorithm>
+#include <vector>
 
 #include "notification-ex/exception.h"
 #include "notification-ex/abstract_item.h"
@@ -128,7 +129,7 @@ AbstractItem::~AbstractItem() = default;
 Bundle AbstractItem::Serialize() const {
   Bundle b;
   struct tm timeinfo;
-  char buf[80] = {0,};
+  char buf[80] = {0, };
 
   if (impl_->uid_ == 0)
     impl_->uid_ = getuid();
@@ -260,9 +261,9 @@ void AbstractItem::Deserialize(Bundle b) {
 
   impl_->policy_ = static_cast<Policy>(stoi(policy_str));
 
-  impl_->visible_ = (bool)stoi(b.GetString(ABSTRACT_ITEM_VISIBLE_KEY));
+  impl_->visible_ = static_cast<bool>(stoi(b.GetString(ABSTRACT_ITEM_VISIBLE_KEY)));
 
-  impl_->enable_ = (bool)stoi(b.GetString(ABSTRACT_ITEM_ENABLE_KEY));
+  impl_->enable_ = static_cast<bool>(stoi(b.GetString(ABSTRACT_ITEM_ENABLE_KEY)));
 
   vector<string> receiver_group = b.GetStringArray(ABSTRACT_ITEM_RECEIVER_GROUP_KEY);
   if (receiver_group.size() != 0) {

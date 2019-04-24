@@ -94,7 +94,7 @@ Bundle ChatMessageItem::Serialize() const {
     reinterpret_cast<char*>(impl_->image_->Serialize().ToRaw().first.get()));
   b.Add(CHATMESSAGE_TIME_KEY,
     reinterpret_cast<char*>(impl_->time_->Serialize().ToRaw().first.get()));
-  b.Add(CHATMESSAGE_TYPE_KEY, std::to_string((int)impl_->type_));
+  b.Add(CHATMESSAGE_TYPE_KEY, std::to_string(static_cast<int>(impl_->type_)));
   return b;
 }
 
@@ -155,4 +155,4 @@ ChatMessageItem::~ChatMessageItem() = default;
 ChatMessageItem::Impl::~Impl() = default;
 
 }  // namespace item
-}  // namespace notification_ex
+}  // namespace notification
