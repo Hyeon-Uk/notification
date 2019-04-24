@@ -17,8 +17,7 @@
 #ifndef NOTIFICATION_EX_DBUS_SENDER_H_
 #define NOTIFICATION_EX_DBUS_SENDER_H_
 
-#include <bundle_cpp.h>
-
+#include "notification-ex/ex_bundle.h"
 #include "notification-ex/event_sender_interface.h"
 #include "notification-ex/ievent_info.h"
 
@@ -32,9 +31,9 @@ class EXPORT_API DBusSender : public IEventSender {
  public:
   DBusSender(std::string path);
   virtual ~DBusSender();
-  void Notify(const IEventInfo& info, std::list<tizen_base::Bundle> serialized,
+  void Notify(const IEventInfo& info, std::list<Bundle> serialized,
       std::string dest_appid = "") override;
-  std::list<tizen_base::Bundle> Request(const IEventInfo& info) override;
+  std::list<Bundle> Request(const IEventInfo& info) override;
 
  private:
   class Impl;

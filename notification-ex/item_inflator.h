@@ -38,7 +38,7 @@ class EXPORT_API ItemInflator {
    * @since_tizen 5.5
    * @param[in] b Bundle type data
    */
-  static std::unique_ptr<AbstractItem> Create(tizen_base::Bundle b);
+  static std::unique_ptr<AbstractItem> Create(Bundle b);
 };
 
 }  // namespace item

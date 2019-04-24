@@ -7,7 +7,6 @@
 #include "notification-ex/progress_item.h"
 #include "notification-ex/item_inflator.h"
 
-using namespace tizen_base;
 using namespace notification;
 using namespace notification::item;
 using namespace std;

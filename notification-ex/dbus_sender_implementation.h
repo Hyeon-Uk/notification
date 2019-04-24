@@ -17,8 +17,6 @@
 #ifndef NOTIFICATION_EX_DBUS_SENDER_IMPLEMENTATION_H_
 #define NOTIFICATION_EX_DBUS_SENDER_IMPLEMENTATION_H_
 
-#include <bundle_cpp.h>
-
 #include <string>
 #include <memory>
 #include <list>
@@ -39,8 +37,7 @@ class DBusSender::Impl {
   std::string GetBusName(
       std::string appid, std::string dest_appid) const;
   bool EmitSignal(std::string bus_name, std::string signal_name, GVariant* data);
-  GDBusMessage* MethodCall(std::string appid, std::string method_name,
-      tizen_base::Bundle serialized);
+  GDBusMessage* MethodCall(std::string appid, std::string method_name, Bundle serialized);
   std::string path_;
   DBusSender* parent_;
 };

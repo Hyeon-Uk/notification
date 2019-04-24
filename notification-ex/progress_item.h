@@ -68,14 +68,14 @@ class EXPORT_API ProgressItem : public AbstractItem {
    * @since_tizen 5.5
    * @return Bundle type data
    */
-  virtual tizen_base::Bundle Serialize() const override;
+  virtual Bundle Serialize() const override;
 
   /**
    * @brief Deserialize the serialized data.
    * @since_tizen 5.5
    * @param[in] b The serialized Bundle data
    */
-  virtual void Deserialize(tizen_base::Bundle b) override;
+  virtual void Deserialize(Bundle b) override;
 
   /**
    * @brief Finds the AbstractItem using by notification item id.

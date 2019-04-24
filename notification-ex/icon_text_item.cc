@@ -29,8 +29,6 @@
 #define ICONTEXT_PATH_KEY "__ICONTEXT_PATH_KEY__"
 #define ICONTEXT_TITLE_KEY "__ICONTEXT_TITLE_KEY__"
 
-using namespace tizen_base;
-
 namespace notification {
 namespace item {
 

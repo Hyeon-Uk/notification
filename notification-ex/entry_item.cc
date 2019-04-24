@@ -30,8 +30,6 @@
 #define ENTRY_TEXT_KEY "__ENTRY_TEXT_KEY__"
 #define ENTRY_LIMIT_KEY "__ENTRY_LIMIT_KEY__"
 
-using namespace tizen_base;
-
 namespace notification {
 namespace item {
 

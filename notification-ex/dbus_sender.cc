@@ -34,7 +34,6 @@
 #define MAX_PACKAGE_STR_SIZE 512
 
 using namespace std;
-using namespace tizen_base;
 namespace notification {
 
 DBusSender::DBusSender(string path) : impl_(new Impl(this, path)) {

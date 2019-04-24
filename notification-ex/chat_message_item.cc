@@ -32,8 +32,6 @@
 #define CHATMESSAGE_TIME_KEY "__CHATMESSAGE_TIME_KEY__"
 #define CHATMESSAGE_TYPE_KEY "__CHATMESSAGE_TYPE_KEY__"
 
-using namespace tizen_base;
-
 namespace notification {
 namespace item {
 

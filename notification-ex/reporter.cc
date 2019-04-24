@@ -36,7 +36,6 @@
 #define NOTIFICATION_EX_REPORTER_OBJECT_PATH "/org/tizen/notification_ex_reporter"
 
 using namespace std;
-using namespace tizen_base;
 using namespace notification::item;
 namespace notification {
 

@@ -20,7 +20,6 @@
 #include "notification-ex/app_control_action.h"
 #include "notification-ex/action_inflator.h"
 
-using namespace tizen_base;
 using namespace notification;
 using namespace notification::item;
 

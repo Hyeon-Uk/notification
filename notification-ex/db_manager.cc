@@ -62,7 +62,6 @@
 #define NOTI_LIMIT 100
 
 using namespace std;
-using namespace tizen_base;
 using namespace notification::item;
 
 namespace notification {

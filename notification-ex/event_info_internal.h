@@ -17,12 +17,11 @@
 #ifndef NOTIFICATION_EX_EVENT_INFO_INTERNAL_H_
 #define NOTIFICATION_EX_EVENT_INFO_INTERNAL_H_
 
-#include <bundle_cpp.h>
-
 #include <string>
 #include <list>
 
 #include "notification-ex/common.h"
+#include "notification-ex/ex_bundle.h"
 #include "notification-ex/ievent_info_internal.h"
 
 #ifndef EXPORT_API
@@ -35,7 +34,7 @@ class EventInfo : public IEventInfoInternal {
  public:
   EventInfo(int type, std::string owner, std::string channel = "",
       std::string item_id = "");
-  EventInfo(tizen_base::Bundle serialized);
+  EventInfo(Bundle serialized);
   virtual ~EventInfo();
   uid_t GetUid() const override;
   void SetUid(uid_t uid) override;
@@ -47,7 +46,7 @@ class EventInfo : public IEventInfoInternal {
   std::string GetChannel() const override;
   std::string GetItemId() const override;
   int GetRequestId() const override;
-  tizen_base::Bundle Serialize() const override;
+  Bundle Serialize() const override;
   static std::string GetString(int type);
 
  private:

@@ -37,7 +37,7 @@ class EXPORT_API ActionInflator {
    * @since_tizen 5.5
    * @param[in] b Bundle type data
    */
-  static std::shared_ptr<AbstractAction> Create(tizen_base::Bundle b);
+  static std::shared_ptr<AbstractAction> Create(Bundle b);
 };
 
 }  // namespace item

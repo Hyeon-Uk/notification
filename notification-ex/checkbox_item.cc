@@ -29,8 +29,6 @@
 #define CHECKBOX_TITLE_KEY "__CHECKBOX_TITLE_KEY__"
 #define CHECKBOX_CHECKED_KEY "__CHECKBOX_CHECKED_KEY__"
 
-using namespace tizen_base;
-
 namespace notification {
 namespace item {
 
