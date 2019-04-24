@@ -20,7 +20,6 @@
 #include "notification-ex/icon_text_item.h"
 #include "notification-ex/item_inflator.h"
 
-using namespace tizen_base;
 using namespace notification;
 using namespace notification::item;
 

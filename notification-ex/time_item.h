@@ -80,14 +80,14 @@ class EXPORT_API TimeItem : public AbstractItem {
    * @since_tizen 5.5
    * @return Bundle type data
    */
-  tizen_base::Bundle Serialize() const override;
+  Bundle Serialize() const override;
 
   /**
    * @brief Deserialize the serialized data.
    * @since_tizen 5.5
    * @param[in] b The serialized Bundle data
    */
-  void Deserialize(tizen_base::Bundle b) override;
+  void Deserialize(Bundle b) override;
 
   /**
    * @brief Finds the AbstractItem using by notification item id.

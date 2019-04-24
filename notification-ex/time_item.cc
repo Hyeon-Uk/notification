@@ -28,8 +28,6 @@
 #define LOG_TAG "NOTIFICATION_EX"
 #define TIME_KEY "__TIME_KEY__"
 
-using namespace tizen_base;
-
 namespace notification {
 namespace item {
 

@@ -31,7 +31,7 @@ using namespace std;
 namespace notification {
 namespace item {
 
-unique_ptr<AbstractItem> ItemInflator::Create(tizen_base::Bundle b) {
+unique_ptr<AbstractItem> ItemInflator::Create(Bundle b) {
   unique_ptr<AbstractItem> item =
       FactoryManager::GetInst().CreateItem(AbstractItem::GetType(b));
   item.get()->Deserialize(b);

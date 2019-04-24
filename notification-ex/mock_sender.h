@@ -30,7 +30,7 @@ class EXPORT_API MockSender : public IEventSender {
   MockSender();
   virtual ~MockSender();
 
-  void Notify(tizen_base::Bundle serialized) override;
+  void Notify(Bundle serialized) override;
 };
 
 }  // namespace notification

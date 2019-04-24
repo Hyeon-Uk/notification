@@ -33,8 +33,6 @@
 #define PROGRESS_MAX_KEY "__PROGRESS_MAX_KEY__"
 
 using namespace std;
-using namespace tizen_base;
-
 namespace notification {
 namespace item {
 

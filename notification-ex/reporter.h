@@ -53,9 +53,8 @@ class EXPORT_API Reporter : public IEventObserver {
   virtual std::list<std::shared_ptr<item::AbstractItem>> OnRequestEvent(
       const IEventInfo& info);
   virtual void OnError(NotificationError error, int requestId);
-  void OnEvent(const IEventInfo& info,
-      std::list<tizen_base::Bundle> serialized) override;
-  std::list<tizen_base::Bundle> OnRequest(const IEventInfo& info) override;
+  void OnEvent(const IEventInfo& info, std::list<Bundle> serialized) override;
+  std::list<Bundle> OnRequest(const IEventInfo& info) override;
   static std::string GetPath();
 
  private:

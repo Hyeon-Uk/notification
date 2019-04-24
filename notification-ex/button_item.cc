@@ -30,8 +30,6 @@
 #define BUTTON_TITLE_KEY "__BUTTON_TITLE_KEY__"
 
 using namespace std;
-using namespace tizen_base;
-
 namespace notification {
 namespace item {
 

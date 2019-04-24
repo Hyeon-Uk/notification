@@ -33,8 +33,6 @@
 #define MAX_PACKAGE_STR_SIZE 512
 
 using namespace std;
-using namespace tizen_base;
-
 namespace notification {
 
 DBusEventListener::DBusEventListener(string path)

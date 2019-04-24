@@ -37,7 +37,6 @@
 #define NOTIFICATION_EX_EVENT_ERROR_KEY "__NOTIFICATION_EX_EVENT_ERROR_KEY__"
 
 using namespace std;
-using namespace tizen_base;
 namespace notification {
 
 EventInfo::EventInfo(int type, std::string owner, std::string channel,

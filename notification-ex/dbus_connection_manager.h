@@ -21,9 +21,7 @@
 
 #include <string>
 
-#ifndef EXPORT_API
-#define EXPORT_API __attribute__((visibility("default")))
-#endif
+#include "notification-ex/ex_bundle.h"
 
 namespace notification {
 

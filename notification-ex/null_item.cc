@@ -27,8 +27,6 @@
 #define LOG_TAG "NOTIFICATION_EX"
 
 using namespace std;
-using namespace tizen_base;
-
 namespace notification {
 namespace item {
 

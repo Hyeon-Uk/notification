@@ -30,8 +30,6 @@
 #define TEXT_CONTENTS_KEY "__TEXT_CONTENTS_KEY__"
 #define TEXT_HYPERLINK_KEY "__TEXT_HYPERLINK_KEY__"
 
-using namespace tizen_base;
-
 namespace notification {
 namespace item {
 TextItem::TextItem(std::string id, std::string text, std::string hyperlink,
