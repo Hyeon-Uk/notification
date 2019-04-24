@@ -38,6 +38,7 @@
 #define GROUP_APP_LABEL_KEY "__GROUP_APP_LABEL_KEY__"
 
 using namespace std;
+using namespace tizen_base;
 namespace notification {
 namespace item {
 

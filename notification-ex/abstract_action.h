@@ -20,7 +20,7 @@
 #include <memory>
 #include <string>
 
-#include "notification-ex/ex_bundle.h"
+#include <bundle_cpp.h>
 
 #ifndef EXPORT_API
 #define EXPORT_API __attribute__((visibility("default")))
@@ -82,21 +82,21 @@ class EXPORT_API AbstractAction {
    * @param[in] b Bundle type data
    * @return The type of action
    */
-  static int GetType(Bundle b);
+  static int GetType(tizen_base::Bundle b);
 
   /**
    * @brief Serialize the data of AbstractAction.
    * @since_tizen 5.5
    * @return Bundle type data
    */
-  virtual Bundle Serialize() const = 0;
+  virtual tizen_base::Bundle Serialize() const = 0;
 
   /**
    * @brief Deserialize the serialized data.
    * @since_tizen 5.5
    * @param[in] b The serialized Bundle data
    */
-  virtual void Deserialize(Bundle b) = 0;
+  virtual void Deserialize(tizen_base::Bundle b) = 0;
 
   /**
    * @brief Gets whether local or not.

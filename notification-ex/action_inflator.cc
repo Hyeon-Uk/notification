@@ -15,6 +15,7 @@
  */
 
 #include <dlog.h>
+#include <bundle_cpp.h>
 
 #include <memory>
 
@@ -30,7 +31,7 @@
 namespace notification {
 namespace item {
 
-std::shared_ptr<AbstractAction> ActionInflator::Create(Bundle b) {
+std::shared_ptr<AbstractAction> ActionInflator::Create(tizen_base::Bundle b) {
   std::shared_ptr<AbstractAction> action =
       FactoryManager::GetInst().CreateAction(AbstractAction::GetType(b));
   action.get()->Deserialize(b);

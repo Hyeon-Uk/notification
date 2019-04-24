@@ -81,6 +81,7 @@
 #define ABSTRACT_ITEM_TRUE "TRUE"
 
 using namespace std;
+using namespace tizen_base;
 namespace notification {
 namespace item {
 

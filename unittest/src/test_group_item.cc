@@ -10,6 +10,7 @@
 #include "notification-ex/item_inflator.h"
 #include "unittest/mock/app_common.h"
 
+using namespace tizen_base;
 using namespace notification;
 using namespace notification::item;
 using namespace std;

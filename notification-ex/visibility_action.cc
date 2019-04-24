@@ -30,6 +30,8 @@
 #define VISIBILITY_ACTION_ENTITY_KEY "__VISIBILITY_ACTION_VISIBLE_KEY__"
 #define VISIBILITY_ACTION_ENTITY_SIZE_KEY "__VISIBILITY_ACTION_ENTITY_SIZE_KEY__"
 
+using namespace tizen_base;
+
 namespace notification {
 namespace item {
 

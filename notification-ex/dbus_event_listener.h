@@ -29,8 +29,8 @@ class EXPORT_API DBusEventListener : public IEventListener {
   void RegisterObserver(IEventObserver* observer) override;
   void UnRegisterObserver(IEventObserver* observer) override;
   void NotifyObserver(
-      const IEventInfo& info, std::list<Bundle> serialized) override;
-  std::list<Bundle> NotifyObserver(const IEventInfo& info) override;
+      const IEventInfo& info, std::list<tizen_base::Bundle> serialized) override;
+  std::list<tizen_base::Bundle> NotifyObserver(const IEventInfo& info) override;
   int NotifyNumberRequest(const IEventInfo& info) override;
 
  private:

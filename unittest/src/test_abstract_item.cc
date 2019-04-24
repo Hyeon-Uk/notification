@@ -28,6 +28,7 @@
 #define MY_ITEM_TYPE AbstractItem::Type::Custom + 1
 
 using namespace notification;
+using namespace tizen_base;
 using namespace notification::item;
 
 namespace {

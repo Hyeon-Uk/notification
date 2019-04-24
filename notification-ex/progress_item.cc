@@ -35,6 +35,8 @@
 #define PROGRESS_UNIT_KEY "__PROGRESS_UNIT_KEY__"
 
 using namespace std;
+using namespace tizen_base;
+
 namespace notification {
 namespace item {
 
