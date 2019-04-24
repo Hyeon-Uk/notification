@@ -847,7 +847,7 @@ extern "C" EXPORT_API int noti_ex_item_image_create(noti_ex_item_h *handle,
     return NOTI_EX_ERROR_OUT_OF_MEMORY;
   }
 
-  *handle = new Handle(p);
+  *handle = new Handle(shared_ptr<AbstractItem>(p));
 
   return NOTI_EX_ERROR_NONE;
 }
@@ -2424,7 +2424,7 @@ extern "C" EXPORT_API int noti_ex_item_text_create(noti_ex_item_h *handle,
     return NOTI_EX_ERROR_OUT_OF_MEMORY;
   }
 
-  *handle = new Handle(p);
+  *handle = new Handle(shared_ptr<AbstractItem>(p));
 
   return NOTI_EX_ERROR_NONE;
 }
@@ -2518,7 +2518,7 @@ extern "C" EXPORT_API int noti_ex_item_time_create(noti_ex_item_h *handle,
     return NOTI_EX_ERROR_OUT_OF_MEMORY;
   }
 
-  *handle = new Handle(p);
+  *handle = new Handle(shared_ptr<AbstractItem>(p));
 
   return NOTI_EX_ERROR_NONE;
 }
