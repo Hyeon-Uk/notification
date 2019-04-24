@@ -117,10 +117,10 @@ typedef void* noti_ex_color_h;
  * @retval #NOTI_EX_ERROR_INVALID_PARAMETER Invalid parameter
  * @retval #NOTI_EX_ERROR_OUT_OF_MEMORY out of memory
  * @see #noti_ex_color_h
- * @see #noti_ex_color_destroy()
+ * @see noti_ex_color_destroy()
  * @par Sample code:
  * @code
-#include <notification_ex_item.h>
+#include <notification_ex.h>
 
 {
 	int ret;
@@ -142,7 +142,7 @@ int noti_ex_color_create(noti_ex_color_h *handle, unsigned char a, unsigned char
  * @see #noti_ex_color_h
  * @par Sample code:
  * @code
-#include <notification_ex_item.h>
+#include <notification_ex.h>
 
 {
 	int ret;
@@ -162,10 +162,10 @@ int noti_ex_color_destroy(noti_ex_color_h handle);
  * @retval #NOTI_EX_ERROR_NONE Success
  * @retval #NOTI_EX_ERROR_INVALID_PARAMETER Invalid parameter
  * @see #noti_ex_color_h
- * @see #noti_ex_color_create()
+ * @see noti_ex_color_create()
  * @par Sample code:
  * @code
-#include <notification_ex_item.h>
+#include <notification_ex.h>
 
 {
 	int ret;
@@ -186,10 +186,10 @@ int noti_ex_color_get_alpha(noti_ex_color_h handle, unsigned char *val);
  * @retval #NOTI_EX_ERROR_NONE Success
  * @retval #NOTI_EX_ERROR_INVALID_PARAMETER Invalid parameter
  * @see #noti_ex_color_h
- * @see #noti_ex_color_create()
+ * @see noti_ex_color_create()
  * @par Sample code:
  * @code
-#include <notification_ex_item.h>
+#include <notification_ex.h>
 
 {
 	int ret;
@@ -210,10 +210,10 @@ int noti_ex_color_get_red(noti_ex_color_h handle, unsigned char *val);
  * @retval #NOTI_EX_ERROR_NONE Success
  * @retval #NOTI_EX_ERROR_INVALID_PARAMETER Invalid parameter
  * @see #noti_ex_color_h
- * @see #noti_ex_color_create()
+ * @see noti_ex_color_create()
  * @par Sample code:
  * @code
-#include <notification_ex_item.h>
+#include <notification_ex.h>
 
 {
 	int ret;
@@ -234,10 +234,10 @@ int noti_ex_color_get_green(noti_ex_color_h handle, unsigned char *val);
  * @retval #NOTI_EX_ERROR_NONE Success
  * @retval #NOTI_EX_ERROR_INVALID_PARAMETER Invalid parameter
  * @see #noti_ex_color_h
- * @see #noti_ex_color_create()
+ * @see noti_ex_color_create()
  * @par Sample code:
  * @code
-#include <notification_ex_item.h>
+#include <notification_ex.h>
 
 {
 	int ret;
@@ -271,10 +271,10 @@ typedef void* noti_ex_padding_h;
  * @retval #NOTI_EX_ERROR_INVALID_PARAMETER Invalid parameter
  * @retval #NOTI_EX_ERROR_OUT_OF_MEMORY out of memory
  * @see #noti_ex_padding_h
- * @see #noti_ex_padding_destroy()
+ * @see noti_ex_padding_destroy()
  * @par Sample code:
  * @code
-#include <notification_ex_item.h>
+#include <notification_ex.h>
 
 {
 	int ret;
@@ -296,7 +296,7 @@ int noti_ex_padding_create(noti_ex_padding_h *handle, int left, int top, int rig
  * @see #noti_ex_padding_h
  * @par Sample code:
  * @code
-#include <notification_ex_item.h>
+#include <notification_ex.h>
 
 {
 	int ret;
@@ -316,10 +316,10 @@ int noti_ex_padding_destroy(noti_ex_padding_h handle);
  * @retval #NOTI_EX_ERROR_NONE Success
  * @retval #NOTI_EX_ERROR_INVALID_PARAMETER Invalid parameter
  * @see #noti_ex_padding_h
- * @see #@see #noti_ex_padding_create()
+ * @see noti_ex_padding_create()
  * @par Sample code:
  * @code
-#include <notification_ex_item.h>
+#include <notification_ex.h>
 
 {
 	int ret;
@@ -340,10 +340,10 @@ int noti_ex_padding_get_left(noti_ex_padding_h handle, int *val);
  * @retval #NOTI_EX_ERROR_NONE Success
  * @retval #NOTI_EX_ERROR_INVALID_PARAMETER Invalid parameter
  * @see #noti_ex_padding_h
- * @see #@see #noti_ex_padding_create()
+ * @see noti_ex_padding_create()
  * @par Sample code:
  * @code
-#include <notification_ex_item.h>
+#include <notification_ex.h>
 
 {
 	int ret;
@@ -364,10 +364,10 @@ int noti_ex_padding_get_top(noti_ex_padding_h handle, int *val);
  * @retval #NOTI_EX_ERROR_NONE Success
  * @retval #NOTI_EX_ERROR_INVALID_PARAMETER Invalid parameter
  * @see #noti_ex_padding_h
- * @see #@see #noti_ex_padding_create()
+ * @see noti_ex_padding_create()
  * @par Sample code:
  * @code
-#include <notification_ex_item.h>
+#include <notification_ex.h>
 
 {
 	int ret;
@@ -388,10 +388,10 @@ int noti_ex_padding_get_right(noti_ex_padding_h handle, int *val);
  * @retval #NOTI_EX_ERROR_NONE Success
  * @retval #NOTI_EX_ERROR_INVALID_PARAMETER Invalid parameter
  * @see #noti_ex_padding_h
- * @see #@see #noti_ex_padding_create()
+ * @see noti_ex_padding_create()
  * @par Sample code:
  * @code
-#include <notification_ex_item.h>
+#include <notification_ex.h>
 
 {
 	int ret;
@@ -425,10 +425,10 @@ typedef void* noti_ex_geometry_h;
  * @retval #NOTI_EX_ERROR_INVALID_PARAMETER Invalid parameter
  * @retval #NOTI_EX_ERROR_OUT_OF_MEMORY out of memory
  * @see #noti_ex_geometry_h
- * @see #noti_ex_geometry_destroy()
+ * @see noti_ex_geometry_destroy()
  * @par Sample code:
  * @code
-#include <notification_ex_item.h>
+#include <notification_ex.h>
 
 {
 	int ret;
@@ -450,7 +450,7 @@ int noti_ex_geometry_create(noti_ex_geometry_h *handle, int x, int y, int w, int
  * @see #noti_ex_geometry_h
  * @par Sample code:
  * @code
-#include <notification_ex_item.h>
+#include <notification_ex.h>
 
 {
 	int ret;
@@ -470,10 +470,10 @@ int noti_ex_geometry_destroy(noti_ex_geometry_h handle);
  * @retval #NOTI_EX_ERROR_NONE Success
  * @retval #NOTI_EX_ERROR_INVALID_PARAMETER Invalid parameter
  * @see #noti_ex_geometry_h
- * @see #noti_ex_geometry_create()
+ * @see noti_ex_geometry_create()
  * @par Sample code:
  * @code
-#include <notification_ex_item.h>
+#include <notification_ex.h>
 
 {
 	int ret;
@@ -494,10 +494,10 @@ int noti_ex_geometry_get_x(noti_ex_geometry_h handle, int *val);
  * @retval #NOTI_EX_ERROR_NONE Success
  * @retval #NOTI_EX_ERROR_INVALID_PARAMETER Invalid parameter
  * @see #noti_ex_geometry_h
- * @see #noti_ex_geometry_create()
+ * @see noti_ex_geometry_create()
  * @par Sample code:
  * @code
-#include <notification_ex_item.h>
+#include <notification_ex.h>
 
 {
 	int ret;
@@ -518,10 +518,10 @@ int noti_ex_geometry_get_y(noti_ex_geometry_h handle, int *val);
  * @retval #NOTI_EX_ERROR_NONE Success
  * @retval #NOTI_EX_ERROR_INVALID_PARAMETER Invalid parameter
  * @see #noti_ex_geometry_h
- * @see #noti_ex_geometry_create()
+ * @see noti_ex_geometry_create()
  * @par Sample code:
  * @code
-#include <notification_ex_item.h>
+#include <notification_ex.h>
 
 {
 	int ret;
@@ -542,10 +542,10 @@ int noti_ex_geometry_get_width(noti_ex_geometry_h handle, int *val);
  * @retval #NOTI_EX_ERROR_NONE Success
  * @retval #NOTI_EX_ERROR_INVALID_PARAMETER Invalid parameter
  * @see #noti_ex_geometry_h
- * @see #noti_ex_geometry_create()
+ * @see noti_ex_geometry_create()
  * @par Sample code:
  * @code
-#include <notification_ex_item.h>
+#include <notification_ex.h>
 
 {
 	int ret;
@@ -586,10 +586,10 @@ typedef void* noti_ex_style_h;
  * @see #noti_ex_color_h
  * @see #noti_ex_padding_h
  * @see #noti_ex_geometry_h
- * @see #noti_ex_style_destroy()
+ * @see noti_ex_style_destroy()
  * @par Sample code:
  * @code
-#include <notification_ex_item.h>
+#include <notification_ex.h>
 
 {
 	int ret;
@@ -619,7 +619,7 @@ int noti_ex_style_create(noti_ex_style_h *handle, noti_ex_color_h color,
  * @see #noti_ex_style_h
  * @par Sample code:
  * @code
-#include <notification_ex_item.h>
+#include <notification_ex.h>
 
 {
 	int ret;
@@ -641,10 +641,10 @@ int noti_ex_style_destroy(noti_ex_style_h handle);
  * @retval #NOTI_EX_ERROR_INVALID_PARAMETER Invalid parameter
  * @see #noti_ex_style_h
  * @see #noti_ex_padding_h
- * @see #noti_ex_style_create()
+ * @see noti_ex_style_create()
  * @par Sample code:
  * @code
-#include <notification_ex_item.h>
+#include <notification_ex.h>
 
 {
 	int ret;
@@ -667,10 +667,10 @@ int noti_ex_style_get_padding(noti_ex_style_h handle, noti_ex_padding_h *padding
  * @retval #NOTI_EX_ERROR_INVALID_PARAMETER Invalid parameter
  * @see #noti_ex_style_h
  * @see #noti_ex_color_h
- * @see #noti_ex_style_create()
+ * @see noti_ex_style_create()
  * @par Sample code:
  * @code
-#include <notification_ex_item.h>
+#include <notification_ex.h>
 
 {
 	int ret;
@@ -693,10 +693,10 @@ int noti_ex_style_get_color(noti_ex_style_h handle, noti_ex_color_h *color);
  * @retval #NOTI_EX_ERROR_INVALID_PARAMETER Invalid parameter
  * @see #noti_ex_style_h
  * @see #noti_ex_geometry_h
- * @see #noti_ex_style_create()
+ * @see noti_ex_style_create()
  * @par Sample code:
  * @code
-#include <notification_ex_item.h>
+#include <notification_ex.h>
 
 {
 	int ret;
@@ -731,10 +731,10 @@ typedef void* noti_ex_led_info_h;
  * @retval #NOTI_EX_ERROR_OUT_OF_MEMORY out of memory
  * @see #noti_ex_led_info_h
  * @see #noti_ex_color_h
- * @see #noti_ex_led_info_destroy()
+ * @see noti_ex_led_info_destroy()
  * @par Sample code:
  * @code
-#include <notification_ex_item.h>
+#include <notification_ex.h>
 
 {
 	int ret;
@@ -759,7 +759,7 @@ int noti_ex_led_info_create(noti_ex_led_info_h *handle, noti_ex_color_h color);
  * @see #noti_ex_led_info_h
  * @par Sample code:
  * @code
-#include <notification_ex_item.h>
+#include <notification_ex.h>
 
 {
 	int ret;
@@ -779,10 +779,10 @@ int noti_ex_led_info_destroy(noti_ex_led_info_h handle);
  * @retval #NOTI_EX_ERROR_NONE Success
  * @retval #NOTI_EX_ERROR_INVALID_PARAMETER Invalid parameter
  * @see #noti_ex_led_info_h
- * @see #noti_ex_led_info_create()
+ * @see noti_ex_led_info_create()
  * @par Sample code:
  * @code
-#include <notification_ex_item.h>
+#include <notification_ex.h>
 
 {
 	int ret;
@@ -802,10 +802,10 @@ int noti_ex_led_info_set_on_period(noti_ex_led_info_h handle, int ms);
  * @retval #NOTI_EX_ERROR_NONE Success
  * @retval #NOTI_EX_ERROR_INVALID_PARAMETER Invalid parameter
  * @see #noti_ex_led_info_h
- * @see #noti_ex_led_info_create()
+ * @see noti_ex_led_info_create()
  * @par Sample code:
  * @code
-#include <notification_ex_item.h>
+#include <notification_ex.h>
 
 {
 	int ret;
@@ -826,10 +826,10 @@ int noti_ex_led_info_get_on_period(noti_ex_led_info_h handle, int *ms);
  * @retval #NOTI_EX_ERROR_NONE Success
  * @retval #NOTI_EX_ERROR_INVALID_PARAMETER Invalid parameter
  * @see #noti_ex_led_info_h
- * @see #noti_ex_led_info_create()
+ * @see noti_ex_led_info_create()
  * @par Sample code:
  * @code
-#include <notification_ex_item.h>
+#include <notification_ex.h>
 
 {
 	int ret;
@@ -849,10 +849,10 @@ int noti_ex_led_info_set_off_period(noti_ex_led_info_h handle, int ms);
  * @retval #NOTI_EX_ERROR_NONE Success
  * @retval #NOTI_EX_ERROR_INVALID_PARAMETER Invalid parameter
  * @see #noti_ex_led_info_h
- * @see #noti_ex_led_info_create()
+ * @see noti_ex_led_info_create()
  * @par Sample code:
  * @code
-#include <notification_ex_item.h>
+#include <notification_ex.h>
 
 {
 	int ret;
@@ -875,10 +875,10 @@ int noti_ex_led_info_get_off_period(noti_ex_led_info_h handle, int *ms);
  * @retval #NOTI_EX_ERROR_INVALID_PARAMETER Invalid parameter
  * @see #noti_ex_led_info_h
  * @see #noti_ex_color_h
- * @see #noti_ex_led_info_create()
+ * @see noti_ex_led_info_create()
  * @par Sample code:
  * @code
-#include <notification_ex_item.h>
+#include <notification_ex.h>
 
 {
 	int ret;
@@ -918,7 +918,7 @@ typedef void* noti_ex_item_info_h;
  * @see #noti_ex_action_h
  * @par Sample code:
  * @code
-#include <notification_ex_item.h>
+#include <notification_ex.h>
 
 {
 	int ret;
@@ -942,7 +942,7 @@ int noti_ex_action_destroy(noti_ex_action_h handle);
  * @see #noti_ex_action_type_e
  * @par Sample code:
  * @code
-#include <notification_ex_item.h>
+#include <notification_ex.h>
 
 {
 	int ret;
@@ -969,7 +969,7 @@ int noti_ex_action_get_type(noti_ex_action_h handle, int *type);
  * @see #noti_ex_action_h
  * @par Sample code:
  * @code
-#include <notification_ex_item.h>
+#include <notification_ex.h>
 
 {
 	int ret;
@@ -993,7 +993,7 @@ int noti_ex_action_is_local(noti_ex_action_h handle, bool *local);
  * @see #noti_ex_item_h
  * @par Sample code:
  * @code
-#include <notification_ex_item.h>
+#include <notification_ex.h>
 
 {
 	int ret;
@@ -1022,7 +1022,7 @@ int noti_ex_action_execute(noti_ex_action_h handle, noti_ex_item_h item);
  * @see #noti_ex_action_h
  * @par Sample code:
  * @code
-#include <notification_ex_item.h>
+#include <notification_ex.h>
 
 {
 	int ret;
@@ -1043,10 +1043,10 @@ int noti_ex_action_get_extra(noti_ex_action_h handle, char **extra);
  * @retval #NOTI_EX_ERROR_NONE Success
  * @retval #NOTI_EX_ERROR_INVALID_PARAMETER Invalid parameter
  * @see #noti_ex_item_info_h
- * @see #noti_ex_item_get_info()
+ * @see noti_ex_item_get_info()
  * @par Sample code:
  * @code
-#include <notification_ex_item.h>
+#include <notification_ex.h>
 
 {
 	int ret;
@@ -1070,10 +1070,10 @@ int noti_ex_item_info_get_hide_time(noti_ex_item_info_h handle, int *hide_time);
  * @retval #NOTI_EX_ERROR_NONE Success
  * @retval #NOTI_EX_ERROR_INVALID_PARAMETER Invalid parameter
  * @see #noti_ex_item_info_h
- * @see #noti_ex_item_get_info()
+ * @see noti_ex_item_get_info()
  * @par Sample code:
  * @code
-#include <notification_ex_item.h>
+#include <notification_ex.h>
 
 {
 	int ret;
@@ -1096,10 +1096,10 @@ int noti_ex_item_info_set_hide_time(noti_ex_item_info_h handle, int hide_time);
  * @retval #NOTI_EX_ERROR_NONE Success
  * @retval #NOTI_EX_ERROR_INVALID_PARAMETER Invalid parameter
  * @see #noti_ex_item_info_h
- * @see #noti_ex_item_get_info()
+ * @see noti_ex_item_get_info()
  * @par Sample code:
  * @code
-#include <notification_ex_item.h>
+#include <notification_ex.h>
 
 {
 	int ret;
@@ -1123,10 +1123,10 @@ int noti_ex_item_info_get_delete_time(noti_ex_item_info_h handle, int *delete_ti
  * @retval #NOTI_EX_ERROR_NONE Success
  * @retval #NOTI_EX_ERROR_INVALID_PARAMETER Invalid parameter
  * @see #noti_ex_item_info_h
- * @see #noti_ex_item_get_info()
+ * @see noti_ex_item_get_info()
  * @par Sample code:
  * @code
-#include <notification_ex_item.h>
+#include <notification_ex.h>
 
 {
 	int ret;
@@ -1149,10 +1149,10 @@ int noti_ex_item_info_set_delete_time(noti_ex_item_info_h handle, int delete_tim
  * @retval #NOTI_EX_ERROR_NONE Success
  * @retval #NOTI_EX_ERROR_INVALID_PARAMETER Invalid parameter
  * @see #noti_ex_item_info_h
- * @see #noti_ex_item_get_info()
+ * @see noti_ex_item_get_info()
  * @par Sample code:
  * @code
-#include <notification_ex_item.h>
+#include <notification_ex.h>
 
 {
 	int ret;
@@ -1177,7 +1177,7 @@ int noti_ex_item_info_get_time(noti_ex_item_info_h handle, time_t *time);
  * @see #noti_ex_item_h
  * @par Sample code:
  * @code
-#include <notification_ex_item.h>
+#include <notification_ex.h>
 
 {
 	int ret;
@@ -1200,7 +1200,7 @@ int noti_ex_item_destroy(noti_ex_item_h handle);
  * @see #noti_ex_item_h
  * @par Sample code:
  * @code
-#include <notification_ex_item.h>
+#include <notification_ex.h>
 
 {
 	int ret;
@@ -1225,7 +1225,7 @@ int noti_ex_item_find_by_id(noti_ex_item_h handle, const char *id, noti_ex_item_
  * @see #noti_ex_item_type_e
  * @par Sample code:
  * @code
-#include <notification_ex_item.h>
+#include <notification_ex.h>
 
 {
 	int ret;
@@ -1254,7 +1254,7 @@ int noti_ex_item_get_type(noti_ex_item_h handle, int *type);
  * @see #noti_ex_item_h
  * @par Sample code:
  * @code
-#include <notification_ex_item.h>
+#include <notification_ex.h>
 
 {
 	int ret;
@@ -1279,7 +1279,7 @@ int noti_ex_item_get_shared_paths(noti_ex_item_h handle, char ***paths, int *cou
  * @see #noti_ex_item_h
  * @par Sample code:
  * @code
-#include <notification_ex_item.h>
+#include <notification_ex.h>
 
 {
 	int ret;
@@ -1302,7 +1302,7 @@ int noti_ex_item_get_id(noti_ex_item_h handle, char **id);
  * @see #noti_ex_item_h
  * @par Sample code:
  * @code
-#include <notification_ex_item.h>
+#include <notification_ex.h>
 
 {
 	int ret;
@@ -1327,7 +1327,7 @@ int noti_ex_item_set_id(noti_ex_item_h handle, const char *id);
  * @see #noti_ex_action_h
  * @par Sample code:
  * @code
-#include <notification_ex_item.h>
+#include <notification_ex.h>
 
 {
 	int ret;
@@ -1352,7 +1352,7 @@ int noti_ex_item_get_action(noti_ex_item_h handle, noti_ex_action_h *action);
  * @see #noti_ex_action_h
  * @par Sample code:
  * @code
-#include <notification_ex_item.h>
+#include <notification_ex.h>
 
 {
 	int ret;
@@ -1382,7 +1382,7 @@ int noti_ex_item_set_action(noti_ex_item_h handle, noti_ex_action_h action);
  * @see #noti_ex_style_h
  * @par Sample code:
  * @code
-#include <notification_ex_item.h>
+#include <notification_ex.h>
 
 {
 	int ret;
@@ -1405,10 +1405,10 @@ int noti_ex_item_get_style(noti_ex_item_h handle, noti_ex_style_h *style);
  * @retval #NOTI_EX_ERROR_INVALID_PARAMETER Invalid parameter
  * @see #noti_ex_item_h
  * @see #noti_ex_style_h
- * @see #noti_ex_style_create()
+ * @see noti_ex_style_create()
  * @par Sample code:
  * @code
-#include <notification_ex_item.h>
+#include <notification_ex.h>
 
 {
 	int ret;
@@ -1430,7 +1430,7 @@ int noti_ex_item_set_style(noti_ex_item_h handle, noti_ex_style_h style);
  * @see #noti_ex_item_h
  * @par Sample code:
  * @code
-#include <notification_ex_item.h>
+#include <notification_ex.h>
 
 {
 	int ret;
@@ -1452,7 +1452,7 @@ int noti_ex_item_set_visible(noti_ex_item_h handle, bool visible);
  * @see #noti_ex_item_h
  * @par Sample code:
  * @code
-#include <notification_ex_item.h>
+#include <notification_ex.h>
 
 {
 	int ret;
@@ -1475,7 +1475,7 @@ int noti_ex_item_get_visible(noti_ex_item_h handle, bool *visible);
  * @see #noti_ex_item_h
  * @par Sample code:
  * @code
-#include <notification_ex_item.h>
+#include <notification_ex.h>
 
 {
 	int ret;
@@ -1497,7 +1497,7 @@ int noti_ex_item_set_enable(noti_ex_item_h handle, bool enable);
  * @see #noti_ex_item_h
  * @par Sample code:
  * @code
-#include <notification_ex_item.h>
+#include <notification_ex.h>
 
 {
 	int ret;
@@ -1520,7 +1520,7 @@ int noti_ex_item_get_enable(noti_ex_item_h handle, bool *enable);
  * @see #noti_ex_item_h
  * @par Sample code:
  * @code
-#include <notification_ex_item.h>
+#include <notification_ex.h>
 
 {
 	int ret;
@@ -1542,7 +1542,7 @@ int noti_ex_item_add_receiver(noti_ex_item_h handle, const char *receiver_group)
  * @see #noti_ex_item_h
  * @par Sample code:
  * @code
-#include <notification_ex_item.h>
+#include <notification_ex.h>
 
 {
 	int ret;
@@ -1566,7 +1566,7 @@ int noti_ex_item_remove_receiver(noti_ex_item_h handle, const char *receiver_gro
  * @see #noti_ex_item_h
  * @par Sample code:
  * @code
-#include <notification_ex_item.h>
+#include <notification_ex.h>
 
 {
 	int ret;
@@ -1592,7 +1592,7 @@ int noti_ex_item_get_receiver_list(noti_ex_item_h handle, char ***list, int *cou
  * @see #noti_ex_item_policy_e
  * @par Sample code:
  * @code
-#include <notification_ex_item.h>
+#include <notification_ex.h>
 
 {
 	int ret;
@@ -1617,7 +1617,7 @@ int noti_ex_item_set_policy(noti_ex_item_h handle, int policy);
  * @see #noti_ex_item_policy_e
  * @par Sample code:
  * @code
-#include <notification_ex_item.h>
+#include <notification_ex.h>
 
 {
 	int ret;
@@ -1641,7 +1641,7 @@ int noti_ex_item_get_policy(noti_ex_item_h handle, int *policy);
  * @see #noti_ex_item_h
  * @par Sample code:
  * @code
-#include <notification_ex_item.h>
+#include <notification_ex.h>
 
 {
 	int ret;
@@ -1664,7 +1664,7 @@ int noti_ex_item_get_channel(noti_ex_item_h handle, char **channel);
  * @see #noti_ex_item_h
  * @par Sample code:
  * @code
-#include <notification_ex_item.h>
+#include <notification_ex.h>
 
 {
 	int ret;
@@ -1686,10 +1686,10 @@ int noti_ex_item_set_channel(noti_ex_item_h handle, const char *channel);
  * @retval #NOTI_EX_ERROR_INVALID_PARAMETER Invalid parameter
  * @see #noti_ex_item_h
  * @see #noti_ex_led_info_h
- * @see #noti_ex_led_info_create()
+ * @see noti_ex_led_info_create()
  * @par Sample code:
  * @code
-#include <notification_ex_item.h>
+#include <notification_ex.h>
 
 {
 	int ret;
@@ -1714,7 +1714,7 @@ int noti_ex_item_set_led_info(noti_ex_item_h handle, noti_ex_led_info_h led);
  * @see #noti_ex_led_info_h
  * @par Sample code:
  * @code
-#include <notification_ex_item.h>
+#include <notification_ex.h>
 
 {
 	int ret;
@@ -1737,7 +1737,7 @@ int noti_ex_item_get_led_info(noti_ex_item_h handle, noti_ex_led_info_h *led);
  * @see #noti_ex_item_h
  * @par Sample code:
  * @code
-#include <notification_ex_item.h>
+#include <notification_ex.h>
 
 {
 	int ret;
@@ -1760,7 +1760,7 @@ int noti_ex_item_set_sound_path(noti_ex_item_h handle, const char *path);
  * @see #noti_ex_item_h
  * @par Sample code:
  * @code
-#include <notification_ex_item.h>
+#include <notification_ex.h>
 
 {
 	int ret;
@@ -1783,7 +1783,7 @@ int noti_ex_item_get_sound_path(noti_ex_item_h handle, char **path);
  * @see #noti_ex_item_h
  * @par Sample code:
  * @code
-#include <notification_ex_item.h>
+#include <notification_ex.h>
 
 {
 	int ret;
@@ -1806,7 +1806,7 @@ int noti_ex_item_set_vibration_path(noti_ex_item_h handle, const char *path);
  * @see #noti_ex_item_h
  * @par Sample code:
  * @code
-#include <notification_ex_item.h>
+#include <notification_ex.h>
 
 {
 	int ret;
@@ -1820,7 +1820,7 @@ int noti_ex_item_get_vibration_path(noti_ex_item_h handle, char **path);
 
 /**
  * @brief Gets the information of a notification_ex item.
- * @details The information of notificaction_ex item is defined as
+ * @details The information of notification_ex item is defined as
  *          notification_ex item info handle.
  * @since_tizen 5.5
  * @remarks @a info should not be released.
@@ -1834,7 +1834,7 @@ int noti_ex_item_get_vibration_path(noti_ex_item_h handle, char **path);
  * @see #noti_ex_item_info_h
  * @par Sample code:
  * @code
-#include <notification_ex_item.h>
+#include <notification_ex.h>
 
 {
 	int ret;
@@ -1858,7 +1858,7 @@ int noti_ex_item_get_info(noti_ex_item_h handle, noti_ex_item_info_h *info);
  * @see #noti_ex_item_h
  * @par Sample code:
  * @code
-#include <notification_ex_item.h>
+#include <notification_exh>
 
 {
 	int ret;
@@ -1882,7 +1882,7 @@ int noti_ex_item_get_sender_app_id(noti_ex_item_h handle, char **id);
  * @see #noti_ex_item_h
  * @par Sample code:
  * @code
-#include <notification_ex_item.h>
+#include <notification_ex.h>
 
 {
 	int ret;
@@ -1905,7 +1905,7 @@ int noti_ex_item_get_tag(noti_ex_item_h handle, char **tag);
  * @see #noti_ex_item_h
  * @par Sample code:
  * @code
-#include <notification_ex_item.h>
+#include <notification_ex.h>
 
 {
 	int ret;

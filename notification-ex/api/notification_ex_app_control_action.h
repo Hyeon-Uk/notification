@@ -31,7 +31,7 @@ extern "C" {
 
 /**
  * @brief Creates the notification_ex action handle with app control handle.
- * @details The notification_ex can define the action with noti_ex_action_h.
+ * @details The notification_ex can define the action with #noti_ex_action_h.
  *          If it is necessary to use app control handle for an action,
  *          the app control handle must be set in notification_ex action handle.
  *          @a extra can be used to pass user defined data
@@ -47,11 +47,11 @@ extern "C" {
  * @retval #NOTI_EX_ERROR_INVALID_PARAMETER Invalid parameter
  * @retval #NOTI_EX_ERROR_OUT_OF_MEMORY out of memory
  * @see #noti_ex_action_h
- * @see #noti_ex_action_destroy()
- * @see #noti_ex_action_get_extra()
+ * @see noti_ex_action_destroy()
+ * @see noti_ex_action_get_extra()
  * @par Sample code:
  * @code
-#include <notification_ex_app_control_action.h>
+#include <notification_ex.h>
 
 {
 	int ret;
@@ -78,10 +78,10 @@ int noti_ex_action_app_control_create(noti_ex_action_h *handle, app_control_h ap
  * @retval #NOTI_EX_ERROR_NONE Success
  * @retval #NOTI_EX_ERROR_INVALID_PARAMETER Invalid parameter
  * @see #noti_ex_action_h
- * @see #noti_ex_action_app_control_create()
+ * @see noti_ex_action_app_control_create()
  * @par Sample code:
  * @code
-#include <notification_ex_app_control_action.h>
+#include <notification_ex.h>
 
 {
 	int ret;
@@ -106,10 +106,10 @@ int noti_ex_action_app_control_set(noti_ex_action_h handle, app_control_h app_co
  * @retval #NOTI_EX_ERROR_NONE Success
  * @retval #NOTI_EX_ERROR_INVALID_PARAMETER Invalid parameter
  * @see #noti_ex_action_h
- * @see #noti_ex_action_app_control_create()
+ * @see noti_ex_action_app_control_create()
  * @par Sample code:
  * @code
-#include <notification_ex_app_control_action.h>
+#include <notification_ex.h>
 
 {
 	int ret;

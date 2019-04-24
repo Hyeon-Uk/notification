@@ -60,12 +60,12 @@ typedef enum _noti_ex_item_chat_message_type {
  * @retval #NOTI_EX_ERROR_OUT_OF_MEMORY out of memory
  * @see #noti_ex_item_h
  * @see #noti_ex_item_chat_message_type_e
- * @see #noti_ex_item_text_create()
- * @see #noti_ex_item_image_create()
- * @see #noti_ex_item_destroy()
+ * @see noti_ex_item_text_create()
+ * @see noti_ex_item_image_create()
+ * @see noti_ex_item_destroy()
  * @par Sample code:
  * @code
-#include <notification_ex_chat_message.h>
+#include <notification_ex.h>
 
 {
 	int ret;
@@ -104,11 +104,11 @@ int noti_ex_item_chat_message_create(noti_ex_item_h *handle, const char *id,
  * @retval #NOTI_EX_ERROR_NONE Success
  * @retval #NOTI_EX_ERROR_INVALID_PARAMETER Invalid parameter, if the item type is not correct, this error is returned
  * @see #noti_ex_item_h
- * @see #noti_ex_item_chat_message_create()
- * @see #noti_ex_item_text_get_contents()
+ * @see noti_ex_item_chat_message_create()
+ * @see noti_ex_item_text_get_contents()
  * @par Sample code:
  * @code
-#include <notification_ex_chat_message.h>
+#include <notification_ex.h>
 
 {
 	int ret;
@@ -134,11 +134,11 @@ int noti_ex_item_chat_message_get_name(noti_ex_item_h handle, noti_ex_item_h *na
  * @retval #NOTI_EX_ERROR_NONE Success
  * @retval #NOTI_EX_ERROR_INVALID_PARAMETER Invalid parameter, if the item type is not correct, this error is returned
  * @see #noti_ex_item_h
- * @see #noti_ex_item_chat_message_create()
- * @see #noti_ex_item_text_get_contents()
+ * @see noti_ex_item_chat_message_create()
+ * @see noti_ex_item_text_get_contents()
  * @par Sample code:
  * @code
-#include <notification_ex_chat_message.h>
+#include <notification_ex.h>
 
 {
 	int ret;
@@ -164,11 +164,11 @@ int noti_ex_item_chat_message_get_text(noti_ex_item_h handle, noti_ex_item_h *te
  * @retval #NOTI_EX_ERROR_NONE Success
  * @retval #NOTI_EX_ERROR_INVALID_PARAMETER Invalid parameter, if the item type is not correct, this error is returned
  * @see #noti_ex_item_h
- * @see #noti_ex_item_chat_message_create()
- * @see #noti_ex_item_image_get_image_path()
+ * @see noti_ex_item_chat_message_create()
+ * @see noti_ex_item_image_get_image_path()
  * @par Sample code:
  * @code
-#include <notification_ex_chat_message.h>
+#include <notification_ex.h>
 
 {
 	int ret;
@@ -194,11 +194,11 @@ int noti_ex_item_chat_message_get_image(noti_ex_item_h handle, noti_ex_item_h *i
  * @retval #NOTI_EX_ERROR_NONE Success
  * @retval #NOTI_EX_ERROR_INVALID_PARAMETER Invalid parameter, if the item type is not correct, this error is returned
  * @see #noti_ex_item_h
- * @see #noti_ex_item_chat_message_create()
- * @see #noti_ex_item_time_get_time()
+ * @see noti_ex_item_chat_message_create()
+ * @see noti_ex_item_time_get_time()
  * @par Sample code:
  * @code
-#include <notification_ex_chat_message.h>
+#include <notification_ex.h>
 
 {
 	int ret;
@@ -221,11 +221,11 @@ int noti_ex_item_chat_message_get_time(noti_ex_item_h handle, noti_ex_item_h *ti
  * @retval #NOTI_EX_ERROR_NONE Success
  * @retval #NOTI_EX_ERROR_INVALID_PARAMETER Invalid parameter, if the item type is not correct, this error is returned
  * @see #noti_ex_item_h
- * @see #noti_ex_item_chat_message_create()
  * @see #noti_ex_item_chat_message_type_e
+ * @see noti_ex_item_chat_message_create()
  * @par Sample code:
  * @code
-#include <notification_ex_chat_message.h>
+#include <notification_ex.h>
 
 {
 	int ret;

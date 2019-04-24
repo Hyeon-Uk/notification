@@ -38,7 +38,7 @@ typedef void* noti_ex_manager_h;
 
 /**
  * @brief Called when a notification addition event is received.
- * @details If this callback is set to NULL in #event_callbacks, addition events cannot be received.
+ * @details If this callback is set to NULL in @a event_callbacks, addition events cannot be received.
  * @since_tizen 5.5
  * @param[in] handle The manager handle \n
  *            The @a handle is the same handle for which the callback was set
@@ -52,8 +52,8 @@ typedef void* noti_ex_manager_h;
  * @see #noti_ex_manager_h
  * @see #noti_ex_event_info_h
  * @see #noti_ex_item_h
- * @see #noti_ex_event_info_clone
- * @see #noti_ex_item_destroy()
+ * @see noti_ex_event_info_clone()
+ * @see noti_ex_item_destroy()
  */
 typedef void (*noti_ex_manager_events_add_cb)(noti_ex_manager_h handle,
 		noti_ex_event_info_h info, noti_ex_item_h *added_items,
@@ -61,7 +61,7 @@ typedef void (*noti_ex_manager_events_add_cb)(noti_ex_manager_h handle,
 
 /**
  * @brief Called when a notification update event is received.
- * @details If this callback is set to NULL in #event_callbacks, update events cannot be received.
+ * @details If this callback is set to NULL in @a event_callbacks, update events cannot be received.
  * @since_tizen 5.5
  * @param[in] handle The manager handle \n
  *            The @a handle is the same handle for which the callback was set
@@ -74,8 +74,8 @@ typedef void (*noti_ex_manager_events_add_cb)(noti_ex_manager_h handle,
  * @see #noti_ex_manager_h
  * @see #noti_ex_event_info_h
  * @see #noti_ex_item_h
- * @see #noti_ex_event_info_clone
- * @see #noti_ex_item_destroy()
+ * @see noti_ex_event_info_clone()
+ * @see noti_ex_item_destroy()
  */
 typedef void (*noti_ex_manager_events_update_cb)(noti_ex_manager_h handle,
 		noti_ex_event_info_h info, noti_ex_item_h updated_item,
@@ -83,7 +83,7 @@ typedef void (*noti_ex_manager_events_update_cb)(noti_ex_manager_h handle,
 
 /**
  * @brief Called when a notification deletion event is received.
- * @details If this callback is set to NULL in #event_callbacks, deletion events cannot be received.
+ * @details If this callback is set to NULL in @a event_callbacks, deletion events cannot be received.
  * @since_tizen 5.5
  * @param[in] handle The manager handle \n
  *            The @a handle is the same handle for which the callback was set
@@ -96,8 +96,8 @@ typedef void (*noti_ex_manager_events_update_cb)(noti_ex_manager_h handle,
  * @see #noti_ex_manager_h
  * @see #noti_ex_event_info_h
  * @see #noti_ex_item_h
- * @see #noti_ex_event_info_clone
- * @see #noti_ex_item_destroy()
+ * @see noti_ex_event_info_clone()
+ * @see noti_ex_item_destroy()
  */
 typedef void (*noti_ex_manager_events_delete_cb)(noti_ex_manager_h handle,
 		noti_ex_event_info_h info, noti_ex_item_h deleted_item,
@@ -106,7 +106,7 @@ typedef void (*noti_ex_manager_events_delete_cb)(noti_ex_manager_h handle,
 /**
  * @brief Called when an error event is received.
  * @details The errors are passed from #noti_ex_reporter_send_error().
- *          If this callback is set to NULL in #event_callbacks, error events cannot be received.
+ *          If this callback is set to NULL in @a event_callbacks, error events cannot be received.
  * @since_tizen 5.5
  * @param[in] handle The manager handle \n
  *            The @a handle is the same handle for which the callback was set
@@ -148,7 +148,7 @@ typedef struct {
  * @remarks @a handle must be released using noti_ex_manager_destroy().
  * @param[out] handle The notification manager handle
  * @param[in] receiver_group The notification group name of manager
- * @param[in] event_callbacks The callbacks for notification_ex events
+ * @param[in] event_callbacks The callbacks for notification events
  * @param[in] user_data The user data for @a event_callbacks
  * @return #NOTI_EX_ERROR_NONE On success, other value on failure
  * @retval #NOTI_EX_ERROR_NONE Success
@@ -161,10 +161,10 @@ typedef struct {
  * @see #NOTI_EX_RECEIVER_GROUP_LOCKSCREEN
  * @see #NOTI_EX_RECEIVER_GROUP_INDICATOR
  * @see #NOTI_EX_RECEIVER_GROUP_POPUP
- * @see #noti_ex_manager_destroy()
+ * @see noti_ex_manager_destroy()
  * @par Sample code:
  * @code
-#include <notification_ex_manager.h>
+#include <notification_ex.h>
 
 void _manager_events_add_cb(noti_ex_manager_h handle, noti_ex_event_info_h info,
 		noti_ex_item_h *added_item, int cnt, void *user_data) {
@@ -209,7 +209,7 @@ int noti_ex_manager_create(noti_ex_manager_h *handle,
  * @see #noti_ex_item_h
  * @par Sample code:
  * @code
-#include <notification_ex_manager.h>
+#include <notification_ex.h>
 
 void _manager_events_error_cb(noti_ex_manager_h handle, noti_ex_error_e error,
 		int req_id, void *user_data) {
@@ -245,10 +245,10 @@ int noti_ex_manager_destroy(noti_ex_manager_h handle);
  * @retval #NOTI_EX_ERROR_IO_ERROR IO error
  * @see #noti_ex_item_h
  * @see #noti_ex_manager_h
- * @see #noti_ex_item_destroy()
+ * @see noti_ex_item_destroy()
  * @par Sample code:
  * @code
-#include <notification_ex_manager.h>
+#include <notification_ex.h>
 
 void _manager_events_error_cb(noti_ex_manager_h handle, noti_ex_error_e error,
 		int req_id, void *user_data) {
@@ -292,7 +292,7 @@ int noti_ex_manager_get(noti_ex_manager_h handle,
  * @see #noti_ex_manager_h
  * @par Sample code:
  * @code
-#include <notification_ex_manager.h>
+#include <notification_ex.h>
 
 void _manager_events_error_cb(noti_ex_manager_h handle, noti_ex_error_e error,
 		int req_id, void *user_data) {
@@ -339,7 +339,7 @@ int noti_ex_manager_update(noti_ex_manager_h handle, noti_ex_item_h item,
  * @see #noti_ex_error_e
  * @par Sample code:
  * @code
-#include <notification_ex_manager.h>
+#include <notification_ex.h>
 
 void _manager_events_error_cb(noti_ex_manager_h handle, noti_ex_error_e error,
 		int req_id, void *user_data) {
@@ -383,7 +383,7 @@ int noti_ex_manager_delete(noti_ex_manager_h handle, noti_ex_item_h noti,
  * @see #noti_ex_error_e
  * @par Sample code:
  * @code
-#include <notification_ex_manager.h>
+#include <notification_ex.h>
 
 void _manager_events_error_cb(noti_ex_manager_h handle, noti_ex_error_e error,
 		int req_id, void *user_data) {
@@ -424,7 +424,7 @@ int noti_ex_manager_delete_all(noti_ex_manager_h handle,
  * @see #noti_ex_manager_h
  * @par Sample code:
  * @code
-#include <notification_ex_manager.h>
+#include <notification_ex.h>
 
 void _manager_events_error_cb(noti_ex_manager_h handle, noti_ex_error_e error,
 		int req_id, void *user_data) {
@@ -468,10 +468,10 @@ int noti_ex_manager_hide(noti_ex_manager_h handle, noti_ex_item_h item,
  * @retval #NOTI_EX_ERROR_IO_ERROR IO error
  * @see #noti_ex_manager_h
  * @see #noti_ex_item_h
- * @see #noti_ex_item_destroy()
+ * @see noti_ex_item_destroy()
  * @par Sample code:
  * @code
-#include <notification_ex_manager.h>
+#include <notification_ex.h>
 
 void _manager_events_error_cb(noti_ex_manager_h handle, noti_ex_error_e error,
 		int req_id, void *user_data) {
@@ -510,7 +510,7 @@ int noti_ex_manager_find_by_root_id(noti_ex_manager_h handle,
  * @see #noti_ex_error_e
  * @par Sample code:
  * @code
-#include <notification_ex_manager.h>
+#include <notification_ex.h>
 
 void _manager_events_add_cb(noti_ex_manager_h handle, noti_ex_event_info_h info,
 		noti_ex_item_h *added_item, int cnt, void *user_data) {
@@ -565,7 +565,7 @@ int noti_ex_manager_send_error(noti_ex_manager_h handle,
  * @see #NOTI_EX_RECEIVER_GROUP_POPUP
  * @par Sample code:
  * @code
-#include <notification_ex_manager.h>
+#include <notification_ex.h>
 
 void _manager_events_error_cb(noti_ex_manager_h handle, noti_ex_error_e error,
 		int req_id, void *user_data) {

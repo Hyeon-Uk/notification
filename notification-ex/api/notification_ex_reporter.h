@@ -39,7 +39,7 @@ typedef void* noti_ex_reporter_h;
 /**
  * @brief Called when the error event is received.
  * @details The errors are passed from noti_ex_manager_send_error().
- *          If this callback is set to NULL in #event_callbacks, error events cannot be received.
+ *          If this callback is set to NULL in @a event_callbacks, error events cannot be received.
  * @since_tizen 5.5
  * @param[in] handle The reporter handle \n
  *            The @a handle is the same handle for which the callback was set
@@ -54,7 +54,7 @@ typedef void (*noti_ex_reporter_events_error_cb)(noti_ex_reporter_h handle,
 
 /**
  * @brief Called when the notification event is received.
- * @details If this callback is set to NULL in #event_callbacks, notification events cannot be received.
+ * @details If this callback is set to NULL in @a event_callbacks, notification events cannot be received.
  * @since_tizen 5.5
  * @param[in] handle The reporter handle \n
  *            The @a handle is the same handle for which the callback was set
@@ -68,8 +68,8 @@ typedef void (*noti_ex_reporter_events_error_cb)(noti_ex_reporter_h handle,
  * @see #noti_ex_reporter_h
  * @see #noti_ex_event_info_h
  * @see #noti_ex_item_h
- * @see #noti_ex_event_info_clone
- * @see #noti_ex_item_destroy()
+ * @see noti_ex_event_info_clone()
+ * @see noti_ex_item_destroy()
  */
 typedef void (*noti_ex_reporter_events_event_cb)(noti_ex_reporter_h handle,
 		noti_ex_event_info_h info, noti_ex_item_h *items, int count,
@@ -97,7 +97,7 @@ typedef struct {
  * @privilege %http://tizen.org/privilege/notification
  * @remarks @a handle must be released using noti_ex_reporter_destroy().
  * @param[out] handle The notification reporter handle
- * @param[in] event_callbacks The callbacks for notification_ex events
+ * @param[in] event_callbacks The callbacks for notification events
  * @param[in] user_data The user data for @a event_callbacks
  * @return #NOTI_EX_ERROR_NONE On success, other value on failure
  * @retval #NOTI_EX_ERROR_NONE Success
@@ -106,10 +106,10 @@ typedef struct {
  * @retval #NOTI_EX_ERROR_OUT_OF_MEMORY Out of memory
  * @see #noti_ex_item_h
  * @see #noti_ex_reporter_events_s
- * @see #noti_ex_reporter_destroy()
+ * @see noti_ex_reporter_destroy()
  * @par Sample code:
  * @code
-#include <notification_ex_reporter.h>
+#include <notification_ex.h>
 
 void _reporter_events_event_cb(noti_ex_reporter_h handle, noti_ex_event_info_h info,
 		noti_ex_item_h *items, int cnt, void *user_data) {
@@ -140,10 +140,10 @@ int noti_ex_reporter_create(noti_ex_reporter_h *handle,
  * @return #NOTI_EX_ERROR_NONE On success, other value on failure
  * @retval #NOTI_EX_ERROR_NONE Success
  * @retval #NOTI_EX_ERROR_INVALID_PARAMETER Invalid parameter
- * @see #noti_ex_reporter_create
+ * @see noti_ex_reporter_create()
  * @par Sample code:
  * @code
-#include <notification_ex_reporter.h>
+#include <notification_ex.h>
 
 void _reporter_events_error_cb(noti_ex_reporter_h handle, noti_ex_error_e error,
 		int req_id, void *user_data) {
@@ -180,7 +180,7 @@ int noti_ex_reporter_destroy(noti_ex_reporter_h handle);
  * @see #noti_ex_error_e
  * @par Sample code:
  * @code
-#include <notification_ex_reporter.h>
+#include <notification_ex.h>
 
 void _reporter_events_event_cb(noti_ex_reporter_h handle, noti_ex_event_info_h info,
 		noti_ex_item_h *items, int cnt, void *user_data) {
@@ -220,10 +220,10 @@ int noti_ex_reporter_send_error(noti_ex_reporter_h handle,
  * @retval #NOTI_EX_ERROR_INVALID_PARAMETER Invalid parameter
  * @retval #NOTI_EX_ERROR_PERMISSION_DENIED Permission deny
  * @retval #NOTI_EX_ERROR_IO_ERROR IO error
- * @see #noti_ex_reporter_create
+ * @see noti_ex_reporter_create()
  * @par Sample code:
  * @code
-#include <notification_ex_reporter.h>
+#include <notification_ex.h>
 
 void _reporter_events_error_cb(noti_ex_reporter_h handle, noti_ex_error_e error,
 		int req_id, void *user_data) {
@@ -263,10 +263,10 @@ int noti_ex_reporter_post(noti_ex_reporter_h handle, noti_ex_item_h noti,
  * @retval #NOTI_EX_ERROR_INVALID_PARAMETER Invalid parameter
  * @retval #NOTI_EX_ERROR_PERMISSION_DENIED Permission deny
  * @retval #NOTI_EX_ERROR_IO_ERROR IO error
- * @see #noti_ex_reporter_create
+ * @see noti_ex_reporter_create()
  * @par Sample code:
  * @code
-#include <notification_ex_reporter.h>
+#include <notification_ex.h>
 
 void _reporter_events_error_cb(noti_ex_reporter_h handle, noti_ex_error_e error,
 		int req_id, void *user_data) {
@@ -311,10 +311,10 @@ int noti_ex_reporter_post_list(noti_ex_reporter_h handle, noti_ex_item_h *noti_l
  * @retval #NOTI_EX_ERROR_INVALID_PARAMETER Invalid parameter
  * @retval #NOTI_EX_ERROR_PERMISSION_DENIED Permission deny
  * @retval #NOTI_EX_ERROR_IO_ERROR IO error
- * @see #noti_ex_reporter_create
+ * @see noti_ex_reporter_create()
  * @par Sample code:
  * @code
-#include <notification_ex_reporter.h>
+#include <notification_ex.h>
 
 void _reporter_events_error_cb(noti_ex_reporter_h handle, noti_ex_error_e error,
 		int req_id, void *user_data) {
@@ -352,10 +352,10 @@ int noti_ex_reporter_update(noti_ex_reporter_h handle, noti_ex_item_h noti,
  * @retval #NOTI_EX_ERROR_INVALID_PARAMETER Invalid parameter
  * @retval #NOTI_EX_ERROR_PERMISSION_DENIED Permission deny
  * @retval #NOTI_EX_ERROR_IO_ERROR IO error
- * @see #noti_ex_reporter_create
+ * @see noti_ex_reporter_create()
  * @par Sample code:
  * @code
-#include <notification_ex_reporter.h>
+#include <notification_ex.h>
 
 void _reporter_events_error_cb(noti_ex_reporter_h handle, noti_ex_error_e error,
 		int req_id, void *user_data) {
@@ -391,10 +391,10 @@ int noti_ex_reporter_delete(noti_ex_reporter_h handle, noti_ex_item_h noti,
  * @retval #NOTI_EX_ERROR_INVALID_PARAMETER Invalid parameter
  * @retval #NOTI_EX_ERROR_PERMISSION_DENIED Permission deny
  * @retval #NOTI_EX_ERROR_IO_ERROR IO error
- * @see #noti_ex_reporter_create
+ * @see noti_ex_reporter_create()
  * @par Sample code:
  * @code
-#include <notification_ex_reporter.h>
+#include <notification_ex.h>
 
 void _reporter_events_error_cb(noti_ex_reporter_h handle, noti_ex_error_e error,
 		int req_id, void *user_data) {
@@ -431,11 +431,11 @@ int noti_ex_reporter_delete_all(noti_ex_reporter_h handle,
  * @retval #NOTI_EX_ERROR_INVALID_PARAMETER Invalid parameter
  * @retval #NOTI_EX_ERROR_PERMISSION_DENIED Permission deny
  * @retval #NOTI_EX_ERROR_IO_ERROR IO error
- * @see #noti_ex_reporter_create
- * @see #noti_ex_item_destroy()
+ * @see noti_ex_reporter_create()
+ * @see noti_ex_item_destroy()
  * @par Sample code:
  * @code
-#include <notification_ex_reporter.h>
+#include <notification_ex.h>
 
 void _reporter_events_error_cb(noti_ex_reporter_h handle, noti_ex_error_e error,
 		int req_id, void *user_data) {

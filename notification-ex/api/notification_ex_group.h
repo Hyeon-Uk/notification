@@ -43,10 +43,10 @@ extern "C" {
  * @retval #NOTI_EX_ERROR_INVALID_PARAMETER Invalid parameter
  * @retval #NOTI_EX_ERROR_OUT_OF_MEMORY out of memory
  * @see #noti_ex_item_h
- * @see #noti_ex_item_destroy()
+ * @see noti_ex_item_destroy()
  * @par Sample code:
  * @code
-#include <notification_ex_group.h>
+#include <notification_ex.h>
 
 {
 	int ret;
@@ -69,11 +69,11 @@ int noti_ex_item_group_create(noti_ex_item_h *handle, const char *id);
  * @retval #NOTI_EX_ERROR_NONE Success
  * @retval #NOTI_EX_ERROR_INVALID_PARAMETER Invalid parameter
  * @see #noti_ex_item_h
- * @see #noti_ex_item_group_create()
- * @see #noti_ex_item_group_is_vertical().
+ * @see noti_ex_item_group_create()
+ * @see noti_ex_item_group_is_vertical().
  * @par Sample code:
  * @code
-#include <notification_ex_group.h>
+#include <notification_ex.h>
 
 {
 	int ret;
@@ -93,11 +93,11 @@ int noti_ex_item_group_set_direction(noti_ex_item_h handle, bool vertical);
  * @retval #NOTI_EX_ERROR_NONE Success
  * @retval #NOTI_EX_ERROR_INVALID_PARAMETER Invalid parameter, if the item type is not correct, this error is returned
  * @see #noti_ex_item_h
- * @see #noti_ex_item_group_create()
- * @see #noti_ex_item_group_set_direction()
+ * @see noti_ex_item_group_create()
+ * @see noti_ex_item_group_set_direction()
  * @par Sample code:
  * @code
-#include <notification_ex_group.h>
+#include <notification_ex.h>
 
 {
 	int ret;
@@ -119,10 +119,10 @@ int noti_ex_item_group_is_vertical(noti_ex_item_h handle, bool *vertical);
  * @retval #NOTI_EX_ERROR_NONE Success
  * @retval #NOTI_EX_ERROR_INVALID_PARAMETER Invalid parameter, if the item type is not correct, this error is returned
  * @see #noti_ex_item_h
- * @see #noti_ex_item_group_create()
+ * @see noti_ex_item_group_create()
  * @par Sample code:
  * @code
-#include <notification_ex_group.h>
+#include <notification_ex.h>
 
 {
 	int ret;
@@ -144,10 +144,10 @@ int noti_ex_item_group_get_app_label(noti_ex_item_h handle, char **label);
  * @retval #NOTI_EX_ERROR_NONE Success
  * @retval #NOTI_EX_ERROR_INVALID_PARAMETER Invalid parameter
  * @see #noti_ex_item_h
- * @see #noti_ex_item_group_create()
+ * @see noti_ex_item_group_create()
  * @par Sample code:
  * @code
-#include <notification_ex_group.h>
+#include <notification_ex.h>
 
 {
 	int ret;
@@ -171,10 +171,10 @@ int noti_ex_item_group_add_child(noti_ex_item_h handle, noti_ex_item_h child);
  * @retval #NOTI_EX_ERROR_NONE Success
  * @retval #NOTI_EX_ERROR_INVALID_PARAMETER Invalid parameter
  * @see #noti_ex_item_h
- * @see #noti_ex_item_group_create()
+ * @see noti_ex_item_group_create()
  * @par Sample code:
  * @code
-#include <notification_ex_group.h>
+#include <notification_ex.h>
 
 {
 	int ret;
@@ -196,13 +196,13 @@ int noti_ex_item_group_remove_child(noti_ex_item_h handle, const char *item_id);
  * @return #NOTI_EX_ERROR_NONE On success, other value on failure
  * @retval #NOTI_EX_ERROR_NONE Success
  * @see #noti_ex_item_h
- * @see #noti_ex_item_group_foreach()
+ * @see noti_ex_item_group_foreach_child()
  */
 typedef int (*noti_ex_item_group_foreach_child_cb)(noti_ex_item_h handle, void *user_data);
 
 /**
  * @brief Gets the data of children from the group item.
- * @details The noti_ex_item_group_foreach_cb() is called for each child of the group item.
+ * @details The noti_ex_item_group_foreach_child_cb() is called for each child of the group item.
  * @since_tizen 5.5
  * @param[in] handle The notification_ex item handle
  * @param[in] callback The callback function to get the children data
@@ -211,10 +211,10 @@ typedef int (*noti_ex_item_group_foreach_child_cb)(noti_ex_item_h handle, void *
  * @retval #NOTI_EX_ERROR_NONE Success
  * @retval #NOTI_EX_ERROR_INVALID_PARAMETER Invalid parameter
  * @see #noti_ex_item_h
- * @see #noti_ex_item_group_foreach_cb()
+ * @see noti_ex_item_group_foreach_child_cb()
  * @par Sample code:
  * @code
-#include <notification_ex_group.h>
+#include <notification_ex.h>
 
 int _ex_item_group_foreach_child_cb(noti_ex_item_h handle, void *user_data) {
 	return 0;
@@ -229,7 +229,7 @@ int _ex_item_group_foreach_child_cb(noti_ex_item_h handle, void *user_data) {
 	ret = noti_ex_item_button_create(&child_item, "button_id", "button_title");
 	ret = noti_ex_item_group_add_child(group_item, child_item);
 
-	ret = noti_ex_item_group_foreach(group_item, _ex_item_group_foreach_child_cb, NULL);
+	ret = noti_ex_item_group_foreach_child(group_item, _ex_item_group_foreach_child_cb, NULL);
 }
  * @endcode
  */

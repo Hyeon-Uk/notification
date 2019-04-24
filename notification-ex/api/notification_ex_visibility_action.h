@@ -31,7 +31,7 @@ extern "C" {
 
 /**
  * @brief Creates the notification_ex action handle to control visibility.
- * @details The notification_ex can define the action with noti_ex_action_h.
+ * @details The notification_ex can define the action with #noti_ex_action_h.
  *          If it is necessary to control visibility of the notification_ex item,
  *          the notification_ex action handle has to be created as a visibility action.
  *          @a extra can be used to pass user defined data
@@ -45,11 +45,11 @@ extern "C" {
  * @retval #NOTI_EX_ERROR_INVALID_PARAMETER Invalid parameter
  * @retval #NOTI_EX_ERROR_OUT_OF_MEMORY out of memory
  * @see #noti_ex_action_h
- * @see #noti_ex_action_destroy()
- * @see #noti_ex_action_get_extra()
+ * @see noti_ex_action_destroy()
+ * @see noti_ex_action_get_extra()
  * @par Sample code:
  * @code
-#include <notification_ex_visibility_action.h>
+#include <notification_ex.h>
 
 {
 	int ret;
@@ -71,10 +71,10 @@ int noti_ex_action_visibility_create(noti_ex_action_h *handle, const char *extra
  * @retval #NOTI_EX_ERROR_NONE Success
  * @retval #NOTI_EX_ERROR_INVALID_PARAMETER Invalid parameter
  * @see #noti_ex_action_h
- * @see #noti_ex_action_visibility_create()
+ * @see noti_ex_action_visibility_create()
  * @par Sample code:
  * @code
-#include <notification_ex_visibility_action.h>
+#include <notification_ex.h>
 
 {
 	int ret;

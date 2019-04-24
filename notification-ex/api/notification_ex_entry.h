@@ -43,10 +43,10 @@ extern "C" {
  * @retval #NOTI_EX_ERROR_INVALID_PARAMETER Invalid parameter
  * @retval #NOTI_EX_ERROR_OUT_OF_MEMORY out of memory
  * @see #noti_ex_item_h
- * @see #noti_ex_item_destroy()
+ * @see noti_ex_item_destroy()
  * @par Sample code:
  * @code
-#include <notification_ex_entry.h>
+#include <notification_ex.h>
 
 {
 	int ret;
@@ -68,10 +68,10 @@ int noti_ex_item_entry_create(noti_ex_item_h *handle, const char *id);
  * @retval #NOTI_EX_ERROR_NONE Success
  * @retval #NOTI_EX_ERROR_INVALID_PARAMETER Invalid parameter, if the item type is not correct, this error is returned
  * @see #noti_ex_item_h
- * @see #noti_ex_item_entry_create()
+ * @see noti_ex_item_entry_create()
  * @par Sample code:
  * @code
-#include <notification_ex_entry.h>
+#include <notification_ex.h>
 
 {
 	int ret;
@@ -92,10 +92,10 @@ int noti_ex_item_entry_get_text(noti_ex_item_h handle, char **text);
  * @retval #NOTI_EX_ERROR_NONE Success
  * @retval #NOTI_EX_ERROR_INVALID_PARAMETER Invalid parameter
  * @see #noti_ex_item_h
- * @see #noti_ex_item_entry_create()
+ * @see noti_ex_item_entry_create()
  * @par Sample code:
  * @code
-#include <notification_ex_entry.h>
+#include <notification_ex.h>
 
 {
 	int ret;
