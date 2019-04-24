@@ -281,7 +281,13 @@ extern "C" EXPORT_API int noti_ex_action_app_control_create(
     return NOTI_EX_ERROR_INVALID_PARAMETER;
   }
 
-  auto* p = new (std::nothrow) AppControlAction(app_control, extra);
+  AppControlAction* p;
+
+  if (extra)
+    p = new (std::nothrow) AppControlAction(app_control, extra);
+  else
+    p = new (std::nothrow) AppControlAction(app_control);
+
   if (p == nullptr) {
     LOGE("Out-of-memory");
     return NOTI_EX_ERROR_OUT_OF_MEMORY;
@@ -2399,14 +2405,20 @@ extern "C" EXPORT_API int noti_ex_reporter_find_by_root_id(
 }
 
 extern "C" EXPORT_API int noti_ex_item_text_create(noti_ex_item_h *handle,
-    const char *id, const char *text, const char *hyper_link) {
+    const char *id, const char *text, const char *hyperlink) {
   if (handle == nullptr) {
     LOGE("Invalid parameter");
     return NOTI_EX_ERROR_INVALID_PARAMETER;
   }
 
-  auto* p = new (std::nothrow) TextItem(id, std::string(text),
-                std::string(hyper_link));
+  TextItem* p;
+
+  if (hyperlink)
+    p = new (std::nothrow) TextItem(id, std::string(text),
+                std::string(hyperlink));
+  else
+    p = new (std::nothrow) TextItem(id, std::string(text));
+
   if (p == nullptr) {
     LOGE("Out-of-memory");
     return NOTI_EX_ERROR_OUT_OF_MEMORY;
