@@ -24,6 +24,11 @@ extern "C" {
 #endif
 
 /**
+ * @addtogroup NOTIFICATION_EX_MODULE
+ * @{
+ */
+
+/**
  * @brief Creates the notification_ex item handle with progress.
  * @details The notification_ex item is the predefined type of notifications.
  *          The notification can be created with one item or group of items.
@@ -150,6 +155,10 @@ int noti_ex_item_progress_get_min(noti_ex_item_h handle, float *min);
  * @endcode
  */
 int noti_ex_item_progress_get_max(noti_ex_item_h handle, float *max);
+
+/**
+ * @}
+ */
 
 #ifdef __cplusplus
 }

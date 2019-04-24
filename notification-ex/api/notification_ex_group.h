@@ -24,6 +24,11 @@ extern "C" {
 #endif
 
 /**
+ * @addtogroup NOTIFICATION_EX_MODULE
+ * @{
+ */
+
+/**
  * @brief Creates the group of notification_ex items.
  * @details The notification_ex item is the predefined type of notifications.
  *          The notification can be created with one item or group of items.
@@ -230,6 +235,10 @@ int _ex_item_group_foreach_child_cb(noti_ex_item_h handle, void *user_data) {
  */
 int noti_ex_item_group_foreach_child(noti_ex_item_h handle,
 		noti_ex_item_group_foreach_child_cb callback, void *user_data);
+
+/**
+ * @}
+ */
 
 #ifdef __cplusplus
 }

@@ -26,6 +26,11 @@ extern "C" {
 #endif
 
 /**
+ * @addtogroup NOTIFICATION_EX_MODULE
+ * @{
+ */
+
+/**
  * @brief The notification_ex manager handle.
  * @since_tizen 5.5
  */
@@ -579,6 +584,10 @@ void _manager_events_error_cb(noti_ex_manager_h handle, noti_ex_error_e error,
  * @endcode
  */
 int noti_ex_manager_get_notification_count(noti_ex_manager_h handle, int *cnt);
+
+/**
+ * @}
+ */
 
 #ifdef __cplusplus
 }

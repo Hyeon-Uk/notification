@@ -22,6 +22,11 @@ extern "C" {
 #endif
 
 /**
+ * @addtogroup NOTIFICATION_EX_MODULE
+ * @{
+ */
+
+/**
  * @brief Enumeration for the type of notification_ex event.
  * @since_tizen 5.5
  */
@@ -217,6 +222,10 @@ int noti_ex_event_info_get_item_id(noti_ex_event_info_h handle, char **item_id);
  * @endcode
  */
 int noti_ex_event_info_get_request_id(noti_ex_event_info_h handle, int *req_id);
+
+/**
+ * @}
+ */
 
 #ifdef __cplusplus
 }

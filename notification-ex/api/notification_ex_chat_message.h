@@ -24,6 +24,11 @@ extern "C" {
 #endif
 
 /**
+ * @addtogroup NOTIFICATION_EX_MODULE
+ * @{
+ */
+
+/**
  * @brief Enumeration for notification_ex chat message type.
  * @since_tizen 5.5
  */
@@ -231,6 +236,10 @@ int noti_ex_item_chat_message_get_time(noti_ex_item_h handle, noti_ex_item_h *ti
  * @endcode
  */
 int noti_ex_item_chat_message_get_message_type(noti_ex_item_h handle, noti_ex_item_chat_message_type_e *message_type);
+
+/**
+ * @}
+ */
 
 #ifdef __cplusplus
 }

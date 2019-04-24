@@ -24,6 +24,11 @@ extern "C" {
 #endif
 
 /**
+ * @addtogroup NOTIFICATION_EX_MODULE
+ * @{
+ */
+
+/**
  * @brief Creates the notification_ex item handle with input selector.
  * @details The notification_ex item is the predefined type of notifications.
  *          The notification can be created with one item or group of items.
@@ -106,6 +111,10 @@ int noti_ex_item_input_selector_get_contents(noti_ex_item_h handle, char ***list
  * @endcode
  */
 int noti_ex_item_input_selector_set_contents(noti_ex_item_h handle, const char **contents, int count);
+
+/**
+ * @}
+ */
 
 #ifdef __cplusplus
 }

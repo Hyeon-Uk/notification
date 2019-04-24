@@ -26,6 +26,11 @@ extern "C" {
 #endif
 
 /**
+ * @addtogroup NOTIFICATION_EX_MODULE
+ * @{
+ */
+
+/**
  * @brief The notification_ex reporter handle.
  * @since_tizen 5.5
  */
@@ -453,6 +458,10 @@ void _reporter_events_error_cb(noti_ex_reporter_h handle, noti_ex_error_e error,
  */
 int noti_ex_reporter_find_by_root_id(noti_ex_reporter_h handle, const char *root_id,
 		noti_ex_item_h *item);
+
+/**
+ * @}
+ */
 
 #ifdef __cplusplus
 }

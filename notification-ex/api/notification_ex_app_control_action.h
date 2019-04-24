@@ -25,6 +25,11 @@ extern "C" {
 #endif
 
 /**
+ * @addtogroup NOTIFICATION_EX_MODULE
+ * @{
+ */
+
+/**
  * @brief Creates the notification_ex action handle with app control handle.
  * @details The notification_ex can define the action with noti_ex_action_h.
  *          If it is necessary to use app control handle for an action,
@@ -115,6 +120,10 @@ int noti_ex_action_app_control_set(noti_ex_action_h handle, app_control_h app_co
  * @endcode
  */
 int noti_ex_action_app_control_get(noti_ex_action_h handle, app_control_h *app_control);
+
+/**
+ * @}
+ */
 
 #ifdef __cplusplus
 }

@@ -24,6 +24,11 @@ extern "C" {
 #endif
 
 /**
+ * @addtogroup NOTIFICATION_EX_MODULE
+ * @{
+ */
+
+/**
  * @brief Creates the notification_ex item handle with an image.
  * @details The notification_ex item is the predefined type of notifications.
  *          The notification can be created with one item or group of items.
@@ -83,6 +88,10 @@ int noti_ex_item_image_create(noti_ex_item_h *handle, const char *id, const char
  * @endcode
  */
 int noti_ex_item_image_get_image_path(noti_ex_item_h handle, char **image_path);
+
+/**
+ * @}
+ */
 
 #ifdef __cplusplus
 }

@@ -24,6 +24,11 @@ extern "C" {
 #endif
 
 /**
+ * @addtogroup NOTIFICATION_EX_MODULE
+ * @{
+ */
+
+/**
  * @brief Creates the notification_ex item handle with checkbox.
  * @details The notification_ex item is the predefined type of notifications.
  *          The notification can be created with one item or group of items.
@@ -103,6 +108,10 @@ int noti_ex_item_checkbox_get_title(noti_ex_item_h handle, char **title);
  * @endcode
  */
 int noti_ex_item_checkbox_is_checked(noti_ex_item_h handle, bool *checked);
+
+/**
+ * @}
+ */
 
 #ifdef __cplusplus
 }

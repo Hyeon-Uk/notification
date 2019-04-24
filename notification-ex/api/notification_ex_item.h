@@ -25,6 +25,11 @@ extern "C" {
 #endif
 
 /**
+ * @addtogroup NOTIFICATION_EX_MODULE
+ * @{
+ */
+
+/**
  * @brief Predefined receiver group for the Ticker.
  * @since_tizen 5.5
  */
@@ -1910,6 +1915,10 @@ int noti_ex_item_get_tag(noti_ex_item_h handle, char **tag);
  * @endcode
  */
 int noti_ex_item_set_tag(noti_ex_item_h handle, const char *tag);
+
+/**
+ * @}
+ */
 
 #ifdef __cplusplus
 }
