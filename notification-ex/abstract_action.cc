@@ -61,7 +61,7 @@ Bundle AbstractAction::Serialize() const {
   b.Add(ABSTRACT_ACTION_TYPE_KEY, std::to_string(GetType()));
   b.Add(ABSTRACT_ACTION_IS_LOCAL_KEY, std::to_string(impl_->isLocal_));
   if (!impl_->extra_.empty())
-    b.Add(ABSTRACT_ACTION_EXTRA_KEY ,impl_->extra_);
+    b.Add(ABSTRACT_ACTION_EXTRA_KEY, impl_->extra_);
   return b;
 }
 

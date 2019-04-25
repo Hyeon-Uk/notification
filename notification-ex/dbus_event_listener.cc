@@ -18,6 +18,9 @@
 #include <glib.h>
 #include <unistd.h>
 
+#include <string>
+#include <list>
+
 #include "notification-ex/dbus_connection_manager.h"
 #include "notification-ex/dbus_event_listener.h"
 #include "notification-ex/dbus_event_listener_implementation.h"

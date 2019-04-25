@@ -17,6 +17,8 @@
 #include <dlog.h>
 #include <app_control_internal.h>
 
+#include <string>
+
 #include "notification-ex/app_control_action.h"
 #include "notification-ex/app_control_action_implementation.h"
 #include "notification-ex/exception.h"
@@ -143,5 +145,5 @@ app_control_h AppControlAction::GetAppControl() const {
   return impl_->control_;
 }
 
-}  //namespace item
-}  //namespace notification
+}  // namespace item
+}  // namespace notification

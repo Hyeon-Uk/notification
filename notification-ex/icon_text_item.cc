@@ -91,4 +91,4 @@ IconTextItem::~IconTextItem() = default;
 IconTextItem::Impl::~Impl() = default;
 
 }  // namespace item
-}  // namespace notification_ex
+}  // namespace notification

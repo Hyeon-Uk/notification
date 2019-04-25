@@ -14,6 +14,9 @@
  * limitations under the License.
  */
 
+#include <string>
+#include <list>
+
 #include "notification-ex/abstract_item.h"
 #include "notification-ex/visibility_action.h"
 #include "notification-ex/visibility_action_implementation.h"
@@ -124,5 +127,5 @@ void VisibilityAction::SetVisibility(std::string id, bool visible) {
       id, visible));
 }
 
-}  //namespace item
-}  //namespace notification
+}  // namespace item
+}  // namespace notification

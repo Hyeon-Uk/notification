@@ -98,7 +98,7 @@ int Manager::GetCount() const {
 }
 
 int Manager::Hide(shared_ptr<item::AbstractItem> noti) {
-  ((IItemInfoInternal*)noti->GetInfo().get())->AddHideViewer(util::GetAppId());
+  (reinterpret_cast<IItemInfoInternal*>(noti->GetInfo().get()))->AddHideViewer(util::GetAppId());
   return impl_->SendNotify(noti, EventInfo::Update);
 }
 
@@ -156,7 +156,7 @@ void Manager::OnEvent(const IEventInfo& info, list<Bundle> serialized) {
     return;
   }
 
-  switch(type) {
+  switch (type) {
     case EventInfo::Post: {
       list<shared_ptr<item::AbstractItem>> added;
       for (auto& i : serialized) {

@@ -70,10 +70,11 @@ using namespace notification::item;
 using namespace notification;
 
 namespace {
+
 class Handle {
  public:
-  Handle(item::AbstractItem* ref) : ref_(ref) { }
-  Handle(std::shared_ptr<item::AbstractItem> ptr)
+  explicit Handle(item::AbstractItem* ref) : ref_(ref) { }
+  explicit Handle(std::shared_ptr<item::AbstractItem> ptr)
       : ref_(nullptr), ptr_(move(ptr)) { }
   virtual ~Handle() = default;
   item::AbstractItem* Get() const {
@@ -96,7 +97,6 @@ class Handle {
  private:
   item::AbstractItem* ref_;
   std::shared_ptr<item::AbstractItem> ptr_;
-
 };
 
 class ManagerCallbackInfo {
@@ -111,7 +111,6 @@ class ManagerCallbackInfo {
 
   void InvokeAdded(Manager* manager, const IEventInfo& info,
       list<shared_ptr<AbstractItem>> addedItem) {
-
     noti_ex_item_h* added_item =
         (noti_ex_item_h*)calloc(addedItem.size(), sizeof(noti_ex_item_h));
     if (added_item == nullptr) {
@@ -169,7 +168,6 @@ class ManagerStub : public Manager {
   void OnAdd(const IEventInfo& info,
       list<shared_ptr<AbstractItem>> addedItem) override {
     cb_->InvokeAdded(this, info, addedItem);
-
   }
 
   void OnUpdate(const IEventInfo& info,
@@ -211,7 +209,6 @@ class ReporterCallbackInfo {
 
   void InvokeEvent(Reporter* reporter, const IEventInfo& info,
       list<shared_ptr<AbstractItem>> notiList) {
-
     noti_ex_item_h* noti_list =
         (noti_ex_item_h*)calloc(notiList.size(), sizeof(noti_ex_item_h));
     if (noti_list == nullptr) {
@@ -271,7 +268,8 @@ class ReporterStub : public Reporter {
  private:
   unique_ptr<ReporterCallbackInfo> cb_;
 };
-}
+
+}  // namespace
 
 extern "C" EXPORT_API int noti_ex_action_app_control_create(
     noti_ex_action_h *handle, app_control_h app_control,
@@ -385,7 +383,7 @@ extern "C" EXPORT_API int noti_ex_item_chat_message_create(
           dynamic_pointer_cast<TextItem>(static_cast<Handle*>(text)->GetPtr()),
           dynamic_pointer_cast<ImageItem>(static_cast<Handle*>(image)->GetPtr()),
           dynamic_pointer_cast<TimeItem>(static_cast<Handle*>(time)->GetPtr()),
-          static_cast<ChatMessageItem::Type>((int)message_type));
+          static_cast<ChatMessageItem::Type>(message_type));
   if (p == nullptr) {
     LOGE("Out-of-memory");
     return NOTI_EX_ERROR_OUT_OF_MEMORY;
@@ -1427,7 +1425,7 @@ extern "C" EXPORT_API int noti_ex_action_is_local(noti_ex_action_h handle,
 
 extern "C" EXPORT_API int noti_ex_action_execute(noti_ex_action_h handle,
     noti_ex_item_h item) {
-  if (handle == nullptr || item==nullptr) {
+  if (handle == nullptr || item == nullptr) {
     LOGE("Invalid parameter");
     return NOTI_EX_ERROR_INVALID_PARAMETER;
   }

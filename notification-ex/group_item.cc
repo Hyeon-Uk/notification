@@ -76,7 +76,7 @@ Bundle GroupItem::Serialize() const {
   for (auto& i : impl_->children_list_) {
     Bundle serialized = i.get()->Serialize();
     serialized.Add(
-        GROUP_CHILDREN_TYPE_KEY, to_string((int)i.get()->GetType()));
+        GROUP_CHILDREN_TYPE_KEY, to_string(static_cast<int>(i.get()->GetType())));
     arr.push_back(reinterpret_cast<char*>(serialized.ToRaw().first.get()));
   }
   b.Add(GROUP_CHILDREN_KEY, arr);
@@ -153,14 +153,14 @@ bool GroupItem::IsVertical() {
 }
 
 string GroupItem::GetAppLabel() {
- if (impl_->app_label_.empty()) {
-   char* name;
-   int ret = app_get_name(&name);
-   if (ret != APP_ERROR_NONE)
-     THROW(ERROR_IO_ERROR);
-   impl_->app_label_ = string(name);
- }
- return impl_->app_label_;
+  if (impl_->app_label_.empty()) {
+    char* name;
+    int ret = app_get_name(&name);
+    if (ret != APP_ERROR_NONE)
+      THROW(ERROR_IO_ERROR);
+    impl_->app_label_ = string(name);
+  }
+  return impl_->app_label_;
 }
 
 }  // namespace item

@@ -48,7 +48,7 @@ unique_ptr<AbstractItem> DefaultItemFactory::CreateItem(int type) {
     case AbstractItem::NullObject :
       THROW(ERROR_INVALID_PARAMETER);
     case AbstractItem::Text :
-      return unique_ptr<AbstractItem>(new TextItem("",""));
+      return unique_ptr<AbstractItem>(new TextItem("", ""));
     case AbstractItem::Icon :
       return unique_ptr<AbstractItem>(new IconItem(""));
     case AbstractItem::Image :
