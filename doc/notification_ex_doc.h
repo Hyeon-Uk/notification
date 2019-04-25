@@ -17,11 +17,22 @@
 /**
  * @ingroup CAPI_APPLICATION_FRAMEWORK
  * @defgroup NOTIFICATION_EX_MODULE Notification EX
- * @brief Notification_ex APIs.
+ * @brief Notification EX APIs.
  * @section NOTIFICATION_EX_MODULE_HEADER Required Header
  *   \#include <notification_ex.h>
  *
  * @section NOTIFICATION_EX_MODULE_OVERVIEW Overview
  * A notification ex API is an expanded API of notification.
- * This API provides functions for creating, inserting and updating notification.
+ * This API provides functions for creating, inserting and updating notification with notification ex items.
+ */
+
+/**
+ * @ingroup NOTIFICATION_EX_MODULE
+ * @defgroup NOTIFICATION_EX_ITEM Notification EX Item
+ * @brief Notification EX Item APIs.
+ * @section NOTIFICATION_EX_ITEM_MODULE_HEADER Required Header
+ *   \#include <notification_ex.h>
+ *
+ * @section NOTIFICATION_EX_ITEM_MODULE_OVERVIEW Overview
+ * It provides functions for handling notification ex items.
  */
