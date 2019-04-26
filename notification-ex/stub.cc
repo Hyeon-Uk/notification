@@ -111,6 +111,8 @@ class ManagerCallbackInfo {
 
   void InvokeAdded(Manager* manager, const IEventInfo& info,
       list<shared_ptr<AbstractItem>> addedItem) {
+    if (cb_.added == nullptr)
+      return;
     noti_ex_item_h* added_item =
         (noti_ex_item_h*)calloc(addedItem.size(), sizeof(noti_ex_item_h));
     if (added_item == nullptr) {
@@ -133,6 +135,8 @@ class ManagerCallbackInfo {
 
   void InvokeUpdated(Manager* manager, const IEventInfo& info,
       shared_ptr<item::AbstractItem> updatedItem) {
+    if (cb_.updated == nullptr)
+      return;
     IEventInfo* c_info = const_cast<IEventInfo*>(&info);
     cb_.updated(static_cast<noti_ex_manager_h>(manager),
         static_cast<noti_ex_event_info_h>(c_info),
@@ -141,6 +145,8 @@ class ManagerCallbackInfo {
 
   void InvokeDeleted(Manager* manager, const IEventInfo& info,
       shared_ptr<item::AbstractItem> deletedItem) {
+    if (cb_.deleted == nullptr)
+      return;
     IEventInfo* c_info = const_cast<IEventInfo*>(&info);
     cb_.deleted(static_cast<noti_ex_manager_h>(manager),
         static_cast<noti_ex_event_info_h>(c_info),
@@ -149,6 +155,8 @@ class ManagerCallbackInfo {
   }
 
   void InvokeError(Manager* manager, NotificationError error, int requestId) {
+    if (cb_.error == nullptr)
+      return;
     cb_.error(static_cast<noti_ex_manager_h>(manager),
         static_cast<noti_ex_error_e>(error), requestId, user_data_);
   }
@@ -209,6 +217,8 @@ class ReporterCallbackInfo {
 
   void InvokeEvent(Reporter* reporter, const IEventInfo& info,
       list<shared_ptr<AbstractItem>> notiList) {
+    if (cb_.event == nullptr)
+      return;
     noti_ex_item_h* noti_list =
         (noti_ex_item_h*)calloc(notiList.size(), sizeof(noti_ex_item_h));
     if (noti_list == nullptr) {
@@ -230,6 +240,8 @@ class ReporterCallbackInfo {
   }
 
   void InvokeError(Reporter* reporter, NotificationError error, int requestId) {
+    if (cb_.error == nullptr)
+      return;
     cb_.error(static_cast<noti_ex_reporter_h>(reporter),
         static_cast<noti_ex_error_e>(error), requestId, user_data_);
   }
