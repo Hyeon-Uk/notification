@@ -35,6 +35,7 @@ class EXPORT_API IEventListener {
   virtual void UnRegisterObserver(IEventObserver* observer) = 0;
   virtual void NotifyObserver(const IEventInfo& info, std::list<Bundle> serialized) = 0;
   virtual std::list<Bundle> NotifyObserver(const IEventInfo& info) = 0;
+  virtual int NotifyNumberRequest(const IEventInfo& info) = 0;
 };
 
 }  // namespace notification

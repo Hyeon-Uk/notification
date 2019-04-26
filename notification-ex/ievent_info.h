@@ -33,6 +33,8 @@ class EXPORT_API IEventInfo {
     Delete,
     Get,
     Error,
+    Count,
+    DeleteAll,
     Custom = 100
   };
   virtual ~IEventInfo() = default;

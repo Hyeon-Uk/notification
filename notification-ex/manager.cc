@@ -88,13 +88,17 @@ int Manager::Delete(shared_ptr<item::AbstractItem> noti) {
 }
 
 int Manager::DeleteAll() {
-  //TODO
-  return -1;
+  Bundle serialized;
+  EventInfo info(EventInfo::DeleteAll, util::GetAppId(), "");
+  list<Bundle> serialized_list {serialized};
+  impl_->sender_->Notify(info, serialized_list, util::GetAppId());
+  return info.GetRequestId();
 }
 
 int Manager::GetCount() const {
-  //TODO
-  return -1;
+  EventInfo info(EventInfo::Count, util::GetAppId(), "");
+  int num = impl_->sender_->RequestNumber(info);
+  return num;
 }
 
 int Manager::Hide(shared_ptr<item::AbstractItem> noti) {
@@ -145,6 +149,10 @@ list<Bundle> Manager::OnRequest(const IEventInfo& info) {
   return serialized_list;
 }
 
+int Manager::OnRequestNumber(const IEventInfo& info) {
+  return OnRequestNumberEvent(info);
+}
+
 void Manager::OnEvent(const IEventInfo& info, list<Bundle> serialized) {
   shared_ptr<AbstractItem> gen_item;
   int type = info.GetEventType();
@@ -191,6 +199,11 @@ void Manager::OnEvent(const IEventInfo& info, list<Bundle> serialized) {
       break;
     case EventInfo::Error:
       break;
+    case EventInfo::Count:
+      break;
+    case EventInfo::DeleteAll:
+      OnDelete(info, nullptr);
+      break;
     case EventInfo::Custom:
       break;
   }
@@ -213,6 +226,10 @@ void Manager::OnError(NotificationError error, int requestId) {
 
 list<shared_ptr<item::AbstractItem>> Manager::OnRequestEvent(const IEventInfo& info) {
   return list<shared_ptr<item::AbstractItem>>({});
+}
+
+int Manager::OnRequestNumberEvent(const IEventInfo& info) {
+  return 0;
 }
 
 string Manager::GetPath() {

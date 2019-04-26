@@ -97,8 +97,11 @@ int Reporter::Delete(std::shared_ptr<AbstractItem> noti) {
 }
 
 int Reporter::DeleteAll() {
-  //TODO
-  return -1;
+  Bundle serialized;
+  EventInfo info(EventInfo::DeleteAll, util::GetAppId(), "");
+  list<Bundle> serialized_list {serialized};
+  impl_->sender_->Notify(info, serialized_list, util::GetAppId());
+  return info.GetRequestId();
 }
 
 std::unique_ptr<AbstractItem> Reporter::FindByRootID(std::string id) {
@@ -125,12 +128,15 @@ int Reporter::SendEvent(const IEventInfo& info,
 void Reporter::OnEvent(const IEventInfo& info, list<Bundle> serialized) {
   NotificationError error =
       (static_cast<const IEventInfoInternal&>(info)).GetError();
+  list<shared_ptr<item::AbstractItem>> item_list;
   if (info.GetEventType() == EventInfo::Error) {
     OnError(error, info.GetRequestId());
     return;
+  } else if (info.GetEventType() == EventInfo::DeleteAll) {
+    OnEvent(info, item_list);
+    return;
   }
 
-  list<shared_ptr<item::AbstractItem>> item_list;
   for (auto& i : serialized) {
     shared_ptr<AbstractItem> gen_item = ItemInflator::Create(i);
     item_list.emplace_back(gen_item);
@@ -149,6 +155,10 @@ list<Bundle> Reporter::OnRequest(const IEventInfo& info) {
     serialized_list.push_back(i->Serialize());
   }
   return serialized_list;
+}
+
+int Reporter::OnRequestNumber(const IEventInfo& info) {
+  return 0;
 }
 
 void Reporter::OnEvent(

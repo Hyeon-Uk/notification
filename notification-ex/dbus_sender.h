@@ -34,6 +34,7 @@ class EXPORT_API DBusSender : public IEventSender {
   void Notify(const IEventInfo& info, std::list<Bundle> serialized,
       std::string dest_appid = "") override;
   std::list<Bundle> Request(const IEventInfo& info) override;
+  int RequestNumber(const IEventInfo& info) override;
 
  private:
   class Impl;

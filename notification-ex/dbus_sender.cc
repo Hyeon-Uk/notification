@@ -153,4 +153,17 @@ std::list<Bundle> DBusSender::Request(const IEventInfo& info) {
   return ret_list;
 }
 
+int DBusSender::RequestNumber(const IEventInfo& info) {
+  string appid = util::GetAppId();
+  string method_name = EventInfo::GetString(info.GetEventType());
+  Bundle serialized = info.Serialize();
+
+  GDBusMessage* reply = impl_->MethodCall(appid, method_name, serialized);
+  GVariant *reply_body = g_dbus_message_get_body(reply);
+
+  int num;
+  g_variant_get(reply_body, "(i)", &num);
+  return num;
+}
+
 }  // namespace notification

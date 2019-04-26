@@ -48,6 +48,7 @@ class EXPORT_API Manager : public IEventObserver {
   int SendEvent(const IEventInfo& info, std::shared_ptr<item::AbstractItem> noti);
   void OnEvent(const IEventInfo& info, std::list<Bundle> serialized) override;
   std::list<Bundle> OnRequest(const IEventInfo& info) override;
+  int OnRequestNumber(const IEventInfo& info) override;
   void SendError(const IEventInfo& info, NotificationError error);
   int GetCount() const;
   static std::string GetPath();
@@ -59,6 +60,7 @@ class EXPORT_API Manager : public IEventObserver {
   virtual void OnError(NotificationError error, int requestId);
   virtual std::list<std::shared_ptr<item::AbstractItem>> OnRequestEvent(
       const IEventInfo& info);
+  virtual int OnRequestNumberEvent(const IEventInfo& info);
 
  private:
   class Impl;

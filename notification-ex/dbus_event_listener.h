@@ -31,6 +31,7 @@ class EXPORT_API DBusEventListener : public IEventListener {
   void NotifyObserver(
       const IEventInfo& info, std::list<Bundle> serialized) override;
   std::list<Bundle> NotifyObserver(const IEventInfo& info) override;
+  int NotifyNumberRequest(const IEventInfo& info) override;
 
  private:
   class Impl;

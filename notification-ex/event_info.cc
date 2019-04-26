@@ -85,6 +85,10 @@ string EventInfo::GetString(int type) {
       return "Get";
     case Error:
       return "Error";
+    case Count:
+      return "Count";
+    case DeleteAll:
+      return "DeleteAll";
     default:
       return "Custom" + std::to_string(Custom);
   }

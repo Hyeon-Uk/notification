@@ -33,6 +33,7 @@ class EXPORT_API IEventObserver {
   virtual ~IEventObserver() = default;
   virtual void OnEvent(const IEventInfo& info, std::list<Bundle> serialized) = 0;
   virtual std::list<Bundle> OnRequest(const IEventInfo& info) = 0;
+  virtual int OnRequestNumber(const IEventInfo& info) = 0;
 };
 
 }  // namespace notification

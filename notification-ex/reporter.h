@@ -55,6 +55,7 @@ class EXPORT_API Reporter : public IEventObserver {
   virtual void OnError(NotificationError error, int requestId);
   void OnEvent(const IEventInfo& info, std::list<Bundle> serialized) override;
   std::list<Bundle> OnRequest(const IEventInfo& info) override;
+  int OnRequestNumber(const IEventInfo& info) override;
   static std::string GetPath();
 
  private:

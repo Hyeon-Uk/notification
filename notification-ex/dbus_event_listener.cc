@@ -114,6 +114,15 @@ void DBusEventListener::Impl::OnMethodCall(
     }
     reply_body = g_variant_new("(a(s))", builder);
     g_variant_builder_unref(builder);
+  } else if (g_strcmp0(method_name, "Count") == 0) {
+    char* appid = NULL;
+    char* serialized = NULL;
+    g_variant_get(parameters, "(&s&s)", &appid, &serialized);
+
+    Bundle b(serialized);
+    EventInfo info(b);
+    int num = dl->parent_->NotifyNumberRequest(info);
+    reply_body = g_variant_new("(i)", num);
   }
   g_dbus_method_invocation_return_value(invocation, reply_body);
 }
@@ -131,6 +140,11 @@ int DBusEventListener::Impl::RegisterGDBusInterface() {
     "          <arg type='s' name='appid' direction='in'/>"
     "          <arg type='s' name='serialized' direction='in'/>"
     "          <arg type='a(s)' name='noti_arr' direction='out'/>"
+    "        </method>"
+    "        <method name='Count'>"
+    "          <arg type='s' name='appid' direction='in'/>"
+    "          <arg type='s' name='serialized' direction='in'/>"
+    "          <arg type='i' name='num' direction='out'/>"
     "        </method>"
     "  </interface>"
     "  </node>";
@@ -216,6 +230,10 @@ void DBusEventListener::NotifyObserver(
 
 list<Bundle> DBusEventListener::NotifyObserver(const IEventInfo& info) {
   return impl_->observer_->OnRequest(info);
+}
+
+int DBusEventListener::NotifyNumberRequest(const IEventInfo& info) {
+  return impl_->observer_->OnRequestNumber(info);
 }
 
 }  // namespace notification
