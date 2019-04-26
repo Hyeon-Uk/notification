@@ -373,7 +373,8 @@ int DBManager::UpdateReceiverList
 }
 
 int DBManager::InsertNotification(list<shared_ptr<item::AbstractItem>> addedItem) {
-  int ret, count;
+  int ret = ERROR_NONE;
+  int count;
   char* query;
   sqlite3* db = OpenDB();
 
