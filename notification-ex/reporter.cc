@@ -58,7 +58,7 @@ Reporter::Impl::Impl(Reporter* parent,
 int Reporter::Impl::SendNotify(shared_ptr<item::AbstractItem> noti,
     IEventInfo::EventType type) {
   Bundle serialized = noti->Serialize();
-  EventInfo info(type, util::GetAppId(), noti->GetChannel());
+  EventInfo info(type, util::GetAppId(), noti->GetChannel(), noti->GetId());
   list<Bundle> serialized_list {serialized};
   sender_->Notify(info, serialized_list);
   return info.GetRequestId();

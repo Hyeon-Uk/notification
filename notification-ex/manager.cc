@@ -63,7 +63,7 @@ Manager::Impl::Impl(Manager* parent,
 int Manager::Impl::SendNotify(shared_ptr<item::AbstractItem> noti,
     IEventInfo::EventType type) {
   Bundle serialized = noti->Serialize();
-  EventInfo info(type, util::GetAppId(), noti->GetChannel());
+  EventInfo info(type, util::GetAppId(), noti->GetChannel(), noti->GetId());
   list<Bundle> serialized_list {serialized};
 
   /* Reply to Sender */
