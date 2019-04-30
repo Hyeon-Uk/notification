@@ -30,6 +30,7 @@ namespace notification {
 
 class EXPORT_API IEventSender {
  public:
+  virtual ~IEventSender() = default;
   virtual void Notify(const IEventInfo& info, std::list<Bundle> serialized,
       std::string dest_appid = "") = 0;
   virtual std::list<Bundle> Request(const IEventInfo &info) = 0;
