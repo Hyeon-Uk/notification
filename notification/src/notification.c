@@ -932,8 +932,10 @@ EXPORT_API int notification_set_sound(notification_h noti,
 			free(noti->sound_path);
 		noti->sound_path = strdup(path);
 
-		if (noti->priv_sound_path != NULL)
+		if (noti->priv_sound_path != NULL) {
 			free(noti->priv_sound_path);
+			noti->priv_sound_path = NULL;
+		}
 
 		priv_path = notification_check_file_path_is_private(noti->pkg_id, path);
 		if (priv_path)
