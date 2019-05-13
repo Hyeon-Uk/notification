@@ -716,7 +716,7 @@ list<shared_ptr<item::AbstractItem>> DBManager::GetNotificationList(int uid) {
                             " ORDER BY insert_time DESC", uid);
   } else {
     query = sqlite3_mprintf("SELECT data FROM noti_ex_list"
-            " WHERE  uid = %d AND (policy & %d) != 0 ORDER BY insert_time DESC",
+            " WHERE  uid = %d AND (policy & %d) == 0 ORDER BY insert_time DESC",
             uid, static_cast<int>(item::AbstractItem::Policy::SimMode));
   }
 
