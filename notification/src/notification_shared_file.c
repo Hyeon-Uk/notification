@@ -217,13 +217,12 @@ int notification_copy_private_file(const char *src_path,
 		/* LCOV_EXCL_STOP */
 	}
 
-	if (!g_file_copy(src, dst, G_FILE_COPY_NOFOLLOW_SYMLINKS,
+	if (!g_file_copy(src, dst, G_FILE_COPY_NOFOLLOW_SYMLINKS, NULL, NULL,
+			NULL, &g_err)) {
 		/* LCOV_EXCL_START */
-			NULL, NULL, NULL, &g_err)) {
 		if (g_err) {
-			ERR(
-				"Copying file from [%s] to [%s] is failed [%s]",
-					 src_path, dst_path, g_err->message);
+			ERR("Copying file from [%s] to [%s] is failed [%s]",
+				src_path, dst_path, g_err->message);
 			g_error_free(g_err);
 		}
 		ret = NOTIFICATION_ERROR_IO_ERROR;
@@ -371,7 +370,6 @@ static void __make_file_info(char *src_path, char *dst_path,
 	* ignore the shared_file_list check for private sharing
 	*/
 	ret = notification_copy_private_file(src_path, dst_path);
-
 	if (ret == NOTIFICATION_ERROR_ALREADY_EXIST_ID) {
 		tmp = g_list_find_custom(shared_file_list, dst_path,
 				__comp_dst_path);
@@ -725,8 +723,8 @@ EXPORT_API void notification_calibrate_private_sharing(
 			notification_h updated_noti, notification_h source_noti)
 {
 	char *updated_path = NULL;
-	char *source_path;
-	char *private_path;
+	char *source_path = NULL;
+	char *private_path = NULL;
 	char buf_key[32] = { 0, };
 	int i = NOTIFICATION_IMAGE_TYPE_ICON;
 
@@ -737,17 +735,22 @@ EXPORT_API void notification_calibrate_private_sharing(
 						&updated_path);
 			if (updated_path == NULL)
 				continue;
+
 			bundle_get_str(updated_noti->b_priv_image_path,
 						buf_key, &private_path);
 			if (private_path == NULL)
 				continue;
+
 			if (strcmp(updated_path, private_path) == 0) {
-				bundle_get_str(source_noti->b_image_path,
-						buf_key, &source_path);
-				bundle_del(updated_noti->b_image_path, buf_key);
-				bundle_add_str(updated_noti->b_image_path,
+				if (bundle_get_str(source_noti->b_image_path,
+					buf_key, &source_path) == BUNDLE_ERROR_NONE) {
+					bundle_del(updated_noti->b_image_path,
+						buf_key);
+					bundle_add_str(updated_noti->b_image_path,
 						buf_key, source_path);
+				}
 			}
+			source_path = NULL;
 			updated_path = NULL;
 			private_path = NULL;
 		}
@@ -885,8 +888,8 @@ int __set_sharing_for_new_file(sharing_req_data_s *req_data,
 
 	ret = security_manager_private_sharing_req_new(&handle);
 	if (ret != SECURITY_MANAGER_SUCCESS) {
-		ret = NOTIFICATION_ERROR_IO_ERROR;
 		ERR("Failed to create private sharing request handle[%d]", ret);
+		ret = NOTIFICATION_ERROR_IO_ERROR;
 		goto out;
 	}
 
@@ -1110,10 +1113,11 @@ EXPORT_API void notification_remove_private_sharing(
 	/* If there is no shared file, the private sharing is not dropped. */
 	__make_sharing_dir(req_data->dir);
 	iter = req_data->shared_file_list;
-	for (; iter != NULL; iter = g_list_next(iter))
+	for (; iter != NULL; iter = g_list_next(iter)) {
 		notification_copy_private_file(
 			((sharing_file_info_s *)(iter->data))->src_path,
 			((sharing_file_info_s *)(iter->data))->dst_path);
+	}
 
 	if (g_list_length(req_data->target_app_table) > 0) {
 		ret = security_manager_private_sharing_req_new(&handle);
@@ -1165,8 +1169,7 @@ EXPORT_API void notification_remove_private_sharing(
 	iter = req_data->shared_file_list;
 	for (; iter != NULL; iter = g_list_next(iter)) {
 		if (g_remove(((sharing_file_info_s *)(iter->data))->dst_path) != 0)
-			ERR("Failed [%s] [%d]",
-					(const char *)iter->data, errno);
+			ERR("Failed [%s] [%d]", (const char *)iter->data, errno);
 	}
 
 	g_rmdir(req_data->dir);
