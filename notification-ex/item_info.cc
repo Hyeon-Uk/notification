@@ -34,11 +34,12 @@ namespace item {
 
 AbstractItem::Impl::ItemInfo::ItemInfo(AbstractItem::Impl* impl) : impl_(impl) {
 }
-int AbstractItem::Impl::ItemInfo::GetUid() const {
+
+uid_t AbstractItem::Impl::ItemInfo::GetUid() const {
   return impl_->uid_;
 }
 
-void AbstractItem::Impl::ItemInfo::SetUid(int uid) {
+void AbstractItem::Impl::ItemInfo::SetUid(uid_t uid) {
   impl_->uid_ = uid;
 }
 

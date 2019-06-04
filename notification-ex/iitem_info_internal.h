@@ -29,8 +29,8 @@ namespace item {
 class EXPORT_API IItemInfoInternal : public IItemInfo {
  public:
   virtual ~IItemInfoInternal() = default;
-  virtual int GetUid() const = 0;
-  virtual void SetUid(int uid) = 0;
+  virtual uid_t GetUid() const = 0;
+  virtual void SetUid(uid_t uid) = 0;
   virtual int GetVersion() const = 0;
   virtual void SetVersion(int ver) = 0;
   virtual void AddHideViewer(std::string appid) = 0;

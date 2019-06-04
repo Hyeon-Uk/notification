@@ -62,7 +62,7 @@ class AbstractItem::Impl {
   std::list<std::string> hide_viewer_list_;
   std::string tag_;
   time_t time_ = 0;
-  int uid_ = 0;
+  uid_t uid_ = 0;
   int request_id_ = 0;
 };
 

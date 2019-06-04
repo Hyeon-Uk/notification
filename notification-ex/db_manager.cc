@@ -251,7 +251,8 @@ void DBManager::CheckLimit(shared_ptr<item::AbstractItem> addedItem, sqlite3* db
   char* query;
   sqlite3_stmt* stmt = nullptr;
   sqlite3_stmt* delete_stmt = nullptr;
-  int uid = static_pointer_cast<IItemInfoInternal>(addedItem->GetInfo())->GetUid();
+  uid_t uid =
+      static_pointer_cast<IItemInfoInternal>(addedItem->GetInfo())->GetUid();
 
   ret = GetCount(addedItem->GetSenderAppId(), uid, &count);
   if (ret != ERROR_NONE || count <= NOTI_LIMIT)
@@ -332,7 +333,8 @@ int DBManager::UpdateReceiverList
     (shared_ptr<item::AbstractItem> updatedItem,  sqlite3* db) {
   int ret;
   char* query;
-  int uid = static_pointer_cast<IItemInfoInternal>(updatedItem->GetInfo())->GetUid();
+  uid_t uid =
+      static_pointer_cast<IItemInfoInternal>(updatedItem->GetInfo())->GetUid();
 
   query = sqlite3_mprintf("DELETE FROM receiver_list"
             " WHERE root_id = %Q AND app_id = %Q AND uid = %d",
@@ -388,7 +390,7 @@ int DBManager::InsertNotification(list<shared_ptr<item::AbstractItem>> addedItem
   }
 
   for (auto& i : addedItem) {
-    int uid = static_pointer_cast<IItemInfoInternal>(i->GetInfo())->GetUid();
+    uid_t uid = static_pointer_cast<IItemInfoInternal>(i->GetInfo())->GetUid();
     ret = GetCount(i->GetId(), i->GetSenderAppId(), uid, &count);
     if (ret != ERROR_NONE)
        break;
@@ -486,12 +488,12 @@ map<string, string> DBManager::GetHideMap() {
   return hide_map;
 }
 
-int DBManager::GetCount(const string& app_id, int uid, int* count) {
+int DBManager::GetCount(const string& app_id, uid_t uid, int* count) {
   return GetCount(string(), app_id, uid, count);
 }
 
 int DBManager::GetCount(const string& root_id, const string& app_id,
-                              int uid, int* count) {
+                              uid_t uid, int* count) {
   int ret;
   char* query;
   sqlite3_stmt *stmt;
@@ -560,9 +562,11 @@ int DBManager::UpdateHideList(shared_ptr<item::AbstractItem> updatedItem,
 int DBManager::UpdateNotification(shared_ptr<item::AbstractItem> updatedItem) {
   int count, ret;
   char* query;
-  int uid = static_pointer_cast<IItemInfoInternal>(updatedItem->GetInfo())->GetUid();
+  uid_t uid =
+      static_pointer_cast<IItemInfoInternal>(updatedItem->GetInfo())->GetUid();
 
-  ret = GetCount(updatedItem->GetId(), updatedItem->GetSenderAppId(), uid, &count);
+  ret = GetCount(
+      updatedItem->GetId(), updatedItem->GetSenderAppId(), uid, &count);
   if (ret != ERROR_NONE) {
     LOGE("fail to get count");
     return ret;
@@ -661,7 +665,8 @@ list<shared_ptr<item::AbstractItem>> DBManager::ExecuteGetList(char* query) {
   return item_list;
 }
 
-list<shared_ptr<item::AbstractItem>> DBManager::GetNotificationList(string app_id, int uid) {
+list<shared_ptr<item::AbstractItem>> DBManager::GetNotificationList(
+    string app_id, uid_t uid) {
   char* query;
   list<shared_ptr<item::AbstractItem>> item_list;
 
@@ -680,7 +685,7 @@ list<shared_ptr<item::AbstractItem>> DBManager::GetNotificationList(string app_i
 }
 
 list<shared_ptr<item::AbstractItem>> DBManager::GetNotificationList
-                             (string app_id, string root_id, int uid) {
+                             (string app_id, string root_id, uid_t uid) {
   char* query;
   list<shared_ptr<item::AbstractItem>> item_list;
 
@@ -699,7 +704,7 @@ list<shared_ptr<item::AbstractItem>> DBManager::GetNotificationList
   return item_list;
 }
 
-list<shared_ptr<item::AbstractItem>> DBManager::GetNotificationList(int uid) {
+list<shared_ptr<item::AbstractItem>> DBManager::GetNotificationList(uid_t uid) {
   int ret, sim_mode;
   char* query;
   list<shared_ptr<item::AbstractItem>> item_list;
@@ -734,7 +739,8 @@ list<shared_ptr<item::AbstractItem>> DBManager::GetNotificationList(int uid) {
 int DBManager::DeleteNotification(shared_ptr<item::AbstractItem> deletedItem) {
   int ret;
   char* query;
-  int uid = static_pointer_cast<IItemInfoInternal>(deletedItem->GetInfo())->GetUid();
+  uid_t uid =
+      static_pointer_cast<IItemInfoInternal>(deletedItem->GetInfo())->GetUid();
 
   query = sqlite3_mprintf("DELETE FROM noti_ex_list"
             " WHERE root_id = %Q AND app_id = %Q AND uid = %d",
@@ -765,7 +771,7 @@ int DBManager::DeleteNotification(shared_ptr<item::AbstractItem> deletedItem) {
   return ret;
 }
 
-string DBManager::GetPkgId(const string& app_id, int uid) {
+string DBManager::GetPkgId(const string& app_id, uid_t uid) {
   pkgmgrinfo_pkginfo_h handle;
   char *buf = nullptr;
   string pkgid;
