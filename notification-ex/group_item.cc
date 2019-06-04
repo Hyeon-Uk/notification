@@ -107,9 +107,13 @@ void GroupItem::Deserialize(Bundle b) {
 }
 
 AbstractItem& GroupItem::FindByID(std::string id) {
+  if (GetId() == id)
+    return *this;
+
   for (auto& i : impl_->children_list_) {
-    if (i.get()->GetId() == id)
-      return *i;
+    auto& re = i.get()->FindByID(id);
+    if (re.GetId() == id)
+      return re;
   }
   return FactoryManager::GetInst().GetNullItem();
 }

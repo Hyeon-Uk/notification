@@ -75,6 +75,30 @@ TEST_F(GroupItemTest, FindByID) {
   ASSERT_EQ(btn.GetTitle(), "test2");
 }
 
+TEST_F(GroupItemTest, FindByIDGroupItem) {
+  GroupItem item("GROUP1");
+  shared_ptr<GroupItem> gr2 = shared_ptr<GroupItem>(new GroupItem("GROUP2"));
+  shared_ptr<GroupItem> gr3 = shared_ptr<GroupItem>(new GroupItem("GROUP3"));
+  gr2->AddChild(std::make_shared<ButtonItem>("btn2", "test2"));
+  gr2->AddChild(std::make_shared<ButtonItem>("btn3", "test3"));
+  gr2->AddChild(std::make_shared<ButtonItem>("btn4", "test4"));
+  gr3->AddChild(std::make_shared<ButtonItem>("btn6", "test6"));
+  gr2->AddChild(gr3);
+
+  item.AddChild(std::make_shared<ButtonItem>("btn1", "test1"));
+  item.AddChild(gr2);
+  item.AddChild(std::make_shared<ButtonItem>("btn5", "test5"));
+  ASSERT_EQ(item.GetChildren().size(), 3);
+
+  AbstractItem& child = item.FindByID("btn3");
+  ButtonItem& btn = static_cast<ButtonItem&>(child);
+  ASSERT_EQ(btn.GetTitle(), "test3");
+
+  AbstractItem& child2 = item.FindByID("GROUP3");
+  GroupItem& ret_gr = static_cast<GroupItem&>(child2);
+  ASSERT_EQ(ret_gr.GetChildren().size(), 1);
+}
+
 TEST_F(GroupItemTest, FindByIDNullItemReturn) {
   GroupItem item("GROUP1");
   item.AddChild(std::make_shared<ButtonItem>("btn1", "test1"));
