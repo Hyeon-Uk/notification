@@ -116,6 +116,13 @@ class EXPORT_API GroupItem : public AbstractItem {
   std::string GetAppLabel();
 
   /**
+   * @brief Sets app label data of GroupItem.
+   * @since_tizen 5.5
+   * @return The app label data
+   */
+  void SetAppLabel(std::string label);
+
+  /**
    * @brief Adds child notification item.
    * @since_tizen 5.5
    * @param[in] AbstractItem object

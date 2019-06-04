@@ -167,5 +167,9 @@ string GroupItem::GetAppLabel() {
   return impl_->app_label_;
 }
 
+void GroupItem::SetAppLabel(string label) {
+  impl_->app_label_ = label;
+}
+
 }  // namespace item
 }  // namespace notification

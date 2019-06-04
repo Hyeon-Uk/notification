@@ -123,6 +123,14 @@ TEST_F(GroupItemTest, GetAppLabel) {
   ASSERT_EQ(app_label, "unittest_appname");
 }
 
+TEST_F(GroupItemTest, SetAppLabel) {
+  GroupItem item("GROUP1");
+  item.SetAppLabel("test");
+  string app_label = item.GetAppLabel();
+
+  ASSERT_EQ(app_label, "test");
+}
+
 TEST_F(GroupItemTest, SetDirection) {
   GroupItem item("GROUP1");
   item.SetDirection(true);
