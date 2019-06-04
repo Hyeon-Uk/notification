@@ -26,6 +26,7 @@
 #include "notification-ex/item_inflator.h"
 #include "notification-ex/dbus_connection_manager.h"
 #include "notification-ex/ex_util.h"
+#include "notification-ex/item_info_internal.h"
 
 #ifdef LOG_TAG
 #undef LOG_TAG
@@ -74,6 +75,7 @@ void Reporter::SendError(const IEventInfo& info, NotificationError error) {
 
 int Reporter::Post(std::shared_ptr<item::AbstractItem> noti) {
   LOGI("Post noti");
+  static_pointer_cast<IItemInfoInternal>(noti->GetInfo())->SetTime(time(NULL));
   return impl_->SendNotify(noti, EventInfo::Post);
 }
 
@@ -81,6 +83,7 @@ int Reporter::Post(std::list<std::shared_ptr<AbstractItem>> notiList) {
   EventInfo info(EventInfo::Post, util::GetAppId(), "");
   list<Bundle> serialized_list;
   for (auto& i : notiList) {
+    static_pointer_cast<IItemInfoInternal>(i->GetInfo())->SetTime(time(NULL));
     Bundle b = i->Serialize();
     serialized_list.push_back(b);
   }
@@ -89,6 +92,7 @@ int Reporter::Post(std::list<std::shared_ptr<AbstractItem>> notiList) {
 }
 
 int Reporter::Update(std::shared_ptr<AbstractItem> noti) {
+  static_pointer_cast<IItemInfoInternal>(noti->GetInfo())->SetTime(time(NULL));
   return impl_->SendNotify(noti, EventInfo::Update);
 }
 
