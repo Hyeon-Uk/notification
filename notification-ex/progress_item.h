@@ -63,6 +63,13 @@ class EXPORT_API ProgressItem : public AbstractItem {
   virtual ~ProgressItem();
 
  public:
+  enum Type {
+    Default,
+    Time,
+    Percent,
+    Pending,
+  };
+
   /**
    * @brief Serialize the data of ProgressItem.
    * @since_tizen 5.5
@@ -119,6 +126,36 @@ class EXPORT_API ProgressItem : public AbstractItem {
    * @return The maximum value of progress
    */
   float GetMax() const;
+
+  /**
+   * @brief Sets the type of progress.
+   * @since_tizen 5.5
+   * @param[in] type The type of progress
+   */
+  void SetProgressType(ProgressItem::Type type);
+
+  /**
+   * @brief Gets the type of progress.
+   * @since_tizen 5.5
+   * @return The type of progress
+   */
+  Type GetProgressType() const;
+
+   /**
+   * @brief Sets the default unit of progress.
+   * @details the unit is valid when the progress type is default.
+   * @since_tizen 5.5
+   * @param[in] unit The unit of progress
+   */
+  void SetDefaultUnit(std::string unit);
+
+  /**
+   * @brief Gets the default unit of progress.
+   * @details the unit is valid when the progress type is default.
+   * @since_tizen 5.5
+   * @return The type of progress
+   */
+  std::string GetDefaultUnit() const;
 
  private:
   class Impl;

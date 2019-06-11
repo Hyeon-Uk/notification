@@ -31,6 +31,8 @@
 #define PROGRESS_MIN_KEY "__PROGRESS_MIN_KEY__"
 #define PROGRESS_CURRENT_KEY "__PROGRESS_CURRENT_KEY__"
 #define PROGRESS_MAX_KEY "__PROGRESS_MAX_KEY__"
+#define PROGRESS_TYPE_KEY "__PROGRESS_TYPE_KEY__"
+#define PROGRESS_UNIT_KEY "__PROGRESS_UNIT_KEY__"
 
 using namespace std;
 namespace notification {
@@ -56,6 +58,8 @@ ProgressItem::Impl::Impl(float min_val, float current, float max_val,
     : min_(min_val), current_(current), max_(max_val), parent_(parent) {
   if (min_val > current || max_val < current)
     THROW(ERROR_INVALID_PARAMETER);
+
+  type_ = ProgressItem::Type::Default;
   LOGI("ProgressItem impl created");
 }
 
@@ -69,6 +73,8 @@ Bundle ProgressItem::Serialize() const {
   b.Add(PROGRESS_MIN_KEY, to_string(impl_->min_));
   b.Add(PROGRESS_CURRENT_KEY, to_string(impl_->current_));
   b.Add(PROGRESS_MAX_KEY, to_string(impl_->max_));
+  b.Add(PROGRESS_TYPE_KEY, to_string(static_cast<int>(impl_->type_)));
+  b.Add(PROGRESS_UNIT_KEY, impl_->unit_);
   return b;
 }
 
@@ -77,6 +83,8 @@ void ProgressItem::Deserialize(Bundle b) {
   impl_->min_ = strtof(b.GetString(PROGRESS_MIN_KEY).c_str(), 0);
   impl_->current_ = strtof(b.GetString(PROGRESS_CURRENT_KEY).c_str(), 0);
   impl_->max_ = strtof(b.GetString(PROGRESS_MAX_KEY).c_str(), 0);
+  impl_->type_ = static_cast<Type>(std::stoi(b.GetString(PROGRESS_TYPE_KEY)));
+  impl_->unit_ = b.GetString(PROGRESS_UNIT_KEY);
 }
 
 AbstractItem& ProgressItem::FindByID(std::string id) {
@@ -99,6 +107,23 @@ float ProgressItem::GetMin() const {
 
 float ProgressItem::GetMax() const {
   return impl_->max_;
+}
+
+void ProgressItem::SetProgressType(ProgressItem::Type type) {
+  impl_->type_ = type;
+}
+
+ProgressItem::Type ProgressItem::GetProgressType() const {
+  return impl_->type_;
+}
+
+void ProgressItem::SetDefaultUnit(std::string unit)
+{
+  impl_->unit_ = unit;
+}
+
+std::string ProgressItem::GetDefaultUnit() const {
+  return impl_->unit_;
 }
 
 }  // namespace item

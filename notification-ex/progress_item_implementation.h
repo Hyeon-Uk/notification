@@ -43,6 +43,8 @@ class ProgressItem::Impl {
   float current_;
   float max_;
   ProgressItem* parent_;
+  Type type_;
+  std::string unit_;
 };
 
 }  // namespace item
