@@ -2167,7 +2167,7 @@ extern "C" EXPORT_API int noti_ex_item_progress_create(noti_ex_item_h *handle,
     return NOTI_EX_ERROR_OUT_OF_MEMORY;
   }
 
-  *handle = new Handle(p);
+  *handle = new Handle(shared_ptr<AbstractItem>(p));
 
   return NOTI_EX_ERROR_NONE;
 }
@@ -2416,7 +2416,7 @@ extern "C" EXPORT_API int noti_ex_reporter_find_by_root_id(
 
 extern "C" EXPORT_API int noti_ex_item_text_create(noti_ex_item_h *handle,
     const char *id, const char *text, const char *hyperlink) {
-  if (handle == nullptr) {
+  if (handle == nullptr || text == nullptr) {
     LOGE("Invalid parameter");
     return NOTI_EX_ERROR_INVALID_PARAMETER;
   }
@@ -2441,7 +2441,7 @@ extern "C" EXPORT_API int noti_ex_item_text_create(noti_ex_item_h *handle,
 
 extern "C" EXPORT_API int noti_ex_item_text_set_contents(noti_ex_item_h handle,
     const char *contents) {
-  if (handle == nullptr) {
+  if (handle == nullptr || contents == nullptr) {
     LOGE("Invalid parameter");
     return NOTI_EX_ERROR_INVALID_PARAMETER;
   }
