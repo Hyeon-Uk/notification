@@ -67,6 +67,74 @@ class EXPORT_API Color {
   virtual ~Color() = default;
 
   /**
+   * @brief Copy-constructor.
+   * @since_tizen 5.5
+   * @param[in] c The object to copy
+   */
+  Color(const Color& c) {
+    a_ = c.a_;
+    r_ = c.r_;
+    g_ = c.g_;
+    b_ = c.b_;
+  }
+
+  /**
+   * @brief Assignment.
+   * @since_tizen 5.5
+   * @param[in] c The object to copy
+   */
+  Color& operator = (const Color& c) {
+    if (this != &c) {
+      a_ = c.a_;
+      r_ = c.r_;
+      g_ = c.g_;
+      b_ = c.b_;
+    }
+    return *this;
+  }
+
+  /**
+   * @brief Move-constructor.
+   * @since_tizen 5.5
+   * @param[in] c The object to move
+   */
+  Color(Color&& c) noexcept {
+    a_ = c.a_;
+    c.a_ = 0;
+
+    r_ = c.r_;
+    c.r_ = 0;
+
+    g_ = c.g_;
+    c.g_ = 0;
+
+    b_ = c.b_;
+    c.b_ = 0;
+  }
+
+  /**
+   * @brief Assignment.
+   * @since_tizen 5.5
+   * @param[in] c The object to move
+   */
+  Color& operator = (Color&& c) noexcept {
+    if (this != &c) {
+      a_ = c.a_;
+      c.a_ = 0;
+
+      r_ = c.r_;
+      c.r_ = 0;
+
+      g_ = c.g_;
+      c.g_ = 0;
+
+      b_ = c.b_;
+      c.b_ = 0;
+    }
+    return *this;
+  }
+
+  /**
    * @brief Gets alpha value of color.
    * @since_tizen 5.5
    * @return The alpha value of color
@@ -126,6 +194,74 @@ class EXPORT_API Padding {
     : left_(left), top_(top), right_(right), bottom_(bottom) {
   }
   virtual ~Padding() = default;
+
+  /**
+   * @brief Copy-constructor.
+   * @since_tizen 5.5
+   * @param[in] c The object to copy
+   */
+  Padding(const Padding& c) {
+    left_ = c.left_;
+    top_ = c.top_;
+    right_ = c.right_;
+    bottom_ = c.bottom_;
+  }
+
+  /**
+   * @brief Assignment.
+   * @since_tizen 5.5
+   * @param[in] c The object to copy
+   */
+  Padding& operator = (const Padding& c) {
+    if (this != &c) {
+      left_ = c.left_;
+      top_ = c.top_;
+      right_ = c.right_;
+      bottom_ = c.bottom_;
+    }
+    return *this;
+  }
+
+  /**
+   * @brief Move-constructor.
+   * @since_tizen 5.5
+   * @param[in] c The object to move
+   */
+  Padding(Padding&& c) noexcept {
+    left_ = c.left_;
+    c.left_ = 0;
+
+    top_ = c.top_;
+    c.top_ = 0;
+
+    right_ = c.right_;
+    c.right_ = 0;
+
+    bottom_ = c.bottom_;
+    c.bottom_ = 0;
+  }
+
+  /**
+   * @brief Assignment.
+   * @since_tizen 5.5
+   * @param[in] c The object to move
+   */
+  Padding& operator = (Padding&& c) noexcept {
+    if (this != &c) {
+      left_ = c.left_;
+      c.left_ = 0;
+
+      top_ = c.top_;
+      c.top_ = 0;
+
+      right_ = c.right_;
+      c.right_ = 0;
+
+      bottom_ = c.bottom_;
+      c.bottom_ = 0;
+    }
+    return *this;
+  }
 
   /**
    * @brief Gets left value of padding.
@@ -188,6 +324,74 @@ class EXPORT_API Geometry {
   virtual ~Geometry() = default;
 
   /**
+   * @brief Copy-constructor.
+   * @since_tizen 5.5
+   * @param[in] c The object to copy
+   */
+  Geometry(const Geometry& c) {
+    x_ = c.x_;
+    y_ = c.y_;
+    w_ = c.w_;
+    h_ = c.h_;
+  }
+
+  /**
+   * @brief Assignment.
+   * @since_tizen 5.5
+   * @param[in] c The object to copy
+   */
+  Geometry& operator = (const Geometry& c) {
+    if (this != &c) {
+      x_ = c.x_;
+      y_ = c.y_;
+      w_ = c.w_;
+      h_ = c.h_;
+    }
+    return *this;
+  }
+
+  /**
+   * @brief Move-constructor.
+   * @since_tizen 5.5
+   * @param[in] c The object to move
+   */
+  Geometry(Geometry&& c) noexcept {
+    x_ = c.x_;
+    c.x_ = 0;
+
+    y_ = c.y_;
+    c.y_ = 0;
+
+    w_ = c.w_;
+    c.w_ = 0;
+
+    h_ = c.h_;
+    c.h_ = 0;
+  }
+
+  /**
+   * @brief Assignment.
+   * @since_tizen 5.5
+   * @param[in] c The object to move
+   */
+  Geometry& operator = (Geometry&& c) noexcept {
+    if (this != &c) {
+      x_ = c.x_;
+      c.x_ = 0;
+
+      y_ = c.y_;
+      c.y_ = 0;
+
+      w_ = c.w_;
+      c.w_ = 0;
+
+      h_ = c.h_;
+      c.h_ = 0;
+    }
+    return *this;
+  }
+
+  /**
    * @brief Gets x value of geometry.
    * @since_tizen 5.5
    * @return The x value of geometry.
@@ -239,18 +443,114 @@ class EXPORT_API Style {
  public:
   Style() {
   }
-  Style(Color color, Padding padding, Geometry geometry)
+
+  Style(std::shared_ptr<Color> color, std::shared_ptr<Padding> padding,
+      std::shared_ptr<Geometry> geometry)
     : color_(color), padding_(padding), geometry_(geometry) {
   }
+
+  Style(std::shared_ptr<Color> color, std::shared_ptr<Padding> padding,
+      std::shared_ptr<Geometry> geometry,
+      std::shared_ptr<Color> background_color, std::string background_image)
+    : color_(color), padding_(padding), geometry_(geometry),
+      background_color_(background_color),
+      background_image_path_(background_image) {
+  }
+
   virtual ~Style() = default;
+
+  /**
+   * @brief Copy-constructor.
+   * @since_tizen 5.5
+   * @param[in] c The object to copy
+   */
+  Style(const Style& c) {
+    color_ = c.color_;
+    padding_ = c.padding_;
+    geometry_ = c.geometry_;
+    background_color_ = c.background_color_;
+    background_image_path_ = c.background_image_path_;
+  }
+
+  /**
+   * @brief Assignment.
+   * @since_tizen 5.5
+   * @param[in] c The object to copy
+   */
+  Style& operator = (const Style& c) {
+    if (this != &c) {
+      color_ = c.color_;
+      padding_ = c.padding_;
+      geometry_ = c.geometry_;
+      background_color_ = c.background_color_;
+      background_image_path_ = c.background_image_path_;
+    }
+    return *this;
+  }
+
+  /**
+   * @brief Move-constructor.
+   * @since_tizen 5.5
+   * @param[in] c The object to move
+   */
+  Style(Style&& c) noexcept {
+    color_ = c.color_;
+    c.color_ = nullptr;
+
+    padding_ = c.padding_;
+    c.padding_ = nullptr;
+
+    geometry_ = c.geometry_;
+    c.geometry_ = nullptr;
+
+    background_color_ = c.background_color_;
+    c.background_color_ = nullptr;
+
+    background_image_path_ = c.background_image_path_;
+    c.background_image_path_ = "";
+  }
+
+  /**
+   * @brief Assignment.
+   * @since_tizen 5.5
+   * @param[in] c The object to move
+   */
+  Style& operator = (Style&& c) noexcept {
+    if (this != &c) {
+      color_ = c.color_;
+      c.color_ = nullptr;
+
+      padding_ = c.padding_;
+      c.padding_ = nullptr;
+
+      geometry_ = c.geometry_;
+      c.geometry_ = nullptr;
+
+      background_color_ = c.background_color_;
+      c.background_color_ = nullptr;
+
+      background_image_path_ = c.background_image_path_;
+      c.background_image_path_ = "";
+    }
+    return *this;
+  }
 
   /**
    * @brief Gets padding data
    * @since_tizen 5.5
    * @return The padding data
    */
-  Padding GetPadding() const {
+  std::shared_ptr<Padding> GetPadding() const {
     return padding_;
+  }
+
+  /**
+   * @brief Sets padding data
+   * @since_tizen 5.5
+   * @param[in] padding The padding data
+   */
+  void SetPadding(std::shared_ptr<Padding> padding) {
+    padding_ = std::move(padding);
   }
 
   /**
@@ -258,8 +558,17 @@ class EXPORT_API Style {
    * @since_tizen 5.5
    * @return The color data
    */
-  Color GetColor() const {
+  std::shared_ptr<Color> GetColor() const {
     return color_;
+  }
+
+  /**
+   * @brief Sets color data
+   * @since_tizen 5.5
+   * @param[in] color The color data
+   */
+  void SetColor(std::shared_ptr<Color> color) {
+    color_ = std::move(color);
   }
 
   /**
@@ -267,14 +576,60 @@ class EXPORT_API Style {
    * @since_tizen 5.5
    * @return The geometry data
    */
-  Geometry GetGeometry() const {
+  std::shared_ptr<Geometry> GetGeometry() const {
     return geometry_;
   }
 
+  /**
+   * @brief Sets geometry data
+   * @since_tizen 5.5
+   * @param[in] geometry The geometry data
+   */
+  void SetGeometry(std::shared_ptr<Geometry> geometry) {
+    geometry_ = std::move(geometry);
+  }
+
+  /**
+   * @brief Gets background image path
+   * @since_tizen 5.5
+   * @param[in] image_path The background image path
+   */
+  void SetBackgroundImage(std::string image_path) {
+    background_image_path_ = std::move(image_path);
+  }
+
+  /**
+   * @brief Gets background image path
+   * @since_tizen 5.5
+   * @return The background image path
+   */
+  std::string GetBackgroundImage() const {
+    return background_image_path_;
+  }
+
+  /**
+   * @brief Sets background color
+   * @since_tizen 5.5
+   */
+  void SetBackgroundColor(std::shared_ptr<Color> color) {
+    background_color_ = std::move(color);
+  }
+
+  /**
+   * @brief Gets background color
+   * @since_tizen 5.5
+   * @return The background color
+   */
+  std::shared_ptr<Color> GetBackgroundColor() const {
+    return background_color_;
+  }
+
  private:
-  Color color_;
-  Padding padding_;
-  Geometry geometry_;
+  std::shared_ptr<Color> color_;
+  std::shared_ptr<Padding> padding_;
+  std::shared_ptr<Geometry> geometry_;
+  std::shared_ptr<Color> background_color_;
+  std::string background_image_path_;
 };  // class Style
 
 /**
@@ -285,9 +640,8 @@ class EXPORT_API Style {
 class EXPORT_API LEDInfo {
  public:
   LEDInfo() {
-    Color(0, 0, 0, 0);
   }
-  explicit LEDInfo(Color color)
+  explicit LEDInfo(std::shared_ptr<Color> color)
     : color_(color) {
   }
   virtual ~LEDInfo() = default;
@@ -333,12 +687,12 @@ class EXPORT_API LEDInfo {
    * @since_tizen 5.5
    * @return color data
    */
-  Color GetColor() const {
+  std::shared_ptr<Color> GetColor() const {
     return color_;
   }
 
  private:
-  Color color_;
+  std::shared_ptr<Color> color_;
   int on_period_ = 0;
   int off_period_ = 0;
 };  // clss LEDInfo

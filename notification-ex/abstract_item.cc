@@ -60,6 +60,11 @@
 #define ABSTRACT_ITEM_STYLE_COLOR_R_KEY "__ABSTRACT_ITEM_STYLE_COLOR_R_KEY__"
 #define ABSTRACT_ITEM_STYLE_COLOR_G_KEY "__ABSTRACT_ITEM_STYLE_COLOR_G_KEY__"
 #define ABSTRACT_ITEM_STYLE_COLOR_B_KEY "__ABSTRACT_ITEM_STYLE_COLOR_B_KEY__"
+#define ABSTRACT_ITEM_STYLE_BG_COLOR_A_KEY "__ABSTRACT_ITEM_STYLE_BG_COLOR_A_KEY__"
+#define ABSTRACT_ITEM_STYLE_BG_COLOR_R_KEY "__ABSTRACT_ITEM_STYLE_BG_COLOR_R_KEY__"
+#define ABSTRACT_ITEM_STYLE_BG_COLOR_G_KEY "__ABSTRACT_ITEM_STYLE_BG_COLOR_G_KEY__"
+#define ABSTRACT_ITEM_STYLE_BG_COLOR_B_KEY "__ABSTRACT_ITEM_STYLE_BG_COLOR_B_KEY__"
+#define ABSTRACT_ITEM_STYLE_BG_IMAGE_PATH_KEY "__ABSTRACT_ITEM_STYLE_BG_IMAGE_PATH_KEY__"
 #define ABSTRACT_ITEM_STYLE_GEOMETRY_X_KEY "__ABSTRACT_ITEM_STYLE_GEOMETRY_X_KEY__"
 #define ABSTRACT_ITEM_STYLE_GEOMETRY_Y_KEY "__ABSTRACT_ITEM_STYLE_GEOMETRY_Y_KEY__"
 #define ABSTRACT_ITEM_STYLE_GEOMETRY_WIDTH_KEY "__ABSTRACT_ITEM_STYLE_GEOMETRY_WIDTH_KEY__"
@@ -175,28 +180,51 @@ Bundle AbstractItem::Serialize() const {
   }
 
   if (impl_->style_ != nullptr) {
-    Padding padding = impl_->style_->GetPadding();
-    b.Add(ABSTRACT_ITEM_STYLE_PADDING_LEFT_KEY, to_string(padding.GetLeft()));
-    b.Add(ABSTRACT_ITEM_STYLE_PADDING_TOP_KEY, to_string(padding.GetTop()));
-    b.Add(ABSTRACT_ITEM_STYLE_PADDING_RIGHT_KEY, to_string(padding.GetRight()));
-    b.Add(ABSTRACT_ITEM_STYLE_PADDING_BOTTOM_KEY, to_string(padding.GetBottom()));
+    shared_ptr<Padding> padding = impl_->style_->GetPadding();
+    if (padding.get() != nullptr) {
+      b.Add(ABSTRACT_ITEM_STYLE_PADDING_LEFT_KEY, to_string(padding->GetLeft()));
+      b.Add(ABSTRACT_ITEM_STYLE_PADDING_TOP_KEY, to_string(padding->GetTop()));
+      b.Add(ABSTRACT_ITEM_STYLE_PADDING_RIGHT_KEY,
+          to_string(padding->GetRight()));
+      b.Add(ABSTRACT_ITEM_STYLE_PADDING_BOTTOM_KEY,
+          to_string(padding->GetBottom()));
+    }
 
-    Color color = impl_->style_->GetColor();
-    b.Add(ABSTRACT_ITEM_STYLE_COLOR_A_KEY,
-        to_string(static_cast<int>(color.GetAVal())));
-    b.Add(ABSTRACT_ITEM_STYLE_COLOR_R_KEY,
-        to_string(static_cast<int>(color.GetRVal())));
-    b.Add(ABSTRACT_ITEM_STYLE_COLOR_G_KEY,
-        to_string(static_cast<int>(color.GetGVal())));
-    b.Add(ABSTRACT_ITEM_STYLE_COLOR_B_KEY,
-        to_string(static_cast<int>(color.GetBVal())));
+    shared_ptr<Color> color = impl_->style_->GetColor();
+    if (color.get() != nullptr) {
+      b.Add(ABSTRACT_ITEM_STYLE_COLOR_A_KEY,
+          to_string(static_cast<int>(color->GetAVal())));
+      b.Add(ABSTRACT_ITEM_STYLE_COLOR_R_KEY,
+          to_string(static_cast<int>(color->GetRVal())));
+      b.Add(ABSTRACT_ITEM_STYLE_COLOR_G_KEY,
+          to_string(static_cast<int>(color->GetGVal())));
+      b.Add(ABSTRACT_ITEM_STYLE_COLOR_B_KEY,
+          to_string(static_cast<int>(color->GetBVal())));
+    }
 
-    Geometry geometry = impl_->style_->GetGeometry();
-    b.Add(ABSTRACT_ITEM_STYLE_GEOMETRY_X_KEY, to_string(geometry.GetX()));
-    b.Add(ABSTRACT_ITEM_STYLE_GEOMETRY_Y_KEY, to_string(geometry.GetY()));
-    b.Add(ABSTRACT_ITEM_STYLE_GEOMETRY_WIDTH_KEY, to_string(geometry.GetWidth()));
-    b.Add(ABSTRACT_ITEM_STYLE_GEOMETRY_HEIGHT_KEY, to_string(geometry.GetHeight()));
+    shared_ptr<Geometry> geometry = impl_->style_->GetGeometry();
+    if (geometry.get() != nullptr) {
+      b.Add(ABSTRACT_ITEM_STYLE_GEOMETRY_X_KEY, to_string(geometry->GetX()));
+      b.Add(ABSTRACT_ITEM_STYLE_GEOMETRY_Y_KEY, to_string(geometry->GetY()));
+      b.Add(ABSTRACT_ITEM_STYLE_GEOMETRY_WIDTH_KEY,
+          to_string(geometry->GetWidth()));
+      b.Add(ABSTRACT_ITEM_STYLE_GEOMETRY_HEIGHT_KEY,
+          to_string(geometry->GetHeight()));
+    }
 
+    shared_ptr<Color> bg_color = impl_->style_->GetBackgroundColor();
+    if (bg_color.get() != nullptr) {
+      b.Add(ABSTRACT_ITEM_STYLE_BG_COLOR_A_KEY,
+          to_string(static_cast<int>(bg_color->GetAVal())));
+      b.Add(ABSTRACT_ITEM_STYLE_BG_COLOR_R_KEY,
+          to_string(static_cast<int>(bg_color->GetRVal())));
+      b.Add(ABSTRACT_ITEM_STYLE_BG_COLOR_G_KEY,
+          to_string(static_cast<int>(bg_color->GetGVal())));
+      b.Add(ABSTRACT_ITEM_STYLE_BG_COLOR_B_KEY,
+          to_string(static_cast<int>(bg_color->GetBVal())));
+    }
+    b.Add(ABSTRACT_ITEM_STYLE_BG_IMAGE_PATH_KEY,
+        impl_->style_->GetBackgroundImage());
     b.Add(ABSTRACT_ITEM_STYLE_IS_EXIST_KEY, ABSTRACT_ITEM_TRUE);
   }
 
@@ -204,13 +232,13 @@ Bundle AbstractItem::Serialize() const {
     b.Add(ABSTRACT_ITEM_LED_ON_PERIOD_KEY, to_string(impl_->led_->GetOnPeriod()));
     b.Add(ABSTRACT_ITEM_LED_OFF_PERIOD_KEY, to_string(impl_->led_->GetOffPeriod()));
     b.Add(ABSTRACT_ITEM_LED_COLOR_A_KEY,
-        to_string(static_cast<int>(impl_->led_->GetColor().GetAVal())));
+        to_string(static_cast<int>(impl_->led_->GetColor()->GetAVal())));
     b.Add(ABSTRACT_ITEM_LED_COLOR_R_KEY,
-        to_string(static_cast<int>(impl_->led_->GetColor().GetRVal())));
+        to_string(static_cast<int>(impl_->led_->GetColor()->GetRVal())));
     b.Add(ABSTRACT_ITEM_LED_COLOR_G_KEY,
-        to_string(static_cast<int>(impl_->led_->GetColor().GetGVal())));
+        to_string(static_cast<int>(impl_->led_->GetColor()->GetGVal())));
     b.Add(ABSTRACT_ITEM_LED_COLOR_B_KEY,
-        to_string(static_cast<int>(impl_->led_->GetColor().GetBVal())));
+        to_string(static_cast<int>(impl_->led_->GetColor()->GetBVal())));
     b.Add(ABSTRACT_ITEM_LED_IS_EXIST_KEY, ABSTRACT_ITEM_TRUE);
   }
 
@@ -273,33 +301,66 @@ void AbstractItem::Deserialize(Bundle b) {
   }
 
   if (!b.GetString(ABSTRACT_ITEM_STYLE_IS_EXIST_KEY).compare(ABSTRACT_ITEM_TRUE)) {
-    Padding padding(stoi(b.GetString(ABSTRACT_ITEM_STYLE_PADDING_LEFT_KEY)),
-      stoi(b.GetString(ABSTRACT_ITEM_STYLE_PADDING_TOP_KEY)),
-      stoi(b.GetString(ABSTRACT_ITEM_STYLE_PADDING_RIGHT_KEY)),
-      stoi(b.GetString(ABSTRACT_ITEM_STYLE_PADDING_BOTTOM_KEY)));
+    shared_ptr<Padding> padding;
+    if (!b.GetString(ABSTRACT_ITEM_STYLE_PADDING_LEFT_KEY).empty()) {
+      padding = make_shared<Padding>(
+        stoi(b.GetString(ABSTRACT_ITEM_STYLE_PADDING_LEFT_KEY)),
+        stoi(b.GetString(ABSTRACT_ITEM_STYLE_PADDING_TOP_KEY)),
+        stoi(b.GetString(ABSTRACT_ITEM_STYLE_PADDING_RIGHT_KEY)),
+        stoi(b.GetString(ABSTRACT_ITEM_STYLE_PADDING_BOTTOM_KEY)));
+    }
 
-    Color color(
-      static_cast<unsigned char>(stoi(b.GetString(ABSTRACT_ITEM_STYLE_COLOR_A_KEY))),
-      static_cast<unsigned char>(stoi(b.GetString(ABSTRACT_ITEM_STYLE_COLOR_R_KEY))),
-      static_cast<unsigned char>(stoi(b.GetString(ABSTRACT_ITEM_STYLE_COLOR_G_KEY))),
-      static_cast<unsigned char>(stoi(b.GetString(ABSTRACT_ITEM_STYLE_COLOR_B_KEY))));
+    shared_ptr<Color> color;
+    if (!b.GetString(ABSTRACT_ITEM_STYLE_COLOR_A_KEY).empty()) {
+      color = make_shared<Color>(
+        static_cast<unsigned char>(
+            stoi(b.GetString(ABSTRACT_ITEM_STYLE_COLOR_A_KEY))),
+        static_cast<unsigned char>(
+            stoi(b.GetString(ABSTRACT_ITEM_STYLE_COLOR_R_KEY))),
+        static_cast<unsigned char>(
+            stoi(b.GetString(ABSTRACT_ITEM_STYLE_COLOR_G_KEY))),
+        static_cast<unsigned char>(
+            stoi(b.GetString(ABSTRACT_ITEM_STYLE_COLOR_B_KEY))));
+    }
 
-    Geometry geometry(stoi(b.GetString(ABSTRACT_ITEM_STYLE_GEOMETRY_X_KEY)),
-      stoi(b.GetString(ABSTRACT_ITEM_STYLE_GEOMETRY_Y_KEY)),
-      stoi(b.GetString(ABSTRACT_ITEM_STYLE_GEOMETRY_WIDTH_KEY)),
-      stoi(b.GetString(ABSTRACT_ITEM_STYLE_GEOMETRY_HEIGHT_KEY)));
+    shared_ptr<Geometry> geometry;
+    if (!b.GetString(ABSTRACT_ITEM_STYLE_GEOMETRY_X_KEY).empty()) {
+      geometry = make_shared<Geometry>(
+        stoi(b.GetString(ABSTRACT_ITEM_STYLE_GEOMETRY_X_KEY)),
+        stoi(b.GetString(ABSTRACT_ITEM_STYLE_GEOMETRY_Y_KEY)),
+        stoi(b.GetString(ABSTRACT_ITEM_STYLE_GEOMETRY_WIDTH_KEY)),
+        stoi(b.GetString(ABSTRACT_ITEM_STYLE_GEOMETRY_HEIGHT_KEY)));
+    }
 
-    impl_->style_ = make_shared<Style>(color, padding, geometry);
+    shared_ptr<Color> bg_color;
+    if (!b.GetString(ABSTRACT_ITEM_STYLE_BG_COLOR_A_KEY).empty()) {
+      bg_color = make_shared<Color>(
+        static_cast<unsigned char>(
+            stoi(b.GetString(ABSTRACT_ITEM_STYLE_BG_COLOR_A_KEY))),
+        static_cast<unsigned char>(
+            stoi(b.GetString(ABSTRACT_ITEM_STYLE_BG_COLOR_R_KEY))),
+        static_cast<unsigned char>(
+            stoi(b.GetString(ABSTRACT_ITEM_STYLE_BG_COLOR_G_KEY))),
+        static_cast<unsigned char>(
+            stoi(b.GetString(ABSTRACT_ITEM_STYLE_BG_COLOR_B_KEY))));
+    }
+
+    impl_->style_ = make_shared<Style>(color, padding, geometry, bg_color,
+        b.GetString(ABSTRACT_ITEM_STYLE_BG_IMAGE_PATH_KEY));
   }
 
   if (!b.GetString(ABSTRACT_ITEM_LED_IS_EXIST_KEY).compare(ABSTRACT_ITEM_TRUE)) {
-    Color color(
-      static_cast<unsigned char>(stoi(b.GetString(ABSTRACT_ITEM_LED_COLOR_A_KEY))),
-      static_cast<unsigned char>(stoi(b.GetString(ABSTRACT_ITEM_LED_COLOR_R_KEY))),
-      static_cast<unsigned char>(stoi(b.GetString(ABSTRACT_ITEM_LED_COLOR_G_KEY))),
-      static_cast<unsigned char>(stoi(b.GetString(ABSTRACT_ITEM_LED_COLOR_B_KEY))));
+    shared_ptr<Color> led_color = make_shared<Color>(
+      static_cast<unsigned char>(
+        stoi(b.GetString(ABSTRACT_ITEM_LED_COLOR_A_KEY))),
+      static_cast<unsigned char>(
+        stoi(b.GetString(ABSTRACT_ITEM_LED_COLOR_R_KEY))),
+      static_cast<unsigned char>(
+        stoi(b.GetString(ABSTRACT_ITEM_LED_COLOR_G_KEY))),
+      static_cast<unsigned char>(
+        stoi(b.GetString(ABSTRACT_ITEM_LED_COLOR_B_KEY))));
 
-    impl_->led_ = make_shared<LEDInfo>(color);
+    impl_->led_ = make_shared<LEDInfo>(led_color);
     impl_->led_->SetOnPeriod(stoi(b.GetString(ABSTRACT_ITEM_LED_ON_PERIOD_KEY)));
     impl_->led_->SetOffPeriod(stoi(b.GetString(ABSTRACT_ITEM_LED_OFF_PERIOD_KEY)));
   }

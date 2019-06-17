@@ -98,11 +98,12 @@ TEST_F(AbstractItemTest, SerializeDeserialize) {
 
   TestItem item("test_id", action);
 
-  Color color(50, 100,150,200);
-  Padding padding(10, 20, 30, 40);
-  Geometry geometry(110, 120, 130, 140);
+  std::shared_ptr<Color> color = std::make_shared<Color>(50, 100,150,200);
+  std::shared_ptr<Padding> padding = std::make_shared<Padding>(10, 20, 30, 40);
+  std::shared_ptr<Geometry> geometry = std::make_shared<Geometry>(110, 120, 130, 140);
+  std::shared_ptr<Color> bg_color = std::make_shared<Color>(71, 72, 73, 74);
 
-  item.SetStyle(std::make_shared<Style>(color, padding, geometry));
+  item.SetStyle(std::make_shared<Style>(color, padding, geometry, bg_color, "bg path"));
   item.SetVisible(false);
   item.SetEnable(false);
   item.AddReceiver("receiver_1");
@@ -123,8 +124,7 @@ TEST_F(AbstractItemTest, SerializeDeserialize) {
   time(&current_time);
   std::static_pointer_cast<IItemInfoInternal>(item.GetInfo())->SetTime(current_time);
 
-  Color color2(150, 160, 170, 180);
-
+  std::shared_ptr<Color> color2 = std::make_shared<Color>(150, 160, 170, 180);
   std::shared_ptr<LEDInfo> led = std::make_shared<LEDInfo>(color2);
   led->SetOnPeriod(10);
   led->SetOffPeriod(20);
@@ -153,25 +153,32 @@ TEST_F(AbstractItemTest, SerializeDeserialize) {
   ASSERT_EQ(gen_test->GetTag(), "tag");
   ASSERT_EQ(gen_test->GetInfo()->GetTime(), current_time);
 
-  ASSERT_EQ(gen_test->GetStyle()->GetPadding().GetLeft(), 10);
-  ASSERT_EQ(gen_test->GetStyle()->GetPadding().GetTop(), 20);
-  ASSERT_EQ(gen_test->GetStyle()->GetPadding().GetRight(), 30);
-  ASSERT_EQ(gen_test->GetStyle()->GetPadding().GetBottom(), 40);
+  ASSERT_EQ(gen_test->GetStyle()->GetPadding()->GetLeft(), 10);
+  ASSERT_EQ(gen_test->GetStyle()->GetPadding()->GetTop(), 20);
+  ASSERT_EQ(gen_test->GetStyle()->GetPadding()->GetRight(), 30);
+  ASSERT_EQ(gen_test->GetStyle()->GetPadding()->GetBottom(), 40);
 
-  ASSERT_EQ(gen_test->GetStyle()->GetColor().GetAVal(), 50);
-  ASSERT_EQ(gen_test->GetStyle()->GetColor().GetRVal(), 100);
-  ASSERT_EQ(gen_test->GetStyle()->GetColor().GetGVal(), 150);
-  ASSERT_EQ(gen_test->GetStyle()->GetColor().GetBVal(), 200);
+  ASSERT_EQ(gen_test->GetStyle()->GetColor()->GetAVal(), 50);
+  ASSERT_EQ(gen_test->GetStyle()->GetColor()->GetRVal(), 100);
+  ASSERT_EQ(gen_test->GetStyle()->GetColor()->GetGVal(), 150);
+  ASSERT_EQ(gen_test->GetStyle()->GetColor()->GetBVal(), 200);
 
-  ASSERT_EQ(gen_test->GetStyle()->GetGeometry().GetX(), 110);
-  ASSERT_EQ(gen_test->GetStyle()->GetGeometry().GetY(), 120);
-  ASSERT_EQ(gen_test->GetStyle()->GetGeometry().GetWidth(), 130);
-  ASSERT_EQ(gen_test->GetStyle()->GetGeometry().GetHeight(), 140);
+  ASSERT_EQ(gen_test->GetStyle()->GetGeometry()->GetX(), 110);
+  ASSERT_EQ(gen_test->GetStyle()->GetGeometry()->GetY(), 120);
+  ASSERT_EQ(gen_test->GetStyle()->GetGeometry()->GetWidth(), 130);
+  ASSERT_EQ(gen_test->GetStyle()->GetGeometry()->GetHeight(), 140);
 
-  ASSERT_EQ(gen_test->GetLEDInfo()->GetColor().GetAVal(), 150);
-  ASSERT_EQ(gen_test->GetLEDInfo()->GetColor().GetRVal(), 160);
-  ASSERT_EQ(gen_test->GetLEDInfo()->GetColor().GetGVal(), 170);
-  ASSERT_EQ(gen_test->GetLEDInfo()->GetColor().GetBVal(), 180);
+  ASSERT_EQ(gen_test->GetStyle()->GetBackgroundColor()->GetAVal(), 71);
+  ASSERT_EQ(gen_test->GetStyle()->GetBackgroundColor()->GetRVal(), 72);
+  ASSERT_EQ(gen_test->GetStyle()->GetBackgroundColor()->GetGVal(), 73);
+  ASSERT_EQ(gen_test->GetStyle()->GetBackgroundColor()->GetBVal(), 74);
+
+  ASSERT_EQ(gen_test->GetStyle()->GetBackgroundImage(), "bg path");
+
+  ASSERT_EQ(gen_test->GetLEDInfo()->GetColor()->GetAVal(), 150);
+  ASSERT_EQ(gen_test->GetLEDInfo()->GetColor()->GetRVal(), 160);
+  ASSERT_EQ(gen_test->GetLEDInfo()->GetColor()->GetGVal(), 170);
+  ASSERT_EQ(gen_test->GetLEDInfo()->GetColor()->GetBVal(), 180);
   ASSERT_EQ(gen_test->GetLEDInfo()->GetOnPeriod(), 10);
   ASSERT_EQ(gen_test->GetLEDInfo()->GetOffPeriod(), 20);
 
@@ -217,6 +224,41 @@ TEST_F(AbstractItemTest, SerializeDeserialize) {
   app_control_get_app_id(ac->GetAppControl(), &app_id);
 
   ASSERT_STREQ(app_id, "new_appid_1");
+}
+
+TEST_F(AbstractItemTest, SerializeDeserialize2) {
+  /* Serialize */
+  TestItem item("test_id");
+
+  std::shared_ptr<Color> color = std::make_shared<Color>(50, 100,150,200);
+  std::shared_ptr<Padding> padding = std::make_shared<Padding>(10, 20, 30, 40);
+  std::shared_ptr<Geometry> geometry = std::make_shared<Geometry>(110, 120, 130, 140);
+
+  item.SetStyle(std::make_shared<Style>(color, padding, geometry, nullptr, ""));
+
+  /* Deserialize */
+  Bundle b = item.Serialize();
+
+  std::shared_ptr<AbstractItem> gen_item = ItemInflator::Create(b);
+  TestItem* gen_test = static_cast<TestItem*>(gen_item.get());
+
+  ASSERT_EQ(gen_test->GetStyle()->GetPadding()->GetLeft(), 10);
+  ASSERT_EQ(gen_test->GetStyle()->GetPadding()->GetTop(), 20);
+  ASSERT_EQ(gen_test->GetStyle()->GetPadding()->GetRight(), 30);
+  ASSERT_EQ(gen_test->GetStyle()->GetPadding()->GetBottom(), 40);
+
+  ASSERT_EQ(gen_test->GetStyle()->GetColor()->GetAVal(), 50);
+  ASSERT_EQ(gen_test->GetStyle()->GetColor()->GetRVal(), 100);
+  ASSERT_EQ(gen_test->GetStyle()->GetColor()->GetGVal(), 150);
+  ASSERT_EQ(gen_test->GetStyle()->GetColor()->GetBVal(), 200);
+
+  ASSERT_EQ(gen_test->GetStyle()->GetGeometry()->GetX(), 110);
+  ASSERT_EQ(gen_test->GetStyle()->GetGeometry()->GetY(), 120);
+  ASSERT_EQ(gen_test->GetStyle()->GetGeometry()->GetWidth(), 130);
+  ASSERT_EQ(gen_test->GetStyle()->GetGeometry()->GetHeight(), 140);
+
+  ASSERT_EQ(gen_test->GetStyle()->GetBackgroundColor(), nullptr);
+  ASSERT_EQ(gen_test->GetStyle()->GetBackgroundImage(), "");
 }
 
 TEST_F(AbstractItemTest, ItemInfoCanReceive) {

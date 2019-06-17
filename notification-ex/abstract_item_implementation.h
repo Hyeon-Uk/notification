@@ -64,6 +64,7 @@ class AbstractItem::Impl {
   time_t time_ = 0;
   uid_t uid_ = 0;
   int request_id_ = 0;
+  std::string background_;
 };
 
 }  // namespace item

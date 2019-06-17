@@ -963,13 +963,14 @@ extern "C" EXPORT_API int noti_ex_color_create(noti_ex_color_h *handle,
     return NOTI_EX_ERROR_INVALID_PARAMETER;
   }
 
-  auto* p = new (std::nothrow) Color(a, r, g, b);
-  if (p == nullptr) {
+  auto* ptr = new (std::nothrow) shared_ptr<Color>(
+      new (std::nothrow) Color(a, r, g, b));
+  if (ptr == nullptr || ptr->get() == nullptr) {
     LOGE("Out-of-memory");
     return NOTI_EX_ERROR_OUT_OF_MEMORY;
   }
 
-  *handle = p;
+  *handle = ptr;
 
   return NOTI_EX_ERROR_NONE;
 }
@@ -980,8 +981,8 @@ extern "C" EXPORT_API int noti_ex_color_destroy(noti_ex_color_h handle) {
     return NOTI_EX_ERROR_INVALID_PARAMETER;
   }
 
-  Color* p = static_cast<Color*>(handle);
-  p->~Color();
+  shared_ptr<Color>* p = static_cast<shared_ptr<Color>*>(handle);
+  delete p;
 
   return NOTI_EX_ERROR_NONE;
 }
@@ -993,8 +994,8 @@ extern "C" EXPORT_API int noti_ex_color_get_alpha(noti_ex_color_h handle,
     return NOTI_EX_ERROR_INVALID_PARAMETER;
   }
 
-  Color* p = static_cast<Color*>(handle);
-  *val = p->GetAVal();
+  shared_ptr<Color>* p = static_cast<shared_ptr<Color>*>(handle);
+  *val = (*p)->GetAVal();
 
   return NOTI_EX_ERROR_NONE;
 }
@@ -1006,8 +1007,8 @@ extern "C" EXPORT_API int noti_ex_color_get_red(noti_ex_color_h handle,
     return NOTI_EX_ERROR_INVALID_PARAMETER;
   }
 
-  Color* p = static_cast<Color*>(handle);
-  *val = p->GetRVal();
+  shared_ptr<Color>* p = static_cast<shared_ptr<Color>*>(handle);
+  *val = (*p)->GetRVal();
 
   return NOTI_EX_ERROR_NONE;
 }
@@ -1019,8 +1020,8 @@ extern "C" EXPORT_API int noti_ex_color_get_green(noti_ex_color_h handle,
     return NOTI_EX_ERROR_INVALID_PARAMETER;
   }
 
-  Color* p = static_cast<Color*>(handle);
-  *val = p->GetGVal();
+  shared_ptr<Color>* p = static_cast<shared_ptr<Color>*>(handle);
+  *val = (*p)->GetGVal();
 
   return NOTI_EX_ERROR_NONE;
 }
@@ -1032,8 +1033,8 @@ extern "C" EXPORT_API int noti_ex_color_get_blue(noti_ex_color_h handle,
     return NOTI_EX_ERROR_INVALID_PARAMETER;
   }
 
-  Color* p = static_cast<Color*>(handle);
-  *val = p->GetBVal();
+  shared_ptr<Color>* p = static_cast<shared_ptr<Color>*>(handle);
+  *val = (*p)->GetBVal();
 
   return NOTI_EX_ERROR_NONE;
 }
@@ -1051,7 +1052,14 @@ extern "C" EXPORT_API int noti_ex_padding_create(noti_ex_padding_h *handle,
     return NOTI_EX_ERROR_OUT_OF_MEMORY;
   }
 
-  *handle = p;
+  auto* ptr = new (std::nothrow) shared_ptr<Padding>(
+      new (std::nothrow) Padding(left, top, right, bottom));
+  if (ptr == nullptr || ptr->get() == nullptr) {
+    LOGE("Out-of-memory");
+    return NOTI_EX_ERROR_OUT_OF_MEMORY;
+  }
+
+  *handle = ptr;
 
   return NOTI_EX_ERROR_NONE;
 }
@@ -1062,8 +1070,8 @@ extern "C" EXPORT_API int noti_ex_padding_destroy(noti_ex_padding_h handle) {
     return NOTI_EX_ERROR_INVALID_PARAMETER;
   }
 
-  Padding* p = static_cast<Padding*>(handle);
-  p->~Padding();
+  shared_ptr<Padding>* p = static_cast<shared_ptr<Padding>*>(handle);
+  delete p;
 
   return NOTI_EX_ERROR_NONE;
 }
@@ -1075,8 +1083,8 @@ extern "C" EXPORT_API int noti_ex_padding_get_left(noti_ex_padding_h handle,
     return NOTI_EX_ERROR_INVALID_PARAMETER;
   }
 
-  Padding* p = static_cast<Padding*>(handle);
-  *val = p->GetLeft();
+  shared_ptr<Padding>* p = static_cast<shared_ptr<Padding>*>(handle);
+  *val = (*p)->GetLeft();
 
   return NOTI_EX_ERROR_NONE;
 }
@@ -1088,8 +1096,8 @@ extern "C" EXPORT_API int noti_ex_padding_get_top(noti_ex_padding_h handle,
     return NOTI_EX_ERROR_INVALID_PARAMETER;
   }
 
-  Padding* p = static_cast<Padding*>(handle);
-  *val = p->GetTop();
+  shared_ptr<Padding>* p = static_cast<shared_ptr<Padding>*>(handle);
+  *val = (*p)->GetTop();
 
   return NOTI_EX_ERROR_NONE;
 }
@@ -1101,8 +1109,8 @@ extern "C" EXPORT_API int noti_ex_padding_get_right(noti_ex_padding_h handle,
     return NOTI_EX_ERROR_INVALID_PARAMETER;
   }
 
-  Padding* p = static_cast<Padding*>(handle);
-  *val = p->GetRight();
+  shared_ptr<Padding>* p = static_cast<shared_ptr<Padding>*>(handle);
+  *val = (*p)->GetRight();
 
   return NOTI_EX_ERROR_NONE;
 }
@@ -1114,8 +1122,8 @@ extern "C" EXPORT_API int noti_ex_padding_get_bottom(noti_ex_padding_h handle,
     return NOTI_EX_ERROR_INVALID_PARAMETER;
   }
 
-  Padding* p = static_cast<Padding*>(handle);
-  *val = p->GetBottom();
+  shared_ptr<Padding>* p = static_cast<shared_ptr<Padding>*>(handle);
+  *val = (*p)->GetBottom();
 
   return NOTI_EX_ERROR_NONE;
 }
@@ -1127,13 +1135,14 @@ extern "C" EXPORT_API int noti_ex_geometry_create(noti_ex_geometry_h *handle,
     return NOTI_EX_ERROR_INVALID_PARAMETER;
   }
 
-  auto* p = new (std::nothrow) Geometry(x, y, w, h);
-  if (p == nullptr) {
+  auto* ptr = new (std::nothrow) shared_ptr<Geometry>(
+      new (std::nothrow) Geometry(x, y, w, h));
+  if (ptr == nullptr || ptr->get() == nullptr) {
     LOGE("Out-of-memory");
     return NOTI_EX_ERROR_OUT_OF_MEMORY;
   }
 
-  *handle = p;
+  *handle = ptr;
 
   return NOTI_EX_ERROR_NONE;
 }
@@ -1144,8 +1153,8 @@ extern "C" EXPORT_API int noti_ex_geometry_destroy(noti_ex_geometry_h handle) {
     return NOTI_EX_ERROR_INVALID_PARAMETER;
   }
 
-  Geometry* p = static_cast<Geometry*>(handle);
-  p->~Geometry();
+  shared_ptr<Geometry>* p = static_cast<shared_ptr<Geometry>*>(handle);
+  delete p;
 
   return NOTI_EX_ERROR_NONE;
 }
@@ -1157,8 +1166,8 @@ extern "C" EXPORT_API int noti_ex_geometry_get_x(noti_ex_geometry_h handle,
     return NOTI_EX_ERROR_INVALID_PARAMETER;
   }
 
-  Geometry* p = static_cast<Geometry*>(handle);
-  *val = p->GetX();
+  shared_ptr<Geometry>* p = static_cast<shared_ptr<Geometry>*>(handle);
+  *val = (*p)->GetX();
 
   return NOTI_EX_ERROR_NONE;
 }
@@ -1170,8 +1179,8 @@ extern "C" EXPORT_API int noti_ex_geometry_get_y(noti_ex_geometry_h handle,
     return NOTI_EX_ERROR_INVALID_PARAMETER;
   }
 
-  Geometry* p = static_cast<Geometry*>(handle);
-  *val = p->GetY();
+  shared_ptr<Geometry>* p = static_cast<shared_ptr<Geometry>*>(handle);
+  *val = (*p)->GetY();
 
   return NOTI_EX_ERROR_NONE;
 }
@@ -1183,8 +1192,8 @@ extern "C" EXPORT_API int noti_ex_geometry_get_width(noti_ex_geometry_h handle,
     return NOTI_EX_ERROR_INVALID_PARAMETER;
   }
 
-  Geometry* p = static_cast<Geometry*>(handle);
-  *val = p->GetWidth();
+  shared_ptr<Geometry>* p = static_cast<shared_ptr<Geometry>*>(handle);
+  *val = (*p)->GetWidth();
 
   return NOTI_EX_ERROR_NONE;
 }
@@ -1196,8 +1205,8 @@ extern "C" EXPORT_API int noti_ex_geometry_get_height(noti_ex_geometry_h handle,
     return NOTI_EX_ERROR_INVALID_PARAMETER;
   }
 
-  Geometry* p = static_cast<Geometry*>(handle);
-  *val = p->GetHeight();
+  shared_ptr<Geometry>* p = static_cast<shared_ptr<Geometry>*>(handle);
+  *val = (*p)->GetHeight();
 
   return NOTI_EX_ERROR_NONE;
 }
@@ -1211,17 +1220,21 @@ extern "C" EXPORT_API int noti_ex_style_create(noti_ex_style_h *handle,
     return NOTI_EX_ERROR_INVALID_PARAMETER;
   }
 
-  Color* color_ = static_cast<Color*>(color);
-  Padding* padding_ = static_cast<Padding*>(padding);
-  Geometry* geo_ = static_cast<Geometry*>(geometry);
+  shared_ptr<Color> col = (color == nullptr) ?
+      nullptr : *(static_cast<shared_ptr<Color>*>(color));
+  shared_ptr<Padding> padd = (padding == nullptr) ?
+      nullptr : *(static_cast<shared_ptr<Padding>*>(padding));
+  shared_ptr<Geometry> geo = (geometry == nullptr) ?
+      nullptr : *(static_cast<shared_ptr<Geometry>*>(geometry));
 
-  auto* p = new (std::nothrow) Style(*color_, *padding_, *geo_);
-  if (p == nullptr) {
+  auto* ptr = new (std::nothrow) shared_ptr<Style>(
+      new (std::nothrow) Style(col, padd, geo));
+  if (ptr == nullptr || ptr->get() == nullptr) {
     LOGE("Out-of-memory");
     return NOTI_EX_ERROR_OUT_OF_MEMORY;
   }
 
-  *handle = p;
+  *handle = ptr;
 
   return NOTI_EX_ERROR_NONE;
 }
@@ -1232,8 +1245,8 @@ extern "C" EXPORT_API int noti_ex_style_destroy(noti_ex_style_h handle) {
     return NOTI_EX_ERROR_INVALID_PARAMETER;
   }
 
-  Style* p = static_cast<Style*>(handle);
-  p->~Style();
+  shared_ptr<Style>* p = static_cast<shared_ptr<Style>*>(handle);
+  delete p;
 
   return NOTI_EX_ERROR_NONE;
 }
@@ -1245,14 +1258,20 @@ extern "C" EXPORT_API int noti_ex_style_get_padding(noti_ex_style_h handle,
     return NOTI_EX_ERROR_INVALID_PARAMETER;
   }
 
-  Style* p = static_cast<Style*>(handle);
-  Padding* padding_ = new (std::nothrow) Padding(p->GetPadding());
-  if (padding_ == nullptr) {
+  shared_ptr<Style>* p = static_cast<shared_ptr<Style>*>(handle);
+  if ((*p)->GetPadding() == nullptr) {
+    LOGW("Padding info is null");
+    return NOTI_EX_ERROR_INVALID_PARAMETER;
+  }
+
+  shared_ptr<Padding>* padd = new (std::nothrow) shared_ptr<Padding>(
+      new (std::nothrow) Padding(*((*p)->GetPadding())));
+  if (padd == nullptr || padd->get() == nullptr) {
     LOGE("Out-of-memory");
     return NOTI_EX_ERROR_OUT_OF_MEMORY;
   }
 
-  *padding = padding_;
+  *padding = padd;
 
   return NOTI_EX_ERROR_NONE;
 }
@@ -1264,14 +1283,20 @@ extern "C" EXPORT_API int noti_ex_style_get_color(noti_ex_style_h handle,
     return NOTI_EX_ERROR_INVALID_PARAMETER;
   }
 
-  Style* p = static_cast<Style*>(handle);
-  Color* color_ = new (std::nothrow) Color(p->GetColor());
-  if (color_ == nullptr) {
+  shared_ptr<Style>* p = static_cast<shared_ptr<Style>*>(handle);
+  if ((*p)->GetColor() == nullptr) {
+    LOGW("Color info is null");
+    return NOTI_EX_ERROR_INVALID_PARAMETER;
+  }
+
+  shared_ptr<Color>* col = new (std::nothrow) shared_ptr<Color>(
+      new (std::nothrow) Color(*((*p)->GetColor())));
+  if (col == nullptr || col->get() == nullptr) {
     LOGE("Out-of-memory");
     return NOTI_EX_ERROR_OUT_OF_MEMORY;
   }
 
-  *color = color_;
+  *color = col;
 
   return NOTI_EX_ERROR_NONE;
 }
@@ -1283,14 +1308,20 @@ extern "C" EXPORT_API int noti_ex_style_get_geometry(noti_ex_style_h handle,
     return NOTI_EX_ERROR_INVALID_PARAMETER;
   }
 
-  Style* p = static_cast<Style*>(handle);
-  Geometry* geo_ = new (std::nothrow) Geometry(p->GetGeometry());
-  if (geo_ == nullptr) {
+  shared_ptr<Style>* p = static_cast<shared_ptr<Style>*>(handle);
+  if ((*p)->GetGeometry() == nullptr) {
+    LOGW("Geometry info is null");
+    return NOTI_EX_ERROR_INVALID_PARAMETER;
+  }
+
+  shared_ptr<Geometry>* geo = new (std::nothrow) shared_ptr<Geometry>(
+      new (std::nothrow) Geometry(*((*p)->GetGeometry())));
+  if (geo == nullptr || geo->get() == nullptr) {
     LOGE("Out-of-memory");
     return NOTI_EX_ERROR_OUT_OF_MEMORY;
   }
 
-  *geometry = geo_;
+  *geometry = geo;
 
   return NOTI_EX_ERROR_NONE;
 }
@@ -1302,7 +1333,7 @@ extern "C" EXPORT_API int noti_ex_led_info_create(noti_ex_led_info_h *handle,
     return NOTI_EX_ERROR_INVALID_PARAMETER;
   }
 
-  Color* color_ = static_cast<Color*>(color);
+  shared_ptr<Color>* color_ = static_cast<shared_ptr<Color>*>(color);
   auto* p = new (std::nothrow) LEDInfo(*color_);
   if (p == nullptr) {
     LOGE("Out-of-memory");
@@ -1386,13 +1417,19 @@ extern "C" EXPORT_API int noti_ex_led_info_get_color(
   }
 
   LEDInfo* p = static_cast<LEDInfo*>(handle);
-  Color* color_ = new (std::nothrow) Color(p->GetColor());
-  if (color_ == nullptr) {
+  if (p->GetColor() == nullptr) {
+    LOGE("Color is null");
+    return NOTI_EX_ERROR_INVALID_PARAMETER;
+  }
+
+  shared_ptr<Color>* col = new (std::nothrow) shared_ptr<Color>(
+      new (std::nothrow) Color(*(p->GetColor())));
+  if (col == nullptr || col->get() == nullptr) {
     LOGE("Out-of-memory");
     return NOTI_EX_ERROR_OUT_OF_MEMORY;
   }
 
-  *color = color_;
+  *color = col;
 
   return NOTI_EX_ERROR_NONE;
 }
@@ -1638,7 +1675,18 @@ extern "C" EXPORT_API int noti_ex_item_get_style(noti_ex_item_h handle,
 
   Handle* p = static_cast<Handle*>(handle);
   shared_ptr<Style> s = p->Get()->GetStyle();
-  *style = static_cast<noti_ex_style_h>(s.get());
+  if (s.get() == nullptr) {
+    LOGE("Style is null");
+    return NOTI_EX_ERROR_INVALID_PARAMETER;
+  }
+
+  auto* ptr = new (std::nothrow) shared_ptr<Style>(new (std::nothrow) Style(*s));
+  if (ptr == nullptr || ptr->get() == nullptr) {
+    LOGE("Out of memory");
+    return NOTI_EX_ERROR_OUT_OF_MEMORY;
+  }
+
+  *style = ptr;
   return NOTI_EX_ERROR_NONE;
 }
 
@@ -1650,8 +1698,8 @@ extern "C" EXPORT_API int noti_ex_item_set_style(noti_ex_item_h handle,
   }
 
   Handle* p = static_cast<Handle*>(handle);
-  Style* s = static_cast<Style*>(style);
-  p->Get()->SetStyle(shared_ptr<Style>(s));
+  shared_ptr<Style>* s = static_cast<shared_ptr<Style>*>(style);
+  p->Get()->SetStyle(*s);
   return NOTI_EX_ERROR_NONE;
 }
 
