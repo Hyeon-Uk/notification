@@ -129,6 +129,17 @@ int Reporter::SendEvent(const IEventInfo& info,
   return info.GetRequestId();
 }
 
+int Reporter::SendEvent(const IEventInfo& info,
+    std::list<std::shared_ptr<item::AbstractItem>> notiList) {
+  list<Bundle> serialized_list;
+  for (auto& i : notiList) {
+    Bundle b = i->Serialize();
+    serialized_list.push_back(b);
+  }
+  impl_->sender_->Notify(info, serialized_list);
+  return info.GetRequestId();
+}
+
 void Reporter::OnEvent(const IEventInfo& info, list<Bundle> serialized) {
   NotificationError error =
       (static_cast<const IEventInfoInternal&>(info)).GetError();

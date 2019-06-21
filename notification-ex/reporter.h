@@ -41,6 +41,8 @@ class EXPORT_API Reporter : public IEventObserver {
   virtual ~Reporter();
 
   int SendEvent(const IEventInfo& info, std::shared_ptr<item::AbstractItem> noti);
+  int SendEvent(const IEventInfo& info,
+      std::list<std::shared_ptr<item::AbstractItem>> notiList);
   void SendError(const IEventInfo& info, NotificationError error);
   int Post(std::shared_ptr<item::AbstractItem> noti);
   int Post(std::list<std::shared_ptr<item::AbstractItem>> notiList);
