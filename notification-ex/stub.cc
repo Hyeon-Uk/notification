@@ -2045,16 +2045,18 @@ extern "C" EXPORT_API int noti_ex_manager_get(noti_ex_manager_h handle,
       *count = 0;
       return NOTI_EX_ERROR_NONE;
     }
-    *items = (noti_ex_item_h*)calloc(item_list.size(), sizeof(noti_ex_item_h));
-    if (*items == nullptr) {
+    noti_ex_item_h* added_item =
+        (noti_ex_item_h*)calloc(item_list.size(), sizeof(noti_ex_item_h));
+    if (added_item == nullptr) {
       LOGE("Fail to create items");
       return NOTI_EX_ERROR_OUT_OF_MEMORY;
     }
 
     int idx = 0;
     for (auto& i : item_list) {
-      *items[idx++] = new Handle(move(i));
+      added_item[idx++] = static_cast<noti_ex_item_h>(new Handle(move(i)));
     }
+    *items = added_item;
     *count = item_list.size();
   } catch (Exception &ex) {
     LOGE("%s %d", ex.what(), ex.GetErrorCode());
