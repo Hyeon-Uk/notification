@@ -70,6 +70,12 @@ AbstractItem& CheckBoxItem::FindByID(std::string id) {
   return FactoryManager::GetInst().GetNullItem();
 }
 
+bool CheckBoxItem::IsItemTypeExist(int type) {
+  if (GetType() == type)
+    return true;
+  return false;
+}
+
 std::string CheckBoxItem::GetTitle(void) const {
   return impl_->title_;
 }

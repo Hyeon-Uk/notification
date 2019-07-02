@@ -70,6 +70,12 @@ AbstractItem& ImageItem::FindByID(std::string id) {
   return FactoryManager::GetInst().GetNullItem();
 }
 
+bool ImageItem::IsItemTypeExist(int type) {
+  if (GetType() == type)
+    return true;
+  return false;
+}
+
 std::string ImageItem::GetImagePath() const {
   return impl_->image_path_;
 }

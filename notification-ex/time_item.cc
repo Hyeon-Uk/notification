@@ -93,6 +93,12 @@ AbstractItem& TimeItem::FindByID(std::string id) {
   return FactoryManager::GetInst().GetNullItem();
 }
 
+bool TimeItem::IsItemTypeExist(int type) {
+  if (GetType() == type)
+    return true;
+  return false;
+}
+
 time_t TimeItem::GetTime() const {
   return impl_->time_;
 }

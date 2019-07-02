@@ -118,6 +118,17 @@ AbstractItem& GroupItem::FindByID(std::string id) {
   return FactoryManager::GetInst().GetNullItem();
 }
 
+bool GroupItem::IsItemTypeExist(int type) {
+  if (GetType() == type)
+    return true;
+
+  for (auto& i : impl_->children_list_) {
+    if (i.get()->IsItemTypeExist(type))
+      return true;
+  }
+  return false;
+}
+
 list<string> GroupItem::GetSharedPath() const {
   list<string> ret;
 

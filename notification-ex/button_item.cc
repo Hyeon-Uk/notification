@@ -72,6 +72,12 @@ AbstractItem& ButtonItem::FindByID(std::string id) {
   return FactoryManager::GetInst().GetNullItem();
 }
 
+bool ButtonItem::IsItemTypeExist(int type) {
+  if (GetType() == type)
+    return true;
+  return false;
+}
+
 std::string ButtonItem::GetTitle() const {
   return impl_->title_;
 }

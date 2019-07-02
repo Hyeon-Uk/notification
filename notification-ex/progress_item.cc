@@ -93,6 +93,12 @@ AbstractItem& ProgressItem::FindByID(std::string id) {
   return FactoryManager::GetInst().GetNullItem();
 }
 
+bool ProgressItem::IsItemTypeExist(int type) {
+  if (GetType() == type)
+    return true;
+  return false;
+}
+
 float ProgressItem::GetCurrent() const {
   return impl_->current_;
 }

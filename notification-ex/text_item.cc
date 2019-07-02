@@ -74,6 +74,12 @@ AbstractItem& TextItem::FindByID(std::string id) {
   return FactoryManager::GetInst().GetNullItem();
 }
 
+bool TextItem::IsItemTypeExist(int type) {
+  if (GetType() == type)
+    return true;
+  return false;
+}
+
 void TextItem::SetContents(std::string contents) {
   impl_->text_ = contents;
 }

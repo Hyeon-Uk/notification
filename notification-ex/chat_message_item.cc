@@ -131,6 +131,12 @@ AbstractItem&  ChatMessageItem::FindByID(std::string id) {
   return FactoryManager::GetInst().GetNullItem();
 }
 
+bool ChatMessageItem::IsItemTypeExist(int type) {
+  if (GetType() == type)
+    return true;
+  return false;
+}
+
 TextItem& ChatMessageItem::GetNameItem() const {
   return *(impl_->name_);
 }

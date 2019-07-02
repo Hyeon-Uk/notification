@@ -52,6 +52,11 @@ class TestItem : public AbstractItem {
   AbstractItem& FindByID(std::string id) override {
     return *this;
   }
+  bool IsItemTypeExist(int type) {
+  if (GetType() == type)
+      return true;
+    return false;
+  }
   int GetType() const override {
     return MY_ITEM_TYPE;
   }

@@ -58,5 +58,11 @@ AbstractItem& NullItem::FindByID(std::string id) {
   return *this;
 }
 
+bool NullItem::IsItemTypeExist(int type) {
+  if (GetType() == type)
+    return true;
+  return false;
+}
+
 }  // namespace item
 }  // namespace notification

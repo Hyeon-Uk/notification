@@ -78,6 +78,12 @@ AbstractItem& InputSelectorItem::FindByID(std::string id) {
   return FactoryManager::GetInst().GetNullItem();
 }
 
+bool InputSelectorItem::IsItemTypeExist(int type) {
+  if (GetType() == type)
+    return true;
+  return false;
+}
+
 list<string> InputSelectorItem::GetContents() const {
   return impl_->contents_;
 }

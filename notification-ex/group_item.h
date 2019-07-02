@@ -79,6 +79,14 @@ class EXPORT_API GroupItem : public AbstractItem {
   AbstractItem& FindByID(std::string id) override;
 
   /**
+   * @brief Checks the item type exist in this notification.
+   * @since_tizen 5.5
+   * @param[in] type notification item type
+   * @return true if the item type exists
+   */
+  bool IsItemTypeExist(int type) override;
+
+  /**
    * @brief Gets the type of GroupItem.
    * @since_tizen 5.5
    * @return AbstractItem::Type::Group

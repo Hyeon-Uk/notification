@@ -79,6 +79,12 @@ AbstractItem& IconTextItem::FindByID(std::string id) {
   return FactoryManager::GetInst().GetNullItem();
 }
 
+bool IconTextItem::IsItemTypeExist(int type) {
+  if (GetType() == type)
+    return true;
+  return false;
+}
+
 IconItem& IconTextItem::GetIconItem() const {
   return *(impl_->icon_);
 }

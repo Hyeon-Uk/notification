@@ -77,6 +77,14 @@ class EXPORT_API NullItem : public AbstractItem {
   void Deserialize(Bundle b) override;
 
   /**
+   * @brief Checks the item type exist in this notification.
+   * @since_tizen 5.5
+   * @param[in] type notification item type
+   * @return true if the item type exists
+   */
+  bool IsItemTypeExist(int type) override;
+
+  /**
    * @brief Finds the AbstractItem using by notification item id.
    * @since_tizen 5.5
    * @param[in] id notification item id

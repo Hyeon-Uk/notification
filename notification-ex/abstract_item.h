@@ -776,6 +776,14 @@ class EXPORT_API AbstractItem {
   virtual AbstractItem& FindByID(std::string id) = 0;
 
   /**
+   * @brief Checks the item type exist in this notification.
+   * @since_tizen 5.5
+   * @param[in] type notification item type
+   * @return true if the item type exists
+   */
+  virtual bool IsItemTypeExist(int type) = 0;
+
+  /**
    * @brief Gets the type of notification item.
    * @since_tizen 5.5
    * @return The type of notification item
