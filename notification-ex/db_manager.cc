@@ -44,6 +44,7 @@
   " root_id TEXT NOT NULL,\n" \
   " app_id TEXT NOT NULL,\n" \
   " uid INTEGER,\n" \
+  " channel TEXT,\n" \
   " priv_id INTEGER,\n" \
   " pkg_id TEXT,\n" \
   " policy INTEGER,\n" \
@@ -404,11 +405,12 @@ int DBManager::InsertNotification(list<shared_ptr<item::AbstractItem>> addedItem
 
     Bundle b = i->Serialize();
     query = sqlite3_mprintf("INSERT INTO noti_ex_list"
-          " (root_id, app_id, uid, priv_id, pkg_id, policy, data, insert_time)"
-          " VALUES (%Q, %Q, %d, %d, %Q, %d, %Q, %d)",
+          " (root_id, app_id, uid, channel, priv_id, pkg_id, policy, data, insert_time)"
+          " VALUES (%Q, %Q, %d, %Q, %d, %Q, %d, %Q, %d)",
           i->GetId().c_str(),
           i->GetSenderAppId().c_str(),
           uid,
+          i->GetChannel().c_str(),
           util::GetQuarkFromString(i->GetId() + to_string(uid)),
           GetPkgId(i->GetSenderAppId(),uid).c_str(),
           static_cast<int>(i->GetPolicy()),
@@ -584,10 +586,11 @@ int DBManager::UpdateNotification(shared_ptr<item::AbstractItem> updatedItem) {
 
   Bundle b = updatedItem->Serialize();
   query = sqlite3_mprintf("UPDATE noti_ex_list SET"
-     " priv_id = %d, pkg_id = %Q, policy = %d, data = %Q, insert_time = %d"
+     " priv_id = %d, pkg_id = %Q, channel = %Q, policy = %d, data = %Q, insert_time = %d"
      " WHERE root_id = %Q AND app_id = %Q AND uid = %d",
      util::GetQuarkFromString(updatedItem->GetId() + to_string(uid)),
      GetPkgId(updatedItem->GetSenderAppId(), uid).c_str(),
+     updatedItem->GetChannel().c_str(),
      static_cast<int>(updatedItem->GetPolicy()),
      reinterpret_cast<char*>(b.ToRaw().first.get()),
      static_pointer_cast<IItemInfo>(updatedItem->GetInfo())->GetTime(),
@@ -704,7 +707,8 @@ list<shared_ptr<item::AbstractItem>> DBManager::GetNotificationList
   return item_list;
 }
 
-list<shared_ptr<item::AbstractItem>> DBManager::GetNotificationList(uid_t uid) {
+list<shared_ptr<item::AbstractItem>> DBManager::GetNotificationList(
+      uid_t uid, string channel) {
   int ret, sim_mode;
   char* query;
   list<shared_ptr<item::AbstractItem>> item_list;
@@ -716,15 +720,22 @@ list<shared_ptr<item::AbstractItem>> DBManager::GetNotificationList(uid_t uid) {
     LOGI("vconf_get_int");
   }
 
-  if (sim_mode == VCONFKEY_TELEPHONY_SIM_INSERTED) {
-    query = sqlite3_mprintf("SELECT data FROM noti_ex_list WHERE uid = %d"
-                            " ORDER BY insert_time DESC", uid);
-  } else {
-    query = sqlite3_mprintf("SELECT data FROM noti_ex_list"
-            " WHERE  uid = %d AND (policy & %d) == 0 ORDER BY insert_time DESC",
-            uid, static_cast<int>(item::AbstractItem::Policy::SimMode));
+  string channel_query;
+  if (!channel.empty())
+    channel_query = " AND channel = '" + channel + "' ";
+
+  string simmode_query;
+  if (sim_mode != VCONFKEY_TELEPHONY_SIM_INSERTED) {
+    simmode_query = " AND (policy & " +
+        to_string(static_cast<int>(item::AbstractItem::Policy::SimMode)) +
+        ") == 0 ";
   }
 
+  string query_str = "SELECT data FROM noti_ex_list WHERE uid = %d " +
+      channel_query +
+      simmode_query;
+
+  query = sqlite3_mprintf(query_str.c_str(), uid);
   if (!query) {
     LOGE("OOM - sql query");
     return item_list;

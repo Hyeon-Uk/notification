@@ -118,8 +118,8 @@ unique_ptr<item::AbstractItem> Manager::FindByRootID(string id) {
   return move(gen_item);
 }
 
-list<unique_ptr<item::AbstractItem>> Manager::Get() {
-  EventInfo info(EventInfo::Get, util::GetAppId(), "");
+list<unique_ptr<item::AbstractItem>> Manager::Get(string channel) {
+  EventInfo info(EventInfo::Get, util::GetAppId(), channel);
   list<Bundle> result = impl_->sender_->Request(info);
   list<unique_ptr<item::AbstractItem>> gen_list;
   for (auto& i : result) {

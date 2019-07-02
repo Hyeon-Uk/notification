@@ -39,7 +39,7 @@ class EXPORT_API Manager : public IEventObserver {
       std::unique_ptr<IEventListener> listener, std::string receiver_group = "");
   virtual ~Manager();
 
-  std::list<std::unique_ptr<item::AbstractItem>> Get();
+  std::list<std::unique_ptr<item::AbstractItem>> Get(std::string channel = "");
   int Update(std::shared_ptr<item::AbstractItem> noti);
   int Delete(std::shared_ptr<item::AbstractItem> noti);
   int DeleteAll();
