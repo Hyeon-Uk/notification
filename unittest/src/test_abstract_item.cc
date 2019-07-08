@@ -135,6 +135,7 @@ TEST_F(AbstractItemTest, SerializeDeserialize) {
   led->SetOffPeriod(20);
 
   item.SetLEDInfo(led);
+  item.SetOnGoingState(true);
 
   /* Deserialize */
   Bundle b = item.Serialize();
@@ -229,6 +230,7 @@ TEST_F(AbstractItemTest, SerializeDeserialize) {
   app_control_get_app_id(ac->GetAppControl(), &app_id);
 
   ASSERT_STREQ(app_id, "new_appid_1");
+  ASSERT_EQ(gen_test->GetOnGoingState(), true);
 }
 
 TEST_F(AbstractItemTest, SerializeDeserialize2) {
@@ -275,6 +277,16 @@ TEST_F(AbstractItemTest, ItemInfoCanReceive) {
   ASSERT_TRUE(std::static_pointer_cast<IItemInfoInternal>(item.GetInfo())->CanReceive(ReceiverGroup::Panel));
   ASSERT_TRUE(std::static_pointer_cast<IItemInfoInternal>(item.GetInfo())->CanReceive(ReceiverGroup::LockScreen));
   ASSERT_FALSE(std::static_pointer_cast<IItemInfoInternal>(item.GetInfo())->CanReceive(ReceiverGroup::Popup));
+}
+
+TEST_F(AbstractItemTest, SetGetOnGoingState) {
+  TestItem item("test_id");
+
+  ASSERT_EQ(item.GetOnGoingState(), false);
+
+  item.SetOnGoingState(true);
+
+  ASSERT_EQ(item.GetOnGoingState(), true);
 }
 
 }  // namespace

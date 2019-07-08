@@ -65,6 +65,7 @@ class AbstractItem::Impl {
   uid_t uid_ = 0;
   int request_id_ = 0;
   std::string background_;
+  bool ongoing_ = false;
 };
 
 }  // namespace item

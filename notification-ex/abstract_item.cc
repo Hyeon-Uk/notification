@@ -79,6 +79,7 @@
 #define ABSTRACT_ITEM_ACTION_KEY "__ABSTRACT_ITEM_ACTION_KEY__"
 #define ABSTRACT_ITEM_HIDE_VIEWER_KEY "__ABSTRACT_ITEM_HIDE_VIEWER_KEY__"
 #define ABSTRACT_ITEM_TRUE "TRUE"
+#define ABSTRACT_ITEM_ONGOING_KEY "__ABSTRACT_ITEM_ONGOING_KEY__"
 
 using namespace std;
 namespace notification {
@@ -167,6 +168,7 @@ Bundle AbstractItem::Serialize() const {
   b.Add(ABSTRACT_ITEM_VISIBLE_KEY, to_string((int)impl_->visible_));
   b.Add(ABSTRACT_ITEM_ENABLE_KEY, to_string((int)impl_->enable_));
   b.Add(ABSTRACT_ITEM_POLICY_KEY, to_string((int)impl_->policy_));
+  b.Add(ABSTRACT_ITEM_ONGOING_KEY, to_string((int)impl_->ongoing_));
 
   if (impl_->receiver_group_list_.size() != 0) {
     vector<string> arr;
@@ -288,10 +290,9 @@ void AbstractItem::Deserialize(Bundle b) {
   string policy_str = b.GetString(ABSTRACT_ITEM_POLICY_KEY);
 
   impl_->policy_ = static_cast<Policy>(stoi(policy_str));
-
   impl_->visible_ = static_cast<bool>(stoi(b.GetString(ABSTRACT_ITEM_VISIBLE_KEY)));
-
   impl_->enable_ = static_cast<bool>(stoi(b.GetString(ABSTRACT_ITEM_ENABLE_KEY)));
+  impl_->ongoing_ = static_cast<bool>(stoi(b.GetString(ABSTRACT_ITEM_ONGOING_KEY)));
 
   vector<string> receiver_group = b.GetStringArray(ABSTRACT_ITEM_RECEIVER_GROUP_KEY);
   if (receiver_group.size() != 0) {
@@ -498,6 +499,14 @@ std::string AbstractItem::GetTag() const {
 
 void AbstractItem::SetTag(std::string tag) {
   impl_->tag_ = tag;
+}
+
+void AbstractItem::SetOnGoingState(bool ongoing) {
+  impl_->ongoing_ = ongoing;
+}
+
+bool AbstractItem::GetOnGoingState() const {
+  return impl_->ongoing_;
 }
 
 }  // namespace item

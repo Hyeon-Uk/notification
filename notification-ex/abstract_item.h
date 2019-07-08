@@ -1000,6 +1000,20 @@ class EXPORT_API AbstractItem {
    */
   void SetTag(std::string tag);
 
+  /**
+   * @brief Sets the ongoing state of notification item.
+   * @since_tizen 5.5
+   * @param[in] ongoing The ongoing state of notification item
+   */
+  void SetOnGoingState(bool ongoing);
+
+  /**
+   * @brief Gets the ongoing state of notification item.
+   * @since_tizen 5.5
+   * @return The ongoing state of notification item
+   */
+  bool GetOnGoingState() const;
+
  private:
   class Impl;
   std::unique_ptr<Impl> impl_;
