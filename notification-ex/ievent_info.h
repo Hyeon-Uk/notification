@@ -17,7 +17,7 @@
 #ifndef NOTIFICATION_EX_IEVENT_INFO_H_
 #define NOTIFICATION_EX_IEVENT_INFO_H_
 
-#include "notification-ex/ex_bundle.h"
+#include <bundle_cpp.h>
 
 namespace notification {
 
@@ -43,7 +43,7 @@ class EXPORT_API IEventInfo {
   virtual std::string GetChannel() const = 0;
   virtual std::string GetItemId() const = 0;
   virtual int GetRequestId() const = 0;
-  virtual Bundle Serialize() const = 0;
+  virtual tizen_base::Bundle Serialize() const = 0;
 };
 
 }  // namespace notification

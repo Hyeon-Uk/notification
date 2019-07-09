@@ -46,8 +46,9 @@ class EXPORT_API Manager : public IEventObserver {
   int Hide(std::shared_ptr<item::AbstractItem> noti);
   std::unique_ptr<item::AbstractItem> FindByRootID(std::string id);
   int SendEvent(const IEventInfo& info, std::shared_ptr<item::AbstractItem> noti);
-  void OnEvent(const IEventInfo& info, std::list<Bundle> serialized) override;
-  std::list<Bundle> OnRequest(const IEventInfo& info) override;
+  void OnEvent(const IEventInfo& info,
+      std::list<tizen_base::Bundle> serialized) override;
+  std::list<tizen_base::Bundle> OnRequest(const IEventInfo& info) override;
   int OnRequestNumber(const IEventInfo& info) override;
   void SendError(const IEventInfo& info, NotificationError error);
   int GetCount() const;

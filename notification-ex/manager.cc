@@ -38,6 +38,7 @@
 #define NOTIFICATION_EX_MANAGER_OBJECT_PATH "/org/tizen/notification_ex_manager"
 
 using namespace std;
+using namespace tizen_base;
 using namespace notification::item;
 namespace notification {
 

@@ -33,8 +33,9 @@ class EXPORT_API IEventListener {
   virtual ~IEventListener() = default;
   virtual void RegisterObserver(IEventObserver* observer) = 0;
   virtual void UnRegisterObserver(IEventObserver* observer) = 0;
-  virtual void NotifyObserver(const IEventInfo& info, std::list<Bundle> serialized) = 0;
-  virtual std::list<Bundle> NotifyObserver(const IEventInfo& info) = 0;
+  virtual void NotifyObserver(const IEventInfo& info,
+      std::list<tizen_base::Bundle> serialized) = 0;
+  virtual std::list<tizen_base::Bundle> NotifyObserver(const IEventInfo& info) = 0;
   virtual int NotifyNumberRequest(const IEventInfo& info) = 0;
 };
 

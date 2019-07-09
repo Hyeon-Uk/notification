@@ -60,14 +60,14 @@ class EXPORT_API VisibilityAction  : public AbstractAction {
    * @since_tizen 5.5
    * @return Bundle type data
    */
-  Bundle Serialize() const override;
+  tizen_base::Bundle Serialize() const override;
 
   /**
    * @brief Deserialize the serialized data.
    * @since_tizen 5.5
    * @param[in] b The serialized Bundle data
    */
-  void Deserialize(Bundle b) override;
+  void Deserialize(tizen_base::Bundle b) override;
 
   /**
    * @brief Gets whether local or not.

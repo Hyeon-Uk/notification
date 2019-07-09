@@ -48,7 +48,6 @@
 #include "notification-ex/progress_item.h"
 #include "notification-ex/time_item.h"
 #include "notification-ex/visibility_action.h"
-#include "notification-ex/ex_bundle.h"
 #include "notification-ex/event_info_internal.h"
 #include "notification-ex/manager.h"
 #include "notification-ex/dbus_sender.h"
@@ -66,6 +65,7 @@
 #define EXPORT_API __attribute__((visibility("default")))
 
 using namespace std;
+using namespace tizen_base;
 using namespace notification::item;
 using namespace notification;
 

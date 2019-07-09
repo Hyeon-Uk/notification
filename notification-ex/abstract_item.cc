@@ -82,6 +82,7 @@
 #define ABSTRACT_ITEM_ONGOING_KEY "__ABSTRACT_ITEM_ONGOING_KEY__"
 
 using namespace std;
+using namespace tizen_base;
 namespace notification {
 namespace item {
 

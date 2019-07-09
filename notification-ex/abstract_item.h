@@ -18,13 +18,13 @@
 #define NOTIFICATION_EX_ABSTRACT_ITEM_H_
 
 #include <time.h>
+#include <bundle_cpp.h>
 
 #include <memory>
 #include <string>
 #include <list>
 
 #include "notification-ex/abstract_action.h"
-#include "notification-ex/ex_bundle.h"
 #include "notification-ex/iitem_info.h"
 
 #ifndef EXPORT_API
@@ -758,14 +758,14 @@ class EXPORT_API AbstractItem {
    * @since_tizen 5.5
    * @return Bundle type data
    */
-  virtual Bundle Serialize() const = 0;
+  virtual tizen_base::Bundle Serialize() const = 0;
 
   /**
    * @brief Deserialize the serialized data.
    * @since_tizen 5.5
    * @param[in] b The serialized Bundle data
    */
-  virtual void Deserialize(Bundle b) = 0;
+  virtual void Deserialize(tizen_base::Bundle b) = 0;
 
   /**
    * @brief Finds the AbstractItem using by notification item id.
@@ -795,7 +795,7 @@ class EXPORT_API AbstractItem {
    * @since_tizen 5.5
    * @return The type of notification item
    */
-  static int GetType(Bundle b);
+  static int GetType(tizen_base::Bundle b);
 
   /**
    * @brief Gets the path of shared file location.
