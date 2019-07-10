@@ -34,6 +34,15 @@ Requires(postun): /sbin/ldconfig
 %description
 Client/Server library for sending notifications.
 
+%if 0%{?gcov:1}
+%package gcov
+Summary:  Notification API(gcov)
+Group:    Applications/Core Applications
+
+%description gcov
+gcov objects of a notification library
+%endif
+
 %prep
 %setup -q
 
@@ -46,18 +55,35 @@ Requires:   %{name} = %{version}-%{release}
 Development files needed to build software that needs to system a system notification.
 
 %build
+%if 0%{?gcov:1}
+export CFLAGS+=" -fprofile-arcs -ftest-coverage"
+export CXXFLAGS+=" -fprofile-arcs -ftest-coverage"
+export FFLAGS+=" -fprofile-arcs -ftest-coverage"
+export LDFLAGS+=" -lgcov"
+%endif
+
 MAJORVER=`echo %{version} | awk 'BEGIN {FS="."}{print $1}'`
-export LDFLAGS+="-Wl,--rpath=%{_prefix}/lib -Wl,--as-needed"
-LDFLAGS="$LDFLAGS"
 %cmake . \
 	-DCMAKE_INSTALL_PREFIX=%{_prefix} \
 	-DMAJORVER=${MAJORVER} -DFULLVER=%{version}
-make %{?jobs:-j%jobs}
+%__make %{?jobs:-j%jobs}
+
+%if 0%{?gcov:1}
+mkdir -p gcov-obj
+find . -name '*.gcno' -exec cp '{}' gcov-obj ';'
+%endif
+
 
 %install
 rm -rf %{buildroot}
 
 %make_install
+
+%if 0%{?gcov:1}
+mkdir -p %{buildroot}%{_datadir}/gcov/obj
+install -m 0644 gcov-obj/* %{buildroot}%{_datadir}/gcov/obj
+%endif
+
 mkdir -p %{buildroot}%{upgrade_script_path}
 cp -f scripts/505.notification_upgrade.sh %{buildroot}%{upgrade_script_path}
 
@@ -160,3 +186,8 @@ GTest for notification-ex
 
 %files -n notification-ex_unittests
 %{_bindir}/notification-ex_unittests
+
+%if 0%{?gcov:1}
+%files gcov
+%{_datadir}/gcov/obj/*
+%endif
