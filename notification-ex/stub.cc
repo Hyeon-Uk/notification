@@ -283,6 +283,13 @@ class ReporterStub : public Reporter {
 
 }  // namespace
 
+void __noti_ex_free_str_array(char** val, int length) {
+  int i;
+  for (i = 0; i < length ; i++)
+    free(val[i]);
+  free(val);
+}
+
 extern "C" EXPORT_API int noti_ex_action_app_control_create(
     noti_ex_action_h *handle, app_control_h app_control,
     const char *extra) {
@@ -924,10 +931,22 @@ extern "C" EXPORT_API int noti_ex_item_input_selector_get_contents(
   InputSelectorItem* p = static_cast<InputSelectorItem*>(h->Get());
   list<string> contents = p->GetContents();
   char **list = (char**)calloc(contents.size(), sizeof(char*));
+  if (list == nullptr) {
+    LOGE("Out of memory");
+    return NOTI_EX_ERROR_OUT_OF_MEMORY;
+  }
+
   int idx = 0;
   for (auto& i : contents) {
-    list[idx++] = strdup(i.c_str());
+    list[idx] = strdup(i.c_str());
+    if (list[idx] == nullptr) {
+      __noti_ex_free_str_array(list, idx);
+      LOGE("Out of memory");
+      return NOTI_EX_ERROR_OUT_OF_MEMORY;
+    }
+    idx++;
   }
+
   *count = contents.size();
   *contents_list = list;
 
@@ -1605,11 +1624,24 @@ extern "C" EXPORT_API int noti_ex_item_get_shared_paths(noti_ex_item_h handle,
   }
   Handle* p = static_cast<Handle*>(handle);
   list<string> shared_path = p->Get()->GetSharedPath();
-  *path = (char**)calloc(shared_path.size(), sizeof(char*));
+  char** tmp_path = (char**)calloc(shared_path.size(), sizeof(char*));
+  if (tmp_path == nullptr) {
+    LOGE("Fail to create items");
+    return NOTI_EX_ERROR_OUT_OF_MEMORY;
+  }
+
   int idx = 0;
   for (auto& i : shared_path) {
-    *path[idx++] = strdup(i.c_str());
+    tmp_path[idx] = strdup(i.c_str());
+    if (tmp_path[idx] == nullptr) {
+      __noti_ex_free_str_array(tmp_path, idx);
+      LOGE("Out of memory");
+      return NOTI_EX_ERROR_OUT_OF_MEMORY;
+    }
+    idx++;
   }
+
+  *path = tmp_path;
   *count = shared_path.size();
   return NOTI_EX_ERROR_NONE;
 }
@@ -1784,11 +1816,24 @@ extern "C" EXPORT_API int noti_ex_item_get_receiver_list(noti_ex_item_h handle,
 
   Handle* p = static_cast<Handle*>(handle);
   list<string> receivers = p->Get()->GetReceiverList();
-  *receiver_list = (char**)calloc(receivers.size(), sizeof(char*));
+  char **tmp_list = (char**)calloc(receivers.size(), sizeof(char*));
+  if (tmp_list == nullptr) {
+    LOGE("Out of memory");
+    return NOTI_EX_ERROR_OUT_OF_MEMORY;
+  }
+
   int idx = 0;
   for (auto& i : receivers) {
-    *receiver_list[idx++] = strdup(i.c_str());
+    tmp_list[idx] = strdup(i.c_str());
+    if (tmp_list[idx] == nullptr) {
+      __noti_ex_free_str_array(tmp_list, idx);
+      LOGE("Out of memory");
+      return NOTI_EX_ERROR_OUT_OF_MEMORY;
+    }
+    idx++;
   }
+
+  *receiver_list = tmp_list;
   *count = receivers.size();
   return NOTI_EX_ERROR_NONE;
 }
