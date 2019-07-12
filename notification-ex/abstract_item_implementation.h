@@ -29,7 +29,7 @@ namespace item {
 class AbstractItem::Impl {
  public:
   class ItemInfo;
-  virtual ~Impl() = default;
+  virtual ~Impl();
 
  private:
   Impl(AbstractItem* parent);

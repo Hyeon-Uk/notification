@@ -132,6 +132,7 @@ AbstractItem::Impl::Impl(AbstractItem* parent,
 }
 
 AbstractItem::~AbstractItem() = default;
+AbstractItem::Impl::~Impl() = default;
 
 Bundle AbstractItem::Serialize() const {
   Bundle b;
