@@ -73,10 +73,11 @@ mkdir -p gcov-obj
 find . -name '*.gcno' -exec cp '{}' gcov-obj ';'
 %endif
 
+%check
+ctest --output-on-failure %{?_smp_mflags}
 
 %install
 rm -rf %{buildroot}
-
 %make_install
 
 %if 0%{?gcov:1}
@@ -86,9 +87,6 @@ install -m 0644 gcov-obj/* %{buildroot}%{_datadir}/gcov/obj
 
 mkdir -p %{buildroot}%{upgrade_script_path}
 cp -f scripts/505.notification_upgrade.sh %{buildroot}%{upgrade_script_path}
-
-%check
-ctest --output-on-failure %{?_smp_mflags}
 
 %clean
 rm -rf %{buildroot}
