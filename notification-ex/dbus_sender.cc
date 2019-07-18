@@ -135,7 +135,10 @@ GDBusMessage* DBusSender::Impl::MethodCall(string appid, string method_name,
 }
 
 std::list<Bundle> DBusSender::Request(const IEventInfo& info) {
-  string appid = util::GetAppId();
+  string appid = info.GetOwner();
+  if (appid.length() == 0)
+    appid = util::GetAppId();
+
   string method_name = EventInfo::GetString(info.GetEventType());
   Bundle serialized = info.Serialize();
 
@@ -155,7 +158,10 @@ std::list<Bundle> DBusSender::Request(const IEventInfo& info) {
 }
 
 int DBusSender::RequestNumber(const IEventInfo& info) {
-  string appid = util::GetAppId();
+  string appid = info.GetOwner();
+  if (appid.length() == 0)
+    appid = util::GetAppId();
+
   string method_name = EventInfo::GetString(info.GetEventType());
   Bundle serialized = info.Serialize();
 
