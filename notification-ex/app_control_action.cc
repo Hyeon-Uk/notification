@@ -95,6 +95,7 @@ void AppControlAction::Deserialize(Bundle b) {
   app_control_h app_control = nullptr;
   bundle* b_ = nullptr;
   std::string control_str;
+  int ret;
 
   AbstractAction::Deserialize(b);
 
@@ -106,15 +107,18 @@ void AppControlAction::Deserialize(Bundle b) {
     return;
   }
 
-  app_control_create(&app_control);
-  if (app_control == nullptr) {
+  ret = app_control_create(&app_control);
+  if (ret != APP_CONTROL_ERROR_NONE) {
     LOGE("failed to create app_control");
+    bundle_free(b_);
     return;
   }
 
-  app_control_import_from_bundle(app_control, b_);
-  if (app_control == nullptr) {
+  ret = app_control_import_from_bundle(app_control, b_);
+  bundle_free(b_);
+  if (ret != APP_CONTROL_ERROR_NONE) {
     LOGE("failed to make app_control from bundle");
+    app_control_destroy(app_control);
     return;
   }
 

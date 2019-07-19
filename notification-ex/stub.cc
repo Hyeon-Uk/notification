@@ -1065,12 +1065,6 @@ extern "C" EXPORT_API int noti_ex_padding_create(noti_ex_padding_h *handle,
     return NOTI_EX_ERROR_INVALID_PARAMETER;
   }
 
-  auto* p = new (std::nothrow) Padding(left, top, right, bottom);
-  if (p == nullptr) {
-    LOGE("Out-of-memory");
-    return NOTI_EX_ERROR_OUT_OF_MEMORY;
-  }
-
   auto* ptr = new (std::nothrow) shared_ptr<Padding>(
       new (std::nothrow) Padding(left, top, right, bottom));
   if (ptr == nullptr || ptr->get() == nullptr) {
