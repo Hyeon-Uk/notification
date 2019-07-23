@@ -79,22 +79,25 @@ static bool __make_sharing_dir(const char *dir)
 	GFile *noti_dir = NULL;
 	GError *g_err = NULL;
 
-	if (access(dir, R_OK) != 0) {
-		noti_dir = g_file_new_for_path(dir);
-		if (g_file_make_directory(noti_dir, NULL, &g_err) == false) {
-			/* LCOV_EXCL_START */
-			if (g_err) {
-				ERR("Failed to make sharing dir[%s]",
-					g_err->message);
-				g_error_free(g_err);
-			}
-			g_object_unref(noti_dir);
-			return false;
-			/* LCOV_EXCL_STOP */
+	if (access(dir, R_OK) == 0)
+		return true;
+
+	noti_dir = g_file_new_for_path(dir);
+	if (noti_dir == NULL)
+		return false;
+
+	if (g_file_make_directory(noti_dir, NULL, &g_err) == false) {
+		/* LCOV_EXCL_START */
+		if (g_err) {
+			ERR("Failed to make sharing dir[%s]", g_err->message);
+			g_error_free(g_err);
 		}
 		g_object_unref(noti_dir);
+		return false;
+		/* LCOV_EXCL_STOP */
 	}
 
+	g_object_unref(noti_dir);
 	return true;
 }
 
@@ -106,11 +109,14 @@ static char *__get_data_path_by_pkg_id(const char *pkg_id,
 	const char *path;
 	char dir[PATH_MAX];
 
+	if (pkg_id == NULL)
+		return NULL;
+
 	tzplatform_set_user(uid);
 	path = tzplatform_getenv(TZ_USER_APP);
 	tzplatform_reset_user();
 
-	if (pkg_id == NULL || path == NULL)
+	if (path == NULL)
 		return NULL;
 
 	snprintf(dir, sizeof(dir), "%s/%s/%s", path, pkg_id, NOTI_PRIV_DATA_DIR);
@@ -817,8 +823,7 @@ int __set_sharing_for_new_target(sharing_req_data_s *req_data,
 						handle, req_data->app_id);
 			if (ret != SECURITY_MANAGER_SUCCESS) {
 				ret = NOTIFICATION_ERROR_IO_ERROR;
-				ERR(
-					"Failed to set owner appid(%s) %d",
+				ERR("Failed to set owner appid(%s) %d",
 						req_data->app_id, ret);
 				goto out;
 			}
@@ -855,8 +860,7 @@ int __set_sharing_for_new_target(sharing_req_data_s *req_data,
 		}
 
 		req_data->target_app_table = g_list_append(
-				req_data->target_app_table,
-				app_info);
+				req_data->target_app_table, app_info);
 	}
 
 out:
@@ -865,6 +869,7 @@ out:
 
 	if (handle != NULL)
 		security_manager_private_sharing_req_free(handle);
+
 	if (path_array != NULL)
 		free(path_array);
 
@@ -897,8 +902,7 @@ int __set_sharing_for_new_file(sharing_req_data_s *req_data,
 					req_data->app_id);
 	if (ret != SECURITY_MANAGER_SUCCESS) {
 		/* LCOV_EXCL_START */
-		ERR("Failed to set owner appid[%s][%d]",
-				req_data->app_id, ret);
+		ERR("Failed to set owner appid[%s][%d]", req_data->app_id, ret);
 		ret = NOTIFICATION_ERROR_IO_ERROR;
 		goto out;
 		/* LCOV_EXCL_STOP */
@@ -965,6 +969,7 @@ int __set_sharing_for_new_file(sharing_req_data_s *req_data,
 out:
 	if (handle != NULL)
 		security_manager_private_sharing_req_free(handle);
+
 	if (path_array != NULL)
 		free(path_array);
 
@@ -1040,10 +1045,10 @@ EXPORT_API int notification_set_private_sharing(notification_h noti,
 	for (iter = new_file_list; iter != NULL; iter = g_list_next(iter)) {
 		tmp = NULL;
 		file_info = iter->data;
-		if (is_overlapping == true)
-			tmp = g_list_find_custom(
-				req_data->shared_file_list, file_info,
-				__comp_file_info);
+		if (is_overlapping) {
+			tmp = g_list_find_custom(req_data->shared_file_list,
+				file_info, __comp_file_info);
+		}
 
 		if (tmp == NULL) {
 			dup_file_info = __dup_file_info(file_info);
@@ -1053,7 +1058,7 @@ EXPORT_API int notification_set_private_sharing(notification_h noti,
 	}
 
 	if (__set_sharing_for_new_target(req_data, uid_info->target_app_list)
-						 != NOTIFICATION_ERROR_NONE) {
+						!= NOTIFICATION_ERROR_NONE) {
 		ret = NOTIFICATION_ERROR_IO_ERROR;
 		goto out;
 	}
@@ -1065,6 +1070,7 @@ EXPORT_API int notification_set_private_sharing(notification_h noti,
 out:
 	if (new_file_list != NULL)
 		g_list_free_full(new_file_list, __free_file_info);
+
 	if (ret != NOTIFICATION_ERROR_NONE)
 		req_data->priv_id_list = g_list_remove(req_data->priv_id_list,
 						GINT_TO_POINTER(noti->priv_id));
@@ -1177,7 +1183,7 @@ EXPORT_API void notification_remove_private_sharing(
 						priv_id_info->data);
 
 	uid_info->sharing_req_list = g_list_remove(uid_info->sharing_req_list,
-							req_data);
+						req_data);
 	__free_req_info(req_data);
 
 out:
@@ -1187,4 +1193,3 @@ out:
 	if (path_array)
 		free(path_array);
 }
-
