@@ -27,6 +27,7 @@
 #include "notification-ex/dbus_connection_manager.h"
 #include "notification-ex/ex_util.h"
 #include "notification-ex/item_info_internal.h"
+#include "notification-ex/null_item.h"
 
 #ifdef LOG_TAG
 #undef LOG_TAG
@@ -203,7 +204,7 @@ void Manager::OnEvent(const IEventInfo& info, list<Bundle> serialized) {
     case EventInfo::Count:
       break;
     case EventInfo::DeleteAll:
-      OnDelete(info, nullptr);
+      OnDelete(info, shared_ptr<AbstractItem>(new NullItem()));
       break;
     case EventInfo::Custom:
       break;
