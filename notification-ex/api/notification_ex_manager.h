@@ -272,7 +272,57 @@ void _manager_events_error_cb(noti_ex_manager_h handle, noti_ex_error_e error,
 }
  * @endcode
  */
-int noti_ex_manager_get(noti_ex_manager_h handle,
+int noti_ex_manager_get(noti_ex_manager_h handle, noti_ex_item_h **items,
+		int *count);
+
+/**
+ * @brief Gets notifications with channel for the notification_ex manager.
+ * @details Every notification that has been sent for the manager will be retrieved.
+ * @since_tizen 5.5
+ * @privlevel public
+ * @privilege %http://tizen.org/privilege/notification
+ * @param[in] handle The notification manager handle
+ * @param[in] channel The channel of a notification_ex item
+ * @param[out] items The result of the get request \n
+ *             Each item in @a items must be released using noti_ex_item_destroy(), then @a items must be released using free().
+ * @param[out] count The count of retrieved notification items
+ * @return #NOTI_EX_ERROR_NONE On success, other value on failure
+ * @retval #NOTI_EX_ERROR_NONE Success
+ * @retval #NOTI_EX_ERROR_INVALID_PARAMETER Invalid parameter
+ * @retval #NOTI_EX_ERROR_PERMISSION_DENIED Permission deny
+ * @retval #NOTI_EX_ERROR_IO_ERROR IO error
+ * @see #noti_ex_item_h
+ * @see #noti_ex_manager_h
+ * @see noti_ex_item_destroy()
+ * @par Sample code:
+ * @code
+#include <notification_ex.h>
+
+void _manager_events_error_cb(noti_ex_manager_h handle, noti_ex_error_e error,
+		int req_id, void *user_data) {
+}
+
+{
+	int ret;
+	noti_ex_manager_h handle;
+	noti_ex_manager_events_s ev;
+	noti_ex_item_h *items;
+	noti_ex_item_h *item;
+	int items_count;
+	char *channel = "channel";
+
+	ev.error = _manager_events_error_cb;
+	ret = noti_ex_manager_create(&handle, NOTI_EX_RECEIVER_GROUP_INDICATOR, ev, NULL);
+	...
+	ret = noti_ex_manager_get_by_channel(handle, channel, &items, &items_count);
+	for (int i = 0; i < items_count; i++) {
+		item = items[i];
+		// do something with item
+	}
+}
+ * @endcode
+ */
+int noti_ex_manager_get_by_channel(noti_ex_manager_h handle, char *channel,
 		noti_ex_item_h **items, int *count);
 
 int noti_ex_manager_get_by_channel(noti_ex_manager_h handle, char *channel,

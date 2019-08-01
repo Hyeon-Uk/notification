@@ -172,6 +172,60 @@ int noti_ex_item_progress_get_type(noti_ex_item_h handle, int *type);
 int noti_ex_item_progress_set_type(noti_ex_item_h handle, int type);
 
 /**
+ * @brief Gets the type of progress.
+ * @since_tizen 5.5
+ * @param[in] handle The notification_ex item handle
+ * @param[out] type The type of progress
+ * @return #NOTI_EX_ERROR_NONE On success, other value on failure
+ * @retval #NOTI_EX_ERROR_NONE Success
+ * @retval #NOTI_EX_ERROR_INVALID_PARAMETER Invalid parameter,
+ *    if the item type is not correct, this error is returned
+ * @see #noti_ex_item_h
+ * @see #noti_ex_item_progress_type_e
+ * @see noti_ex_item_progress_create()
+ * @par Sample code:
+ * @code
+#include <notification_ex.h>
+
+{
+	int ret;
+	int type;
+
+	ret = noti_ex_item_progress_get_type(progress_item, &type);
+}
+ * @endcode
+ */
+int noti_ex_item_progress_get_type(noti_ex_item_h handle, int *type);
+
+/**
+ * @brief Sets the type of progress.
+ * @since_tizen 5.5
+ * @param[in] handle The notification_ex item handle
+ * @param[in] type The type of progress
+ * @return #NOTI_EX_ERROR_NONE On success, other value on failure
+ * @retval #NOTI_EX_ERROR_NONE Success
+ * @retval #NOTI_EX_ERROR_INVALID_PARAMETER Invalid parameter,
+ *    if the item type is not correct, this error is returned
+ * @see #noti_ex_item_h
+ * @see #noti_ex_item_progress_type_e
+ * @see noti_ex_item_progress_create()
+ * @par Sample code:
+ * @code
+#include <notification_ex.h>
+
+{
+	int ret;
+	noti_ex_item_h progress_item = NULL;
+	int type = NOTI_EX_ITEM_PROGRESS_TYPE_PERCENT;
+
+	ret = noti_ex_item_progress_create(&progress_item, "progress_id", 0, 50, 100);
+	ret = noti_ex_item_progress_set_type(progress_item, type);
+}
+ * @endcode
+ */
+int noti_ex_item_progress_set_type(noti_ex_item_h handle, int type);
+
+/**
  * @}
  */
 

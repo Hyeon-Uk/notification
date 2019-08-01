@@ -134,6 +134,35 @@ int noti_ex_item_text_get_contents(noti_ex_item_h handle, char **contents);
 int noti_ex_item_text_get_hyperlink(noti_ex_item_h handle, char **hyperlink);
 
 /**
+ * @brief Sets the multi language handle for the title of a text item.
+ * @since_tizen 5.5
+ * @param[in] handle The notification_ex item handle
+ * @param[in] lang The notification_ex_multi_lang handle
+ * @return #NOTI_EX_ERROR_NONE On success, other value on failure
+ * @retval #NOTI_EX_ERROR_NONE Success
+ * @retval #NOTI_EX_ERROR_INVALID_PARAMETER Invalid parameter, if the item type is not correct, this error is returned
+ * @see #noti_ex_multi_lang_h
+ * @see noti_ex_item_text_create()
+ * @par Sample code:
+ * @code
+#include <notification_ex.h>
+
+{
+	int ret;
+	noti_ex_item_h text_item = NULL;
+	noti_ex_multi_lang_h lang = NULL;
+
+	noti_ex_item_h text_item = NULL;
+
+	ret = noti_ex_item_text_create(&text_item, "text_id", "title", "hyperlink");
+	ret = noti_ex_multi_lang_create(&lang, "title 1", "IDS_TEXT_TITLE", 1);
+	ret = noti_ex_item_text_set_multi_language(text_item, lang);
+}
+ * @endcode
+ */
+int noti_ex_item_text_set_multi_language(noti_ex_item_h handle, noti_ex_multi_lang_h lang);
+
+/**
  * @}
  */
 

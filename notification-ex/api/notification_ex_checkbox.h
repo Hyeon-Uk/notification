@@ -109,7 +109,57 @@ int noti_ex_item_checkbox_get_title(noti_ex_item_h handle, char **title);
  */
 int noti_ex_item_checkbox_get_check_state(noti_ex_item_h handle, bool *checked);
 
+/**
+ * @brief Sets the check state of a checkbox.
+ * @since_tizen 5.5
+ * @param[in] handle The notification_ex item handle
+ * @param[in] checked The check state of a checkbox
+ * @return #NOTI_EX_ERROR_NONE On success, other value on failure
+ * @retval #NOTI_EX_ERROR_NONE Success
+ * @retval #NOTI_EX_ERROR_INVALID_PARAMETER Invalid parameter, if the item type is not correct, this error is returned
+ * @see #noti_ex_item_h
+ * @see noti_ex_item_checkbox_create()
+ * @par Sample code:
+ * @code
+#include <notification_ex.h>
+
+{
+	int ret;
+
+	ret = noti_ex_item_checkbox_set_check_state(checkbox_item, true);
+}
+ * @endcode
+ */
 int noti_ex_item_checkbox_set_check_state(noti_ex_item_h handle, bool checked);
+
+/**
+ * @brief Sets the multi language handle for the title of a checkbox item.
+ * @since_tizen 5.5
+ * @param[in] handle The notification_ex item handle
+ * @param[in] lang The notification_ex_multi_lang handle
+ * @return #NOTI_EX_ERROR_NONE On success, other value on failure
+ * @retval #NOTI_EX_ERROR_NONE Success
+ * @retval #NOTI_EX_ERROR_INVALID_PARAMETER Invalid parameter, if the item type is not correct, this error is returned
+ * @see #noti_ex_multi_lang_h
+ * @see noti_ex_item_checkbox_create()
+ * @par Sample code:
+ * @code
+#include <notification_ex.h>
+
+{
+	int ret;
+	noti_ex_item_h checkbox_item = NULL;
+	noti_ex_multi_lang_h lang = NULL;
+
+	noti_ex_item_h text_item = NULL;
+
+	ret = noti_ex_item_checkbox_create(&checkbox_item, "checkbox_id", "checkbox_title", false);
+	ret = noti_ex_multi_lang_create(&lang, "title 1", "IDS_CHECKBOX_TITLE", 1);
+	ret = noti_ex_item_checkbox_set_multi_language(checkbox_item, lang);
+}
+ * @endcode
+ */
+int noti_ex_item_checkbox_set_multi_language(noti_ex_item_h handle, noti_ex_multi_lang_h lang);
 
 /**
  * @}
