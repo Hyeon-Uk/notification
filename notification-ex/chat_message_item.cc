@@ -126,9 +126,40 @@ void ChatMessageItem::Deserialize(Bundle b) {
   impl_->type_ = static_cast<Type>(std::stoi(b.GetString(CHATMESSAGE_TYPE_KEY)));
 }
 
-AbstractItem&  ChatMessageItem::FindByID(std::string id) {
+AbstractItem& ChatMessageItem::FindByID(std::string id) {
   if (GetId() == id)
     return *this;
+
+  if (impl_->name_->GetId() == id)
+    return *(impl_->name_);
+
+  if (impl_->text_->GetId() == id)
+    return *(impl_->text_);
+
+  if (impl_->image_->GetId() == id)
+    return *(impl_->image_);
+
+  if (impl_->time_->GetId() == id)
+    return *(impl_->time_);
+
+  return FactoryManager::GetInst().GetNullItem();
+}
+
+AbstractItem& ChatMessageItem::FindByMainType(MainType type) {
+  if (GetMainType() == type)
+    return *this;
+
+  if (impl_->name_->GetMainType() == type)
+    return *(impl_->name_);
+
+  if (impl_->text_->GetMainType() == type)
+    return *(impl_->text_);
+
+  if (impl_->image_->GetMainType() == type)
+    return *(impl_->image_);
+
+  if (impl_->time_->GetMainType() == type)
+    return *(impl_->time_);
 
   return FactoryManager::GetInst().GetNullItem();
 }

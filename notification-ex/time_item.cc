@@ -88,13 +88,6 @@ void TimeItem::Deserialize(Bundle b) {
   impl_->time_ = mktime(&timeinfo);
 }
 
-AbstractItem& TimeItem::FindByID(std::string id) {
-  if (GetId() == id)
-    return *this;
-
-  return FactoryManager::GetInst().GetNullItem();
-}
-
 bool TimeItem::IsItemTypeExist(int type) {
   if (GetType() == type)
     return true;

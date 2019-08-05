@@ -78,6 +78,25 @@ AbstractItem& IconTextItem::FindByID(std::string id) {
   if (GetId() == id)
     return *this;
 
+  if (impl_->icon_->GetId() == id)
+    return *(impl_->icon_);
+
+  if (impl_->text_->GetId() == id)
+    return *(impl_->text_);
+
+  return FactoryManager::GetInst().GetNullItem();
+}
+
+AbstractItem& IconTextItem::FindByMainType(MainType type) {
+  if (GetMainType() == type)
+    return *this;
+
+  if (impl_->icon_->GetMainType() == type)
+    return *(impl_->icon_);
+
+  if (impl_->text_->GetMainType() == type)
+    return *(impl_->text_);
+
   return FactoryManager::GetInst().GetNullItem();
 }
 

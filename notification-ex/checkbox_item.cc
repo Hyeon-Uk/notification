@@ -65,13 +65,6 @@ void CheckBoxItem::Deserialize(Bundle b) {
   impl_->checked_ = std::stoi(b.GetString(CHECKBOX_CHECKED_KEY));
 }
 
-AbstractItem& CheckBoxItem::FindByID(std::string id) {
-  if (GetId() == id)
-    return *this;
-
-  return FactoryManager::GetInst().GetNullItem();
-}
-
 bool CheckBoxItem::IsItemTypeExist(int type) {
   if (GetType() == type)
     return true;

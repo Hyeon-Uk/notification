@@ -74,12 +74,6 @@ void InputSelectorItem::Deserialize(Bundle b) {
   impl_->contents_ = list<string>(contents.begin(), contents.end());
 }
 
-AbstractItem& InputSelectorItem::FindByID(std::string id) {
-  if (GetId() == id)
-    return *this;
-  return FactoryManager::GetInst().GetNullItem();
-}
-
 bool InputSelectorItem::IsItemTypeExist(int type) {
   if (GetType() == type)
     return true;

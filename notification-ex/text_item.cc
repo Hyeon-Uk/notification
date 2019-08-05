@@ -70,12 +70,6 @@ void TextItem::Deserialize(Bundle b) {
   impl_->hyperlink_ = b.GetString(TEXT_HYPERLINK_KEY);
 }
 
-AbstractItem& TextItem::FindByID(std::string id) {
-  if (GetId() == id)
-    return *this;
-  return FactoryManager::GetInst().GetNullItem();
-}
-
 bool TextItem::IsItemTypeExist(int type) {
   if (GetType() == type)
     return true;

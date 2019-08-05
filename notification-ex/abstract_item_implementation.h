@@ -66,6 +66,7 @@ class AbstractItem::Impl {
   int request_id_ = 0;
   std::string background_;
   bool ongoing_ = false;
+  MainType main_type_ = MainNone;
 };
 
 }  // namespace item

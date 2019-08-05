@@ -76,6 +76,14 @@ class EXPORT_API IconTextItem : public AbstractItem {
   AbstractItem& FindByID(std::string id) override;
 
   /**
+   * @brief Finds the AbstractItem using by main type.
+   * @since_tizen 5.5
+   * @param[in] type The main type
+   * @return AbstractItem object
+   */
+  AbstractItem& FindByMainType(MainType type) override;
+
+  /**
    * @brief Checks the item type exist in this notification.
    * @since_tizen 5.5
    * @param[in] type notification item type

@@ -68,12 +68,6 @@ void ButtonItem::Deserialize(Bundle b) {
   impl_->title_ = b.GetString(BUTTON_TITLE_KEY);
 }
 
-AbstractItem& ButtonItem::FindByID(std::string id) {
-  if (GetId() == id)
-    return *this;
-  return FactoryManager::GetInst().GetNullItem();
-}
-
 bool ButtonItem::IsItemTypeExist(int type) {
   if (GetType() == type)
     return true;

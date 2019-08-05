@@ -89,12 +89,6 @@ void ProgressItem::Deserialize(Bundle b) {
   impl_->unit_ = b.GetString(PROGRESS_UNIT_KEY);
 }
 
-AbstractItem& ProgressItem::FindByID(std::string id) {
-  if (GetId() == id)
-    return *this;
-  return FactoryManager::GetInst().GetNullItem();
-}
-
 bool ProgressItem::IsItemTypeExist(int type) {
   if (GetType() == type)
     return true;

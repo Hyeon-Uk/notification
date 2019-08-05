@@ -85,14 +85,6 @@ class EXPORT_API ProgressItem : public AbstractItem {
   virtual void Deserialize(tizen_base::Bundle b) override;
 
   /**
-   * @brief Finds the AbstractItem using by notification item id.
-   * @since_tizen 5.5
-   * @param[in] id notification item id
-   * @return AbstractItem object
-   */
-  virtual AbstractItem& FindByID(std::string id) override;
-
-  /**
    * @brief Checks the item type exist in this notification.
    * @since_tizen 5.5
    * @param[in] type notification item type

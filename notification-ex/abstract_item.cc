@@ -28,6 +28,7 @@
 #include "notification-ex/item_info_internal.h"
 #include "notification-ex/ex_util.h"
 #include "notification-ex/action_inflator.h"
+#include "notification-ex/factory_manager.h"
 
 #ifdef LOG_TAG
 #undef LOG_TAG
@@ -80,6 +81,7 @@
 #define ABSTRACT_ITEM_HIDE_VIEWER_KEY "__ABSTRACT_ITEM_HIDE_VIEWER_KEY__"
 #define ABSTRACT_ITEM_TRUE "TRUE"
 #define ABSTRACT_ITEM_ONGOING_KEY "__ABSTRACT_ITEM_ONGOING_KEY__"
+#define ABSTRACT_ITEM_MAIN_TYPE_KEY "__ABSTRACT_ITEM_MAIN_TYPE_KEY__"
 
 using namespace std;
 using namespace tizen_base;
@@ -171,6 +173,7 @@ Bundle AbstractItem::Serialize() const {
   b.Add(ABSTRACT_ITEM_ENABLE_KEY, to_string((int)impl_->enable_));
   b.Add(ABSTRACT_ITEM_POLICY_KEY, to_string((int)impl_->policy_));
   b.Add(ABSTRACT_ITEM_ONGOING_KEY, to_string((int)impl_->ongoing_));
+  b.Add(ABSTRACT_ITEM_MAIN_TYPE_KEY, to_string((int)impl_->main_type_));
 
   if (impl_->receiver_group_list_.size() != 0) {
     vector<string> arr;
@@ -295,6 +298,7 @@ void AbstractItem::Deserialize(Bundle b) {
   impl_->visible_ = static_cast<bool>(stoi(b.GetString(ABSTRACT_ITEM_VISIBLE_KEY)));
   impl_->enable_ = static_cast<bool>(stoi(b.GetString(ABSTRACT_ITEM_ENABLE_KEY)));
   impl_->ongoing_ = static_cast<bool>(stoi(b.GetString(ABSTRACT_ITEM_ONGOING_KEY)));
+  impl_->main_type_ = static_cast<MainType>(stoi(b.GetString(ABSTRACT_ITEM_MAIN_TYPE_KEY)));
 
   vector<string> receiver_group = b.GetStringArray(ABSTRACT_ITEM_RECEIVER_GROUP_KEY);
   if (receiver_group.size() != 0) {
@@ -509,6 +513,36 @@ void AbstractItem::SetOnGoingState(bool ongoing) {
 
 bool AbstractItem::GetOnGoingState() const {
   return impl_->ongoing_;
+}
+
+bool AbstractItem::SetMainType(std::string target_id, MainType type) {
+  AbstractItem& target = FindByID(target_id);
+  if (target.GetType() == NullObject)
+    return false;
+  AbstractItem& old = FindByMainType(type);
+  if (target.GetType() != NullObject)
+    old.impl_->main_type_ = MainNone;
+  target.impl_->main_type_ = type;
+
+  return true;
+}
+
+AbstractItem::MainType AbstractItem::GetMainType() const {
+  return impl_->main_type_;
+}
+
+AbstractItem& AbstractItem::FindByID(std::string id) {
+  if (GetId() == id)
+    return *this;
+
+  return FactoryManager::GetInst().GetNullItem();
+}
+
+AbstractItem& AbstractItem::FindByMainType(AbstractItem::MainType type) {
+  if (impl_->main_type_ == type)
+    return *this;
+
+  return FactoryManager::GetInst().GetNullItem();
 }
 
 }  // namespace item

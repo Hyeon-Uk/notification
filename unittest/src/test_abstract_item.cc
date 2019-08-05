@@ -24,6 +24,8 @@
 #include "notification-ex/iitem_factory.h"
 #include "notification-ex/factory_manager.h"
 #include "notification-ex/default_item_factory.h"
+#include "notification-ex/group_item.h"
+#include "notification-ex/button_item.h"
 
 #define MY_ITEM_TYPE AbstractItem::Type::Custom + 1
 
@@ -288,6 +290,18 @@ TEST_F(AbstractItemTest, SetGetOnGoingState) {
   item.SetOnGoingState(true);
 
   ASSERT_EQ(item.GetOnGoingState(), true);
+}
+
+TEST_F(AbstractItemTest, SetGetFindMainType) {
+  auto root = std::make_shared<GroupItem>("test_group");
+  auto item = std::make_shared<ButtonItem>("test_id", "title");
+  root->AddChild(item);
+
+  bool ret = root->SetMainType("test_id", AbstractItem::MainButton);
+  EXPECT_TRUE(ret);
+  EXPECT_EQ(item->GetMainType(), AbstractItem::MainButton);
+  auto& i = root->FindByMainType(AbstractItem::MainButton);
+  EXPECT_EQ(i.GetId(), "test_id");
 }
 
 }  // namespace

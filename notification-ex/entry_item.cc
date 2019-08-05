@@ -73,12 +73,6 @@ void EntryItem::Deserialize(Bundle b) {
   impl_->limit_ = std::stoi(b.GetString(ENTRY_LIMIT_KEY));
 }
 
-AbstractItem& EntryItem::FindByID(std::string id) {
-  if (GetId() == id)
-    return *this;
-  return FactoryManager::GetInst().GetNullItem();
-}
-
 bool EntryItem::IsItemTypeExist(int type) {
   if (GetType() == type)
     return true;

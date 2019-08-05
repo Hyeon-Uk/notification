@@ -65,13 +65,6 @@ void ImageItem::Deserialize(Bundle b) {
   impl_->image_path_ = b.GetString(IMAGE_PATH_KEY);
 }
 
-AbstractItem& ImageItem::FindByID(std::string id) {
-  if (GetId() == id)
-    return *this;
-
-  return FactoryManager::GetInst().GetNullItem();
-}
-
 bool ImageItem::IsItemTypeExist(int type) {
   if (GetType() == type)
     return true;

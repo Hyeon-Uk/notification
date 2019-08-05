@@ -119,6 +119,18 @@ AbstractItem& GroupItem::FindByID(std::string id) {
   return FactoryManager::GetInst().GetNullItem();
 }
 
+AbstractItem& GroupItem::FindByMainType(MainType type) {
+  if (GetMainType() == type)
+    return *this;
+
+  for (auto& i : impl_->children_list_) {
+    auto& re = i.get()->FindByMainType(type);
+    if (re.GetType() != NullObject)
+      return re;
+  }
+  return FactoryManager::GetInst().GetNullItem();
+}
+
 bool GroupItem::IsItemTypeExist(int type) {
   if (GetType() == type)
     return true;

@@ -729,6 +729,14 @@ class EXPORT_API AbstractItem {
     SimMode = 1 << 1,
   };
 
+  enum MainType {
+    MainNone = 0,
+    MainTitle,
+    MainContents,
+    MainIcon,
+    MainButton
+  };
+
  public:
   /**
    * @brief Constructor
@@ -773,7 +781,15 @@ class EXPORT_API AbstractItem {
    * @param[in] id notification item id
    * @return AbstractItem object
    */
-  virtual AbstractItem& FindByID(std::string id) = 0;
+  virtual AbstractItem& FindByID(std::string id);
+
+  /**
+   * @brief Finds the AbstractItem using by main type.
+   * @since_tizen 5.5
+   * @param[in] type The main type
+   * @return AbstractItem object
+   */
+  virtual AbstractItem& FindByMainType(MainType type);
 
   /**
    * @brief Checks the item type exist in this notification.
@@ -1013,6 +1029,22 @@ class EXPORT_API AbstractItem {
    * @return The ongoing state of notification item
    */
   bool GetOnGoingState() const;
+
+  /**
+   * @brief Sets the main type of notification item.
+   * @since_tizen 5.5
+   * @param[in] target_id The ID of notification item to set
+   * @param[in] type The main type
+   * @return true if target_id is valid to set
+   */
+  bool SetMainType(std::string target_id, MainType type);
+
+  /**
+   * @brief Gets the main type of notification item.
+   * @since_tizen 5.5
+   * @return The main type
+   */
+  MainType GetMainType() const;
 
  private:
   class Impl;
