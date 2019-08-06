@@ -87,7 +87,7 @@ class EXPORT_API TextItem : public AbstractItem {
   /**
    * @brief Sets the contents of TextItem.
    * @since_tizen 5.5
-   * @return The text contents
+   * @param[in] contents the contents of TextItem
    */
   void SetContents(std::string contents);
 

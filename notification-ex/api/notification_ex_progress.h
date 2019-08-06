@@ -29,6 +29,17 @@ extern "C" {
  */
 
 /**
+ * @brief Enumeration for notification_ex progress item types.
+ * @since_tizen 5.5
+ */
+typedef enum _noti_ex_item_progress_type {
+	NOTI_EX_ITEM_PROGRESS_TYPE_DEFAULT, /**< Default */
+	NOTI_EX_ITEM_PROGRESS_TYPE_TIME, /**< Time */
+	NOTI_EX_ITEM_PROGRESS_TYPE_PERCENT, /**< Percent */
+	NOTI_EX_ITEM_PROGRESS_TYPE_PENDING, /**< Pending */
+} noti_ex_item_progress_type_e;
+
+/**
  * @brief Creates the notification_ex item handle with progress.
  * @details The notification_ex item is the predefined type of notifications.
  *          The notification can be created with one item or group of items.
@@ -155,6 +166,10 @@ int noti_ex_item_progress_get_min(noti_ex_item_h handle, float *min);
  * @endcode
  */
 int noti_ex_item_progress_get_max(noti_ex_item_h handle, float *max);
+
+int noti_ex_item_progress_get_type(noti_ex_item_h handle, int *type);
+
+int noti_ex_item_progress_set_type(noti_ex_item_h handle, int type);
 
 /**
  * @}

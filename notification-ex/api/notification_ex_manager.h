@@ -275,6 +275,9 @@ void _manager_events_error_cb(noti_ex_manager_h handle, noti_ex_error_e error,
 int noti_ex_manager_get(noti_ex_manager_h handle,
 		noti_ex_item_h **items, int *count);
 
+int noti_ex_manager_get_by_channel(noti_ex_manager_h handle, char *channel,
+		noti_ex_item_h **items, int *count);
+
 /**
  * @brief Updates notification.
  * @since_tizen 5.5

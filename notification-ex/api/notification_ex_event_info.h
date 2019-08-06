@@ -109,7 +109,7 @@ int noti_ex_event_info_destroy(noti_ex_event_info_h handle);
  * @retval #NOTI_EX_ERROR_NONE Success
  * @retval #NOTI_EX_ERROR_INVALID_PARAMETER Invalid parameter
  * @see #noti_ex_event_info_h
- * @see noti_ex_event_info_create()
+ * @see noti_ex_event_info_clone()
  * @par Sample code:
  * @code
 #include <notification_ex.h>
@@ -134,7 +134,7 @@ int noti_ex_event_info_get_event_type(noti_ex_event_info_h handle, noti_ex_event
  * @retval #NOTI_EX_ERROR_NONE Success
  * @retval #NOTI_EX_ERROR_INVALID_PARAMETER Invalid parameter
  * @see #noti_ex_event_info_h
- * @see noti_ex_event_info_create()
+ * @see noti_ex_event_info_clone()
  * @par Sample code:
  * @code
 #include <notification_ex.h>
@@ -159,7 +159,7 @@ int noti_ex_event_info_get_owner(noti_ex_event_info_h handle, char **owner);
  * @retval #NOTI_EX_ERROR_NONE Success
  * @retval #NOTI_EX_ERROR_INVALID_PARAMETER Invalid parameter
  * @see #noti_ex_event_info_h
- * @see noti_ex_event_info_create()
+ * @see noti_ex_event_info_clone()
  * @par Sample code:
  * @code
 #include <notification_ex.h>
@@ -184,7 +184,7 @@ int noti_ex_event_info_get_channel(noti_ex_event_info_h handle, char **channel);
  * @retval #NOTI_EX_ERROR_NONE Success
  * @retval #NOTI_EX_ERROR_INVALID_PARAMETER Invalid parameter
  * @see #noti_ex_event_info_h
- * @see noti_ex_event_info_create()
+ * @see noti_ex_event_info_clone()
  * @par Sample code:
  * @code
 #include <notification_ex.h>
@@ -208,7 +208,7 @@ int noti_ex_event_info_get_item_id(noti_ex_event_info_h handle, char **item_id);
  * @retval #NOTI_EX_ERROR_NONE Success
  * @retval #NOTI_EX_ERROR_INVALID_PARAMETER Invalid parameter
  * @see #noti_ex_event_info_h
- * @see noti_ex_event_info_create()
+ * @see noti_ex_event_info_clone()
  * @par Sample code:
  * @code
 #include <notification_ex.h>
