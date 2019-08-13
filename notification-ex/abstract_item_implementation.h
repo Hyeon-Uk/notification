@@ -37,6 +37,7 @@ class AbstractItem::Impl {
       std::shared_ptr<AbstractAction> action = std::shared_ptr<AbstractAction>({}));
   Impl(AbstractItem* parent, std::string id,
       std::shared_ptr<AbstractAction> action = std::shared_ptr<AbstractAction>({}));
+  bool IsValidMainType(AbstractItem& target, MainType type);
 
  private:
   friend class AbstractItem;

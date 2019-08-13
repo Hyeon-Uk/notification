@@ -515,10 +515,40 @@ bool AbstractItem::GetOnGoingState() const {
   return impl_->ongoing_;
 }
 
+bool AbstractItem::Impl::IsValidMainType(AbstractItem& target, MainType type) {
+  int item_type = target.GetType();
+
+  switch (type) {
+    case MainTitle:
+    case MainContents:
+      if (item_type != Text)
+        return false;
+      break;
+    case MainIcon:
+      if (item_type != Image)
+        return false;
+      break;
+    case MainButton:
+      if (item_type != Button)
+        return false;
+      break;
+    default:
+      return false;
+  }
+
+  return true;
+}
+
 bool AbstractItem::SetMainType(std::string target_id, MainType type) {
   AbstractItem& target = FindByID(target_id);
   if (target.GetType() == NullObject)
     return false;
+  if (!impl_->IsValidMainType(target,type)) {
+    LOGE("Main type and item type are not matched (%d, %d)",
+        type, target.GetType());
+    return false;
+  }
+
   AbstractItem& old = FindByMainType(type);
   if (target.GetType() != NullObject)
     old.impl_->main_type_ = MainNone;

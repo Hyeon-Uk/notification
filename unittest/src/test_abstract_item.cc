@@ -304,4 +304,13 @@ TEST_F(AbstractItemTest, SetGetFindMainType) {
   EXPECT_EQ(i.GetId(), "test_id");
 }
 
+TEST_F(AbstractItemTest, SetInvalidMainType) {
+  auto root = std::make_shared<GroupItem>("test_group");
+  auto item = std::make_shared<ButtonItem>("test_id", "title");
+  root->AddChild(item);
+
+  bool ret = root->SetMainType("test_id", AbstractItem::MainTitle);
+  EXPECT_FALSE(ret);
+}
+
 }  // namespace
