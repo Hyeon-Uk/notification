@@ -22,8 +22,11 @@
  *   \#include <notification_ex.h>
  *
  * @section NOTIFICATION_EX_MODULE_OVERVIEW Overview
- * A notification ex API is an expanded API of notification.
- * This API provides functions for creating, inserting and updating notification with notification ex items.
+ * A notification ex API is a set of expanded APIs for notifications.
+ * The expanded notification is the predefined type of notifications.
+ * The notification can define actions with one item or group of items.
+ * It supports displaying the notification with selectors to select predefined input
+ * and controlling visibility of the created notification items.
  */
 
 /**
