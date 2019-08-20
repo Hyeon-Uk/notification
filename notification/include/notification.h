@@ -546,6 +546,8 @@ int notification_get_led_time_period(notification_h noti, int *on_ms, int *off_m
  * @brief Sets the launch option for a notification.
  * @details When notification data selected in display application, application launched by app_control_send_launch_request with app_control handle.
  * @since_tizen @if WEARABLE 2.3.1 @elseif MOBILE 2.3 @endif
+ * @privilege http://tizen.org/privilege/appmanager.launch
+ * @remarks Since 4.0, %http://tizen.org/privilege/appmanager.launch privilege is additionally required.
  * @param[in] noti The notification handle
  * @param[in] type Launching option type
  * @param[in] option App Control handler
@@ -618,6 +620,8 @@ int notification_get_launch_option(notification_h noti, notification_launch_opti
  * @details When some event occurs on notification, application launched by app_control_send_launch_request with app_control handle. \n
  *          Setting event handler of a button means that the notification will show the button.
  * @since_tizen @if MOBILE 2.4 @elseif WEARABLE 3.0 @endif
+ * @privilege http://tizen.org/privilege/appmanager.launch
+ * @remarks Since 4.0, %http://tizen.org/privilege/appmanager.launch privilege is additionally required.
  * @param[in] noti The notification handle
  * @param[in] event_type Event type
  * @param[in] event_handler App control handle
