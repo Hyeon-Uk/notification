@@ -1838,6 +1838,7 @@ EXPORT_API int notification_get_extension_data(notification_h noti, const char *
 {
 	char *ret_str;
 	bundle *args;
+	int ret;
 
 	if (noti == NULL || key == NULL || value == NULL)
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
@@ -1847,8 +1848,8 @@ EXPORT_API int notification_get_extension_data(notification_h noti, const char *
 
 	args = noti->args;
 
-	bundle_get_str(args, key, &ret_str);
-	if (ret_str == NULL)
+	ret = bundle_get_str(args, key, &ret_str);
+	if (ret != BUNDLE_ERROR_NONE)
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 
 	*value = _create_bundle_from_bundle_raw((bundle_raw *)ret_str);
