@@ -133,7 +133,7 @@ TEST_F(GroupItemTest, FindByIDNullItemReturn) {
 }
 
 int __fake_app_get_name(char** app_name) {
-  *app_name = (char*)"unittest_appname";
+  *app_name = strdup("unittest_appname");
   return 0;
 }
 

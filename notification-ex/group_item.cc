@@ -187,6 +187,7 @@ string GroupItem::GetAppLabel() {
     if (ret != APP_ERROR_NONE)
       THROW(ERROR_IO_ERROR);
     impl_->app_label_ = string(name);
+    free(name);
   }
   return impl_->app_label_;
 }

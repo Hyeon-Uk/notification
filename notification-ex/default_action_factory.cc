@@ -37,10 +37,13 @@ unique_ptr<AbstractAction> DefaultActionFactory::CreateAction(int type) {
   switch (type) {
     case AbstractAction::NullObject :
       THROW(ERROR_INVALID_PARAMETER);
-    case AbstractAction::AppControl :
+    case AbstractAction::AppControl : {
       app_control_h control;
       app_control_create(&control);
-      return unique_ptr<AbstractAction>(new AppControlAction(control));
+      unique_ptr<AbstractAction> action(new AppControlAction(control));
+      app_control_destroy(control);
+      return action;
+    }
     case AbstractAction::Visibility :
       return unique_ptr<AbstractAction>(new VisibilityAction());
     case AbstractAction::Custom :

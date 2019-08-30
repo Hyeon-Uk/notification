@@ -79,6 +79,7 @@ Bundle AppControlAction::Serialize() const {
   bundle_encode(control_b, &control_raw, &len);
   if (len <= 0) {
     LOGE("bundle encode failed");
+    bundle_free(control_b);
     return {};
   }
 

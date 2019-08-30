@@ -82,7 +82,10 @@ std::string DBusConnectionManager::GetBusName(string appid) const {
   if (encoded_str == NULL)
     return "";
 
-  return string(NOTIFICATION_EX_BUS_NAME_PREFIX) + encoded_str;
+  string bus_name = string(NOTIFICATION_EX_BUS_NAME_PREFIX) + encoded_str;
+  g_free(encoded_str);
+
+  return bus_name;
 }
 
 int DBusConnectionManager::Init() {
