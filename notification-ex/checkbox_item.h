@@ -93,6 +93,13 @@ class EXPORT_API CheckBoxItem : public AbstractItem {
    */
   bool IsChecked() const;
 
+  /**
+   * @brief Gets the check state of CheckBoxItem.
+   * @since_tizen 5.5
+   * @param[in] checked the check state
+   */
+  void SetChecked(bool checked);
+
 private:
   class Impl;
   std::unique_ptr<Impl> impl_;

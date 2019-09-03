@@ -96,6 +96,37 @@ typedef enum _noti_ex_item_policy {
 } noti_ex_item_policy_e;
 
 /**
+ * @brief Enumeration for main types of notification_ex item.
+ * @since_tizen 5.5
+ */
+typedef enum _noti_ex_item_main_type {
+	/**
+	* None
+	*/
+	NOTI_EX_ITEM_MAIN_TYPE_NONE = 0,
+	/**
+	* Main title.
+	* This main type is valid only for items of type #NOTI_EX_ITEM_TYPE_TEXT.
+	*/
+	NOTI_EX_ITEM_MAIN_TYPE_TITLE,
+	/**
+	* Main contents.
+	* This main type is valid only for items of type #NOTI_EX_ITEM_TYPE_TEXT.
+	*/
+	NOTI_EX_ITEM_MAIN_TYPE_CONTENTS,
+	/**
+	* Main icon.
+	* This main type is valid only for items of type #NOTI_EX_ITEM_TYPE_IMAGE.
+	*/
+	NOTI_EX_ITEM_MAIN_TYPE_ICON,
+	/**
+	* Main button.
+	* This main type is valid only for items of type #NOTI_EX_ITEM_TYPE_BUTTON.
+	*/
+	NOTI_EX_ITEM_MAIN_TYPE_BUTTON,
+} noti_ex_item_main_type_e;
+
+/**
  * @brief The handle for the color information.
  * @since_tizen 5.5
  */
@@ -707,6 +738,18 @@ int noti_ex_style_get_color(noti_ex_style_h handle, noti_ex_color_h *color);
  * @endcode
  */
 int noti_ex_style_get_geometry(noti_ex_style_h handle, noti_ex_geometry_h *geometry);
+
+int noti_ex_style_get_background_image(noti_ex_style_h handle,
+		char **background_image);
+
+int noti_ex_style_set_background_image(noti_ex_style_h handle,
+		char *background_image);
+
+int noti_ex_style_get_background_color(noti_ex_style_h handle,
+		noti_ex_color_h *color);
+
+int noti_ex_style_set_background_color(noti_ex_style_h handle,
+		noti_ex_color_h color);
 
 /**
  * @brief The handle for the LED information.
@@ -1915,6 +1958,19 @@ int noti_ex_item_get_tag(noti_ex_item_h handle, char **tag);
  * @endcode
  */
 int noti_ex_item_set_tag(noti_ex_item_h handle, const char *tag);
+
+int noti_ex_item_get_ongoing_state(noti_ex_item_h handle, bool *ongoing);
+
+int noti_ex_item_set_ongoing_state(noti_ex_item_h handle, bool ongoing);
+
+int noti_ex_item_check_type_exist(noti_ex_item_h handle, int type, bool *exist);
+
+int noti_ex_item_get_main_type(noti_ex_item_h handle, int *type);
+
+int noti_ex_item_set_main_type(noti_ex_item_h handle, const char *id, int type);
+
+int noti_ex_item_find_by_main_type(noti_ex_item_h handle, int type,
+		noti_ex_item_h *item);
 
 /**
  * @}

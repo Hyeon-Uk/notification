@@ -79,6 +79,10 @@ bool CheckBoxItem::IsChecked(void) const {
   return impl_->checked_;
 }
 
+void CheckBoxItem::SetChecked(bool checked) {
+  impl_->checked_ = checked;
+}
+
 CheckBoxItem::~CheckBoxItem() = default;
 CheckBoxItem::Impl::~Impl() = default;
 

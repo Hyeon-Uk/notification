@@ -103,11 +103,13 @@ int noti_ex_item_checkbox_get_title(noti_ex_item_h handle, char **title);
 	int ret;
 	bool checked;
 
-	ret = noti_ex_item_checkbox_is_checked(checkbox_item, &checked);
+	ret = noti_ex_item_checkbox_get_check_state(checkbox_item, &checked);
 }
  * @endcode
  */
-int noti_ex_item_checkbox_is_checked(noti_ex_item_h handle, bool *checked);
+int noti_ex_item_checkbox_get_check_state(noti_ex_item_h handle, bool *checked);
+
+int noti_ex_item_checkbox_set_check_state(noti_ex_item_h handle, bool checked);
 
 /**
  * @}
