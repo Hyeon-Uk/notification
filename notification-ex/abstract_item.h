@@ -25,6 +25,7 @@
 #include <list>
 
 #include "notification-ex/abstract_action.h"
+#include "notification-ex/multi_language.h"
 #include "notification-ex/iitem_info.h"
 
 #ifndef EXPORT_API
@@ -833,6 +834,11 @@ class EXPORT_API AbstractItem {
    * @param[in] id notification item id
    */
   void SetId(std::string id);
+
+  std::vector<std::shared_ptr<MultiLanguage>> GetMultiLanguageArr() const;
+  std::shared_ptr<MultiLanguage> GetMultiLanguage() const;
+  void SetMultiLanguage(std::shared_ptr<MultiLanguage> multi);
+  void SetMultiLanguage(std::vector<std::shared_ptr<MultiLanguage>> multi_arr);
 
   /**
    * @brief Gets AbstractAction for notification item.

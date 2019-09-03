@@ -62,6 +62,8 @@ int noti_ex_item_entry_create(noti_ex_item_h *handle, const char *id);
  * @brief Gets the text of an entry item.
  * @since_tizen 5.5
  * @remarks @a text must be released using free().
+ * @remarks If the multi-language handle is set by \n
+ *          noti_ex_item_entry_set_multi_language(), it will return a multi-language text.
  * @param[in] handle The notification_ex item handle
  * @param[out] text The text of entry item
  * @return #NOTI_EX_ERROR_NONE On success, other value on failure
@@ -69,6 +71,7 @@ int noti_ex_item_entry_create(noti_ex_item_h *handle, const char *id);
  * @retval #NOTI_EX_ERROR_INVALID_PARAMETER Invalid parameter, if the item type is not correct, this error is returned
  * @see #noti_ex_item_h
  * @see noti_ex_item_entry_create()
+ * @see noti_ex_item_entry_set_multi_language()
  * @par Sample code:
  * @code
 #include <notification_ex.h>
@@ -105,6 +108,41 @@ int noti_ex_item_entry_get_text(noti_ex_item_h handle, char **text);
  * @endcode
  */
 int noti_ex_item_entry_set_text(noti_ex_item_h handle, const char *text);
+
+/**
+ * @brief Sets the multi-language handle.
+ * @since_tizen 5.5
+ * @remarks After the multi-language handle setted successfully, \n
+ *          noti_ex_item_entry_get_text() will return the multi-language text. \n
+ * @remarks The #noti_ex_item_h handle keeps its own copy of #noti_ex_multi_lang_h. \n
+ *          Therefore, you can destroy @ multi after it was set for @ handle.
+ * @remarks You can pass NULL to @a multi, if you want to remove the multi-language text.
+ * @param[in] handle The notification_ex item handle
+ * @param[in] multi The multi-language handle
+ * @return #NOTI_EX_ERROR_NONE On success, other value on failure
+ * @retval #NOTI_EX_ERROR_NONE Success
+ * @retval #NOTI_EX_ERROR_INVALID_PARAMETER Invalid parameter, if the item type is not correct, this error is returned
+ * @see #noti_ex_item_h
+ * @see noti_ex_item_text_create()
+ * @see noti_ex_item_text_set_multi_language()
+ * @see noti_ex_item_text_get_contents()
+ * @par Sample code:
+ * @code
+#include <notification_ex.h>
+
+{
+	int ret;
+	noti_ex_item_h entry_item = NULL;
+	noti_ex_multi_lang_h multi;
+
+	ret = noti_ex_item_entry_create(&entry_item, "entry_id");
+	ret = noti_ex_item_entry_set_multi_language(entry_item, multi);
+	noti_ex_multi_lang_destroy(multi);
+}
+ * @endcode
+ */
+int noti_ex_item_entry_set_multi_language(noti_ex_item_h handle,
+		noti_ex_multi_lang_h multi);
 
 /**
  * @}

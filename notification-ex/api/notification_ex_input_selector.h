@@ -18,6 +18,7 @@
 #define __TIZEN_APPFW_NOTIFICATION_EX_INPUT_SELECTOR_H__
 
 #include <notification_ex_item.h>
+#include <notification_ex_multi_language.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -62,6 +63,8 @@ int noti_ex_item_input_selector_create(noti_ex_item_h *handle, const char *id);
  * @brief Gets the contents that can be selected by input selector.
  * @since_tizen 5.5
  * @remarks Each item in the @a list must be released using free(), then the @a list must be released using free().
+ * @remarks If the multi-language handle is set by noti_ex_item_input_selector_set_multi_language_contents(), \n
+ *          it will return a multi-language contents.
  * @param[in] handle The notification_ex item handle
  * @param[out] list The list of contents
  * @param[out] count The count of contents
@@ -71,6 +74,7 @@ int noti_ex_item_input_selector_create(noti_ex_item_h *handle, const char *id);
  * @see #noti_ex_item_h
  * @see noti_ex_item_input_selector_create()
  * @see noti_ex_item_input_selector_set_contents()
+ * @see noti_ex_item_input_selector_set_multi_language_contents()
  * @par Sample code:
  * @code
 #include <notification_ex.h>
@@ -111,6 +115,39 @@ int noti_ex_item_input_selector_get_contents(noti_ex_item_h handle, char ***list
  * @endcode
  */
 int noti_ex_item_input_selector_set_contents(noti_ex_item_h handle, const char **contents, int count);
+
+/**
+ * @brief Sets the multi-language contents for input selector item.
+ * @since_tizen 5.5
+ * @remarks After the multi-language handle setted successfully, \n
+ *          noti_ex_item_input_selector_get_contents() will return the multi-language text. \n
+ * @remarks The #noti_ex_item_h handle keeps its own copy of #noti_ex_multi_lang_h list. \n
+ *          Therefore, you can destroy @ multi_language_list after it was set for @ handle.
+ * @remarks You can pass NULL to @a multi_language_list, if you want to remove the multi-language text.
+ * @param[in] handle The notification_ex item handle
+ * @param[in] multi_language_list The list of noti_ex_multi_lang_h
+ * @param[in] count The count of contents
+ * @return #NOTI_EX_ERROR_NONE On success, other value on failure
+ * @retval #NOTI_EX_ERROR_NONE Success
+ * @retval #NOTI_EX_ERROR_INVALID_PARAMETER Invalid parameter
+ * @see #noti_ex_item_h
+ * @see noti_ex_item_input_selector_create()
+ * @see noti_ex_item_input_selector_get_contents()
+ * @par Sample code:
+ * @code
+#include <notification_ex.h>
+
+{
+	int ret;
+	noti_ex_multi_lang_h *contents[] = {multi1, multi2, multi3};
+	int count = 3;
+
+	ret = noti_ex_item_input_selector_set_multi_language_contents(selector_item, contents, count);
+}
+ * @endcode
+ */
+int noti_ex_item_input_selector_set_multi_language_contents(
+		noti_ex_item_h handle, noti_ex_multi_lang_h *multi_language_list, int count);
 
 /**
  * @}

@@ -16,6 +16,8 @@ pkg_check_modules(notification-ex REQUIRED
 	dlog
 	capi-appfw-app-control
 	capi-appfw-app-common
+	capi-appfw-package-manager
+	pkgmgr-info
 	aul
 	uuid
 )

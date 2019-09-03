@@ -18,6 +18,7 @@
 #define __TIZEN_APPFW_NOTIFICATION_EX_TEXT_H__
 
 #include <notification_ex_item.h>
+#include <notification_ex_multi_language.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -63,6 +64,8 @@ int noti_ex_item_text_create(noti_ex_item_h *handle, const char *id, const char 
 /**
  * @brief Sets the text contents of the text item.
  * @since_tizen 5.5
+ * @remarks If the multi-language handle is set by noti_ex_item_text_set_multi_language(), \n
+ *          it will return a multi-language content.
  * @param[in] handle The notification_ex item handle
  * @param[in] contents The text contents
  * @return #NOTI_EX_ERROR_NONE On success, other value on failure
@@ -87,6 +90,8 @@ int noti_ex_item_text_set_contents(noti_ex_item_h handle, const char *contents);
  * @brief Gets the text contents of the text item.
  * @since_tizen 5.5
  * @remarks @a contents must be released using free().
+ * @remarks If the multi-language handle is set by noti_ex_item_text_set_multi_language(), \n
+ *          it will return a multi-language content.
  * @param[in] handle The notification_ex item handle
  * @param[out] contents The text contents
  * @return #NOTI_EX_ERROR_NONE On success, other value on failure
@@ -94,6 +99,7 @@ int noti_ex_item_text_set_contents(noti_ex_item_h handle, const char *contents);
  * @retval #NOTI_EX_ERROR_INVALID_PARAMETER Invalid parameter, if the item type is not correct, this error is returned
  * @see #noti_ex_item_h
  * @see noti_ex_item_text_create()
+ * @see noti_ex_item_text_set_multi_language()
  * @par Sample code:
  * @code
 #include <notification_ex.h>
@@ -132,6 +138,42 @@ int noti_ex_item_text_get_contents(noti_ex_item_h handle, char **contents);
  * @endcode
  */
 int noti_ex_item_text_get_hyperlink(noti_ex_item_h handle, char **hyperlink);
+
+/**
+ * @brief Sets the multi-language handle.
+ * @since_tizen 5.5
+ * @remarks After the multi-language handle setted successfully, \n
+ *          noti_ex_item_text_get_contents() will return the multi-language text. \n
+ * @remarks The #noti_ex_item_h handle keeps its own copy of #noti_ex_multi_lang_h. \n
+ *          Therefore, you can destroy @ multi after it was set for @ handle.
+ * @remarks You can pass NULL to @a multi, if you want to remove the multi-language text.
+ * @param[in] handle The notification_ex item handle
+ * @param[in] multi The multi-language handle
+ * @return #NOTI_EX_ERROR_NONE On success, other value on failure
+ * @retval #NOTI_EX_ERROR_NONE Success
+ * @retval #NOTI_EX_ERROR_INVALID_PARAMETER Invalid parameter, if the item type is not correct, this error is returned
+ * @see #noti_ex_item_h
+ * @see noti_ex_item_text_create()
+ * @see noti_ex_multi_lang_create()
+ * @see noti_ex_item_text_get_contents()
+ * @par Sample code:
+ * @code
+#include <notification_ex.h>
+
+{
+	int ret;
+	noti_ex_item_h text_item = NULL;
+	noti_ex_multi_lang_h multi;
+
+	ret = noti_ex_item_text_create(&text_item, "text_id", "text", "hyperlink");
+	ret = noti_ex_multi_lang_create(&multi, "_IDS_NOTI_TEST_", "Hi %d I'm %s", 33, "test");
+	ret = noti_ex_item_text_set_multi_language(text_item, multi);
+	noti_ex_multi_lang_destroy(multi);
+}
+ * @endcode
+ */
+int noti_ex_item_text_set_multi_language(noti_ex_item_h handle,
+		noti_ex_multi_lang_h multi);
 
 /**
  * @}

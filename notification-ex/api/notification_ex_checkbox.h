@@ -18,6 +18,7 @@
 #define __TIZEN_APPFW_NOTIFICATION_EX_CHECKBOX_H__
 
 #include <notification_ex_item.h>
+#include <notification_ex_multi_language.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -64,6 +65,8 @@ int noti_ex_item_checkbox_create(noti_ex_item_h *handle, const char *id, const c
  * @brief Gets the title of a checkbox.
  * @since_tizen 5.5
  * @remarks @a title must be released using free().
+ * @remarks If the multi-language handle is set by noti_ex_item_checkbox_set_multi_language_title(), \n
+ *          it will return a multi-language title.
  * @param[in] handle The notification_ex item handle
  * @param[out] title The title of notification_ex item
  * @return #NOTI_EX_ERROR_NONE On success, other value on failure
@@ -71,6 +74,7 @@ int noti_ex_item_checkbox_create(noti_ex_item_h *handle, const char *id, const c
  * @retval #NOTI_EX_ERROR_INVALID_PARAMETER Invalid parameter, if the item type is not correct, this error is returned
  * @see #noti_ex_item_h
  * @see noti_ex_item_checkbox_create()
+ * @see noti_ex_item_checkbox_set_multi_language_title()
  * @par Sample code:
  * @code
 #include <notification_ex.h>
@@ -84,6 +88,42 @@ int noti_ex_item_checkbox_create(noti_ex_item_h *handle, const char *id, const c
  * @endcode
  */
 int noti_ex_item_checkbox_get_title(noti_ex_item_h handle, char **title);
+
+/**
+ * @brief Sets the multi-language handle.
+ * @since_tizen 5.5
+ * @remarks After the multi-language handle setted successfully, \n
+ *          noti_ex_item_checkbox_get_title() will return the multi-language text.
+ * @remarks The #noti_ex_item_h handle keeps its own copy of #noti_ex_multi_lang_h. \n
+ *          Therefore, you can destroy @ multi after it was set for @ handle.
+ * @remarks You can pass NULL to @a multi, if you want to remove the multi-language text.
+ * @param[in] handle The notification_ex item handle
+ * @param[in] multi The multi-language handle
+ * @return #NOTI_EX_ERROR_NONE On success, other value on failure
+ * @retval #NOTI_EX_ERROR_NONE Success
+ * @retval #NOTI_EX_ERROR_INVALID_PARAMETER Invalid parameter, if the item type is not correct, this error is returned
+ * @see #noti_ex_item_h
+ * @see noti_ex_item_checkbox_create()
+ * @see noti_ex_item_checkbox_get_title()
+ * @see noti_ex_multi_lang_create()
+ * @par Sample code:
+ * @code
+#include <notification_ex.h>
+
+{
+	int ret;
+	noti_ex_item_h checkbox_item = NULL;
+	noti_ex_multi_lang_h multi;
+
+	ret = noti_ex_item_checkbox_create(&checkbox_item, "checkbox_id", "checkbox_title", false);
+	ret = noti_ex_multi_lang_create(&multi, "_IDS_NOTI_TEST_", "Hi %d I'm %s", 33, "test");
+	ret = noti_ex_item_checkbox_set_multi_language_title(checkbox_item, multi);
+	noti_ex_multi_lang_destroy(multi);
+}
+ * @endcode
+ */
+int noti_ex_item_checkbox_set_multi_language_title(noti_ex_item_h handle,
+		noti_ex_multi_lang_h multi);
 
 /**
  * @brief Gets the check state of a checkbox.

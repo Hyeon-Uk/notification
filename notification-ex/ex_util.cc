@@ -18,8 +18,11 @@
 #include <aul.h>
 #include <fcntl.h>
 #include <unistd.h>
+#include <package_info.h>
+#include <package_manager.h>
 
 #include <string>
+#include <memory>
 
 #include "notification-ex/ex_util.h"
 
@@ -99,6 +102,77 @@ string GetAppId() {
 
   LOGI("appid(%s)", appid.c_str());
   return appid;
+}
+
+string GetPkgId() {
+  static string pkgid = "";
+  if (!pkgid.empty()) {
+    LOGI("pkgid(%s)", pkgid.c_str());
+    return pkgid;
+  }
+
+  char pkgid_buf[MAX_PACKAGE_STR_SIZE] = {0, };
+  int ret = aul_app_get_pkgid_bypid(getpid(), pkgid_buf, sizeof(pkgid_buf));
+  if (ret == AUL_R_OK)
+    pkgid = string(pkgid_buf);
+
+  return pkgid;
+}
+
+string GetDomainName() {
+  static string domain_str = "";
+  if (!domain_str.empty()) {
+    LOGI("domain(%s)", domain_str.c_str());
+    return domain_str;
+  }
+
+  string pkgid = GetPkgId();
+  if (pkgid.empty())
+    return "";
+
+  string::size_type pos = pkgid.rfind('.');
+  if (pos != string::npos)
+    ++pos;
+  else
+    return "";
+
+  domain_str = pkgid.substr(pos);
+  return domain_str;
+}
+
+string GetLocaleDirectory() {
+  string pkgid = GetPkgId();
+  if (pkgid.empty())
+    return "";
+
+  static string locale_directory = "";
+  if (!locale_directory.empty()) {
+    LOGI("locale_directory(%s)", locale_directory.c_str());
+    return locale_directory;
+  }
+
+  package_info_h package_info;
+  int err = package_info_create(pkgid.c_str(), &package_info);
+  if (err != PACKAGE_MANAGER_ERROR_NONE) {
+    LOGE("fail to get package info");
+    return "";
+  }
+  unique_ptr<package_info_s, decltype(package_info_destroy)*> pkg_ptr(
+      package_info, package_info_destroy);
+
+  char* app_root_path;
+  err = package_info_get_root_path(pkg_ptr.get(), &app_root_path);
+  if (err != PACKAGE_MANAGER_ERROR_NONE) {
+    LOGE("Failed to get root path err[%d] path[%p]",
+        err, app_root_path);
+    return "";
+  }
+
+  string app_root_str(app_root_path);
+  free(app_root_path);
+
+  locale_directory = app_root_str + string("/res/locale");
+  return locale_directory;
 }
 
 }  // namespace util

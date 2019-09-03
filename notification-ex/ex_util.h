@@ -27,6 +27,9 @@ namespace util {
   GQuark GetQuarkFromString(std::string str);
   std::string GetQuarkToString(GQuark quark);
   int GetRequestId();
+  std::string GetPkgId();
+  std::string GetDomainName();
+  std::string GetLocaleDirectory();
 }  // namespace util
 }  // namespace notification
 

@@ -26,6 +26,7 @@
 #include "notification-ex/abstract_item.h"
 #include "notification-ex/abstract_item_implementation.h"
 #include "notification-ex/item_info_internal.h"
+#include "notification-ex/multi_language.h"
 #include "notification-ex/ex_util.h"
 #include "notification-ex/action_inflator.h"
 #include "notification-ex/factory_manager.h"
@@ -82,6 +83,8 @@
 #define ABSTRACT_ITEM_TRUE "TRUE"
 #define ABSTRACT_ITEM_ONGOING_KEY "__ABSTRACT_ITEM_ONGOING_KEY__"
 #define ABSTRACT_ITEM_MAIN_TYPE_KEY "__ABSTRACT_ITEM_MAIN_TYPE_KEY__"
+#define ABSTRACT_ITEM_MULTI_LANG_ARR_KEY "__ABSTRACT_ITEM_MULTI_LANG_ARR_KEY__"
+#define ABSTRACT_ITEM_MULTI_LANG_KEY "__ABSTRACT_ITEM_MULTI_LANG_KEY__"
 
 using namespace std;
 using namespace tizen_base;
@@ -254,6 +257,19 @@ Bundle AbstractItem::Serialize() const {
       reinterpret_cast<char*>(impl_->action_->Serialize().ToRaw().first.get()));
   }
 
+  if (impl_->multi_lang_ != nullptr) {
+    b.Add(ABSTRACT_ITEM_MULTI_LANG_KEY,
+      reinterpret_cast<char*>(impl_->multi_lang_->Serialize().ToRaw().first.get()));
+  }
+
+  if (impl_->multi_lang_arr_.size() > 0) {
+    vector<string> arr;
+    for (auto& i : impl_->multi_lang_arr_) {
+      arr.push_back(reinterpret_cast<char*>(i->Serialize().ToRaw().first.get()));
+    }
+    b.Add(ABSTRACT_ITEM_MULTI_LANG_ARR_KEY, arr);
+  }
+
   if (impl_->hide_viewer_list_.size() != 0) {
     vector<string> arr;
 
@@ -375,6 +391,18 @@ void AbstractItem::Deserialize(Bundle b) {
   string action_str = b.GetString(ABSTRACT_ITEM_ACTION_KEY);
   if (!action_str.empty())
     impl_->action_ = ActionInflator::Create(Bundle(action_str));
+
+  string multi_str = b.GetString(ABSTRACT_ITEM_MULTI_LANG_KEY);
+  if (!multi_str.empty())
+    impl_->multi_lang_ = shared_ptr<MultiLanguage>(new MultiLanguage(multi_str));
+
+  vector<string> multi_arr_str = b.GetStringArray(ABSTRACT_ITEM_MULTI_LANG_ARR_KEY);
+  if (!multi_arr_str.empty()) {
+    for (string str : multi_arr_str) {
+      impl_->multi_lang_arr_.push_back(
+          shared_ptr<MultiLanguage>(new MultiLanguage(str)));
+    }
+  }
 
   vector<string> hide_viewer = b.GetStringArray(ABSTRACT_ITEM_HIDE_VIEWER_KEY);
   if (hide_viewer.size() != 0) {
@@ -573,6 +601,23 @@ AbstractItem& AbstractItem::FindByMainType(AbstractItem::MainType type) {
     return *this;
 
   return FactoryManager::GetInst().GetNullItem();
+}
+
+std::shared_ptr<MultiLanguage> AbstractItem::GetMultiLanguage() const {
+  return impl_->multi_lang_;
+}
+
+vector<shared_ptr<MultiLanguage>> AbstractItem::GetMultiLanguageArr() const {
+  return impl_->multi_lang_arr_;
+}
+
+void AbstractItem::SetMultiLanguage(std::shared_ptr<MultiLanguage> multi) {
+  impl_->multi_lang_ = multi;
+}
+
+void AbstractItem::SetMultiLanguage(
+    vector<shared_ptr<MultiLanguage>> multi_arr) {
+  impl_->multi_lang_arr_ = multi_arr;
 }
 
 }  // namespace item

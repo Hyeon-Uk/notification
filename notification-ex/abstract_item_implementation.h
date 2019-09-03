@@ -55,6 +55,8 @@ class AbstractItem::Impl {
   std::list<std::string> receiver_group_list_;
   std::string can_receive_;
   std::shared_ptr<AbstractAction> action_;
+  std::shared_ptr<MultiLanguage> multi_lang_;
+  std::vector<std::shared_ptr<MultiLanguage>> multi_lang_arr_;
   AbstractItem* parent_;
   std::string sound_path_;
   std::string vibration_path_;

@@ -33,6 +33,7 @@
 #include <notification_ex_text.h>
 #include <notification_ex_time.h>
 #include <notification_ex_visibility_action.h>
+#include <notification_ex_multi_language.h>
 
 #ifdef __cplusplus
 extern "C" {

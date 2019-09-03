@@ -19,6 +19,8 @@
 #include <unistd.h>
 
 #include <list>
+#include <sstream>
+#include <iomanip>
 
 #include "api/notification_ex_app_control_action.h"
 #include "api/notification_ex_button.h"
@@ -389,14 +391,48 @@ extern "C" EXPORT_API int noti_ex_item_button_get_title(noti_ex_item_h handle,
     LOGE("Invalid handle type");
     return NOTI_EX_ERROR_INVALID_PARAMETER;
   }
+
   ButtonItem* p = static_cast<ButtonItem*>(sp->Get());
-  if (!p->GetTitle().empty()) {
-    *title = strdup(p->GetTitle().c_str());
-    if (*title == nullptr) {
-      LOGE("Out-of-memory");
-      return NOTI_EX_ERROR_OUT_OF_MEMORY;
-    }
+  string str;
+  if (p->GetMultiLanguage() != nullptr &&
+      !p->GetMultiLanguage()->GetTranslatedString().empty())
+    str = p->GetMultiLanguage()->GetTranslatedString();
+  else if (!p->GetTitle().empty())
+    str = p->GetTitle();
+
+  *title = strdup(str.c_str());
+  if (*title == nullptr) {
+    LOGE("Out-of-memory");
+    return NOTI_EX_ERROR_OUT_OF_MEMORY;
   }
+
+  return NOTI_EX_ERROR_NONE;
+}
+
+extern "C" EXPORT_API int noti_ex_item_button_set_multi_language_title(
+    noti_ex_item_h handle, noti_ex_multi_lang_h multi) {
+  if (handle == nullptr) {
+    LOGE("Invalid parameter");
+    return NOTI_EX_ERROR_INVALID_PARAMETER;
+  }
+
+  Handle* p = static_cast<Handle*>(handle);
+  if (!p->IsValidType(AbstractItem::Button)) {
+    LOGE("Invalid handle type");
+    return NOTI_EX_ERROR_INVALID_PARAMETER;
+  }
+
+  ButtonItem* bi = static_cast<ButtonItem*>(p->Get());
+  if (multi == nullptr) {
+    bi->SetMultiLanguage(nullptr);
+    return NOTI_EX_ERROR_NONE;
+  }
+
+  shared_ptr<MultiLanguage> mul_ptr =
+      *reinterpret_cast<shared_ptr<MultiLanguage>*>(multi);
+
+  mul_ptr->UpdateString();
+  bi->SetMultiLanguage(mul_ptr);
 
   return NOTI_EX_ERROR_NONE;
 }
@@ -546,20 +582,53 @@ extern "C" EXPORT_API int noti_ex_item_checkbox_get_title(noti_ex_item_h handle,
     LOGE("Invalid handle type");
     return NOTI_EX_ERROR_INVALID_PARAMETER;
   }
+
   CheckBoxItem* p = static_cast<CheckBoxItem*>(h->Get());
-  if (!p->GetTitle().empty()) {
-    *title = strdup(p->GetTitle().c_str());
-    if (*title == nullptr) {
-        LOGE("Out-of-memory");
-        return NOTI_EX_ERROR_OUT_OF_MEMORY;
-    }
+  string str;
+  if (p->GetMultiLanguage() != nullptr &&
+    !p->GetMultiLanguage()->GetTranslatedString().empty())
+    str = p->GetMultiLanguage()->GetTranslatedString();
+  else if (!p->GetTitle().empty())
+    str = p->GetTitle();
+
+  *title = strdup(str.c_str());
+  if (*title == nullptr) {
+    LOGE("Out-of-memory");
+    return NOTI_EX_ERROR_OUT_OF_MEMORY;
   }
 
   return NOTI_EX_ERROR_NONE;
 }
 
-extern "C" EXPORT_API int noti_ex_item_checkbox_is_checked(
-    noti_ex_item_h handle, bool *checked) {
+extern "C" EXPORT_API int noti_ex_item_checkbox_set_multi_language_title(
+    noti_ex_item_h handle, noti_ex_multi_lang_h multi) {
+  if (handle == nullptr || multi == nullptr) {
+    LOGE("Invalid parameter");
+    return NOTI_EX_ERROR_INVALID_PARAMETER;
+  }
+
+  Handle* p = static_cast<Handle*>(handle);
+  if (!p->IsValidType(AbstractItem::CheckBox)) {
+    LOGE("Invalid handle type");
+    return NOTI_EX_ERROR_INVALID_PARAMETER;
+  }
+
+  CheckBoxItem* ci = static_cast<CheckBoxItem*>(p->Get());
+  if (multi == nullptr) {
+    ci->SetMultiLanguage(nullptr);
+    return NOTI_EX_ERROR_NONE;
+  }
+
+  shared_ptr<MultiLanguage> mul_ptr =
+      *reinterpret_cast<shared_ptr<MultiLanguage>*>(multi);
+  mul_ptr->UpdateString();
+  ci->SetMultiLanguage(mul_ptr);
+
+  return NOTI_EX_ERROR_NONE;
+}
+
+extern "C" EXPORT_API int noti_ex_item_checkbox_is_checked(noti_ex_item_h handle,
+    bool *checked) {
   if (handle == nullptr || checked == nullptr) {
     LOGE("Invalid parameter");
     return NOTI_EX_ERROR_INVALID_PARAMETER;
@@ -571,42 +640,6 @@ extern "C" EXPORT_API int noti_ex_item_checkbox_is_checked(
   }
   CheckBoxItem* p = static_cast<CheckBoxItem*>(h->Get());
   *checked = p->IsChecked();
-
-  return NOTI_EX_ERROR_NONE;
-}
-
-extern "C" EXPORT_API int noti_ex_item_checkbox_get_check_state(
-    noti_ex_item_h handle, bool *checked) {
-  if (handle == nullptr || checked == nullptr) {
-    LOGE("Invalid parameter");
-    return NOTI_EX_ERROR_INVALID_PARAMETER;
-  }
-  Handle* h = static_cast<Handle*>(handle);
-  if (!h->IsValidType(AbstractItem::CheckBox)) {
-    LOGE("Invalid handle type");
-    return NOTI_EX_ERROR_INVALID_PARAMETER;
-  }
-  CheckBoxItem* p = static_cast<CheckBoxItem*>(h->Get());
-  *checked = p->IsChecked();
-
-  return NOTI_EX_ERROR_NONE;
-}
-
-extern "C" EXPORT_API int noti_ex_item_checkbox_set_check_state(
-    noti_ex_item_h handle, bool checked) {
-  if (handle == nullptr) {
-    LOGE("Invalid parameter");
-    return NOTI_EX_ERROR_INVALID_PARAMETER;
-  }
-
-  Handle* h = static_cast<Handle*>(handle);
-  if (!h->IsValidType(AbstractItem::CheckBox)) {
-    LOGE("Invalid handle type");
-    return NOTI_EX_ERROR_INVALID_PARAMETER;
-  }
-
-  CheckBoxItem* p = static_cast<CheckBoxItem*>(h->Get());
-  p->SetChecked(checked);
 
   return NOTI_EX_ERROR_NONE;
 }
@@ -643,13 +676,19 @@ extern "C" EXPORT_API int noti_ex_item_entry_get_text(noti_ex_item_h handle,
     LOGE("Invalid handle type");
     return NOTI_EX_ERROR_INVALID_PARAMETER;
   }
+
   EntryItem* p = static_cast<EntryItem*>(h->Get());
-  if (!p->GetText().empty()) {
-    *text = strdup(p->GetText().c_str());
-    if (*text == nullptr) {
-        LOGE("Out-of-memory");
-        return NOTI_EX_ERROR_OUT_OF_MEMORY;
-    }
+  string str;
+  if (p->GetMultiLanguage() != nullptr &&
+      !p->GetMultiLanguage()->GetTranslatedString().empty())
+    str = p->GetMultiLanguage()->GetTranslatedString();
+  else if (!p->GetText().empty())
+    str = p->GetText();
+
+  *text = strdup(str.c_str());
+  if (*text == nullptr) {
+    LOGE("Out-of-memory");
+    return NOTI_EX_ERROR_OUT_OF_MEMORY;
   }
 
   return NOTI_EX_ERROR_NONE;
@@ -668,6 +707,28 @@ extern "C" EXPORT_API int noti_ex_item_entry_set_text(noti_ex_item_h handle,
   }
   EntryItem* p = static_cast<EntryItem*>(h->Get());
   p->SetText(std::string(text));
+
+  return NOTI_EX_ERROR_NONE;
+}
+
+extern "C" EXPORT_API int noti_ex_item_entry_set_multi_language(
+    noti_ex_item_h handle, noti_ex_multi_lang_h multi) {
+  if (handle == nullptr || multi == nullptr) {
+    LOGE("Invalid parameter");
+    return NOTI_EX_ERROR_INVALID_PARAMETER;
+  }
+
+  Handle* p = static_cast<Handle*>(handle);
+  if (!p->IsValidType(AbstractItem::Entry)) {
+    LOGE("Invalid handle type");
+    return NOTI_EX_ERROR_INVALID_PARAMETER;
+  }
+
+  shared_ptr<MultiLanguage> mul_ptr =
+      *reinterpret_cast<shared_ptr<MultiLanguage>*>(multi);
+  EntryItem* ei = static_cast<EntryItem*>(p->Get());
+  ei->SetMultiLanguage(mul_ptr);
+  ei->GetMultiLanguage()->UpdateString();
 
   return NOTI_EX_ERROR_NONE;
 }
@@ -977,8 +1038,18 @@ extern "C" EXPORT_API int noti_ex_item_input_selector_get_contents(
     LOGE("Invalid handle type");
     return NOTI_EX_ERROR_INVALID_PARAMETER;
   }
+
   InputSelectorItem* p = static_cast<InputSelectorItem*>(h->Get());
-  list<string> contents = p->GetContents();
+  vector<shared_ptr<MultiLanguage>> arr = p->GetMultiLanguageArr();
+  list<string> contents;
+  if (arr.size() == 0) {
+    contents = p->GetContents();
+  } else {
+    for (auto& i : arr) {
+      contents.push_back(i->GetTranslatedString());
+    }
+  }
+
   char **list = (char**)calloc(contents.size(), sizeof(char*));
   if (list == nullptr) {
     LOGE("Out of memory");
@@ -1020,6 +1091,33 @@ extern "C" EXPORT_API int noti_ex_item_input_selector_set_contents(
     new_contents.push_back(contents[i]);
   }
   p->SetContents(move(new_contents));
+
+  return NOTI_EX_ERROR_NONE;
+}
+
+extern "C" EXPORT_API int noti_ex_item_input_selector_set_multi_language_contents(
+    noti_ex_item_h handle, noti_ex_multi_lang_h* multi_language_list, int count) {
+  if (handle == nullptr) {
+    LOGE("Invalid parameter");
+    return NOTI_EX_ERROR_INVALID_PARAMETER;
+  }
+
+  Handle* p = static_cast<Handle*>(handle);
+  if (!p->IsValidType(AbstractItem::InputSelector)) {
+    LOGE("Invalid handle type");
+    return NOTI_EX_ERROR_INVALID_PARAMETER;
+  }
+
+  vector<shared_ptr<MultiLanguage>> m_list;
+  for (int i = 0; i < count; i++) {
+    shared_ptr<MultiLanguage> mul_ptr =
+      *reinterpret_cast<shared_ptr<MultiLanguage>*>(multi_language_list[i]);
+    mul_ptr->UpdateString();
+    m_list.push_back(mul_ptr);
+  }
+
+  InputSelectorItem* input = static_cast<InputSelectorItem*>(p->Get());
+  input->SetMultiLanguage(m_list);
 
   return NOTI_EX_ERROR_NONE;
 }
@@ -2847,13 +2945,19 @@ extern "C" EXPORT_API int noti_ex_item_text_get_contents(noti_ex_item_h handle,
     LOGE("Invalid handle type");
     return NOTI_EX_ERROR_INVALID_PARAMETER;
   }
+
   TextItem* ti = static_cast<TextItem*>(p->Get());
-  if (!ti->GetContents().empty()) {
-    *contents = strdup(ti->GetContents().c_str());
-    if (*contents == nullptr) {
-      LOGE("Out-of-memory");
-      return NOTI_EX_ERROR_OUT_OF_MEMORY;
-    }
+  string str;
+  if (ti->GetMultiLanguage() != nullptr &&
+      !ti->GetMultiLanguage()->GetTranslatedString().empty())
+    str = ti->GetMultiLanguage()->GetTranslatedString();
+  else if (!ti->GetContents().empty())
+    str = ti->GetContents();
+
+  *contents = strdup(str.c_str());
+  if (*contents == nullptr) {
+    LOGE("Out-of-memory");
+    return NOTI_EX_ERROR_OUT_OF_MEMORY;
   }
 
   return NOTI_EX_ERROR_NONE;
@@ -2879,6 +2983,33 @@ extern "C" EXPORT_API int noti_ex_item_text_get_hyperlink(
       return NOTI_EX_ERROR_OUT_OF_MEMORY;
     }
   }
+
+  return NOTI_EX_ERROR_NONE;
+}
+
+extern "C" EXPORT_API int noti_ex_item_text_set_multi_language(
+    noti_ex_item_h handle, noti_ex_multi_lang_h multi) {
+  if (handle == nullptr) {
+    LOGE("Invalid parameter");
+    return NOTI_EX_ERROR_INVALID_PARAMETER;
+  }
+
+  Handle* p = static_cast<Handle*>(handle);
+  if (!p->IsValidType(AbstractItem::Text)) {
+    LOGE("Invalid handle type");
+    return NOTI_EX_ERROR_INVALID_PARAMETER;
+  }
+
+  TextItem* ti = static_cast<TextItem*>(p->Get());
+  if (multi == nullptr) {
+    ti->SetMultiLanguage(nullptr);
+    return NOTI_EX_ERROR_NONE;
+  }
+
+  shared_ptr<MultiLanguage> mul_ptr =
+      *reinterpret_cast<shared_ptr<MultiLanguage>*>(multi);
+  ti->SetMultiLanguage(mul_ptr);
+  ti->GetMultiLanguage()->UpdateString();
 
   return NOTI_EX_ERROR_NONE;
 }
@@ -2963,5 +3094,64 @@ extern "C" EXPORT_API int noti_ex_action_visibility_set(noti_ex_action_h handle,
   VisibilityAction* action = static_cast<VisibilityAction*>(ptr->get());
   action->SetVisibility(id, visible);
 
+  return NOTI_EX_ERROR_NONE;
+}
+
+extern "C" EXPORT_API int noti_ex_multi_lang_create(noti_ex_multi_lang_h* handle,
+    const char* msgid, const char* format, ...) {
+  if (handle == nullptr || msgid == nullptr || format == nullptr) {
+    LOGE("Invalid parameter");
+    return NOTI_EX_ERROR_INVALID_PARAMETER;
+  }
+
+  const char* format_idx = format;
+  vector<string> arr;
+  va_list args;
+  va_start(args, format);
+  while (*format_idx != '\0') {
+    char* arg = nullptr;
+    int arg_i;
+    double arg_f;
+    stringstream stream;
+    if (*format_idx == '%') {
+      switch (*(format_idx + 1)) {
+        case 's':
+          arg = va_arg(args, char *);
+          arr.push_back(string(arg));
+          break;
+        case 'd':
+          arg_i = va_arg(args, int);
+          arr.push_back(to_string(arg_i));
+          break;
+        case 'f':
+          arg_f = va_arg(args, double);
+          stream << std::fixed << std::setprecision(2) << arg_f;
+          arr.push_back(stream.str());
+          break;
+      }
+    }
+    format_idx++;
+  }
+  va_end(args);
+
+  MultiLanguage* p = new MultiLanguage(string(msgid), format, arr);
+  if (p == nullptr) {
+    LOGE("Out-of-memory");
+    return NOTI_EX_ERROR_OUT_OF_MEMORY;
+  }
+  *handle = new shared_ptr<MultiLanguage>(p);
+
+  return NOTI_EX_ERROR_NONE;
+}
+
+extern "C" EXPORT_API int noti_ex_multi_lang_destroy(noti_ex_multi_lang_h handle) {
+  if (handle == nullptr) {
+    LOGE("Invalid parameter");
+    return NOTI_EX_ERROR_INVALID_PARAMETER;
+  }
+
+  shared_ptr<MultiLanguage>* mul_ptr =
+      reinterpret_cast<shared_ptr<MultiLanguage>*>(handle);
+  delete mul_ptr;
   return NOTI_EX_ERROR_NONE;
 }
