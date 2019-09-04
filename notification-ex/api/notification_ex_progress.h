@@ -167,12 +167,9 @@ int noti_ex_item_progress_get_min(noti_ex_item_h handle, float *min);
  */
 int noti_ex_item_progress_get_max(noti_ex_item_h handle, float *max);
 
-int noti_ex_item_progress_get_type(noti_ex_item_h handle, int *type);
-
-int noti_ex_item_progress_set_type(noti_ex_item_h handle, int type);
-
 /**
  * @brief Gets the type of progress.
+ * The type is equal to one of the values of #noti_ex_item_progress_type_e.
  * @since_tizen 5.5
  * @param[in] handle The notification_ex item handle
  * @param[out] type The type of progress
@@ -199,6 +196,7 @@ int noti_ex_item_progress_get_type(noti_ex_item_h handle, int *type);
 
 /**
  * @brief Sets the type of progress.
+ * @details The type is equal to one of the values of #noti_ex_item_progress_type_e.
  * @since_tizen 5.5
  * @param[in] handle The notification_ex item handle
  * @param[in] type The type of progress

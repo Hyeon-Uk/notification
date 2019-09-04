@@ -748,8 +748,9 @@ int noti_ex_style_get_geometry(noti_ex_style_h handle, noti_ex_geometry_h *geome
 /**
  * @brief Gets the background image path from style.
  * @since_tizen 5.5
+ * @remarks The @a image_path should be released using free().
  * @param[in] handle The notification_ex style handle
- * @param[out] background_image The background image path
+ * @param[out] image_path The background image path
  * @return #NOTI_EX_ERROR_NONE On success, other value on failure
  * @retval #NOTI_EX_ERROR_NONE Success
  * @retval #NOTI_EX_ERROR_INVALID_PARAMETER Invalid parameter
@@ -761,20 +762,20 @@ int noti_ex_style_get_geometry(noti_ex_style_h handle, noti_ex_geometry_h *geome
 
 {
 	int ret;
-	char *background_image;
+	char *image_path;
 
-	ret = noti_ex_style_get_background_image(style, &background_image);
+	ret = noti_ex_style_get_background_image(style, &image_path);
 }
  * @endcode
  */
 int noti_ex_style_get_background_image(noti_ex_style_h handle,
-		char **background_image);
+		char **image_path);
 
 /**
  * @brief Sets the background image path of a style.
  * @since_tizen 5.5
  * @param[in] handle The notification_ex style handle
- * @param[in] background_image The background image path
+ * @param[in] image_path The background image path
  * @return #NOTI_EX_ERROR_NONE On success, other value on failure
  * @retval #NOTI_EX_ERROR_NONE Success
  * @retval #NOTI_EX_ERROR_INVALID_PARAMETER Invalid parameter
@@ -786,17 +787,21 @@ int noti_ex_style_get_background_image(noti_ex_style_h handle,
 
 {
 	int ret;
-	noti_ex_geometry_h geometry = NULL;
+	char *image_path[BUFLEN];
 
-	ret = noti_ex_style_get_geometry(style, &geometry);
+	char *shared_path = app_get_shared_resource_path();
+	snprintf(image_path, BUFLEN, "%simage.png", shared_path);
+	free(shared_path);
+
+	ret = noti_ex_style_set_background_image(style, image_path);
 }
  * @endcode
  */
 int noti_ex_style_set_background_image(noti_ex_style_h handle,
-		char *background_image);
+		char *image_path);
 
 /**
- * @brief Gets the background color from style.
+ * @brief Gets the background color of a style.
  * @since_tizen 5.5
  * @remarks @a color must be released using noti_ex_color_destroy().
  * @param[in] handle The notification_ex style handle
@@ -842,6 +847,7 @@ int noti_ex_style_get_background_color(noti_ex_style_h handle,
 
 	ret = noti_ex_color_create(&color, 0, 0, 0, 0);
 	ret = noti_ex_style_set_background_color(style, color);
+	ret = noti_ex_color_destroy(color);
 }
  * @endcode
  */
@@ -2057,7 +2063,7 @@ int noti_ex_item_get_tag(noti_ex_item_h handle, char **tag);
 int noti_ex_item_set_tag(noti_ex_item_h handle, const char *tag);
 
 /**
- * @brief Gets a value indicating whether a notification is currently ongoing.
+ * @brief Gets the value indicating whether a notification is currently ongoing.
  * @since_tizen 5.5
  * @param[in] handle The notification_ex item handle
  * @param[out] ongoing The state of ongoing
@@ -2080,7 +2086,7 @@ int noti_ex_item_set_tag(noti_ex_item_h handle, const char *tag);
 int noti_ex_item_get_ongoing_state(noti_ex_item_h handle, bool *ongoing);
 
 /**
- * @brief Sets a value indicating whether a notification is currently ongoing.
+ * @brief Sets the value indicating whether a notification is currently ongoing.
  * @since_tizen 5.5
  * @param[in] handle The notification_ex item handle
  * @param[in] ongoing The state of ongoing
@@ -2102,9 +2108,8 @@ int noti_ex_item_get_ongoing_state(noti_ex_item_h handle, bool *ongoing);
 int noti_ex_item_set_ongoing_state(noti_ex_item_h handle, bool ongoing);
 
 /**
- * @brief Checks if a specified type is included in a notification_ex item.
+ * @brief Checks if an item of a specified type is included in a notification_ex item.
  * @since_tizen 5.5
- * @remarks @a tag must be released using free().
  * @param[in] handle The notification_ex item handle
  * @param[in] type The type of a notification_ex item
  * @param[out] exist The state of if a type is included
@@ -2112,6 +2117,7 @@ int noti_ex_item_set_ongoing_state(noti_ex_item_h handle, bool ongoing);
  * @retval #NOTI_EX_ERROR_NONE Success
  * @retval #NOTI_EX_ERROR_INVALID_PARAMETER Invalid parameter
  * @see #noti_ex_item_h
+ * @see #noti_ex_item_type_e
  * @par Sample code:
  * @code
 #include <notification_ex.h>
@@ -2128,7 +2134,8 @@ int noti_ex_item_set_ongoing_state(noti_ex_item_h handle, bool ongoing);
 int noti_ex_item_check_type_exist(noti_ex_item_h handle, int type, bool *exist);
 
 /**
- * @brief Gets the main type of notification item.
+ * @brief Gets the main type of a notification item.
+ * @details The type is equal to one of the values of #noti_ex_item_main_type_e.
  * @since_tizen 5.5
  * @param[in] handle The notification_ex item handle
  * @param[out] type The main type
@@ -2157,12 +2164,13 @@ int noti_ex_item_get_main_type(noti_ex_item_h handle, int *type);
 
 /**
  * @brief Sets the main type of a notification item.
- * @details Use this api to configure main type among multiple items.
- * In other words, if there is only one item, it should not be used.
+ * @details Use this function to configure main type among multiple items.
+ *          In other words, if there is only one item, it should not be used.
+ *          The type is equal to one of the values of #noti_ex_item_main_type_e.
  * @since_tizen 5.5
- * @remarks When set to a specific type, values previously set to the same type are deleted.
+ * @remarks When set to a specific type, the previous main item of the same type is canceled.
  * @param[in] handle The notification_ex item handle
- * @param[in] id The id of notification_ex item
+ * @param[in] id The ID of notification_ex item
  * @param[in] type The main type
  * @return #NOTI_EX_ERROR_NONE On success, other value on failure
  * @retval #NOTI_EX_ERROR_NONE Success
@@ -2193,6 +2201,7 @@ int noti_ex_item_set_main_type(noti_ex_item_h handle, const char *id, int type);
  * @brief Finds the notification item of the specified main type.
  * @details Finds the item that matches the main type among the group items.
  * @since_tizen 5.5
+ * @remarks @a handle must be released using noti_ex_item_destroy().
  * @param[in] handle The notification_ex item handle
  * @param[in] type The main type
  * @param[out] item The notification_ex item handle
@@ -2210,7 +2219,7 @@ int noti_ex_item_set_main_type(noti_ex_item_h handle, const char *id, int type);
 	int type = NOTI_EX_ITEM_MAIN_TYPE_TITLE;
 	int ret;
 
-	ret = noti_ex_item_get_main_type(item_handle, type, &text_item);
+	ret = noti_ex_item_find_by_main_type(item_handle, type, &text_item);
 
 	if (text_item != NULL) {
 		// Do something

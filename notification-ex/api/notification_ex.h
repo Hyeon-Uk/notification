@@ -55,4 +55,4 @@ extern "C" {
 #ifdef __cplusplus
 }
 #endif
-#endif  // __TIZEN_APPFW_NOTIFICATION_EX_H__
+#endif  /* __TIZEN_APPFW_NOTIFICATION_EX_H__ */

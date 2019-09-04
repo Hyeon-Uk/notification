@@ -36,7 +36,7 @@ typedef enum _noti_ex_event_info_type {
 	NOTI_EX_EVENT_DELETE, /**< Delete the notification */
 	NOTI_EX_EVENT_GET, /**< Get the notification */
 	NOTI_EX_EVENT_ERROR, /**< Error occurs */
-	NOTI_EX_EVENT_DELETE_ALL, /**< Delete all notification */
+	NOTI_EX_EVENT_DELETE_ALL, /**< Delete all notifications */
 } noti_ex_event_info_type_e;
 
 /**

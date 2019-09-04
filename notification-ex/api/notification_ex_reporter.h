@@ -101,8 +101,8 @@ typedef struct {
  * @param[in] user_data The user data for @a event_callbacks
  * @return #NOTI_EX_ERROR_NONE On success, other value on failure
  * @retval #NOTI_EX_ERROR_NONE Success
- * @retval #NOTI_EX_ERROR_INVALID_PARAMETER Invalid parameter
  * @retval #NOTI_EX_ERROR_PERMISSION_DENIED Permission deny
+ * @retval #NOTI_EX_ERROR_INVALID_PARAMETER Invalid parameter
  * @retval #NOTI_EX_ERROR_OUT_OF_MEMORY Out of memory
  * @see #noti_ex_item_h
  * @see #noti_ex_reporter_events_s
@@ -172,8 +172,8 @@ int noti_ex_reporter_destroy(noti_ex_reporter_h handle);
  * @param[in] error The error type
  * @return #NOTI_EX_ERROR_NONE On success, other value on failure
  * @retval #NOTI_EX_ERROR_NONE Success
- * @retval #NOTI_EX_ERROR_INVALID_PARAMETER Invalid parameter
  * @retval #NOTI_EX_ERROR_PERMISSION_DENIED Permission deny
+ * @retval #NOTI_EX_ERROR_INVALID_PARAMETER Invalid parameter
  * @retval #NOTI_EX_ERROR_IO_ERROR IO error
  * @see #noti_ex_event_info_h
  * @see #noti_ex_manager_events_s
@@ -217,8 +217,8 @@ int noti_ex_reporter_send_error(noti_ex_reporter_h handle,
  * @param[out] request_id The id of request
  * @return #NOTI_EX_ERROR_NONE On success, other value on failure
  * @retval #NOTI_EX_ERROR_NONE Success
- * @retval #NOTI_EX_ERROR_INVALID_PARAMETER Invalid parameter
  * @retval #NOTI_EX_ERROR_PERMISSION_DENIED Permission deny
+ * @retval #NOTI_EX_ERROR_INVALID_PARAMETER Invalid parameter
  * @retval #NOTI_EX_ERROR_IO_ERROR IO error
  * @see noti_ex_reporter_create()
  * @par Sample code:
@@ -260,8 +260,8 @@ int noti_ex_reporter_post(noti_ex_reporter_h handle, noti_ex_item_h noti,
  * @param[out] request_id The id of request
  * @return #NOTI_EX_ERROR_NONE On success, other value on failure
  * @retval #NOTI_EX_ERROR_NONE Success
- * @retval #NOTI_EX_ERROR_INVALID_PARAMETER Invalid parameter
  * @retval #NOTI_EX_ERROR_PERMISSION_DENIED Permission deny
+ * @retval #NOTI_EX_ERROR_INVALID_PARAMETER Invalid parameter
  * @retval #NOTI_EX_ERROR_IO_ERROR IO error
  * @see noti_ex_reporter_create()
  * @par Sample code:
@@ -308,8 +308,8 @@ int noti_ex_reporter_post_list(noti_ex_reporter_h handle, noti_ex_item_h *noti_l
  * @param[out] request_id The id of request
  * @return #NOTI_EX_ERROR_NONE On success, other value on failure
  * @retval #NOTI_EX_ERROR_NONE Success
- * @retval #NOTI_EX_ERROR_INVALID_PARAMETER Invalid parameter
  * @retval #NOTI_EX_ERROR_PERMISSION_DENIED Permission deny
+ * @retval #NOTI_EX_ERROR_INVALID_PARAMETER Invalid parameter
  * @retval #NOTI_EX_ERROR_IO_ERROR IO error
  * @see noti_ex_reporter_create()
  * @par Sample code:
@@ -349,8 +349,8 @@ int noti_ex_reporter_update(noti_ex_reporter_h handle, noti_ex_item_h noti,
  * @param[out] request_id The id of request
  * @return #NOTI_EX_ERROR_NONE On success, other value on failure
  * @retval #NOTI_EX_ERROR_NONE Success
- * @retval #NOTI_EX_ERROR_INVALID_PARAMETER Invalid parameter
  * @retval #NOTI_EX_ERROR_PERMISSION_DENIED Permission deny
+ * @retval #NOTI_EX_ERROR_INVALID_PARAMETER Invalid parameter
  * @retval #NOTI_EX_ERROR_IO_ERROR IO error
  * @see noti_ex_reporter_create()
  * @par Sample code:
@@ -388,8 +388,8 @@ int noti_ex_reporter_delete(noti_ex_reporter_h handle, noti_ex_item_h noti,
  * @param[out] request_id The id of request
  * @return #NOTI_EX_ERROR_NONE On success, other value on failure
  * @retval #NOTI_EX_ERROR_NONE Success
- * @retval #NOTI_EX_ERROR_INVALID_PARAMETER Invalid parameter
  * @retval #NOTI_EX_ERROR_PERMISSION_DENIED Permission deny
+ * @retval #NOTI_EX_ERROR_INVALID_PARAMETER Invalid parameter
  * @retval #NOTI_EX_ERROR_IO_ERROR IO error
  * @see noti_ex_reporter_create()
  * @par Sample code:
@@ -428,8 +428,8 @@ int noti_ex_reporter_delete_all(noti_ex_reporter_h handle,
  *             The @a item must be released using noti_ex_item_destroy().
  * @return #NOTI_EX_ERROR_NONE On success, other value on failure
  * @retval #NOTI_EX_ERROR_NONE Success
- * @retval #NOTI_EX_ERROR_INVALID_PARAMETER Invalid parameter
  * @retval #NOTI_EX_ERROR_PERMISSION_DENIED Permission deny
+ * @retval #NOTI_EX_ERROR_INVALID_PARAMETER Invalid parameter
  * @retval #NOTI_EX_ERROR_IO_ERROR IO error
  * @see noti_ex_reporter_create()
  * @see noti_ex_item_destroy()

@@ -152,8 +152,8 @@ typedef struct {
  * @param[in] user_data The user data for @a event_callbacks
  * @return #NOTI_EX_ERROR_NONE On success, other value on failure
  * @retval #NOTI_EX_ERROR_NONE Success
- * @retval #NOTI_EX_ERROR_INVALID_PARAMETER Invalid parameter
  * @retval #NOTI_EX_ERROR_PERMISSION_DENIED Permission deny
+ * @retval #NOTI_EX_ERROR_INVALID_PARAMETER Invalid parameter
  * @retval #NOTI_EX_ERROR_OUT_OF_MEMORY Out of memory
  * @see #noti_ex_manager_h
  * @see #noti_ex_manager_events_s
@@ -240,8 +240,8 @@ int noti_ex_manager_destroy(noti_ex_manager_h handle);
  * @param[out] count The count of retrieved notification items
  * @return #NOTI_EX_ERROR_NONE On success, other value on failure
  * @retval #NOTI_EX_ERROR_NONE Success
- * @retval #NOTI_EX_ERROR_INVALID_PARAMETER Invalid parameter
  * @retval #NOTI_EX_ERROR_PERMISSION_DENIED Permission deny
+ * @retval #NOTI_EX_ERROR_INVALID_PARAMETER Invalid parameter
  * @retval #NOTI_EX_ERROR_IO_ERROR IO error
  * @see #noti_ex_item_h
  * @see #noti_ex_manager_h
@@ -268,7 +268,10 @@ void _manager_events_error_cb(noti_ex_manager_h handle, noti_ex_error_e error,
 	for (int i = 0; i < items_count; i++) {
 		item = items[i];
 		// do something with item
+		noti_ex_item_destroy(item);
 	}
+
+	free(items);
 }
  * @endcode
  */
@@ -276,7 +279,7 @@ int noti_ex_manager_get(noti_ex_manager_h handle, noti_ex_item_h **items,
 		int *count);
 
 /**
- * @brief Gets notifications with channel for the notification_ex manager.
+ * @brief Gets notifications with @a channel for the notification_ex manager.
  * @details Every notification that has been sent for the manager will be retrieved.
  * @since_tizen 5.5
  * @privlevel public
@@ -288,8 +291,8 @@ int noti_ex_manager_get(noti_ex_manager_h handle, noti_ex_item_h **items,
  * @param[out] count The count of retrieved notification items
  * @return #NOTI_EX_ERROR_NONE On success, other value on failure
  * @retval #NOTI_EX_ERROR_NONE Success
- * @retval #NOTI_EX_ERROR_INVALID_PARAMETER Invalid parameter
  * @retval #NOTI_EX_ERROR_PERMISSION_DENIED Permission deny
+ * @retval #NOTI_EX_ERROR_INVALID_PARAMETER Invalid parameter
  * @retval #NOTI_EX_ERROR_IO_ERROR IO error
  * @see #noti_ex_item_h
  * @see #noti_ex_manager_h
@@ -318,13 +321,13 @@ void _manager_events_error_cb(noti_ex_manager_h handle, noti_ex_error_e error,
 	for (int i = 0; i < items_count; i++) {
 		item = items[i];
 		// do something with item
+		noti_ex_item_destroy(item);
 	}
+
+	free(items);
 }
  * @endcode
  */
-int noti_ex_manager_get_by_channel(noti_ex_manager_h handle, char *channel,
-		noti_ex_item_h **items, int *count);
-
 int noti_ex_manager_get_by_channel(noti_ex_manager_h handle, char *channel,
 		noti_ex_item_h **items, int *count);
 
@@ -338,8 +341,8 @@ int noti_ex_manager_get_by_channel(noti_ex_manager_h handle, char *channel,
  * @param[out] request_id The id of request
  * @return #NOTI_EX_ERROR_NONE On success, other value on failure
  * @retval #NOTI_EX_ERROR_NONE Success
- * @retval #NOTI_EX_ERROR_INVALID_PARAMETER Invalid parameter
  * @retval #NOTI_EX_ERROR_PERMISSION_DENIED Permission deny
+ * @retval #NOTI_EX_ERROR_INVALID_PARAMETER Invalid parameter
  * @retval #NOTI_EX_ERROR_IO_ERROR IO error
  * @see #noti_ex_item_h
  * @see #noti_ex_manager_h
@@ -385,8 +388,8 @@ int noti_ex_manager_update(noti_ex_manager_h handle, noti_ex_item_h item,
  * @param[out] request_id The id of request
  * @return #NOTI_EX_ERROR_NONE On success, other value on failure
  * @retval #NOTI_EX_ERROR_NONE Success
- * @retval #NOTI_EX_ERROR_INVALID_PARAMETER Invalid parameter
  * @retval #NOTI_EX_ERROR_PERMISSION_DENIED Permission deny
+ * @retval #NOTI_EX_ERROR_INVALID_PARAMETER Invalid parameter
  * @retval #NOTI_EX_ERROR_IO_ERROR IO error
  * @see #noti_ex_manager_h
  * @see #noti_ex_error_e
@@ -429,8 +432,8 @@ int noti_ex_manager_delete(noti_ex_manager_h handle, noti_ex_item_h noti,
  * @param[out] request_id The id of request
  * @return #NOTI_EX_ERROR_NONE On success, other value on failure
  * @retval #NOTI_EX_ERROR_NONE Success
- * @retval #NOTI_EX_ERROR_INVALID_PARAMETER Invalid parameter
  * @retval #NOTI_EX_ERROR_PERMISSION_DENIED Permission deny
+ * @retval #NOTI_EX_ERROR_INVALID_PARAMETER Invalid parameter
  * @retval #NOTI_EX_ERROR_IO_ERROR IO error
  * @see #noti_ex_manager_h
  * @see #noti_ex_error_e
@@ -470,8 +473,8 @@ int noti_ex_manager_delete_all(noti_ex_manager_h handle,
  * @param[out] request_id The id of request
  * @return #NOTI_EX_ERROR_NONE On success, other value on failure
  * @retval #NOTI_EX_ERROR_NONE Success
- * @retval #NOTI_EX_ERROR_INVALID_PARAMETER Invalid parameter
  * @retval #NOTI_EX_ERROR_PERMISSION_DENIED Permission deny
+ * @retval #NOTI_EX_ERROR_INVALID_PARAMETER Invalid parameter
  * @retval #NOTI_EX_ERROR_IO_ERROR IO error
  * @see #noti_ex_item_h
  * @see #noti_ex_manager_h
@@ -516,8 +519,8 @@ int noti_ex_manager_hide(noti_ex_manager_h handle, noti_ex_item_h item,
  *             The @a item must be released using noti_ex_item_destroy().
  * @return #NOTI_EX_ERROR_NONE On success, other value on failure
  * @retval #NOTI_EX_ERROR_NONE Success
- * @retval #NOTI_EX_ERROR_INVALID_PARAMETER Invalid parameter
  * @retval #NOTI_EX_ERROR_PERMISSION_DENIED Permission deny
+ * @retval #NOTI_EX_ERROR_INVALID_PARAMETER Invalid parameter
  * @retval #NOTI_EX_ERROR_IO_ERROR IO error
  * @see #noti_ex_manager_h
  * @see #noti_ex_item_h
@@ -555,8 +558,8 @@ int noti_ex_manager_find_by_root_id(noti_ex_manager_h handle,
  * @param[in] error The error type
  * @return #NOTI_EX_ERROR_NONE On success, other value on failure
  * @retval #NOTI_EX_ERROR_NONE Success
- * @retval #NOTI_EX_ERROR_INVALID_PARAMETER Invalid parameter
  * @retval #NOTI_EX_ERROR_PERMISSION_DENIED Permission deny
+ * @retval #NOTI_EX_ERROR_INVALID_PARAMETER Invalid parameter
  * @retval #NOTI_EX_ERROR_IO_ERROR IO error
  * @see #noti_ex_event_info_h
  * @see #noti_ex_manager_h
@@ -608,8 +611,8 @@ int noti_ex_manager_send_error(noti_ex_manager_h handle,
  * @param[out] cnt The count of notifications
  * @return #NOTI_EX_ERROR_NONE On success, other value on failure
  * @retval #NOTI_EX_ERROR_NONE Success
- * @retval #NOTI_EX_ERROR_INVALID_PARAMETER Invalid parameter
  * @retval #NOTI_EX_ERROR_PERMISSION_DENIED Permission deny
+ * @retval #NOTI_EX_ERROR_INVALID_PARAMETER Invalid parameter
  * @retval #NOTI_EX_ERROR_IO_ERROR IO error
  * @see #noti_ex_manager_h
  * @see #NOTI_EX_RECEIVER_GROUP_TICKER
