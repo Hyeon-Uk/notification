@@ -28,14 +28,3 @@
  * It supports displaying the notification with selectors to select predefined input
  * and controlling visibility of the created notification items.
  */
-
-/**
- * @ingroup NOTIFICATION_EX_MODULE
- * @defgroup NOTIFICATION_EX_ITEM Notification EX Item
- * @brief Notification EX Item APIs.
- * @section NOTIFICATION_EX_ITEM_MODULE_HEADER Required Header
- *   \#include <notification_ex.h>
- *
- * @section NOTIFICATION_EX_ITEM_MODULE_OVERVIEW Overview
- * It provides functions for handling notification ex items.
- */

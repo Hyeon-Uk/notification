@@ -24,7 +24,7 @@ extern "C" {
 #endif
 
 /**
- * @addtogroup NOTIFICATION_EX_ITEM
+ * @addtogroup NOTIFICATION_EX_MODULE
  * @{
  */
 
