@@ -161,6 +161,8 @@ int noti_ex_item_checkbox_set_check_state(noti_ex_item_h handle, bool checked);
  */
 int noti_ex_item_checkbox_set_multi_language(noti_ex_item_h handle, noti_ex_multi_lang_h lang);
 
+int noti_ex_item_checkbox_is_checked(noti_ex_item_h handle, bool *checked);
+
 /**
  * @}
  */
