@@ -85,33 +85,6 @@ int noti_ex_item_button_create(noti_ex_item_h *handle, const char *id, const cha
 int noti_ex_item_button_get_title(noti_ex_item_h handle, char **title);
 
 /**
- * @brief Sets the multi language handle for the title of a button item.
- * @since_tizen 5.5
- * @param[in] handle The notification_ex item handle
- * @param[in] lang The notification_ex_multi_lang handle
- * @return #NOTI_EX_ERROR_NONE On success, other value on failure
- * @retval #NOTI_EX_ERROR_NONE Success
- * @retval #NOTI_EX_ERROR_INVALID_PARAMETER Invalid parameter, if the item type is not correct, this error is returned
- * @see #noti_ex_multi_lang_h
- * @see noti_ex_item_button_create()
- * @par Sample code:
- * @code
-#include <notification_ex.h>
-
-{
-	int ret;
-	noti_ex_item_h button_item = NULL;
-	noti_ex_multi_lang_h lang = NULL;
-
-	ret = noti_ex_item_button_create(&button_item, "button_id", "button_title");
-	ret = noti_ex_multi_lang_create(&lang, "Button 1", "IDS_BUTTON_TITLE", 1);
-	ret = noti_ex_item_button_set_multi_language(button_item, lang);
-}
- * @endcode
- */
-int noti_ex_item_button_set_multi_language(noti_ex_item_h handle, noti_ex_multi_lang_h lang);
-
-/**
  * @}
  */
 

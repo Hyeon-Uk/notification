@@ -2222,61 +2222,6 @@ int noti_ex_item_find_by_main_type(noti_ex_item_h handle, int type,
 		noti_ex_item_h *item);
 
 /**
- * @brief The notification_ex_nulti_lang handle.
- * @since_tizen 5.5
- */
-typedef void *noti_ex_multi_lang_h;
-
-/**
- * @brief Creates the notification_ex_multi_lang handle for multi language support.
- * @since_tizen 5.5
- * @remarks @a handle must be released using noti_ex_multi_lang_destroy().
- * @param[out] handle The notification_ex_multi_lang handle
- * @param[in] text The basic text
- * @param[in] msg_id The message id for localization
- * @return #NOTI_EX_ERROR_NONE On success, other value on failure
- * @retval #NOTI_EX_ERROR_NONE Success
- * @retval #NOTI_EX_ERROR_INVALID_PARAMETER Invalid parameter
- * @retval #NOTI_EX_ERROR_OUT_OF_MEMORY out of memory
- * @see #noti_ex_multi_lang_h
- * @see noti_ex_multi_lang_destroy()
- * @par Sample code:
- * @code
-#include <notification_ex.h>
-
-{
-	int ret;
-	noti_ex_multi_lang_h lang;
-
-	noti_ex_multi_lang_create(&lang, "You get 20 messages.", "IDS_APP_BODY_GET_MESSAGES", 20);
-}
- * @endcode
- */
-int noti_ex_multi_lang_create(noti_ex_multi_lang_h *lang, const char *text,  const char *msg_id, ...);
-
-/**
- * @brief Releases the notification_ex_multi_lang handle.
- * @since_tizen 5.5
- * @param[in] handle The notification_ex_multi_lang handle
- * @return #NOTI_EX_ERROR_NONE On success, other value on failure
- * @retval #NOTI_EX_ERROR_NONE Success
- * @retval #NOTI_EX_ERROR_INVALID_PARAMETER Invalid parameter
- * @see #noti_ex_multi_lang_h
- * @par Sample code:
- * @code
-#include <notification_ex.h>
-
-{
-	int ret;
-
-	ret = noti_ex_multi_lang_destroy(lang);
-}
- * @endcode
- */
-int noti_ex_multi_lang_destroy(noti_ex_multi_lang_h lang);
-
-
-/**
  * @}
  */
 
