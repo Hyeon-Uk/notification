@@ -298,12 +298,15 @@ extern "C" EXPORT_API int noti_ex_action_app_control_create(
     return NOTI_EX_ERROR_INVALID_PARAMETER;
   }
 
-  AppControlAction* p;
+  shared_ptr<AbstractAction>* p;
 
-  if (extra)
-    p = new (std::nothrow) AppControlAction(app_control, extra);
-  else
-    p = new (std::nothrow) AppControlAction(app_control);
+  if (extra) {
+    p = new (std::nothrow) shared_ptr<AbstractAction>(
+          new (std::nothrow) AppControlAction(app_control, extra));
+  } else {
+    p = new (std::nothrow) shared_ptr<AbstractAction>(
+          new (std::nothrow) AppControlAction(app_control));
+  }
 
   if (p == nullptr) {
     LOGE("Out-of-memory");
@@ -322,8 +325,10 @@ extern "C" EXPORT_API int noti_ex_action_app_control_set(
     return NOTI_EX_ERROR_INVALID_PARAMETER;
   }
 
-  AppControlAction* p = static_cast<AppControlAction*>(handle);
-  p->SetAppControl(app_control);
+  shared_ptr<AbstractAction>* ptr =
+      static_cast<shared_ptr<AbstractAction>*>(handle);
+  AppControlAction* action = static_cast<AppControlAction*>(ptr->get());
+  action->SetAppControl(app_control);
 
   return NOTI_EX_ERROR_NONE;
 }
@@ -335,8 +340,10 @@ extern "C" EXPORT_API int noti_ex_action_app_control_get(
     return NOTI_EX_ERROR_INVALID_PARAMETER;
   }
 
-  AppControlAction* p = static_cast<AppControlAction*>(handle);
-  *app_control = p->GetAppControl();
+  shared_ptr<AbstractAction>* ptr =
+      static_cast<shared_ptr<AbstractAction>*>(handle);
+  AppControlAction* action = static_cast<AppControlAction*>(ptr->get());
+  *app_control = action->GetAppControl();
 
   return NOTI_EX_ERROR_NONE;
 }
@@ -1447,8 +1454,9 @@ extern "C" EXPORT_API int noti_ex_led_info_create(noti_ex_led_info_h *handle,
     return NOTI_EX_ERROR_INVALID_PARAMETER;
   }
 
-  shared_ptr<Color>* color_ = static_cast<shared_ptr<Color>*>(color);
-  auto* p = new (std::nothrow) LEDInfo(*color_);
+  shared_ptr<Color>* color_ptr = static_cast<shared_ptr<Color>*>(color);
+  shared_ptr<LEDInfo>* p = new (std::nothrow) shared_ptr<LEDInfo>(
+      new (std::nothrow) LEDInfo(*color_ptr));
   if (p == nullptr) {
     LOGE("Out-of-memory");
     return NOTI_EX_ERROR_OUT_OF_MEMORY;
@@ -1465,9 +1473,9 @@ extern "C" EXPORT_API int noti_ex_led_info_destroy(noti_ex_led_info_h handle) {
     return NOTI_EX_ERROR_INVALID_PARAMETER;
   }
 
-  LEDInfo* p = static_cast<LEDInfo*>(handle);
-  p->~LEDInfo();
-
+  shared_ptr<LEDInfo>* led_ptr =
+      reinterpret_cast<shared_ptr<LEDInfo>*>(handle);
+  delete led_ptr;
   return NOTI_EX_ERROR_NONE;
 }
 
@@ -1478,8 +1486,9 @@ extern "C" EXPORT_API int noti_ex_led_info_set_on_period(
     return NOTI_EX_ERROR_INVALID_PARAMETER;
   }
 
-  LEDInfo* p = static_cast<LEDInfo*>(handle);
-  p->SetOnPeriod(ms);
+  shared_ptr<LEDInfo>* led_ptr =
+      reinterpret_cast<shared_ptr<LEDInfo>*>(handle);
+  (*led_ptr)->SetOnPeriod(ms);
 
   return NOTI_EX_ERROR_NONE;
 }
@@ -1491,8 +1500,9 @@ extern "C" EXPORT_API int noti_ex_led_info_get_on_period(
     return NOTI_EX_ERROR_INVALID_PARAMETER;
   }
 
-  LEDInfo* p = static_cast<LEDInfo*>(handle);
-  *ms = p->GetOnPeriod();
+  shared_ptr<LEDInfo>* led_ptr =
+      reinterpret_cast<shared_ptr<LEDInfo>*>(handle);
+  *ms = (*led_ptr)->GetOnPeriod();
 
   return NOTI_EX_ERROR_NONE;
 }
@@ -1504,8 +1514,9 @@ extern "C" EXPORT_API int noti_ex_led_info_set_off_period(
     return NOTI_EX_ERROR_INVALID_PARAMETER;
   }
 
-  LEDInfo* p = static_cast<LEDInfo*>(handle);
-  p->SetOffPeriod(ms);
+  shared_ptr<LEDInfo>* led_ptr =
+      reinterpret_cast<shared_ptr<LEDInfo>*>(handle);
+  (*led_ptr)->SetOffPeriod(ms);
 
   return NOTI_EX_ERROR_NONE;
 }
@@ -1517,8 +1528,9 @@ extern "C" EXPORT_API int noti_ex_led_info_get_off_period(
     return NOTI_EX_ERROR_INVALID_PARAMETER;
   }
 
-  LEDInfo* p = static_cast<LEDInfo*>(handle);
-  *ms = p->GetOffPeriod();
+  shared_ptr<LEDInfo>* led_ptr =
+      reinterpret_cast<shared_ptr<LEDInfo>*>(handle);
+  *ms = (*led_ptr)->GetOffPeriod();
 
   return NOTI_EX_ERROR_NONE;
 }
@@ -1530,14 +1542,15 @@ extern "C" EXPORT_API int noti_ex_led_info_get_color(
     return NOTI_EX_ERROR_INVALID_PARAMETER;
   }
 
-  LEDInfo* p = static_cast<LEDInfo*>(handle);
-  if (p->GetColor() == nullptr) {
+  shared_ptr<LEDInfo>* led_ptr =
+      reinterpret_cast<shared_ptr<LEDInfo>*>(handle);
+  if ((*led_ptr)->GetColor() == nullptr) {
     LOGE("Color is null");
     return NOTI_EX_ERROR_INVALID_PARAMETER;
   }
 
   shared_ptr<Color>* col = new (std::nothrow) shared_ptr<Color>(
-      new (std::nothrow) Color(*(p->GetColor())));
+      new (std::nothrow) Color(*((*led_ptr)->GetColor())));
   if (col == nullptr || col->get() == nullptr) {
     LOGE("Out-of-memory");
     return NOTI_EX_ERROR_OUT_OF_MEMORY;
@@ -1554,8 +1567,9 @@ extern "C" EXPORT_API int noti_ex_action_destroy(noti_ex_action_h handle) {
     return NOTI_EX_ERROR_INVALID_PARAMETER;
   }
 
-  AbstractAction* p = static_cast<AbstractAction*>(handle);
-  p->~AbstractAction();
+  shared_ptr<AbstractAction>* ptr =
+      static_cast<shared_ptr<AbstractAction>*>(handle);
+  delete ptr;
 
   return NOTI_EX_ERROR_NONE;
 }
@@ -1567,8 +1581,9 @@ extern "C" EXPORT_API int noti_ex_action_get_type(noti_ex_action_h handle,
     return NOTI_EX_ERROR_INVALID_PARAMETER;
   }
 
-  AbstractAction* p = static_cast<AbstractAction*>(handle);
-  *type = p->GetType();
+  shared_ptr<AbstractAction>* ptr =
+      static_cast<shared_ptr<AbstractAction>*>(handle);
+  *type = (*ptr)->GetType();
 
   return NOTI_EX_ERROR_NONE;
 }
@@ -1580,8 +1595,9 @@ extern "C" EXPORT_API int noti_ex_action_is_local(noti_ex_action_h handle,
     return NOTI_EX_ERROR_INVALID_PARAMETER;
   }
 
-  AbstractAction* p = static_cast<AbstractAction*>(handle);
-  *local = p->IsLocal();
+  shared_ptr<AbstractAction>* ptr =
+      static_cast<shared_ptr<AbstractAction>*>(handle);
+  *local = (*ptr)->IsLocal();
 
   return NOTI_EX_ERROR_NONE;
 }
@@ -1592,9 +1608,10 @@ extern "C" EXPORT_API int noti_ex_action_execute(noti_ex_action_h handle,
     LOGE("Invalid parameter");
     return NOTI_EX_ERROR_INVALID_PARAMETER;
   }
-  AbstractAction* p = static_cast<AbstractAction*>(handle);
+  shared_ptr<AbstractAction>* ptr =
+      static_cast<shared_ptr<AbstractAction>*>(handle);
   Handle* ih = static_cast<Handle*>(item);
-  p->Execute(ih->GetPtr());
+  (*ptr)->Execute(ih->GetPtr());
 
   return NOTI_EX_ERROR_NONE;
 }
@@ -1606,9 +1623,10 @@ extern "C" EXPORT_API int noti_ex_action_get_extra(noti_ex_action_h handle,
     return NOTI_EX_ERROR_INVALID_PARAMETER;
   }
 
-  AbstractAction* p = static_cast<AbstractAction*>(handle);
-  if (!p->GetExtra().empty()) {
-    *extra = strdup(p->GetExtra().c_str());
+  shared_ptr<AbstractAction>* ptr =
+      static_cast<shared_ptr<AbstractAction>*>(handle);
+  if (!(*ptr)->GetExtra().empty()) {
+    *extra = strdup((*ptr)->GetExtra().c_str());
     if (*extra == nullptr) {
       LOGE("Out-of-memory");
       return NOTI_EX_ERROR_OUT_OF_MEMORY;
@@ -1775,7 +1793,8 @@ extern "C" EXPORT_API int noti_ex_item_get_action(noti_ex_item_h handle,
     *action = nullptr;
     return NOTI_EX_ERROR_NONE;
   }
-  *action = static_cast<noti_ex_action_h>(p->Get()->GetAction().get());
+  *action = static_cast<noti_ex_action_h>(new shared_ptr<AbstractAction>(
+      p->Get()->GetAction()));
 
   return NOTI_EX_ERROR_NONE;
 }
@@ -1788,8 +1807,10 @@ extern "C" EXPORT_API int noti_ex_item_set_action(noti_ex_item_h handle,
   }
 
   Handle* p = static_cast<Handle*>(handle);
-  AbstractAction* a = static_cast<AbstractAction*>(action);
-  p->Get()->SetAction(shared_ptr<AbstractAction>(a));
+
+  shared_ptr<AbstractAction>* ptr =
+      static_cast<shared_ptr<AbstractAction>*>(action);
+  p->Get()->SetAction(*ptr);
   return NOTI_EX_ERROR_NONE;
 }
 
@@ -1993,8 +2014,9 @@ extern "C" EXPORT_API int noti_ex_item_set_led_info(noti_ex_item_h handle,
   }
 
   Handle* p = static_cast<Handle*>(handle);
-  LEDInfo* led_info = static_cast<LEDInfo*>(led);
-  p->Get()->SetLEDInfo(shared_ptr<LEDInfo>(led_info));
+  shared_ptr<LEDInfo>* led_ptr =
+      reinterpret_cast<shared_ptr<LEDInfo>*>(led);
+  p->Get()->SetLEDInfo(*led_ptr);
   return NOTI_EX_ERROR_NONE;
 }
 
@@ -2007,7 +2029,7 @@ extern "C" EXPORT_API int noti_ex_item_get_led_info(noti_ex_item_h handle,
 
   Handle* p = static_cast<Handle*>(handle);
   if (p->Get()->GetLEDInfo() != nullptr)
-    *led = static_cast<noti_ex_led_info_h>(p->Get()->GetLEDInfo().get());
+    *led = new shared_ptr<LEDInfo>(p->Get()->GetLEDInfo());
   else
     *led = nullptr;
   return NOTI_EX_ERROR_NONE;
@@ -2911,13 +2933,14 @@ extern "C" EXPORT_API int noti_ex_action_visibility_create(
   if (extra != NULL)
     extra_str = string(extra);
 
-  auto* p = new (std::nothrow) VisibilityAction(extra_str);
-  if (p == nullptr) {
+  shared_ptr<AbstractAction>* ptr = new (std::nothrow) shared_ptr<AbstractAction>(
+      new (std::nothrow) VisibilityAction(extra_str));
+  if (ptr == nullptr) {
     LOGE("Out-of-memory");
     return NOTI_EX_ERROR_OUT_OF_MEMORY;
   }
 
-  *handle = p;
+  *handle = ptr;
 
   return NOTI_EX_ERROR_NONE;
 }
@@ -2929,8 +2952,10 @@ extern "C" EXPORT_API int noti_ex_action_visibility_set(noti_ex_action_h handle,
     return NOTI_EX_ERROR_INVALID_PARAMETER;
   }
 
-  VisibilityAction* p = static_cast<VisibilityAction*>(handle);
-  p->SetVisibility(id, visible);
+  shared_ptr<AbstractAction>* ptr =
+      static_cast<shared_ptr<AbstractAction>*>(handle);
+  VisibilityAction* action = static_cast<VisibilityAction*>(ptr->get());
+  action->SetVisibility(id, visible);
 
   return NOTI_EX_ERROR_NONE;
 }
