@@ -31,6 +31,7 @@
 #include "notification-ex/ex_util.h"
 #include "notification-ex/action_inflator.h"
 #include "notification-ex/factory_manager.h"
+#include "notification-ex/shared_file.h"
 
 #ifdef LOG_TAG
 #undef LOG_TAG
@@ -422,14 +423,42 @@ string AbstractItem::GetId() const {
 }
 
 std::list<std::string> AbstractItem::GetSharedPath() const {
-  return {};
+  std::list<std::string> ret;
+
+  if (!impl_->priv_sound_path_.empty())
+    ret.push_back(impl_->priv_sound_path_);
+
+  if (!impl_->priv_vibration_path_.empty())
+    ret.push_back(impl_->priv_vibration_path_);
+
+  return ret;
 }
 
 void AbstractItem::SetSharedPath() {
+  if (!impl_->priv_sound_path_.empty())
+    impl_->sound_path_ = impl_->priv_sound_path_;
+
+  if (!impl_->priv_vibration_path_.empty())
+    impl_->vibration_path_ = impl_->priv_vibration_path_;
 }
 
 std::list<std::map<std::string, std::string>> AbstractItem::GetPathMapList() const {
-  return {};
+  std::list<std::map<std::string, std::string>> path_map_list;
+  std::map<std::string, std::string> path_map;
+
+  if (!impl_->priv_sound_path_.empty()) {
+    path_map.insert(std::pair<std::string, std::string>(impl_->sound_path_,
+        impl_->priv_sound_path_));
+    path_map_list.push_back(path_map);
+  }
+
+  if (!impl_->priv_vibration_path_.empty()) {
+    path_map.insert(std::pair<std::string, std::string>(impl_->vibration_path_,
+        impl_->priv_vibration_path_));
+    path_map_list.push_back(path_map);
+  }
+
+  return path_map_list;
 }
 
 shared_ptr<AbstractAction> AbstractItem::GetAction() const {
@@ -513,10 +542,12 @@ void AbstractItem::SetChannel(string channel) {
 
 void AbstractItem::SetSoundPath(std::string path) {
   impl_->sound_path_ = path;
+  UpdateSoundPrivatePath();
 }
 
 void AbstractItem::SetVibrationPath(std::string path) {
   impl_->vibration_path_ = path;
+  UpdateVibrationPrivatePath();
 }
 
 std::string AbstractItem::GetSoundPath() const {
@@ -626,6 +657,36 @@ void AbstractItem::SetMultiLanguage(std::shared_ptr<MultiLanguage> multi) {
 void AbstractItem::SetMultiLanguage(
     vector<shared_ptr<MultiLanguage>> multi_arr) {
   impl_->multi_lang_arr_ = multi_arr;
+}
+
+void AbstractItem::UpdateSoundPrivatePath() {
+  SharedFile* shared_file = new SharedFile();
+  if (!shared_file->IsPrivatePath(impl_->sound_path_)) {
+    delete(shared_file);
+    return;
+  }
+
+  std::string path = shared_file->GetDataPath(AbstractItem::GetSenderAppId(),
+            impl_->sound_path_);
+  if (!path.empty())
+    impl_->priv_sound_path_ = path;
+
+  delete(shared_file);
+}
+
+void AbstractItem::UpdateVibrationPrivatePath() {
+  SharedFile* shared_file = new SharedFile();
+  if (!shared_file->IsPrivatePath(impl_->vibration_path_)) {
+    delete(shared_file);
+    return;
+  }
+
+  std::string path = shared_file->GetDataPath(AbstractItem::GetSenderAppId(),
+            impl_->vibration_path_);
+  if (!path.empty())
+    impl_->priv_vibration_path_ = path;
+
+  delete(shared_file);
 }
 
 }  // namespace item
