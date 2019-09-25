@@ -23,6 +23,7 @@
 #include <memory>
 #include <string>
 #include <list>
+#include <vector>
 
 #include "notification-ex/abstract_action.h"
 #include "notification-ex/multi_language.h"

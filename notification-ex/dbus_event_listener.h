@@ -14,8 +14,11 @@
  * limitations under the License.
  */
 
-#ifndef NOTIFICATION_EX_DBUS_LISTENER_H_
-#define NOTIFICATION_EX_DBUS_LISTENER_H_
+#ifndef NOTIFICATION_EX_DBUS_EVENT_LISTENER_H_
+#define NOTIFICATION_EX_DBUS_EVENT_LISTENER_H_
+
+#include <string>
+#include <list>
 
 #include "notification-ex/event_listener_interface.h"
 
@@ -40,4 +43,4 @@ class EXPORT_API DBusEventListener : public IEventListener {
 
 }  // namespace notification
 
-#endif  // NOTIFICATION_EX_DBUS_LISTENER_H_
+#endif  // NOTIFICATION_EX_DBUS_EVENT_LISTENER_H_

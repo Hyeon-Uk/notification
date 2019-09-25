@@ -34,7 +34,7 @@ extern "C" {
  * @brief The notification_ex reporter handle.
  * @since_tizen 5.5
  */
-typedef void* noti_ex_reporter_h;
+typedef void *noti_ex_reporter_h;
 
 /**
  * @brief Called when the error event is received.

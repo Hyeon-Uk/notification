@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-#ifndef NOTIFICATION_EX_DBUS_MANAGER_H_
-#define NOTIFICATION_EX_DBUS_MANAGER_H_
+#ifndef NOTIFICATION_EX_DBUS_CONNECTION_MANAGER_H_
+#define NOTIFICATION_EX_DBUS_CONNECTION_MANAGER_H_
 
 #include <gio/gio.h>
 
@@ -47,4 +47,4 @@ class EXPORT_API DBusConnectionManager {
 
 }  // namespace notification
 
-#endif  // NOTIFICATION_EX_DBUS_MANAGER_H_
+#endif  // NOTIFICATION_EX_DBUS_CONNECTION_MANAGER_H_

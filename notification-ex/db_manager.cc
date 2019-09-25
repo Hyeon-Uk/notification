@@ -413,7 +413,7 @@ int DBManager::InsertNotification(list<shared_ptr<item::AbstractItem>> addedItem
           uid,
           i->GetChannel().c_str(),
           util::GetQuarkFromString(i->GetId() + to_string(uid)),
-          GetPkgId(i->GetSenderAppId(),uid).c_str(),
+          GetPkgId(i->GetSenderAppId(), uid).c_str(),
           static_cast<int>(i->GetPolicy()),
           reinterpret_cast<char*>(b.ToRaw().first.get()),
           static_pointer_cast<IItemInfo>(i->GetInfo())->GetTime());

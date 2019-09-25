@@ -34,7 +34,7 @@ extern "C" {
  * @brief The notification_ex manager handle.
  * @since_tizen 5.5
  */
-typedef void* noti_ex_manager_h;
+typedef void *noti_ex_manager_h;
 
 /**
  * @brief Called when a notification addition event is received.

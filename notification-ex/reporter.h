@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-#ifndef NOTIFICATION_EX_REPOTER_H_
-#define NOTIFICATION_EX_REPOTER_H_
+#ifndef NOTIFICATION_EX_REPORTER_H_
+#define NOTIFICATION_EX_REPORTER_H_
 
 #include <string>
 #include <list>
@@ -68,4 +68,4 @@ class EXPORT_API Reporter : public IEventObserver {
 
 }  // namespace notification
 
-#endif  // NOTIFICATION_EX_REPOTER_H_
+#endif  // NOTIFICATION_EX_REPORTER_H_

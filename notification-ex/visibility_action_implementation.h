@@ -17,6 +17,7 @@
 #ifndef NOTIFICATION_EX_VISIBILITY_ACTION_IMPLEMENTATION_H_
 #define NOTIFICATION_EX_VISIBILITY_ACTION_IMPLEMENTATION_H_
 
+#include <string>
 #include <list>
 
 #include "notification-ex/visibility_action.h"
@@ -40,7 +41,7 @@ class VisibilityAction::Impl {
      VisibilityEntity(std::string id, bool visibility)
        : id_(id), visibility_(visibility) {
      }
-   };
+  };
 
  private:
   VisibilityAction* parent_;

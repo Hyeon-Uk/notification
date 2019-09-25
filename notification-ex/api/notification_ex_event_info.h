@@ -43,7 +43,7 @@ typedef enum _noti_ex_event_info_type {
  * @brief The handle for the notification event information.
  * @since_tizen 5.5
  */
-typedef void* noti_ex_event_info_h;
+typedef void *noti_ex_event_info_h;
 
 /**
  * @brief Clones the notification event info handle.

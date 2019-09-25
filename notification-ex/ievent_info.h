@@ -19,6 +19,8 @@
 
 #include <bundle_cpp.h>
 
+#include <string>
+
 namespace notification {
 
 #ifndef EXPORT_API

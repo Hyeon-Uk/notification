@@ -571,7 +571,7 @@ bool AbstractItem::SetMainType(std::string target_id, MainType type) {
   AbstractItem& target = FindByID(target_id);
   if (target.GetType() == NullObject)
     return false;
-  if (!impl_->IsValidMainType(target,type)) {
+  if (!impl_->IsValidMainType(target, type)) {
     LOGE("Main type and item type are not matched (%d, %d)",
         type, target.GetType());
     return false;

@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-#ifndef NOTIFICATION_EX_OBSERVER_INTERFACE_H_
-#define NOTIFICATION_EX_OBSERVER_INTERFACE_H_
+#ifndef NOTIFICATION_EX_EVENT_OBSERVER_INTERFACE_H_
+#define NOTIFICATION_EX_EVENT_OBSERVER_INTERFACE_H_
 
 #include <bundle_cpp.h>
 
@@ -40,4 +40,4 @@ class EXPORT_API IEventObserver {
 
 }  // namespace notification
 
-#endif
+#endif  // NOTIFICATION_EX_EVENT_OBSERVER_INTERFACE_H_

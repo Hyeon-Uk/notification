@@ -20,6 +20,7 @@
 #include <string>
 #include <memory>
 #include <list>
+#include <vector>
 
 #include "notification-ex/abstract_item.h"
 

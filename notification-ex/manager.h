@@ -66,7 +66,6 @@ class EXPORT_API Manager : public IEventObserver {
  private:
   class Impl;
   std::unique_ptr<Impl> impl_;
-
 };
 
 }  // namespace notification

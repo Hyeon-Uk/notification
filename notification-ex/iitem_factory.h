@@ -49,4 +49,4 @@ class EXPORT_API IItemFactory {
 }  // namespace item
 }  // namespace notification
 
-#endif  // NOTIFICATION_EX_ITEM_FACTORY_H_
+#endif  // NOTIFICATION_EX_IITEM_FACTORY_H_

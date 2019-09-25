@@ -17,6 +17,9 @@
 #ifndef NOTIFICATION_EX_IITEM_INFO_INTERNAL_H_
 #define NOTIFICATION_EX_IITEM_INFO_INTERNAL_H_
 
+#include <string>
+#include <list>
+
 #include "notification-ex/iitem_info.h"
 
 #ifndef EXPORT_API

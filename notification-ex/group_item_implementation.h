@@ -40,7 +40,6 @@ class GroupItem::Impl {
   bool is_vertical_ = true;
   std::string app_label_;
   GroupItem* parent_;
-
 };
 
 }  // namespace item

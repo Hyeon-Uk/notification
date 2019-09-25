@@ -32,7 +32,6 @@ namespace item {
  */
 class EXPORT_API ItemInflator {
  public:
-
   /**
    * @brief Creates AbstractItem from Bundle data
    * @since_tizen 5.5

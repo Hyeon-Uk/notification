@@ -17,6 +17,9 @@
 #ifndef NOTIFICATION_EX_ITEM_INFO_INTERNAL_H_
 #define NOTIFICATION_EX_ITEM_INFO_INTERNAL_H_
 
+#include <string>
+#include <list>
+
 #include "notification-ex/abstract_item_implementation.h"
 #include "notification-ex/iitem_info_internal.h"
 

@@ -19,6 +19,8 @@
 
 #include <app_control.h>
 
+#include <string>
+
 #include "notification-ex/abstract_action.h"
 
 namespace notification {

@@ -97,7 +97,7 @@ class EXPORT_API ImageItem : public AbstractItem {
  private:
   class Impl;
   std::unique_ptr<Impl> impl_;
-};  //class ImageItem
+};  // class ImageItem
 
 }  // namespace item
 }  // namespace notification

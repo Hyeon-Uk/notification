@@ -60,7 +60,6 @@ class EXPORT_API DBManager {
   static void CheckLimit(std::shared_ptr<item::AbstractItem> addedItem, sqlite3* db);
   static int UpdateReceiverList(std::shared_ptr<item::AbstractItem> updatedItem,  sqlite3* db);
   static std::list<std::shared_ptr<item::AbstractItem>> ExecuteGetList(char* query);
-
 };
 }  // namespace notification
 

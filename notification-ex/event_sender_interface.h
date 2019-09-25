@@ -19,6 +19,7 @@
 
 #include <bundle_cpp.h>
 
+#include <string>
 #include <list>
 
 #include "notification-ex/ievent_info.h"

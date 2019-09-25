@@ -17,6 +17,8 @@
 #ifndef NOTIFICATION_EX_VISIBILITY_ACTION_H_
 #define NOTIFICATION_EX_VISIBILITY_ACTION_H_
 
+#include <string>
+
 #include "notification-ex/abstract_action.h"
 
 namespace notification {

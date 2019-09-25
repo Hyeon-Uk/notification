@@ -150,7 +150,7 @@ class ManagerCallbackInfo {
     if (cb_.deleted == nullptr)
       return;
     IEventInfo* c_info = const_cast<IEventInfo*>(&info);
-    if(c_info->GetEventType() == static_cast<int>(IEventInfo::EventType::DeleteAll)) {
+    if (c_info->GetEventType() == static_cast<int>(IEventInfo::EventType::DeleteAll)) {
       cb_.deleted(static_cast<noti_ex_manager_h>(manager),
         static_cast<noti_ex_event_info_h>(c_info),
         nullptr, user_data_);

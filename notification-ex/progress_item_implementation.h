@@ -1,5 +1,3 @@
-
-
 /*
  * Copyright (c) 2019 Samsung Electronics Co., Ltd.
  *
@@ -16,8 +14,8 @@
  * limitations under the License.
  */
 
-#ifndef NOTIFICATION_EX_INPUT_SELECTOR_ITEM_IMPLEMENTATION_H_
-#define NOTIFICATION_EX_INPUT_SELECTOR_ITEM_IMPLEMENTATION_H_
+#ifndef NOTIFICATION_EX_PROGRESS_ITEM_IMPLEMENTATION_H_
+#define NOTIFICATION_EX_PROGRESS_ITEM_IMPLEMENTATION_H_
 
 #include <string>
 #include <memory>
@@ -50,4 +48,4 @@ class ProgressItem::Impl {
 }  // namespace item
 }  // namespace notification
 
-#endif  // NOTIFICATION_EX_INPUT_SELECTOR_ITEM_IMPLEMENTATION_H_
+#endif  // NOTIFICATION_EX_PROGRESS_ITEM_IMPLEMENTATION_H_

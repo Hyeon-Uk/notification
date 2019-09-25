@@ -45,7 +45,7 @@ class EXPORT_API TextItem : public AbstractItem {
    * @param[in] hyperlink The hyperlink of TextItem
    * @param[in] action The action for TextItem
    */
-  TextItem(std::string id ,std::string text,
+  TextItem(std::string id, std::string text,
       std::string hyperlink = std::string(),
       std::shared_ptr<AbstractAction> action = std::shared_ptr<AbstractAction>({}));
 
