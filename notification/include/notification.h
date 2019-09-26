@@ -85,10 +85,10 @@ int notification_set_image(notification_h noti, notification_image_type_e type, 
  * @param[in] noti Notification handle
  * @param[in] type Notification image type
  * @param[out] image_path Image file full path
- * @return NOTIFICATION_ERROR_NONE on success,
+ * @return #NOTIFICATION_ERROR_NONE on success,
  *         other value on failure
- * @retval NOTIFICATION_ERROR_NONE Success
- * @retval NOTIFICATION_ERROR_INVALID_PARAMETER Invalid parameter
+ * @retval #NOTIFICATION_ERROR_NONE Success
+ * @retval #NOTIFICATION_ERROR_INVALID_PARAMETER Invalid parameter
  * @pre Notification handle should be created by notification_create().
  * @see #notification_image_type_e
  * @see notification_create()
@@ -256,6 +256,7 @@ int notification_set_text(notification_h noti, notification_text_type_e type,
 /**
  * @brief Gets the text from the notification handle.
  * @since_tizen @if WEARABLE 2.3.1 @elseif MOBILE 2.3 @endif
+ * @remarks Do not free @a text. It will be freed when notification_free() is called.
  * @param[in] noti The notification handle
  * @param[in] type The notification text type
  * @param[out] text The notification text
@@ -344,6 +345,7 @@ int notification_set_sound(notification_h noti, notification_sound_type_e type, 
 /**
  * @brief Gets the sound type from the notification handle.
  * @since_tizen @if WEARABLE 2.3.1 @elseif MOBILE 2.3 @endif
+ * @remarks Do not free @a path. It will be freed when notification_free() is called.
  * @param[in] noti The notification handle
  * @param[out] type The notification sound type
  * @param[out] path The user sound file path
@@ -401,6 +403,7 @@ int notification_set_vibration(notification_h noti, notification_vibration_type_
 /**
  * @brief Gets the vibrate type from the notification handle.
  * @since_tizen @if WEARABLE 2.3.1 @elseif MOBILE 2.3 @endif
+ * @remarks Do not free @a path. It will be freed when notification_free() is called.
  * @param[in] noti The notification handle
  * @param[out] type The notification sound type
  * @param[out] path The user vibration file path
@@ -413,11 +416,11 @@ int notification_set_vibration(notification_h noti, notification_vibration_type_
 #include <notification.h>
 
 {
-	notification_h noti = NULL;
-	int noti_err = NOTIFICATION_ERROR_NONE;
-	notification_vibration_type_e type = NOTIFICATION_VIBRATION_TYPE_NONE;
+	int noti_err;
+	notification_vibration_type_e type;
+	char *path;
 
-	noti_err = notification_get_vibration(noti, &type, NULL);
+	noti_err = notification_get_vibration(noti, &type, &path);
 	if (noti_err != NOTIFICATION_ERROR_NONE)
 		return;
 
@@ -546,6 +549,7 @@ int notification_get_led_time_period(notification_h noti, int *on_ms, int *off_m
  * @brief Sets the launch option for a notification.
  * @details When notification data selected in display application, application launched by app_control_send_launch_request with app_control handle.
  * @since_tizen @if WEARABLE 2.3.1 @elseif MOBILE 2.3 @endif
+ * @privlevel public
  * @privilege http://tizen.org/privilege/appmanager.launch
  * @remarks Since 4.0, %http://tizen.org/privilege/appmanager.launch privilege is additionally required.
  * @param[in] noti The notification handle
@@ -588,7 +592,7 @@ int notification_set_launch_option(notification_h noti, notification_launch_opti
 /**
  * @brief Gets the launch option from the notification handle.
  * @since_tizen @if WEARABLE 2.3.1 @elseif MOBILE 2.3 @endif
- * @remarks You must release @a app_control using app_control_destroy().
+ * @remarks You must release @a option using app_control_destroy().
  * @param[in] noti The notification handle
  * @param[in] type Launching option type
  * @param[out] option The pointer of App Control handler
@@ -602,13 +606,14 @@ int notification_set_launch_option(notification_h noti, notification_launch_opti
 
 {
 	app_control_h app_control = NULL;
-	app_control_create(&app_control);
-
-	// Do something
 
 	noti_err = notification_get_launch_option(noti, NOTIFICATION_LAUNCH_OPTION_APP_CONTROL, (void *)&app_control);
 	if (noti_err != NOTIFICATION_ERROR_NONE)
 		return;
+
+	// Do something
+
+	app_control_destroy(app_control);
 }
  * @endcode
  */
@@ -620,6 +625,7 @@ int notification_get_launch_option(notification_h noti, notification_launch_opti
  * @details When some event occurs on notification, application launched by app_control_send_launch_request with app_control handle. \n
  *          Setting event handler of a button means that the notification will show the button.
  * @since_tizen @if MOBILE 2.4 @elseif WEARABLE 3.0 @endif
+ * @privlevel public
  * @privilege http://tizen.org/privilege/appmanager.launch
  * @remarks Since 4.0, %http://tizen.org/privilege/appmanager.launch privilege is additionally required.
  * @param[in] noti The notification handle
@@ -663,7 +669,7 @@ int notification_set_event_handler(notification_h noti, notification_event_type_
 /**
  * @brief Gets the event handler of a specific event.
  * @since_tizen @if MOBILE 2.4 @elseif WEARABLE 3.0 @endif
- * @remarks You must release @a app_control using app_control_destroy().
+ * @remarks You must release @a event_handler using app_control_destroy().
  * @param[in] noti The notification handle
  * @param[in] event_type Launching option type
  * @param[out] event_handler The handler of App Control
@@ -678,7 +684,6 @@ int notification_set_event_handler(notification_h noti, notification_event_type_
 
 {
 	app_control_h app_control = NULL;
-	app_control_create(&app_control);
 
 	// Do something
 
@@ -687,6 +692,8 @@ int notification_set_event_handler(notification_h noti, notification_event_type_
 		notification_free(noti);
 		return;
 	}
+
+	app_control_destroy(app_control);
 }
  * @endcode
  */
@@ -756,7 +763,7 @@ int notification_get_property(notification_h noti, int *flags);
 
 /**
  * @brief Sets applications to display the notification.
- * @details All display application is enabled(NOTIFICATION_DISPLAY_APP_ALL) if you do not call this API.
+ * @details All display application is enabled(NOTIFICATION_DISPLAY_APP_ALL) if you do not call this function.
  * @since_tizen @if WEARABLE 2.3.1 @elseif MOBILE 2.3 @endif
  * @param[in] noti The notification handle
  * @param[in] applist The with | operation
@@ -1004,9 +1011,9 @@ int notification_get_type(notification_h noti, notification_type_e *type);
  * @return #NOTIFICATION_ERROR_NONE on success,
  *         otherwise any other value on failure
  * @retval #NOTIFICATION_ERROR_NONE Success
+ * @retval #NOTIFICATION_ERROR_PERMISSION_DENIED The Permission denied
  * @retval #NOTIFICATION_ERROR_INVALID_PARAMETER Invalid input value
  * @retval #NOTIFICATION_ERROR_NOT_EXIST_ID Priv ID does not exist
- * @retval #NOTIFICATION_ERROR_PERMISSION_DENIED The application does not have the privilege to call this method
  * @par Sample code:
  * @code
 #include <notification.h>
@@ -1033,8 +1040,8 @@ int notification_update(notification_h noti);
  * @return #NOTIFICATION_ERROR_NONE on success,
  *         otherwise any other value on failure
  * @retval #NOTIFICATION_ERROR_NONE Success
+ * @retval #NOTIFICATION_ERROR_PERMISSION_DENIED The Permission denied
  * @retval #NOTIFICATION_ERROR_INVALID_PARAMETER Invalid input value
- * @retval NOTIFICATION_ERROR_PERMISSION_DENIED The application does not have the privilege to call this method
  * @par Sample code:
  * @code
 #include <notification.h>
@@ -1062,11 +1069,10 @@ int notification_delete(notification_h noti);
  *          #NOTIFICATION_TYPE_ONGOING can display progress on a notification with #NOTIFICATION_LY_ONGOING_PROGRESS layout.
  * @since_tizen @if WEARABLE 2.3.1 @elseif MOBILE 2.3 @endif
  * @remarks The specific error code can be obtained using the get_last_result() method. Error codes are described in Exception section.
+ *          The returned value should be released using notification_free().
  * @param[in] type The notification type
- * @return Notification handle(notification_h) on success,
+ * @return Notification handle(#notification_h) on success,
  *         otherwise @c NULL on failure
- * @retval notification_h Success
- * @retval NULL Failure
  * @exception #NOTIFICATION_ERROR_NONE Success
  * @exception #NOTIFICATION_ERROR_INVALID_PARAMETER Invalid input value
  * @exception #NOTIFICATION_ERROR_OUT_OF_MEMORY Out of memory
@@ -1085,6 +1091,7 @@ int notification_delete(notification_h noti);
 
 	// Do something
 
+	notification_free(noti);
 }
  * @endcode
  */
@@ -1192,6 +1199,7 @@ int notification_set_tag(notification_h noti, const char *tag);
 /**
  * @brief Gets the tag of the notification handle.
  * @since_tizen @if WEARABLE 2.3.1 @elseif MOBILE 2.3 @endif
+ * @remarks Do not free @a tag. It will be freed when notification_free() is called.
  * @param[in] noti Notification handle
  * @param[out] tag Tag for loading notification handle
  * @return #NOTIFICATION_ERROR_NONE on success,
@@ -1225,15 +1233,14 @@ int notification_get_tag(notification_h noti, const char **tag);
  * @privlevel public
  * @privilege %http://tizen.org/privilege/notification
  * @remarks The specific error code can be obtained using the get_last_result() method. Error codes are described in Exception section.
+ *          The returned value should be released using notification_free().
  * @param[in] tag Tag for loading notification handle
- * @return Notification handle(notification_h) on success,
+ * @return Notification handle(#notification_h) on success,
  *         NULL on failure
- * @retval notification_h Success
- * @retval NULL Failure
  * @exception #NOTIFICATION_ERROR_NONE Success
+ * @exception #NOTIFICATION_ERROR_PERMISSION_DENIED The Permission denied
  * @exception #NOTIFICATION_ERROR_INVALID_PARAMETER Invalid input value
  * @exception #NOTIFICATION_ERROR_OUT_OF_MEMORY Out of memory
- * @exception #NOTIFICATION_ERROR_PERMISSION_DENIED The application does not have the privilege to call this method
  * @see #notification_type_e
  * @par Sample code:
  * @code
@@ -1263,8 +1270,8 @@ notification_h notification_load_by_tag(const char *tag);
  * @return #NOTIFICATION_ERROR_NONE if success,
  *         other value if failure
  * @retval #NOTIFICATION_ERROR_NONE Success
+ * @retval #NOTIFICATION_ERROR_PERMISSION_DENIED The Permission denied
  * @retval #NOTIFICATION_ERROR_INVALID_PARAMETER Invalid input value
- * @retval #NOTIFICATION_ERROR_PERMISSION_DENIED The application does not have the privilege to call this method
  * @par Sample code:
  * @code
 #include <notification.h>
@@ -1291,8 +1298,8 @@ int notification_delete_all(notification_type_e type);
  * @return #NOTIFICATION_ERROR_NONE if success,
  *         other value if failure
  * @retval #NOTIFICATION_ERROR_NONE Success
+ * @retval #NOTIFICATION_ERROR_PERMISSION_DENIED The Permission denied
  * @retval #NOTIFICATION_ERROR_INVALID_PARAMETER Invalid parameter
- * @retval #NOTIFICATION_ERROR_PERMISSION_DENIED The application does not have the privilege to call this method
  * @pre Notification handle should be created by notification_create().
  * @post notification_free().
  * @par Sample code:
@@ -1315,12 +1322,13 @@ int notification_post(notification_h noti);
 /**
  * @brief Gets the package name of the notification.
  * @since_tizen @if MOBILE 2.4 @elseif WEARABLE 3.0 @endif
+ * @remarks Do not free @a pkgname. It will be freed when notification_free() is called.
  * @param[in] noti Notification handle
  * @param[out] pkgname The package name of the notification
  * @return #NOTIFICATION_ERROR_NONE on success,
  *         otherwise a negative error value
- * @retval NOTIFICATION_ERROR_NONE Success
- * @retval NOTIFICATION_ERROR_INVALID_PARAMETER Invalid input value
+ * @retval #NOTIFICATION_ERROR_NONE Success
+ * @retval #NOTIFICATION_ERROR_INVALID_PARAMETER Invalid input value
  * @par Sample code:
  * @code
 #include <notification.h>
@@ -1338,6 +1346,7 @@ int notification_post(notification_h noti);
 		notification_free(noti);
 		return;
 	}
+
 }
  * @endcode
  */
@@ -1351,8 +1360,8 @@ int notification_get_pkgname(notification_h noti, char **pkgname);
  * @param[in] button_index Button index
  * @return #NOTIFICATION_ERROR_NONE on success,
  *         otherwise a negative error value
- * @retval NOTIFICATION_ERROR_NONE Success
- * @retval NOTIFICATION_ERROR_INVALID_PARAMETER Invalid input value
+ * @retval #NOTIFICATION_ERROR_NONE Success
+ * @retval #NOTIFICATION_ERROR_INVALID_PARAMETER Invalid input value
  * @par Sample code:
  * @code
 #include <notification.h>
@@ -1383,8 +1392,8 @@ int notification_add_button(notification_h noti, notification_button_index_e but
  * @param[in] button_index Button index
  * @return #NOTIFICATION_ERROR_NONE on success,
  *         otherwise a negative error value
- * @retval NOTIFICATION_ERROR_NONE Success
- * @retval NOTIFICATION_ERROR_INVALID_PARAMETER Invalid input value
+ * @retval #NOTIFICATION_ERROR_NONE Success
+ * @retval #NOTIFICATION_ERROR_INVALID_PARAMETER Invalid input value
  * @par Sample code:
  * @code
 #include <notification.h>
@@ -1450,7 +1459,6 @@ int notification_set_auto_remove(notification_h noti, bool auto_remove);
  * @return #NOTIFICATION_ERROR_NONE On success, other value on failure
  * @retval #NOTIFICATION_ERROR_INVALID_PARAMETER Invalid parameter
  * @see #notification_h
- * @see #notification_get_auto_remove
  * @par Sample code:
  * @code
 #include <notification.h>
@@ -1485,10 +1493,10 @@ int notification_get_auto_remove(notification_h noti, bool *auto_remove);
  * @param[in] noti Notification handle
  * @param[in] template_name Template name
  * @return #NOTIFICATION_ERROR_NONE On success, other value on failure
+ * @retval #NOTIFICATION_ERROR_PERMISSION_DENIED The Permission denied
  * @retval #NOTIFICATION_ERROR_INVALID_PARAMETER Invalid parameter
  * @retval #NOTIFICATION_ERROR_IO_ERROR I/O error
  * @retval #NOTIFICATION_ERROR_OUT_OF_MEMORY Out of memory
- * @retval #NOTIFICATION_ERROR_PERMISSION_DENIED The Permission denied
  * @retval #NOTIFICATION_ERROR_MAX_EXCEEDED Max notification count exceeded
  * @see #notification_h
  * @see notification_create_from_template()
@@ -1533,9 +1541,9 @@ int notification_save_as_template(notification_h noti, const char *template_name
  * @param[in] template_name Template name
  * @return Notification handle on success, NULL on failure
  * @exception #NOTIFICATION_ERROR_NONE Success
+ * @exception #NOTIFICATION_ERROR_PERMISSION_DENIED The Permission denied
  * @exception #NOTIFICATION_ERROR_INVALID_PARAMETER Invalid input value
  * @exception #NOTIFICATION_ERROR_OUT_OF_MEMORY Out of memory
- * @exception #NOTIFICATION_ERROR_PERMISSION_DENIED The application does not have the privilege to call this method
  * @exception #NOTIFICATION_ERROR_FROM_DB Error from DB query
  * @see #notification_h
  * @see notification_save_as_template()
@@ -1569,10 +1577,10 @@ notification_h notification_create_from_template(const char *template_name);
  * @param[out] state Notification block state
  * @return #NOTIFICATION_ERROR_NONE On success, other value on failure
  * @retval #NOTIFICATION_ERROR_NONE Success
+ * @retval #NOTIFICATION_ERROR_PERMISSION_DENIED The Permission denied
  * @retval #NOTIFICATION_ERROR_INVALID_PARAMETER Invalid parameter
  * @retval #NOTIFICATION_ERROR_OUT_OF_MEMORY out of memory
  * @retval #NOTIFICATION_ERROR_IO_ERROR I/O Error
- * @retval #NOTIFICATION_ERROR_PERMISSION_DENIED Permission denied
  * @retval #NOTIFICATION_ERROR_SERVICE_NOT_READY No response from notification service
  * @see #notification_block_state_e
  * @par Sample code:

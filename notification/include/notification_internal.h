@@ -87,7 +87,7 @@ int notification_unresister_changed_cb_for_uid(
  * @param[in] progress Percentage value of progressive data
  * @return #NOTIFICATION_ERROR_NONE on success, other value on failure
  * @retval #NOTIFICATION_ERROR_NONE Success
- * @retval #NOTIFICATION_ERROR_INVALID_PARAMETER Invalid input value
+ * @retval #NOTIFICATION_ERROR_INVALID_PARAMETER Invalid parameter
  * @par Sample code:
  * @code
 #include <notification_internal.h>
@@ -113,7 +113,7 @@ int notification_update_progress(notification_h noti, int priv_id, double progre
  * @param[in] size Bytes of progressive data
  * @return #NOTIFICATION_ERROR_NONE if success, other value if failure
  * @retval #NOTIFICATION_ERROR_NONE Success
- * @retval #NOTIFICATION_ERROR_INVALID_PARAMETER Invalid input value
+ * @retval #NOTIFICATION_ERROR_INVALID_PARAMETER Invalid parameter
  * @par Sample code:
  * @code
 #include <notification_internal.h>
@@ -139,7 +139,7 @@ int notification_update_size(notification_h noti, int priv_id, double size);
  * @param[in] content Text to update
  * @return #NOTIFICATION_ERROR_NONE on success, other value on failure
  * @retval #NOTIFICATION_ERROR_NONE Success
- * @retval #NOTIFICATION_ERROR_INVALID_PARAMETER Invalid input value
+ * @retval #NOTIFICATION_ERROR_INVALID_PARAMETER Invalid parameter
  * @par Sample code:
  * @code
 #include <notification_internal.h>
@@ -252,10 +252,10 @@ int notification_get_count(notification_type_e type, const char *app_id, int gro
  * @param[out] count The numbers of all notifications
  * @return #NOTIFICATION_ERROR_NONE on success, other value on failure
  * @retval #NOTIFICATION_ERROR_NONE Success
- * @retval #NOTIFICATION_ERROR_INVALID_PARAMETER Invalid input value
+ * @retval #NOTIFICATION_ERROR_PERMISSION_DENIED Permission denied
+ * @retval #NOTIFICATION_ERROR_INVALID_PARAMETER Invalid parameter
  * @retval #NOTIFICATION_ERROR_IO_ERROR I/O Error
  * @retval #NOTIFICATION_ERROR_FROM_DB Error from DB
- * @retval #NOTIFICATION_ERROR_PERMISSION_DENIED The application does not have the privilege to call this method
  */
 int notification_get_all_count(notification_type_e type, int *count);
 int notification_get_all_count_for_uid(notification_type_e type, int *count, uid_t uid);
@@ -267,7 +267,7 @@ int notification_get_all_count_for_uid(notification_type_e type, int *count, uid
  * @param[in] type Notification type
  * @return #NOTIFICATION_ERROR_NONE on success, other value on failure
  * @retval #NOTIFICATION_ERROR_NONE Success
- * @retval #NOTIFICATION_ERROR_INVALID_PARAMETER Invalid input value
+ * @retval #NOTIFICATION_ERROR_INVALID_PARAMETER Invalid parameter
  * @see #notification_type_e
  * @par Sample code:
  * @code
@@ -319,7 +319,7 @@ int notification_set_pkgname(notification_h noti, const char *pkgname) NOTIFICAT
  * @param[in] app_id Caller application id
  * @return #NOTIFICATION_ERROR_NONE on success, other value on failure
  * @retval #NOTIFICATION_ERROR_NONE Success
- * @retval #NOTIFICATION_ERROR_INVALID_PARAMETER Invalid input value
+ * @retval #NOTIFICATION_ERROR_INVALID_PARAMETER Invalid parameter
  * @par Sample code:
  * @code
 #include <notification.h>
@@ -351,7 +351,7 @@ int notification_set_app_id(notification_h noti, const char *app_id);
  * @param[in] type Notification type
  * @return #NOTIFICATION_ERROR_NONE if success, other value if failure
  * @retval #NOTIFICATION_ERROR_NONE Success
- * @retval #NOTIFICATION_ERROR_INVALID_PARAMETER Invalid input value
+ * @retval #NOTIFICATION_ERROR_INVALID_PARAMETER Invalid parameter
  * @par Sample code:
  * @code
 #include <notification.h>
@@ -377,7 +377,7 @@ int notification_delete_all_by_type(const char *app_id, notification_type_e type
  * @param[in] priv_id Priv ID
  * @return #NOTIFICATION_ERROR_NONE if success, other value if failure
  * @retval #NOTIFICATION_ERROR_NONE Success
- * @retval #NOTIFICATION_ERROR_INVALID_PARAMETER Invalid input value
+ * @retval #NOTIFICATION_ERROR_INVALID_PARAMETER Invalid parameter
  * @par Sample code:
  * @code
 #include <notification.h>
@@ -588,8 +588,8 @@ int notification_get_execute_option(notification_h noti,
  * @return #NOTIFICATION_ERROR_NONE on success,
  *         otherwise any other value on failure
  * @retval #NOTIFICATION_ERROR_NONE Success
+ * @retval #NOTIFICATION_ERROR_PERMISSION_DENIED Permission denied
  * @retval #NOTIFICATION_ERROR_INVALID_PARAMETER Invalid parameter
- * @retval #NOTIFICATION_ERROR_PERMISSION_DENIED The application does not have the privilege to call this method
  * @pre Notification handle should be created by notification_create().
  * @post notification_free().
  * @par Sample code:
@@ -623,9 +623,9 @@ int notification_insert_for_uid(notification_h noti, int *priv_id, uid_t uid);
  * @return #NOTIFICATION_ERROR_NONE on success,
  *         otherwise any other value on failure
  * @retval #NOTIFICATION_ERROR_NONE Success
- * @retval #NOTIFICATION_ERROR_INVALID_PARAMETER Invalid input value
+ * @retval #NOTIFICATION_ERROR_PERMISSION_DENIED Permission denied
+ * @retval #NOTIFICATION_ERROR_INVALID_PARAMETER Invalid parameter
  * @retval #NOTIFICATION_ERROR_NOT_EXIST_ID Priv ID does not exist
- * @retval #NOTIFICATION_ERROR_PERMISSION_DENIED The application does not have the privilege to call this method
  * @par Sample code:
  * @code
 #include <notification.h>
@@ -657,8 +657,8 @@ int notification_update_async_for_uid(notification_h noti,
  * @return #NOTIFICATION_ERROR_NONE on success,
  *         otherwise any other value on failure
  * @retval #NOTIFICATION_ERROR_NONE Success
+ * @retval #NOTIFICATION_ERROR_PERMISSION_DENIED Permission denied
  * @retval #NOTIFICATION_ERROR_INVALID_PARAMETER Invalid parameter
- * @retval #NOTIFICATION_ERROR_PERMISSION_DENIED The application does not have the privilege to call this method
  * @see notification_unregister_detailed_changed_cb()
  * @par Sample code:
  * @code
@@ -689,8 +689,8 @@ int notification_register_detailed_changed_cb_for_uid(
  * @return #NOTIFICATION_ERROR_NONE on success,
  *         otherwise any other value on failure
  * @retval #NOTIFICATION_ERROR_NONE Success
+ * @retval #NOTIFICATION_ERROR_PERMISSION_DENIED Permission denied
  * @retval #NOTIFICATION_ERROR_INVALID_PARAMETER Invalid parameter
- * @retval #NOTIFICATION_ERROR_PERMISSION_DENIED The application does not have the privilege to call this method
  * @see notification_register_detailed_changed_cb()
  * @par Sample code:
  * @code
@@ -1224,9 +1224,9 @@ int notification_get_event_flag(notification_h noti, bool *event_flag);
  * @return #NOTIFICATION_ERROR_NONE on success,
  *         otherwise any other value on failure
  * @retval #NOTIFICATION_ERROR_NONE Success
+ * @retval #NOTIFICATION_ERROR_PERMISSION_DENIED Permission denied
  * @retval #NOTIFICATION_ERROR_INVALID_PARAMETER Invalid parameter
  * @retval #NOTIFICATION_ERROR_IO_ERROR I/O Error
- * @retval #NOTIFICATION_ERROR_PERMISSION_DENIED Permission denied
  * @retval #NOTIFICATION_ERROR_OUT_OF_MEMORY Out of memory
  * @retval #NOTIFICATION_ERROR_SERVICE_NOT_READY No response from notification service
  * @see #notification_send_event()
@@ -1278,10 +1278,10 @@ int notification_translate_localized_text(notification_h noti);
  * @param[in] template_name Template name
  * @return Notification handle on success, NULL on failure
  * @exception #NOTIFICATION_ERROR_NONE Success
- * @exception #NOTIFICATION_ERROR_INVALID_PARAMETER Invalid input value
+ * @exception #NOTIFICATION_ERROR_PERMISSION_DENIED The Permission denied
+ * @exception #NOTIFICATION_ERROR_INVALID_PARAMETER Invalid parameter
  * @exception #NOTIFICATION_ERROR_IO_ERROR I/O Error
  * @exception #NOTIFICATION_ERROR_OUT_OF_MEMORY Out of memory
- * @exception #NOTIFICATION_ERROR_PERMISSION_DENIED The application does not have the privilege to call this method
  * @exception #NOTIFICATION_ERROR_FROM_DB Error from DB query
  * @exception #NOTIFICATION_ERROR_SERVICE_NOT_READY No response from notification service
  * @see #notification_h
@@ -1410,7 +1410,7 @@ int notification_get_extension_event_handler(notification_h noti,
  * @param[in] label Label of Caller application
  * @return #NOTIFICATION_ERROR_NONE on success, other value on failure
  * @retval #NOTIFICATION_ERROR_NONE Success
- * @retval #NOTIFICATION_ERROR_INVALID_PARAMETER Invalid input value
+ * @retval #NOTIFICATION_ERROR_INVALID_PARAMETER Invalid parameter
  * @par Sample code:
  * @code
 #include <notification.h>
@@ -1444,7 +1444,7 @@ int notification_set_app_label(notification_h noti, char *label);
  * @param[out] label Label of Caller application
  * @return #NOTIFICATION_ERROR_NONE on success, other value on failure
  * @retval #NOTIFICATION_ERROR_NONE Success
- * @retval #NOTIFICATION_ERROR_INVALID_PARAMETER Invalid input value
+ * @retval #NOTIFICATION_ERROR_INVALID_PARAMETER Invalid parameter
  * @par Sample code:
  * @code
 #include <notification.h>
@@ -1476,10 +1476,10 @@ int notification_set_indirect_request(notification_h noti, pid_t pid, uid_t uid)
  * @param[in] display_applist Combination value of display list
  * @return #NOTIFICATION_ERROR_NONE on success, other value on failure
  * @retval #NOTIFICATION_ERROR_NONE Success
- * @retval #NOTIFICATION_ERROR_INVALID_PARAMETER Invalid input value
+ * @retval #NOTIFICATION_ERROR_PERMISSION_DENIED Permission denied
+ * @retval #NOTIFICATION_ERROR_INVALID_PARAMETER Invalid parameter
  * @retval #NOTIFICATION_ERROR_IO_ERROR I/O error
  * @retval #NOTIFICATION_ERROR_OUT_OF_MEMORY Out of memory
- * @retval #NOTIFICATION_ERROR_PERMISSION_DENIED The application does not have the privilege to call this method
  * @retval #NOTIFICATION_ERROR_FROM_DB Error from DB query
  * @retval #NOTIFICATION_ERROR_SERVICE_NOT_READY No response from notification service
  * @par Sample code:

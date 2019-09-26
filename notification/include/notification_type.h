@@ -56,7 +56,7 @@ typedef enum _notification_ly_type {
 	NOTIFICATION_LY_NOTI_EVENT_MULTIPLE, /**< Layout for notification. Used to inform multiple event */
 	NOTIFICATION_LY_NOTI_THUMBNAIL, /**< Layout for notification. Used to display images */
 	NOTIFICATION_LY_ONGOING_EVENT, /**< Layout for ongoing notification. Used to display text message.
-					* notifications with NOTIFICATION_LY_ONGOING_EVENT can not be protected from
+					* notifications with #NOTIFICATION_LY_ONGOING_EVENT can not be protected from
 					* removing by user since tizen @if MOBILE 2.4 @elseif WEARABLE 3.0 @endif */
 	NOTIFICATION_LY_ONGOING_PROGRESS, /**< Layout for ongoing notification. Used to display progress */
 	NOTIFICATION_LY_EXTENSION, /**< Layout for extended notification (Since 4.0) */
@@ -203,7 +203,7 @@ typedef enum _notification_image_type {
 	NOTIFICATION_IMAGE_TYPE_ICON_FOR_LOCK, /**< Lock screen icon */
 	NOTIFICATION_IMAGE_TYPE_THUMBNAIL, /**< Thumbnail */
 	NOTIFICATION_IMAGE_TYPE_THUMBNAIL_FOR_LOCK, /**< Lock screen thumbnail */
-	NOTIFICATION_IMAGE_TYPE_ICON_SUB, /**< Icon */
+	NOTIFICATION_IMAGE_TYPE_ICON_SUB, /**< Sub icon */
 	NOTIFICATION_IMAGE_TYPE_BACKGROUND, /**< image displayed on background */
 	NOTIFICATION_IMAGE_TYPE_LIST_1, /**< Image for thumbnail list */
 	NOTIFICATION_IMAGE_TYPE_LIST_2, /**< Image for thumbnail list */

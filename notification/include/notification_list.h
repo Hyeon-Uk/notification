@@ -49,14 +49,15 @@ typedef struct _notification_list *notification_list_h;
  * @since_tizen @if MOBILE 2.3 @elseif WEARABLE 2.3.1 @endif
  * @privlevel public
  * @privilege %http://tizen.org/privilege/notification
+ * @remarks The @a list should be released using notification_free_list().
  * @param[in] type The notification type
  * @param[in] count The returned notification data number
  * @param[out] list The notification list handle
  * @return #NOTIFICATION_ERROR_NONE on success,
  *         otherwise any other value on failure
  * @retval #NOTIFICATION_ERROR_NONE         Success
+ * @retval #NOTIFICATION_ERROR_PERMISSION_DENIED Permission denied
  * @retval #NOTIFICATION_ERROR_INVALID_PARAMETER Invalid parameter
- * @retval #NOTIFICATION_ERROR_PERMISSION_DENIED The application does not have the privilege to call this method
  * @see #notification_list_h
  * @par Sample code:
  * @code
@@ -70,16 +71,16 @@ typedef struct _notification_list *notification_list_h;
 	if (noti_err != NOTIFICATION_ERROR_NONE) {
 		return;
 	}
+
+	notification_free_list(noti_list);
 }
  * @endcode
  */
-int notification_get_list(notification_type_e type,
-		int count,
-		notification_list_h *list);
+int notification_get_list(notification_type_e type, int count,
+			notification_list_h *list);
 
-int notification_get_list_for_uid(notification_type_e type,
-		int count,
-		notification_list_h *list, uid_t uid);
+int notification_get_list_for_uid(notification_type_e type, int count,
+			notification_list_h *list, uid_t uid);
 
 /**
  * @internal
@@ -87,6 +88,7 @@ int notification_get_list_for_uid(notification_type_e type,
  * @since_tizen 4.0
  * @privlevel public
  * @privilege %http://tizen.org/privilege/notification
+ * @remarks The @a list should be released using notification_free_list().
  * @param[in]  type            The notification type
  * @param[in]  page_number     The page number of the value set \n
  *                             It starts from @c 1.
@@ -97,8 +99,8 @@ int notification_get_list_for_uid(notification_type_e type,
  * @return #NOTIFICATION_ERROR_NONE on success,
  *         otherwise any other value on failure
  * @retval #NOTIFICATION_ERROR_NONE         Success
+ * @retval #NOTIFICATION_ERROR_PERMISSION_DENIED Permission denied
  * @retval #NOTIFICATION_ERROR_INVALID_PARAMETER Invalid parameter
- * @retval #NOTIFICATION_ERROR_PERMISSION_DENIED The application does not have the privilege to call this method
  * @see #notification_list_h
  */
 int notification_get_list_by_page(notification_type_e type,
@@ -113,6 +115,7 @@ int notification_get_list_by_page_for_uid(notification_type_e type,
  * @since_tizen @if MOBILE 2.3 @elseif WEARABLE 2.3.1 @endif
  * @privlevel public
  * @privilege %http://tizen.org/privilege/notification
+ * @remarks The @a list should be released using notification_free_list().
  * @param[in]  app_id  The caller application ID
  * @param[in]  group_id The group ID
  * @param[in]  priv_id  The private ID
@@ -121,8 +124,8 @@ int notification_get_list_by_page_for_uid(notification_type_e type,
  * @return #NOTIFICATION_ERROR_NONE if success,
  *         other value if failure
  * @retval #NOTIFICATION_ERROR_NONE Success
+ * @retval #NOTIFICATION_ERROR_PERMISSION_DENIED Permission denied
  * @retval #NOTIFICATION_ERROR_INVALID_PARAMETER Invalid parameter
- * @retval NOTIFICATION_ERROR_PERMISSION_DENIED The application does not have the privilege to call this method
  * @see #notification_list_h
  * @par Sample code:
  * @code
@@ -136,6 +139,8 @@ int notification_get_list_by_page_for_uid(notification_type_e type,
 	if (noti_err != NOTIFICATION_ERROR_NONE) {
 		return;
 	}
+
+	notification_free_list(noti_list);
 }
  * @endcode
  */
@@ -162,8 +167,8 @@ int notification_get_detail_list_for_uid(const char *app_id,
  * @return #NOTIFICATION_ERROR_NONE on success,
  *         otherwise any other value on failure
  * @retval #NOTIFICATION_ERROR_NONE         Success
+ * @retval #NOTIFICATION_ERROR_PERMISSION_DENIED Permission denied
  * @retval #NOTIFICATION_ERROR_INVALID_PARAMETER Invalid parameter
- * @retval NOTIFICATION_ERROR_PERMISSION_DENIED The application does not have the privilege to call this method
  * @pre notification_get_grouping_list() or notification_get_detail_list().
  * @see #notification_list_h
  * @par Sample code:
@@ -191,10 +196,9 @@ int notification_free_list(notification_list_h list);
  * @brief Gets the head pointer of the notification list.
  * @since_tizen @if WEARABLE 2.3.1 @elseif MOBILE 2.3 @endif
  * @remarks The specific error code can be obtained using the get_last_result() method. Error codes are described in Exception section.
+ *          The returned value should be released using notification_free_list().
  * @param[in] list Notification list handle
- * @return Notification list handle on success, NULL on failure
- * @retval #notification_list_h Success
- * @retval NULL Failure
+ * @return #notification_list_h on success, NULL on failure
  * @exception #NOTIFICATION_ERROR_NONE Success
  * @exception #NOTIFICATION_ERROR_INVALID_PARAMETER Invalid input value
  * @see #notification_list_h
@@ -212,6 +216,8 @@ int notification_free_list(notification_list_h list);
 	}
 
 	noti_list = notification_list_get_head(noti_list);
+
+	notification_free_list(noti_list);
 }
  * @endcode
  */
@@ -222,10 +228,9 @@ notification_list_h notification_list_get_head(notification_list_h list);
  * @brief Gets the tail pointer to the notification list.
  * @since_tizen @if MOBILE 2.3 @elseif WEARABLE 2.3.1 @endif
  * @remarks The specific error code can be obtained using the get_last_result() method. Error codes are described in Exception section.
+ *          The returned value should be released using notification_free_list().
  * @param[in] list Notification list handle
- * @return Notification list handle on success, NULL on failure
- * @retval #notification_list_h Success
- * @retval NULL Failure
+ * @return #notification_list_h on success, NULL on failure
  * @exception #NOTIFICATION_ERROR_NONE Success
  * @exception #NOTIFICATION_ERROR_INVALID_PARAMETER Invalid input value
  * @see #notification_list_h
@@ -243,6 +248,8 @@ notification_list_h notification_list_get_head(notification_list_h list);
 	}
 
 	noti_list = notification_list_get_tail(noti_list);
+
+	notification_free_list(noti_list);
 }
  * @endcode
  */
@@ -253,10 +260,9 @@ notification_list_h notification_list_get_tail(notification_list_h list);
  * @brief Gets the previous pointer of the current notification list.
  * @since_tizen @if WEARABLE 2.3.1 @elseif MOBILE 2.3 @endif
  * @remarks The specific error code can be obtained using the get_last_result() method. Error codes are described in Exception section.
+ *          The returned value should be released using notification_free_list().
  * @param[in] list Notification list handle
- * @return Notification list handle on success, NULL on failure
- * @retval #notification_list_h Success
- * @retval NULL Failure
+ * @return #notification_list_h on success, NULL on failure
  * @exception #NOTIFICATION_ERROR_NONE Success
  * @exception #NOTIFICATION_ERROR_INVALID_PARAMETER Invalid input value
  * @see #notification_list_h
@@ -274,6 +280,8 @@ notification_list_h notification_list_get_tail(notification_list_h list);
 	}
 
 	noti_list = notification_list_get_prev(noti_list);
+
+	notification_free_list(noti_list);
 }
  * @endcode
  */
@@ -284,10 +292,9 @@ notification_list_h notification_list_get_prev(notification_list_h list);
  * @brief Gets the next pointer of the current notification list.
  * @since_tizen @if WEARABLE 2.3.1 @elseif MOBILE 2.3 @endif
  * @remarks The specific error code can be obtained using the get_last_result() method. Error codes are described in Exception section.
+ *          The returned value should be released using notification_free_list().
  * @param[in] list Notification list handle
- * @return Notification list handle on success, NULL on failure
- * @retval #notification_list_h Success
- * @retval NULL Failure
+ * @return #notification_list_h on success, NULL on failure
  * @exception #NOTIFICATION_ERROR_NONE Success
  * @exception #NOTIFICATION_ERROR_INVALID_PARAMETER Invalid input value
  * @see #notification_list_h
@@ -297,7 +304,7 @@ notification_list_h notification_list_get_prev(notification_list_h list);
 ...
 {
 	notification_list_h noti_list = NULL;
-	int noti_err = NOTIFICATION_ERROR_NONE;
+	int noti_err;
 
 	noti_err  = notification_get_grouping_list(NOTIFICATION_TYPE_NONE, -1, &noti_list);
 	if (noti_err != NOTIFICATION_ERROR_NONE) {
@@ -305,6 +312,8 @@ notification_list_h notification_list_get_prev(notification_list_h list);
 	}
 
 	noti_list = notification_list_get_next(noti_list);
+
+	notification_free_list(noti_list);
 }
  * @endcode
  */
@@ -315,10 +324,9 @@ notification_list_h notification_list_get_next(notification_list_h list);
  * @brief Gets the notification handle that the list has.
  * @since_tizen @if WEARABLE 2.3.1 @elseif MOBILE 2.3 @endif
  * @remarks The specific error code can be obtained using the get_last_result() method. Error codes are described in Exception section.
+ *          The returned value should be released using notification_free().
  * @param[in] list Notification list handle
- * @return Notification handle on success, NULL on failure
- * @retval #notification_h Success
- * @retval NULL Failure
+ * @return #notification_h on success, NULL on failure
  * @exception #NOTIFICATION_ERROR_NONE Success
  * @exception #NOTIFICATION_ERROR_INVALID_PARAMETER Invalid input value
  * @see #notification_list_h
@@ -338,6 +346,8 @@ notification_list_h notification_list_get_next(notification_list_h list);
 	}
 
 	noti = notification_list_get_data(noti_list);
+
+	notification_free(noti);
 }
  * @endcode
  */
@@ -381,9 +391,7 @@ int notification_list_get_count(notification_list_h list);
  * @remarks The specific error code can be obtained using the get_last_result() method. Error codes are described in Exception section.
  * @param[in] list Notification list handle
  * @param[in] noti Notification handle
- * @return Notification handle on success, NULL on failure
- * @retval #notification_h Success
- * @retval NULL Failure
+ * @return #notification_h on success, NULL on failure
  * @exception #NOTIFICATION_ERROR_NONE Success
  * @exception #NOTIFICATION_ERROR_INVALID_PARAMETER Invalid input value
  * @exception #NOTIFICATION_ERROR_OUT_OF_MEMORY Out of memory
@@ -417,10 +425,8 @@ notification_list_h notification_list_append(notification_list_h list,
  * @remarks The specific error code can be obtained using the get_last_result() method. Error codes are described in Exception section.
  * @param[in] list The notification list handle
  * @param[in] noti The notification handle
- * @return Notification handle on success,
+ * @return #notification_h on success,
  *         otherwise @c NULL on failure
- * @retval #notification_h Success
- * @retval NULL Failure
  * @exception #NOTIFICATION_ERROR_NONE Success
  * @exception #NOTIFICATION_ERROR_INVALID_PARAMETER Invalid input value
  * @see #notification_list_h
@@ -437,11 +443,12 @@ notification_list_h notification_list_append(notification_list_h list,
 	...
 
 	noti_list = notification_list_remove(noti_list, noti);
+
 }
  * @endcode
  */
 notification_list_h notification_list_remove(notification_list_h list,
-					     notification_h noti);
+			notification_h noti);
 
 /**
  * @}
