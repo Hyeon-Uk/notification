@@ -900,7 +900,7 @@ int notification_setting_db_update_pkg_disabled(const char *pkg_id, bool value, 
 	if (pkg_id == NULL)
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 
-	db = notification_db_open(DBPATH);
+	db = notification_db_open();
 	if (!db)
 		return get_last_result();
 
