@@ -602,7 +602,7 @@ extern "C" EXPORT_API int noti_ex_item_checkbox_get_title(noti_ex_item_h handle,
 
 extern "C" EXPORT_API int noti_ex_item_checkbox_set_multi_language_title(
     noti_ex_item_h handle, noti_ex_multi_lang_h multi) {
-  if (handle == nullptr || multi == nullptr) {
+  if (handle == nullptr) {
     LOGE("Invalid parameter");
     return NOTI_EX_ERROR_INVALID_PARAMETER;
   }
@@ -713,7 +713,7 @@ extern "C" EXPORT_API int noti_ex_item_entry_set_text(noti_ex_item_h handle,
 
 extern "C" EXPORT_API int noti_ex_item_entry_set_multi_language(
     noti_ex_item_h handle, noti_ex_multi_lang_h multi) {
-  if (handle == nullptr || multi == nullptr) {
+  if (handle == nullptr) {
     LOGE("Invalid parameter");
     return NOTI_EX_ERROR_INVALID_PARAMETER;
   }
@@ -724,9 +724,14 @@ extern "C" EXPORT_API int noti_ex_item_entry_set_multi_language(
     return NOTI_EX_ERROR_INVALID_PARAMETER;
   }
 
+  EntryItem* ei = static_cast<EntryItem*>(p->Get());
+  if (multi == nullptr) {
+    ei->SetMultiLanguage(nullptr);
+    return NOTI_EX_ERROR_NONE;
+  }
+
   shared_ptr<MultiLanguage> mul_ptr =
       *reinterpret_cast<shared_ptr<MultiLanguage>*>(multi);
-  EntryItem* ei = static_cast<EntryItem*>(p->Get());
   ei->SetMultiLanguage(mul_ptr);
   ei->GetMultiLanguage()->UpdateString();
 
