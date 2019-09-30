@@ -644,6 +644,42 @@ extern "C" EXPORT_API int noti_ex_item_checkbox_is_checked(noti_ex_item_h handle
   return NOTI_EX_ERROR_NONE;
 }
 
+extern "C" EXPORT_API int noti_ex_item_checkbox_get_check_state(
+    noti_ex_item_h handle, bool *checked) {
+  if (handle == nullptr || checked == nullptr) {
+    LOGE("Invalid parameter");
+    return NOTI_EX_ERROR_INVALID_PARAMETER;
+  }
+  Handle* h = static_cast<Handle*>(handle);
+  if (!h->IsValidType(AbstractItem::CheckBox)) {
+    LOGE("Invalid handle type");
+    return NOTI_EX_ERROR_INVALID_PARAMETER;
+  }
+  CheckBoxItem* p = static_cast<CheckBoxItem*>(h->Get());
+  *checked = p->IsChecked();
+
+  return NOTI_EX_ERROR_NONE;
+}
+
+extern "C" EXPORT_API int noti_ex_item_checkbox_set_check_state(
+    noti_ex_item_h handle, bool checked) {
+  if (handle == nullptr) {
+    LOGE("Invalid parameter");
+    return NOTI_EX_ERROR_INVALID_PARAMETER;
+  }
+
+  Handle* h = static_cast<Handle*>(handle);
+  if (!h->IsValidType(AbstractItem::CheckBox)) {
+    LOGE("Invalid handle type");
+    return NOTI_EX_ERROR_INVALID_PARAMETER;
+  }
+
+  CheckBoxItem* p = static_cast<CheckBoxItem*>(h->Get());
+  p->SetChecked(checked);
+
+  return NOTI_EX_ERROR_NONE;
+}
+
 extern "C" EXPORT_API int noti_ex_item_entry_create(noti_ex_item_h *handle,
     const char *id) {
   EntryItem* p;
