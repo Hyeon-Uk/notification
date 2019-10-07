@@ -1505,10 +1505,15 @@ int noti_ex_item_get_action(noti_ex_item_h handle, noti_ex_action_h *action);
 	noti_ex_item_h item_handle = NULL;
 	noti_ex_action_h action = NULL;
 
-	ret = noti_ex_action_visibility_create(&action, NULL);
+	ret = app_control_create(&app_control);
+	ret = app_control_set_app_id(app_control, "appid");
+	ret = noti_ex_action_app_control_create(&action, app_control, NULL);
+
 	ret = noti_ex_item_button_create(&item_handle, "button_id", "button_title");
 
 	ret = noti_ex_item_set_action(item_handle, action);
+
+	app_control_destroy(app_control);
 }
  * @endcode
  */

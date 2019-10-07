@@ -107,7 +107,7 @@ int noti_ex_item_input_selector_get_contents(noti_ex_item_h handle, char ***list
 
 {
 	int ret;
-	const char *contents[] = {"content_1", "content_2", "content_3"};
+	const char *contents[] = {"What's up?", "On my way", "Nice"};
 	int count = 3;
 
 	ret = noti_ex_item_input_selector_set_contents(selector_item, contents, count);
