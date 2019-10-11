@@ -68,6 +68,7 @@ class AbstractItem::Impl {
   time_t time_ = 0;
   uid_t uid_ = 0;
   int request_id_ = 0;
+  int64_t private_id_ = 0;
   std::string background_;
   bool ongoing_ = false;
   MainType main_type_ = MainNone;

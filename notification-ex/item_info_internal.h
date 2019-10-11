@@ -30,6 +30,8 @@ class AbstractItem::Impl::ItemInfo : public IItemInfoInternal {
  public:
   ItemInfo(AbstractItem::Impl* impl);
   virtual ~ItemInfo() = default;
+  int64_t GetPrivateId() const override;
+  void SetPrivateId(int64_t private_id) override;
   uid_t GetUid() const override;
   void SetUid(uid_t uid) override;
   time_t GetTime() const override;

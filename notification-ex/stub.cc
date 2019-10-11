@@ -55,6 +55,7 @@
 #include "notification-ex/dbus_sender.h"
 #include "notification-ex/dbus_event_listener.h"
 #include "notification-ex/exception.h"
+#include "notification-ex/iitem_info_internal.h"
 
 #ifdef LOG_TAG
 #undef LOG_TAG
@@ -3177,5 +3178,33 @@ extern "C" EXPORT_API int noti_ex_multi_lang_destroy(noti_ex_multi_lang_h handle
   shared_ptr<MultiLanguage>* mul_ptr =
       reinterpret_cast<shared_ptr<MultiLanguage>*>(handle);
   delete mul_ptr;
+  return NOTI_EX_ERROR_NONE;
+}
+
+extern "C" EXPORT_API int noti_ex_item_get_private_id(
+    noti_ex_item_h item, int64_t* private_id) {
+  if (item == nullptr || private_id == nullptr) {
+    LOGE("Invalid parameter");
+    return NOTI_EX_ERROR_INVALID_PARAMETER;
+  }
+
+  Handle* h = static_cast<Handle*>(item);
+  *private_id = static_pointer_cast<IItemInfoInternal>(
+      h->Get()->GetInfo())->GetPrivateId();
+
+  return NOTI_EX_ERROR_NONE;
+}
+
+extern "C" EXPORT_API int noti_ex_item_set_private_id(
+    noti_ex_item_h item, int64_t priv_id) {
+  if (item == nullptr) {
+    LOGE("Invalid parameter");
+    return NOTI_EX_ERROR_INVALID_PARAMETER;
+  }
+
+  Handle* h = static_cast<Handle*>(item);
+  static_pointer_cast<IItemInfoInternal>(
+      h->Get()->GetInfo())->SetPrivateId(priv_id);
+
   return NOTI_EX_ERROR_NONE;
 }

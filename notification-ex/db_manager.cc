@@ -20,6 +20,7 @@
 #include <vconf.h>
 #include <pkgmgr-info.h>
 #include <tzplatform_config.h>
+#include <inttypes.h>
 
 #include <string.h>
 #include <list>
@@ -45,13 +46,13 @@
   " app_id TEXT NOT NULL,\n" \
   " uid INTEGER,\n" \
   " channel TEXT,\n" \
-  " priv_id INTEGER,\n" \
+  " priv_id INTEGER PRIMARY KEY,\n" \
   " pkg_id TEXT,\n" \
   " policy INTEGER,\n" \
   " data TEXT NOT NULL,\n" \
   " insert_time INTEGER,\n" \
   " hide_list TEXT,\n" \
-  " PRIMARY KEY (root_id, app_id, uid));\n" \
+  " UNIQUE (root_id, app_id, uid));\n" \
   "CREATE TABLE IF NOT EXISTS receiver_list (\n" \
   " root_id TEXT NOT NULL,\n" \
   " app_id TEXT NOT NULL,\n" \
@@ -139,6 +140,35 @@ int DBManager::ExecuteQuery(const char* query, int* num_changes) {
   ret = ExecuteQuery(db, query, num_changes);
   CloseDB(db);
 
+  return ret;
+}
+
+int DBManager::GetSequence(sqlite3* db, int64_t* seq) {
+  int ret = ERROR_NONE;
+  sqlite3_stmt *stmt;
+
+  if (db == nullptr || seq == nullptr)
+    return ERROR_INVALID_PARAMETER;
+
+  string query = "SELECT IFNULL(MIN(priv_id), 0), IFNULL(MAX(priv_id), 0)"
+      " FROM noti_ex_list";
+  sqlite3_prepare_v2(db, query.c_str(), query.size(), &stmt, nullptr);
+  ret = sqlite3_step(stmt);
+  if (ret == SQLITE_ROW) {
+    int64_t min_p = sqlite3_column_int64(stmt, 0);
+    if (min_p > 1)
+      *seq = min_p - 1;
+    else
+      *seq = sqlite3_column_int64(stmt, 1) + 1;
+    ret = ERROR_NONE;
+  } else {
+    /* LCOV_EXCL_START */
+    LOGE("Sqlite err [%d][%s]", ret, sqlite3_errmsg(db));
+    ret = ERROR_FROM_DB;
+    /* LCOV_EXCL_STOP */
+  }
+
+  sqlite3_finalize(stmt);
   return ret;
 }
 
@@ -380,6 +410,7 @@ int DBManager::InsertNotification(list<shared_ptr<item::AbstractItem>> addedItem
   int ret = ERROR_NONE;
   int count;
   char* query;
+  int64_t seq;
   sqlite3* db = OpenDB();
 
   if (db == nullptr)
@@ -393,7 +424,7 @@ int DBManager::InsertNotification(list<shared_ptr<item::AbstractItem>> addedItem
 
   for (auto& i : addedItem) {
     uid_t uid = static_pointer_cast<IItemInfoInternal>(i->GetInfo())->GetUid();
-    ret = GetCount(i->GetId(), i->GetSenderAppId(), uid, &count);
+    ret = GetCount(0, i->GetId(), i->GetSenderAppId(), uid, &count);
     if (ret != ERROR_NONE)
        break;
 
@@ -404,15 +435,20 @@ int DBManager::InsertNotification(list<shared_ptr<item::AbstractItem>> addedItem
       break;
     }
 
+    ret = GetSequence(db, &seq);
+    if (ret != ERROR_NONE)
+      break;
+
+    static_pointer_cast<IItemInfoInternal>(i->GetInfo())->SetPrivateId(seq);
     Bundle b = i->Serialize();
     query = sqlite3_mprintf("INSERT INTO noti_ex_list"
           " (root_id, app_id, uid, channel, priv_id, pkg_id, policy, data, insert_time)"
-          " VALUES (%Q, %Q, %d, %Q, %d, %Q, %d, %Q, %d)",
+          " VALUES (%Q, %Q, %d, %Q, %" PRId64 ", %Q, %d, %Q, %d)",
           i->GetId().c_str(),
           i->GetSenderAppId().c_str(),
           uid,
           i->GetChannel().c_str(),
-          util::GetQuarkFromString(i->GetId() + to_string(uid)),
+          static_pointer_cast<IItemInfoInternal>(i->GetInfo())->GetPrivateId(),
           GetPkgId(i->GetSenderAppId(), uid).c_str(),
           static_cast<int>(i->GetPolicy()),
           reinterpret_cast<char*>(b.ToRaw().first.get()),
@@ -492,17 +528,20 @@ map<string, string> DBManager::GetHideMap() {
 }
 
 int DBManager::GetCount(const string& app_id, uid_t uid, int* count) {
-  return GetCount(string(), app_id, uid, count);
+  return GetCount(0, string(), app_id, uid, count);
 }
 
-int DBManager::GetCount(const string& root_id, const string& app_id,
+int DBManager::GetCount(int64_t priv_id, const string& root_id, const string& app_id,
                               uid_t uid, int* count) {
   int ret;
   char* query;
   sqlite3_stmt *stmt;
   sqlite3* db;
 
-  if (root_id.empty()) {
+  if (priv_id != 0) {
+    query = sqlite3_mprintf("SELECT count(*) FROM noti_ex_list"
+                            " WHERE priv_id = %" PRId64 "", priv_id);
+  } else if (root_id.empty()) {
     query = sqlite3_mprintf("SELECT count(*) FROM noti_ex_list"
                             " WHERE app_id = %Q AND uid = %d", app_id.c_str(), uid);
   } else {
@@ -567,8 +606,10 @@ int DBManager::UpdateNotification(shared_ptr<item::AbstractItem> updatedItem) {
   char* query;
   uid_t uid =
       static_pointer_cast<IItemInfoInternal>(updatedItem->GetInfo())->GetUid();
+  int64_t priv_id = static_pointer_cast<IItemInfoInternal>(
+      updatedItem->GetInfo())->GetPrivateId();
 
-  ret = GetCount(
+  ret = GetCount(priv_id,
       updatedItem->GetId(), updatedItem->GetSenderAppId(), uid, &count);
   if (ret != ERROR_NONE) {
     LOGE("fail to get count");
@@ -576,7 +617,7 @@ int DBManager::UpdateNotification(shared_ptr<item::AbstractItem> updatedItem) {
   }
 
   if (count <= 0) {
-    LOGE("not exist id(%s) for appid(%s)",
+    LOGE("not exist priv_id(%" PRId64 ") id(%s) for appid(%s)", priv_id,
         updatedItem->GetId().c_str(), updatedItem->GetSenderAppId().c_str());
     return ERROR_NOT_EXIST_ID;
   }
@@ -587,17 +628,14 @@ int DBManager::UpdateNotification(shared_ptr<item::AbstractItem> updatedItem) {
 
   Bundle b = updatedItem->Serialize();
   query = sqlite3_mprintf("UPDATE noti_ex_list SET"
-     " priv_id = %d, pkg_id = %Q, channel = %Q, policy = %d, data = %Q, insert_time = %d"
-     " WHERE root_id = %Q AND app_id = %Q AND uid = %d",
-     util::GetQuarkFromString(updatedItem->GetId() + to_string(uid)),
+     " pkg_id = %Q, channel = %Q, policy = %d, data = %Q, insert_time = %d"
+     " WHERE priv_id = %" PRId64 "",
      GetPkgId(updatedItem->GetSenderAppId(), uid).c_str(),
      updatedItem->GetChannel().c_str(),
      static_cast<int>(updatedItem->GetPolicy()),
      reinterpret_cast<char*>(b.ToRaw().first.get()),
      static_pointer_cast<IItemInfo>(updatedItem->GetInfo())->GetTime(),
-     updatedItem->GetId().c_str(),
-     updatedItem->GetSenderAppId().c_str(),
-     uid);
+     priv_id);
 
   if (!query) {
     LOGE("OOM - sql query");
@@ -708,6 +746,26 @@ list<shared_ptr<item::AbstractItem>> DBManager::GetNotificationList
   return item_list;
 }
 
+list<shared_ptr<item::AbstractItem>> DBManager::GetNotificationList
+                             (string app_id, int64_t priv_id, uid_t uid) {
+  char* query;
+  list<shared_ptr<item::AbstractItem>> item_list;
+
+  query = sqlite3_mprintf("SELECT data FROM noti_ex_list"
+      " WHERE uid = %d AND app_id = %Q AND priv_id = %" PRId64 "",
+      uid, app_id.c_str(), priv_id);
+
+  if (!query) {
+    LOGE("OOM - sql query");
+    return item_list;
+  }
+
+  item_list = ExecuteGetList(query);
+  sqlite3_free(query);
+
+  return item_list;
+}
+
 list<shared_ptr<item::AbstractItem>> DBManager::GetNotificationList(
       uid_t uid, string channel) {
   int ret, sim_mode;
@@ -751,13 +809,11 @@ list<shared_ptr<item::AbstractItem>> DBManager::GetNotificationList(
 int DBManager::DeleteNotification(shared_ptr<item::AbstractItem> deletedItem) {
   int ret;
   char* query;
-  uid_t uid =
-      static_pointer_cast<IItemInfoInternal>(deletedItem->GetInfo())->GetUid();
+  int64_t priv_id = static_pointer_cast<IItemInfoInternal>(
+      deletedItem->GetInfo())->GetPrivateId();
 
-  query = sqlite3_mprintf("DELETE FROM noti_ex_list"
-            " WHERE root_id = %Q AND app_id = %Q AND uid = %d",
-            deletedItem->GetId().c_str(), deletedItem->GetSenderAppId().c_str(),
-            uid);
+  query = sqlite3_mprintf("DELETE FROM noti_ex_list WHERE priv_id = %" PRId64 "",
+      priv_id);
   if (!query) {
     LOGE("OOM - sql query");
     return ERROR_OUT_OF_MEMORY;
@@ -765,21 +821,6 @@ int DBManager::DeleteNotification(shared_ptr<item::AbstractItem> deletedItem) {
 
   ret = ExecuteQuery(query, nullptr);
   sqlite3_free(query);
-  if (ret != ERROR_NONE)
-    return ret;
-
-  query = sqlite3_mprintf("DELETE FROM receiver_list"
-                " WHERE root_id = %Q AND app_id = %Q AND uid = %d",
-                deletedItem->GetId().c_str(), deletedItem->GetSenderAppId().c_str(),
-                uid);
-  if (!query) {
-    LOGE("OOM - sql query");
-    return ERROR_OUT_OF_MEMORY;
-  }
-
-  ret = ExecuteQuery(query, nullptr);
-  sqlite3_free(query);
-
   return ret;
 }
 

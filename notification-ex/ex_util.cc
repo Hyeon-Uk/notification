@@ -36,13 +36,6 @@
 using namespace std;
 namespace notification {
 namespace util {
-GQuark GetQuarkFromString(string str) {
-  return g_quark_from_string(str.c_str());
-}
-
-std::string GetQuarkToString(GQuark quark) {
-  return g_quark_to_string(quark);
-}
 
 int GetRequestId() {
   static int id = 0;

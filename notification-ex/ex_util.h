@@ -24,8 +24,6 @@
 namespace notification {
 namespace util {
   std::string GetAppId();
-  GQuark GetQuarkFromString(std::string str);
-  std::string GetQuarkToString(GQuark quark);
   int GetRequestId();
   std::string GetPkgId();
   std::string GetDomainName();

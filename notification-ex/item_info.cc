@@ -35,6 +35,14 @@ namespace item {
 AbstractItem::Impl::ItemInfo::ItemInfo(AbstractItem::Impl* impl) : impl_(impl) {
 }
 
+int64_t AbstractItem::Impl::ItemInfo::GetPrivateId() const {
+  return impl_->private_id_;
+}
+
+void AbstractItem::Impl::ItemInfo::SetPrivateId(int64_t private_id) {
+  impl_->private_id_ = private_id;
+}
+
 uid_t AbstractItem::Impl::ItemInfo::GetUid() const {
   return impl_->uid_;
 }

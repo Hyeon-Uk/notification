@@ -40,12 +40,13 @@ class EXPORT_API DBManager {
   static std::map<std::string, std::string> GetHideMap();
   static int UpdateHideList(std::shared_ptr<item::AbstractItem> updatedItem, const std::string& hide_list);
   static int UpdateNotification(std::shared_ptr<item::AbstractItem> updatedItem);
-  static int GetCount(const std::string& root_id, const std::string& app_id, uid_t uid, int* count);
+  static int GetCount(int64_t priv_id, const std::string& root_id, const std::string& app_id,  uid_t uid, int* count);
   static int GetCount(const std::string& app_id, uid_t uid, int* count);
   static int DeleteNotification(std::shared_ptr<item::AbstractItem> deletedItem);
   static std::list<std::shared_ptr<item::AbstractItem>> GetNotificationList(uid_t uid, std::string channel = "");
   static std::list<std::shared_ptr<item::AbstractItem>> GetNotificationList(std::string app_id, uid_t uid);
   static std::list<std::shared_ptr<item::AbstractItem>> GetNotificationList(std::string app_id, std::string root_id, uid_t uid);
+  static std::list<std::shared_ptr<item::AbstractItem>> GetNotificationList(std::string app_id, int64_t private_id, uid_t uid);
 
  private:
   DBManager(); /* LCOV_EXCL_LINE */
@@ -56,6 +57,7 @@ class EXPORT_API DBManager {
   static int RecoverCorruptedDB(sqlite3* db);
   static int ExecuteQuery(const char* query, int* num_changes);
   static int ExecuteQuery(sqlite3* db, const char* query, int* num_changes);
+  static int GetSequence(sqlite3* db, int64_t* seq);
   static std::string GetPkgId(const std::string& app_id, uid_t uid);
   static void CheckLimit(std::shared_ptr<item::AbstractItem> addedItem, sqlite3* db);
   static int UpdateReceiverList(std::shared_ptr<item::AbstractItem> updatedItem,  sqlite3* db);

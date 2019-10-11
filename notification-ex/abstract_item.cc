@@ -39,6 +39,7 @@
 #define ABSTRACT_ITEM_TYPE_KEY "__ABSTRACT_ITEM_TYPE_KEY__"
 #define ABSTRACT_ITEM_ID_KEY "__ABSTRACT_ITEM_ID_KEY__"
 #define ABSTRACT_ITEM_UID_KEY "__ABSTRACT_ITEM_UID_KEY__"
+#define ABSTRACT_ITEM_PRIVATE_ID_KEY "__ABSTRACT_ITEM_PRIVATE_ID_KEY__"
 #define ABSTRACT_ITEM_TIME_KEY "__ABSTRACT_ITEM_TIME_KEY__"
 #define ABSTRACT_ITEM_SENDER_APPID_KEY "__ABSTRACT_ITEM_SENDER_APPID_KEY__"
 #define ABSTRACT_ITEM_TAG_KEY "__ABSTRACT_ITEM_TAG_KEY__"
@@ -157,6 +158,7 @@ Bundle AbstractItem::Serialize() const {
   b.Add(ABSTRACT_ITEM_HIDE_TIME_KEY, to_string(impl_->hide_time_));
   b.Add(ABSTRACT_ITEM_DELETE_TIME_KEY, to_string(impl_->delete_time_));
   b.Add(ABSTRACT_ITEM_UID_KEY, to_string(impl_->uid_));
+  b.Add(ABSTRACT_ITEM_PRIVATE_ID_KEY, to_string(impl_->private_id_));
   b.Add(ABSTRACT_ITEM_TAG_KEY, impl_->tag_);
 
   localtime_r(&impl_->time_, &timeinfo);
@@ -302,6 +304,7 @@ void AbstractItem::Deserialize(Bundle b) {
   impl_->sound_path_ = b.GetString(ABSTRACT_ITEM_SOUND_PATH_KEY);
   impl_->vibration_path_ = b.GetString(ABSTRACT_ITEM_VIBRATION_PATH_KEY);
   impl_->uid_ = stoi(b.GetString(ABSTRACT_ITEM_UID_KEY));
+  impl_->private_id_ = stoi(b.GetString(ABSTRACT_ITEM_PRIVATE_ID_KEY));
   impl_->tag_ = b.GetString(ABSTRACT_ITEM_TAG_KEY);
 
   time_s = b.GetString(ABSTRACT_ITEM_TIME_KEY);
