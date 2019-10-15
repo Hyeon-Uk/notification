@@ -17,8 +17,15 @@
 #ifndef __NOTIFICATION_VIEWER_H__
 #define __NOTIFICATION_VIEWER_H__
 
-int notification_get_default_viewer(const char *path, char **default_viewer);
-int notification_launch_default_viewer(const char *default_viewer, int priv_id,
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+int notification_init_default_viewer();
+int notification_launch_default_viewer(int priv_id,
 				notification_op_type_e status, uid_t uid);
 
+#ifdef __cplusplus
+}
+#endif
 #endif /* __NOTIFICATION_VIEWER_H__ */

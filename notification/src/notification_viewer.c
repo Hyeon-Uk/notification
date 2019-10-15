@@ -26,18 +26,24 @@
 #include <notification_debug.h>
 #include <notification_viewer.h>
 
+#define DEFAULT_VIEWER_CONF_FILE "/usr/share/notification/notification.ini"
+static char *_default_viewer;
+
 /* LCOV_EXCL_START */
-EXPORT_API int notification_get_default_viewer(const char *path, char **default_viewer)
+EXPORT_API int notification_init_default_viewer()
 {
 	char *viewer = NULL;
 	dictionary *dict = NULL;
 
-	if (access(path, F_OK) != 0) {
-		ERR("can't access file_path(%s)", path);
+	if (_default_viewer != NULL)
+		return 0;
+
+	if (access(DEFAULT_VIEWER_CONF_FILE, F_OK) != 0) {
+		ERR("can't access file_path(%s)", DEFAULT_VIEWER_CONF_FILE);
 		return -1;
 	}
 
-	dict = iniparser_load(path);
+	dict = iniparser_load(DEFAULT_VIEWER_CONF_FILE);
 	if (!dict) {
 		ERR("can't load file");
 		return -1;
@@ -45,7 +51,7 @@ EXPORT_API int notification_get_default_viewer(const char *path, char **default_
 
 	viewer = iniparser_getstring(dict, "Notification:DefaultViewer", NULL);
 	if (viewer != NULL)
-		*default_viewer = strdup(viewer);
+		_default_viewer = strdup(viewer);
 
 	iniparser_freedict(dict);
 
@@ -54,12 +60,15 @@ EXPORT_API int notification_get_default_viewer(const char *path, char **default_
 /* LCOV_EXCL_STOP */
 
 /* LCOV_EXCL_START */
-EXPORT_API int notification_launch_default_viewer(const char *default_viewer,
-			int priv_id, notification_op_type_e status, uid_t uid)
+EXPORT_API int notification_launch_default_viewer(int priv_id,
+		notification_op_type_e status, uid_t uid)
 {
 	int ret;
 	char buf[32] = {0,};
 	bundle *b = NULL;
+
+	if (_default_viewer == NULL)
+		return NOTIFICATION_ERROR_NONE;
 
 	b = bundle_create();
 	if (b == NULL) {
@@ -67,7 +76,7 @@ EXPORT_API int notification_launch_default_viewer(const char *default_viewer,
 		return NOTIFICATION_ERROR_OUT_OF_MEMORY;
 	}
 
-	ret = aul_svc_set_appid(b, default_viewer);
+	ret = aul_svc_set_appid(b, _default_viewer);
 	if (ret != AUL_SVC_RET_OK) {
 		ERR("Failed to set appid to bundle[%x]", ret);
 		goto out;
