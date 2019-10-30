@@ -1069,6 +1069,8 @@ class EXPORT_API AbstractItem {
  private:
   class Impl;
   std::unique_ptr<Impl> impl_;
+  void UpdateSoundPrivatePath();
+  void UpdateVibrationPrivatePath();
 };  // class AbstractItem
 
 }  // namespace item
