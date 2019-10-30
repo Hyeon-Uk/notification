@@ -24,6 +24,7 @@
 #include <string>
 #include <list>
 #include <vector>
+#include <map>
 
 #include "notification-ex/abstract_action.h"
 #include "notification-ex/multi_language.h"
@@ -821,6 +822,18 @@ class EXPORT_API AbstractItem {
    * @return The list of shared path.
    */
   virtual std::list<std::string> GetSharedPath() const;
+
+  /**
+   * @brief Sets the shared file path to original file path.
+   */
+  virtual void SetSharedPath();
+
+  /**
+   * @brief
+   * @since_tizen 5.5
+   * @return
+   */
+  virtual std::list<std::map<std::string, std::string>> GetPathMapList() const;
 
   /**
    * @brief Gets the notification item id.

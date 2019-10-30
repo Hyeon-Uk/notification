@@ -37,6 +37,7 @@
 
 #define MAX_PACKAGE_STR_SIZE 512
 #define NOTIFICATION_EX_MANAGER_OBJECT_PATH "/org/tizen/notification_ex_manager"
+#define DATA_PROVIDER_MASTER_ID "data-provider-master"
 
 using namespace std;
 using namespace tizen_base;
@@ -51,6 +52,10 @@ Manager::~Manager() = default;
 
 Manager::Impl::~Impl() {
   listener_->UnRegisterObserver(parent_);
+
+  list<Bundle> dummy_list {};
+  EventInfo info(EventInfo::Unregister, util::GetAppId(), "", "");
+  sender_->Notify(info, dummy_list, DATA_PROVIDER_MASTER_ID);
 }
 Manager::Impl::Impl(Manager* parent,
     unique_ptr<IEventSender> sender,
@@ -60,6 +65,10 @@ Manager::Impl::Impl(Manager* parent,
     parent_(parent) {
   LOGI("impl created");
   listener_->RegisterObserver(parent_);
+
+  list<Bundle> serialized_list {};
+  EventInfo info(EventInfo::Register, util::GetAppId(), receiver_group, "");
+  sender_->Notify(info, serialized_list, DATA_PROVIDER_MASTER_ID);
 }
 
 int Manager::Impl::SendNotify(shared_ptr<item::AbstractItem> noti,

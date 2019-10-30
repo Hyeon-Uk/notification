@@ -21,6 +21,7 @@
 #include <memory>
 #include <algorithm>
 #include <vector>
+#include <map>
 
 #include "notification-ex/exception.h"
 #include "notification-ex/abstract_item.h"
@@ -424,6 +425,13 @@ string AbstractItem::GetId() const {
 }
 
 std::list<std::string> AbstractItem::GetSharedPath() const {
+  return {};
+}
+
+void AbstractItem::SetSharedPath() {
+}
+
+std::list<std::map<std::string, std::string>> AbstractItem::GetPathMapList() const {
   return {};
 }
 

@@ -27,6 +27,7 @@
 #include "notification-ex/dbus_connection_manager.h"
 #include "notification-ex/ex_util.h"
 #include "notification-ex/item_info_internal.h"
+#include "notification-ex/shared_file.h"
 
 #ifdef LOG_TAG
 #undef LOG_TAG
@@ -77,6 +78,10 @@ void Reporter::SendError(const IEventInfo& info, NotificationError error) {
 int Reporter::Post(std::shared_ptr<item::AbstractItem> noti) {
   LOGI("Post noti");
   static_pointer_cast<IItemInfoInternal>(noti->GetInfo())->SetTime(time(NULL));
+  SharedFile* shared_file = new SharedFile();
+  shared_file->CopyPrivateFile(noti);
+  delete shared_file;
+
   return impl_->SendNotify(noti, EventInfo::Post);
 }
 
@@ -87,6 +92,10 @@ int Reporter::Post(std::list<std::shared_ptr<AbstractItem>> notiList) {
     static_pointer_cast<IItemInfoInternal>(i->GetInfo())->SetTime(time(NULL));
     Bundle b = i->Serialize();
     serialized_list.push_back(b);
+
+    SharedFile* shared_file = new SharedFile();
+    shared_file->CopyPrivateFile(i);
+    delete shared_file;
   }
   impl_->sender_->Notify(info, serialized_list);
   return info.GetRequestId();
@@ -94,6 +103,10 @@ int Reporter::Post(std::list<std::shared_ptr<AbstractItem>> notiList) {
 
 int Reporter::Update(std::shared_ptr<AbstractItem> noti) {
   static_pointer_cast<IItemInfoInternal>(noti->GetInfo())->SetTime(time(NULL));
+  SharedFile* shared_file = new SharedFile();
+  shared_file->CopyPrivateFile(noti);
+  delete shared_file;
+
   return impl_->SendNotify(noti, EventInfo::Update);
 }
 
@@ -186,6 +199,9 @@ void Reporter::OnError(NotificationError error, int requestId) {
 
 string Reporter::GetPath() {
   return NOTIFICATION_EX_REPORTER_OBJECT_PATH;
+}
+
+void Reporter::OnRegister(const IEventInfo& info) {
 }
 
 }  // namespace notification

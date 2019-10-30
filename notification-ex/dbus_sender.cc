@@ -46,7 +46,7 @@ DBusSender::Impl::~Impl() = default;
 
 DBusSender::Impl::Impl(DBusSender* parent, string path)
     : path_(path), parent_(parent) {
-  LOGI("ButtonItem impl created");
+  LOGI("Dbus_sender impl created");
 }
 
 DBusSender::~DBusSender() {
