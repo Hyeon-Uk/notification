@@ -88,6 +88,7 @@
 #define ABSTRACT_ITEM_MAIN_TYPE_KEY "__ABSTRACT_ITEM_MAIN_TYPE_KEY__"
 #define ABSTRACT_ITEM_MULTI_LANG_ARR_KEY "__ABSTRACT_ITEM_MULTI_LANG_ARR_KEY__"
 #define ABSTRACT_ITEM_MULTI_LANG_KEY "__ABSTRACT_ITEM_MULTI_LANG_KEY__"
+#define ABSTRACT_ITEM_EXTENSION_DATA_KEY "__ABSTRACT_ITEM_EXTENSION_DATA_KEY__"
 
 using namespace std;
 using namespace tizen_base;
@@ -285,6 +286,9 @@ Bundle AbstractItem::Serialize() const {
     b.Add(ABSTRACT_ITEM_HIDE_VIEWER_KEY, arr);
   }
 
+  b.Add(ABSTRACT_ITEM_EXTENSION_DATA_KEY,
+    reinterpret_cast<char*>(impl_->extension_data_.ToRaw().first.get()));
+
   return b;
 }
 
@@ -415,6 +419,8 @@ void AbstractItem::Deserialize(Bundle b) {
       impl_->hide_viewer_list_.push_back(str);
     }
   }
+
+  impl_->extension_data_ = Bundle(b.GetString(ABSTRACT_ITEM_EXTENSION_DATA_KEY));
 }
 
 void AbstractItem::SetId(std::string id) {
@@ -699,6 +705,21 @@ void AbstractItem::UpdateVibrationPrivatePath() {
     impl_->priv_vibration_path_ = path;
 
   delete(shared_file);
+}
+
+tizen_base::Bundle AbstractItem::GetExtensionData(std::string key) {
+  if (impl_->extension_data_.GetString(key) == "")
+    return Bundle();
+  else
+    return Bundle(impl_->extension_data_.GetString(key));
+}
+
+void AbstractItem::SetExtensionData(std::string key, Bundle value) {
+  if (impl_->extension_data_.GetString(key) != "")
+    impl_->extension_data_.Delete(key);
+
+  impl_->extension_data_.Add(key,
+    reinterpret_cast<char*>(value.ToRaw().first.get()));
 }
 
 }  // namespace item

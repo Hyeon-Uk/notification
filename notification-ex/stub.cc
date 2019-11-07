@@ -2509,6 +2509,39 @@ extern "C" EXPORT_API int noti_ex_item_find_by_main_type(noti_ex_item_h handle,
   return NOTI_EX_ERROR_NONE;
 }
 
+extern "C" EXPORT_API int noti_ex_item_get_extension_data(noti_ex_item_h handle,
+    const char *key, bundle **value) {
+  if (handle == nullptr || key == nullptr || value == nullptr) {
+    LOGE("Invalid handle type");
+    return NOTI_EX_ERROR_INVALID_PARAMETER;
+  }
+
+  Handle* p = static_cast<Handle*>(handle);
+
+  Bundle b = p->Get()->GetExtensionData(key);
+  if (b.GetCount() == 0)
+    *value = nullptr;
+  else
+    *value = b.GetHandle();
+
+  return NOTI_EX_ERROR_NONE;
+}
+
+extern "C" EXPORT_API int noti_ex_item_set_extension_data(noti_ex_item_h handle,
+    const char *key, bundle *value) {
+  if (handle == nullptr || key == nullptr || value == nullptr) {
+    LOGE("Invalid handle type");
+    return NOTI_EX_ERROR_INVALID_PARAMETER;
+  }
+
+  Bundle b = Bundle(value);
+
+  Handle* p = static_cast<Handle*>(handle);
+  p->Get()->SetExtensionData(key, b);
+
+  return NOTI_EX_ERROR_NONE;
+}
+
 extern "C" EXPORT_API int noti_ex_manager_create(noti_ex_manager_h *handle,
     const char *receiver_group, noti_ex_manager_events_s event_callbacks,
     void *data) {

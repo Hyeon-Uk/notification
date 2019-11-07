@@ -36,6 +36,10 @@ int noti_ex_style_set_padding(noti_ex_style_h handle,
 int noti_ex_led_info_set_color(
     noti_ex_led_info_h handle, noti_ex_color_h color);
 
+int noti_ex_item_get_extension_data(noti_ex_item_h handle, const char *key,
+		bundle **value);
+int noti_ex_item_set_extension_data(noti_ex_item_h handle, const char *key,
+		bundle *value);
 
 #ifdef __cplusplus
 }
