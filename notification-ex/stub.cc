@@ -480,7 +480,10 @@ extern "C" EXPORT_API int noti_ex_item_chat_message_get_name(
     return NOTI_EX_ERROR_INVALID_PARAMETER;
   }
   ChatMessageItem* p = static_cast<ChatMessageItem*>(h->Get());
-  *name = new Handle(&(p->GetNameItem()));
+  if (p->GetNameItem().GetType() == AbstractItem::NullObject)
+    *name = nullptr;
+  else
+    *name = new Handle(&(p->GetNameItem()));
 
   return NOTI_EX_ERROR_NONE;
 }
@@ -498,7 +501,10 @@ extern "C" EXPORT_API int noti_ex_item_chat_message_get_text(
     return NOTI_EX_ERROR_INVALID_PARAMETER;
   }
   ChatMessageItem* p = static_cast<ChatMessageItem*>(h->Get());
-  *text = new Handle(&(p->GetTextItem()));
+  if (p->GetTextItem().GetType() == AbstractItem::NullObject)
+    *text = nullptr;
+  else
+    *text = new Handle(&(p->GetTextItem()));
 
   return NOTI_EX_ERROR_NONE;
 }
@@ -516,7 +522,10 @@ extern "C" EXPORT_API int noti_ex_item_chat_message_get_image(
     return NOTI_EX_ERROR_INVALID_PARAMETER;
   }
   ChatMessageItem* p = static_cast<ChatMessageItem*>(h->Get());
-  *image =  new Handle(&(p->GetImageItem()));
+  if (p->GetImageItem().GetType() == AbstractItem::NullObject)
+    *image = nullptr;
+  else
+    *image =  new Handle(&(p->GetImageItem()));
 
   return NOTI_EX_ERROR_NONE;
 }
@@ -534,7 +543,10 @@ extern "C" EXPORT_API int noti_ex_item_chat_message_get_time(
     return NOTI_EX_ERROR_INVALID_PARAMETER;
   }
   ChatMessageItem* p = static_cast<ChatMessageItem*>(h->Get());
-  *time = new Handle(&(p->GetTimeItem()));
+  if (p->GetTimeItem().GetType() == AbstractItem::NullObject)
+    *time = nullptr;
+  else
+    *time = new Handle(&(p->GetTimeItem()));
 
   return NOTI_EX_ERROR_NONE;
 }

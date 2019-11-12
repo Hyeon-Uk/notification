@@ -171,18 +171,26 @@ std::list<std::string> ChatMessageItem::GetSharedPath() const {
 }
 
 TextItem& ChatMessageItem::GetNameItem() const {
+  if (impl_->name_ == nullptr)
+    return static_cast<TextItem&>(FactoryManager::GetInst().GetNullItem());
   return *(impl_->name_);
 }
 
 TextItem& ChatMessageItem::GetTextItem() const {
+  if (impl_->text_ == nullptr)
+    return static_cast<TextItem&>(FactoryManager::GetInst().GetNullItem());
   return *(impl_->text_);
 }
 
 ImageItem& ChatMessageItem::GetImageItem() const {
+  if (impl_->image_ == nullptr)
+    return static_cast<ImageItem&>(FactoryManager::GetInst().GetNullItem());
   return *(impl_->image_);
 }
 
 TimeItem& ChatMessageItem::GetTimeItem() const {
+  if (impl_->time_ == nullptr)
+    return static_cast<TimeItem&>(FactoryManager::GetInst().GetNullItem());
   return *(impl_->time_);
 }
 
