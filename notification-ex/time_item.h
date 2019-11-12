@@ -103,6 +103,7 @@ class EXPORT_API TimeItem : public AbstractItem {
    * @return The time state of TimeItem.
    */
   time_t GetTime() const;
+  void SetTime(time_t time);
 
  private:
   class Impl;
