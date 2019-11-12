@@ -2034,9 +2034,10 @@ extern "C" EXPORT_API int noti_ex_item_get_style(noti_ex_item_h handle,
 
   Handle* p = static_cast<Handle*>(handle);
   shared_ptr<Style> s = p->Get()->GetStyle();
-  if (s.get() == nullptr) {
-    LOGE("Style is null");
-    return NOTI_EX_ERROR_INVALID_PARAMETER;
+  if (s == nullptr || s.get() == nullptr) {
+    LOGW("Style is null");
+    *style = nullptr;
+    return NOTI_EX_ERROR_NONE;
   }
 
   auto* ptr = new (std::nothrow) shared_ptr<Style>(new (std::nothrow) Style(*s));
