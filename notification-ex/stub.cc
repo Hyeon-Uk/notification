@@ -22,23 +22,7 @@
 #include <sstream>
 #include <iomanip>
 
-#include "api/notification_ex_app_control_action.h"
-#include "api/notification_ex_button.h"
-#include "api/notification_ex_chat_message.h"
-#include "api/notification_ex_checkbox.h"
-#include "api/notification_ex_entry.h"
-#include "api/notification_ex_event_info.h"
-#include "api/notification_ex_group.h"
-#include "api/notification_ex_image.h"
-#include "api/notification_ex_input_selector.h"
-#include "api/notification_ex_item.h"
-#include "api/notification_ex_manager.h"
-#include "api/notification_ex_progress.h"
-#include "api/notification_ex_reporter.h"
-#include "api/notification_ex_text.h"
-#include "api/notification_ex_time.h"
-#include "api/notification_ex_visibility_action.h"
-#include "api/notification_ex_visibility_action.h"
+#include "api/notification_ex.h"
 #include "api/notification_ex_internal.h"
 #include "notification-ex/reporter.h"
 #include "notification-ex/app_control_action.h"
@@ -1039,6 +1023,8 @@ extern "C" EXPORT_API int noti_ex_item_image_get_image_path(
       LOGE("Out-of-memory");
       return NOTI_EX_ERROR_OUT_OF_MEMORY;
     }
+  } else {
+    *image_path = nullptr;
   }
 
   return NOTI_EX_ERROR_NONE;
@@ -1470,7 +1456,8 @@ extern "C" EXPORT_API int noti_ex_style_get_padding(noti_ex_style_h handle,
       new (std::nothrow) Padding(*((*p)->GetPadding())));
   if (padd == nullptr || padd->get() == nullptr) {
     LOGE("Out-of-memory");
-    return NOTI_EX_ERROR_OUT_OF_MEMORY;
+    *padding = nullptr;
+    return NOTI_EX_ERROR_NONE;
   }
 
   *padding = padd;
@@ -1508,7 +1495,8 @@ extern "C" EXPORT_API int noti_ex_style_get_color(noti_ex_style_h handle,
   shared_ptr<Style>* p = static_cast<shared_ptr<Style>*>(handle);
   if ((*p)->GetColor() == nullptr) {
     LOGW("Color info is null");
-    return NOTI_EX_ERROR_INVALID_PARAMETER;
+    *color = nullptr;
+    return NOTI_EX_ERROR_NONE;
   }
 
   shared_ptr<Color>* col = new (std::nothrow) shared_ptr<Color>(
@@ -1552,7 +1540,8 @@ extern "C" EXPORT_API int noti_ex_style_get_geometry(noti_ex_style_h handle,
   shared_ptr<Style>* p = static_cast<shared_ptr<Style>*>(handle);
   if ((*p)->GetGeometry() == nullptr) {
     LOGW("Geometry info is null");
-    return NOTI_EX_ERROR_INVALID_PARAMETER;
+    *geometry = nullptr;
+    return NOTI_EX_ERROR_NONE;
   }
 
   shared_ptr<Geometry>* geo = new (std::nothrow) shared_ptr<Geometry>(
@@ -1594,20 +1583,27 @@ extern "C" EXPORT_API int noti_ex_style_get_background_image(
   }
 
   shared_ptr<Style>* p = static_cast<shared_ptr<Style>*>(handle);
-  *background_image = strdup((*p)->GetBackgroundImage().c_str());
+
+  if ((*p)->GetBackgroundImage().empty())
+    *background_image = nullptr;
+  else
+    *background_image = strdup((*p)->GetBackgroundImage().c_str());
 
   return NOTI_EX_ERROR_NONE;
 }
 
 extern "C" EXPORT_API int noti_ex_style_set_background_image(
     noti_ex_style_h handle, char* background_image) {
-  if (handle == nullptr || background_image == nullptr) {
+  if (handle == nullptr) {
     LOGE("Invalid parameter");
     return NOTI_EX_ERROR_INVALID_PARAMETER;
   }
 
   shared_ptr<Style>* p = static_cast<shared_ptr<Style>*>(handle);
-  (*p)->SetBackgroundImage(background_image);
+  if (background_image == nullptr)
+    (*p)->SetBackgroundImage("");
+  else
+    (*p)->SetBackgroundImage(background_image);
 
   return NOTI_EX_ERROR_NONE;
 }
@@ -1622,7 +1618,8 @@ extern "C" EXPORT_API int noti_ex_style_get_background_color(
   shared_ptr<Style>* p = static_cast<shared_ptr<Style>*>(handle);
   if ((*p)->GetBackgroundColor() == nullptr) {
     LOGW("Color info is null");
-    return NOTI_EX_ERROR_INVALID_PARAMETER;
+    *color = nullptr;
+    return NOTI_EX_ERROR_NONE;
   }
 
   shared_ptr<Color>* col = new (std::nothrow) shared_ptr<Color>(
@@ -1639,12 +1636,17 @@ extern "C" EXPORT_API int noti_ex_style_get_background_color(
 
 extern "C" EXPORT_API int noti_ex_style_set_background_color(
     noti_ex_style_h handle, noti_ex_color_h color) {
-  if (handle == nullptr || color == nullptr) {
+  if (handle == nullptr) {
     LOGE("Invalid parameter");
     return NOTI_EX_ERROR_INVALID_PARAMETER;
   }
 
   shared_ptr<Style>* p = static_cast<shared_ptr<Style>*>(handle);
+  if (color == nullptr) {
+    (*p)->SetBackgroundColor(nullptr);
+    return NOTI_EX_ERROR_NONE;
+  }
+
   shared_ptr<Color>* col = static_cast<shared_ptr<Color>*>(color);
   (*p)->SetBackgroundColor(*col);
 
@@ -1749,8 +1751,9 @@ extern "C" EXPORT_API int noti_ex_led_info_get_color(
   shared_ptr<LEDInfo>* led_ptr =
       reinterpret_cast<shared_ptr<LEDInfo>*>(handle);
   if ((*led_ptr)->GetColor() == nullptr) {
-    LOGE("Color is null");
-    return NOTI_EX_ERROR_INVALID_PARAMETER;
+    LOGW("Color is null");
+    *color = nullptr;
+    return NOTI_EX_ERROR_NONE;
   }
 
   shared_ptr<Color>* col = new (std::nothrow) shared_ptr<Color>(
@@ -1854,6 +1857,8 @@ extern "C" EXPORT_API int noti_ex_action_get_extra(noti_ex_action_h handle,
       LOGE("Out-of-memory");
       return NOTI_EX_ERROR_OUT_OF_MEMORY;
     }
+  } else {
+    *extra = nullptr;
   }
 
   return NOTI_EX_ERROR_NONE;
@@ -2030,12 +2035,16 @@ extern "C" EXPORT_API int noti_ex_item_get_action(noti_ex_item_h handle,
 
 extern "C" EXPORT_API int noti_ex_item_set_action(noti_ex_item_h handle,
     noti_ex_action_h action) {
-  if (handle == nullptr || action == nullptr) {
+  if (handle == nullptr) {
     LOGE("Invalid parameter");
     return NOTI_EX_ERROR_INVALID_PARAMETER;
   }
 
   Handle* p = static_cast<Handle*>(handle);
+  if (action == nullptr) {
+    p->Get()->SetAction(nullptr);
+    return NOTI_EX_ERROR_NONE;
+  }
 
   shared_ptr<AbstractAction>* ptr =
       static_cast<shared_ptr<AbstractAction>*>(action);
@@ -2052,7 +2061,7 @@ extern "C" EXPORT_API int noti_ex_item_get_style(noti_ex_item_h handle,
 
   Handle* p = static_cast<Handle*>(handle);
   shared_ptr<Style> s = p->Get()->GetStyle();
-  if (s == nullptr || s.get() == nullptr) {
+  if (s.get() == nullptr) {
     LOGW("Style is null");
     *style = nullptr;
     return NOTI_EX_ERROR_NONE;
@@ -2070,12 +2079,17 @@ extern "C" EXPORT_API int noti_ex_item_get_style(noti_ex_item_h handle,
 
 extern "C" EXPORT_API int noti_ex_item_set_style(noti_ex_item_h handle,
     noti_ex_style_h style) {
-  if (handle == nullptr || style == nullptr) {
+  if (handle == nullptr) {
     LOGE("Invalid parameter");
     return NOTI_EX_ERROR_INVALID_PARAMETER;
   }
 
   Handle* p = static_cast<Handle*>(handle);
+  if (style == nullptr) {
+    p->Get()->SetStyle(nullptr);
+    return NOTI_EX_ERROR_NONE;
+  }
+
   shared_ptr<Style>* s = static_cast<shared_ptr<Style>*>(style);
   p->Get()->SetStyle(*s);
   return NOTI_EX_ERROR_NONE;
@@ -2162,6 +2176,12 @@ extern "C" EXPORT_API int noti_ex_item_get_receiver_list(noti_ex_item_h handle,
 
   Handle* p = static_cast<Handle*>(handle);
   list<string> receivers = p->Get()->GetReceiverList();
+  if (receivers.size() == 0) {
+    *receiver_list = nullptr;
+    *count = 0;
+    return NOTI_EX_ERROR_NONE;
+  }
+
   char **tmp_list = (char**)calloc(receivers.size(), sizeof(char*));
   if (tmp_list == nullptr) {
     LOGE("Out of memory");
@@ -2245,8 +2265,8 @@ extern "C" EXPORT_API int noti_ex_item_set_led_info(noti_ex_item_h handle,
 
   Handle* p = static_cast<Handle*>(handle);
   if (led == nullptr) {
-     p->Get()->SetLEDInfo(nullptr);
-     return NOTI_EX_ERROR_NONE;
+    p->Get()->SetLEDInfo(nullptr);
+    return NOTI_EX_ERROR_NONE;
   }
   shared_ptr<LEDInfo>* led_ptr =
       reinterpret_cast<shared_ptr<LEDInfo>*>(led);
@@ -3129,6 +3149,8 @@ extern "C" EXPORT_API int noti_ex_item_text_get_hyperlink(
       LOGE("Out-of-memory");
       return NOTI_EX_ERROR_OUT_OF_MEMORY;
     }
+  } else {
+    *hyper_link = nullptr;
   }
 
   return NOTI_EX_ERROR_NONE;
