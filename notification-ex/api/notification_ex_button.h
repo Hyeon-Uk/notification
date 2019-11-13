@@ -94,7 +94,7 @@ int noti_ex_item_button_get_title(noti_ex_item_h handle, char **title);
  * @remarks After the multi-language handle setted successfully, noti_ex_item_button_get_title() \n
  *          will return the multi-language text.
  * @remarks The #noti_ex_item_h handle keeps its own copy of #noti_ex_multi_lang_h. \n
- *          Therefore, you can destroy @ multi after it was set for @ handle.
+ *          Therefore, you can destroy @a multi after it was set for @ handle.
  * @remarks You can pass NULL to @a multi, if you want to remove multi-language text.
  * @param[in] handle The notification_ex button item handle
  * @param[in] multi The multi-language handle

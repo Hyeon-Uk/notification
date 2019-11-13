@@ -114,14 +114,14 @@ int notification_get_image(notification_h noti, notification_image_type_e type, 
  * @details If input_time is @c 0, time information is taken from the current time.
  * @since_tizen @if WEARABLE 2.3.1 @elseif MOBILE 2.3 @endif
  * @param[in] noti The notification handle
- * @param[in] input_time The input time. If you want the time stamp to not be shown, set this as NOTIFICATION_DO_NOT_SHOW_TIME_STAMP
+ * @param[in] input_time The input time. If you want the time stamp to not be shown, set this as #NOTIFICATION_DO_NOT_SHOW_TIME_STAMP
  * @return #NOTIFICATION_ERROR_NONE on success,
  *         otherwise any other value on failure
  * @retval #NOTIFICATION_ERROR_NONE Success
  * @retval #NOTIFICATION_ERROR_INVALID_PARAMETER Invalid parameter
  * @pre Notification handle should be created by notification_create().
  * @see notification_create()
- * @see NOTIFICATION_DO_NOT_SHOW_TIME_STAMP
+ * @see #NOTIFICATION_DO_NOT_SHOW_TIME_STAMP
  * @par Sample code:
  * @code
 #include <notification.h>
@@ -475,7 +475,7 @@ int notification_set_led(notification_h noti, notification_led_op_e operation, i
 {
 	notification_h noti = NULL;
 	int noti_err = NOTIFICATION_ERROR_NONE;
-	notification_led_type_e type = NOTIFICATION_LED_OP_OFF;
+	notification_led_op_e type;
 
 	noti_err = notification_get_led(noti, &type, NULL);
 	if (noti_err != NOTIFICATION_ERROR_NONE)
@@ -763,7 +763,7 @@ int notification_get_property(notification_h noti, int *flags);
 
 /**
  * @brief Sets applications to display the notification.
- * @details All display application is enabled(NOTIFICATION_DISPLAY_APP_ALL) if you do not call this function.
+ * @details All display application is enabled(#NOTIFICATION_DISPLAY_APP_ALL) if you do not call this function.
  * @since_tizen @if WEARABLE 2.3.1 @elseif MOBILE 2.3 @endif
  * @param[in] noti The notification handle
  * @param[in] applist The with | operation
@@ -1616,7 +1616,7 @@ int notification_get_noti_block_state(notification_block_state_e *state);
  *          Note that you should set an app_control for handling the event for user input using notification_set_event_handler().
  *          #NOTIFICATION_EVENT_TYPE_CLICK_ON_TEXT_INPUT_BUTTON is the event type for the text input.
  *          You can get the text the user enters in the app_control handle that is passed as a result of the event.
- *          The app_control will contain APP_CONTROL_DATA_TEXT key, so you can get the text using app_control_get_extra_data() using APP_CONTROL_DATA_TEXT key.
+ *          The app_control will contain #APP_CONTROL_DATA_TEXT key, so you can get the text using app_control_get_extra_data() using APP_CONTROL_DATA_TEXT key.
  *          The value will contain the text user enters.
  *
  *          Note that you are able to make the switching button to the text input box.
@@ -1811,7 +1811,7 @@ int notification_set_text_input(notification_h noti, int text_input_max_length);
 		return;
 
 	noti_err = notification_set_text(noti,
-			NOTIFICATION_TEXT_TYPE_CONTENT_EXTENTION,
+			NOTIFICATION_TEXT_TYPE_CONTENT_EXTENSION,
 			"message",
 			NULL,
 			NOTIFICATION_VARIABLE_TYPE_NONE);
@@ -1819,12 +1819,12 @@ int notification_set_text_input(notification_h noti, int text_input_max_length);
 		return;
 
 	noti_err = notification_set_image(noti,
-			NOTIFICATION_IMAGE_TYPE_EXTENTION,
+			NOTIFICATION_IMAGE_TYPE_EXTENSION,
 			image_path);
 	if (noti_err != NOTIFICATION_ERROR_NONE)
 		return;
 
-	noti_err = notification_set_layout(noti, NOTIFICATION_LY_EXTENTION);
+	noti_err = notification_set_layout(noti, NOTIFICATION_LY_EXTENSION);
 	if (noti_err != NOTIFICATION_ERROR_NONE)
 		return;
 
