@@ -441,15 +441,19 @@ extern "C" EXPORT_API int noti_ex_item_chat_message_create(
     noti_ex_item_h *handle, const char *id, noti_ex_item_h name,
     noti_ex_item_h text, noti_ex_item_h image, noti_ex_item_h time,
     noti_ex_item_chat_message_type_e message_type) {
-  if (handle == nullptr || message_type > NOTI_EX_ITEM_CHAT_MESSAGE_TYPE_SENDER) {
+  if (handle == nullptr || (text == nullptr && image == nullptr)
+      || name == nullptr || time == nullptr
+      || message_type > NOTI_EX_ITEM_CHAT_MESSAGE_TYPE_SENDER) {
     LOGE("Invalid parameter");
     return NOTI_EX_ERROR_INVALID_PARAMETER;
   }
 
   auto* p = new (std::nothrow) ChatMessageItem(id,
           dynamic_pointer_cast<TextItem>(static_cast<Handle*>(name)->GetPtr()),
-          dynamic_pointer_cast<TextItem>(static_cast<Handle*>(text)->GetPtr()),
-          dynamic_pointer_cast<ImageItem>(static_cast<Handle*>(image)->GetPtr()),
+          text == nullptr ? nullptr
+            : dynamic_pointer_cast<TextItem>(static_cast<Handle*>(text)->GetPtr()),
+          image == nullptr ? nullptr
+            : dynamic_pointer_cast<ImageItem>(static_cast<Handle*>(image)->GetPtr()),
           dynamic_pointer_cast<TimeItem>(static_cast<Handle*>(time)->GetPtr()),
           static_cast<ChatMessageItem::Type>(message_type));
   if (p == nullptr) {
