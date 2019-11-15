@@ -152,7 +152,14 @@ int DBManager::GetSequence(sqlite3* db, int64_t* seq) {
 
   string query = "SELECT IFNULL(MIN(priv_id), 0), IFNULL(MAX(priv_id), 0)"
       " FROM noti_ex_list";
-  sqlite3_prepare_v2(db, query.c_str(), query.size(), &stmt, nullptr);
+  ret = sqlite3_prepare_v2(db, query.c_str(), query.size(), &stmt, nullptr);
+  if (ret != SQLITE_OK) {
+    /* LCOV_EXCL_START */
+    LOGE("Sqlite3 err[%d][%s]", ret, sqlite3_errmsg(db));
+    return ERROR_FROM_DB;
+    /* LCOV_EXCL_STOP */
+  }
+
   ret = sqlite3_step(stmt);
   if (ret == SQLITE_ROW) {
     int64_t min_p = sqlite3_column_int64(stmt, 0);

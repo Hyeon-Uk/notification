@@ -133,7 +133,6 @@ class ManagerCallbackInfo {
     cb_.added(static_cast<noti_ex_manager_h>(manager),
         static_cast<noti_ex_event_info_h>(c_info), added_item,
         addedItem.size(), user_data_);
-    free(added_item);
   }
 
   void InvokeUpdated(Manager* manager, const IEventInfo& info,

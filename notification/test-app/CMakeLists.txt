@@ -20,11 +20,11 @@ SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wl,--gc-sections -fPIC")
 ##########################################################
 
 SET(TEST-APP-SRCS
-	${CMAKE_SOURCE_DIR}/test-app/main.c
+	${CMAKE_SOURCE_DIR}/notification/test-app/main.c
 )
 
 INCLUDE_DIRECTORIES(
-	${CMAKE_SOURCE_DIR}/include
+	${CMAKE_SOURCE_DIR}/notification/include
 )
 
 INCLUDE(FindPkgConfig)

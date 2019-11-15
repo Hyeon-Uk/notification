@@ -53,7 +53,7 @@ DBusEventListener::Impl::~Impl() = default;
 
 DBusEventListener::Impl::Impl(DBusEventListener* parent, string path)
     : subscribe_id_(0), registration_id_(0), path_(path), parent_(parent) {
-  LOGI("ButtonItem impl created");
+  LOGI("Dbus_event_listener impl created");
 }
 
 void DBusEventListener::Impl::SignalCb(GDBusConnection* connection,

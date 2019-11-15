@@ -20,6 +20,7 @@
 #include <string>
 #include <memory>
 #include <list>
+#include <map>
 
 #include "notification-ex/abstract_item.h"
 
@@ -94,10 +95,26 @@ class EXPORT_API ImageItem : public AbstractItem {
    */
   std::string GetImagePath() const;
 
+  /**
+   * @brief Gets the path of shared file location.
+   * @since_tizen 5.5
+   * @return The list of shared path.
+   */
+  std::list<std::string> GetSharedPath() const override;
+
+  /**
+   * @brief Sets the shared file path to original file path.
+   * @since_tizen 5.5
+   */
+  void SetSharedPath() override;
+
+  std::list<std::map<std::string, std::string>> GetPathMapList(void) const override;
+
  private:
   class Impl;
   std::unique_ptr<Impl> impl_;
-};  // class ImageItem
+  void UpdatePrivatePath();
+};  //class ImageItem
 
 }  // namespace item
 }  // namespace notification

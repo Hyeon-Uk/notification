@@ -19,6 +19,8 @@
 
 #include <tizen.h>
 
+#define REGULAR_UID_MIN 5000
+
 namespace notification {
 
 enum NotificationError {

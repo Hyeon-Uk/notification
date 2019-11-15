@@ -145,14 +145,38 @@ bool GroupItem::IsItemTypeExist(int type) {
 list<string> GroupItem::GetSharedPath() const {
   list<string> ret;
 
+  auto r = AbstractItem::GetSharedPath();
+  for (auto& shared_path_r : r)
+    ret.push_back(move(shared_path_r));
+
   for (auto& i : impl_->children_list_) {
-    auto s = i->GetSharedPath();
-    for (auto& j : s) {
-      ret.push_back(move(j));
-    }
+    auto c = i->GetSharedPath();
+    for (auto& shared_path_c : c)
+      ret.push_back(move(shared_path_c));
   }
 
   return ret;
+}
+
+void GroupItem::SetSharedPath() {
+  for (auto& i : impl_->children_list_)
+    i->SetSharedPath();
+}
+
+list<map<string, string>> GroupItem::GetPathMapList() const {
+  list<map<string, string>> path_map_list;
+
+  auto r = AbstractItem::GetPathMapList();
+  for (auto& path_map_r : r)
+    path_map_list.push_back(move(path_map_r));
+
+  for (auto& i : impl_->children_list_) {
+    auto c = i->GetPathMapList();
+    for (auto& path_map_c : c)
+      path_map_list.push_back(move(path_map_c));
+  }
+
+  return path_map_list;
 }
 
 void GroupItem::AddChild(shared_ptr<AbstractItem> child) {

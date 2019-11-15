@@ -8,6 +8,8 @@ pkg_check_modules(notification-ex_unittests REQUIRED
     capi-appfw-app-control
     glib-2.0
     aul
+    security-manager
+    libtzplatform-config
 )
 
 FOREACH(flag ${notification-ex_unittests_CFLAGS})

@@ -20,6 +20,7 @@
 #include <string>
 #include <memory>
 #include <list>
+#include <map>
 
 #include "notification-ex/abstract_item.h"
 
@@ -107,6 +108,19 @@ class EXPORT_API GroupItem : public AbstractItem {
    * @return The list of shared path.
    */
   std::list<std::string> GetSharedPath() const override;
+
+  /**
+   * @brief Sets the shared file path to original file path.
+   * @since_tizen 5.5
+   */
+  void SetSharedPath() override;
+
+  /**
+   * @brief Gets the paths of shared file location.
+   * @since_tizen 5.5
+   * @return The list of private path and original path.
+   */
+  std::list<std::map<std::string, std::string>> GetPathMapList() const override;
 
   /**
    * @brief Sets the vertical state.

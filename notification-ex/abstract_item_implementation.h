@@ -60,7 +60,9 @@ class AbstractItem::Impl {
   std::vector<std::shared_ptr<MultiLanguage>> multi_lang_arr_;
   AbstractItem* parent_;
   std::string sound_path_;
+  std::string priv_sound_path_;
   std::string vibration_path_;
+  std::string priv_vibration_path_;
   std::string sender_appid_;
   std::shared_ptr<IItemInfo> info_;
   std::list<std::string> hide_viewer_list_;
