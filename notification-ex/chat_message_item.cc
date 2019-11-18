@@ -61,14 +61,22 @@ Bundle ChatMessageItem::Serialize() const {
   Bundle b;
   b = AbstractItem::Serialize();
 
-  b.Add(CHATMESSAGE_NAME_KEY,
-    reinterpret_cast<char*>(impl_->name_->Serialize().ToRaw().first.get()));
-  b.Add(CHATMESSAGE_TEXT_KEY,
-    reinterpret_cast<char*>(impl_->text_->Serialize().ToRaw().first.get()));
-  b.Add(CHATMESSAGE_IMAGE_KEY,
-    reinterpret_cast<char*>(impl_->image_->Serialize().ToRaw().first.get()));
-  b.Add(CHATMESSAGE_TIME_KEY,
-    reinterpret_cast<char*>(impl_->time_->Serialize().ToRaw().first.get()));
+  if (impl_->name_ != nullptr)
+    b.Add(CHATMESSAGE_NAME_KEY,
+      reinterpret_cast<char*>(impl_->name_->Serialize().ToRaw().first.get()));
+
+  if (impl_->text_ != nullptr)
+    b.Add(CHATMESSAGE_TEXT_KEY,
+      reinterpret_cast<char*>(impl_->text_->Serialize().ToRaw().first.get()));
+
+  if (impl_->image_ != nullptr)
+    b.Add(CHATMESSAGE_IMAGE_KEY,
+      reinterpret_cast<char*>(impl_->image_->Serialize().ToRaw().first.get()));
+
+  if (impl_->time_ != nullptr)
+    b.Add(CHATMESSAGE_TIME_KEY,
+      reinterpret_cast<char*>(impl_->time_->Serialize().ToRaw().first.get()));
+
   b.Add(CHATMESSAGE_TYPE_KEY, std::to_string(static_cast<int>(impl_->type_)));
   return b;
 }
@@ -76,25 +84,33 @@ Bundle ChatMessageItem::Serialize() const {
 void ChatMessageItem::Deserialize(Bundle b) {
   AbstractItem::Deserialize(b);
 
-  std::shared_ptr<AbstractItem> name =
-      FactoryManager::GetInst().CreateItem(AbstractItem::Text);
-  name.get()->Deserialize(Bundle(b.GetString(CHATMESSAGE_NAME_KEY)));
-  impl_->name_ = std::static_pointer_cast<TextItem>(name);
+  if (!b.GetString(CHATMESSAGE_NAME_KEY).empty()) {
+    std::shared_ptr<AbstractItem> name =
+        FactoryManager::GetInst().CreateItem(AbstractItem::Text);
+    name.get()->Deserialize(Bundle(b.GetString(CHATMESSAGE_NAME_KEY)));
+    impl_->name_ = std::static_pointer_cast<TextItem>(name);
+  }
 
-  std::shared_ptr<AbstractItem> text =
-      FactoryManager::GetInst().CreateItem(AbstractItem::Text);
-  text.get()->Deserialize(Bundle(b.GetString(CHATMESSAGE_TEXT_KEY)));
-  impl_->text_ = std::static_pointer_cast<TextItem>(text);
+  if (!b.GetString(CHATMESSAGE_TEXT_KEY).empty()) {
+    std::shared_ptr<AbstractItem> text =
+        FactoryManager::GetInst().CreateItem(AbstractItem::Text);
+    text.get()->Deserialize(Bundle(b.GetString(CHATMESSAGE_TEXT_KEY)));
+    impl_->text_ = std::static_pointer_cast<TextItem>(text);
+  }
 
-  std::shared_ptr<AbstractItem> image =
-      FactoryManager::GetInst().CreateItem(AbstractItem::Image);
-  image.get()->Deserialize(Bundle(b.GetString(CHATMESSAGE_IMAGE_KEY)));
-  impl_->image_ = std::static_pointer_cast<ImageItem>(image);
+  if (!b.GetString(CHATMESSAGE_IMAGE_KEY).empty()) {
+    std::shared_ptr<AbstractItem> image =
+        FactoryManager::GetInst().CreateItem(AbstractItem::Image);
+    image.get()->Deserialize(Bundle(b.GetString(CHATMESSAGE_IMAGE_KEY)));
+    impl_->image_ = std::static_pointer_cast<ImageItem>(image);
+  }
 
-  std::shared_ptr<AbstractItem> time =
-      FactoryManager::GetInst().CreateItem(AbstractItem::Time);
-  time.get()->Deserialize(Bundle(b.GetString(CHATMESSAGE_TIME_KEY)));
-  impl_->time_ = std::static_pointer_cast<TimeItem>(time);
+  if (!b.GetString(CHATMESSAGE_TIME_KEY).empty()) {
+    std::shared_ptr<AbstractItem> time =
+        FactoryManager::GetInst().CreateItem(AbstractItem::Time);
+    time.get()->Deserialize(Bundle(b.GetString(CHATMESSAGE_TIME_KEY)));
+    impl_->time_ = std::static_pointer_cast<TimeItem>(time);
+  }
 
   impl_->type_ = static_cast<Type>(std::stoi(b.GetString(CHATMESSAGE_TYPE_KEY)));
 }
