@@ -47,8 +47,6 @@ typedef void (*GFileProgressCallback) (goffset current_num_bytes,
 
 DECLARE_FAKE_VALUE_FUNC(GFile*, g_file_new_for_path, const char*);
 DECLARE_FAKE_VALUE_FUNC(gboolean, g_file_query_exists, GFile*, GCancellable*);
-DECLARE_FAKE_VALUE_FUNC(gboolean, g_file_copy, GFile*, GFile*, GFileCopyFlags,
-    GCancellable*, GFileProgressCallback, gpointer, GError**);
 DECLARE_FAKE_VALUE_FUNC(gboolean, g_file_make_directory, GFile*, GCancellable*,
     GError**);
 DECLARE_FAKE_VALUE_FUNC(int, access, const char*, int);

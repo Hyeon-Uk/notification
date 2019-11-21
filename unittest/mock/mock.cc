@@ -30,8 +30,6 @@ DEFINE_FAKE_VALUE_FUNC(int, app_get_name, char**);
 /* gio */
 DEFINE_FAKE_VALUE_FUNC(GFile*, g_file_new_for_path, const char*);
 DEFINE_FAKE_VALUE_FUNC(gboolean, g_file_query_exists, GFile*, GCancellable*);
-DEFINE_FAKE_VALUE_FUNC(gboolean, g_file_copy, GFile*, GFile*, GFileCopyFlags,
-    GCancellable*, GFileProgressCallback, gpointer, GError**);
 DEFINE_FAKE_VALUE_FUNC(gboolean, g_file_make_directory, GFile*, GCancellable*,
     GError**);
 DEFINE_FAKE_VALUE_FUNC(int, access, const char*, int);
@@ -41,7 +39,7 @@ DEFINE_FAKE_VALUE_FUNC(ssize_t, smack_new_label_from_path, const char*,
     const char*, int, char**);
 
 /* tzplatform */
-DEFINE_FAKE_VALUE_FUNC(const char*, tzplatform_getenv, enum tzplatform_variable);
+DEFINE_FAKE_VALUE_FUNC(const char*, tzplatform_getenv, tzplatform_variable_e);
 
 /* security-manager */
 DEFINE_FAKE_VALUE_FUNC(int, security_manager_private_sharing_req_new,

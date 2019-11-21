@@ -48,12 +48,6 @@ gboolean __fake_g_file_make_directory(GFile* file, GCancellable* cancellable,
   return true;
 }
 
-gboolean __fake_g_file_copy(GFile* source, GFile* dest, GFileCopyFlags flags,
-    GCancellable* cancellable, GFileProgressCallback callback,
-    gpointer data, GError** error) {
-  return false;
-}
-
 int __fake_access(const char* path, int mode) {
   return 0;
 }
@@ -66,7 +60,7 @@ ssize_t __fake_smack_new_label_from_path(const char* path, const char* xattr,
 }
 
 // tzplatform
-const char* __fake_tzplatform_getenv(enum tzplatform_variable id) {
+const char* __fake_tzplatform_getenv(tzplatform_variable_e id) {
   return "/opt/usr/home/owner/apps_rw";
 }
 
@@ -107,7 +101,6 @@ class SharedFileTest  : public ::testing::Test {
     g_file_new_for_path_fake.custom_fake = __fake_g_file_new_for_path;
     g_file_query_exists_fake.custom_fake = __fake_g_file_query_exists;
     g_file_make_directory_fake.custom_fake = __fake_g_file_make_directory;
-    g_file_copy_fake.custom_fake = __fake_g_file_copy;
     access_fake.custom_fake = __fake_access;
     security_manager_private_sharing_req_new_fake.custom_fake =
       __fake_security_manager_private_sharing_req_new;

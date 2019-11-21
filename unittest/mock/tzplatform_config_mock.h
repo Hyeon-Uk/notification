@@ -23,12 +23,12 @@
 extern "C" {
 #endif
 
-enum tzplatform_variable {
+typedef enum {
 	USER = 0,
 	SYSTEM = 1,
-};
+}tzplatform_variable_e;
 
-DECLARE_FAKE_VALUE_FUNC(const char*, tzplatform_getenv, enum tzplatform_variable);
+DECLARE_FAKE_VALUE_FUNC(const char*, tzplatform_getenv, tzplatform_variable_e);
 
 #ifdef __cplusplus
 }
