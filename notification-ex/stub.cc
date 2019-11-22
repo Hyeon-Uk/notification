@@ -1935,6 +1935,12 @@ extern "C" EXPORT_API int noti_ex_item_find_by_id(noti_ex_item_h handle,
 
   Handle* p = static_cast<Handle*>(handle);
   AbstractItem& find_item = p->Get()->FindByID(string(id));
+  if (find_item.GetType() == AbstractItem::NullObject) {
+    LOGW("Not exist ID");
+    *item = nullptr;
+    return NOTI_EX_ERROR_NONE;
+  }
+
   *item = new Handle(&find_item);
   return NOTI_EX_ERROR_NONE;
 }
@@ -2465,6 +2471,11 @@ extern "C" EXPORT_API int noti_ex_item_find_by_main_type(noti_ex_item_h handle,
 
   GroupItem* p = static_cast<GroupItem*>(h->Get());
   AbstractItem& find_item = p->FindByMainType(static_cast<AbstractItem::MainType>(type));
+  if (find_item.GetType() == AbstractItem::NullObject) {
+    LOGW("Not exist ID");
+    *item = nullptr;
+    return NOTI_EX_ERROR_NONE;
+  }
   *item = new Handle(&find_item);
 
   return NOTI_EX_ERROR_NONE;
@@ -2669,7 +2680,13 @@ extern "C" EXPORT_API int noti_ex_manager_find_by_root_id(
   }
   try {
     ManagerStub* stub = static_cast<ManagerStub*>(handle);
-    *item = new Handle(stub->FindByRootID(root_id));
+    shared_ptr<AbstractItem> ptr = stub->FindByRootID(root_id);
+    if (ptr == nullptr) {
+      LOGW("Not exist ID");
+      *item = nullptr;
+      return NOTI_EX_ERROR_NONE;
+    }
+    *item = new Handle(ptr);
   } catch (Exception &ex) {
     LOGE("%s %d", ex.what(), ex.GetErrorCode());
     return NOTI_EX_ERROR_IO_ERROR;
@@ -3006,7 +3023,13 @@ extern "C" EXPORT_API int noti_ex_reporter_find_by_root_id(
   }
   try {
     ReporterStub* stub = static_cast<ReporterStub*>(handle);
-    *item = new Handle(stub->FindByRootID(root_id));
+    shared_ptr<AbstractItem> ptr = stub->FindByRootID(root_id);
+    if (ptr == nullptr) {
+      LOGW("Not exist ID");
+      *item = nullptr;
+      return NOTI_EX_ERROR_NONE;
+    }
+    *item = new Handle(ptr);
   } catch (Exception &ex) {
     LOGE("%s %d", ex.what(), ex.GetErrorCode());
     return NOTI_EX_ERROR_IO_ERROR;
