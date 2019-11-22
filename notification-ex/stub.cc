@@ -1653,7 +1653,7 @@ extern "C" EXPORT_API int noti_ex_style_set_background_color(
 
 extern "C" EXPORT_API int noti_ex_led_info_create(noti_ex_led_info_h *handle,
     noti_ex_color_h color) {
-  if (handle == nullptr) {
+  if (handle == nullptr || color == nullptr) {
     LOGE("Invalid parameter");
     return NOTI_EX_ERROR_INVALID_PARAMETER;
   }
