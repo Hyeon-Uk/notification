@@ -167,6 +167,12 @@ class EXPORT_API GroupItem : public AbstractItem {
   void RemoveChild(std::string itemId);
 
   /**
+   * @brief Removes children.
+   * @since_tizen 5.5
+   */
+  void RemoveChildren();
+
+  /**
    * @brief Gets the list of children item of GroupItem.
    * @since_tizen 5.5
    * @return The list of AbstractItem

@@ -98,6 +98,10 @@ time_t TimeItem::GetTime() const {
   return impl_->time_;
 }
 
+void TimeItem::SetTime(time_t time) {
+  impl_->time_ = time;
+}
+
 TimeItem::~TimeItem() = default;
 TimeItem::Impl::~Impl() = default;
 
