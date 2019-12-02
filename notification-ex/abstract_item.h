@@ -694,6 +694,10 @@ class EXPORT_API LEDInfo {
     return color_;
   }
 
+  void SetColor(std::shared_ptr<Color> color) {
+    color_ = std::move(color);
+  }
+
  private:
   std::shared_ptr<Color> color_;
   int on_period_ = 0;

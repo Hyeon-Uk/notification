@@ -38,6 +38,8 @@
 #include "api/notification_ex_text.h"
 #include "api/notification_ex_time.h"
 #include "api/notification_ex_visibility_action.h"
+#include "api/notification_ex_visibility_action.h"
+#include "api/notification_ex_internal.h"
 #include "notification-ex/reporter.h"
 #include "notification-ex/app_control_action.h"
 #include "notification-ex/button_item.h"
@@ -478,7 +480,10 @@ extern "C" EXPORT_API int noti_ex_item_chat_message_get_name(
     return NOTI_EX_ERROR_INVALID_PARAMETER;
   }
   ChatMessageItem* p = static_cast<ChatMessageItem*>(h->Get());
-  *name = new Handle(&(p->GetNameItem()));
+  if (p->GetNameItem().GetType() == AbstractItem::NullObject)
+    *name = nullptr;
+  else
+    *name = new Handle(&(p->GetNameItem()));
 
   return NOTI_EX_ERROR_NONE;
 }
@@ -496,7 +501,10 @@ extern "C" EXPORT_API int noti_ex_item_chat_message_get_text(
     return NOTI_EX_ERROR_INVALID_PARAMETER;
   }
   ChatMessageItem* p = static_cast<ChatMessageItem*>(h->Get());
-  *text = new Handle(&(p->GetTextItem()));
+  if (p->GetTextItem().GetType() == AbstractItem::NullObject)
+    *text = nullptr;
+  else
+    *text = new Handle(&(p->GetTextItem()));
 
   return NOTI_EX_ERROR_NONE;
 }
@@ -514,7 +522,10 @@ extern "C" EXPORT_API int noti_ex_item_chat_message_get_image(
     return NOTI_EX_ERROR_INVALID_PARAMETER;
   }
   ChatMessageItem* p = static_cast<ChatMessageItem*>(h->Get());
-  *image =  new Handle(&(p->GetImageItem()));
+  if (p->GetImageItem().GetType() == AbstractItem::NullObject)
+    *image = nullptr;
+  else
+    *image =  new Handle(&(p->GetImageItem()));
 
   return NOTI_EX_ERROR_NONE;
 }
@@ -532,7 +543,10 @@ extern "C" EXPORT_API int noti_ex_item_chat_message_get_time(
     return NOTI_EX_ERROR_INVALID_PARAMETER;
   }
   ChatMessageItem* p = static_cast<ChatMessageItem*>(h->Get());
-  *time = new Handle(&(p->GetTimeItem()));
+  if (p->GetTimeItem().GetType() == AbstractItem::NullObject)
+    *time = nullptr;
+  else
+    *time = new Handle(&(p->GetTimeItem()));
 
   return NOTI_EX_ERROR_NONE;
 }
@@ -1464,6 +1478,26 @@ extern "C" EXPORT_API int noti_ex_style_get_padding(noti_ex_style_h handle,
   return NOTI_EX_ERROR_NONE;
 }
 
+
+extern "C" EXPORT_API int noti_ex_style_set_padding(noti_ex_style_h handle,
+    noti_ex_padding_h padding) {
+  if (handle == nullptr) {
+    LOGE("Invalid parameter");
+    return NOTI_EX_ERROR_INVALID_PARAMETER;
+  }
+
+  shared_ptr<Style>* p = static_cast<shared_ptr<Style>*>(handle);
+  if (padding == nullptr) {
+    (*p)->SetPadding(nullptr);
+    return NOTI_EX_ERROR_NONE;
+  }
+
+  shared_ptr<Padding>* padd = static_cast<shared_ptr<Padding>*>(padding);
+  (*p)->SetPadding(*padd);
+
+  return NOTI_EX_ERROR_NONE;
+}
+
 extern "C" EXPORT_API int noti_ex_style_get_color(noti_ex_style_h handle,
     noti_ex_color_h *color) {
   if (handle == nullptr || color == nullptr) {
@@ -1489,6 +1523,25 @@ extern "C" EXPORT_API int noti_ex_style_get_color(noti_ex_style_h handle,
   return NOTI_EX_ERROR_NONE;
 }
 
+extern "C" EXPORT_API int noti_ex_style_set_color(
+    noti_ex_style_h handle, noti_ex_color_h color) {
+  if (handle == nullptr) {
+    LOGE("Invalid parameter");
+    return NOTI_EX_ERROR_INVALID_PARAMETER;
+  }
+
+  shared_ptr<Style>* p = static_cast<shared_ptr<Style>*>(handle);
+  if (color == nullptr) {
+    (*p)->SetColor(nullptr);
+    return NOTI_EX_ERROR_NONE;
+  }
+
+  shared_ptr<Color>* col = static_cast<shared_ptr<Color>*>(color);
+  (*p)->SetColor(*col);
+
+  return NOTI_EX_ERROR_NONE;
+}
+
 extern "C" EXPORT_API int noti_ex_style_get_geometry(noti_ex_style_h handle,
     noti_ex_geometry_h *geometry) {
   if (handle == nullptr || geometry == nullptr) {
@@ -1510,6 +1563,25 @@ extern "C" EXPORT_API int noti_ex_style_get_geometry(noti_ex_style_h handle,
   }
 
   *geometry = geo;
+
+  return NOTI_EX_ERROR_NONE;
+}
+
+extern "C" EXPORT_API int noti_ex_style_set_geometry(
+    noti_ex_style_h handle, noti_ex_geometry_h geometry) {
+  if (handle == nullptr) {
+    LOGE("Invalid parameter");
+    return NOTI_EX_ERROR_INVALID_PARAMETER;
+  }
+
+  shared_ptr<Style>* p = static_cast<shared_ptr<Style>*>(handle);
+  if (geometry == nullptr) {
+    (*p)->SetGeometry(nullptr);
+    return NOTI_EX_ERROR_NONE;
+  }
+
+  shared_ptr<Geometry>* geo = static_cast<shared_ptr<Geometry>*>(geometry);
+  (*p)->SetGeometry(*geo);
 
   return NOTI_EX_ERROR_NONE;
 }
@@ -1581,7 +1653,7 @@ extern "C" EXPORT_API int noti_ex_style_set_background_color(
 
 extern "C" EXPORT_API int noti_ex_led_info_create(noti_ex_led_info_h *handle,
     noti_ex_color_h color) {
-  if (handle == nullptr) {
+  if (handle == nullptr || color == nullptr) {
     LOGE("Invalid parameter");
     return NOTI_EX_ERROR_INVALID_PARAMETER;
   }
@@ -1689,6 +1761,25 @@ extern "C" EXPORT_API int noti_ex_led_info_get_color(
   }
 
   *color = col;
+
+  return NOTI_EX_ERROR_NONE;
+}
+
+extern "C" EXPORT_API int noti_ex_led_info_set_color(
+    noti_ex_led_info_h handle, noti_ex_color_h color) {
+  if (handle == nullptr) {
+    LOGE("Invalid parameter");
+    return NOTI_EX_ERROR_INVALID_PARAMETER;
+  }
+
+  shared_ptr<LEDInfo>* p = static_cast<shared_ptr<LEDInfo>*>(handle);
+  if (color == nullptr) {
+    (*p)->SetColor(nullptr);
+    return NOTI_EX_ERROR_NONE;
+  }
+
+  shared_ptr<Color>* col = static_cast<shared_ptr<Color>*>(color);
+  (*p)->SetColor(*col);
 
   return NOTI_EX_ERROR_NONE;
 }
@@ -1844,6 +1935,12 @@ extern "C" EXPORT_API int noti_ex_item_find_by_id(noti_ex_item_h handle,
 
   Handle* p = static_cast<Handle*>(handle);
   AbstractItem& find_item = p->Get()->FindByID(string(id));
+  if (find_item.GetType() == AbstractItem::NullObject) {
+    LOGW("Not exist ID");
+    *item = nullptr;
+    return NOTI_EX_ERROR_NONE;
+  }
+
   *item = new Handle(&find_item);
   return NOTI_EX_ERROR_NONE;
 }
@@ -1955,9 +2052,10 @@ extern "C" EXPORT_API int noti_ex_item_get_style(noti_ex_item_h handle,
 
   Handle* p = static_cast<Handle*>(handle);
   shared_ptr<Style> s = p->Get()->GetStyle();
-  if (s.get() == nullptr) {
-    LOGE("Style is null");
-    return NOTI_EX_ERROR_INVALID_PARAMETER;
+  if (s == nullptr || s.get() == nullptr) {
+    LOGW("Style is null");
+    *style = nullptr;
+    return NOTI_EX_ERROR_NONE;
   }
 
   auto* ptr = new (std::nothrow) shared_ptr<Style>(new (std::nothrow) Style(*s));
@@ -2146,6 +2244,10 @@ extern "C" EXPORT_API int noti_ex_item_set_led_info(noti_ex_item_h handle,
   }
 
   Handle* p = static_cast<Handle*>(handle);
+  if (led == nullptr) {
+     p->Get()->SetLEDInfo(nullptr);
+     return NOTI_EX_ERROR_NONE;
+  }
   shared_ptr<LEDInfo>* led_ptr =
       reinterpret_cast<shared_ptr<LEDInfo>*>(led);
   p->Get()->SetLEDInfo(*led_ptr);
@@ -2369,6 +2471,11 @@ extern "C" EXPORT_API int noti_ex_item_find_by_main_type(noti_ex_item_h handle,
 
   GroupItem* p = static_cast<GroupItem*>(h->Get());
   AbstractItem& find_item = p->FindByMainType(static_cast<AbstractItem::MainType>(type));
+  if (find_item.GetType() == AbstractItem::NullObject) {
+    LOGW("Not exist ID");
+    *item = nullptr;
+    return NOTI_EX_ERROR_NONE;
+  }
   *item = new Handle(&find_item);
 
   return NOTI_EX_ERROR_NONE;
@@ -2573,7 +2680,13 @@ extern "C" EXPORT_API int noti_ex_manager_find_by_root_id(
   }
   try {
     ManagerStub* stub = static_cast<ManagerStub*>(handle);
-    *item = new Handle(stub->FindByRootID(root_id));
+    shared_ptr<AbstractItem> ptr = stub->FindByRootID(root_id);
+    if (ptr == nullptr) {
+      LOGW("Not exist ID");
+      *item = nullptr;
+      return NOTI_EX_ERROR_NONE;
+    }
+    *item = new Handle(ptr);
   } catch (Exception &ex) {
     LOGE("%s %d", ex.what(), ex.GetErrorCode());
     return NOTI_EX_ERROR_IO_ERROR;
@@ -2910,7 +3023,13 @@ extern "C" EXPORT_API int noti_ex_reporter_find_by_root_id(
   }
   try {
     ReporterStub* stub = static_cast<ReporterStub*>(handle);
-    *item = new Handle(stub->FindByRootID(root_id));
+    shared_ptr<AbstractItem> ptr = stub->FindByRootID(root_id);
+    if (ptr == nullptr) {
+      LOGW("Not exist ID");
+      *item = nullptr;
+      return NOTI_EX_ERROR_NONE;
+    }
+    *item = new Handle(ptr);
   } catch (Exception &ex) {
     LOGE("%s %d", ex.what(), ex.GetErrorCode());
     return NOTI_EX_ERROR_IO_ERROR;
@@ -3087,6 +3206,23 @@ extern "C" EXPORT_API int noti_ex_item_time_get_time(noti_ex_item_h handle,
   return NOTI_EX_ERROR_NONE;
 }
 
+extern "C" EXPORT_API int noti_ex_item_time_set_time(noti_ex_item_h handle,
+    time_t time) {
+  if (handle == nullptr) {
+    LOGE("Invalid parameter");
+    return NOTI_EX_ERROR_INVALID_PARAMETER;
+  }
+  Handle* h = static_cast<Handle*>(handle);
+  if (!h->IsValidType(AbstractItem::Time)) {
+    LOGE("Invalid handle type");
+    return NOTI_EX_ERROR_INVALID_PARAMETER;
+  }
+  TimeItem* p = static_cast<TimeItem*>(h->Get());
+  p->SetTime(time);
+
+  return NOTI_EX_ERROR_NONE;
+}
+
 extern "C" EXPORT_API int noti_ex_action_visibility_create(
     noti_ex_action_h *handle, const char *extra) {
   if (handle == nullptr) {
@@ -3208,6 +3344,36 @@ extern "C" EXPORT_API int noti_ex_item_set_private_id(
   Handle* h = static_cast<Handle*>(item);
   static_pointer_cast<IItemInfoInternal>(
       h->Get()->GetInfo())->SetPrivateId(priv_id);
+
+  return NOTI_EX_ERROR_NONE;
+}
+
+extern "C" EXPORT_API int noti_ex_item_free_string_list(char** list, int count) {
+  if (list == nullptr) {
+    LOGE("Invalid parameter");
+    return NOTI_EX_ERROR_INVALID_PARAMETER;
+  }
+
+  LOGI("Free strings (%d)", count);
+  for (int i = 0; i < count; i++)
+    free(list[i]);
+  free(list);
+
+  return NOTI_EX_ERROR_NONE;
+}
+
+extern "C" EXPORT_API int noti_ex_item_group_remove_children(noti_ex_item_h handle) {
+  if (handle == nullptr) {
+    LOGE("Invalid parameter");
+    return NOTI_EX_ERROR_INVALID_PARAMETER;
+  }
+  Handle* h = static_cast<Handle*>(handle);
+  if (!h->IsValidType(AbstractItem::Group)) {
+    LOGE("Invalid handle type");
+    return NOTI_EX_ERROR_INVALID_PARAMETER;
+  }
+  GroupItem* p = static_cast<GroupItem*>(h->Get());
+  p->RemoveChildren();
 
   return NOTI_EX_ERROR_NONE;
 }

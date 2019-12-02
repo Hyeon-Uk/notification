@@ -589,6 +589,8 @@ bool AbstractItem::Impl::IsValidMainType(AbstractItem& target, MainType type) {
   int item_type = target.GetType();
 
   switch (type) {
+    case MainNone:
+      return true;
     case MainTitle:
     case MainContents:
       if (item_type != Text)
@@ -613,6 +615,13 @@ bool AbstractItem::SetMainType(std::string target_id, MainType type) {
   AbstractItem& target = FindByID(target_id);
   if (target.GetType() == NullObject)
     return false;
+
+  if (type == MainNone) {
+    LOGW("Clear main type from %s", target_id.c_str());
+    target.impl_->main_type_ = MainNone;
+    return true;
+  }
+
   if (!impl_->IsValidMainType(target, type)) {
     LOGE("Main type and item type are not matched (%d, %d)",
         type, target.GetType());
