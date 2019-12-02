@@ -34,6 +34,11 @@
 
 #define LOG_TAG "NOTIFICATION_EX"
 #define MAX_PACKAGE_STR_SIZE 512
+#define NORMAL_UID_BASE 5000
+
+#define DBUS_NAME "org.freedesktop.DBus"
+#define DBUS_OBJECT_PATH "/org/freedesktop/DBus"
+#define DBUS_INTERFACE_NAME "org.freedesktop.DBus"
 
 using namespace std;
 using namespace tizen_base;
@@ -54,6 +59,84 @@ DBusEventListener::Impl::~Impl() = default;
 DBusEventListener::Impl::Impl(DBusEventListener* parent, string path)
     : subscribe_id_(0), registration_id_(0), path_(path), parent_(parent) {
   LOGI("Dbus_event_listener impl created");
+}
+
+uid_t DBusEventListener::Impl::GetSenderUid(GDBusConnection* connection,
+                const char* sender_name) {
+  GDBusMessage* msg = nullptr;
+  GDBusMessage* reply = nullptr;
+  GError* err = nullptr;
+  GVariant* body;
+  uid_t uid = 0;
+
+  msg = g_dbus_message_new_method_call(DBUS_NAME, DBUS_OBJECT_PATH,
+      DBUS_INTERFACE_NAME, "GetConnectionUnixUser");
+  if (!msg) {
+    LOGE("Failed to alloc new method call");
+    goto out;
+  }
+
+  g_dbus_message_set_body(msg, g_variant_new("(s)", sender_name));
+  reply = g_dbus_connection_send_message_with_reply_sync(connection, msg,
+      G_DBUS_SEND_MESSAGE_FLAGS_NONE, -1, nullptr, nullptr, &err);
+
+  if (!reply) {
+    if (err != nullptr) {
+      LOGE("Failed to get uid [%s]", err->message);
+      g_error_free(err);
+    }
+    goto out;
+  }
+
+  body = g_dbus_message_get_body(reply);
+  g_variant_get(body, "(u)", &uid);
+
+out:
+  if (msg)
+    g_object_unref(msg);
+  if (reply)
+    g_object_unref(reply);
+
+  return uid;
+}
+
+pid_t DBusEventListener::Impl::GetSenderPid(GDBusConnection* connection,
+               const char* sender_name) {
+  GDBusMessage* msg = nullptr;
+  GDBusMessage* reply = nullptr;
+  GError* err = nullptr;
+  GVariant* body;
+  pid_t pid = 0;
+
+  msg = g_dbus_message_new_method_call(DBUS_NAME, DBUS_OBJECT_PATH,
+      DBUS_INTERFACE_NAME, "GetConnectionUnixProcessID");
+  if (!msg) {
+    LOGE("Failed to alloc new method call");
+    goto out;
+  }
+
+  g_dbus_message_set_body(msg, g_variant_new("(s)", sender_name));
+  reply = g_dbus_connection_send_message_with_reply_sync(connection, msg,
+      G_DBUS_SEND_MESSAGE_FLAGS_NONE, -1, nullptr, nullptr, &err);
+
+  if (!reply) {
+    if (err != nullptr) {
+      LOGE("Failed to get uid [%s]", err->message);
+      g_error_free(err);
+    }
+    goto out;
+  }
+
+  body = g_dbus_message_get_body(reply);
+  g_variant_get(body, "(u)", &pid);
+
+out:
+  if (msg)
+    g_object_unref(msg);
+  if (reply)
+    g_object_unref(reply);
+
+  return pid;
 }
 
 void DBusEventListener::Impl::SignalCb(GDBusConnection* connection,
@@ -90,6 +173,17 @@ void DBusEventListener::Impl::SignalCb(GDBusConnection* connection,
 
   Bundle b(event_info_raw);
   EventInfo info(b);
+
+  if (info.GetEventType() == EventInfo::Post
+           || info.GetEventType() == EventInfo::Update) {
+    uid_t uid = GetSenderUid(connection, sender_name);
+    if (uid >= NORMAL_UID_BASE) {
+      pid_t pid = GetSenderPid(connection, sender_name);
+      info.SetValidatedOwner(util::GetAppId(pid));
+      info.SetValidatedUid(uid);
+    }
+  }
+
   dl->parent_->NotifyObserver(info, ret_list);
 }
 

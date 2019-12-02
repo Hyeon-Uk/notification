@@ -44,6 +44,10 @@ class EventInfo : public IEventInfoInternal {
   int GetEventType() const override;
   void SetEventType(int type) override;
   std::string GetOwner() const override;
+  uid_t GetValidatedUid() const override;
+  void SetValidatedUid(uid_t uid) override;
+  void SetValidatedOwner(std::string owner) override;
+  std::string GetValidatedOwner() const override;
   std::string GetChannel() const override;
   std::string GetItemId() const override;
   int GetRequestId() const override;

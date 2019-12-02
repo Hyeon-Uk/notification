@@ -50,6 +50,11 @@ class DBusEventListener::Impl {
                       const gchar* signal_name,
                       GVariant* parameters,
                       void* user_data);
+  static pid_t GetSenderPid(GDBusConnection* connection,
+                     const char* sender_name);
+  static uid_t GetSenderUid(GDBusConnection* connection,
+                     const char* sender_name);
+
   bool SubscribeSignal();
   void UnSubscribeSignal();
   IEventObserver* observer_ = nullptr;
