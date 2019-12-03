@@ -337,7 +337,15 @@ extern "C" EXPORT_API int noti_ex_action_app_control_get(
   shared_ptr<AbstractAction>* ptr =
       static_cast<shared_ptr<AbstractAction>*>(handle);
   AppControlAction* action = static_cast<AppControlAction*>(ptr->get());
-  *app_control = action->GetAppControl();
+
+  app_control_h clone;
+  int r = app_control_clone(&clone, action->GetAppControl());
+  if (r != APP_CONTROL_ERROR_NONE) {
+    LOGE("failed to create a app_control handle : %d", r);
+    return NOTI_EX_ERROR_INVALID_PARAMETER;
+  }
+
+  *app_control = clone;
 
   return NOTI_EX_ERROR_NONE;
 }
