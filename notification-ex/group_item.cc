@@ -23,6 +23,7 @@
 #include "notification-ex/group_item.h"
 #include "notification-ex/group_item_implementation.h"
 #include "notification-ex/factory_manager.h"
+#include "notification-ex/ex_util.h"
 #include "notification-ex/exception.h"
 
 #ifdef LOG_TAG
@@ -53,6 +54,12 @@ GroupItem::GroupItem(shared_ptr<AbstractAction> action)
 GroupItem::Impl::Impl(GroupItem* parent)
     : parent_(parent) {
   LOGI("GroupItem created");
+  char* name;
+  int ret = app_get_name(&name);
+  if (ret != APP_ERROR_NONE)
+    app_label_ = util::GetAppId();
+  else
+    app_label_ = string(name);
 }
 
 GroupItem::~GroupItem() {
@@ -67,9 +74,8 @@ Bundle GroupItem::Serialize() const {
   b = AbstractItem::Serialize();
   b.Add(GROUP_DIRECTION_KEY, impl_->is_vertical_ ?
       GROUP_DIRECTION_VERTICAL : GROUP_DIRECTION_HORIZONTAL);
-  if (!impl_->app_label_.empty())
-    b.Add(GROUP_APP_LABEL_KEY, impl_->app_label_);
 
+  b.Add(GROUP_APP_LABEL_KEY, impl_->app_label_);
   if (impl_->children_list_.size() == 0)
     return b;
 
@@ -211,14 +217,6 @@ bool GroupItem::IsVertical() {
 }
 
 string GroupItem::GetAppLabel() {
-  if (impl_->app_label_.empty()) {
-    char* name;
-    int ret = app_get_name(&name);
-    if (ret != APP_ERROR_NONE)
-      THROW(ERROR_IO_ERROR);
-    impl_->app_label_ = string(name);
-    free(name);
-  }
   return impl_->app_label_;
 }
 
