@@ -29,13 +29,11 @@ enum NotificationError {
   ERROR_OUT_OF_MEMORY = TIZEN_ERROR_OUT_OF_MEMORY, /**< Out of memory */
   ERROR_IO_ERROR = TIZEN_ERROR_IO_ERROR, /**< I/O error */
   ERROR_PERMISSION_DENIED = TIZEN_ERROR_PERMISSION_DENIED, /**< Permission denied */
-  ERROR_INVALID_OPERATION = TIZEN_ERROR_INVALID_OPERATION, /**< Function not implemented (@b Since: @if MOBILE 2.4 @elseif WEARABLE 3.0 @endif) */
   ERROR_FROM_DB = TIZEN_ERROR_NOTIFICATION | 0x01, /**< Error from DB query */
   ERROR_ALREADY_EXIST_ID = TIZEN_ERROR_NOTIFICATION | 0x02, /**< Already exist private ID */
   ERROR_FROM_DBUS = TIZEN_ERROR_NOTIFICATION | 0x03, /**< Error from DBus */
   ERROR_NOT_EXIST_ID = TIZEN_ERROR_NOTIFICATION | 0x04, /**< Not exist private ID */
   ERROR_SERVICE_NOT_READY = TIZEN_ERROR_NOTIFICATION | 0x05, /**< No response from notification service */
-  ERROR_MAX_EXCEEDED = TIZEN_ERROR_NOTIFICATION | 0x06, /**< Max notification count exceeded (@b Since: 3.0) */
 };
 
 }  // namespace notification
