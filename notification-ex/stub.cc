@@ -1971,36 +1971,6 @@ extern "C" EXPORT_API int noti_ex_item_get_type(noti_ex_item_h handle,
   return NOTI_EX_ERROR_NONE;
 }
 
-extern "C" EXPORT_API int noti_ex_item_get_shared_paths(noti_ex_item_h handle,
-    char ***path, int *count) {
-  if (handle == nullptr || path == nullptr || count == nullptr) {
-    LOGE("Invalid parameter");
-    return NOTI_EX_ERROR_INVALID_PARAMETER;
-  }
-  Handle* p = static_cast<Handle*>(handle);
-  list<string> shared_path = p->Get()->GetSharedPath();
-  char** tmp_path = (char**)calloc(shared_path.size(), sizeof(char*));
-  if (tmp_path == nullptr) {
-    LOGE("Fail to create items");
-    return NOTI_EX_ERROR_OUT_OF_MEMORY;
-  }
-
-  int idx = 0;
-  for (auto& i : shared_path) {
-    tmp_path[idx] = strdup(i.c_str());
-    if (tmp_path[idx] == nullptr) {
-      __noti_ex_free_str_array(tmp_path, idx);
-      LOGE("Out of memory");
-      return NOTI_EX_ERROR_OUT_OF_MEMORY;
-    }
-    idx++;
-  }
-
-  *path = tmp_path;
-  *count = shared_path.size();
-  return NOTI_EX_ERROR_NONE;
-}
-
 extern "C" EXPORT_API int noti_ex_item_get_id(noti_ex_item_h handle,
     char **id) {
   if (handle == nullptr || id == nullptr) {
