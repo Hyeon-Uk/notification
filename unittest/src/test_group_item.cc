@@ -52,7 +52,14 @@ TEST_F(GroupItemTest, RemoveChild) {
   ASSERT_EQ(item.GetChildren().size(), 1);
 }
 
+int __fake_app_get_name(char** app_name) {
+  *app_name = strdup("unittest_appname");
+  return 0;
+}
+
 TEST_F(GroupItemTest, SerializeDeserialize) {
+  app_get_name_fake.custom_fake = __fake_app_get_name;
+
   GroupItem item("GROUP1");
   item.AddChild(std::make_shared<ButtonItem>("btn1", "test1"));
   item.AddChild(std::make_shared<ButtonItem>("btn2", "test2"));
@@ -142,11 +149,6 @@ TEST_F(GroupItemTest, FindByIDNullItemReturn) {
 
   AbstractItem& child = item.FindByID("not_exist_button");
   ASSERT_EQ(child.GetType(), AbstractItem::NullObject);
-}
-
-int __fake_app_get_name(char** app_name) {
-  *app_name = strdup("unittest_appname");
-  return 0;
 }
 
 TEST_F(GroupItemTest, GetAppLabel) {
