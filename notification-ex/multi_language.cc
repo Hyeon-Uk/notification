@@ -33,6 +33,8 @@
 #define MULTI_LANGUAGE_FORMAT_KEY "__MULTI_LANGUAGE_FORMAT_KEY__"
 #define MULTI_LANGUAGE_ARGS_KEY "__MULTI_LANGUAGE_ARGS_KEY__"
 #define MULTI_LANGUAGE_TRANSLATED_KEY "__MULTI_LANGUAGE_TRANSLATED_KEY__"
+#define MULTI_LANGUAGE_DOMAIN_KEY "__MULTI_LANGUAGE_DOMAIN_KEY__"
+#define MULTI_LANGUAGE_LOCALE_KEY "__MULTI_LANGUAGE_LOCALE_KEY__"
 
 using namespace std;
 using namespace tizen_base;
@@ -72,6 +74,8 @@ Bundle MultiLanguage::Serialize() const {
   b.Add(MULTI_LANGUAGE_FORMAT_KEY, impl_->format_);
   b.Add(MULTI_LANGUAGE_ARGS_KEY, impl_->args_);
   b.Add(MULTI_LANGUAGE_TRANSLATED_KEY, impl_->translated_);
+  b.Add(MULTI_LANGUAGE_DOMAIN_KEY, impl_->domain_name_);
+  b.Add(MULTI_LANGUAGE_LOCALE_KEY, impl_->locale_directory_);
   return b;
 }
 
@@ -80,10 +84,17 @@ void MultiLanguage::Deserialize(Bundle b) {
   impl_->format_ = b.GetString(MULTI_LANGUAGE_FORMAT_KEY);
   impl_->args_ = b.GetStringArray(MULTI_LANGUAGE_ARGS_KEY);
   impl_->translated_ = b.GetString(MULTI_LANGUAGE_TRANSLATED_KEY);
+  impl_->domain_name_ = b.GetString(MULTI_LANGUAGE_DOMAIN_KEY);
+  impl_->locale_directory_ = b.GetString(MULTI_LANGUAGE_LOCALE_KEY);
 }
 
 void MultiLanguage::UpdateString() {
-  UpdateString(util::GetDomainName(), util::GetLocaleDirectory());
+  if (impl_->domain_name_.empty())
+    impl_->domain_name_ = util::GetDomainName();
+  if (impl_->locale_directory_.empty())
+    impl_->locale_directory_ = util::GetLocaleDirectory();
+
+  UpdateString(impl_->domain_name_, impl_->locale_directory_);
 }
 
 void MultiLanguage::UpdateString(string domain, string locale_directory) {
