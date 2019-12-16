@@ -56,10 +56,12 @@ GroupItem::Impl::Impl(GroupItem* parent)
   LOGI("GroupItem created");
   char* name;
   int ret = app_get_name(&name);
-  if (ret != APP_ERROR_NONE)
+  if (ret != APP_ERROR_NONE) {
     app_label_ = util::GetAppId();
-  else
+  } else {
     app_label_ = string(name);
+    free(name);
+  }
 }
 
 GroupItem::~GroupItem() {

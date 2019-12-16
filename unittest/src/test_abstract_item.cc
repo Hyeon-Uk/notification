@@ -17,6 +17,7 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 #include <app_control.h>
+#include <app_common.h>
 
 #include "notification-ex/item_inflator.h"
 #include "notification-ex/app_control_action.h"
@@ -292,7 +293,14 @@ TEST_F(AbstractItemTest, SetGetOnGoingState) {
   ASSERT_EQ(item.GetOnGoingState(), true);
 }
 
+int __fake_app_get_name(char** app_name) {
+  *app_name = strdup("unittest_appname");
+  return 0;
+}
+
 TEST_F(AbstractItemTest, SetGetFindMainType) {
+  app_get_name_fake.custom_fake = __fake_app_get_name;
+
   auto root = std::make_shared<GroupItem>("test_group");
   auto item = std::make_shared<ButtonItem>("test_id", "title");
   root->AddChild(item);
