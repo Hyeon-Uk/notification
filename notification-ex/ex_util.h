@@ -24,6 +24,7 @@
 namespace notification {
 namespace util {
   std::string GetAppId();
+  std::string GetAppId(pid_t pid);
   int GetRequestId();
   std::string GetPkgId();
   std::string GetDomainName();

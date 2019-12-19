@@ -41,9 +41,11 @@ class EventInfo::Impl {
  private:
   int type_;
   std::string owner_;
+  std::string validated_owner_;
   std::string channel_;
   std::string item_id_;
   uid_t uid_;
+  uid_t validated_uid_;
   int request_id_;
   NotificationError error_;
   EventInfo* parent_;

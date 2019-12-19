@@ -54,6 +54,7 @@ EventInfo::Impl::Impl(EventInfo* parent, int type, std::string owner,
   uid_ = getuid();
   request_id_ = util::GetRequestId();
   error_ = ERROR_NONE;
+  validated_uid_ = 0;
   LOGI("EventInfo impl created");
 }
 
@@ -126,6 +127,14 @@ string EventInfo::GetOwner() const {
   return impl_->owner_;
 }
 
+void EventInfo::SetValidatedOwner(std::string owner) {
+  impl_->validated_owner_ = owner;
+}
+
+string EventInfo::GetValidatedOwner() const {
+  return impl_->validated_owner_;
+}
+
 string EventInfo::GetChannel() const {
   return impl_->channel_;
 }
@@ -140,6 +149,14 @@ uid_t EventInfo::GetUid() const {
 
 void EventInfo::SetUid(uid_t uid) {
   impl_->uid_ = uid;
+}
+
+uid_t EventInfo::GetValidatedUid() const {
+  return impl_->validated_uid_;
+}
+
+void EventInfo::SetValidatedUid(uid_t uid) {
+  impl_->validated_uid_ = uid;
 }
 
 int EventInfo::GetRequestId() const {
