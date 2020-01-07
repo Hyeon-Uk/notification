@@ -79,7 +79,7 @@ static int _get_table_field_data_string(char **table, char **buf, int ucs2, int 
 				goto out;
 			}
 			memset(*buf, 0, sLen + 1);
-			strncpy(*buf, pTemp, sLen);
+			strncpy(*buf, pTemp, sLen + 1);
 		} else {
 			*buf = NULL; /* LCOV_EXCL_LINE */
 		}

@@ -550,7 +550,7 @@ EXPORT_API int notification_get_text(notification_h noti,
 				"%d ", ret_variable_int);
 
 			src_len = strlen(result_str);
-			max_len = NOTI_TEXT_RESULT_LEN - src_len - 1;
+			max_len = sizeof(result_str) - src_len - 1;
 			strncat(result_str, buf_str, max_len);
 			num_args++;
 		}
@@ -606,7 +606,7 @@ EXPORT_API int notification_get_text(notification_h noti,
 						ret_variable_int);
 
 				src_len = strlen(result_str);
-				max_len = NOTI_TEXT_RESULT_LEN - src_len - 1;
+				max_len = sizeof(result_str) - src_len - 1;
 				strncat(result_str, buf_str, max_len);
 
 				temp_str++;
@@ -639,7 +639,7 @@ EXPORT_API int notification_get_text(notification_h noti,
 							sizeof(buf_str) - 1);
 
 					src_len = strlen(result_str);
-					max_len = NOTI_TEXT_RESULT_LEN - src_len - 1;
+					max_len = sizeof(result_str) - src_len - 1;
 					strncat(result_str, buf_str, max_len);
 				}
 
@@ -658,7 +658,7 @@ EXPORT_API int notification_get_text(notification_h noti,
 						ret_variable_double);
 
 				src_len = strlen(result_str);
-				max_len = NOTI_TEXT_RESULT_LEN - src_len - 1;
+				max_len = sizeof(result_str) - src_len - 1;
 				strncat(result_str, buf_str, max_len);
 
 				temp_str++;
@@ -699,7 +699,7 @@ EXPORT_API int notification_get_text(notification_h noti,
 							ret_variable_int);
 
 					src_len = strlen(result_str);
-					max_len = NOTI_TEXT_RESULT_LEN - src_len - 1;
+					max_len = sizeof(result_str) - src_len - 1;
 					strncat(result_str, buf_str, max_len);
 
 					temp_str += 3;
@@ -715,7 +715,7 @@ EXPORT_API int notification_get_text(notification_h noti,
 						 ret_val);
 
 					src_len = strlen(result_str);
-					max_len = NOTI_TEXT_RESULT_LEN - src_len - 1;
+					max_len = sizeof(result_str) - src_len - 1;
 					strncat(result_str, buf_str, max_len);
 
 					temp_str += 3;
@@ -733,7 +733,7 @@ EXPORT_API int notification_get_text(notification_h noti,
 						"%.2f", ret_variable_double);
 
 					src_len = strlen(result_str);
-					max_len = NOTI_TEXT_RESULT_LEN - src_len - 1;
+					max_len = sizeof(result_str) - src_len - 1;
 					strncat(result_str, buf_str, max_len);
 
 					temp_str += 3;
@@ -784,7 +784,7 @@ EXPORT_API int notification_get_text(notification_h noti,
 						ret_variable_int);
 
 				src_len = strlen(result_str);
-				max_len = NOTI_TEXT_RESULT_LEN - src_len - 1;
+				max_len = sizeof(result_str) - src_len - 1;
 				strncat(result_str, buf_str, max_len);
 
 				num_args++;

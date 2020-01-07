@@ -126,7 +126,7 @@ unique_ptr<item::AbstractItem> Manager::FindByRootID(string id) {
   }
   Bundle b = result.front();
   unique_ptr<AbstractItem> gen_item = ItemInflator::Create(b);
-  return move(gen_item);
+  return gen_item;
 }
 
 list<unique_ptr<item::AbstractItem>> Manager::Get(string channel) {
@@ -137,7 +137,7 @@ list<unique_ptr<item::AbstractItem>> Manager::Get(string channel) {
     unique_ptr<AbstractItem> gen_item = ItemInflator::Create(i);
     gen_list.push_back(move(gen_item));
   }
-  return move(gen_list);
+  return gen_list;
 }
 
 int Manager::SendEvent(const IEventInfo& info,
