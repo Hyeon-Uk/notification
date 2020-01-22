@@ -2195,6 +2195,7 @@ int noti_ex_item_get_main_type(noti_ex_item_h handle, int *type);
 	ret = noti_ex_item_group_create(&group_item, "group_id");
 	ret = noti_ex_item_text_create(&text_item, "text_id", "text", "hyperlink");
 	ret = noti_ex_item_group_add_child(group_item, text_item);
+	noti_ex_item_destroy(text_item);
 
 	ret = noti_ex_item_set_main_type(group_item, "text_id", type);
 }

@@ -27,6 +27,10 @@ class IEventInfoInternal : public IEventInfo {
   virtual ~IEventInfoInternal() = default;
   virtual uid_t GetUid() const = 0;
   virtual void SetUid(uid_t uid) = 0;
+  virtual uid_t GetValidatedUid() const = 0;
+  virtual void SetValidatedUid(uid_t uid) = 0;
+  virtual void SetValidatedOwner(std::string owner) = 0;
+  virtual std::string GetValidatedOwner() const = 0;
   virtual NotificationError GetError() const = 0;
   virtual void SetError(NotificationError error) = 0;
   virtual void SetEventType(int type) = 0;

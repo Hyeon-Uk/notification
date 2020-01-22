@@ -157,6 +157,8 @@ int noti_ex_item_group_get_app_label(noti_ex_item_h handle, char **label);
 	ret = noti_ex_item_group_create(&group_item, "group_id");
 	ret = noti_ex_item_button_create(&child_item, "button_id", "button_title");
 	ret = noti_ex_item_group_add_child(group_item, child_item);
+
+	noti_ex_item_destroy(child_item);
 }
  * @endcode
  */
@@ -228,6 +230,8 @@ int _ex_item_group_foreach_child_cb(noti_ex_item_h handle, void *user_data) {
 	ret = noti_ex_item_group_create(&group_item, "group_id");
 	ret = noti_ex_item_button_create(&child_item, "button_id", "button_title");
 	ret = noti_ex_item_group_add_child(group_item, child_item);
+
+	noti_ex_item_destroy(child_item);
 
 	ret = noti_ex_item_group_foreach_child(group_item, _ex_item_group_foreach_child_cb, NULL);
 }

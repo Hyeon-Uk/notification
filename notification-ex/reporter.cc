@@ -132,7 +132,7 @@ std::unique_ptr<AbstractItem> Reporter::FindByRootID(std::string id) {
   }
   Bundle b = result.front();
   unique_ptr<AbstractItem> gen_item = ItemInflator::Create(b);
-  return move(gen_item);
+  return gen_item;
 }
 
 int Reporter::SendEvent(const IEventInfo& info,

@@ -94,6 +94,7 @@ TEST_F(AbstractItemTest, SerializeDeserialize) {
   app_control_h app_control, app_control_1;
   char* app_id = NULL;
   time_t current_time;
+  Bundle extension_b;
 
   app_control_create(&app_control);
   app_control_set_app_id(app_control, "new_appid");
@@ -140,6 +141,9 @@ TEST_F(AbstractItemTest, SerializeDeserialize) {
 
   item.SetLEDInfo(led);
   item.SetOnGoingState(true);
+
+  extension_b.Add("test_key", "test_value");
+  item.SetExtensionData("extension_key", extension_b);
 
   /* Deserialize */
   Bundle b = item.Serialize();
@@ -235,6 +239,9 @@ TEST_F(AbstractItemTest, SerializeDeserialize) {
 
   ASSERT_STREQ(app_id, "new_appid_1");
   ASSERT_EQ(gen_test->GetOnGoingState(), true);
+
+  Bundle extension_b2 = gen_test->GetExtensionData("extension_key");
+  ASSERT_EQ(extension_b2.GetString("test_key"), "test_value");
 }
 
 TEST_F(AbstractItemTest, SerializeDeserialize2) {

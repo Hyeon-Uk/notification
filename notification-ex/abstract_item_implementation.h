@@ -74,6 +74,7 @@ class AbstractItem::Impl {
   std::string background_;
   bool ongoing_ = false;
   MainType main_type_ = MainNone;
+  tizen_base::Bundle extension_data_;
 };
 
 }  // namespace item

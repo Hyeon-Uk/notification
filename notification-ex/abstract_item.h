@@ -1070,6 +1070,22 @@ class EXPORT_API AbstractItem {
    */
   MainType GetMainType() const;
 
+  /**
+   * @brief Gets the extension data.
+   * @since_tizen 5.5
+   * @param[in] key
+   * @return Bundle
+   */
+  tizen_base::Bundle GetExtensionData(std::string key);
+
+  /**
+   * @brief Sets the extension data.
+   * @since_tizen 5.5
+   * @param[in] key key string
+   * @param[in] value Bundle
+   */
+  void SetExtensionData(std::string key, tizen_base::Bundle value);
+
  private:
   class Impl;
   std::unique_ptr<Impl> impl_;

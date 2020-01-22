@@ -242,7 +242,10 @@ void _reporter_events_error_cb(noti_ex_reporter_h handle, noti_ex_error_e error,
 	ret = noti_ex_item_group_create(&group_item, "group_id");
 	ret = noti_ex_item_button_create(&child_item, "button_id", "button_title");
 	ret = noti_ex_item_group_add_child(group_item, child_item);
+	noti_ex_item_destroy(child_item);
+
 	ret = noti_ex_reporter_post(handle, group_item, &request_id);
+	noti_ex_item_destroy(group_item);
 }
  * @endcode
  */
@@ -286,12 +289,18 @@ void _reporter_events_error_cb(noti_ex_reporter_h handle, noti_ex_error_e error,
 	ret = noti_ex_item_group_create(&noti_list[0], "group_id1");
 	ret = noti_ex_item_button_create(&child_item, "button_id1", "button_title");
 	ret = noti_ex_item_group_add_child(noti_list[0], child_item);
+	noti_ex_item_destroy(child_item);
 
 	ret = noti_ex_item_group_create(&noti_list[1], "group_id2");
 	ret = noti_ex_item_button_create(&child_item, "button_id2", "button_title");
 	ret = noti_ex_item_group_add_child(noti_list[1], child_item);
+	noti_ex_item_destroy(child_item);
 
 	ret = noti_ex_reporter_post_list(handle, noti_list, 2, &request_id);
+	noti_ex_item_destroy(noti_list[0]);
+	noti_ex_item_destroy(noti_list[1]);
+
+	free(noti_list);
 }
  * @endcode
  */

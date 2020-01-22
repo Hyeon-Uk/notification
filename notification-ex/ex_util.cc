@@ -23,6 +23,7 @@
 
 #include <string>
 #include <memory>
+#include <map>
 
 #include "notification-ex/ex_util.h"
 
@@ -32,6 +33,7 @@
 
 #define LOG_TAG "NOTIFICATION_EX"
 #define MAX_PACKAGE_STR_SIZE 512
+#define MAX_CACHE_SIZE 100
 
 using namespace std;
 namespace notification {
@@ -44,15 +46,23 @@ int GetRequestId() {
 }
 
 string GetAppId() {
-  static string appid = "";
+ return GetAppId(getpid());
+}
+
+string GetAppId(pid_t pid) {
+  static map<pid_t, string> appid_cache;
+
+  string appid;
   char appid_buf[MAX_PACKAGE_STR_SIZE] = {0, };
 
-  if (!appid.empty()) {
-    LOGI("appid(%s)", appid.c_str());
-    return appid;
+  if (appid_cache.find(pid) != appid_cache.end()) {
+    LOGI("appid(%s)", appid_cache[pid].c_str());
+    return appid_cache[pid];
   }
 
-  int pid = getpid();
+  if (appid_cache.size() > MAX_CACHE_SIZE)
+    appid_cache.clear();
+
   int ret = aul_app_get_appid_bypid(pid, appid_buf, sizeof(appid_buf));
   if (ret == AUL_R_OK) {
     appid = string(appid_buf);
@@ -94,6 +104,7 @@ string GetAppId() {
   }
 
   LOGI("appid(%s)", appid.c_str());
+  appid_cache[pid] = appid;
   return appid;
 }
 
