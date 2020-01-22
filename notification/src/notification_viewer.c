@@ -32,8 +32,8 @@ static char *_default_viewer;
 /* LCOV_EXCL_START */
 EXPORT_API int notification_init_default_viewer()
 {
-	char *viewer = NULL;
-	dictionary *dict = NULL;
+	const char *viewer;
+	dictionary *dict;
 
 	if (_default_viewer != NULL)
 		return 0;
