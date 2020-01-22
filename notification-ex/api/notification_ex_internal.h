@@ -23,18 +23,16 @@ extern "C" {
 
 int noti_ex_item_free_string_list(char** list, int count);
 int noti_ex_item_group_remove_children(noti_ex_item_h handle);
-int noti_ex_item_time_set_time(noti_ex_item_h handle,
-        time_t time);
+int noti_ex_item_time_set_time(noti_ex_item_h handle, time_t time);
 
-int noti_ex_style_set_geometry(
-    noti_ex_style_h handle, noti_ex_geometry_h geometry);
-int noti_ex_style_set_color(
-    noti_ex_style_h handle, noti_ex_color_h color);
+int noti_ex_style_set_geometry(noti_ex_style_h handle,
+		noti_ex_geometry_h geometry);
+int noti_ex_style_set_color(noti_ex_style_h handle, noti_ex_color_h color);
 int noti_ex_style_set_padding(noti_ex_style_h handle,
-    noti_ex_padding_h padding);
+		noti_ex_padding_h padding);
 
-int noti_ex_led_info_set_color(
-    noti_ex_led_info_h handle, noti_ex_color_h color);
+int noti_ex_led_info_set_color(noti_ex_led_info_h handle,
+		noti_ex_color_h color);
 
 int noti_ex_item_get_extension_data(noti_ex_item_h handle, const char *key,
 		bundle **value);
