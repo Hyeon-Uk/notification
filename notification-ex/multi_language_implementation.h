@@ -44,6 +44,8 @@ class MultiLanguage::Impl {
   std::string format_;
   std::vector<std::string> args_;
   std::string translated_;
+  std::string domain_name_;
+  std::string locale_directory_;
   MultiLanguage* parent_;
 };
 
