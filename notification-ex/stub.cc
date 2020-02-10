@@ -3107,6 +3107,9 @@ extern "C" EXPORT_API int noti_ex_item_text_create(noti_ex_item_h *handle,
 
   TextItem* p;
 
+  if (id == NULL)
+    id = "";
+
   if (hyperlink)
     p = new (std::nothrow) TextItem(id, std::string(text),
                 std::string(hyperlink));

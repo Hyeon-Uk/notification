@@ -145,15 +145,15 @@ string GetDomainName() {
 }
 
 string GetLocaleDirectory() {
-  string pkgid = GetPkgId();
-  if (pkgid.empty())
-    return "";
-
   static string locale_directory = "";
   if (!locale_directory.empty()) {
     LOGI("locale_directory(%s)", locale_directory.c_str());
     return locale_directory;
   }
+
+  string pkgid = GetPkgId();
+  if (pkgid.empty())
+    return "";
 
   package_info_h package_info;
   int err = package_info_create(pkgid.c_str(), &package_info);

@@ -155,7 +155,7 @@ Bundle AbstractItem::Serialize() const {
     b.Add(ABSTRACT_ITEM_CHANNEL_KEY, impl_->channel_);
 
   b.Add(ABSTRACT_ITEM_ID_KEY, impl_->id_);
-  b.Add(ABSTRACT_ITEM_SENDER_APPID_KEY, GetSenderAppId().c_str());
+  b.Add(ABSTRACT_ITEM_SENDER_APPID_KEY, impl_->sender_appid_);
   b.Add(ABSTRACT_ITEM_TYPE_KEY, to_string(GetType()));
   b.Add(ABSTRACT_ITEM_VERSION_KEY, to_string(impl_->version_));
   b.Add(ABSTRACT_ITEM_HIDE_TIME_KEY, to_string(impl_->hide_time_));
