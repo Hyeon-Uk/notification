@@ -15,7 +15,7 @@ pkg_check_modules(notification-ex_unittests REQUIRED
 FOREACH(flag ${notification-ex_unittests_CFLAGS})
     SET(EXTRA_CFLAGS "${EXTRA_CFLAGS} ${flag}")
 ENDFOREACH(flag)
-SET(EXTRA_CFLAGS "${EXTRA_CFLAGS} -fvisibility=hidden -Wall -Werror")
+SET(EXTRA_CFLAGS "${EXTRA_CFLAGS} -fvisibility=hidden -Wall")
 
 SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${EXTRA_CFLAGS} -std=c++11")
 SET(CMAKE_CXX_FLAGS_DEBUG "-O0 -g")
