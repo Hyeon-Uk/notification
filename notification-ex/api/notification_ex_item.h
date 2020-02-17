@@ -60,6 +60,18 @@ extern "C" {
 #define NOTI_EX_RECEIVER_GROUP_POPUP "tizen.org/receiver/popup"
 
 /**
+ * @brief Default sound.
+ * @since_tizen 5.5
+ */
+#define NOTIFICATION_SOUND_TYPE_DEFAULT "__SOUND_TYPE_DEFAULT__"
+
+/**
+ * @brief Default vibration.
+ * @since_tizen 5.5
+ */
+#define NOTIFICATION_VIBRATION_TYPE_DEFAULT "__VIBRATION_TYPE_DEFAULT__"
+
+/**
  * @brief Enumeration for notification_ex item types.
  * @since_tizen 5.5
  */
@@ -99,6 +111,7 @@ typedef enum _noti_ex_item_policy {
 	NOTI_EX_ITEM_POLICY_NONE = 0, /**< No policy */
 	NOTI_EX_ITEM_POLICY_ON_BOOT_CLEAR = 1 << 0, /**< On boot clear */
 	NOTI_EX_ITEM_POLICY_SIM_MODE = 1 << 1, /**< SIM mode */
+	NOTI_EX_ITEM_POLICY_DISABLE_AUTO_DELETE = 1 << 2, /**< Disable auto delete */
 } noti_ex_item_policy_e;
 
 /**
@@ -1388,32 +1401,6 @@ int noti_ex_item_find_by_id(noti_ex_item_h handle, const char *id, noti_ex_item_
 int noti_ex_item_get_type(noti_ex_item_h handle, int *type);
 
 /**
- * @brief Gets the path of shared files.
- * @since_tizen 5.5
- * @remarks Each path in the @a paths must be released using free(), then the @a paths must be released using free().
- * @param[in] handle The notification_ex item handle
- * @param[out] paths The absolute paths of shared files
- * @param[out] count The number of paths
- * @return #NOTI_EX_ERROR_NONE On success, other value on failure
- * @retval #NOTI_EX_ERROR_NONE Success
- * @retval #NOTI_EX_ERROR_INVALID_PARAMETER Invalid parameter
- * @see #noti_ex_item_h
- * @par Sample code:
- * @code
-#include <notification_ex.h>
-
-{
-	int ret;
-	char **paths = NULL;
-	int count;
-
-	ret = noti_ex_item_get_shared_paths(item_handle, &paths, &count);
-}
- * @endcode
- */
-int noti_ex_item_get_shared_paths(noti_ex_item_h handle, char ***paths, int *count);
-
-/**
  * @brief Gets the id of a notification_ex item.
  * @since_tizen 5.5
  * @remarks @a id must be released using free().
@@ -1882,6 +1869,7 @@ int noti_ex_item_get_led_info(noti_ex_item_h handle, noti_ex_led_info_h *led);
  * @since_tizen 5.5
  * @param[in] handle The notification_ex item handle
  * @param[in] path The absolute path of sound for notification_ex item
+ *                 If you want to set a default sound, enter #NOTIFICATION_SOUND_TYPE_DEFAULT.
  * @return #NOTI_EX_ERROR_NONE On success, other value on failure
  * @retval #NOTI_EX_ERROR_NONE Success
  * @retval #NOTI_EX_ERROR_INVALID_PARAMETER Invalid parameter
@@ -1905,6 +1893,8 @@ int noti_ex_item_set_sound_path(noti_ex_item_h handle, const char *path);
  * @remarks @a path must be released using free().
  * @param[in] handle The notification_ex item handle
  * @param[out] path The absolute path of sound for notification_ex item
+ *                  If not set, you will get NULL.
+ *                  If set default, you will get #NOTIFICATION_SOUND_TYPE_DEFAULT.
  * @return #NOTI_EX_ERROR_NONE On success, other value on failure
  * @retval #NOTI_EX_ERROR_NONE Success
  * @retval #NOTI_EX_ERROR_INVALID_PARAMETER Invalid parameter
@@ -1928,6 +1918,7 @@ int noti_ex_item_get_sound_path(noti_ex_item_h handle, char **path);
  * @since_tizen 5.5
  * @param[in] handle The notification_ex item handle
  * @param[in] path The absolute path of vibration for notification_ex item
+ *                 If you want to set a default sound, enter #NOTIFICATION_VIBRATION_TYPE_DEFAULT.
  * @return #NOTI_EX_ERROR_NONE On success, other value on failure
  * @retval #NOTI_EX_ERROR_NONE Success
  * @retval #NOTI_EX_ERROR_INVALID_PARAMETER Invalid parameter
@@ -1951,6 +1942,8 @@ int noti_ex_item_set_vibration_path(noti_ex_item_h handle, const char *path);
  * @remarks @a path must be released using free().
  * @param[in] handle The notification_ex item handle
  * @param[out] path The absolute path of vibration for a notification_ex item
+ *                  If not set, you will get NULL.
+ *                  If set default, you will get #NOTIFICATION_VIBRATION_TYPE_DEFAULT.
  * @return #NOTI_EX_ERROR_NONE On success, other value on failure
  * @retval #NOTI_EX_ERROR_NONE Success
  * @retval #NOTI_EX_ERROR_INVALID_PARAMETER Invalid parameter
@@ -2009,7 +2002,7 @@ int noti_ex_item_get_info(noti_ex_item_h handle, noti_ex_item_info_h *info);
  * @see #noti_ex_item_h
  * @par Sample code:
  * @code
-#include <notification_exh>
+#include <notification_ex.h>
 
 {
 	int ret;
@@ -2235,6 +2228,63 @@ int noti_ex_item_set_main_type(noti_ex_item_h handle, const char *id, int type);
  */
 int noti_ex_item_find_by_main_type(noti_ex_item_h handle, int type,
 		noti_ex_item_h *item);
+
+/**
+ * @brief Gets the extension data.
+ * @since_tizen 5.5
+ * @remarks The @a value should be released using bundle_free().
+ * @param[in] handle The notification_ex item handle
+ * @param[in] key The key
+ * @param[out] value The bundle data
+ * @return #NOTI_EX_ERROR_NONE On success, other value on failure
+ * @retval #NOTI_EX_ERROR_NONE Success
+ * @retval #NOTI_EX_ERROR_INVALID_PARAMETER Invalid parameter
+ * @see #noti_ex_item_h
+ * @par Sample code:
+ * @code
+#include <notification_ex.h>
+
+{
+	int ret;
+	char *key = "ADDITIONAL_DATA_KEY";
+	bundle *b;
+
+	ret = noti_ex_item_get_extension_data(item_handle, key, &b);
+	...
+	bundle_free(b);
+}
+ * @endcode
+ */
+int noti_ex_item_get_extension_data(noti_ex_item_h handle, const char *key,
+		bundle **value);
+
+/**
+ * @brief Sets the extension data.
+ * @since_tizen 5.5
+ * @param[in] handle The notification_ex item handle
+ * @param[in] key The key
+ * @param[in] value The bundle data
+ * @return #NOTI_EX_ERROR_NONE On success, other value on failure
+ * @retval #NOTI_EX_ERROR_NONE Success
+ * @retval #NOTI_EX_ERROR_INVALID_PARAMETER Invalid parameter
+ * @see #noti_ex_item_h
+ * @par Sample code:
+ * @code
+#include <notification_ex.h>
+
+{
+	int ret;
+	char *key = "ADDITIONAL_DATA_KEY";
+	bundle *b = bundle_create();
+	bundle_add_str(b, "key", "value");
+
+	ret = noti_ex_item_set_extension_data(item_handle, key, b);
+	bundle_free(b);
+}
+ * @endcode
+ */
+int noti_ex_item_set_extension_data(noti_ex_item_h handle, const char *key,
+		bundle *value);
 
 /**
  * @}

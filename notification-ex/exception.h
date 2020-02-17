@@ -64,8 +64,6 @@ class Exception : public std::exception {
       return ": IO_ERROR";
     case ERROR_PERMISSION_DENIED:
       return ": PERMISSION_DENIED";
-    case ERROR_INVALID_OPERATION:
-      return ": INVALID_OPERATION";
     case ERROR_FROM_DB:
       return ": ERROR_FROM_DB";
     case ERROR_ALREADY_EXIST_ID:
@@ -76,8 +74,6 @@ class Exception : public std::exception {
       return ": NOT_EXIST_ID";
     case ERROR_SERVICE_NOT_READY:
       return ": SERVICE_NOT_READY";
-    case ERROR_MAX_EXCEEDED:
-      return ": MAX_EXCEEDED";
     default:
       return "";
     }
