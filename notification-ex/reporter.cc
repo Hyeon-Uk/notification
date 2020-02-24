@@ -122,6 +122,14 @@ int Reporter::DeleteAll() {
   return info.GetRequestId();
 }
 
+int Reporter::DeleteByChannel(string channel) {
+  Bundle serialized;
+  EventInfo info(EventInfo::DeleteAll, util::GetAppId(), channel);
+  list<Bundle> serialized_list {serialized};
+  impl_->sender_->Notify(info, serialized_list, util::GetAppId());
+  return info.GetRequestId();
+}
+
 std::unique_ptr<AbstractItem> Reporter::FindByRootID(std::string id) {
   Bundle serialized;
   EventInfo info(EventInfo::Get, util::GetAppId(), "", id);

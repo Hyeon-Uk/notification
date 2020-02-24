@@ -96,6 +96,20 @@ class EXPORT_API ButtonItem : public AbstractItem {
    */
   std::string GetTitle() const;
 
+  /**
+   * @brief Gets the image path of ButtonItem.
+   * @since_tizen 5.5
+   * @return The path of image
+   */
+  std::string GetImgPath() const;
+
+  /**
+   * @brief Sets the image path of ButtonItem.
+   * @since_tizen 5.5
+   * @param[in] path Image path
+   */
+  void SetImgPath(std::string path);
+
  private:
   class Impl;
   std::unique_ptr<Impl> impl_;

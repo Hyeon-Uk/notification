@@ -21,6 +21,8 @@
 extern "C" {
 #endif
 
+#define NOTI_EX_INPUT_SELECTOR_REPLY "__NOTI_EX_INPUT_SELECTOR_REPLY__"
+
 int noti_ex_item_free_string_list(char** list, int count);
 int noti_ex_item_group_remove_children(noti_ex_item_h handle);
 int noti_ex_item_time_set_time(noti_ex_item_h handle, time_t time);
@@ -33,6 +35,18 @@ int noti_ex_style_set_padding(noti_ex_style_h handle,
 
 int noti_ex_led_info_set_color(noti_ex_led_info_h handle,
 		noti_ex_color_h color);
+
+int noti_ex_item_icon_create(noti_ex_item_h *handle, const char *id,
+		const char *icon_path);
+int noti_ex_item_icon_get_icon_path(noti_ex_item_h handle, char **icon_path);
+
+int noti_ex_item_button_set_image(noti_ex_item_h handle, char *path);
+int noti_ex_item_button_get_image(noti_ex_item_h handle, char **path);
+
+int noti_ex_reporter_delete_by_channel(noti_ex_manager_h handle, char *channel,
+		int *request_id);
+int noti_ex_manager_delete_by_channel(noti_ex_manager_h handle, char *channel,
+		int *request_id);
 
 #ifdef __cplusplus
 }
