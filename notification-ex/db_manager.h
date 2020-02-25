@@ -44,7 +44,7 @@ class EXPORT_API DBManager {
   static int GetCount(const std::string& app_id, uid_t uid, int* count);
   static int DeleteNotification(std::shared_ptr<item::AbstractItem> deletedItem);
   static std::list<std::shared_ptr<item::AbstractItem>> GetNotificationList(uid_t uid, std::string channel = "");
-  static std::list<std::shared_ptr<item::AbstractItem>> GetNotificationList(std::string app_id, uid_t uid);
+  static std::list<std::shared_ptr<item::AbstractItem>> GetNotificationList(std::string app_id, uid_t uid, std::string channel = "");
   static std::list<std::shared_ptr<item::AbstractItem>> GetNotificationList(std::string app_id, std::string root_id, uid_t uid);
   static std::list<std::shared_ptr<item::AbstractItem>> GetNotificationList(std::string app_id, int64_t private_id, uid_t uid);
 

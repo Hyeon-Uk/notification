@@ -37,6 +37,7 @@ class ButtonItem::Impl {
   friend class ButtonItem;
 
   std::string title_;
+  std::string img_path_;
   ButtonItem* parent_;
 };
 

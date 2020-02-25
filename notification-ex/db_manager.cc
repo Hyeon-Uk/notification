@@ -715,13 +715,19 @@ list<shared_ptr<item::AbstractItem>> DBManager::ExecuteGetList(char* query) {
 }
 
 list<shared_ptr<item::AbstractItem>> DBManager::GetNotificationList(
-    string app_id, uid_t uid) {
+    string app_id, uid_t uid, string channel) {
   char* query;
   list<shared_ptr<item::AbstractItem>> item_list;
 
-  query = sqlite3_mprintf("SELECT data FROM noti_ex_list"
-                    " WHERE uid = %d AND app_id = %Q ORDER BY insert_time DESC",
-                    uid, app_id.c_str());
+  if (!channel.empty()) {
+    query = sqlite3_mprintf("SELECT data FROM noti_ex_list WHERE uid = %d "
+      "AND app_id = %Q AND channel = %Q ORDER BY insert_time DESC", uid,
+      app_id.c_str(), channel.c_str());
+  } else {
+    query = sqlite3_mprintf("SELECT data FROM noti_ex_list WHERE uid = %d "
+      "AND app_id = %Q ORDER BY insert_time DESC", uid, app_id.c_str());
+  }
+
   if (!query) {
     LOGE("OOM - sql query");
     return item_list;

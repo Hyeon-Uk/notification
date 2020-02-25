@@ -43,6 +43,7 @@ class EXPORT_API Manager : public IEventObserver {
   int Update(std::shared_ptr<item::AbstractItem> noti);
   int Delete(std::shared_ptr<item::AbstractItem> noti);
   int DeleteAll();
+  int DeleteByChannel(std::string channel);
   int Hide(std::shared_ptr<item::AbstractItem> noti);
   std::unique_ptr<item::AbstractItem> FindByRootID(std::string id);
   int SendEvent(const IEventInfo& info, std::shared_ptr<item::AbstractItem> noti);

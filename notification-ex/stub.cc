@@ -42,6 +42,7 @@
 #include "notification-ex/dbus_event_listener.h"
 #include "notification-ex/exception.h"
 #include "notification-ex/iitem_info_internal.h"
+#include "notification-ex/icon_item.h"
 
 #ifdef LOG_TAG
 #undef LOG_TAG
@@ -427,6 +428,47 @@ extern "C" EXPORT_API int noti_ex_item_button_set_multi_language_title(
 
   mul_ptr->UpdateString();
   bi->SetMultiLanguage(mul_ptr);
+
+  return NOTI_EX_ERROR_NONE;
+}
+
+extern "C" EXPORT_API int noti_ex_item_button_set_image(
+    noti_ex_item_h handle, char *path) {
+  if (handle == nullptr || path == nullptr) {
+    LOGE("Invalid parameter");
+    return NOTI_EX_ERROR_INVALID_PARAMETER;
+  }
+
+  Handle* h = static_cast<Handle*>(handle);
+  if (!h->IsValidType(AbstractItem::Button)) {
+    LOGE("Invalid handle type");
+    return NOTI_EX_ERROR_INVALID_PARAMETER;
+  }
+
+  ButtonItem* p = static_cast<ButtonItem*>(h->Get());
+  p->SetImgPath(path);
+
+  return NOTI_EX_ERROR_NONE;
+}
+
+extern "C" EXPORT_API int noti_ex_item_button_get_image(
+    noti_ex_item_h handle, char **path) {
+  if (handle == nullptr || path == nullptr) {
+    LOGE("Invalid parameter");
+    return NOTI_EX_ERROR_INVALID_PARAMETER;
+  }
+
+  Handle* h = static_cast<Handle*>(handle);
+  if (!h->IsValidType(AbstractItem::Button)) {
+    LOGE("Invalid handle type");
+    return NOTI_EX_ERROR_INVALID_PARAMETER;
+  }
+
+  ButtonItem* p = static_cast<ButtonItem*>(h->Get());
+  if (!p->GetImgPath().empty())
+    *path = strdup(p->GetImgPath().c_str());
+  else
+    *path = nullptr;
 
   return NOTI_EX_ERROR_NONE;
 }
@@ -2681,6 +2723,24 @@ extern "C" EXPORT_API int noti_ex_manager_delete_all(noti_ex_manager_h handle,
   return NOTI_EX_ERROR_NONE;
 }
 
+extern "C" EXPORT_API int noti_ex_manager_delete_by_channel(
+    noti_ex_manager_h handle, char* channel, int* request_id) {
+  if (handle == nullptr || channel == nullptr || request_id == nullptr) {
+    LOGE("Invalid parameter");
+    return NOTI_EX_ERROR_INVALID_PARAMETER;
+  }
+
+  try {
+    ManagerStub* stub = static_cast<ManagerStub*>(handle);
+    *request_id = stub->DeleteByChannel(channel);
+  } catch (Exception &ex) {
+    LOGE("%s %d", ex.what(), ex.GetErrorCode());
+    return NOTI_EX_ERROR_IO_ERROR;
+  }
+
+  return NOTI_EX_ERROR_NONE;
+}
+
 extern "C" EXPORT_API int noti_ex_manager_hide(noti_ex_manager_h handle,
     noti_ex_item_h noti, int *request_id) {
   if (handle == nullptr || noti == nullptr || request_id == nullptr) {
@@ -3043,6 +3103,24 @@ extern "C" EXPORT_API int noti_ex_reporter_delete_all(
     LOGE("%s %d", ex.what(), ex.GetErrorCode());
     return NOTI_EX_ERROR_IO_ERROR;
   }
+  return NOTI_EX_ERROR_NONE;
+}
+
+extern "C" EXPORT_API int noti_ex_reporter_delete_by_channel(
+    noti_ex_reporter_h handle, char* channel, int* request_id) {
+  if (handle == nullptr || channel == nullptr || request_id == nullptr) {
+    LOGE("Invalid parameter");
+    return NOTI_EX_ERROR_INVALID_PARAMETER;
+  }
+
+  try {
+    ReporterStub* stub = static_cast<ReporterStub*>(handle);
+    *request_id = stub->DeleteByChannel(channel);
+  } catch (Exception &ex) {
+    LOGE("%s %d", ex.what(), ex.GetErrorCode());
+    return NOTI_EX_ERROR_IO_ERROR;
+  }
+
   return NOTI_EX_ERROR_NONE;
 }
 
@@ -3410,6 +3488,55 @@ extern "C" EXPORT_API int noti_ex_item_group_remove_children(noti_ex_item_h hand
   }
   GroupItem* p = static_cast<GroupItem*>(h->Get());
   p->RemoveChildren();
+
+  return NOTI_EX_ERROR_NONE;
+}
+
+extern "C" EXPORT_API int noti_ex_item_icon_create(noti_ex_item_h *handle,
+    const char *id, const char *icon_path) {
+  if (handle == nullptr || icon_path == nullptr) {
+    LOGE("Invalid parameter");
+    return NOTI_EX_ERROR_INVALID_PARAMETER;
+  }
+
+  IconItem* p;
+  if (id)
+    p = new (std::nothrow) IconItem(id, icon_path);
+  else
+    p = new (std::nothrow) IconItem(icon_path);
+
+  if (p == nullptr) {
+    LOGE("Out-of-memory");
+    return NOTI_EX_ERROR_OUT_OF_MEMORY;
+  }
+
+  *handle = new Handle(shared_ptr<AbstractItem>(p));
+
+  return NOTI_EX_ERROR_NONE;
+}
+
+int noti_ex_item_icon_get_icon_path(noti_ex_item_h handle, char **icon_path) {
+  if (handle == nullptr || icon_path == nullptr) {
+    LOGE("Invalid parameter");
+    return NOTI_EX_ERROR_INVALID_PARAMETER;
+  }
+
+  Handle* h = static_cast<Handle*>(handle);
+  if (!h->IsValidType(AbstractItem::Icon)) {
+    LOGE("Invalid handle type");
+    return NOTI_EX_ERROR_INVALID_PARAMETER;
+  }
+
+  IconItem* p = static_cast<IconItem*>(h->Get());
+  if (!p->GetImagePath().empty()) {
+    *icon_path = strdup(p->GetImagePath().c_str());
+    if (*icon_path == nullptr) {
+      LOGE("Out-of-memory");
+      return NOTI_EX_ERROR_OUT_OF_MEMORY;
+    }
+  } else {
+    *icon_path = nullptr;
+  }
 
   return NOTI_EX_ERROR_NONE;
 }
