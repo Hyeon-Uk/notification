@@ -63,13 +63,13 @@ extern "C" {
  * @brief Default sound.
  * @since_tizen 5.5
  */
-#define NOTIFICATION_SOUND_TYPE_DEFAULT "__SOUND_TYPE_DEFAULT__"
+#define NOTI_EX_SOUND_TYPE_DEFAULT "__SOUND_TYPE_DEFAULT__"
 
 /**
  * @brief Default vibration.
  * @since_tizen 5.5
  */
-#define NOTIFICATION_VIBRATION_TYPE_DEFAULT "__VIBRATION_TYPE_DEFAULT__"
+#define NOTI_EX_VIBRATION_TYPE_DEFAULT "__VIBRATION_TYPE_DEFAULT__"
 
 /**
  * @brief Enumeration for notification_ex item types.
@@ -1869,7 +1869,7 @@ int noti_ex_item_get_led_info(noti_ex_item_h handle, noti_ex_led_info_h *led);
  * @since_tizen 5.5
  * @param[in] handle The notification_ex item handle
  * @param[in] path The absolute path of sound for notification_ex item
- *                 If you want to set a default sound, enter #NOTIFICATION_SOUND_TYPE_DEFAULT.
+ *                 If you want to set a default sound, enter #NOTI_EX_SOUND_TYPE_DEFAULT.
  * @return #NOTI_EX_ERROR_NONE On success, other value on failure
  * @retval #NOTI_EX_ERROR_NONE Success
  * @retval #NOTI_EX_ERROR_INVALID_PARAMETER Invalid parameter
@@ -1894,7 +1894,7 @@ int noti_ex_item_set_sound_path(noti_ex_item_h handle, const char *path);
  * @param[in] handle The notification_ex item handle
  * @param[out] path The absolute path of sound for notification_ex item
  *                  If not set, you will get NULL.
- *                  If set default, you will get #NOTIFICATION_SOUND_TYPE_DEFAULT.
+ *                  If set default, you will get #NOTI_EX_SOUND_TYPE_DEFAULT.
  * @return #NOTI_EX_ERROR_NONE On success, other value on failure
  * @retval #NOTI_EX_ERROR_NONE Success
  * @retval #NOTI_EX_ERROR_INVALID_PARAMETER Invalid parameter
@@ -1918,7 +1918,7 @@ int noti_ex_item_get_sound_path(noti_ex_item_h handle, char **path);
  * @since_tizen 5.5
  * @param[in] handle The notification_ex item handle
  * @param[in] path The absolute path of vibration for notification_ex item
- *                 If you want to set a default sound, enter #NOTIFICATION_VIBRATION_TYPE_DEFAULT.
+ *                 If you want to set a default sound, enter #NOTI_EX_VIBRATION_TYPE_DEFAULT.
  * @return #NOTI_EX_ERROR_NONE On success, other value on failure
  * @retval #NOTI_EX_ERROR_NONE Success
  * @retval #NOTI_EX_ERROR_INVALID_PARAMETER Invalid parameter
@@ -1943,7 +1943,7 @@ int noti_ex_item_set_vibration_path(noti_ex_item_h handle, const char *path);
  * @param[in] handle The notification_ex item handle
  * @param[out] path The absolute path of vibration for a notification_ex item
  *                  If not set, you will get NULL.
- *                  If set default, you will get #NOTIFICATION_VIBRATION_TYPE_DEFAULT.
+ *                  If set default, you will get #NOTI_EX_VIBRATION_TYPE_DEFAULT.
  * @return #NOTI_EX_ERROR_NONE On success, other value on failure
  * @retval #NOTI_EX_ERROR_NONE Success
  * @retval #NOTI_EX_ERROR_INVALID_PARAMETER Invalid parameter
