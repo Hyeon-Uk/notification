@@ -136,6 +136,7 @@ typedef struct {
 } noti_ex_manager_events_s;
 
 /**
+ * @partner
  * @brief Creates the notification_ex manager handle.
  * @details The manager handle is created with event callbacks and
  *          the user can listen to notification events through the event callbacks.
@@ -143,8 +144,8 @@ typedef struct {
  *          the user should identify it with @a receiver_group
  *          Callbacks in @a event_callbacks can be set to NULL, which will result in the corresponding events not being received.
  * @since_tizen 5.5
- * @privlevel public
- * @privilege %http://tizen.org/privilege/notification
+ * @privlevel partner
+ * @privilege %http://tizen.org/privilege/notification.admin
  * @remarks @a handle must be released using noti_ex_manager_destroy().
  * @param[out] handle The notification manager handle
  * @param[in] receiver_group The notification group name of manager
@@ -229,11 +230,12 @@ void _manager_events_error_cb(noti_ex_manager_h handle, noti_ex_error_e error,
 int noti_ex_manager_destroy(noti_ex_manager_h handle);
 
 /**
+ * @partner
  * @brief Gets all notifications for the notification_ex manager.
  * @details Every notification that has been sent for the manager will be retrieved.
  * @since_tizen 5.5
- * @privlevel public
- * @privilege %http://tizen.org/privilege/notification
+ * @privlevel partner
+ * @privilege %http://tizen.org/privilege/notification.admin
  * @param[in] handle The notification manager handle
  * @param[out] items The result of the get request \n
  *             Each item in @a items must be released using noti_ex_item_destroy(), then @a items must be released using free().
@@ -279,11 +281,12 @@ int noti_ex_manager_get(noti_ex_manager_h handle, noti_ex_item_h **items,
 		int *count);
 
 /**
+ * @partner
  * @brief Gets notifications with @a channel for the notification_ex manager.
  * @details Every notification that has been sent for the manager will be retrieved.
  * @since_tizen 5.5
- * @privlevel public
- * @privilege %http://tizen.org/privilege/notification
+ * @privlevel partner
+ * @privilege %http://tizen.org/privilege/notification.admin
  * @param[in] handle The notification manager handle
  * @param[in] channel The channel of a notification_ex item
  * @param[out] items The result of the get request \n
@@ -332,10 +335,11 @@ int noti_ex_manager_get_by_channel(noti_ex_manager_h handle, char *channel,
 		noti_ex_item_h **items, int *count);
 
 /**
+ * @partner
  * @brief Updates notification.
  * @since_tizen 5.5
- * @privlevel public
- * @privilege %http://tizen.org/privilege/notification
+ * @privlevel partner
+ * @privilege %http://tizen.org/privilege/notification.admin
  * @param[in] handle The notification manager handle
  * @param[in] item The notification item to be updated
  * @param[out] request_id The id of request
@@ -379,10 +383,11 @@ int noti_ex_manager_update(noti_ex_manager_h handle, noti_ex_item_h item,
 		int *request_id);
 
 /**
+ * @partner
  * @brief Deletes notification.
  * @since_tizen 5.5
- * @privlevel public
- * @privilege %http://tizen.org/privilege/notification
+ * @privlevel partner
+ * @privilege %http://tizen.org/privilege/notification.admin
  * @param[in] handle The notification manager handle
  * @param[in] noti The notification item to be updated
  * @param[out] request_id The id of request
@@ -424,10 +429,11 @@ int noti_ex_manager_delete(noti_ex_manager_h handle, noti_ex_item_h noti,
 		int *request_id);
 
 /**
+ * @partner
  * @brief Deletes all notification.
  * @since_tizen 5.5
- * @privlevel public
- * @privilege %http://tizen.org/privilege/notification
+ * @privlevel partner
+ * @privilege %http://tizen.org/privilege/notification.admin
  * @param[in] handle The notification manager handle
  * @param[out] request_id The id of request
  * @return #NOTI_EX_ERROR_NONE On success, other value on failure
@@ -464,10 +470,11 @@ int noti_ex_manager_delete_all(noti_ex_manager_h handle,
 		int *request_id);
 
 /**
+ * @partner
  * @brief Hides notification.
  * @since_tizen 5.5
- * @privlevel public
- * @privilege %http://tizen.org/privilege/notification
+ * @privlevel partner
+ * @privilege %http://tizen.org/privilege/notification.admin
  * @param[in] handle The notification manager handle
  * @param[in] item The notification item to be hidden
  * @param[out] request_id The id of request
@@ -508,10 +515,11 @@ int noti_ex_manager_hide(noti_ex_manager_h handle, noti_ex_item_h item,
 		int *request_id);
 
 /**
+ * @partner
  * @brief Finds notification by root id.
  * @since_tizen 5.5
- * @privlevel public
- * @privilege %http://tizen.org/privilege/notification
+ * @privlevel partner
+ * @privilege %http://tizen.org/privilege/notification.admin
  * @remarks @a root_id is the id of the foremost notification item.
  * @param[in] handle The notification manager handle
  * @param[in] root_id The id of the foremost notification item to be retrieved
@@ -549,10 +557,11 @@ int noti_ex_manager_find_by_root_id(noti_ex_manager_h handle,
 		const char *root_id, noti_ex_item_h *item);
 
 /**
+ * @partner
  * @brief Sends error to the reporter.
  * @since_tizen 5.5
- * @privlevel public
- * @privilege %http://tizen.org/privilege/notification
+ * @privlevel partner
+ * @privilege %http://tizen.org/privilege/notification.admin
  * @param[in] handle The notification manager handle
  * @param[in] info The handle that contains event information
  * @param[in] error The error type
@@ -603,10 +612,11 @@ int noti_ex_manager_send_error(noti_ex_manager_h handle,
 		noti_ex_event_info_h info, noti_ex_error_e error);
 
 /**
+ * @partner
  * @brief Gets the count of notifications for the manager.
  * @since_tizen 5.5
- * @privlevel public
- * @privilege %http://tizen.org/privilege/notification
+ * @privlevel partner
+ * @privilege %http://tizen.org/privilege/notification.admin
  * @param[in] handle The notification manager handle
  * @param[out] cnt The count of notifications
  * @return #NOTI_EX_ERROR_NONE On success, other value on failure
