@@ -143,6 +143,38 @@ std::unique_ptr<AbstractItem> Reporter::FindByRootID(std::string id) {
   return gen_item;
 }
 
+list<unique_ptr<AbstractItem>> Reporter::FindByChannel(string channel) {
+  Bundle serialized;
+  EventInfo info(EventInfo::Get, util::GetAppId(), channel, "");
+  list<Bundle> result = impl_->sender_->Request(info);
+  if (result.size() == 0) {
+    LOGE("Fail to get noti");
+    return list<unique_ptr<item::AbstractItem>>{};
+  }
+
+  list<unique_ptr<AbstractItem>> gen_item_list;
+  for (auto& i : result)
+    gen_item_list.push_back(ItemInflator::Create(i));
+
+  return gen_item_list;
+}
+
+list<unique_ptr<AbstractItem>> Reporter::FindAll() {
+  Bundle serialized;
+  EventInfo info(EventInfo::Get, util::GetAppId(), "", "");
+  list<Bundle> result = impl_->sender_->Request(info);
+  if (result.size() == 0) {
+    LOGE("Fail to get noti");
+    return list<unique_ptr<item::AbstractItem>>{};
+  }
+
+  list<unique_ptr<AbstractItem>> gen_item_list;
+  for (auto& i : result)
+    gen_item_list.push_back(ItemInflator::Create(i));
+
+  return gen_item_list;
+}
+
 int Reporter::SendEvent(const IEventInfo& info,
     shared_ptr<item::AbstractItem> noti) {
   Bundle serialized = noti->Serialize();

@@ -43,8 +43,13 @@ int noti_ex_item_icon_get_icon_path(noti_ex_item_h handle, char **icon_path);
 int noti_ex_item_button_set_image(noti_ex_item_h handle, char *path);
 int noti_ex_item_button_get_image(noti_ex_item_h handle, char **path);
 
+int noti_ex_reporter_find_by_channel(noti_ex_reporter_h handle,
+		const char *channel, noti_ex_item_h **noti_list, int *count);
+int noti_ex_reporter_find_all(noti_ex_reporter_h handle,
+		noti_ex_item_h **noti_list, int *count);
 int noti_ex_reporter_delete_by_channel(noti_ex_manager_h handle, char *channel,
 		int *request_id);
+
 int noti_ex_manager_delete_by_channel(noti_ex_manager_h handle, char *channel,
 		int *request_id);
 
