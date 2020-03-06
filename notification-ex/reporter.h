@@ -51,6 +51,8 @@ class EXPORT_API Reporter : public IEventObserver {
   int DeleteAll();
   int DeleteByChannel(std::string channel);
   std::unique_ptr<item::AbstractItem> FindByRootID(std::string id);
+  std::list<std::unique_ptr<item::AbstractItem>> FindByChannel(std::string channel);
+  std::list<std::unique_ptr<item::AbstractItem>> FindAll();
   virtual void OnEvent(const IEventInfo& info,
       std::list<std::shared_ptr<item::AbstractItem>> notiList);
   virtual std::list<std::shared_ptr<item::AbstractItem>> OnRequestEvent(

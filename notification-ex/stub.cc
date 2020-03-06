@@ -3146,6 +3146,73 @@ extern "C" EXPORT_API int noti_ex_reporter_find_by_root_id(
   return NOTI_EX_ERROR_NONE;
 }
 
+extern "C" EXPORT_API int noti_ex_reporter_find_by_channel(noti_ex_reporter_h handle,
+    const char *channel, noti_ex_item_h **noti_list, int *count) {
+  if (handle == nullptr || channel == nullptr || noti_list == nullptr
+      || count == nullptr) {
+    LOGE("Invalid parameter");
+    return NOTI_EX_ERROR_INVALID_PARAMETER;
+  }
+
+  try {
+    ReporterStub* stub = static_cast<ReporterStub*>(handle);
+    list<unique_ptr<AbstractItem>> list_ptr = stub->FindByChannel(channel);
+    if (list_ptr.empty()) {
+      LOGW("Not exist ID");
+      *noti_list = nullptr;
+      return NOTI_EX_ERROR_NONE;
+    }
+
+    int size = list_ptr.size();
+    int i = 0;
+
+    Handle* list_item[size];
+    for (auto& ptr : list_ptr)
+      list_item[i++] = new Handle(std::move(ptr));
+
+    *noti_list = reinterpret_cast<noti_ex_item_h*>(list_item);
+    *count = size;
+  } catch (Exception &ex) {
+    LOGE("%s %d", ex.what(), ex.GetErrorCode());
+    return NOTI_EX_ERROR_IO_ERROR;
+  }
+
+  return NOTI_EX_ERROR_NONE;
+}
+
+extern "C" EXPORT_API int noti_ex_reporter_find_all(noti_ex_reporter_h handle,
+    noti_ex_item_h **noti_list, int *count) {
+  if (handle == nullptr || noti_list == nullptr || count == nullptr) {
+    LOGE("Invalid parameter");
+    return NOTI_EX_ERROR_INVALID_PARAMETER;
+  }
+
+  try {
+    ReporterStub* stub = static_cast<ReporterStub*>(handle);
+    list<unique_ptr<AbstractItem>> list_ptr = stub->FindAll();
+    if (list_ptr.empty()) {
+      LOGW("Not exist ID");
+      *noti_list = nullptr;
+      return NOTI_EX_ERROR_NONE;
+    }
+
+    int size = list_ptr.size();
+    int i = 0;
+
+    Handle* list_item[size];
+    for (auto& ptr : list_ptr)
+      list_item[i++] = new Handle(std::move(ptr));
+
+    *noti_list = reinterpret_cast<noti_ex_item_h*>(list_item);
+    *count = size;
+  } catch (Exception &ex) {
+    LOGE("%s %d", ex.what(), ex.GetErrorCode());
+    return NOTI_EX_ERROR_IO_ERROR;
+  }
+
+  return NOTI_EX_ERROR_NONE;
+}
+
 extern "C" EXPORT_API int noti_ex_item_text_create(noti_ex_item_h *handle,
     const char *id, const char *text, const char *hyperlink) {
   if (handle == nullptr || text == nullptr) {
