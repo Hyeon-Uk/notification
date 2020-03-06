@@ -23,9 +23,8 @@ SET(TEST-APP-SRCS
 	${CMAKE_SOURCE_DIR}/notification/test-app/main.c
 )
 
-INCLUDE_DIRECTORIES(
-	${CMAKE_SOURCE_DIR}/notification/include
-)
+INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/notification/include)
+INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/notification-ex/api)
 
 INCLUDE(FindPkgConfig)
 pkg_check_modules(test_app_pkgs REQUIRED glib-2.0 gthread-2.0 vconf capi-appfw-app-control libtzplatform-config)
@@ -38,7 +37,7 @@ SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${EXTRA_CFLAGS}")
 SET(CMAKE_EXE_LINKER_FLAGS "-Wl,--as-needed -pie")
 
 ADD_EXECUTABLE(notification-test-app ${TEST-APP-SRCS})
-TARGET_LINK_LIBRARIES(notification-test-app ${test_app_pkgs_LDFLAGS} notification)
+TARGET_LINK_LIBRARIES(notification-test-app ${test_app_pkgs_LDFLAGS} notification notification-ex)
 
 #INSTALL(TARGETS notification-test-app DESTINATION bin)
 
