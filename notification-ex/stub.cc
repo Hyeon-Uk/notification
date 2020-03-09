@@ -2534,7 +2534,7 @@ extern "C" EXPORT_API int noti_ex_item_get_extension_data(noti_ex_item_h handle,
   if (b.GetCount() == 0)
     *value = nullptr;
   else
-    *value = b.GetHandle();
+    *value = bundle_dup(b.GetHandle());
 
   return NOTI_EX_ERROR_NONE;
 }
