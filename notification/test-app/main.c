@@ -35,6 +35,10 @@
 #include <notification_text_domain.h>
 #include <tzplatform_config.h>
 
+#include <notification_ex.h>
+#include <notification_ex_internal.h>
+
+
 #define PATH_FMT_RO_APP_ROOT tzplatform_getenv(TZ_SYS_RO_APP)
 #define TIZEN_PATH_MAX 1024
 
@@ -43,7 +47,8 @@
 typedef enum testapp_menu_type {
 	TESTAPP_MENU_TYPE_MAIN_MENU = 1,
 	TESTAPP_MENU_TYPE_BASIC_TEST_MENU = 2,
-	TESTAPP_MENU_TYPE_SETTING_TEST_MENU = 3
+	TESTAPP_MENU_TYPE_SETTING_TEST_MENU = 3,
+	TESTAPP_MENU_TYPE_EX_TEST_MENU = 4
 } testapp_menu_type_e;
 
 /*-----------------------------------------------------------------------------------------*/
@@ -126,9 +131,6 @@ static void testapp_system_signal_handler(int signal_number)
 	exit(0);
 }
 
-
-
-
 void testapp_show_menu(testapp_menu_type_e menu)
 {
 	switch (menu) {
@@ -136,35 +138,48 @@ void testapp_show_menu(testapp_menu_type_e menu)
 		testapp_print("==========================================\n");
 		testapp_print("    Notification test application \n");
 		testapp_print("==========================================\n");
-		testapp_print("1. Basic Test\n");
+		testapp_print("1. Notification Test\n");
 		testapp_print("2. Setting Test\n");
+		testapp_print("3. Notification-ex Test\n");
 		testapp_print("0. Exit \n");
 		testapp_print("------------------------------------------\n");
 		break;
 	case TESTAPP_MENU_TYPE_BASIC_TEST_MENU:
 		testapp_print("==========================================\n");
-		testapp_print("    Basic test menu \n");
+		testapp_print("    Notification test menu \n");
 		testapp_print("==========================================\n");
-		testapp_print(" 1.  Post a simple notification\n");
-		testapp_print(" 2.  Post simple notifications repeatedly\n");
-		testapp_print(" 3.  Post a notification on indicator\n");
-		testapp_print(" 4.  Post status status message\n");
-		testapp_print(" 5.  Delete all notification\n");
-		testapp_print(" 6.  Post a heads notification with a button\n");
-		testapp_print(" 7.  Post a notification with domain text\n");
-		testapp_print(" 8.  Load by tag\n");
-		testapp_print(" 9.  Get list\n");
-		testapp_print(" 10. Post noti to 5002 \n");
+		testapp_print("1.  Post a simple notification\n");
+		testapp_print("2.  Post simple notifications repeatedly\n");
+		testapp_print("3.  Post a notification on indicator\n");
+		testapp_print("4.  Post status status message\n");
+		testapp_print("5.  Delete all notification\n");
+		testapp_print("6.  Post a heads notification with a button\n");
+		testapp_print("7.  Post a notification with domain text\n");
+		testapp_print("8.  Load by tag\n");
+		testapp_print("9.  Get list\n");
+		testapp_print("10. Post noti to 5002 \n");
+		testapp_print("0.  Exit \n");
 		testapp_print("------------------------------------------\n");
 		break;
 	case TESTAPP_MENU_TYPE_SETTING_TEST_MENU:
 		testapp_print("==========================================\n");
 		testapp_print("    Setting test menu \n");
 		testapp_print("==========================================\n");
-		testapp_print(" 1.  Get setting list\n");
-		testapp_print(" 2.  Update setting\n");
-		testapp_print(" 3.  Update system setting\n");
-		testapp_print(" 4.  Refresh setting table\n");
+		testapp_print("1.  Get setting list\n");
+		testapp_print("2.  Update setting\n");
+		testapp_print("3.  Update system setting\n");
+		testapp_print("4.  Refresh setting table\n");
+		testapp_print("0.  Exit \n");
+		testapp_print("------------------------------------------\n");
+	case TESTAPP_MENU_TYPE_EX_TEST_MENU:
+		testapp_print("==========================================\n");
+		testapp_print("    Notification-ex test menu \n");
+		testapp_print("==========================================\n");
+		testapp_print("1.  Post a simple notification\n");
+		testapp_print("2.  Post a multiple notification\n");
+		testapp_print("3.  Get notifications\n");
+		testapp_print("4.  Delete notifications\n");
+		testapp_print("0.  Exit \n");
 		testapp_print("------------------------------------------\n");
 		break;
 	default:
@@ -843,6 +858,204 @@ void testapp_setting_main()
 }
 /* Setting Test } ---------------------------------------------------------------*/
 
+
+
+/* Ex Test { -------------------------------------------------------------- */
+void _reporter_events_event_cb(noti_ex_reporter_h handle, noti_ex_event_info_h info,
+		noti_ex_item_h *items, int cnt, void *user_data) {
+}
+
+void _reporter_events_error_cb(noti_ex_reporter_h handle,
+		noti_ex_error_e error, int req_id, void *user_data) {
+}
+
+void _noti_ex_manager_events_error_cb(noti_ex_manager_h handle,
+		noti_ex_error_e error, int request_id, void *user_data) {
+}
+
+
+static int testapp_ex_test_post_notification()
+{
+	noti_ex_reporter_h handle;
+	noti_ex_item_h group_item = NULL;
+	noti_ex_item_h child_item = NULL;
+
+	int request_id;
+	int ret = NOTI_EX_ERROR_NONE;
+
+	noti_ex_reporter_events_s ev;
+	ev.event = _reporter_events_event_cb;
+	ev.error = _reporter_events_error_cb;
+
+	ret = noti_ex_reporter_create(&handle, ev, NULL);
+	ret = noti_ex_item_group_create(&group_item, "group_id");
+	ret = noti_ex_item_button_create(&child_item, "button_id", "button_title");
+	ret = noti_ex_item_group_add_child(group_item, child_item);
+	noti_ex_item_destroy(child_item);
+
+	ret = noti_ex_reporter_post(handle, group_item, &request_id);
+
+	noti_ex_item_destroy(group_item);
+	noti_ex_reporter_destroy(handle);
+
+	testapp_print("notification-ex post[%d]", ret);
+
+	return ret;
+}
+
+static int testapp_ex_test_post_notifications()
+{
+	noti_ex_reporter_h handle;
+	noti_ex_item_h child_item = NULL;
+
+	int request_id;
+	int ret = NOTI_EX_ERROR_NONE;
+
+	noti_ex_item_h *noti_list = (noti_ex_item_h *)calloc(2, sizeof(noti_ex_item_h));
+
+	noti_ex_reporter_events_s ev;
+	ev.event = _reporter_events_event_cb;
+	ev.error = _reporter_events_error_cb;
+
+	ret = noti_ex_reporter_create(&handle, ev, NULL);
+
+	ret = noti_ex_item_group_create(&noti_list[0], "group_id1");
+	ret = noti_ex_item_button_create(&child_item, "button_id1", "button_title");
+	ret = noti_ex_item_group_add_child(noti_list[0], child_item);
+	ret = noti_ex_item_set_channel(noti_list[0], "test");
+	noti_ex_item_destroy(child_item);
+
+	ret = noti_ex_item_group_create(&noti_list[1], "group_id2");
+	ret = noti_ex_item_button_create(&child_item, "button_id2", "button_title");
+	ret = noti_ex_item_group_add_child(noti_list[1], child_item);
+	ret = noti_ex_item_set_channel(noti_list[1], "test");
+	noti_ex_item_destroy(child_item);
+
+	ret = noti_ex_reporter_post_list(handle, noti_list, 2, &request_id);
+	noti_ex_item_destroy(noti_list[0]);
+	noti_ex_item_destroy(noti_list[1]);
+
+	noti_ex_reporter_destroy(handle);
+
+	free(noti_list);
+
+	testapp_print("notification-ex post multi[%d]", ret);
+
+	return ret;
+}
+
+static int testapp_ex_test_get_notifications()
+{
+	noti_ex_reporter_h handle;
+	noti_ex_item_h *noti_list_all = NULL;
+	noti_ex_item_h *noti_list_channel = NULL;
+	noti_ex_item_h text_item = NULL;
+	noti_ex_item_h group_item = NULL;
+
+	int count = 0;
+	int ret = NOTI_EX_ERROR_NONE;
+	int request_id;
+	char *id = NULL;
+
+	noti_ex_reporter_events_s ev;
+	ev.event = _reporter_events_event_cb;
+	ev.error = _reporter_events_error_cb;
+
+	ret = noti_ex_reporter_create(&handle, ev, NULL);
+
+	ret = noti_ex_item_group_create(&group_item, "group_id3");
+	ret = noti_ex_item_text_create(&text_item, "text_id", "text", "hyperlink");
+	ret = noti_ex_item_group_add_child(group_item, text_item);
+	ret = noti_ex_item_set_channel(group_item, "test");
+
+	ret = noti_ex_reporter_post(handle, group_item, &request_id);
+	noti_ex_item_destroy(text_item);
+	noti_ex_item_destroy(group_item);
+
+	ret = noti_ex_reporter_find_by_channel(handle, "test", &noti_list_channel, &count);
+	ret = noti_ex_item_get_id(noti_list_channel[0], &id);
+	testapp_print("notification-ex Get by_channel[%d][%s]\n", count, id);
+
+	ret = noti_ex_reporter_find_all(handle, &noti_list_all, &count);
+	ret = noti_ex_item_get_id(noti_list_all[0], &id);
+	testapp_print("notification-ex Get all[%d][%s]\n", count, id);
+
+	noti_ex_reporter_destroy(handle);
+	return ret;
+}
+
+static int testapp_ex_test_delete_notifications()
+{
+	noti_ex_manager_h handle;
+
+	int request_id;
+	int ret = NOTI_EX_ERROR_NONE;
+
+	noti_ex_manager_events_s ev;
+	ev.error = _noti_ex_manager_events_error_cb;
+
+	ret = noti_ex_manager_create(&handle, NOTI_EX_RECEIVER_GROUP_POPUP, ev, NULL);
+
+	ret = noti_ex_manager_delete_all(handle, &request_id);
+
+	noti_ex_manager_destroy(handle);
+
+	testapp_print("notification-ex deletebychannel [test]");
+	return ret;
+}
+
+static gboolean testapp_interpret_command_ex_test(int selected_number)
+{
+	gboolean go_to_loop = TRUE;
+
+	switch (selected_number) {
+	case 1:
+		testapp_ex_test_post_notification();
+		break;
+
+	case 2:
+		testapp_ex_test_post_notifications();
+		break;
+
+	case 3:
+		testapp_ex_test_get_notifications();
+		break;
+
+	case 4:
+		testapp_ex_test_delete_notifications();
+		break;
+
+	case 0:
+		go_to_loop = FALSE;
+		break;
+
+	default:
+		break;
+	}
+
+	return go_to_loop;
+
+}
+
+void testapp_notification_ex_main()
+{
+	gboolean go_to_loop = TRUE;
+	int menu_number = 0;
+
+	while (go_to_loop) {
+		testapp_show_menu(TESTAPP_MENU_TYPE_EX_TEST_MENU);
+		testapp_show_prompt(TESTAPP_MENU_TYPE_EX_TEST_MENU);
+
+		if (0 >= scanf("%d", &menu_number))
+			testapp_print("Invalid input");
+
+		go_to_loop = testapp_interpret_command_ex_test(menu_number);
+	}
+}
+/* Ex Test } ---------------------------------------------------------------*/
+
+
+
 /* Main { ---------------------------------------------------------------------*/
 static gboolean testapp_interpret_command(int menu_number)
 {
@@ -855,6 +1068,10 @@ static gboolean testapp_interpret_command(int menu_number)
 
 	case 2:
 		testapp_setting_main();
+		break;
+
+	case 3:
+		testapp_notification_ex_main();
 		break;
 
 	case 0:
@@ -876,11 +1093,15 @@ void testapp_show_prompt(testapp_menu_type_e menu)
 		break;
 
 	case TESTAPP_MENU_TYPE_BASIC_TEST_MENU:
-		testapp_print("[BASIC_TEST]# ");
+		testapp_print("[NOTIFICATION_TEST]# ");
 		break;
 
 	case TESTAPP_MENU_TYPE_SETTING_TEST_MENU:
 		testapp_print("[SETTING_TEST]# ");
+		break;
+
+	case TESTAPP_MENU_TYPE_EX_TEST_MENU:
+		testapp_print("[NOTIFICATION-EX_TEST]# ");
 		break;
 	}
 }
