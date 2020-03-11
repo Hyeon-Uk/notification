@@ -31,7 +31,7 @@
 
 namespace notification {
 
-class EventInfo : public IEventInfoInternal {
+class EXPORT_API EventInfo : public IEventInfoInternal {
  public:
   EventInfo(int type, std::string owner, std::string channel = "",
       std::string item_id = "");

@@ -3154,6 +3154,8 @@ extern "C" EXPORT_API int noti_ex_reporter_find_by_channel(noti_ex_reporter_h ha
     return NOTI_EX_ERROR_INVALID_PARAMETER;
   }
 
+  Handle** list_item = nullptr;
+
   try {
     ReporterStub* stub = static_cast<ReporterStub*>(handle);
     list<unique_ptr<AbstractItem>> list_ptr = stub->FindByChannel(channel);
@@ -3166,7 +3168,7 @@ extern "C" EXPORT_API int noti_ex_reporter_find_by_channel(noti_ex_reporter_h ha
     int size = list_ptr.size();
     int i = 0;
 
-    Handle* list_item[size];
+    list_item = (Handle**)calloc(size, sizeof(Handle*));
     for (auto& ptr : list_ptr)
       list_item[i++] = new Handle(std::move(ptr));
 
@@ -3174,6 +3176,7 @@ extern "C" EXPORT_API int noti_ex_reporter_find_by_channel(noti_ex_reporter_h ha
     *count = size;
   } catch (Exception &ex) {
     LOGE("%s %d", ex.what(), ex.GetErrorCode());
+    free(list_item);
     return NOTI_EX_ERROR_IO_ERROR;
   }
 
@@ -3187,6 +3190,8 @@ extern "C" EXPORT_API int noti_ex_reporter_find_all(noti_ex_reporter_h handle,
     return NOTI_EX_ERROR_INVALID_PARAMETER;
   }
 
+  Handle** list_item = nullptr;
+
   try {
     ReporterStub* stub = static_cast<ReporterStub*>(handle);
     list<unique_ptr<AbstractItem>> list_ptr = stub->FindAll();
@@ -3199,7 +3204,7 @@ extern "C" EXPORT_API int noti_ex_reporter_find_all(noti_ex_reporter_h handle,
     int size = list_ptr.size();
     int i = 0;
 
-    Handle* list_item[size];
+    list_item = (Handle**)calloc(size, sizeof(Handle*));
     for (auto& ptr : list_ptr)
       list_item[i++] = new Handle(std::move(ptr));
 
@@ -3207,6 +3212,7 @@ extern "C" EXPORT_API int noti_ex_reporter_find_all(noti_ex_reporter_h handle,
     *count = size;
   } catch (Exception &ex) {
     LOGE("%s %d", ex.what(), ex.GetErrorCode());
+    free(list_item);
     return NOTI_EX_ERROR_IO_ERROR;
   }
 
