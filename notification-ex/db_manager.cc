@@ -415,9 +415,8 @@ int DBManager::UpdateReceiverList
 
 int DBManager::InsertNotification(list<shared_ptr<item::AbstractItem>> addedItem) {
   int ret = ERROR_NONE;
-  int count;
   char* query;
-  int64_t seq;
+  int64_t priv_id = 0;
   sqlite3* db = OpenDB();
 
   if (db == nullptr)
@@ -431,36 +430,35 @@ int DBManager::InsertNotification(list<shared_ptr<item::AbstractItem>> addedItem
 
   for (auto& i : addedItem) {
     uid_t uid = static_pointer_cast<IItemInfoInternal>(i->GetInfo())->GetUid();
-    ret = GetCount(0, i->GetId(), i->GetSenderAppId(), uid, &count);
-    if (ret != ERROR_NONE)
-       break;
+    list<shared_ptr<item::AbstractItem>> item_list =
+        GetNotificationList(i->GetSenderAppId(), i->GetId(), uid);
 
-    if (count > 0) {
-      LOGE("already exist id :[%s] appid[%s]",
-               i->GetId().c_str(), i->GetSenderAppId().c_str());
-      ret = ERROR_ALREADY_EXIST_ID;
+    if (!item_list.empty())
+      priv_id =
+        static_pointer_cast<IItemInfoInternal>(item_list.front()->GetInfo())->GetPrivateId();
+    else
+      ret = GetSequence(db, &priv_id);
+
+    if (ret != ERROR_NONE || priv_id == 0) {
+      LOGE("Failed to get pirv_id");
       break;
     }
 
-    ret = GetSequence(db, &seq);
-    if (ret != ERROR_NONE)
-      break;
-
-    static_pointer_cast<IItemInfoInternal>(i->GetInfo())->SetPrivateId(seq);
+    static_pointer_cast<IItemInfoInternal>(i->GetInfo())->SetPrivateId(priv_id);
     Bundle b = i->Serialize();
-    query = sqlite3_mprintf("INSERT INTO noti_ex_list"
+
+    query = sqlite3_mprintf("INSERT OR REPLACE INTO noti_ex_list"
           " (root_id, app_id, uid, channel, priv_id, pkg_id, policy, data, insert_time)"
           " VALUES (%Q, %Q, %d, %Q, %" PRId64 ", %Q, %d, %Q, %d)",
           i->GetId().c_str(),
           i->GetSenderAppId().c_str(),
           uid,
           i->GetChannel().c_str(),
-          static_pointer_cast<IItemInfoInternal>(i->GetInfo())->GetPrivateId(),
+          priv_id,
           GetPkgId(i->GetSenderAppId(), uid).c_str(),
           static_cast<int>(i->GetPolicy()),
           reinterpret_cast<char*>(b.ToRaw().first.get()),
           static_pointer_cast<IItemInfo>(i->GetInfo())->GetTime());
-
     if (!query) {
       LOGE("OOM - sql query");
       ret = ERROR_OUT_OF_MEMORY;
