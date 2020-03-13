@@ -433,7 +433,7 @@ extern "C" EXPORT_API int noti_ex_item_button_set_multi_language_title(
 }
 
 extern "C" EXPORT_API int noti_ex_item_button_set_image(
-    noti_ex_item_h handle, char *path) {
+    noti_ex_item_h handle, const char *path) {
   if (handle == nullptr || path == nullptr) {
     LOGE("Invalid parameter");
     return NOTI_EX_ERROR_INVALID_PARAMETER;
@@ -2724,7 +2724,7 @@ extern "C" EXPORT_API int noti_ex_manager_delete_all(noti_ex_manager_h handle,
 }
 
 extern "C" EXPORT_API int noti_ex_manager_delete_by_channel(
-    noti_ex_manager_h handle, char* channel, int* request_id) {
+    noti_ex_manager_h handle, const char* channel, int* request_id) {
   if (handle == nullptr || channel == nullptr || request_id == nullptr) {
     LOGE("Invalid parameter");
     return NOTI_EX_ERROR_INVALID_PARAMETER;
@@ -2733,6 +2733,24 @@ extern "C" EXPORT_API int noti_ex_manager_delete_by_channel(
   try {
     ManagerStub* stub = static_cast<ManagerStub*>(handle);
     *request_id = stub->DeleteByChannel(channel);
+  } catch (Exception &ex) {
+    LOGE("%s %d", ex.what(), ex.GetErrorCode());
+    return NOTI_EX_ERROR_IO_ERROR;
+  }
+
+  return NOTI_EX_ERROR_NONE;
+}
+
+extern "C" EXPORT_API int noti_ex_manager_delete_by_appid(
+    noti_ex_manager_h handle, const char* app_id, int* request_id) {
+  if (handle == nullptr || app_id == nullptr || request_id == nullptr) {
+    LOGE("Invalid parameter");
+    return NOTI_EX_ERROR_INVALID_PARAMETER;
+  }
+
+  try {
+    ManagerStub* stub = static_cast<ManagerStub*>(handle);
+    *request_id = stub->DeleteByAppId(app_id);
   } catch (Exception &ex) {
     LOGE("%s %d", ex.what(), ex.GetErrorCode());
     return NOTI_EX_ERROR_IO_ERROR;
@@ -3107,7 +3125,7 @@ extern "C" EXPORT_API int noti_ex_reporter_delete_all(
 }
 
 extern "C" EXPORT_API int noti_ex_reporter_delete_by_channel(
-    noti_ex_reporter_h handle, char* channel, int* request_id) {
+    noti_ex_reporter_h handle, const char* channel, int* request_id) {
   if (handle == nullptr || channel == nullptr || request_id == nullptr) {
     LOGE("Invalid parameter");
     return NOTI_EX_ERROR_INVALID_PARAMETER;
