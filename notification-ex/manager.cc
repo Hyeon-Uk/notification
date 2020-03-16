@@ -114,6 +114,14 @@ int Manager::DeleteByChannel(string channel) {
   return info.GetRequestId();
 }
 
+int Manager::DeleteByAppId(string appId) {
+  Bundle serialized;
+  EventInfo info(EventInfo::DeleteAll, util::GetAppId(), "", appId);
+  list<Bundle> serialized_list {serialized};
+  impl_->sender_->Notify(info, serialized_list, util::GetAppId());
+  return info.GetRequestId();
+}
+
 int Manager::GetCount() const {
   EventInfo info(EventInfo::Count, util::GetAppId(), "");
   int num = impl_->sender_->RequestNumber(info);
