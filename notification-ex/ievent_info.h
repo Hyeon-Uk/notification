@@ -35,8 +35,8 @@ class EXPORT_API IEventInfo {
     Delete,
     Get,
     Error,
-    Count,
     DeleteAll,
+    Count,
     Register,
     Unregister,
     Custom = 100
