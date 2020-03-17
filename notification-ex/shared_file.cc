@@ -53,7 +53,7 @@ SharedFile::SharingData::~SharingData() = default;
 SharedFile::SharingTarget::SharingTarget() = default;
 SharedFile::SharingTarget::~SharingTarget() = default;
 
-const char* SharedFile::GetLastIndex(const char* path, const char* search) const {
+const char* SharedFile::GetLastIndex(const char* path, const char* search) {
   int i;
   int search_len;
   const char* index;
@@ -393,16 +393,14 @@ SharedFile::SharingData SharedFile::FindSharingData(string appid) {
   return {};
 }
 
-int SharedFile::SetPrivateSharing(list<shared_ptr<AbstractItem>> item,
+int SharedFile::SetPrivateSharing(list<shared_ptr<AbstractItem>> notiList,
     multimap<string, string> receiver_group_map) {
-  int ret;
-
-  if (item.empty() || receiver_group_map.empty()) {
+  if (notiList.empty() || receiver_group_map.empty()) {
     LOGE("Invalid parameter");
     return ERROR_INVALID_PARAMETER;
   }
 
-  for (auto& i : item) {
+  for (auto& i : notiList) {
     SharingData sharing_data;
     list<string> new_shared_file_list;
     list<string> new_receiver_group_list;
@@ -465,9 +463,8 @@ int SharedFile::SetPrivateSharing(list<shared_ptr<AbstractItem>> item,
       new_receiver_group_list = i->GetReceiverList();
     }
 
-    ret = SetSharingData(sharing_data, new_shared_file_list,
-                new_receiver_group_list, receiver_group_map);
-    if (ret == ERROR_NONE)
+    if (SetSharingData(sharing_data, new_shared_file_list,
+                new_receiver_group_list, receiver_group_map) == ERROR_NONE)
       i->SetSharedPath();
   }
 
@@ -475,76 +472,77 @@ int SharedFile::SetPrivateSharing(list<shared_ptr<AbstractItem>> item,
   return ERROR_NONE;
 }
 
-int SharedFile::UpdatePrivateSharing(shared_ptr<AbstractItem> item,
+int SharedFile::UpdatePrivateSharing(list<shared_ptr<AbstractItem>> notiList,
     multimap<string, string> receiver_group_map) {
-  list<string> new_shared_file_list;
-  list<string> new_receiver_group_list;
-  int ret;
-
-  if (item == nullptr || receiver_group_map.empty()) {
+  if (notiList.empty() || receiver_group_map.empty()) {
     LOGE("Invalid parameter");
     return ERROR_INVALID_PARAMETER;
   }
 
-  list<string> shared_path_list = item->GetSharedPath();
-  if (shared_path_list.empty())
-    return ERROR_NONE;
+  for (auto& i : notiList) {
+    list<string> new_shared_file_list;
+    list<string> new_receiver_group_list;
+    list<string> shared_path_list = i->GetSharedPath();
+    if (shared_path_list.empty())
+      continue;
 
-  string appid = item->GetSenderAppId();
-  SharingData sharing_data = FindSharingData(appid);
-  if (appid.empty() || sharing_data.app_id.empty())
-    return ERROR_IO_ERROR;
+    string appid = i->GetSenderAppId();
+    SharingData sharing_data = FindSharingData(appid);
+    if (appid.empty() || sharing_data.app_id.empty())
+      continue;
 
-  for (auto& shared_path : shared_path_list) {
-    std::list<std::string>::iterator it;
-    it = std::find_if(sharing_data.shared_file_list.begin(),
+    for (auto& shared_path : shared_path_list) {
+      std::list<std::string>::iterator it;
+      it = std::find_if(sharing_data.shared_file_list.begin(),
                     sharing_data.shared_file_list.end(),
                     [&shared_path](std::string shared_file){
                       return shared_file.compare(shared_path) == 0;
                     });
-    if (it == sharing_data.shared_file_list.end()) {
-      sharing_data.shared_file_list.push_back(shared_path);
-      new_shared_file_list.push_back(shared_path);
+      if (it == sharing_data.shared_file_list.end()) {
+        sharing_data.shared_file_list.push_back(shared_path);
+        new_shared_file_list.push_back(shared_path);
+      }
     }
-  }
 
-  new_receiver_group_list = item->GetReceiverList();
-  ret = SetSharingData(sharing_data, new_shared_file_list,
-            new_receiver_group_list, receiver_group_map);
-  if (ret == ERROR_NONE)
-    item->SetSharedPath();
+    new_receiver_group_list = i->GetReceiverList();
+    if (SetSharingData(sharing_data, new_shared_file_list,
+        new_receiver_group_list, receiver_group_map) == ERROR_NONE)
+      i->SetSharedPath();
+  }
 
   LOGD("UpdatePrivateSharing");
   return ERROR_NONE;
 }
 
-int SharedFile::RemovePrivateSharing(shared_ptr<AbstractItem> item,
+int SharedFile::RemovePrivateSharing(list<shared_ptr<AbstractItem>> notiList,
     multimap<string, string> receiver_group_map) {
-  if (item == nullptr || receiver_group_map.empty()) {
+  if (notiList.empty() || receiver_group_map.empty()) {
     LOGE("Invalid parameter");
     return ERROR_INVALID_PARAMETER;
   }
 
-  string appid = item->GetSenderAppId();
-  if (appid.empty())
-    return ERROR_IO_ERROR;
+  for (auto& i : notiList) {
+    string appid = i->GetSenderAppId();
+    if (appid.empty())
+      continue;
 
-  SharingData sharing_data = FindSharingData(appid);
-  if (sharing_data.app_id.empty())
-    return ERROR_NONE;
+    SharingData sharing_data = FindSharingData(appid);
+    if (sharing_data.app_id.empty())
+      continue;
 
-  sharing_data.noti_id_list.remove(item->GetId());
-  if (sharing_data.noti_id_list.size() == 0) {
-    UnsetSharingData(sharing_data, receiver_group_map);
+    sharing_data.noti_id_list.remove(i->GetId());
+    if (sharing_data.noti_id_list.size() == 0) {
+      UnsetSharingData(sharing_data, receiver_group_map);
 
-    vector<char*> path_array = ConvertListToArray(sharing_data.shared_file_list);
-    if (!path_array.empty()) {
-      for (int i = 0; i < static_cast<int>(path_array.size()); i++) {
-        if (g_remove(path_array[i]) == -1)
+      vector<char*> path_array = ConvertListToArray(sharing_data.shared_file_list);
+      if (!path_array.empty()) {
+        for (int i = 0; i < static_cast<int>(path_array.size()); i++) {
+          if (g_remove(path_array[i]) == -1)
           LOGE("Failed to remove shared_file(%s)", path_array[i]);
+        }
       }
+      g_rmdir(sharing_data.dir.c_str());
     }
-    g_rmdir(sharing_data.dir.c_str());
   }
 
   LOGD("RemovePrivateSharing");

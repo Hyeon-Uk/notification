@@ -141,10 +141,13 @@ TEST_F(SharedFileTest, SetPrivateSharing) {
 }
 
 TEST_F(SharedFileTest, RemovePrivateSharing) {
+  list<shared_ptr<item::AbstractItem>> notiList;
+  notiList.push_back(SharedFileTest::item);
+
   std::multimap<std::string, std::string> map_;
   map_.insert(make_pair("tizen.org/receiver/popup", "test_appid"));
 
-  ASSERT_EQ(shared_file->RemovePrivateSharing(SharedFileTest::item, map_), ERROR_NONE);
+  ASSERT_EQ(shared_file->RemovePrivateSharing(notiList, map_), ERROR_NONE);
 }
 
 }  // namespace

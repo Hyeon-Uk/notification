@@ -123,29 +123,30 @@ class ManagerCallbackInfo {
   }
 
   void InvokeUpdated(Manager* manager, const IEventInfo& info,
-      shared_ptr<item::AbstractItem> updatedItem) {
+      list<shared_ptr<AbstractItem>> updatedItem) {
     if (cb_.updated == nullptr)
       return;
+
     IEventInfo* c_info = const_cast<IEventInfo*>(&info);
-    cb_.updated(static_cast<noti_ex_manager_h>(manager),
+    for (auto& i : updatedItem) {
+      cb_.updated(static_cast<noti_ex_manager_h>(manager),
         static_cast<noti_ex_event_info_h>(c_info),
-        static_cast<noti_ex_item_h>(new Handle(updatedItem)), user_data_);
+        static_cast<noti_ex_item_h>(new Handle(shared_ptr<AbstractItem>(i))),
+        user_data_);
+    }
   }
 
   void InvokeDeleted(Manager* manager, const IEventInfo& info,
-      shared_ptr<item::AbstractItem> deletedItem) {
+      list<shared_ptr<AbstractItem>> deletedItem) {
     if (cb_.deleted == nullptr)
       return;
+
     IEventInfo* c_info = const_cast<IEventInfo*>(&info);
-    if (c_info->GetEventType() == static_cast<int>(IEventInfo::EventType::DeleteAll)) {
+    for (auto& i : deletedItem) {
       cb_.deleted(static_cast<noti_ex_manager_h>(manager),
         static_cast<noti_ex_event_info_h>(c_info),
-        nullptr, user_data_);
-    } else {
-      cb_.deleted(static_cast<noti_ex_manager_h>(manager),
-        static_cast<noti_ex_event_info_h>(c_info),
-        static_cast<noti_ex_item_h>(
-            new Handle(deletedItem)), user_data_);
+        static_cast<noti_ex_item_h>(new Handle(shared_ptr<AbstractItem>(i))),
+        user_data_);
     }
   }
 
@@ -174,12 +175,12 @@ class ManagerStub : public Manager {
   }
 
   void OnUpdate(const IEventInfo& info,
-      std::shared_ptr<item::AbstractItem> updatedItem) override {
+      list<shared_ptr<AbstractItem>> updatedItem) override {
     cb_->InvokeUpdated(this, info, updatedItem);
   }
 
   void OnDelete(const IEventInfo& info,
-      shared_ptr<item::AbstractItem> deletedItem) override {
+      list<shared_ptr<AbstractItem>> deletedItem) override {
     cb_->InvokeDeleted(this, info, deletedItem);
   }
 
@@ -3137,6 +3138,28 @@ extern "C" EXPORT_API int noti_ex_reporter_update(noti_ex_reporter_h handle,
   return NOTI_EX_ERROR_NONE;
 }
 
+extern "C" EXPORT_API int noti_ex_reporter_update_list(
+    noti_ex_reporter_h handle, noti_ex_item_h *noti_list, int count,
+    int *request_id) {
+    if (handle == nullptr || noti_list == nullptr || request_id == nullptr) {
+      LOGE("Invalid parameter");
+      return NOTI_EX_ERROR_INVALID_PARAMETER;
+    }
+    try {
+      ReporterStub* stub = static_cast<ReporterStub*>(handle);
+      list<shared_ptr<item::AbstractItem>> notiList;
+      for (int i = 0; i < count; i++) {
+        Handle* item = static_cast<Handle*>(noti_list[i]);
+        notiList.push_back(item->GetPtr());
+      }
+      *request_id = stub->Update(notiList);
+    } catch (Exception &ex) {
+      LOGE("%s %d", ex.what(), ex.GetErrorCode());
+      return NOTI_EX_ERROR_IO_ERROR;
+    }
+    return NOTI_EX_ERROR_NONE;
+}
+
 extern "C" EXPORT_API int noti_ex_reporter_delete(noti_ex_reporter_h handle,
     noti_ex_item_h noti, int *request_id) {
   if (handle == nullptr || noti == nullptr || request_id == nullptr) {
@@ -3157,6 +3180,28 @@ extern "C" EXPORT_API int noti_ex_reporter_delete(noti_ex_reporter_h handle,
     return NOTI_EX_ERROR_IO_ERROR;
   }
   return NOTI_EX_ERROR_NONE;
+}
+
+extern "C" EXPORT_API int noti_ex_reporter_delete_list(
+    noti_ex_reporter_h handle, noti_ex_item_h *noti_list, int count,
+    int *request_id) {
+    if (handle == nullptr || noti_list == nullptr || request_id == nullptr) {
+      LOGE("Invalid parameter");
+      return NOTI_EX_ERROR_INVALID_PARAMETER;
+    }
+    try {
+      ReporterStub* stub = static_cast<ReporterStub*>(handle);
+      list<shared_ptr<item::AbstractItem>> notiList;
+      for (int i = 0; i < count; i++) {
+        Handle* item = static_cast<Handle*>(noti_list[i]);
+        notiList.push_back(item->GetPtr());
+      }
+      *request_id = stub->Delete(notiList);
+    } catch (Exception &ex) {
+      LOGE("%s %d", ex.what(), ex.GetErrorCode());
+      return NOTI_EX_ERROR_IO_ERROR;
+    }
+    return NOTI_EX_ERROR_NONE;
 }
 
 extern "C" EXPORT_API int noti_ex_reporter_delete_all(
