@@ -484,6 +484,9 @@ extern "C" EXPORT_API int noti_ex_item_chat_message_create(
     return NOTI_EX_ERROR_INVALID_PARAMETER;
   }
 
+  if (id == NULL)
+    id = "";
+
   auto* p = new (std::nothrow) ChatMessageItem(id,
           dynamic_pointer_cast<TextItem>(static_cast<Handle*>(name)->GetPtr()),
           text == nullptr ? nullptr
@@ -612,6 +615,9 @@ extern "C" EXPORT_API int noti_ex_item_checkbox_create(noti_ex_item_h *handle,
     return NOTI_EX_ERROR_INVALID_PARAMETER;
   }
 
+  if (id == NULL)
+    id = "";
+
   p = new (std::nothrow) CheckBoxItem(id, title, checked);
   if (p == nullptr) {
     LOGE("Out-of-memory");
@@ -724,7 +730,11 @@ extern "C" EXPORT_API int noti_ex_item_entry_create(noti_ex_item_h *handle,
     return NOTI_EX_ERROR_INVALID_PARAMETER;
   }
 
-  p = new (std::nothrow) EntryItem(id);
+  if (id)
+    p = new (std::nothrow) EntryItem(id);
+  else
+    p = new (std::nothrow) EntryItem();
+
   if (p == nullptr) {
     LOGE("Out-of-memory");
     return NOTI_EX_ERROR_OUT_OF_MEMORY;
