@@ -162,9 +162,11 @@ bool ChatMessageItem::IsItemTypeExist(int type) {
 std::list<std::string> ChatMessageItem::GetSharedPath() const {
   std::list<std::string> ret;
 
-  auto image = impl_->image_->GetSharedPath();
-  for (auto& i : image) {
-    ret.push_back(std::move(i));
+  if (impl_->image_ != nullptr) {
+    auto image = impl_->image_->GetSharedPath();
+    for (auto& i : image) {
+      ret.push_back(std::move(i));
+    }
   }
 
   return ret;
