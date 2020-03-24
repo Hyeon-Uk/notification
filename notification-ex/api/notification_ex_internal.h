@@ -42,6 +42,8 @@ int noti_ex_item_icon_get_icon_path(noti_ex_item_h handle, char **icon_path);
 
 int noti_ex_item_button_set_image(noti_ex_item_h handle, const char *path);
 int noti_ex_item_button_get_image(noti_ex_item_h handle, char **path);
+int noti_ex_item_button_set_contents(noti_ex_item_h handle, const char *contents);
+int noti_ex_item_button_get_contents(noti_ex_item_h handle, char **contents);
 
 int noti_ex_reporter_find_by_channel(noti_ex_reporter_h handle,
 		const char *channel, noti_ex_item_h **noti_list, int *count);

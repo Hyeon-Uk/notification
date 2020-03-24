@@ -473,6 +473,47 @@ extern "C" EXPORT_API int noti_ex_item_button_get_image(
   return NOTI_EX_ERROR_NONE;
 }
 
+extern "C" EXPORT_API int noti_ex_item_button_set_contents(
+    noti_ex_item_h handle, const char *contents) {
+  if (handle == nullptr || contents == nullptr) {
+    LOGE("Invalid parameter");
+    return NOTI_EX_ERROR_INVALID_PARAMETER;
+  }
+
+  Handle* h = static_cast<Handle*>(handle);
+  if (!h->IsValidType(AbstractItem::Button)) {
+    LOGE("Invalid handle type");
+    return NOTI_EX_ERROR_INVALID_PARAMETER;
+  }
+
+  ButtonItem* p = static_cast<ButtonItem*>(h->Get());
+  p->SetContents(std::string(contents));
+
+  return NOTI_EX_ERROR_NONE;
+}
+
+extern "C" EXPORT_API int noti_ex_item_button_get_contents(
+    noti_ex_item_h handle, char **contents) {
+  if (handle == nullptr || contents == nullptr) {
+    LOGE("Invalid parameter");
+    return NOTI_EX_ERROR_INVALID_PARAMETER;
+  }
+
+  Handle* h = static_cast<Handle*>(handle);
+  if (!h->IsValidType(AbstractItem::Button)) {
+    LOGE("Invalid handle type");
+    return NOTI_EX_ERROR_INVALID_PARAMETER;
+  }
+
+  ButtonItem* p = static_cast<ButtonItem*>(h->Get());
+  if (!p->GetContents().empty())
+    *contents = strdup(p->GetContents().c_str());
+  else
+    *contents = nullptr;
+
+  return NOTI_EX_ERROR_NONE;
+}
+
 extern "C" EXPORT_API int noti_ex_item_chat_message_create(
     noti_ex_item_h *handle, const char *id, noti_ex_item_h name,
     noti_ex_item_h text, noti_ex_item_h image, noti_ex_item_h time,
