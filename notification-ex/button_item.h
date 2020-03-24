@@ -110,6 +110,20 @@ class EXPORT_API ButtonItem : public AbstractItem {
    */
   void SetImgPath(std::string path);
 
+  /**
+   * @brief Gets the contents of ButtonItem.
+   * @since_tizen 5.5
+   * @return The contents string
+   */
+  std::string GetContents() const;
+
+  /**
+   * @brief Sets the contents of ButtonItem.
+   * @since_tizen 5.5
+   * @param[in] contents The contents string
+   */
+  void SetContents(std::string contents);
+
  private:
   class Impl;
   std::unique_ptr<Impl> impl_;

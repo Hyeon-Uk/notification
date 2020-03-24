@@ -29,6 +29,7 @@
 #define LOG_TAG "NOTIFICATION_EX"
 #define BUTTON_TITLE_KEY "__BUTTON_TITLE_KEY__"
 #define BUTTON_IMAGE_KEY "__BUTTON_IMAGE_KEY__"
+#define BUTTON_CONTENTS_KEY "__BUTTON_CONTENTS_KEY__"
 
 using namespace std;
 using namespace tizen_base;
@@ -63,6 +64,8 @@ Bundle ButtonItem::Serialize() const {
   b.Add(BUTTON_TITLE_KEY, impl_->title_);
   if (!impl_->img_path_.empty())
     b.Add(BUTTON_IMAGE_KEY, impl_->img_path_);
+  if (!impl_->contents_.empty())
+    b.Add(BUTTON_CONTENTS_KEY, impl_->contents_);
   return b;
 }
 
@@ -70,6 +73,7 @@ void ButtonItem::Deserialize(Bundle b) {
   AbstractItem::Deserialize(b);
   impl_->title_ = b.GetString(BUTTON_TITLE_KEY);
   impl_->img_path_ = b.GetString(BUTTON_IMAGE_KEY);
+  impl_->contents_ = b.GetString(BUTTON_CONTENTS_KEY);
 }
 
 bool ButtonItem::IsItemTypeExist(int type) {
@@ -88,6 +92,14 @@ void ButtonItem::SetImgPath(string path) {
 
 std::string ButtonItem::GetImgPath() const {
   return impl_->img_path_;
+}
+
+void ButtonItem::SetContents(std::string contents) {
+  impl_->contents_ = contents;
+}
+
+std::string ButtonItem::GetContents() const {
+  return impl_->contents_;
 }
 
 }  // namespace item

@@ -38,6 +38,7 @@ class ButtonItem::Impl {
 
   std::string title_;
   std::string img_path_;
+  std::string contents_;
   ButtonItem* parent_;
 };
 
