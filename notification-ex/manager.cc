@@ -257,15 +257,15 @@ void Manager::OnEvent(const IEventInfo& info, list<Bundle> serialized) {
 }
 
 void Manager::OnAdd(const IEventInfo& info,
-      list<shared_ptr<item::AbstractItem>> addedItem) {
+      list<shared_ptr<item::AbstractItem>> addedList) {
 }
 
 void Manager::OnUpdate(const IEventInfo& info,
-      list<shared_ptr<item::AbstractItem>> updatedItem) {
+      list<shared_ptr<item::AbstractItem>> updatedList) {
 }
 
 void Manager::OnDelete(const IEventInfo& info,
-      list<shared_ptr<item::AbstractItem>> deletedItem) {
+      list<shared_ptr<item::AbstractItem>> deletedList) {
 }
 
 void Manager::OnError(NotificationError error, int requestId) {

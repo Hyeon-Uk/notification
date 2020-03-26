@@ -100,18 +100,18 @@ class ManagerCallbackInfo {
   }
 
   void InvokeAdded(Manager* manager, const IEventInfo& info,
-      list<shared_ptr<AbstractItem>> addedItem) {
+      list<shared_ptr<AbstractItem>> addedList) {
     if (cb_.added == nullptr)
       return;
     noti_ex_item_h* added_item =
-        (noti_ex_item_h*)calloc(addedItem.size(), sizeof(noti_ex_item_h));
+        (noti_ex_item_h*)calloc(addedList.size(), sizeof(noti_ex_item_h));
     if (added_item == nullptr) {
       LOGE("Out of memory");
       return;
     }
 
     int idx = 0;
-    for (auto& i : addedItem) {
+    for (auto& i : addedList) {
       added_item[idx++] =
           static_cast<noti_ex_item_h>(new Handle(shared_ptr<AbstractItem>(i)));
     }
@@ -119,16 +119,16 @@ class ManagerCallbackInfo {
     IEventInfo* c_info = const_cast<IEventInfo*>(&info);
     cb_.added(static_cast<noti_ex_manager_h>(manager),
         static_cast<noti_ex_event_info_h>(c_info), added_item,
-        addedItem.size(), user_data_);
+        addedList.size(), user_data_);
   }
 
   void InvokeUpdated(Manager* manager, const IEventInfo& info,
-      list<shared_ptr<AbstractItem>> updatedItem) {
+      list<shared_ptr<AbstractItem>> updatedList) {
     if (cb_.updated == nullptr)
       return;
 
     IEventInfo* c_info = const_cast<IEventInfo*>(&info);
-    for (auto& i : updatedItem) {
+    for (auto& i : updatedList) {
       cb_.updated(static_cast<noti_ex_manager_h>(manager),
         static_cast<noti_ex_event_info_h>(c_info),
         static_cast<noti_ex_item_h>(new Handle(shared_ptr<AbstractItem>(i))),
@@ -137,12 +137,12 @@ class ManagerCallbackInfo {
   }
 
   void InvokeDeleted(Manager* manager, const IEventInfo& info,
-      list<shared_ptr<AbstractItem>> deletedItem) {
+      list<shared_ptr<AbstractItem>> deletedList) {
     if (cb_.deleted == nullptr)
       return;
 
     IEventInfo* c_info = const_cast<IEventInfo*>(&info);
-    for (auto& i : deletedItem) {
+    for (auto& i : deletedList) {
       cb_.deleted(static_cast<noti_ex_manager_h>(manager),
         static_cast<noti_ex_event_info_h>(c_info),
         static_cast<noti_ex_item_h>(new Handle(shared_ptr<AbstractItem>(i))),
@@ -170,18 +170,18 @@ class ManagerStub : public Manager {
   }
 
   void OnAdd(const IEventInfo& info,
-      list<shared_ptr<AbstractItem>> addedItem) override {
-    cb_->InvokeAdded(this, info, addedItem);
+      list<shared_ptr<AbstractItem>> addedList) override {
+    cb_->InvokeAdded(this, info, addedList);
   }
 
   void OnUpdate(const IEventInfo& info,
-      list<shared_ptr<AbstractItem>> updatedItem) override {
-    cb_->InvokeUpdated(this, info, updatedItem);
+      list<shared_ptr<AbstractItem>> updatedList) override {
+    cb_->InvokeUpdated(this, info, updatedList);
   }
 
   void OnDelete(const IEventInfo& info,
-      list<shared_ptr<AbstractItem>> deletedItem) override {
-    cb_->InvokeDeleted(this, info, deletedItem);
+      list<shared_ptr<AbstractItem>> deletedList) override {
+    cb_->InvokeDeleted(this, info, deletedList);
   }
 
   void OnError(NotificationError error, int requestId) override {

@@ -413,7 +413,7 @@ int DBManager::UpdateReceiverList
   return ERROR_NONE;
 }
 
-int DBManager::InsertNotification(list<shared_ptr<item::AbstractItem>> addedItem) {
+int DBManager::InsertNotification(list<shared_ptr<item::AbstractItem>> addedList) {
   int ret = ERROR_NONE;
   char* query;
   int64_t priv_id = 0;
@@ -428,7 +428,7 @@ int DBManager::InsertNotification(list<shared_ptr<item::AbstractItem>> addedItem
     return ERROR_FROM_DB;
   }
 
-  for (auto& i : addedItem) {
+  for (auto& i : addedList) {
     uid_t uid = static_pointer_cast<IItemInfoInternal>(i->GetInfo())->GetUid();
     list<shared_ptr<item::AbstractItem>> item_list =
         GetNotificationList(i->GetSenderAppId(), i->GetId(), uid);
@@ -476,7 +476,7 @@ int DBManager::InsertNotification(list<shared_ptr<item::AbstractItem>> addedItem
   }
 
   if (ret == ERROR_NONE) {
-    CheckLimit(*(addedItem.begin()), db);
+    CheckLimit(*(addedList.begin()), db);
     if (sqlite3_exec(db, "END TRANSACTION", nullptr, nullptr, nullptr)) {
       LOGE("end transaction error : %s", sqlite3_errmsg(db));
       ret = ERROR_FROM_DB;
@@ -606,7 +606,7 @@ int DBManager::UpdateHideList(shared_ptr<item::AbstractItem> updatedItem,
   return ret;
 }
 
-int DBManager::UpdateNotification(list<shared_ptr<item::AbstractItem>> updatedItem) {
+int DBManager::UpdateNotification(list<shared_ptr<item::AbstractItem>> updatedList) {
   int ret = ERROR_NONE;
   char* query;
   sqlite3* db = OpenDB();
@@ -619,7 +619,7 @@ int DBManager::UpdateNotification(list<shared_ptr<item::AbstractItem>> updatedIt
     return ERROR_FROM_DB;
   }
 
-  for (auto& i : updatedItem) {
+  for (auto& i : updatedList) {
     uid_t uid = static_pointer_cast<IItemInfoInternal>(i->GetInfo())->GetUid();
     list<shared_ptr<item::AbstractItem>> item_list =
         GetNotificationList(i->GetSenderAppId(), i->GetId(), uid);
@@ -811,7 +811,7 @@ list<shared_ptr<item::AbstractItem>> DBManager::GetNotificationList(
 }
 
 int DBManager::DeleteNotification(
-    list<shared_ptr<item::AbstractItem>> deletedItem) {
+    list<shared_ptr<item::AbstractItem>> deletedList) {
   int ret = ERROR_NONE;
   char* query;
   sqlite3* db = OpenDB();
@@ -824,7 +824,7 @@ int DBManager::DeleteNotification(
     return ERROR_FROM_DB;
   }
 
-  for (auto& i : deletedItem) {
+  for (auto& i : deletedList) {
     query = sqlite3_mprintf("DELETE FROM noti_ex_list WHERE priv_id = %" PRId64 "",
       static_pointer_cast<IItemInfoInternal>(i->GetInfo())->GetPrivateId());
     if (!query) {
