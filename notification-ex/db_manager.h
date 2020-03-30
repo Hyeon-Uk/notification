@@ -36,13 +36,13 @@ class EXPORT_API DBManager {
  public:
   static int InitializeDB();
   static void InitializeData();
-  static int InsertNotification(std::list<std::shared_ptr<item::AbstractItem>> addedItem);
+  static int InsertNotification(std::list<std::shared_ptr<item::AbstractItem>> addedList);
   static std::map<std::string, std::string> GetHideMap();
   static int UpdateHideList(std::shared_ptr<item::AbstractItem> updatedItem, const std::string& hide_list);
-  static int UpdateNotification(std::shared_ptr<item::AbstractItem> updatedItem);
+  static int UpdateNotification(std::list<std::shared_ptr<item::AbstractItem>> updatedList);
   static int GetCount(int64_t priv_id, const std::string& root_id, const std::string& app_id,  uid_t uid, int* count);
   static int GetCount(const std::string& app_id, uid_t uid, int* count);
-  static int DeleteNotification(std::shared_ptr<item::AbstractItem> deletedItem);
+  static int DeleteNotification(std::list<std::shared_ptr<item::AbstractItem>> deletedList);
   static std::list<std::shared_ptr<item::AbstractItem>> GetNotificationList(uid_t uid, std::string channel = "");
   static std::list<std::shared_ptr<item::AbstractItem>> GetNotificationList(std::string app_id, uid_t uid, std::string channel = "");
   static std::list<std::shared_ptr<item::AbstractItem>> GetNotificationList(std::string app_id, std::string root_id, uid_t uid);

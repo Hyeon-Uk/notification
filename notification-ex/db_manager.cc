@@ -413,7 +413,7 @@ int DBManager::UpdateReceiverList
   return ERROR_NONE;
 }
 
-int DBManager::InsertNotification(list<shared_ptr<item::AbstractItem>> addedItem) {
+int DBManager::InsertNotification(list<shared_ptr<item::AbstractItem>> addedList) {
   int ret = ERROR_NONE;
   char* query;
   int64_t priv_id = 0;
@@ -428,7 +428,7 @@ int DBManager::InsertNotification(list<shared_ptr<item::AbstractItem>> addedItem
     return ERROR_FROM_DB;
   }
 
-  for (auto& i : addedItem) {
+  for (auto& i : addedList) {
     uid_t uid = static_pointer_cast<IItemInfoInternal>(i->GetInfo())->GetUid();
     list<shared_ptr<item::AbstractItem>> item_list =
         GetNotificationList(i->GetSenderAppId(), i->GetId(), uid);
@@ -476,7 +476,7 @@ int DBManager::InsertNotification(list<shared_ptr<item::AbstractItem>> addedItem
   }
 
   if (ret == ERROR_NONE) {
-    CheckLimit(*(addedItem.begin()), db);
+    CheckLimit(*(addedList.begin()), db);
     if (sqlite3_exec(db, "END TRANSACTION", nullptr, nullptr, nullptr)) {
       LOGE("end transaction error : %s", sqlite3_errmsg(db));
       ret = ERROR_FROM_DB;
@@ -606,63 +606,56 @@ int DBManager::UpdateHideList(shared_ptr<item::AbstractItem> updatedItem,
   return ret;
 }
 
-int DBManager::UpdateNotification(shared_ptr<item::AbstractItem> updatedItem) {
-  int count, ret;
+int DBManager::UpdateNotification(list<shared_ptr<item::AbstractItem>> updatedList) {
+  int ret = ERROR_NONE;
   char* query;
-  uid_t uid =
-      static_pointer_cast<IItemInfoInternal>(updatedItem->GetInfo())->GetUid();
-  int64_t priv_id = static_pointer_cast<IItemInfoInternal>(
-      updatedItem->GetInfo())->GetPrivateId();
-
-  ret = GetCount(priv_id,
-      updatedItem->GetId(), updatedItem->GetSenderAppId(), uid, &count);
-  if (ret != ERROR_NONE) {
-    LOGE("fail to get count");
-    return ret;
-  }
-
-  if (count <= 0) {
-    LOGE("not exist priv_id(%" PRId64 ") id(%s) for appid(%s)", priv_id,
-        updatedItem->GetId().c_str(), updatedItem->GetSenderAppId().c_str());
-    return ERROR_NOT_EXIST_ID;
-  }
-
   sqlite3* db = OpenDB();
   if (db == nullptr)
     return ERROR_FROM_DB;
 
-  Bundle b = updatedItem->Serialize();
-  query = sqlite3_mprintf("UPDATE noti_ex_list SET"
-     " pkg_id = %Q, channel = %Q, policy = %d, data = %Q, insert_time = %d"
-     " WHERE priv_id = %" PRId64 "",
-     GetPkgId(updatedItem->GetSenderAppId(), uid).c_str(),
-     updatedItem->GetChannel().c_str(),
-     static_cast<int>(updatedItem->GetPolicy()),
-     reinterpret_cast<char*>(b.ToRaw().first.get()),
-     static_pointer_cast<IItemInfo>(updatedItem->GetInfo())->GetTime(),
-     priv_id);
-
-  if (!query) {
-    LOGE("OOM - sql query");
-    CloseDB(db);
-    return ERROR_OUT_OF_MEMORY;
-  }
-
   if (sqlite3_exec(db, "BEGIN TRANSACTION", nullptr, nullptr, nullptr)) {
     LOGE("begin transaction error : %s", sqlite3_errmsg(db));
-    sqlite3_free(query);
     CloseDB(db);
     return ERROR_FROM_DB;
   }
 
-  ret = ExecuteQuery(db, query, nullptr);
-  sqlite3_free(query);
-  if (ret != ERROR_NONE)
-    goto out;
+  for (auto& i : updatedList) {
+    uid_t uid = static_pointer_cast<IItemInfoInternal>(i->GetInfo())->GetUid();
+    list<shared_ptr<item::AbstractItem>> item_list =
+        GetNotificationList(i->GetSenderAppId(), i->GetId(), uid);
 
-  ret = UpdateReceiverList(updatedItem, db);
+    if (item_list.empty()) {
+      LOGE("not exist id(%s) for appid(%s)", i->GetId().c_str(), i->GetSenderAppId().c_str());
+      ret = ERROR_NOT_EXIST_ID;
+      break;
+    }
 
-out:
+    Bundle b = i->Serialize();
+    query = sqlite3_mprintf("UPDATE noti_ex_list SET"
+        " pkg_id = %Q, channel = %Q, policy = %d, data = %Q, insert_time = %d"
+        " WHERE priv_id = %" PRId64 "",
+        GetPkgId(i->GetSenderAppId(), uid).c_str(),
+        i->GetChannel().c_str(),
+        static_cast<int>(i->GetPolicy()),
+        reinterpret_cast<char*>(b.ToRaw().first.get()),
+        static_pointer_cast<IItemInfo>(i->GetInfo())->GetTime(),
+        static_pointer_cast<IItemInfoInternal>(item_list.front()->GetInfo())->GetPrivateId());
+    if (!query) {
+      LOGE("OOM - sql query");
+      ret = ERROR_OUT_OF_MEMORY;
+      break;
+    }
+
+    ret = ExecuteQuery(db, query, nullptr);
+    sqlite3_free(query);
+    if (ret != ERROR_NONE)
+      break;
+
+    ret = UpdateReceiverList(i, db);
+    if (ret != ERROR_NONE)
+      break;
+  }
+
   if (ret == ERROR_NONE) {
     if (sqlite3_exec(db, "END TRANSACTION", nullptr, nullptr, nullptr)) {
       LOGE("end transaction error : %s", sqlite3_errmsg(db));
@@ -670,7 +663,7 @@ out:
     }
   } else {
     if (sqlite3_exec(db, "ROLLBACK TRANSACTION", nullptr, nullptr, nullptr))
-    LOGE("rollback transaction error : %s", sqlite3_errmsg(db));
+      LOGE("rollback transaction error : %s", sqlite3_errmsg(db));
   }
 
   CloseDB(db);
@@ -737,8 +730,8 @@ list<shared_ptr<item::AbstractItem>> DBManager::GetNotificationList(
   return item_list;
 }
 
-list<shared_ptr<item::AbstractItem>> DBManager::GetNotificationList
-                             (string app_id, string root_id, uid_t uid) {
+list<shared_ptr<item::AbstractItem>> DBManager::GetNotificationList(
+    string app_id, string root_id, uid_t uid) {
   char* query;
   list<shared_ptr<item::AbstractItem>> item_list;
 
@@ -757,8 +750,8 @@ list<shared_ptr<item::AbstractItem>> DBManager::GetNotificationList
   return item_list;
 }
 
-list<shared_ptr<item::AbstractItem>> DBManager::GetNotificationList
-                             (string app_id, int64_t priv_id, uid_t uid) {
+list<shared_ptr<item::AbstractItem>> DBManager::GetNotificationList(
+    string app_id, int64_t priv_id, uid_t uid) {
   char* query;
   list<shared_ptr<item::AbstractItem>> item_list;
 
@@ -778,7 +771,7 @@ list<shared_ptr<item::AbstractItem>> DBManager::GetNotificationList
 }
 
 list<shared_ptr<item::AbstractItem>> DBManager::GetNotificationList(
-      uid_t uid, string channel) {
+    uid_t uid, string channel) {
   int ret, sim_mode;
   char* query;
   list<shared_ptr<item::AbstractItem>> item_list;
@@ -817,21 +810,46 @@ list<shared_ptr<item::AbstractItem>> DBManager::GetNotificationList(
   return item_list;
 }
 
-int DBManager::DeleteNotification(shared_ptr<item::AbstractItem> deletedItem) {
-  int ret;
+int DBManager::DeleteNotification(
+    list<shared_ptr<item::AbstractItem>> deletedList) {
+  int ret = ERROR_NONE;
   char* query;
-  int64_t priv_id = static_pointer_cast<IItemInfoInternal>(
-      deletedItem->GetInfo())->GetPrivateId();
+  sqlite3* db = OpenDB();
+  if (db == nullptr)
+    return ERROR_FROM_DB;
 
-  query = sqlite3_mprintf("DELETE FROM noti_ex_list WHERE priv_id = %" PRId64 "",
-      priv_id);
-  if (!query) {
-    LOGE("OOM - sql query");
-    return ERROR_OUT_OF_MEMORY;
+  if (sqlite3_exec(db, "BEGIN TRANSACTION", nullptr, nullptr, nullptr)) {
+    LOGE("begin transaction error : %s", sqlite3_errmsg(db));
+    CloseDB(db);
+    return ERROR_FROM_DB;
   }
 
-  ret = ExecuteQuery(query, nullptr);
-  sqlite3_free(query);
+  for (auto& i : deletedList) {
+    query = sqlite3_mprintf("DELETE FROM noti_ex_list WHERE priv_id = %" PRId64 "",
+      static_pointer_cast<IItemInfoInternal>(i->GetInfo())->GetPrivateId());
+    if (!query) {
+      LOGE("OOM - sql query");
+      ret = ERROR_OUT_OF_MEMORY;
+      break;
+    }
+
+    ret = ExecuteQuery(db, query, nullptr);
+    sqlite3_free(query);
+    if (ret != ERROR_NONE)
+      break;
+  }
+
+  if (ret == ERROR_NONE) {
+    if (sqlite3_exec(db, "END TRANSACTION", nullptr, nullptr, nullptr)) {
+      LOGE("end transaction error : %s", sqlite3_errmsg(db));
+      ret = ERROR_FROM_DB;
+    }
+  } else {
+    if (sqlite3_exec(db, "ROLLBACK TRANSACTION", nullptr, nullptr, nullptr))
+    LOGE("rollback transaction error : %s", sqlite3_errmsg(db));
+  }
+
+  CloseDB(db);
   return ret;
 }
 

@@ -48,6 +48,7 @@ class EXPORT_API Manager : public IEventObserver {
   int Hide(std::shared_ptr<item::AbstractItem> noti);
   std::unique_ptr<item::AbstractItem> FindByRootID(std::string id);
   int SendEvent(const IEventInfo& info, std::shared_ptr<item::AbstractItem> noti);
+  int SendEvent(const IEventInfo& info, std::list<std::shared_ptr<item::AbstractItem>> notiList);
   void OnEvent(const IEventInfo& info,
       std::list<tizen_base::Bundle> serialized) override;
   std::list<tizen_base::Bundle> OnRequest(const IEventInfo& info) override;
@@ -57,9 +58,9 @@ class EXPORT_API Manager : public IEventObserver {
   static std::string GetPath();
 
  protected:
-  virtual void OnAdd(const IEventInfo& info, std::list<std::shared_ptr<item::AbstractItem>> addedItem);
-  virtual void OnUpdate(const IEventInfo& info, std::shared_ptr<item::AbstractItem> updatedItem);
-  virtual void OnDelete(const IEventInfo& info, std::shared_ptr<item::AbstractItem> deletedItem);
+  virtual void OnAdd(const IEventInfo& info, std::list<std::shared_ptr<item::AbstractItem>> addedList);
+  virtual void OnUpdate(const IEventInfo& info, std::list<std::shared_ptr<item::AbstractItem>> updatedList);
+  virtual void OnDelete(const IEventInfo& info, std::list<std::shared_ptr<item::AbstractItem>> deletedList);
   virtual void OnError(NotificationError error, int requestId);
   virtual std::list<std::shared_ptr<item::AbstractItem>> OnRequestEvent(
       const IEventInfo& info);

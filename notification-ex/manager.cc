@@ -165,6 +165,17 @@ int Manager::SendEvent(const IEventInfo& info,
   return info.GetRequestId();
 }
 
+int Manager::SendEvent(const IEventInfo& info,
+    list<shared_ptr<item::AbstractItem>> notiList) {
+  list<Bundle> serialized_list;
+  for (auto& i : notiList) {
+    Bundle b = i->Serialize();
+    serialized_list.push_back(b);
+  }
+  impl_->sender_->Notify(info, serialized_list);
+  return info.GetRequestId();
+}
+
 list<Bundle> Manager::OnRequest(const IEventInfo& info) {
   list<shared_ptr<item::AbstractItem>> item_list = OnRequestEvent(info);
   list<Bundle> serialized_list;
@@ -205,21 +216,27 @@ void Manager::OnEvent(const IEventInfo& info, list<Bundle> serialized) {
       break;
     }
     case EventInfo::Update: {
+      list<shared_ptr<item::AbstractItem>> updated;
       for (auto& i : serialized) {
         gen_item = ItemInflator::Create(i);
         if (std::static_pointer_cast<IItemInfoInternal>(gen_item->GetInfo())
               ->CanReceive(impl_->receiver_group_))
-          OnUpdate(info, gen_item);
+          updated.emplace_back(gen_item);
       }
+      if (updated.size() > 0)
+        OnUpdate(info, updated);
       break;
     }
     case EventInfo::Delete: {
+      list<shared_ptr<item::AbstractItem>> deleted;
       for (auto& i : serialized) {
         gen_item = ItemInflator::Create(i);
         if (std::static_pointer_cast<IItemInfoInternal>(gen_item->GetInfo())
               ->CanReceive(impl_->receiver_group_))
-          OnDelete(info, gen_item);
+          deleted.emplace_back(gen_item);
       }
+      if (deleted.size() > 0)
+        OnDelete(info, deleted);
       break;
     }
     case EventInfo::Get:
@@ -228,24 +245,27 @@ void Manager::OnEvent(const IEventInfo& info, list<Bundle> serialized) {
       break;
     case EventInfo::Count:
       break;
-    case EventInfo::DeleteAll:
-      OnDelete(info, shared_ptr<AbstractItem>(new NullItem()));
+    case EventInfo::DeleteAll: {
+      list<shared_ptr<item::AbstractItem>> deleted;
+      deleted.emplace_back(new NullItem());
+      OnDelete(info, deleted);
       break;
+    }
     case EventInfo::Custom:
       break;
   }
 }
 
 void Manager::OnAdd(const IEventInfo& info,
-      list<shared_ptr<item::AbstractItem>> addedItem) {
+      list<shared_ptr<item::AbstractItem>> addedList) {
 }
 
 void Manager::OnUpdate(const IEventInfo& info,
-      shared_ptr<item::AbstractItem> updatedItem) {
+      list<shared_ptr<item::AbstractItem>> updatedList) {
 }
 
 void Manager::OnDelete(const IEventInfo& info,
-      shared_ptr<item::AbstractItem> deletedItem) {
+      list<shared_ptr<item::AbstractItem>> deletedList) {
 }
 
 void Manager::OnError(NotificationError error, int requestId) {

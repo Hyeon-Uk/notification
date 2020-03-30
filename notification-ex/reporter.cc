@@ -78,9 +78,7 @@ void Reporter::SendError(const IEventInfo& info, NotificationError error) {
 int Reporter::Post(std::shared_ptr<item::AbstractItem> noti) {
   LOGI("Post noti");
   static_pointer_cast<IItemInfoInternal>(noti->GetInfo())->SetTime(time(NULL));
-  SharedFile* shared_file = new SharedFile();
-  shared_file->CopyPrivateFile(noti);
-  delete shared_file;
+  SharedFile::CopyPrivateFile(noti);
 
   return impl_->SendNotify(noti, EventInfo::Post);
 }
@@ -92,10 +90,7 @@ int Reporter::Post(std::list<std::shared_ptr<AbstractItem>> notiList) {
     static_pointer_cast<IItemInfoInternal>(i->GetInfo())->SetTime(time(NULL));
     Bundle b = i->Serialize();
     serialized_list.push_back(b);
-
-    SharedFile* shared_file = new SharedFile();
-    shared_file->CopyPrivateFile(i);
-    delete shared_file;
+    SharedFile::CopyPrivateFile(i);
   }
   impl_->sender_->Notify(info, serialized_list);
   return info.GetRequestId();
@@ -103,15 +98,39 @@ int Reporter::Post(std::list<std::shared_ptr<AbstractItem>> notiList) {
 
 int Reporter::Update(std::shared_ptr<AbstractItem> noti) {
   static_pointer_cast<IItemInfoInternal>(noti->GetInfo())->SetTime(time(NULL));
-  SharedFile* shared_file = new SharedFile();
-  shared_file->CopyPrivateFile(noti);
-  delete shared_file;
+  SharedFile::CopyPrivateFile(noti);
 
   return impl_->SendNotify(noti, EventInfo::Update);
 }
 
+int Reporter::Update(std::list<std::shared_ptr<AbstractItem>> notiList) {
+  EventInfo info(EventInfo::Update, util::GetAppId(), "");
+  list<Bundle> serialized_list;
+  for (auto& i : notiList) {
+    static_pointer_cast<IItemInfoInternal>(i->GetInfo())->SetTime(time(NULL));
+    Bundle b = i->Serialize();
+    serialized_list.push_back(b);
+    SharedFile::CopyPrivateFile(i);
+  }
+  impl_->sender_->Notify(info, serialized_list);
+  return info.GetRequestId();
+}
+
 int Reporter::Delete(std::shared_ptr<AbstractItem> noti) {
   return impl_->SendNotify(noti, EventInfo::Delete);
+}
+
+int Reporter::Delete(std::list<std::shared_ptr<AbstractItem>> notiList) {
+  EventInfo info(EventInfo::Delete, util::GetAppId(), "");
+  list<Bundle> serialized_list;
+  for (auto& i : notiList) {
+    static_pointer_cast<IItemInfoInternal>(i->GetInfo())->SetTime(time(NULL));
+    Bundle b = i->Serialize();
+    serialized_list.push_back(b);
+    SharedFile::CopyPrivateFile(i);
+  }
+  impl_->sender_->Notify(info, serialized_list);
+  return info.GetRequestId();
 }
 
 int Reporter::DeleteAll() {
@@ -173,14 +192,6 @@ list<unique_ptr<AbstractItem>> Reporter::FindAll() {
     gen_item_list.push_back(ItemInflator::Create(i));
 
   return gen_item_list;
-}
-
-int Reporter::SendEvent(const IEventInfo& info,
-    shared_ptr<item::AbstractItem> noti) {
-  Bundle serialized = noti->Serialize();
-  list<Bundle> serialized_list {serialized};
-  impl_->sender_->Notify(info, serialized_list);
-  return info.GetRequestId();
 }
 
 int Reporter::SendEvent(const IEventInfo& info,

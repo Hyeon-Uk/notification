@@ -177,8 +177,9 @@ void testapp_show_menu(testapp_menu_type_e menu)
 		testapp_print("==========================================\n");
 		testapp_print("1.  Post a simple notification\n");
 		testapp_print("2.  Post a multiple notification\n");
-		testapp_print("3.  Get notifications\n");
-		testapp_print("4.  Delete notifications\n");
+		testapp_print("3.  Post a chatmessage notification\n");
+		testapp_print("4.  Get notifications\n");
+		testapp_print("5.  Delete notifications\n");
 		testapp_print("0.  Exit \n");
 		testapp_print("------------------------------------------\n");
 		break;
@@ -873,33 +874,30 @@ void _noti_ex_manager_events_error_cb(noti_ex_manager_h handle,
 		noti_ex_error_e error, int request_id, void *user_data) {
 }
 
-
 static int testapp_ex_test_post_notification()
 {
 	noti_ex_reporter_h handle;
 	noti_ex_item_h group_item = NULL;
 	noti_ex_item_h child_item = NULL;
-
 	int request_id;
-	int ret = NOTI_EX_ERROR_NONE;
+	int ret;
 
 	noti_ex_reporter_events_s ev;
 	ev.event = _reporter_events_event_cb;
 	ev.error = _reporter_events_error_cb;
 
-	ret = noti_ex_reporter_create(&handle, ev, NULL);
-	ret = noti_ex_item_group_create(&group_item, "group_id");
-	ret = noti_ex_item_button_create(&child_item, "button_id", "button_title");
-	ret = noti_ex_item_group_add_child(group_item, child_item);
+	noti_ex_reporter_create(&handle, ev, NULL);
+
+	noti_ex_item_group_create(&group_item, "group_id");
+	noti_ex_item_button_create(&child_item, "button_id", "button_title");
+	noti_ex_item_group_add_child(group_item, child_item);
 	noti_ex_item_destroy(child_item);
 
 	ret = noti_ex_reporter_post(handle, group_item, &request_id);
+	testapp_print("notification-ex post[%d]", ret);
 
 	noti_ex_item_destroy(group_item);
 	noti_ex_reporter_destroy(handle);
-
-	testapp_print("notification-ex post[%d]", ret);
-
 	return ret;
 }
 
@@ -907,9 +905,8 @@ static int testapp_ex_test_post_notifications()
 {
 	noti_ex_reporter_h handle;
 	noti_ex_item_h child_item = NULL;
-
 	int request_id;
-	int ret = NOTI_EX_ERROR_NONE;
+	int ret;
 
 	noti_ex_item_h *noti_list = (noti_ex_item_h *)calloc(2, sizeof(noti_ex_item_h));
 
@@ -917,30 +914,65 @@ static int testapp_ex_test_post_notifications()
 	ev.event = _reporter_events_event_cb;
 	ev.error = _reporter_events_error_cb;
 
-	ret = noti_ex_reporter_create(&handle, ev, NULL);
+	noti_ex_reporter_create(&handle, ev, NULL);
 
-	ret = noti_ex_item_group_create(&noti_list[0], "group_id1");
-	ret = noti_ex_item_button_create(&child_item, "button_id1", "button_title");
-	ret = noti_ex_item_group_add_child(noti_list[0], child_item);
-	ret = noti_ex_item_set_channel(noti_list[0], "test");
+	noti_ex_item_group_create(&noti_list[0], "group_id1");
+	noti_ex_item_button_create(&child_item, "button_id1", "button_title");
+	noti_ex_item_group_add_child(noti_list[0], child_item);
+	noti_ex_item_set_channel(noti_list[0], "test");
 	noti_ex_item_destroy(child_item);
 
-	ret = noti_ex_item_group_create(&noti_list[1], "group_id2");
-	ret = noti_ex_item_button_create(&child_item, "button_id2", "button_title");
-	ret = noti_ex_item_group_add_child(noti_list[1], child_item);
-	ret = noti_ex_item_set_channel(noti_list[1], "test");
+	noti_ex_item_group_create(&noti_list[1], "group_id2");
+	noti_ex_item_button_create(&child_item, "button_id2", "button_title");
+	noti_ex_item_group_add_child(noti_list[1], child_item);
+	noti_ex_item_set_channel(noti_list[1], "test");
 	noti_ex_item_destroy(child_item);
 
 	ret = noti_ex_reporter_post_list(handle, noti_list, 2, &request_id);
-	noti_ex_item_destroy(noti_list[0]);
-	noti_ex_item_destroy(noti_list[1]);
-
-	noti_ex_reporter_destroy(handle);
-
-	free(noti_list);
-
 	testapp_print("notification-ex post multi[%d]", ret);
 
+	noti_ex_item_destroy(noti_list[0]);
+	noti_ex_item_destroy(noti_list[1]);
+	noti_ex_reporter_destroy(handle);
+	free(noti_list);
+	return ret;
+}
+
+static int testapp_ex_test_post_chat_message_notification()
+{
+	noti_ex_reporter_h handle;
+	noti_ex_item_h chatmessage_item = NULL;
+	noti_ex_item_h name_handle = NULL;
+	noti_ex_item_h text_handle = NULL;
+	noti_ex_item_h image_handle = NULL;
+	noti_ex_item_h time_handle = NULL;
+	time_t current_time;
+
+	int request_id;
+	int ret;
+
+	noti_ex_reporter_events_s ev;
+	ev.event = _reporter_events_event_cb;
+	ev.error = _reporter_events_error_cb;
+
+	noti_ex_reporter_create(&handle, ev, NULL);
+
+	noti_ex_item_text_create(&name_handle, "name_id", "name", NULL);
+	noti_ex_item_text_create(&text_handle, "text_id", "text", NULL);
+	noti_ex_item_image_create(&image_handle, "image_id", "image_path");
+
+	time(&current_time);
+	noti_ex_item_time_create(&time_handle, "time_id", current_time);
+
+	ret = noti_ex_item_chat_message_create(&chatmessage_item, "message_id", name_handle,
+				text_handle, image_handle, time_handle, NOTI_EX_ITEM_CHAT_MESSAGE_TYPE_USER);
+	testapp_print("notification-ex chat message create [%d]", ret);
+
+	ret = noti_ex_reporter_post(handle, chatmessage_item, &request_id);
+	testapp_print("notification-ex post[%d]", ret);
+	noti_ex_item_destroy(chatmessage_item);
+
+	noti_ex_reporter_destroy(handle);
 	return ret;
 }
 
@@ -953,32 +985,32 @@ static int testapp_ex_test_get_notifications()
 	noti_ex_item_h group_item = NULL;
 
 	int count = 0;
-	int ret = NOTI_EX_ERROR_NONE;
 	int request_id;
 	char *id = NULL;
+	int ret;
 
 	noti_ex_reporter_events_s ev;
 	ev.event = _reporter_events_event_cb;
 	ev.error = _reporter_events_error_cb;
 
-	ret = noti_ex_reporter_create(&handle, ev, NULL);
+	noti_ex_reporter_create(&handle, ev, NULL);
 
-	ret = noti_ex_item_group_create(&group_item, "group_id3");
-	ret = noti_ex_item_text_create(&text_item, "text_id", "text", "hyperlink");
-	ret = noti_ex_item_group_add_child(group_item, text_item);
-	ret = noti_ex_item_set_channel(group_item, "test");
+	noti_ex_item_group_create(&group_item, "group_id3");
+	noti_ex_item_text_create(&text_item, "text_id", "text", "hyperlink");
+	noti_ex_item_group_add_child(group_item, text_item);
+	noti_ex_item_set_channel(group_item, "test");
 
-	ret = noti_ex_reporter_post(handle, group_item, &request_id);
+	noti_ex_reporter_post(handle, group_item, &request_id);
 	noti_ex_item_destroy(text_item);
 	noti_ex_item_destroy(group_item);
 
 	ret = noti_ex_reporter_find_by_channel(handle, "test", &noti_list_channel, &count);
-	ret = noti_ex_item_get_id(noti_list_channel[0], &id);
-	testapp_print("notification-ex Get by_channel[%d][%s]\n", count, id);
+	noti_ex_item_get_id(noti_list_channel[0], &id);
+	testapp_print("notification-ex Get by_channel [%d] [%d][%s]\n", ret, count, id);
 
-	ret = noti_ex_reporter_find_all(handle, &noti_list_all, &count);
-	ret = noti_ex_item_get_id(noti_list_all[0], &id);
-	testapp_print("notification-ex Get all[%d][%s]\n", count, id);
+	noti_ex_reporter_find_all(handle, &noti_list_all, &count);
+	noti_ex_item_get_id(noti_list_all[0], &id);
+	testapp_print("notification-ex Get all[%d] [%d][%s]\n", ret, count, id);
 
 	noti_ex_reporter_destroy(handle);
 	return ret;
@@ -986,21 +1018,31 @@ static int testapp_ex_test_get_notifications()
 
 static int testapp_ex_test_delete_notifications()
 {
-	noti_ex_manager_h handle;
+	noti_ex_reporter_h handle;
+	noti_ex_item_h group_item = NULL;
+	noti_ex_item_h child_item = NULL;
 
 	int request_id;
-	int ret = NOTI_EX_ERROR_NONE;
+	int ret;
 
-	noti_ex_manager_events_s ev;
-	ev.error = _noti_ex_manager_events_error_cb;
+	noti_ex_reporter_events_s ev;
+	ev.event = _reporter_events_event_cb;
+	ev.error = _reporter_events_error_cb;
 
-	ret = noti_ex_manager_create(&handle, NOTI_EX_RECEIVER_GROUP_POPUP, ev, NULL);
+	noti_ex_reporter_create(&handle, ev, NULL);
 
-	ret = noti_ex_manager_delete_all(handle, &request_id);
+	noti_ex_item_group_create(&group_item, "group_id");
+	noti_ex_item_button_create(&child_item, "button_id", "button_title");
+	ret = noti_ex_item_group_add_child(group_item, child_item);
+	noti_ex_item_destroy(child_item);
 
-	noti_ex_manager_destroy(handle);
+	ret = noti_ex_reporter_post(handle, group_item, &request_id);
+	testapp_print("notification-ex delete - post [%d]", ret);
+	noti_ex_item_destroy(group_item);
 
-	testapp_print("notification-ex deletebychannel [test]");
+	noti_ex_reporter_delete_all(handle, &request_id);
+	testapp_print("notification-ex delete - delete all [%d]", ret);
+	noti_ex_reporter_destroy(handle);
 	return ret;
 }
 
@@ -1018,10 +1060,14 @@ static gboolean testapp_interpret_command_ex_test(int selected_number)
 		break;
 
 	case 3:
-		testapp_ex_test_get_notifications();
+		testapp_ex_test_post_chat_message_notification();
 		break;
 
 	case 4:
+		testapp_ex_test_get_notifications();
+		break;
+
+	case 5:
 		testapp_ex_test_delete_notifications();
 		break;
 

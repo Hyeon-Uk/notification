@@ -41,13 +41,13 @@ class EXPORT_API SharedFile {
 
   bool IsPrivatePath(std::string path) const;
   std::string GetDataPath(std::string app_id, std::string path) const;
-  int SetPrivateSharing(std::list<std::shared_ptr<AbstractItem>> item,
+  int SetPrivateSharing(std::list<std::shared_ptr<AbstractItem>> notiList,
           std::multimap<std::string, std::string> receiver_group_map);
-  int UpdatePrivateSharing(std::shared_ptr<AbstractItem>item,
+  int UpdatePrivateSharing(std::list<std::shared_ptr<AbstractItem>> notiList,
           std::multimap<std::string, std::string> receiver_group_map);
-  int RemovePrivateSharing(std::shared_ptr<AbstractItem>item,
+  int RemovePrivateSharing(std::list<std::shared_ptr<AbstractItem>> notiList,
           std::multimap<std::string, std::string> receiver_group_map);
-  int CopyPrivateFile(std::shared_ptr<item::AbstractItem>added_item);
+  static int CopyPrivateFile(std::shared_ptr<item::AbstractItem>added_item);
 
  private:
   class SharingData {
@@ -66,10 +66,10 @@ class EXPORT_API SharedFile {
     ~SharingTarget();
     std::string target_id;
   };
-  const char* GetLastIndex(const char* path, const char* search) const;
-  bool MakeDir(const char* path);
-  std::string GetDir(std::string path);
-  int CopyFile(const char* source, const char* dest);
+  static const char* GetLastIndex(const char* path, const char* search);
+  static bool MakeDir(const char* path);
+  static std::string GetDir(std::string path);
+  static int CopyFile(const char* source, const char* dest);
   std::vector<char*> ConvertListToArray(const std::list<std::string>& data);
   SharingData FindSharingData(std::string appid);
   int SetSharingData(SharingData sharing_data,
