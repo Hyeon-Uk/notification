@@ -201,9 +201,7 @@ void GroupItem::RemoveChild(string itemId) {
 }
 
 void GroupItem::RemoveChildren() {
-  for (auto& i : impl_->children_list_) {
-    impl_->children_list_.remove(i);
-  }
+  impl_->children_list_.clear();
 }
 
 list<shared_ptr<AbstractItem>> GroupItem::GetChildren() {
