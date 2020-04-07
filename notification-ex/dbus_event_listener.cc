@@ -162,29 +162,31 @@ void DBusEventListener::Impl::SignalCb(GDBusConnection* connection,
     || (cur_appid == sender_appid))
     return;
 
-  LOGE("%s : %s", cur_appid.c_str(), sender_appid.c_str());
+  LOGD("%s : %s", cur_appid.c_str(), sender_appid.c_str());
 
-  char* raw = nullptr;
-  list<Bundle> ret_list;
-  while (g_variant_iter_loop(iter, "(s)", &raw) && raw != nullptr) {
-    Bundle ret(raw);
-    ret_list.emplace_back(ret);
-  }
-
-  Bundle b(event_info_raw);
-  EventInfo info(b);
-
-  if (info.GetEventType() == EventInfo::Post
-           || info.GetEventType() == EventInfo::Update) {
-    uid_t uid = GetSenderUid(connection, sender_name);
-    if (uid >= NORMAL_UID_BASE) {
-      pid_t pid = GetSenderPid(connection, sender_name);
-      info.SetValidatedOwner(util::GetAppId(pid));
-      info.SetValidatedUid(uid);
+  try {
+    char* raw = nullptr;
+    list<Bundle> ret_list;
+    while (g_variant_iter_loop(iter, "(s)", &raw) && raw != nullptr) {
+      Bundle ret(raw);
+      ret_list.emplace_back(ret);
     }
-  }
 
-  dl->parent_->NotifyObserver(info, ret_list);
+    Bundle b(event_info_raw);
+    EventInfo info(b);
+    if (info.GetEventType() == EventInfo::Post
+           || info.GetEventType() == EventInfo::Update) {
+      uid_t uid = GetSenderUid(connection, sender_name);
+      if (uid >= NORMAL_UID_BASE) {
+        pid_t pid = GetSenderPid(connection, sender_name);
+        info.SetValidatedOwner(util::GetAppId(pid));
+        info.SetValidatedUid(uid);
+      }
+    }
+    dl->parent_->NotifyObserver(info, ret_list);
+  } catch(Exception &ex) {
+    LOGE("%s %d", ex.what(), ex.GetErrorCode());
+  }
 }
 
 void DBusEventListener::Impl::OnMethodCall(
@@ -195,32 +197,36 @@ void DBusEventListener::Impl::OnMethodCall(
   LOGI("method_name[%s] sender[%s]", method_name, sender);
   DBusEventListener::Impl* dl = static_cast<DBusEventListener::Impl*>(user_data);
   GVariant *reply_body = NULL;
-  if (g_strcmp0(method_name, "Get") == 0) {
+  try {
     char* appid = NULL;
     char* serialized = NULL;
-    g_variant_get(parameters, "(&s&s)", &appid, &serialized);
+    if (g_strcmp0(method_name, "Get") == 0) {
+      g_variant_get(parameters, "(&s&s)", &appid, &serialized);
 
-    Bundle b(serialized);
-    EventInfo info(b);
-    list<Bundle> result = dl->parent_->NotifyObserver(info);
-    GVariantBuilder* builder = g_variant_builder_new(G_VARIANT_TYPE("a(s)"));
-    for (auto& i : result) {
-      g_variant_builder_add(builder, "(s)",
+      Bundle b(serialized);
+      EventInfo info(b);
+      list<Bundle> result = dl->parent_->NotifyObserver(info);
+      GVariantBuilder* builder = g_variant_builder_new(G_VARIANT_TYPE("a(s)"));
+      for (auto& i : result) {
+        g_variant_builder_add(builder, "(s)",
           reinterpret_cast<char*>(i.ToRaw().first.get()));
-    }
-    reply_body = g_variant_new("(a(s))", builder);
-    g_variant_builder_unref(builder);
-  } else if (g_strcmp0(method_name, "Count") == 0) {
-    char* appid = NULL;
-    char* serialized = NULL;
-    g_variant_get(parameters, "(&s&s)", &appid, &serialized);
+      }
+      reply_body = g_variant_new("(a(s))", builder);
+      g_variant_builder_unref(builder);
+    } else if (g_strcmp0(method_name, "Count") == 0) {
+      g_variant_get(parameters, "(&s&s)", &appid, &serialized);
 
-    Bundle b(serialized);
-    EventInfo info(b);
-    int num = dl->parent_->NotifyNumberRequest(info);
-    reply_body = g_variant_new("(i)", num);
+      Bundle b(serialized);
+      EventInfo info(b);
+      int num = dl->parent_->NotifyNumberRequest(info);
+      reply_body = g_variant_new("(i)", num);
+    }
+    g_dbus_method_invocation_return_value(invocation, reply_body);
+  } catch (Exception &ex) {
+    LOGE("%s %d", ex.what(), ex.GetErrorCode());
+    g_dbus_method_invocation_return_error(invocation, noti_ex_error_quark(),
+            ERROR_IO_ERROR, "OnMethodCall fail");
   }
-  g_dbus_method_invocation_return_value(invocation, reply_body);
 }
 
 int DBusEventListener::Impl::RegisterGDBusInterface() {
