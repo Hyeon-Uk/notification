@@ -18,11 +18,15 @@
 #define MOCK_GIO_H_
 
 #include "mock.h"
-#include <gio/gio.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+typedef struct _GFile GFile;
+typedef struct _GError GError;
+typedef struct _GCancellable GCancellable;
+typedef int gboolean;
 
 DECLARE_FAKE_VALUE_FUNC(GFile*, g_file_new_for_path, const char*);
 DECLARE_FAKE_VALUE_FUNC(gboolean, g_file_query_exists, GFile*, GCancellable*);
