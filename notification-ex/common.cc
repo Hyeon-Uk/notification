@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+#include <string.h>
+
 #include "notification-ex/common.h"
 
 #ifdef LOG_TAG
