@@ -18,6 +18,7 @@
 #define NOTIFICATION_EX_COMMON_H_
 
 #include <tizen.h>
+#include <gio/gio.h>
 
 #define REGULAR_UID_MIN 5000
 
@@ -36,7 +37,8 @@ enum NotificationError {
   ERROR_SERVICE_NOT_READY = TIZEN_ERROR_NOTIFICATION | 0x05, /**< No response from notification service */
 };
 
+GQuark noti_ex_error_quark(void);
+
 }  // namespace notification
 
 #endif  // NOTIFICATION_EX_COMMON_H_
-

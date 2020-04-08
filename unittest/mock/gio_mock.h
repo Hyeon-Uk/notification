@@ -18,32 +18,11 @@
 #define MOCK_GIO_H_
 
 #include "mock.h"
-#include <glib.h>
+#include <gio/gio.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-typedef struct _GFile GFile;
-typedef struct _GError GError;
-typedef void GDBusConnection;
-typedef void GCancellable;
-typedef void* gpointer;
-typedef int gboolean;
-
-typedef enum {
-  G_FILE_COPY_NONE                 = 0,
-  G_FILE_COPY_OVERWRITE            = (1 << 0),
-  G_FILE_COPY_BACKUP               = (1 << 1),
-  G_FILE_COPY_NOFOLLOW_SYMLINKS    = (1 << 2),
-  G_FILE_COPY_ALL_METADATA         = (1 << 3),
-  G_FILE_COPY_NO_FALLBACK_FOR_MOVE = (1 << 4),
-  G_FILE_COPY_TARGET_DEFAULT_PERMS = (1 << 5)
-} GFileCopyFlags;
-
-
-typedef void (*GFileProgressCallback) (goffset current_num_bytes,
-    goffset total_num_bytes, gpointer user_data);
 
 DECLARE_FAKE_VALUE_FUNC(GFile*, g_file_new_for_path, const char*);
 DECLARE_FAKE_VALUE_FUNC(gboolean, g_file_query_exists, GFile*, GCancellable*);
