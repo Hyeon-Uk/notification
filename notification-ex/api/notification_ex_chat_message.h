@@ -48,7 +48,7 @@ typedef enum _noti_ex_item_chat_message_type {
  * @remarks @a handle must be released using noti_ex_item_destroy().
  *          @a name, @a text, @a image and @a time must not be released if the function returns #NOTI_EX_ERROR_NONE.
  *          @a name, @a text, @a image and @a time will be released when @a handle is released.
- *          @a name and @a time are mandatory (cannot be null). @a text and @a image cannot both be null.
+ *          @a name and @a time are mandatory (cannot be null). Both @a text and @a image cannot be null.
  * @param[out] handle The noti ex item handle
  * @param[in] id The id of notification_ex item
  * @param[in] name The notification_ex item handle for name
