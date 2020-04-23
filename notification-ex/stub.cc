@@ -3702,7 +3702,7 @@ extern "C" EXPORT_API int noti_ex_item_icon_create(noti_ex_item_h *handle,
   return NOTI_EX_ERROR_NONE;
 }
 
-int noti_ex_item_icon_get_icon_path(noti_ex_item_h handle, char **icon_path) {
+extern "C" EXPORT_API int noti_ex_item_icon_get_icon_path(noti_ex_item_h handle, char **icon_path) {
   if (handle == nullptr || icon_path == nullptr) {
     LOGE("Invalid parameter");
     return NOTI_EX_ERROR_INVALID_PARAMETER;
