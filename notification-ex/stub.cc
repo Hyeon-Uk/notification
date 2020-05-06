@@ -2874,15 +2874,14 @@ extern "C" EXPORT_API int noti_ex_manager_send_error(noti_ex_manager_h handle,
 }
 
 extern "C" EXPORT_API int noti_ex_manager_get_notification_count(
-    noti_ex_manager_h handle, int *cnt) {
-
-  if (handle == nullptr || cnt == nullptr) {
+    noti_ex_manager_h handle, int *count) {
+  if (handle == nullptr || count == nullptr) {
     LOGE("Invalid parameter");
     return NOTI_EX_ERROR_INVALID_PARAMETER;
   }
   try {
     ManagerStub* stub = static_cast<ManagerStub*>(handle);
-    *cnt = stub->GetCount();
+    *count = stub->GetCount();
   } catch (Exception &ex) {
     LOGE("%s %d", ex.what(), ex.GetErrorCode());
     return NOTI_EX_ERROR_IO_ERROR;

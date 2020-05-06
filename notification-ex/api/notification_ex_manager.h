@@ -389,7 +389,7 @@ int noti_ex_manager_update(noti_ex_manager_h handle, noti_ex_item_h item,
  * @privlevel partner
  * @privilege %http://tizen.org/privilege/notification.admin
  * @param[in] handle The notification manager handle
- * @param[in] noti The notification item to be updated
+ * @param[in] noti The notification item to be deleted
  * @param[out] request_id The id of request
  * @return #NOTI_EX_ERROR_NONE On success, other value on failure
  * @retval #NOTI_EX_ERROR_NONE Success
@@ -618,7 +618,7 @@ int noti_ex_manager_send_error(noti_ex_manager_h handle,
  * @privlevel partner
  * @privilege %http://tizen.org/privilege/notification.admin
  * @param[in] handle The notification manager handle
- * @param[out] cnt The count of notifications
+ * @param[out] count The count of notifications
  * @return #NOTI_EX_ERROR_NONE On success, other value on failure
  * @retval #NOTI_EX_ERROR_NONE Success
  * @retval #NOTI_EX_ERROR_PERMISSION_DENIED Permission deny
@@ -649,7 +649,7 @@ void _manager_events_error_cb(noti_ex_manager_h handle, noti_ex_error_e error,
 }
  * @endcode
  */
-int noti_ex_manager_get_notification_count(noti_ex_manager_h handle, int *cnt);
+int noti_ex_manager_get_notification_count(noti_ex_manager_h handle, int *count);
 
 /**
  * @}
