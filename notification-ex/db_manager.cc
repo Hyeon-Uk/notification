@@ -609,6 +609,7 @@ int DBManager::UpdateHideList(shared_ptr<item::AbstractItem> updatedItem,
 int DBManager::UpdateNotification(list<shared_ptr<item::AbstractItem>> updatedList) {
   int ret = ERROR_NONE;
   char* query;
+  int64_t priv_id;
   sqlite3* db = OpenDB();
   if (db == nullptr)
     return ERROR_FROM_DB;
@@ -630,6 +631,8 @@ int DBManager::UpdateNotification(list<shared_ptr<item::AbstractItem>> updatedLi
       break;
     }
 
+    priv_id = static_pointer_cast<IItemInfoInternal>(item_list.front()->GetInfo())->GetPrivateId();
+    static_pointer_cast<IItemInfoInternal>(i->GetInfo())->SetPrivateId(priv_id);
     Bundle b = i->Serialize();
     query = sqlite3_mprintf("UPDATE noti_ex_list SET"
         " pkg_id = %Q, channel = %Q, policy = %d, data = %Q, insert_time = %d"
@@ -639,7 +642,7 @@ int DBManager::UpdateNotification(list<shared_ptr<item::AbstractItem>> updatedLi
         static_cast<int>(i->GetPolicy()),
         reinterpret_cast<char*>(b.ToRaw().first.get()),
         static_pointer_cast<IItemInfo>(i->GetInfo())->GetTime(),
-        static_pointer_cast<IItemInfoInternal>(item_list.front()->GetInfo())->GetPrivateId());
+        priv_id);
     if (!query) {
       LOGE("OOM - sql query");
       ret = ERROR_OUT_OF_MEMORY;
