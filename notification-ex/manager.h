@@ -40,12 +40,12 @@ class EXPORT_API Manager : public IEventObserver {
   virtual ~Manager();
 
   std::list<std::unique_ptr<item::AbstractItem>> Get(std::string channel = "");
-  int Update(std::shared_ptr<item::AbstractItem> noti);
-  int Delete(std::shared_ptr<item::AbstractItem> noti);
-  int DeleteAll();
-  int DeleteByChannel(std::string channel);
-  int DeleteByAppId(std::string appId);
-  int Hide(std::shared_ptr<item::AbstractItem> noti);
+  int Update(std::shared_ptr<item::AbstractItem> noti, int& request_id);
+  int Delete(std::shared_ptr<item::AbstractItem> noti, int& request_id);
+  int DeleteAll(int& request_id);
+  int DeleteByChannel(std::string channel, int& request_id);
+  int DeleteByAppId(std::string appId, int& request_id);
+  int Hide(std::shared_ptr<item::AbstractItem> noti, int& request_id);
   std::unique_ptr<item::AbstractItem> FindByRootID(std::string id);
   int SendEvent(const IEventInfo& info, std::shared_ptr<item::AbstractItem> noti);
   int SendEvent(const IEventInfo& info, std::list<std::shared_ptr<item::AbstractItem>> notiList);

@@ -2626,6 +2626,13 @@ extern "C" EXPORT_API int noti_ex_manager_create(noti_ex_manager_h *handle,
     LOGE("Fail to create manager");
     return NOTI_EX_ERROR_IO_ERROR;
   }
+
+  int ret = get_last_result();
+  if (ret == ERROR_PERMISSION_DENIED || ret == ERROR_IO_ERROR) {
+    LOGE("error(%d)", ret);
+    delete stub;
+    return ret;
+  }
   stub->SetManagerCallbackInfo(unique_ptr<ManagerCallbackInfo>(
       new ManagerCallbackInfo(event_callbacks, data)));
   *handle = static_cast<noti_ex_manager_h>(stub);
@@ -2653,11 +2660,20 @@ extern "C" EXPORT_API int noti_ex_manager_get(noti_ex_manager_h handle,
   try {
     ManagerStub* stub = static_cast<ManagerStub*>(handle);
     list<unique_ptr<item::AbstractItem>> item_list = stub->Get();
+    int ret = get_last_result();
+    if (ret == ERROR_PERMISSION_DENIED || ret == ERROR_IO_ERROR) {
+      LOGE("error(%d)", ret);
+      *items = nullptr;
+      *count = 0;
+      return ret;
+    }
+
     if (item_list.size() == 0) {
       *items = nullptr;
       *count = 0;
       return NOTI_EX_ERROR_NONE;
     }
+
     noti_ex_item_h* added_item =
         (noti_ex_item_h*)calloc(item_list.size(), sizeof(noti_ex_item_h));
     if (added_item == nullptr) {
@@ -2689,6 +2705,14 @@ extern "C" EXPORT_API int noti_ex_manager_get_by_channel(
   try {
     ManagerStub* stub = static_cast<ManagerStub*>(handle);
     list<unique_ptr<item::AbstractItem>> item_list = stub->Get(channel);
+    int ret = get_last_result();
+    if (ret == ERROR_PERMISSION_DENIED || ret == ERROR_IO_ERROR) {
+      LOGE("error(%d)", ret);
+      *items = nullptr;
+      *count = 0;
+      return ret;
+    }
+
     if (item_list.size() == 0) {
       *items = nullptr;
       *count = 0;
@@ -2717,6 +2741,8 @@ extern "C" EXPORT_API int noti_ex_manager_get_by_channel(
 
 extern "C" EXPORT_API int noti_ex_manager_update(noti_ex_manager_h handle,
     noti_ex_item_h noti, int *request_id) {
+  int ret = ERROR_NONE;
+
   if (handle == nullptr || noti == nullptr || request_id == nullptr) {
     LOGE("Invalid parameter");
     return NOTI_EX_ERROR_INVALID_PARAMETER;
@@ -2728,21 +2754,24 @@ extern "C" EXPORT_API int noti_ex_manager_update(noti_ex_manager_h handle,
       LOGE("Invalid noti reference can not be sended");
       return NOTI_EX_ERROR_INVALID_PARAMETER;
     } else {
-      *request_id = stub->Update(sp->GetPtr());
+      ret = stub->Update(sp->GetPtr(), *request_id);
     }
   } catch (Exception &ex) {
     LOGE("%s %d", ex.what(), ex.GetErrorCode());
     return NOTI_EX_ERROR_IO_ERROR;
   }
-  return NOTI_EX_ERROR_NONE;
+  return ret;
 }
 
 extern "C" EXPORT_API int noti_ex_manager_delete(noti_ex_manager_h handle,
     noti_ex_item_h noti, int *request_id) {
+  int ret = ERROR_NONE;
+
   if (handle == nullptr || noti == nullptr || request_id == nullptr) {
     LOGE("Invalid parameter");
     return NOTI_EX_ERROR_INVALID_PARAMETER;
   }
+
   try {
     ManagerStub* stub = static_cast<ManagerStub*>(handle);
     Handle* item = static_cast<Handle*>(noti);
@@ -2750,33 +2779,38 @@ extern "C" EXPORT_API int noti_ex_manager_delete(noti_ex_manager_h handle,
       LOGE("Invalid noti reference can not be sended");
       return NOTI_EX_ERROR_INVALID_PARAMETER;
     } else {
-      *request_id = stub->Delete(item->GetPtr());
+      ret = stub->Delete(item->GetPtr(), *request_id);
     }
   } catch (Exception &ex) {
     LOGE("%s %d", ex.what(), ex.GetErrorCode());
     return NOTI_EX_ERROR_IO_ERROR;
   }
-  return NOTI_EX_ERROR_NONE;
+
+  return ret;
 }
 
 extern "C" EXPORT_API int noti_ex_manager_delete_all(noti_ex_manager_h handle,
     int *request_id) {
+  int ret = ERROR_NONE;
+
   if (handle == nullptr || request_id == nullptr) {
     LOGE("Invalid parameter");
     return NOTI_EX_ERROR_INVALID_PARAMETER;
   }
   try {
     ManagerStub* stub = static_cast<ManagerStub*>(handle);
-    *request_id = stub->DeleteAll();
+    ret = stub->DeleteAll(*request_id);
   } catch (Exception &ex) {
     LOGE("%s %d", ex.what(), ex.GetErrorCode());
     return NOTI_EX_ERROR_IO_ERROR;
   }
-  return NOTI_EX_ERROR_NONE;
+  return ret;
 }
 
 extern "C" EXPORT_API int noti_ex_manager_delete_by_channel(
     noti_ex_manager_h handle, const char* channel, int* request_id) {
+  int ret = ERROR_NONE;
+
   if (handle == nullptr || channel == nullptr || request_id == nullptr) {
     LOGE("Invalid parameter");
     return NOTI_EX_ERROR_INVALID_PARAMETER;
@@ -2784,17 +2818,19 @@ extern "C" EXPORT_API int noti_ex_manager_delete_by_channel(
 
   try {
     ManagerStub* stub = static_cast<ManagerStub*>(handle);
-    *request_id = stub->DeleteByChannel(channel);
+    ret = stub->DeleteByChannel(channel, *request_id);
   } catch (Exception &ex) {
     LOGE("%s %d", ex.what(), ex.GetErrorCode());
     return NOTI_EX_ERROR_IO_ERROR;
   }
 
-  return NOTI_EX_ERROR_NONE;
+  return ret;
 }
 
 extern "C" EXPORT_API int noti_ex_manager_delete_by_appid(
     noti_ex_manager_h handle, const char* app_id, int* request_id) {
+  int ret = ERROR_NONE;
+
   if (handle == nullptr || app_id == nullptr || request_id == nullptr) {
     LOGE("Invalid parameter");
     return NOTI_EX_ERROR_INVALID_PARAMETER;
@@ -2802,17 +2838,19 @@ extern "C" EXPORT_API int noti_ex_manager_delete_by_appid(
 
   try {
     ManagerStub* stub = static_cast<ManagerStub*>(handle);
-    *request_id = stub->DeleteByAppId(app_id);
+    ret = stub->DeleteByAppId(app_id, *request_id);
   } catch (Exception &ex) {
     LOGE("%s %d", ex.what(), ex.GetErrorCode());
     return NOTI_EX_ERROR_IO_ERROR;
   }
 
-  return NOTI_EX_ERROR_NONE;
+  return ret;
 }
 
 extern "C" EXPORT_API int noti_ex_manager_hide(noti_ex_manager_h handle,
     noti_ex_item_h noti, int *request_id) {
+  int ret = ERROR_NONE;
+
   if (handle == nullptr || noti == nullptr || request_id == nullptr) {
     LOGE("Invalid parameter");
     return NOTI_EX_ERROR_INVALID_PARAMETER;
@@ -2824,13 +2862,13 @@ extern "C" EXPORT_API int noti_ex_manager_hide(noti_ex_manager_h handle,
       LOGE("Invalid noti reference can not be sended");
       return NOTI_EX_ERROR_INVALID_PARAMETER;
     } else {
-      *request_id = stub->Hide(item->GetPtr());
+      ret = stub->Hide(item->GetPtr(), *request_id);
     }
   } catch (Exception &ex) {
     LOGE("%s %d", ex.what(), ex.GetErrorCode());
     return NOTI_EX_ERROR_IO_ERROR;
   }
-  return NOTI_EX_ERROR_NONE;
+  return ret;
 }
 
 extern "C" EXPORT_API int noti_ex_manager_find_by_root_id(
@@ -2842,6 +2880,12 @@ extern "C" EXPORT_API int noti_ex_manager_find_by_root_id(
   try {
     ManagerStub* stub = static_cast<ManagerStub*>(handle);
     shared_ptr<AbstractItem> ptr = stub->FindByRootID(root_id);
+    int ret = get_last_result();
+    if (ret == ERROR_PERMISSION_DENIED || ret == ERROR_IO_ERROR) {
+      LOGE("error(%d)", ret);
+      return ret;
+    }
+
     if (ptr == nullptr) {
       LOGW("Not exist ID");
       *item = nullptr;
@@ -2866,6 +2910,12 @@ extern "C" EXPORT_API int noti_ex_manager_send_error(noti_ex_manager_h handle,
     IEventInfo* c_info = static_cast<IEventInfo*>(info);
     stub->SendError(static_cast<const IEventInfo&>(*c_info),
         static_cast<NotificationError>(error));
+
+    int ret = get_last_result();
+    if (ret == ERROR_PERMISSION_DENIED || ret == ERROR_IO_ERROR) {
+      LOGE("error(%d)", ret);
+      return ret;
+    }
   } catch (Exception &ex) {
     LOGE("%s %d", ex.what(), ex.GetErrorCode());
     return NOTI_EX_ERROR_IO_ERROR;
@@ -2882,6 +2932,12 @@ extern "C" EXPORT_API int noti_ex_manager_get_notification_count(
   try {
     ManagerStub* stub = static_cast<ManagerStub*>(handle);
     *count = stub->GetCount();
+
+    int ret = get_last_result();
+    if (ret == ERROR_PERMISSION_DENIED || ret == ERROR_IO_ERROR) {
+      LOGE("error(%d)", ret);
+      return ret;
+    }
   } catch (Exception &ex) {
     LOGE("%s %d", ex.what(), ex.GetErrorCode());
     return NOTI_EX_ERROR_IO_ERROR;
@@ -3073,6 +3129,8 @@ extern "C" EXPORT_API int noti_ex_reporter_send_error(noti_ex_reporter_h handle,
 
 extern "C" EXPORT_API int noti_ex_reporter_post(noti_ex_reporter_h handle,
     noti_ex_item_h noti, int *request_id) {
+  int ret = NOTI_EX_ERROR_NONE;
+
   if (handle == nullptr || noti == nullptr || request_id == nullptr) {
     LOGE("Invalid parameter");
     return NOTI_EX_ERROR_INVALID_PARAMETER;
@@ -3084,17 +3142,18 @@ extern "C" EXPORT_API int noti_ex_reporter_post(noti_ex_reporter_h handle,
       LOGE("Invalid noti reference can not be sended");
       return NOTI_EX_ERROR_INVALID_PARAMETER;
     } else {
-      *request_id = stub->Post(h->GetPtr());
+      ret = stub->Post(h->GetPtr(), *request_id);
     }
   } catch (Exception &ex) {
     LOGE("%s %d", ex.what(), ex.GetErrorCode());
     return NOTI_EX_ERROR_IO_ERROR;
   }
-  return NOTI_EX_ERROR_NONE;
+  return ret;
 }
 
 extern "C" EXPORT_API int noti_ex_reporter_post_list(noti_ex_reporter_h handle,
     noti_ex_item_h *noti_list, int count, int *request_id) {
+  int ret = NOTI_EX_ERROR_NONE;
 
   if (handle == nullptr || noti_list == nullptr || request_id == nullptr) {
     LOGE("Invalid parameter");
@@ -3107,16 +3166,18 @@ extern "C" EXPORT_API int noti_ex_reporter_post_list(noti_ex_reporter_h handle,
       Handle* item = static_cast<Handle*>(noti_list[i]);
       notiList.push_back(item->GetPtr());
     }
-    *request_id = stub->Post(notiList);
+    ret = stub->Post(notiList, *request_id);
   } catch (Exception &ex) {
     LOGE("%s %d", ex.what(), ex.GetErrorCode());
     return NOTI_EX_ERROR_IO_ERROR;
   }
-  return NOTI_EX_ERROR_NONE;
+  return ret;
 }
 
 extern "C" EXPORT_API int noti_ex_reporter_update(noti_ex_reporter_h handle,
     noti_ex_item_h noti, int *request_id) {
+  int ret = NOTI_EX_ERROR_NONE;
+
   if (handle == nullptr || noti == nullptr || request_id == nullptr) {
     LOGE("Invalid parameter");
     return NOTI_EX_ERROR_INVALID_PARAMETER;
@@ -3128,39 +3189,43 @@ extern "C" EXPORT_API int noti_ex_reporter_update(noti_ex_reporter_h handle,
       LOGE("Invalid noti reference can not be sended");
       return NOTI_EX_ERROR_INVALID_PARAMETER;
     } else {
-      *request_id = stub->Update(item->GetPtr());
+      ret = stub->Update(item->GetPtr(), *request_id);
     }
   } catch (Exception &ex) {
     LOGE("%s %d", ex.what(), ex.GetErrorCode());
     return NOTI_EX_ERROR_IO_ERROR;
   }
-  return NOTI_EX_ERROR_NONE;
+  return ret;
 }
 
 extern "C" EXPORT_API int noti_ex_reporter_update_list(
     noti_ex_reporter_h handle, noti_ex_item_h *noti_list, int count,
     int *request_id) {
-    if (handle == nullptr || noti_list == nullptr || request_id == nullptr) {
-      LOGE("Invalid parameter");
-      return NOTI_EX_ERROR_INVALID_PARAMETER;
+  int ret = NOTI_EX_ERROR_NONE;
+
+  if (handle == nullptr || noti_list == nullptr || request_id == nullptr) {
+    LOGE("Invalid parameter");
+    return NOTI_EX_ERROR_INVALID_PARAMETER;
+  }
+  try {
+    ReporterStub* stub = static_cast<ReporterStub*>(handle);
+    list<shared_ptr<item::AbstractItem>> notiList;
+    for (int i = 0; i < count; i++) {
+      Handle* item = static_cast<Handle*>(noti_list[i]);
+      notiList.push_back(item->GetPtr());
     }
-    try {
-      ReporterStub* stub = static_cast<ReporterStub*>(handle);
-      list<shared_ptr<item::AbstractItem>> notiList;
-      for (int i = 0; i < count; i++) {
-        Handle* item = static_cast<Handle*>(noti_list[i]);
-        notiList.push_back(item->GetPtr());
-      }
-      *request_id = stub->Update(notiList);
-    } catch (Exception &ex) {
-      LOGE("%s %d", ex.what(), ex.GetErrorCode());
-      return NOTI_EX_ERROR_IO_ERROR;
-    }
-    return NOTI_EX_ERROR_NONE;
+    ret = stub->Update(notiList, *request_id);
+  } catch (Exception &ex) {
+    LOGE("%s %d", ex.what(), ex.GetErrorCode());
+    return NOTI_EX_ERROR_IO_ERROR;
+  }
+  return ret;
 }
 
 extern "C" EXPORT_API int noti_ex_reporter_delete(noti_ex_reporter_h handle,
     noti_ex_item_h noti, int *request_id) {
+  int ret = NOTI_EX_ERROR_NONE;
+
   if (handle == nullptr || noti == nullptr || request_id == nullptr) {
     LOGE("Invalid parameter");
     return NOTI_EX_ERROR_INVALID_PARAMETER;
@@ -3172,55 +3237,65 @@ extern "C" EXPORT_API int noti_ex_reporter_delete(noti_ex_reporter_h handle,
       LOGE("Invalid noti reference can not be sended");
       return NOTI_EX_ERROR_INVALID_PARAMETER;
     } else {
-      *request_id = stub->Delete(item->GetPtr());
+      ret = stub->Delete(item->GetPtr(), *request_id);
     }
   } catch (Exception &ex) {
     LOGE("%s %d", ex.what(), ex.GetErrorCode());
     return NOTI_EX_ERROR_IO_ERROR;
   }
-  return NOTI_EX_ERROR_NONE;
+  return ret;
 }
 
 extern "C" EXPORT_API int noti_ex_reporter_delete_list(
     noti_ex_reporter_h handle, noti_ex_item_h *noti_list, int count,
     int *request_id) {
-    if (handle == nullptr || noti_list == nullptr || request_id == nullptr) {
-      LOGE("Invalid parameter");
-      return NOTI_EX_ERROR_INVALID_PARAMETER;
-    }
-    try {
-      ReporterStub* stub = static_cast<ReporterStub*>(handle);
-      list<shared_ptr<item::AbstractItem>> notiList;
-      for (int i = 0; i < count; i++) {
-        Handle* item = static_cast<Handle*>(noti_list[i]);
-        notiList.push_back(item->GetPtr());
-      }
-      *request_id = stub->Delete(notiList);
-    } catch (Exception &ex) {
-      LOGE("%s %d", ex.what(), ex.GetErrorCode());
-      return NOTI_EX_ERROR_IO_ERROR;
-    }
-    return NOTI_EX_ERROR_NONE;
-}
+  int ret = NOTI_EX_ERROR_NONE;
 
-extern "C" EXPORT_API int noti_ex_reporter_delete_all(
-    noti_ex_reporter_h handle, int *request_id) {
-  if (handle == nullptr || request_id == nullptr) {
+  if (handle == nullptr || noti_list == nullptr || request_id == nullptr) {
     LOGE("Invalid parameter");
     return NOTI_EX_ERROR_INVALID_PARAMETER;
   }
+
   try {
     ReporterStub* stub = static_cast<ReporterStub*>(handle);
-    *request_id = stub->DeleteAll();
+    list<shared_ptr<item::AbstractItem>> notiList;
+    for (int i = 0; i < count; i++) {
+      Handle* item = static_cast<Handle*>(noti_list[i]);
+      notiList.push_back(item->GetPtr());
+    }
+    ret = stub->Delete(notiList, *request_id);
   } catch (Exception &ex) {
     LOGE("%s %d", ex.what(), ex.GetErrorCode());
     return NOTI_EX_ERROR_IO_ERROR;
   }
-  return NOTI_EX_ERROR_NONE;
+
+  return ret;
+}
+
+extern "C" EXPORT_API int noti_ex_reporter_delete_all(
+    noti_ex_reporter_h handle, int *request_id) {
+  int ret = NOTI_EX_ERROR_NONE;
+
+  if (handle == nullptr || request_id == nullptr) {
+    LOGE("Invalid parameter");
+    return NOTI_EX_ERROR_INVALID_PARAMETER;
+  }
+
+  try {
+    ReporterStub* stub = static_cast<ReporterStub*>(handle);
+    ret = stub->DeleteAll(*request_id);
+  } catch (Exception &ex) {
+    LOGE("%s %d", ex.what(), ex.GetErrorCode());
+    return NOTI_EX_ERROR_IO_ERROR;
+  }
+
+  return ret;
 }
 
 extern "C" EXPORT_API int noti_ex_reporter_delete_by_channel(
     noti_ex_reporter_h handle, const char* channel, int* request_id) {
+  int ret = NOTI_EX_ERROR_NONE;
+
   if (handle == nullptr || channel == nullptr || request_id == nullptr) {
     LOGE("Invalid parameter");
     return NOTI_EX_ERROR_INVALID_PARAMETER;
@@ -3228,13 +3303,13 @@ extern "C" EXPORT_API int noti_ex_reporter_delete_by_channel(
 
   try {
     ReporterStub* stub = static_cast<ReporterStub*>(handle);
-    *request_id = stub->DeleteByChannel(channel);
+    ret = stub->DeleteByChannel(channel, *request_id);
   } catch (Exception &ex) {
     LOGE("%s %d", ex.what(), ex.GetErrorCode());
     return NOTI_EX_ERROR_IO_ERROR;
   }
 
-  return NOTI_EX_ERROR_NONE;
+  return ret;
 }
 
 extern "C" EXPORT_API int noti_ex_reporter_find_by_root_id(

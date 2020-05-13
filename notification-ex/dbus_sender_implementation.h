@@ -24,6 +24,7 @@
 #include <list>
 
 #include "notification-ex/dbus_sender.h"
+#include "notification-ex/ievent_info.h"
 
 namespace notification {
 
@@ -41,6 +42,8 @@ class DBusSender::Impl {
   bool EmitSignal(std::string bus_name, std::string signal_name, GVariant* data);
   GDBusMessage* MethodCall(std::string appid, std::string method_name,
       tizen_base::Bundle serialized);
+  GDBusMessage* MethodCall(std::string appid, const IEventInfo& info,
+      std::list<tizen_base::Bundle> serialized);
   std::string path_;
   DBusSender* parent_;
 };

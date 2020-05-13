@@ -53,9 +53,9 @@ Manager::~Manager() = default;
 Manager::Impl::~Impl() {
   listener_->UnRegisterObserver(parent_);
 
-  list<Bundle> dummy_list {};
+  list<Bundle> serialized_list {};
   EventInfo info(EventInfo::Unregister, util::GetAppId(), "", "");
-  sender_->Notify(info, dummy_list, DATA_PROVIDER_MASTER_ID);
+  sender_->SendMessage(info, serialized_list, DATA_PROVIDER_MASTER_ID);
 }
 Manager::Impl::Impl(Manager* parent,
     unique_ptr<IEventSender> sender,
@@ -66,9 +66,12 @@ Manager::Impl::Impl(Manager* parent,
   LOGI("impl created");
   listener_->RegisterObserver(parent_);
 
+  if (DBusConnectionManager::GetInst().IsDataProviderMaster(util::GetAppId()))
+    return;
+
   list<Bundle> serialized_list {};
   EventInfo info(EventInfo::Register, util::GetAppId(), receiver_group, "");
-  sender_->Notify(info, serialized_list, DATA_PROVIDER_MASTER_ID);
+  sender_->SendMessage(info, serialized_list, DATA_PROVIDER_MASTER_ID);
 }
 
 int Manager::Impl::SendNotify(shared_ptr<item::AbstractItem> noti,
@@ -87,39 +90,52 @@ void Manager::SendError(const IEventInfo& info, NotificationError error) {
   IEventInfo& i = const_cast<IEventInfo&>(info);
   static_cast<IEventInfoInternal&>(i).SetError(error);
   static_cast<IEventInfoInternal&>(i).SetEventType(EventInfo::Error);
-  impl_->sender_->Notify(info, serialized_list, info.GetOwner());
+  impl_->sender_->SendMessage(info, serialized_list, info.GetOwner());
 }
 
-int Manager::Update(shared_ptr<item::AbstractItem> noti) {
-  return impl_->SendNotify(noti, EventInfo::Update);
+int Manager::Update(shared_ptr<item::AbstractItem> noti, int& request_id) {
+  Bundle serialized = noti->Serialize();
+  EventInfo info(EventInfo::Update, util::GetAppId(), noti->GetChannel(), noti->GetId());
+  list<Bundle> serialized_list {serialized};
+
+  request_id = info.GetRequestId();
+  return impl_->sender_->SendMessage(info, serialized_list, noti->GetSenderAppId());
 }
 
-int Manager::Delete(shared_ptr<item::AbstractItem> noti) {
-  return impl_->SendNotify(noti, EventInfo::Delete);
+int Manager::Delete(shared_ptr<item::AbstractItem> noti, int& request_id) {
+  Bundle serialized = noti->Serialize();
+  EventInfo info(EventInfo::Delete, util::GetAppId(), noti->GetChannel(), noti->GetId());
+  list<Bundle> serialized_list {serialized};
+
+  request_id = info.GetRequestId();
+  return impl_->sender_->SendMessage(info, serialized_list, noti->GetSenderAppId());
 }
 
-int Manager::DeleteAll() {
+int Manager::DeleteAll(int& request_id) {
   Bundle serialized;
   EventInfo info(EventInfo::DeleteAll, util::GetAppId(), "");
   list<Bundle> serialized_list {serialized};
-  impl_->sender_->Notify(info, serialized_list, util::GetAppId());
-  return info.GetRequestId();
+
+  request_id = info.GetRequestId();
+  return impl_->sender_->SendMessage(info, serialized_list, util::GetAppId());
 }
 
-int Manager::DeleteByChannel(string channel) {
+int Manager::DeleteByChannel(string channel, int& request_id) {
   Bundle serialized;
   EventInfo info(EventInfo::DeleteAll, util::GetAppId(), channel);
   list<Bundle> serialized_list {serialized};
-  impl_->sender_->Notify(info, serialized_list, util::GetAppId());
-  return info.GetRequestId();
+
+  request_id = info.GetRequestId();
+  return impl_->sender_->SendMessage(info, serialized_list, util::GetAppId());
 }
 
-int Manager::DeleteByAppId(string appId) {
+int Manager::DeleteByAppId(string appId, int& request_id) {
   Bundle serialized;
   EventInfo info(EventInfo::DeleteAll, util::GetAppId(), "", appId);
   list<Bundle> serialized_list {serialized};
-  impl_->sender_->Notify(info, serialized_list, util::GetAppId());
-  return info.GetRequestId();
+
+  request_id = info.GetRequestId();
+  return impl_->sender_->SendMessage(info, serialized_list, util::GetAppId());
 }
 
 int Manager::GetCount() const {
@@ -128,9 +144,15 @@ int Manager::GetCount() const {
   return num;
 }
 
-int Manager::Hide(shared_ptr<item::AbstractItem> noti) {
+int Manager::Hide(shared_ptr<item::AbstractItem> noti, int& request_id) {
   (reinterpret_cast<IItemInfoInternal*>(noti->GetInfo().get()))->AddHideViewer(util::GetAppId());
-  return impl_->SendNotify(noti, EventInfo::Update);
+
+  EventInfo info(EventInfo::Update, util::GetAppId(), noti->GetChannel(), noti->GetId());
+  Bundle serialized = noti->Serialize();
+  list<Bundle> serialized_list {serialized};
+
+  request_id = info.GetRequestId();
+  return impl_->sender_->SendMessage(info, serialized_list, noti->GetSenderAppId());
 }
 
 unique_ptr<item::AbstractItem> Manager::FindByRootID(string id) {
@@ -158,6 +180,7 @@ list<unique_ptr<item::AbstractItem>> Manager::Get(string channel) {
 
 int Manager::SendEvent(const IEventInfo& info,
     shared_ptr<item::AbstractItem> noti) {
+  LOGI("manager-sendevent");
   Bundle serialized = noti->Serialize();
   Bundle serialized_info = info.Serialize();
   list<Bundle> serialized_list {serialized};
@@ -167,6 +190,7 @@ int Manager::SendEvent(const IEventInfo& info,
 
 int Manager::SendEvent(const IEventInfo& info,
     list<shared_ptr<item::AbstractItem>> notiList) {
+  LOGI("manager-sendevent - list");
   list<Bundle> serialized_list;
   for (auto& i : notiList) {
     Bundle b = i->Serialize();

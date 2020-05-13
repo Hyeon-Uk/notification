@@ -107,7 +107,6 @@ void DBusSender::Notify(const IEventInfo& info, list<Bundle> serialized,
 
 GDBusMessage* DBusSender::Impl::MethodCall(string appid, string method_name,
     Bundle serialized) {
-  GError* err = nullptr;
   GDBusMessage* msg = g_dbus_message_new_method_call(
       DBusConnectionManager::GetInst().GetDataProviderMasterName().c_str(),
       path_.c_str(),
@@ -127,11 +126,99 @@ GDBusMessage* DBusSender::Impl::MethodCall(string appid, string method_name,
 
   LOGI("send message !! (%s) (%s) (%s)",
       path_.c_str(), method_name.c_str(), appid.c_str());
+
+  GError* err = nullptr;
   GDBusMessage* reply = g_dbus_connection_send_message_with_reply_sync(
       DBusConnectionManager::GetInst().GetConnection(), msg,
       G_DBUS_SEND_MESSAGE_FLAGS_NONE, -1, NULL, NULL, &err);
+  if (err != NULL) {
+    LOGE("MethodCall, err[%s]", err->message);
+    if (err->code == G_DBUS_ERROR_ACCESS_DENIED)
+      set_last_result(ERROR_PERMISSION_DENIED);
+    else
+      set_last_result(ERROR_IO_ERROR);
+    g_error_free(err);
+  }
 
   return reply;
+}
+
+GDBusMessage* DBusSender::Impl::MethodCall(string appid, const IEventInfo& info,
+    list<Bundle> serialized) {
+  GDBusMessage* msg = g_dbus_message_new_method_call(
+      DBusConnectionManager::GetInst().GetDataProviderMasterName().c_str(),
+      path_.c_str(),
+      DBusConnectionManager::GetInst().GetInterfaceName().c_str(),
+      EventInfo::GetString(info.GetEventType()).c_str());
+  if (!msg) {
+    LOGE("Can't allocate new method call");
+    return nullptr;
+  }
+
+  GVariantBuilder* builder = g_variant_builder_new(G_VARIANT_TYPE("a(s)"));
+  for (auto& i : serialized) {
+    g_variant_builder_add(builder, "(s)",
+        reinterpret_cast<char*>(i.ToRaw().first.get()));
+  }
+
+  g_dbus_message_set_body(msg,
+      g_variant_new("(ssa(s))",
+          appid.c_str(),
+          reinterpret_cast<char*>(info.Serialize().ToRaw().first.get()),
+          builder
+      )
+  );
+
+  LOGI("send message !! (%s) (%s) (%s)",
+      path_.c_str(), EventInfo::GetString(info.GetEventType()).c_str(), appid.c_str());
+
+  GError* err = nullptr;
+  GDBusMessage* reply = g_dbus_connection_send_message_with_reply_sync(
+      DBusConnectionManager::GetInst().GetConnection(), msg,
+      G_DBUS_SEND_MESSAGE_FLAGS_NONE, -1, NULL, NULL, &err);
+  if (err != NULL) {
+    LOGE("MethodCall, err[%s]", err->message);
+    if (err->code == G_DBUS_ERROR_ACCESS_DENIED)
+      set_last_result(ERROR_PERMISSION_DENIED);
+    else
+      set_last_result(ERROR_IO_ERROR);
+    g_error_free(err);
+  }
+
+  g_variant_builder_unref(builder);
+  return reply;
+}
+
+int DBusSender::SendMessage(const IEventInfo& info, list<Bundle> serialized,
+    string dest_appid) {
+  string appid = info.GetOwner();
+  if (appid.length() == 0)
+    appid = util::GetAppId();
+
+  GDBusMessage* reply = impl_->MethodCall(appid, info, serialized);
+  if (!reply)
+    return ERROR_IO_ERROR;
+
+  int ret = ERROR_NONE;
+  GError* err = nullptr;
+  if (g_dbus_message_to_gerror(reply, &err)) {
+    LOGE("SendMessage got error %s", err->message);
+    if (err->code == G_DBUS_ERROR_ACCESS_DENIED) {
+      set_last_result(ERROR_PERMISSION_DENIED);
+      ret = ERROR_PERMISSION_DENIED;
+    } else {
+      set_last_result(ERROR_IO_ERROR);
+      ret = ERROR_IO_ERROR;
+    }
+    g_error_free(err);
+    return ret;
+  } else {
+    set_last_result(ERROR_NONE);
+  }
+
+  GVariant *reply_body = g_dbus_message_get_body(reply);
+  g_variant_get(reply_body, "(i)", &ret);
+  return ret;
 }
 
 std::list<Bundle> DBusSender::Request(const IEventInfo& info) {
@@ -142,11 +229,27 @@ std::list<Bundle> DBusSender::Request(const IEventInfo& info) {
   string method_name = EventInfo::GetString(info.GetEventType());
   Bundle serialized = info.Serialize();
 
-  GDBusMessage* reply = impl_->MethodCall(appid, method_name, serialized);
-  GVariant *reply_body = g_dbus_message_get_body(reply);
-
-  GVariantIter *iter = nullptr;
   list<Bundle> ret_list;
+  GDBusMessage* reply = impl_->MethodCall(appid, method_name, serialized);
+  if (!reply)
+    return ret_list;
+
+  GError* err = nullptr;
+  if (g_dbus_message_to_gerror(reply, &err)) {
+    LOGE("Request got error %s", err->message);
+    if (err->code == G_DBUS_ERROR_ACCESS_DENIED)
+      set_last_result(ERROR_PERMISSION_DENIED);
+    else
+      set_last_result(ERROR_IO_ERROR);
+
+    g_error_free(err);
+    return ret_list;
+  } else {
+    set_last_result(ERROR_NONE);
+  }
+
+  GVariant *reply_body = g_dbus_message_get_body(reply);
+  GVariantIter *iter = nullptr;
   g_variant_get(reply_body, "(a(s))", &iter);
   char* raw = nullptr;
   while (g_variant_iter_loop(iter, "(s)", &raw) && raw != nullptr) {
@@ -166,9 +269,25 @@ int DBusSender::RequestNumber(const IEventInfo& info) {
   Bundle serialized = info.Serialize();
 
   GDBusMessage* reply = impl_->MethodCall(appid, method_name, serialized);
-  GVariant *reply_body = g_dbus_message_get_body(reply);
+  if (!reply)
+    return 0;
+
+  GError* err = nullptr;
+  if (g_dbus_message_to_gerror(reply, &err)) {
+    LOGE("RequestNumber got error %s", err->message);
+    if (err->code == G_DBUS_ERROR_ACCESS_DENIED)
+      set_last_result(ERROR_PERMISSION_DENIED);
+    else
+      set_last_result(ERROR_IO_ERROR);
+
+    g_error_free(err);
+    return 0;
+  } else {
+    set_last_result(ERROR_NONE);
+  }
 
   int num;
+  GVariant *reply_body = g_dbus_message_get_body(reply);
   g_variant_get(reply_body, "(i)", &num);
   return num;
 }

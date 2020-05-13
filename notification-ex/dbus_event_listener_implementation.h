@@ -41,6 +41,7 @@ class DBusEventListener::Impl {
     const gchar *iface_name, const gchar *method_name,
     GVariant *parameters, GDBusMethodInvocation *invocation,
     gpointer user_data);
+  static void MethodCallHandler(GVariant *parameters, Impl* dl, pid_t pid, uid_t uid);
 
   static GDBusInterfaceVTable InterfaceVtable;
   static void SignalCb(GDBusConnection* connection,

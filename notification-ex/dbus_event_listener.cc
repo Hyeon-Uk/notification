@@ -19,6 +19,7 @@
 #include <unistd.h>
 
 #include <string>
+#include <map>
 #include <list>
 
 #include "notification-ex/dbus_connection_manager.h"
@@ -35,6 +36,7 @@
 #define LOG_TAG "NOTIFICATION_EX"
 #define MAX_PACKAGE_STR_SIZE 512
 #define NORMAL_UID_BASE 5000
+#define MAX_CACHE_COUNT 20
 
 #define DBUS_NAME "org.freedesktop.DBus"
 #define DBUS_OBJECT_PATH "/org/freedesktop/DBus"
@@ -63,6 +65,11 @@ DBusEventListener::Impl::Impl(DBusEventListener* parent, string path)
 
 uid_t DBusEventListener::Impl::GetSenderUid(GDBusConnection* connection,
                 const char* sender_name) {
+  static std::map<std::string, uid_t> cache;
+  auto cp = cache.find(sender_name);
+  if (cp != cache.end())
+    return cp->second;
+
   GDBusMessage* msg = nullptr;
   GDBusMessage* reply = nullptr;
   GError* err = nullptr;
@@ -91,6 +98,11 @@ uid_t DBusEventListener::Impl::GetSenderUid(GDBusConnection* connection,
   body = g_dbus_message_get_body(reply);
   g_variant_get(body, "(u)", &uid);
 
+  if (cache.size() >= MAX_CACHE_COUNT)
+    cache.clear();
+
+  cache[sender_name] = uid;
+
 out:
   if (msg)
     g_object_unref(msg);
@@ -101,7 +113,12 @@ out:
 }
 
 pid_t DBusEventListener::Impl::GetSenderPid(GDBusConnection* connection,
-               const char* sender_name) {
+                const char* sender_name) {
+  static std::map<std::string, pid_t> cache;
+  auto cp = cache.find(sender_name);
+  if (cp != cache.end())
+    return cp->second;
+
   GDBusMessage* msg = nullptr;
   GDBusMessage* reply = nullptr;
   GError* err = nullptr;
@@ -129,6 +146,11 @@ pid_t DBusEventListener::Impl::GetSenderPid(GDBusConnection* connection,
 
   body = g_dbus_message_get_body(reply);
   g_variant_get(body, "(u)", &pid);
+
+  if (cache.size() >= MAX_CACHE_COUNT)
+    cache.clear();
+
+  cache[sender_name] = pid;
 
 out:
   if (msg)
@@ -189,18 +211,83 @@ void DBusEventListener::Impl::SignalCb(GDBusConnection* connection,
   }
 }
 
+void DBusEventListener::Impl::MethodCallHandler(GVariant* parameters,
+            DBusEventListener::Impl* dl, pid_t pid, uid_t uid) {
+  char* appid = nullptr;
+  GVariantIter* iter = nullptr;
+  char* event_info_raw = nullptr;
+
+  g_variant_get(parameters, "(ssa(s))", &appid, &event_info_raw, &iter);
+
+  string sender_appid = string(appid);
+  string cur_appid = util::GetAppId();
+  LOGI("MethodCallHandler!! appid(%s), sender(%s), cur(%s)", appid,
+    sender_appid.c_str(), cur_appid.c_str());
+
+  if (sender_appid == cur_appid)
+    return;
+
+  if ((!DBusConnectionManager::GetInst().IsDataProviderMaster(cur_appid)
+    && !DBusConnectionManager::GetInst().IsDataProviderMaster(sender_appid))
+    || (cur_appid == sender_appid))
+    return;
+
+  char* raw = nullptr;
+  list<Bundle> ret_list;
+  while (g_variant_iter_loop(iter, "(s)", &raw) && raw != nullptr) {
+    Bundle ret(raw);
+    ret_list.emplace_back(ret);
+  }
+
+  Bundle b(event_info_raw);
+  EventInfo info(b);
+
+  if (info.GetEventType() == EventInfo::Post
+        || info.GetEventType() == EventInfo::Update) {
+    if (uid >= NORMAL_UID_BASE) {
+      info.SetValidatedOwner(util::GetAppId(pid));
+      info.SetValidatedUid(uid);
+    }
+  }
+
+  dl->parent_->NotifyObserver(info, ret_list);
+}
+
 void DBusEventListener::Impl::OnMethodCall(
-    GDBusConnection *conn, const gchar *sender, const gchar *object_path,
-    const gchar *iface_name, const gchar *method_name,
-    GVariant *parameters, GDBusMethodInvocation *invocation,
+    GDBusConnection* conn, const gchar* sender, const gchar* object_path,
+    const gchar* iface_name, const gchar* method_name,
+    GVariant* parameters, GDBusMethodInvocation* invocation,
     gpointer user_data) {
   LOGI("method_name[%s] sender[%s]", method_name, sender);
   DBusEventListener::Impl* dl = static_cast<DBusEventListener::Impl*>(user_data);
-  GVariant *reply_body = NULL;
+  GVariant* reply_body = NULL;
   try {
     char* appid = NULL;
     char* serialized = NULL;
-    if (g_strcmp0(method_name, "Get") == 0) {
+
+    uid_t uid = GetSenderUid(conn, sender);
+    pid_t pid = GetSenderPid(conn, sender);
+
+    if (g_strcmp0(method_name, "Post") == 0
+           || g_strcmp0(method_name, "Update") == 0
+           || g_strcmp0(method_name, "Delete") == 0
+           || g_strcmp0(method_name, "Error") == 0
+           || g_strcmp0(method_name, "DeleteAll") == 0
+           || g_strcmp0(method_name, "Register") == 0
+           || g_strcmp0(method_name, "Unregister") == 0) {
+      parameters = g_variant_ref(parameters);
+      g_dbus_method_invocation_return_value(invocation, g_variant_new("(i)", 0));
+      MethodCallHandler(parameters, dl, pid, uid);
+      g_variant_unref(parameters);
+      return;
+    } else if (g_strcmp0(method_name, "Count") == 0) {
+      g_variant_get(parameters, "(&s&s)", &appid, &serialized);
+
+      Bundle b(serialized);
+      EventInfo info(b);
+      int num = dl->parent_->NotifyNumberRequest(info);
+      reply_body = g_variant_new("(i)", num);
+    } else if (g_strcmp0(method_name, "Get") == 0) {
       g_variant_get(parameters, "(&s&s)", &appid, &serialized);
 
       Bundle b(serialized);
@@ -213,15 +300,14 @@ void DBusEventListener::Impl::OnMethodCall(
       }
       reply_body = g_variant_new("(a(s))", builder);
       g_variant_builder_unref(builder);
-    } else if (g_strcmp0(method_name, "Count") == 0) {
-      g_variant_get(parameters, "(&s&s)", &appid, &serialized);
-
-      Bundle b(serialized);
-      EventInfo info(b);
-      int num = dl->parent_->NotifyNumberRequest(info);
-      reply_body = g_variant_new("(i)", num);
+    } else {
+      g_dbus_method_invocation_return_error(invocation, noti_ex_error_quark(),
+            ERROR_IO_ERROR, "invalid operation");
+      return;
     }
+
     g_dbus_method_invocation_return_value(invocation, reply_body);
+
   } catch (Exception &ex) {
     LOGE("%s %d", ex.what(), ex.GetErrorCode());
     g_dbus_method_invocation_return_error(invocation, noti_ex_error_quark(),
@@ -238,15 +324,57 @@ int DBusEventListener::Impl::RegisterGDBusInterface() {
   static gchar introspection_xml[] =
     "  <node>"
     "  <interface name='org.tizen.notification_ex'>"
+    "        <method name='Post'>"
+    "          <arg type='s' name='appid' direction='in'/>"
+    "          <arg type='s' name='info' direction='in'/>"
+    "          <arg type='a(s)' name='serialized' direction='in'/>"
+    "          <arg type='i' name='ret' direction='out'/>"
+    "        </method>"
+    "        <method name='Update'>"
+    "          <arg type='s' name='appid' direction='in'/>"
+    "          <arg type='s' name='info' direction='in'/>"
+    "          <arg type='a(s)' name='serialized' direction='in'/>"
+    "          <arg type='i' name='ret' direction='out'/>"
+    "        </method>"
+    "        <method name='Delete'>"
+    "          <arg type='s' name='appid' direction='in'/>"
+    "          <arg type='s' name='info' direction='in'/>"
+    "          <arg type='a(s)' name='serialized' direction='in'/>"
+    "          <arg type='i' name='ret' direction='out'/>"
+    "        </method>"
     "        <method name='Get'>"
     "          <arg type='s' name='appid' direction='in'/>"
     "          <arg type='s' name='serialized' direction='in'/>"
     "          <arg type='a(s)' name='noti_arr' direction='out'/>"
     "        </method>"
+    "        <method name='Error'>"
+    "          <arg type='s' name='appid' direction='in'/>"
+    "          <arg type='s' name='info' direction='in'/>"
+    "          <arg type='a(s)' name='serialized' direction='in'/>"
+    "          <arg type='i' name='ret' direction='out'/>"
+    "        </method>"
     "        <method name='Count'>"
     "          <arg type='s' name='appid' direction='in'/>"
     "          <arg type='s' name='serialized' direction='in'/>"
     "          <arg type='i' name='num' direction='out'/>"
+    "        </method>"
+    "        <method name='DeleteAll'>"
+    "          <arg type='s' name='appid' direction='in'/>"
+    "          <arg type='s' name='info' direction='in'/>"
+    "          <arg type='a(s)' name='serialized' direction='in'/>"
+    "          <arg type='i' name='ret' direction='out'/>"
+    "        </method>"
+    "        <method name='Register'>"
+    "          <arg type='s' name='appid' direction='in'/>"
+    "          <arg type='s' name='info' direction='in'/>"
+    "          <arg type='a(s)' name='serialized' direction='in'/>"
+    "          <arg type='i' name='ret' direction='out'/>"
+    "        </method>"
+    "        <method name='Unregister'>"
+    "          <arg type='s' name='appid' direction='in'/>"
+    "          <arg type='s' name='info' direction='in'/>"
+    "          <arg type='a(s)' name='serialized' direction='in'/>"
+    "          <arg type='i' name='ret' direction='out'/>"
     "        </method>"
     "  </interface>"
     "  </node>";
