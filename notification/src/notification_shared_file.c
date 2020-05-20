@@ -685,14 +685,16 @@ EXPORT_API bool notification_validate_private_sharing(
 						notification_h updated_noti)
 {
 	char *updated_path = NULL;
-	char *private_path;
+	char *private_path = NULL;
 	char buf_key[32] = { 0, };
 	int i = NOTIFICATION_IMAGE_TYPE_ICON;
 
 	if (updated_noti->b_image_path && updated_noti->b_priv_image_path) {
 		for (; i <= NOTIFICATION_IMAGE_TYPE_MAX; i++) {
-			snprintf(buf_key, sizeof(buf_key), "%d", i);
+			updated_path = NULL;
+			private_path = NULL;
 
+			snprintf(buf_key, sizeof(buf_key), "%d", i);
 			bundle_get_str(updated_noti->b_image_path, buf_key,
 							&updated_path);
 			if (updated_path == NULL)
@@ -705,8 +707,6 @@ EXPORT_API bool notification_validate_private_sharing(
 
 			if (strcmp(updated_path, private_path) == 0)
 				return false;
-
-			updated_path = NULL;
 		}
 	}
 
@@ -736,6 +736,10 @@ EXPORT_API void notification_calibrate_private_sharing(
 
 	if (updated_noti->b_image_path && updated_noti->b_priv_image_path) {
 		for (; i <= NOTIFICATION_IMAGE_TYPE_MAX; i++) {
+			source_path = NULL;
+			updated_path = NULL;
+			private_path = NULL;
+
 			snprintf(buf_key, sizeof(buf_key), "%d", i);
 			bundle_get_str(updated_noti->b_image_path, buf_key,
 						&updated_path);
@@ -756,9 +760,6 @@ EXPORT_API void notification_calibrate_private_sharing(
 						buf_key, source_path);
 				}
 			}
-			source_path = NULL;
-			updated_path = NULL;
-			private_path = NULL;
 		}
 	}
 
@@ -766,9 +767,11 @@ EXPORT_API void notification_calibrate_private_sharing(
 		if (strcmp(updated_noti->sound_path,
 				updated_noti->priv_sound_path) == 0) {
 			free(updated_noti->sound_path);
-			updated_noti->sound_path = strdup(source_noti->sound_path);
-			if (updated_noti->sound_path == NULL)
-				ERR("out of memory");
+			if (source_noti->sound_path) {
+				updated_noti->sound_path = strdup(source_noti->sound_path);
+				if (updated_noti->sound_path == NULL)
+					ERR("out of memory");
+			}
 		}
 	}
 
@@ -776,10 +779,12 @@ EXPORT_API void notification_calibrate_private_sharing(
 		if (strcmp(updated_noti->vibration_path,
 				updated_noti->priv_vibration_path) == 0) {
 			free(updated_noti->vibration_path);
-			updated_noti->vibration_path =
-				strdup(source_noti->priv_vibration_path);
-			if (updated_noti->vibration_path == NULL)
-				ERR("out of memory");
+			if (source_noti->priv_vibration_path) {
+				updated_noti->vibration_path =
+					strdup(source_noti->priv_vibration_path);
+				if (updated_noti->vibration_path == NULL)
+					ERR("out of memory");
+			}
 		}
 	}
 }
