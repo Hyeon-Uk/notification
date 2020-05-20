@@ -293,7 +293,7 @@ void DBManager::CheckLimit(shared_ptr<item::AbstractItem> addedItem, sqlite3* db
   uid_t uid =
       static_pointer_cast<IItemInfoInternal>(addedItem->GetInfo())->GetUid();
 
-  ret = GetCount(addedItem->GetSenderAppId(), string(), uid, &count);
+  ret = GetCount(addedItem->GetSenderAppId(), uid, &count);
   if (ret != ERROR_NONE || count <= NOTI_LIMIT)
     return;
 
@@ -532,29 +532,23 @@ map<string, string> DBManager::GetHideMap() {
   return hide_map;
 }
 
-int DBManager::GetCount(const string& app_id, const string& channel, uid_t uid, int* count) {
-  return GetCount(0, string(), app_id, channel, uid, count);
+int DBManager::GetCount(const string& app_id, uid_t uid, int* count) {
+  return GetCount(0, string(), app_id, uid, count);
 }
 
-int DBManager::GetCount(int64_t priv_id, const string& root_id,
-    const string& app_id, const string& channel, uid_t uid, int* count) {
+int DBManager::GetCount(int64_t priv_id, const string& root_id, const string& app_id,
+                              uid_t uid, int* count) {
   int ret;
   char* query;
   sqlite3_stmt *stmt;
   sqlite3* db;
-  string query_str;
 
   if (priv_id != 0) {
     query = sqlite3_mprintf("SELECT count(*) FROM noti_ex_list"
                             " WHERE priv_id = %" PRId64 "", priv_id);
   } else if (root_id.empty()) {
-    if (!channel.empty())
-      query = sqlite3_mprintf("SELECT count(*) FROM noti_ex_list"
-                              " WHERE app_id = %Q AND uid = %d AND channel = %Q",
-                              app_id.c_str(), uid, channel.c_str());
-    else
-      query = sqlite3_mprintf("SELECT count(*) FROM noti_ex_list"
-                              " WHERE app_id = %Q AND uid = %d", app_id.c_str(), uid);
+    query = sqlite3_mprintf("SELECT count(*) FROM noti_ex_list"
+                            " WHERE app_id = %Q AND uid = %d", app_id.c_str(), uid);
   } else {
     query = sqlite3_mprintf("SELECT count(*) FROM noti_ex_list"
                             " WHERE root_id = %Q AND app_id = %Q AND uid = %d",

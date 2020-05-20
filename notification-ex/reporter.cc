@@ -194,12 +194,6 @@ list<unique_ptr<AbstractItem>> Reporter::FindAll() {
   return gen_item_list;
 }
 
-int Reporter::GetCount(string channel) const {
-  EventInfo info(EventInfo::Count, util::GetAppId(), channel);
-  int num = impl_->sender_->RequestNumber(info);
-  return num;
-}
-
 int Reporter::SendEvent(const IEventInfo& info,
     std::list<std::shared_ptr<item::AbstractItem>> notiList) {
   list<Bundle> serialized_list;
