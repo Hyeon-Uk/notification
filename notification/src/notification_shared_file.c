@@ -767,6 +767,8 @@ EXPORT_API void notification_calibrate_private_sharing(
 		if (strcmp(updated_noti->sound_path,
 				updated_noti->priv_sound_path) == 0) {
 			free(updated_noti->sound_path);
+			updated_noti->sound_path = NULL;
+
 			if (source_noti->sound_path) {
 				updated_noti->sound_path = strdup(source_noti->sound_path);
 				if (updated_noti->sound_path == NULL)
@@ -779,6 +781,8 @@ EXPORT_API void notification_calibrate_private_sharing(
 		if (strcmp(updated_noti->vibration_path,
 				updated_noti->priv_vibration_path) == 0) {
 			free(updated_noti->vibration_path);
+			updated_noti->vibration_path = NULL;
+
 			if (source_noti->priv_vibration_path) {
 				updated_noti->vibration_path =
 					strdup(source_noti->priv_vibration_path);
