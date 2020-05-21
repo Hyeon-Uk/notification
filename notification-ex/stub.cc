@@ -3332,6 +3332,24 @@ extern "C" EXPORT_API int noti_ex_reporter_find_all(noti_ex_reporter_h handle,
   return NOTI_EX_ERROR_NONE;
 }
 
+extern "C" EXPORT_API int noti_ex_reporter_get_count_by_channel(
+    noti_ex_reporter_h handle, const char *channel, int *count) {
+  if (handle == nullptr || channel == nullptr || count == nullptr) {
+    LOGE("Invalid parameter");
+    return NOTI_EX_ERROR_INVALID_PARAMETER;
+  }
+
+  try {
+    ReporterStub* stub = static_cast<ReporterStub*>(handle);
+    *count = stub->GetCount(channel);
+  } catch (Exception &ex) {
+    LOGE("%s %d", ex.what(), ex.GetErrorCode());
+    return NOTI_EX_ERROR_IO_ERROR;
+  }
+
+  return NOTI_EX_ERROR_NONE;
+}
+
 extern "C" EXPORT_API int noti_ex_item_text_create(noti_ex_item_h *handle,
     const char *id, const char *text, const char *hyperlink) {
   if (handle == nullptr || text == nullptr) {

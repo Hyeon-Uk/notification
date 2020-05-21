@@ -40,8 +40,10 @@ class EXPORT_API DBManager {
   static std::map<std::string, std::string> GetHideMap();
   static int UpdateHideList(std::shared_ptr<item::AbstractItem> updatedItem, const std::string& hide_list);
   static int UpdateNotification(std::list<std::shared_ptr<item::AbstractItem>> updatedList);
-  static int GetCount(int64_t priv_id, const std::string& root_id, const std::string& app_id,  uid_t uid, int* count);
-  static int GetCount(const std::string& app_id, uid_t uid, int* count);
+  static int GetCount(int64_t priv_id, const std::string& root_id,
+                  const std::string& app_id, const std::string& channel, uid_t uid, int* count);
+  static int GetCount(const std::string& app_id, const std::string& channel,
+                  uid_t uid, int* count);
   static int DeleteNotification(std::list<std::shared_ptr<item::AbstractItem>> deletedList);
   static std::list<std::shared_ptr<item::AbstractItem>> GetNotificationList(uid_t uid, std::string channel = "");
   static std::list<std::shared_ptr<item::AbstractItem>> GetNotificationList(std::string app_id, uid_t uid, std::string channel = "");
