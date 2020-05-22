@@ -3621,29 +3621,15 @@ extern "C" EXPORT_API int noti_ex_multi_lang_destroy(noti_ex_multi_lang_h handle
 }
 
 extern "C" EXPORT_API int noti_ex_item_get_private_id(
-    noti_ex_item_h item, int64_t* private_id) {
-  if (item == nullptr || private_id == nullptr) {
+    noti_ex_item_h handle, int64_t* private_id) {
+  if (handle == nullptr || private_id == nullptr) {
     LOGE("Invalid parameter");
     return NOTI_EX_ERROR_INVALID_PARAMETER;
   }
 
-  Handle* h = static_cast<Handle*>(item);
+  Handle* h = static_cast<Handle*>(handle);
   *private_id = static_pointer_cast<IItemInfoInternal>(
       h->Get()->GetInfo())->GetPrivateId();
-
-  return NOTI_EX_ERROR_NONE;
-}
-
-extern "C" EXPORT_API int noti_ex_item_set_private_id(
-    noti_ex_item_h item, int64_t priv_id) {
-  if (item == nullptr) {
-    LOGE("Invalid parameter");
-    return NOTI_EX_ERROR_INVALID_PARAMETER;
-  }
-
-  Handle* h = static_cast<Handle*>(item);
-  static_pointer_cast<IItemInfoInternal>(
-      h->Get()->GetInfo())->SetPrivateId(priv_id);
 
   return NOTI_EX_ERROR_NONE;
 }
