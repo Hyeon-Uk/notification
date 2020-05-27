@@ -3275,6 +3275,7 @@ extern "C" EXPORT_API int noti_ex_reporter_find_by_channel(noti_ex_reporter_h ha
     if (list_ptr.empty()) {
       LOGW("Not exist ID");
       *noti_list = nullptr;
+      *count = 0;
       return NOTI_EX_ERROR_NONE;
     }
 
