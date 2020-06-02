@@ -109,17 +109,20 @@ void MultiLanguage::UpdateString(string domain, string locale_directory) {
 
   LOGI("base str(%s)", base_str.c_str());
   int arg_pos = 0;
-  for (string::iterator it = base_str.begin(); *it; ++it) {
-    if (*it != '%')
+  size_t pos = base_str.find("%");
+  while (pos != string::npos && (pos + 2) <= base_str.length()) {
+    char next_ch = base_str[pos + 1];
+    if (next_ch != 'd' && next_ch != 'f' && next_ch != 's') {
+      pos++;
+      pos = base_str.find("%", pos);
       continue;
-    char next_ch = *(it + 1);
-    if (next_ch != 'd' && next_ch != 'f' && next_ch != 's')
-      continue;
-
-    size_t pos = base_str.find("%" + string(1, next_ch));
-    base_str = base_str.replace(pos, 2, impl_->args_[arg_pos]);
+    }
+    base_str.replace(pos, 2, impl_->args_[arg_pos]);
+    pos += impl_->args_[arg_pos].length();
+    pos = base_str.find("%", pos);
     arg_pos++;
   }
+
   impl_->translated_ = base_str;
   LOGI("translated(%s)", impl_->translated_.c_str());
 }
