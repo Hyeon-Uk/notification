@@ -26,6 +26,7 @@ extern "C" {
 int noti_ex_item_free_string_list(char** list, int count);
 int noti_ex_item_group_remove_children(noti_ex_item_h handle);
 int noti_ex_item_time_set_time(noti_ex_item_h handle, time_t time);
+int noti_ex_item_get_private_id(noti_ex_item_h handle, int64_t* private_id);
 
 int noti_ex_style_set_geometry(noti_ex_style_h handle,
 		noti_ex_geometry_h geometry);
