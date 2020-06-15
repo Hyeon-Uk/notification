@@ -156,6 +156,7 @@ typedef struct {
  * @retval #NOTI_EX_ERROR_PERMISSION_DENIED Permission deny
  * @retval #NOTI_EX_ERROR_INVALID_PARAMETER Invalid parameter
  * @retval #NOTI_EX_ERROR_OUT_OF_MEMORY Out of memory
+ * @retval #NOTI_EX_ERROR_IO_ERROR IO error
  * @see #noti_ex_manager_h
  * @see #noti_ex_manager_events_s
  * @see #NOTI_EX_RECEIVER_GROUP_TICKER
