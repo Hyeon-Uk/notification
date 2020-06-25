@@ -27,7 +27,6 @@
 #include "notification-ex/input_selector_item.h"
 #include "notification-ex/progress_item.h"
 #include "notification-ex/icon_item.h"
-#include "notification-ex/icon_text_item.h"
 #include "notification-ex/image_item.h"
 #include "notification-ex/checkbox_item.h"
 #include "notification-ex/chat_message_item.h"
@@ -60,8 +59,6 @@ unique_ptr<AbstractItem> DefaultItemFactory::CreateItem(int type) {
         nullptr, nullptr, nullptr, nullptr, ChatMessageItem::Type::user));
     case AbstractItem::CheckBox :
       return unique_ptr<AbstractItem>(new CheckBoxItem("", ""));
-    case AbstractItem::IconText :
-      return unique_ptr<AbstractItem>(new IconTextItem("", nullptr, nullptr));
     case AbstractItem::InputSelector :
       return unique_ptr<AbstractItem>(new InputSelectorItem());
     case AbstractItem::Group :
