@@ -20,7 +20,7 @@
 #include "notification-ex/button_item.h"
 #include "notification-ex/text_item.h"
 #include "notification-ex/item_inflator.h"
-#include "unittest/mock/app_common.h"
+#include "mock/app_common.h"
 
 using namespace tizen_base;
 using namespace notification;

@@ -22,10 +22,10 @@
 #include "notification-ex/image_item.h"
 #include "notification-ex/common.h"
 
-#include "unittest/mock/gio_mock.h"
-#include "unittest/mock/smack_mock.h"
-#include "unittest/mock/tzplatform_config_mock.h"
-#include "unittest/mock/security_manager_mock.h"
+#include "mock/gio_mock.h"
+#include "mock/smack_mock.h"
+#include "mock/tzplatform_config_mock.h"
+#include "mock/security_manager_mock.h"
 
 
 using namespace notification;
