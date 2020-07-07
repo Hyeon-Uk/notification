@@ -440,7 +440,7 @@ EXPORT_API int notification_get_text(notification_h noti,
 					char **text)
 {
 	char result_str[NOTI_TEXT_RESULT_LEN] = { 0, };
-	char buf_str[NOTI_TEXT_RESULT_LEN] = { 0, };
+	char buf_str[32] = { 0, };
 	char buf_key[32] = { 0, };
 	char *ret_val = NULL;
 	char *get_str = NULL;
@@ -448,8 +448,6 @@ EXPORT_API int notification_get_text(notification_h noti,
 	char *translated_str = NULL;
 	bundle *b = NULL;
 	int num_args = 0;
-	int src_len = 0;
-	int max_len = 0;
 	int ret_variable_int = 0;
 	double ret_variable_double = 0.0;
 	notification_text_type_e text_type = NOTIFICATION_TEXT_TYPE_NONE;
@@ -546,12 +544,9 @@ EXPORT_API int notification_get_text(notification_h noti,
 					noti->group_id,
 					noti->priv_id,
 					&ret_variable_int);
-			snprintf(buf_str, sizeof(buf_str),
-				"%d ", ret_variable_int);
+			snprintf(buf_str, sizeof(buf_str), "%d ", ret_variable_int);
+			strncat(result_str, buf_str, sizeof(result_str) - strlen(result_str) - 1);
 
-			src_len = strlen(result_str);
-			max_len = sizeof(result_str) - src_len - 1;
-			strncat(result_str, buf_str, max_len);
 			num_args++;
 		}
 	}
@@ -602,12 +597,8 @@ EXPORT_API int notification_get_text(notification_h noti,
 						ret_variable_int = atoi(ret_val);
 				}
 
-				snprintf(buf_str, sizeof(buf_str), "%d",
-						ret_variable_int);
-
-				src_len = strlen(result_str);
-				max_len = sizeof(result_str) - src_len - 1;
-				strncat(result_str, buf_str, max_len);
+				snprintf(buf_str, sizeof(buf_str), "%d", ret_variable_int);
+				strncat(result_str, buf_str, sizeof(result_str) - strlen(result_str) - 1);
 
 				temp_str++;
 				num_args++;
@@ -634,14 +625,8 @@ EXPORT_API int notification_get_text(notification_h noti,
 					translated_str = NULL;
 				}
 
-				if (translated_str != NULL) {
-					strncpy(buf_str, translated_str,
-							sizeof(buf_str) - 1);
-
-					src_len = strlen(result_str);
-					max_len = sizeof(result_str) - src_len - 1;
-					strncat(result_str, buf_str, max_len);
-				}
+				if (translated_str != NULL)
+					strncat(result_str, translated_str, sizeof(result_str) - strlen(result_str) - 1);
 
 				temp_str++;
 				num_args++;
@@ -654,12 +639,8 @@ EXPORT_API int notification_get_text(notification_h noti,
 				if (ret_val != NULL)
 					ret_variable_double = atof(ret_val);
 
-				snprintf(buf_str, sizeof(buf_str), "%.2f",
-						ret_variable_double);
-
-				src_len = strlen(result_str);
-				max_len = sizeof(result_str) - src_len - 1;
-				strncat(result_str, buf_str, max_len);
+				snprintf(buf_str, sizeof(buf_str), "%.2f", ret_variable_double);
+				strncat(result_str, buf_str, sizeof(result_str) - strlen(result_str) - 1);
 
 				temp_str++;
 				num_args++;
@@ -695,12 +676,8 @@ EXPORT_API int notification_get_text(notification_h noti,
 							ret_variable_int = atoi(ret_val);
 					}
 
-					snprintf(buf_str, sizeof(buf_str), "%d",
-							ret_variable_int);
-
-					src_len = strlen(result_str);
-					max_len = sizeof(result_str) - src_len - 1;
-					strncat(result_str, buf_str, max_len);
+					snprintf(buf_str, sizeof(buf_str), "%d", ret_variable_int);
+					strncat(result_str, buf_str, sizeof(result_str) - strlen(result_str) - 1);
 
 					temp_str += 3;
 				} else if (*(temp_str + 3) == 's') {
@@ -710,13 +687,8 @@ EXPORT_API int notification_get_text(notification_h noti,
 						 num_args + *(temp_str + 1) - 49);
 
 					bundle_get_str(b, buf_key, &ret_val);
-
-					snprintf(buf_str, sizeof(buf_str), "%s",
-						 ret_val);
-
-					src_len = strlen(result_str);
-					max_len = sizeof(result_str) - src_len - 1;
-					strncat(result_str, buf_str, max_len);
+					if (ret_val != NULL)
+						strncat(result_str, ret_val, sizeof(result_str) - strlen(result_str) - 1);
 
 					temp_str += 3;
 				} else if (*(temp_str + 3) == 'f') {
@@ -729,12 +701,8 @@ EXPORT_API int notification_get_text(notification_h noti,
 					if (ret_val != NULL)
 						ret_variable_double = atof(ret_val);
 
-					snprintf(buf_str, sizeof(buf_str),
-						"%.2f", ret_variable_double);
-
-					src_len = strlen(result_str);
-					max_len = sizeof(result_str) - src_len - 1;
-					strncat(result_str, buf_str, max_len);
+					snprintf(buf_str, sizeof(buf_str), "%.2f", ret_variable_double);
+					strncat(result_str, buf_str, sizeof(result_str) - strlen(result_str) - 1);
 
 					temp_str += 3;
 				} else {
@@ -780,12 +748,8 @@ EXPORT_API int notification_get_text(notification_h noti,
 						noti->group_id,
 						noti->priv_id,
 						&ret_variable_int);
-				snprintf(buf_str, sizeof(buf_str), " %d",
-						ret_variable_int);
-
-				src_len = strlen(result_str);
-				max_len = sizeof(result_str) - src_len - 1;
-				strncat(result_str, buf_str, max_len);
+				snprintf(buf_str, sizeof(buf_str), " %d", ret_variable_int);
+				strncat(result_str, buf_str, sizeof(result_str) - strlen(result_str) - 1);
 
 				num_args++;
 			}
