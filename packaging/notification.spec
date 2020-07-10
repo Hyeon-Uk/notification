@@ -24,6 +24,11 @@ BuildRequires: pkgconfig(libsmack)
 BuildRequires: pkgconfig(gmock)
 BuildRequires: pkgconfig(uuid)
 
+%if 0%{?gcov:1}
+BuildRequires:  lcov
+BuildRequires:  zip
+%endif
+
 BuildRequires: cmake
 Requires(post): /sbin/ldconfig
 Requires(post): %{TZ_SYS_BIN}/sqlite3
@@ -75,6 +80,12 @@ find . -name '*.gcno' -exec cp '{}' gcov-obj ';'
 
 %check
 ctest --output-on-failure %{?_smp_mflags}
+%if 0%{?gcov:1}
+lcov -c --ignore-errors graph --no-external -q -d . -o notification-ex.info
+genhtml notification-ex.info -o notification-ex.out
+zip -r notification-ex.zip notification-ex.out
+install -m 0644 notification-ex.zip %{buildroot}%{_datadir}/gcov/notification-ex.zip
+%endif
 
 %install
 rm -rf %{buildroot}
@@ -135,8 +146,6 @@ fi
 %{_libdir}/pkgconfig/notification.pc
 %{_libdir}/libnotification.so
 
-
-
 #################################################
 # notification-ex
 #################################################
@@ -171,7 +180,6 @@ Header & package configuration files to support development of the notification.
 %{_libdir}/pkgconfig/notification-ex.pc
 %attr(0644,root,root) %{_libdir}/libnotification-ex.so
 
-
 #################################################
 # notification-ex_unittests
 #################################################
@@ -187,5 +195,5 @@ GTest for notification-ex
 
 %if 0%{?gcov:1}
 %files gcov
-%{_datadir}/gcov/obj/*
+%{_datadir}/gcov/*
 %endif

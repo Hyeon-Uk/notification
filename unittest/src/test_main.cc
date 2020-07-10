@@ -17,9 +17,9 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
-int main(int argc, char** argv){
+int main(int argc, char** argv) {
   int ret = -1;
-  setenv("GCOV_PREFIX", "/tmp/", 1);
+
   try {
     testing::InitGoogleTest(&argc, argv);
   } catch(...) {
