@@ -248,11 +248,7 @@ int SharedFile::SetSharingData(SharingData sharing_data,
   if (req == nullptr)
     return ERROR_IO_ERROR;
 
-  appid = strdup(sharing_data.app_id.c_str());
-  if (appid == nullptr) {
-    LOGE("Failed to get Sender appid");
-    return ERROR_OUT_OF_MEMORY;
-  }
+  appid = sharing_data.app_id.c_str();
 
   ret = security_manager_private_sharing_req_set_owner_appid(req.get(), appid);
   if (ret != SECURITY_MANAGER_SUCCESS) {
@@ -327,11 +323,7 @@ int SharedFile::UnsetSharingData(SharingData sharing_data,
   if (req == nullptr)
     return ERROR_IO_ERROR;
 
-  appid = strdup(sharing_data.app_id.c_str());
-  if (appid == nullptr) {
-    LOGE("Failed to get Sender appid");
-    return ERROR_OUT_OF_MEMORY;
-  }
+  appid = sharing_data.app_id.c_str();
 
   ret = security_manager_private_sharing_req_set_owner_appid(req.get(), appid);
   if (ret != SECURITY_MANAGER_SUCCESS) {

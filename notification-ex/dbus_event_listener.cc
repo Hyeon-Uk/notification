@@ -172,28 +172,33 @@ void DBusEventListener::Impl::SignalCb(GDBusConnection* connection,
   char* appid = nullptr;
   GVariantIter *iter = nullptr;
   char* event_info_raw = nullptr;
-  g_variant_get(parameters, "(ssa(s))", &appid, &event_info_raw, &iter);
+  g_variant_get(parameters, "(&s&sa(s))", &appid, &event_info_raw, &iter);
 
   LOGI("signal callback!! (%s)", appid);
   string sender_appid = string(appid);
   string cur_appid = util::GetAppId();
-  if (sender_appid == cur_appid)
+  if (sender_appid == cur_appid) {
+    g_variant_iter_free(iter);
     return;
+  }
   if ((!DBusConnectionManager::GetInst().IsDataProviderMaster(cur_appid)
     && !DBusConnectionManager::GetInst().IsDataProviderMaster(sender_appid))
-    || (cur_appid == sender_appid))
+    || (cur_appid == sender_appid)) {
+    g_variant_iter_free(iter);
     return;
+  }
 
   LOGD("%s : %s", cur_appid.c_str(), sender_appid.c_str());
 
   try {
     char* raw = nullptr;
     list<Bundle> ret_list;
-    while (g_variant_iter_loop(iter, "(s)", &raw) && raw != nullptr) {
+    while (g_variant_iter_loop(iter, "(&s)", &raw) && raw != nullptr) {
       Bundle ret(raw);
       ret_list.emplace_back(ret);
     }
 
+    g_variant_iter_free(iter);
     Bundle b(event_info_raw);
     EventInfo info(b);
     if (info.GetEventType() == EventInfo::Post
@@ -217,28 +222,33 @@ void DBusEventListener::Impl::MethodCallHandler(GVariant* parameters,
   GVariantIter* iter = nullptr;
   char* event_info_raw = nullptr;
 
-  g_variant_get(parameters, "(ssa(s))", &appid, &event_info_raw, &iter);
+  g_variant_get(parameters, "(&s&sa(s))", &appid, &event_info_raw, &iter);
 
   string sender_appid = string(appid);
   string cur_appid = util::GetAppId();
   LOGI("MethodCallHandler!! appid(%s), sender(%s), cur(%s)", appid,
     sender_appid.c_str(), cur_appid.c_str());
 
-  if (sender_appid == cur_appid)
+  if (sender_appid == cur_appid) {
+    g_variant_iter_free(iter);
     return;
+  }
 
   if ((!DBusConnectionManager::GetInst().IsDataProviderMaster(cur_appid)
     && !DBusConnectionManager::GetInst().IsDataProviderMaster(sender_appid))
-    || (cur_appid == sender_appid))
+    || (cur_appid == sender_appid)) {
+    g_variant_iter_free(iter);
     return;
+  }
 
   char* raw = nullptr;
   list<Bundle> ret_list;
-  while (g_variant_iter_loop(iter, "(s)", &raw) && raw != nullptr) {
+  while (g_variant_iter_loop(iter, "(&s)", &raw) && raw != nullptr) {
     Bundle ret(raw);
     ret_list.emplace_back(ret);
   }
 
+  g_variant_iter_free(iter);
   Bundle b(event_info_raw);
   EventInfo info(b);
 
