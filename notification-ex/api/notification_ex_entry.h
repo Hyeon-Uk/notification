@@ -115,7 +115,7 @@ int noti_ex_item_entry_set_text(noti_ex_item_h handle, const char *text);
  * @remarks After the multi-language handle setted successfully, \n
  *          noti_ex_item_entry_get_text() will return the multi-language text. \n
  * @remarks The #noti_ex_item_h handle keeps its own copy of #noti_ex_multi_lang_h. \n
- *          Therefore, you can destroy @a multi after it was set for @ handle.
+ *          Therefore, you can destroy @a multi after it was set for @a handle.
  * @remarks You can pass NULL to @a multi, if you want to remove the multi-language text.
  * @param[in] handle The notification_ex item handle
  * @param[in] multi The multi-language handle

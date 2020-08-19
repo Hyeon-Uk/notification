@@ -122,7 +122,7 @@ int noti_ex_item_input_selector_set_contents(noti_ex_item_h handle, const char *
  * @remarks After the multi-language handle setted successfully, \n
  *          noti_ex_item_input_selector_get_contents() will return the multi-language text. \n
  * @remarks The #noti_ex_item_h handle keeps its own copy of #noti_ex_multi_lang_h list. \n
- *          Therefore, you can destroy @a multi_language_list after it was set for @ handle.
+ *          Therefore, you can destroy @a multi_language_list after it was set for @a handle.
  * @remarks You can pass NULL to @a multi_language_list, if you want to remove the multi-language text.
  * @param[in] handle The notification_ex item handle
  * @param[in] multi_language_list The list of noti_ex_multi_lang_h

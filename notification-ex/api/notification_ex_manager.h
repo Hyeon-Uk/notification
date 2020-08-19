@@ -105,7 +105,7 @@ typedef void (*noti_ex_manager_events_delete_cb)(noti_ex_manager_h handle,
 
 /**
  * @brief Called when an error event is received.
- * @details The errors are passed from #noti_ex_reporter_send_error().
+ * @details The errors are passed from noti_ex_reporter_send_error().
  *          If this callback is set to NULL in @a event_callbacks, error events cannot be received.
  * @since_tizen 5.5
  * @param[in] handle The manager handle \n

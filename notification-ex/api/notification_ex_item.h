@@ -1277,7 +1277,7 @@ int noti_ex_item_info_get_delete_time(noti_ex_item_info_h handle, int *delete_ti
  * @brief Sets the time to delete the notification_ex item.
  * @since_tizen 5.5
  * @param[in] handle The notification_ex item info handle
- * @param[out] delete_time The time to delete notification, in seconds
+ * @param[in] delete_time The time to delete notification, in seconds
  * @return #NOTI_EX_ERROR_NONE On success, other value on failure
  * @retval #NOTI_EX_ERROR_NONE Success
  * @retval #NOTI_EX_ERROR_INVALID_PARAMETER Invalid parameter
