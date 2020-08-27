@@ -37,6 +37,7 @@
 #include "notification_shared_file.h"
 #include <notification_private.h>
 
+#define NOTI_PRIV_DATA_DIR "data/.notification"
 
 #define DUMMY_PARAM
 #define __OOM_CHECK(value, ret_value, free_fun) \
@@ -104,8 +105,6 @@ static bool __make_sharing_dir(const char *dir)
 static char *__get_data_path_by_pkg_id(const char *pkg_id,
 					const char *file_name, uid_t uid)
 {
-#define NOTI_PRIV_DATA_DIR "data/.notification"
-
 	const char *path;
 	char dir[PATH_MAX];
 
@@ -480,45 +479,52 @@ static GList *__get_new_file_list(notification_h noti,
 
 static char *__get_shared_dir(notification_h noti)
 {
-	char *path = NULL;
+	char *path;
 	char *dir;
+	char *shared_path = NULL;
 	const char *index;
 	char buf_key[32] = { 0, };
+	int ret;
 	int i = NOTIFICATION_IMAGE_TYPE_ICON, dir_len;
 
 	if (noti->b_priv_image_path != NULL) {
 		for (; i <= NOTIFICATION_IMAGE_TYPE_MAX; i++) {
 			snprintf(buf_key, sizeof(buf_key), "%d", i);
-			bundle_get_str(noti->b_priv_image_path, buf_key, &path);
-			if (path != NULL)
+			ret = bundle_get_str(noti->b_priv_image_path, buf_key, &path);
+			if (ret == BUNDLE_ERROR_NONE
+					&& __last_index_of(path, NOTI_PRIV_DATA_DIR) != NULL) {
+				shared_path = path;
 				break;
+			}
 		}
 	}
 
-	if (path == NULL && noti->priv_sound_path != NULL)
-		path = noti->priv_sound_path;
-	else if (path == NULL && noti->priv_vibration_path != NULL)
-		path = noti->priv_vibration_path;
+	if (shared_path == NULL && noti->priv_sound_path != NULL
+			&& __last_index_of(noti->priv_sound_path, NOTI_PRIV_DATA_DIR) != NULL)
+		shared_path = noti->priv_sound_path;
+	else if (shared_path == NULL && noti->priv_vibration_path != NULL
+			&& __last_index_of(noti->priv_vibration_path, NOTI_PRIV_DATA_DIR) != NULL)
+		shared_path = noti->priv_vibration_path;
 
-	if (path == NULL) {
+	if (shared_path == NULL) {
 		DBG("No private resource");
 		return NULL;
 	}
 
-	index =  __last_index_of(path, "/");
+	index =  __last_index_of(shared_path, "/");
 	if (index == NULL) {
 		ERR("Failed to find directory separator");
 		return NULL;
 	}
 
-	dir_len = index - path + 1;
+	dir_len = index - shared_path + 1;
 	if (dir_len <= 0 || dir_len > PATH_MAX)
 		return NULL;
 
 	dir = (char *)calloc(dir_len, sizeof(char));
 	__OOM_CHECK(dir, NULL, DUMMY_PARAM);
 
-	snprintf(dir, dir_len, "%s", path);
+	snprintf(dir, dir_len, "%s", shared_path);
 
 	return dir;
 }
@@ -1022,18 +1028,17 @@ EXPORT_API int notification_set_private_sharing(notification_h noti,
 						__free_req_info(req_data));
 
 		req_data->dir = __get_shared_dir(noti);
-		if (req_data->dir == NULL) {
-			__free_req_info(req_data);
-			return NOTIFICATION_ERROR_INVALID_PARAMETER;
-		}
 
 		uid_info->sharing_req_list = g_list_append(
 			uid_info->sharing_req_list, req_data);
 	} else {
 		req_data = (sharing_req_data_s *)req_list->data;
+		if (req_data->dir == NULL)
+			req_data->dir = __get_shared_dir(noti);
 	}
 
-	__make_sharing_dir(req_data->dir);
+	if (req_data->dir != NULL)
+		__make_sharing_dir(req_data->dir);
 
 	tmp = g_list_find_custom(req_data->priv_id_list,
 				GINT_TO_POINTER(noti->priv_id), __comp_priv_id);
@@ -1090,6 +1095,7 @@ EXPORT_API void notification_remove_private_sharing(
 				const char *src_app_id, int priv_id, uid_t uid)
 {
 	char **path_array = NULL;
+	char *dst_path;
 	sharing_req_data_s *req_data;
 	private_sharing_req *handle = NULL;
 	uid_info_s *uid_info;
@@ -1126,12 +1132,14 @@ EXPORT_API void notification_remove_private_sharing(
 	}
 
 	/* If there is no shared file, the private sharing is not dropped. */
-	__make_sharing_dir(req_data->dir);
-	iter = req_data->shared_file_list;
-	for (; iter != NULL; iter = g_list_next(iter)) {
-		notification_copy_private_file(
-			((sharing_file_info_s *)(iter->data))->src_path,
-			((sharing_file_info_s *)(iter->data))->dst_path);
+	if (req_data->dir != NULL) {
+		__make_sharing_dir(req_data->dir);
+		iter = req_data->shared_file_list;
+		for (; iter != NULL; iter = g_list_next(iter)) {
+			notification_copy_private_file(
+				((sharing_file_info_s *)(iter->data))->src_path,
+				((sharing_file_info_s *)(iter->data))->dst_path);
+		}
 	}
 
 	if (g_list_length(req_data->target_app_table) > 0) {
@@ -1181,13 +1189,18 @@ EXPORT_API void notification_remove_private_sharing(
 		}
 	}
 
-	iter = req_data->shared_file_list;
-	for (; iter != NULL; iter = g_list_next(iter)) {
-		if (g_remove(((sharing_file_info_s *)(iter->data))->dst_path) != 0)
-			ERR("Failed [%s] [%d]", (const char *)iter->data, errno);
-	}
+	if (req_data->dir != NULL) {
+		iter = req_data->shared_file_list;
+		for (; iter != NULL; iter = g_list_next(iter)) {
+			dst_path = ((sharing_file_info_s *)(iter->data))->dst_path;
+			if (strncmp(req_data->dir, dst_path, strlen(req_data->dir)) != 0)
+				continue;
 
-	g_rmdir(req_data->dir);
+			if (g_remove(dst_path) != 0)
+				ERR("Failed [%s] [%d]", dst_path, errno);
+		}
+		g_rmdir(req_data->dir);
+	}
 	req_data->priv_id_list = g_list_remove(req_data->priv_id_list,
 						priv_id_info->data);
 
