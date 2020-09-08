@@ -533,7 +533,10 @@ int SharedFile::RemovePrivateSharing(list<shared_ptr<AbstractItem>> notiList,
           LOGE("Failed to remove shared_file(%s)", path_array[i]);
         }
       }
-      g_rmdir(sharing_data.dir.c_str());
+
+      if (g_rmdir(sharing_data.dir.c_str()) != 0)
+        LOGE("Failed to remove sharing directory(%s)(%d)",
+            sharing_data.dir.c_str(), errno);
     }
   }
 
