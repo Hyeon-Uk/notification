@@ -190,9 +190,11 @@ bool SharedFile::IsPrivatePath(string path) const {
     return false;
   }
 
+  errno = 0;
   if (smack_new_label_from_path(path.c_str(), XATTR_NAME_SMACK, 1, &smack_label)
         <= 0) {
-    LOGE("smack_new_label_from_path failed");
+    LOGE("smack_new_label_from_path failed  : %d [%s][%s]",
+        errno, strerror(errno), path.c_str());
     return false;
   }
 

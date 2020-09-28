@@ -683,10 +683,12 @@ char *notification_check_file_path_is_private(const char *pkg_id,
 	int size;
 	uid_t uid = getuid();
 
+	errno = 0;
 	size = smack_new_label_from_path(file_path, XATTR_NAME_SMACK,
 							TRUE, &smack_label);
 	if (size <= 0) {
-		ERR("Failed to get smack info");
+		ERR("Failed to get smack info : %d [%s][%s]",
+				errno, strerror(errno), file_path);
 		return NULL;
 	}
 
