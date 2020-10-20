@@ -38,6 +38,8 @@
 #include <notification_private.h>
 
 #define NOTI_PRIV_DATA_DIR "data/.notification"
+#define MAX_TIMEOUT 5000
+#define MAX_RETRY_CNT 3
 
 #define DUMMY_PARAM
 #define __OOM_CHECK(value, ret_value, free_fun) \
@@ -59,6 +61,9 @@ typedef struct uid_info {
 typedef struct sharing_req_data {
 	char *app_id;
 	char *dir;
+	guint timer;
+	int drop_retry_count;
+	uid_t uid;
 	GList *priv_id_list;
 	GList *shared_file_list;
 	GList *target_app_table;
@@ -1046,6 +1051,7 @@ EXPORT_API int notification_set_private_sharing(notification_h noti,
 						__free_req_info(req_data));
 
 		req_data->dir = __get_shared_dir(noti);
+		req_data->uid = uid;
 
 		uid_info->sharing_req_list = g_list_append(
 			uid_info->sharing_req_list, req_data);
@@ -1053,6 +1059,11 @@ EXPORT_API int notification_set_private_sharing(notification_h noti,
 		req_data = (sharing_req_data_s *)req_list->data;
 		if (req_data->dir == NULL)
 			req_data->dir = __get_shared_dir(noti);
+
+		if (req_data->timer > 0) {
+			g_source_remove(req_data->timer);
+			req_data->timer = 0;
+		}
 	}
 
 	if (req_data->dir != NULL)
@@ -1109,45 +1120,26 @@ out:
 	return ret;
 }
 
-EXPORT_API void notification_remove_private_sharing(
-				const char *src_app_id, int priv_id, uid_t uid)
+static gboolean __timeout_handler(void *data)
 {
 	char **path_array = NULL;
 	char *dst_path;
+	char *target_appid;
 	sharing_req_data_s *req_data;
 	private_sharing_req *handle = NULL;
-	uid_info_s *uid_info;
-	GList *req_list;
 	GList *iter;
-	GList *priv_id_info = NULL;
-	GList *tmp_list = NULL;
-	int len, ret;
+	GList *tmp_list;
+	uid_info_s *uid_info;
+	int ret = SECURITY_MANAGER_SUCCESS;
+	int len;
 
-	tmp_list = g_list_find_custom(__uid_list, GINT_TO_POINTER(uid),
-						__comp_uid_info_list);
-	if (tmp_list == NULL)
-		return;
-
-	uid_info = tmp_list->data;
-
-	req_list = g_list_find_custom(uid_info->sharing_req_list, src_app_id,
-						__comp_sharing_req_list);
-	if (req_list == NULL)
-		return;
-
-	req_data = (sharing_req_data_s *)req_list->data;
-
-	priv_id_info = g_list_find_custom(req_data->priv_id_list,
-				GINT_TO_POINTER(priv_id), __comp_priv_id);
-	if (priv_id_info == NULL)
-		return;
-
-	len = g_list_length(req_data->priv_id_list);
-	if (len > 1) {
-		req_data->priv_id_list = g_list_remove(req_data->priv_id_list,
-					priv_id_info->data);
-		return;
+	req_data = (sharing_req_data_s *)data;
+	if (g_list_length(req_data->priv_id_list) > 0) {
+		req_data->timer = 0;
+		return FALSE;
 	}
+
+	req_data->drop_retry_count++;
 
 	/* If there is no shared file, the private sharing is not dropped. */
 	if (req_data->dir != NULL) {
@@ -1168,7 +1160,7 @@ EXPORT_API void notification_remove_private_sharing(
 		}
 
 		ret = security_manager_private_sharing_req_set_owner_appid(
-					handle, src_app_id);
+				handle, req_data->app_id);
 		if (ret != SECURITY_MANAGER_SUCCESS) {
 			ERR("Failed to set owner appid(%s) %d",
 					req_data->app_id, ret);
@@ -1179,6 +1171,7 @@ EXPORT_API void notification_remove_private_sharing(
 		if (path_array == NULL) {
 			ERR("path_array is null %d",
 				g_list_length(req_data->shared_file_list));
+			ret = SECURITY_MANAGER_ERROR_MEMORY;
 			goto out;
 		}
 
@@ -1190,12 +1183,14 @@ EXPORT_API void notification_remove_private_sharing(
 		}
 
 		iter = req_data->target_app_table;
-		for (; iter != NULL; iter = g_list_next(iter)) {
+		while(iter != NULL) {
+			target_appid = (char *)iter->data;
+			iter = g_list_next(iter);
+
 			ret = security_manager_private_sharing_req_set_target_appid(
-						handle, (const char *)iter->data);
+						handle, target_appid);
 			if (ret != SECURITY_MANAGER_SUCCESS) {
-				ERR("Failed to set target appid(%s)",
-					(const char *)iter->data);
+				ERR("Failed to set target appid(%s)", target_appid);
 				goto out;
 			}
 
@@ -1204,7 +1199,23 @@ EXPORT_API void notification_remove_private_sharing(
 				ERR("Failed to drop %d", ret);
 				goto out;
 			}
+
+			req_data->target_app_table = g_list_remove(
+					req_data->target_app_table, target_appid);
+			free(target_appid);
 		}
+	}
+
+out:
+	if (handle != NULL)
+		security_manager_private_sharing_req_free(handle);
+
+	if (path_array)
+		free(path_array);
+
+	if (ret != SECURITY_MANAGER_SUCCESS && req_data->drop_retry_count < MAX_RETRY_CNT) {
+		ERR("drop_retry_count %d", req_data->drop_retry_count);
+		return TRUE;
 	}
 
 	if (req_data->dir != NULL) {
@@ -1219,17 +1230,61 @@ EXPORT_API void notification_remove_private_sharing(
 		}
 		g_rmdir(req_data->dir);
 	}
-	req_data->priv_id_list = g_list_remove(req_data->priv_id_list,
-						priv_id_info->data);
 
+	tmp_list = g_list_find_custom(__uid_list, GINT_TO_POINTER(req_data->uid),
+			__comp_uid_info_list);
+
+	uid_info = tmp_list->data;
 	uid_info->sharing_req_list = g_list_remove(uid_info->sharing_req_list,
-						req_data);
+			req_data);
 	__free_req_info(req_data);
 
-out:
-	if (handle != NULL)
-		security_manager_private_sharing_req_free(handle);
+	return FALSE;
+}
 
-	if (path_array)
-		free(path_array);
+EXPORT_API void notification_remove_private_sharing(
+		const char *src_app_id, int priv_id, uid_t uid)
+{
+	sharing_req_data_s *req_data;
+	uid_info_s *uid_info;
+	GList *req_list;
+	GList *priv_id_info = NULL;
+	GList *tmp_list = NULL;
+	int len;
+
+	tmp_list = g_list_find_custom(__uid_list, GINT_TO_POINTER(uid),
+			__comp_uid_info_list);
+	if (tmp_list == NULL)
+		return;
+
+	uid_info = tmp_list->data;
+
+	req_list = g_list_find_custom(uid_info->sharing_req_list, src_app_id,
+			__comp_sharing_req_list);
+	if (req_list == NULL)
+		return;
+
+	req_data = (sharing_req_data_s *)req_list->data;
+
+	priv_id_info = g_list_find_custom(req_data->priv_id_list,
+			GINT_TO_POINTER(priv_id), __comp_priv_id);
+	if (priv_id_info == NULL)
+		return;
+
+	req_data->priv_id_list = g_list_remove(req_data->priv_id_list,
+			priv_id_info->data);
+	len = g_list_length(req_data->priv_id_list);
+	if (len > 0)
+		return;
+
+	if (req_data->timer > 0)
+		g_source_remove(req_data->timer);
+
+	req_data->timer = g_timeout_add(MAX_TIMEOUT, __timeout_handler, req_data);
+	req_data->drop_retry_count = 0;
+	if (req_data->timer == 0) {
+		ERR("Failed to add timer");
+		__timeout_handler(req_data);
+	}
+
 }
