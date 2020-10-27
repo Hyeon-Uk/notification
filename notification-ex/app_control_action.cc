@@ -123,6 +123,9 @@ void AppControlAction::Deserialize(Bundle b) {
     return;
   }
 
+  if (impl_->control_)
+    app_control_destroy(impl_->control_);
+
   impl_->control_ = app_control;
 }
 

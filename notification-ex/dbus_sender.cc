@@ -252,11 +252,13 @@ std::list<Bundle> DBusSender::Request(const IEventInfo& info) {
   GVariantIter *iter = nullptr;
   g_variant_get(reply_body, "(a(s))", &iter);
   char* raw = nullptr;
-  while (g_variant_iter_loop(iter, "(s)", &raw) && raw != nullptr) {
+  while (g_variant_iter_loop(iter, "(&s)", &raw) && raw != nullptr) {
     Bundle ret(raw);
     ret_list.emplace_back(ret);
   }
 
+  if (iter)
+    g_variant_iter_free(iter);
   return ret_list;
 }
 
