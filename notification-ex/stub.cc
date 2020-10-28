@@ -3355,9 +3355,15 @@ extern "C" EXPORT_API int noti_ex_reporter_find_by_channel(noti_ex_reporter_h ha
     }
 
     int size = list_ptr.size();
-    int i = 0;
+    list_item = static_cast<Handle**>(calloc(size, sizeof(Handle*)));
+    if (list_item == nullptr) {
+      LOGE("Out of memory");
+      *noti_list = nullptr;
+      *count = 0;
+      return NOTI_EX_ERROR_OUT_OF_MEMORY;
+    }
 
-    list_item = (Handle**)calloc(size, sizeof(Handle*));
+    int i = 0;
     for (auto& ptr : list_ptr)
       list_item[i++] = new Handle(std::move(ptr));
 
@@ -3391,9 +3397,15 @@ extern "C" EXPORT_API int noti_ex_reporter_find_all(noti_ex_reporter_h handle,
     }
 
     int size = list_ptr.size();
-    int i = 0;
+    list_item = static_cast<Handle**>(calloc(size, sizeof(Handle*)));
+    if (list_item == nullptr) {
+      LOGE("Out of memory");
+      *noti_list = nullptr;
+      *count = 0;
+      return NOTI_EX_ERROR_OUT_OF_MEMORY;
+    }
 
-    list_item = (Handle**)calloc(size, sizeof(Handle*));
+    int i = 0;
     for (auto& ptr : list_ptr)
       list_item[i++] = new Handle(std::move(ptr));
 
