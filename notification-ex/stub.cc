@@ -1072,8 +1072,9 @@ extern "C" EXPORT_API int noti_ex_item_group_foreach_child(noti_ex_item_h handle
   list<shared_ptr<AbstractItem>> children = p->GetChildren();
   LOGI("Retrive (%zd)", children.size());
   for (auto i : children) {
+    Handle handle(i);
     int ret = callback(
-        static_cast<noti_ex_item_h>(new Handle(i)), data);
+        static_cast<noti_ex_item_h>(&handle), data);
     if (ret != NOTI_EX_ERROR_NONE) {
       LOGW("callback return (%d) stop foreach", ret);
       break;
