@@ -55,27 +55,31 @@ DBusSender::~DBusSender() {
 
 bool DBusSender::Impl::EmitSignal(string bus_name, string signal_name,
     GVariant* data) {
-  GError* err = NULL;
-  gboolean result = TRUE;
-
-  result = g_dbus_connection_emit_signal(
-              DBusConnectionManager::GetInst().GetConnection(),
-              bus_name.empty() ? NULL : bus_name.c_str(),
-              path_.c_str(),
-              DBusConnectionManager::GetInst().GetInterfaceName().c_str(),
-              signal_name.c_str(), data, &err);
+  GError* err = nullptr;
+  GDBusConnection* conn = DBusConnectionManager::GetInst().GetConnection();
+  gboolean result = g_dbus_connection_emit_signal(conn,
+      bus_name.empty() ? NULL : bus_name.c_str(),
+      path_.c_str(),
+      DBusConnectionManager::GetInst().GetInterfaceName().c_str(),
+      signal_name.c_str(), data, &err);
   if (result == FALSE) {
-    LOGE("g_dbus_connection_emit_signal() is failed");
-    if (err != NULL) {
-      LOGE("g_dbus_connection_emit_signal() err : %s",
-        err->message);
-      g_error_free(err);
-    }
-  } else {
-    LOGI("Successfully emit signal to %s, %s, %s",
-      bus_name.c_str(), path_.c_str(), signal_name.c_str());
+    LOGE("g_dbus_connection_emit_signal() is failed. error(%s)",
+        err ? err->message : "Unknown");
+    g_clear_error(&err);
+    return false;
   }
-  return result;
+
+  result = g_dbus_connection_flush_sync(conn, NULL, &err);
+  if (result == FALSE) {
+    LOGE("g_dbus_connection_flush_sync() is failed. error(%s)",
+        err ? err->message : "Unknown");
+    g_clear_error(&err);
+    return false;
+  }
+
+  LOGI("Successfully emit signal to %s, %s, %s",
+      bus_name.c_str(), path_.c_str(), signal_name.c_str());
+  return true;
 }
 
 string DBusSender::Impl::GetBusName(string appid, string dest_appid) const {
