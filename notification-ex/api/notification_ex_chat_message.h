@@ -98,7 +98,7 @@ int noti_ex_item_chat_message_create(noti_ex_item_h *handle, const char *id,
  * @brief Gets the notification_ex item handle for the chat message name.
  * @details The name is a notification_ex item handle created with noti_ex_item_text_create().
  * @since_tizen 5.5
- * @remarks @a name should not be released.
+ * @remarks @a name must be released using noti_ex_item_destroy().
  * @remarks The @a name is available until @a handle is released.
  * @param[in] handle The notification_ex item handle
  * @param[out] name The notification_ex item handle with name
@@ -128,7 +128,7 @@ int noti_ex_item_chat_message_get_name(noti_ex_item_h handle, noti_ex_item_h *na
  * @brief Gets the notification_ex item handle for the chat message text.
  * @details The text is a notification_ex item handle created with noti_ex_item_text_create().
  * @since_tizen 5.5
- * @remarks @a text should not be released.
+ * @remarks @a text must be released using noti_ex_item_destroy().
  * @remarks The @a text is available until @a handle is released.
  * @param[in] handle The notification_ex item handle
  * @param[out] text The notification_ex item handle with text
@@ -158,7 +158,7 @@ int noti_ex_item_chat_message_get_text(noti_ex_item_h handle, noti_ex_item_h *te
  * @brief Gets the notification_ex item handle for the chat message image.
  * @details The image is a notification_ex item handle created with noti_ex_item_image_create().
  * @since_tizen 5.5
- * @remarks @a image should not be released.
+ * @remarks @a image must be released using noti_ex_item_destroy().
  * @remarks The @a image is available until @a handle is released.
  * @param[in] handle The notification_ex item handle
  * @param[out] image The notification_ex item handle with image
@@ -188,7 +188,7 @@ int noti_ex_item_chat_message_get_image(noti_ex_item_h handle, noti_ex_item_h *i
  * @brief Gets the notification_ex item handle for the chat message time.
  * @details The time is notification_ex item handle created with noti_ex_item_time_create().
  * @since_tizen 5.5
- * @remarks @a time should not be released.
+ * @remarks @a time must be released using noti_ex_item_destroy().
  * @remarks The @a time is available until @a handle is released.
  * @param[in] handle The notification_ex item handle
  * @param[out] time The notification_ex item handle with time
