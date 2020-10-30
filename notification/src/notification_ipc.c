@@ -1608,6 +1608,11 @@ int notification_ipc_request_load_system_setting(notification_system_setting_h *
 
 		notification_ipc_make_system_setting_from_gvariant(result_setting, setting_body);
 
+		if (reply) {
+			g_object_unref(reply);
+			reply = NULL;
+		}
+
 		result = _send_sync_noti(g_variant_new("(i)", uid), &reply, "load_dnd_allow_exception");
 		if (result == NOTIFICATION_ERROR_NONE) {
 			reply_body = g_dbus_message_get_body(reply);
@@ -1617,13 +1622,16 @@ int notification_ipc_request_load_system_setting(notification_system_setting_h *
 				dnd_allow_exception = (dnd_allow_exception_h)calloc(1, sizeof(struct notification_system_setting_dnd_allow_exception));
 				if (dnd_allow_exception == NULL) {
 					/* LCOV_EXCL_START */
+					ERR("Out of memory");
 					result = NOTIFICATION_ERROR_OUT_OF_MEMORY;
+					g_variant_unref(iter_body);
 					goto out;
 					/* LCOV_EXCL_STOP */
 				}
 
 				notification_ipc_make_dnd_allow_exception_from_gvariant(dnd_allow_exception, iter_body);
 				result_setting->dnd_allow_exceptions = g_list_append(result_setting->dnd_allow_exceptions, dnd_allow_exception);
+				g_variant_unref(iter_body);
 			}
 			*setting = result_setting;
 		}
