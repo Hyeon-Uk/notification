@@ -140,6 +140,7 @@ GDBusMessage* DBusSender::Impl::MethodCall(string appid, string method_name,
     g_error_free(err);
   }
 
+  g_object_unref(msg);
   return reply;
 }
 
@@ -186,6 +187,7 @@ GDBusMessage* DBusSender::Impl::MethodCall(string appid, const IEventInfo& info,
   }
 
   g_variant_builder_unref(builder);
+  g_object_unref(msg);
   return reply;
 }
 
@@ -234,6 +236,9 @@ std::list<Bundle> DBusSender::Request(const IEventInfo& info) {
   if (!reply)
     return ret_list;
 
+  auto reply_ptr = std::unique_ptr<GDBusMessage, decltype(g_object_unref)*>(
+      reply, g_object_unref);
+
   GError* err = nullptr;
   if (g_dbus_message_to_gerror(reply, &err)) {
     LOGE("Request got error %s", err->message);
@@ -273,6 +278,9 @@ int DBusSender::RequestNumber(const IEventInfo& info) {
   GDBusMessage* reply = impl_->MethodCall(appid, method_name, serialized);
   if (!reply)
     return 0;
+
+  auto reply_ptr = std::unique_ptr<GDBusMessage, decltype(g_object_unref)*>(
+      reply, g_object_unref);
 
   GError* err = nullptr;
   if (g_dbus_message_to_gerror(reply, &err)) {
