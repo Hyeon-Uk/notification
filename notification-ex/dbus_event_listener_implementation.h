@@ -36,12 +36,25 @@ class DBusEventListener::Impl {
  private:
   void UnRegisterGDBusInterface();
   int RegisterGDBusInterface();
+  std::list<tizen_base::Bundle> ReadNotiList(
+      GDBusMethodInvocation* invocation, int noti_cnt);
+  static int GetRecvSocket(GDBusMethodInvocation* invocation);
   static void OnMethodCall(
     GDBusConnection *conn, const gchar *sender, const gchar *object_path,
     const gchar *iface_name, const gchar *method_name,
     GVariant *parameters, GDBusMethodInvocation *invocation,
     gpointer user_data);
-  static void MethodCallHandler(GVariant *parameters, Impl* dl, pid_t pid, uid_t uid);
+  static int MethodCallHandler(std::string sender_appid,
+      std::string event_info_raw, int noti_cnt,
+      GDBusMethodInvocation* invocation, Impl* dl, pid_t pid, uid_t uid);
+  static void MultiNotiUpdateProcess(
+      GVariant* parameters, GDBusMethodInvocation* invocation,
+      Impl* dl, pid_t pid, uid_t uid);
+  static void GlobalUpdateProcess(
+      GVariant* parameters, GDBusMethodInvocation* invocation,
+      Impl* dl, pid_t pid, uid_t uid);
+  static void GetProcess(
+      GVariant* parameters, GDBusMethodInvocation* invocation, Impl* dl);
 
   static GDBusInterfaceVTable InterfaceVtable;
   static void SignalCb(GDBusConnection* connection,

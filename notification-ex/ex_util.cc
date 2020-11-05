@@ -26,16 +26,22 @@
 #include <map>
 
 #include "notification-ex/ex_util.h"
+#include "notification-ex/socket_handler.h"
 
 #ifdef LOG_TAG
 #undef LOG_TAG
 #endif
 
 #define LOG_TAG "NOTIFICATION_EX"
-#define MAX_PACKAGE_STR_SIZE 512
-#define MAX_CACHE_SIZE 100
 
 using namespace std;
+
+namespace {
+constexpr int MAX_PACKAGE_STR_SIZE = 512;
+constexpr int MAX_CACHE_SIZE = 100;
+constexpr int MAX_RETRY_CNT = 10;
+}
+
 namespace notification {
 namespace util {
 
@@ -46,7 +52,7 @@ int GetRequestId() {
 }
 
 string GetAppId() {
- return GetAppId(getpid());
+  return GetAppId(getpid());
 }
 
 string GetAppId(pid_t pid) {
@@ -178,6 +184,111 @@ string GetLocaleDirectory() {
   locale_directory = app_root_str + string("/res/locale");
   return locale_directory;
 }
+
+unsigned int GetSocketBufferSize(int fd, int optname) {
+  unsigned int ret_size = 0;
+  socklen_t len = sizeof(ret_size);
+
+  errno = 0;
+  if (getsockopt(fd, SOL_SOCKET, optname, &ret_size, &len) < 0) {
+    LOGE("read socket size [%d]", errno);
+    return 0;
+  }
+  return ret_size;
+}
+
+unsigned int ReadSocket(int fd, char* buffer, unsigned int nbytes) {
+  unsigned int left = nbytes;
+  ssize_t nb;
+  int retry_cnt = 0;
+  const struct timespec SLEEP_TIME = { 0, 20 * 1000 * 1000 };
+  while (left && (retry_cnt < MAX_RETRY_CNT)) {
+    errno = 0;
+    nb = read(fd, buffer, left);
+    if (nb == 0) {
+      LOGE("read socket - EOF, fd close [%d]", fd);
+      return -1;
+    } else if (nb == -1) {
+      if (errno == EINTR || errno == EAGAIN || errno == EWOULDBLOCK) {
+        LOGE("errno [%d], sleep and retry", errno);
+        retry_cnt++;
+        nanosleep(&SLEEP_TIME, 0);
+        continue;
+      }
+      LOGE("errno [%d] fd [%d]", errno, fd);
+      return -1;
+    }
+    left -= nb;
+    buffer += nb;
+    retry_cnt = 0;
+  }
+
+  if (left != 0) {
+    LOGE("error fd [%d] retry_cnt [%d]", fd, retry_cnt);
+    return -1;
+  }
+  return 0;
+}
+
+list<tizen_base::Bundle> ReadBundleList(int recvfd, int noti_cnt) {
+  list<tizen_base::Bundle> ret_list;
+  list<tizen_base::Bundle> empty_list;
+  SocketHandler recv_sock(recvfd);
+  unsigned int buf_size = 0;
+  unsigned int data_size = 0;
+  buf_size = util::GetSocketBufferSize(recv_sock.Get(), SO_RCVBUF);
+  std::unique_ptr<char, decltype(std::free)*> data_ptr(
+      static_cast<char*>(calloc(buf_size, sizeof(char))), std::free);
+  for (int i = 0; i < noti_cnt; i++) {
+    int ret = util::ReadSocket(recv_sock.Get(),
+        reinterpret_cast<char*>(&data_size), sizeof(data_size));
+    if (ret != 0)
+      return empty_list;
+    if (data_size > buf_size) {
+      buf_size = data_size;
+      data_ptr.reset(static_cast<char*>(calloc(buf_size, sizeof(char))));
+    }
+    memset(data_ptr.get(), 0, buf_size);
+    ret = util::ReadSocket(recv_sock.Get(), data_ptr.get(), data_size);
+    if (ret != 0)
+      return empty_list;
+    ret_list.emplace_back(data_ptr.get());
+  }
+  return ret_list;
+}
+
+int WriteSocket(int fd, const char* buffer, unsigned int nbytes) {
+  int retry_cnt = 0;
+  unsigned int left = nbytes;
+  ssize_t nb;
+  const struct timespec SLEEP_TIME = { 0, 20 * 1000 * 1000 };
+
+  while (left && (retry_cnt < MAX_RETRY_CNT)) {
+    errno = 0;
+    nb = write(fd, buffer, left);
+    if (nb == -1) {
+      if (errno == EINTR || errno == EAGAIN || errno == EWOULDBLOCK) {
+        LOGE("continue..");
+        retry_cnt++;
+        nanosleep(&SLEEP_TIME, 0);
+        continue;
+      }
+      LOGE("error fd [%d] errno [%d]", fd, errno);
+      return -1;
+    }
+
+    left -= nb;
+    buffer += nb;
+    retry_cnt = 0;
+  }
+
+  if (left != 0) {
+    LOGE("error fd [%d], retry_cnt [%d]", fd, retry_cnt);
+    return -1;
+  }
+  return 0;
+}
+
 
 }  // namespace util
 }  // namespace notification

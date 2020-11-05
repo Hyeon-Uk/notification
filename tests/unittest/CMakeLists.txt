@@ -7,6 +7,8 @@ PKG_CHECK_MODULES(notification-ex_unittests REQUIRED
     gmock
     capi-appfw-app-control
     glib-2.0
+    gio-2.0
+    gio-unix-2.0
     aul
     security-manager
     libtzplatform-config

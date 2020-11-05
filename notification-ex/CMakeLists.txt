@@ -12,6 +12,8 @@ SET(VERSION "${VERSION_MAJOR}.0.0")
 INCLUDE(FindPkgConfig)
 pkg_check_modules(notification-ex REQUIRED
 	glib-2.0
+	gio-2.0
+	gio-unix-2.0
 	bundle
 	dlog
 	capi-appfw-app-control

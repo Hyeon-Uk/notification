@@ -18,8 +18,12 @@
 #define NOTIFICATION_EX_EX_UTIL_H_
 
 #include <gmodule.h>
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <bundle_cpp.h>
 
 #include <string>
+#include <list>
 
 namespace notification {
 namespace util {
@@ -29,6 +33,10 @@ namespace util {
   std::string GetPkgId();
   std::string GetDomainName();
   std::string GetLocaleDirectory();
+  unsigned int GetSocketBufferSize(int fd, int optname);
+  unsigned int ReadSocket(int fd, char* buffer, unsigned int nbytes);
+  int WriteSocket(int fd, const char* buffer, unsigned int nbytes);
+  std::list<tizen_base::Bundle> ReadBundleList(int recvfd, int noti_cnt);
 }  // namespace util
 }  // namespace notification
 

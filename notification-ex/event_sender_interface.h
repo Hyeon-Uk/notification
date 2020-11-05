@@ -40,7 +40,7 @@ class EXPORT_API IEventSender {
       std::list<tizen_base::Bundle> serialized,
       std::string dest_appid = "") = 0;
   virtual std::list<tizen_base::Bundle> Request(const IEventInfo& info) = 0;
-  virtual int RequestNumber(const IEventInfo& info) = 0;
+  virtual int RequestReturnValue(const IEventInfo& info) = 0;
 };
 
 }  // namespace notification

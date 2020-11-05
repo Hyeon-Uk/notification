@@ -40,7 +40,11 @@ class EXPORT_API DBusSender : public IEventSender {
   int SendMessage(const IEventInfo& info, std::list<tizen_base::Bundle> serialized,
       std::string dest_appid = "") override;
   std::list<tizen_base::Bundle> Request(const IEventInfo& info) override;
-  int RequestNumber(const IEventInfo& info) override;
+  int RequestReturnValue(const IEventInfo& info) override;
+
+ private:
+  void Notify(GVariantBuilder* builder,
+        const IEventInfo& info, std::string dest_appid);
 
  private:
   class Impl;

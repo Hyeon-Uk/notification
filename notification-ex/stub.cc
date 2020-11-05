@@ -2810,7 +2810,12 @@ extern "C" EXPORT_API int noti_ex_manager_delete_all(noti_ex_manager_h handle,
   }
   try {
     ManagerStub* stub = static_cast<ManagerStub*>(handle);
-    ret = stub->DeleteAll(*request_id);
+    stub->DeleteAll(*request_id);
+    ret = get_last_result();
+    if (ret != ERROR_NONE) {
+      LOGE("error(%d)", ret);
+      return ret;
+    }
   } catch (Exception &ex) {
     LOGE("%s %d", ex.what(), ex.GetErrorCode());
     return NOTI_EX_ERROR_IO_ERROR;
@@ -2829,7 +2834,12 @@ extern "C" EXPORT_API int noti_ex_manager_delete_by_channel(
 
   try {
     ManagerStub* stub = static_cast<ManagerStub*>(handle);
-    ret = stub->DeleteByChannel(channel, *request_id);
+    stub->DeleteByChannel(channel, *request_id);
+    ret = get_last_result();
+    if (ret != ERROR_NONE) {
+      LOGE("error(%d)", ret);
+      return ret;
+    }
   } catch (Exception &ex) {
     LOGE("%s %d", ex.what(), ex.GetErrorCode());
     return NOTI_EX_ERROR_IO_ERROR;
@@ -2849,7 +2859,12 @@ extern "C" EXPORT_API int noti_ex_manager_delete_by_appid(
 
   try {
     ManagerStub* stub = static_cast<ManagerStub*>(handle);
-    ret = stub->DeleteByAppId(app_id, *request_id);
+    stub->DeleteByAppId(app_id, *request_id);
+    ret = get_last_result();
+    if (ret != ERROR_NONE) {
+      LOGE("error(%d)", ret);
+      return ret;
+    }
   } catch (Exception &ex) {
     LOGE("%s %d", ex.what(), ex.GetErrorCode());
     return NOTI_EX_ERROR_IO_ERROR;
@@ -3294,7 +3309,12 @@ extern "C" EXPORT_API int noti_ex_reporter_delete_all(
 
   try {
     ReporterStub* stub = static_cast<ReporterStub*>(handle);
-    ret = stub->DeleteAll(*request_id);
+    stub->DeleteAll(*request_id);
+    ret = get_last_result();
+    if (ret != ERROR_NONE) {
+      LOGE("error(%d)", ret);
+      return ret;
+    }
   } catch (Exception &ex) {
     LOGE("%s %d", ex.what(), ex.GetErrorCode());
     return NOTI_EX_ERROR_IO_ERROR;
@@ -3314,7 +3334,12 @@ extern "C" EXPORT_API int noti_ex_reporter_delete_by_channel(
 
   try {
     ReporterStub* stub = static_cast<ReporterStub*>(handle);
-    ret = stub->DeleteByChannel(channel, *request_id);
+    stub->DeleteByChannel(channel, *request_id);
+    ret = get_last_result();
+    if (ret != ERROR_NONE) {
+      LOGE("error(%d)", ret);
+      return ret;
+    }
   } catch (Exception &ex) {
     LOGE("%s %d", ex.what(), ex.GetErrorCode());
     return NOTI_EX_ERROR_IO_ERROR;
