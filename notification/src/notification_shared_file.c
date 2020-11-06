@@ -40,6 +40,7 @@
 #define NOTI_PRIV_DATA_DIR "data/.notification"
 #define MAX_TIMEOUT 5000
 #define MAX_RETRY_CNT 3
+#define ERR_BUFFER_SIZE 1024
 
 #define DUMMY_PARAM
 #define __OOM_CHECK(value, ret_value, free_fun) \
@@ -687,13 +688,16 @@ char *notification_check_file_path_is_private(const char *pkg_id,
 	char *dst_path = NULL;
 	int size;
 	uid_t uid = getuid();
+	char err_buf[ERR_BUFFER_SIZE];
+	char *err_str;
 
 	errno = 0;
 	size = smack_new_label_from_path(file_path, XATTR_NAME_SMACK,
 							TRUE, &smack_label);
 	if (size <= 0) {
-		ERR("Failed to get smack info : %d [%s][%s]",
-				errno, strerror(errno), file_path);
+		err_str = strerror_r(errno, err_buf, sizeof(err_buf));
+		ERR("Failed to get smack info : %d [%s][%s]", errno, err_str,
+			file_path);
 		return NULL;
 	}
 

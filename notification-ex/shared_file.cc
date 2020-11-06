@@ -41,6 +41,7 @@
 #define LOG_TAG "NOTIFICATION_EX"
 #define CHECK_LABEL "::RO"
 #define NOTI_PRIV_DATA_DIR "data/.notification_ex"
+#define ERR_BUFFER_SIZE 1024
 
 using namespace std;
 
@@ -184,6 +185,7 @@ vector<char*> SharedFile::ConvertListToArray(const list<string>& data) {
 bool SharedFile::IsPrivatePath(string path) const {
   char* smack_label = nullptr;
   bool ret = false;
+  char err_buf[ERR_BUFFER_SIZE];
 
   if (path.empty()) {
     LOGE("Invalid parameter");
@@ -194,7 +196,7 @@ bool SharedFile::IsPrivatePath(string path) const {
   if (smack_new_label_from_path(path.c_str(), XATTR_NAME_SMACK, 1, &smack_label)
         <= 0) {
     LOGE("smack_new_label_from_path failed  : %d [%s][%s]",
-        errno, strerror(errno), path.c_str());
+        errno, strerror_r(errno, err_buf, sizeof(err_buf)), path.c_str());
     return false;
   }
 
