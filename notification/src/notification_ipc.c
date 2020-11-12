@@ -481,6 +481,7 @@ static void _delete_multiple_notify(GVariant *parameters)
 	buf = (int *)malloc(sizeof(int) * num);
 	if (buf == NULL) {
 		ERR("Failed to alloc");
+		g_variant_iter_free(iter);
 		return;
 	}
 
@@ -523,6 +524,7 @@ static void _delete_by_display_applist_notify(GVariant *parameters)
 	buf = (int *)malloc(sizeof(int) * num);
 	if (buf == NULL) {
 		ERR("Failed to alloc");
+		g_variant_iter_free(iter);
 		return;
 	}
 
