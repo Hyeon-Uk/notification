@@ -1238,9 +1238,11 @@ out:
 	tmp_list = g_list_find_custom(__uid_list, GINT_TO_POINTER(req_data->uid),
 			__comp_uid_info_list);
 
-	uid_info = tmp_list->data;
-	uid_info->sharing_req_list = g_list_remove(uid_info->sharing_req_list,
-			req_data);
+	if (tmp_list != NULL) {
+		uid_info = tmp_list->data;
+		uid_info->sharing_req_list = g_list_remove(
+				uid_info->sharing_req_list, req_data);
+	}
 	__free_req_info(req_data);
 
 	return FALSE;

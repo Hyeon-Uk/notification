@@ -1347,6 +1347,8 @@ extern "C" EXPORT_API int noti_ex_padding_create(noti_ex_padding_h *handle,
       new (std::nothrow) Padding(left, top, right, bottom));
   if (ptr == nullptr || ptr->get() == nullptr) {
     LOGE("Out-of-memory");
+    if (ptr != nullptr)
+      delete(ptr);
     return NOTI_EX_ERROR_OUT_OF_MEMORY;
   }
 
@@ -1430,6 +1432,8 @@ extern "C" EXPORT_API int noti_ex_geometry_create(noti_ex_geometry_h *handle,
       new (std::nothrow) Geometry(x, y, w, h));
   if (ptr == nullptr || ptr->get() == nullptr) {
     LOGE("Out-of-memory");
+    if (ptr != nullptr)
+      delete ptr;
     return NOTI_EX_ERROR_OUT_OF_MEMORY;
   }
 
@@ -1522,6 +1526,8 @@ extern "C" EXPORT_API int noti_ex_style_create(noti_ex_style_h *handle,
       new (std::nothrow) Style(col, padd, geo));
   if (ptr == nullptr || ptr->get() == nullptr) {
     LOGE("Out-of-memory");
+    if (ptr != nullptr)
+      delete ptr;
     return NOTI_EX_ERROR_OUT_OF_MEMORY;
   }
 
@@ -1651,6 +1657,8 @@ extern "C" EXPORT_API int noti_ex_style_get_geometry(noti_ex_style_h handle,
       new (std::nothrow) Geometry(*((*p)->GetGeometry())));
   if (geo == nullptr || geo->get() == nullptr) {
     LOGE("Out-of-memory");
+    if (geo != nullptr)
+      delete geo;
     return NOTI_EX_ERROR_OUT_OF_MEMORY;
   }
 
@@ -2143,6 +2151,8 @@ extern "C" EXPORT_API int noti_ex_item_get_style(noti_ex_item_h handle,
   auto* ptr = new (std::nothrow) shared_ptr<Style>(new (std::nothrow) Style(*s));
   if (ptr == nullptr || ptr->get() == nullptr) {
     LOGE("Out of memory");
+    if (ptr != nullptr)
+      delete ptr;
     return NOTI_EX_ERROR_OUT_OF_MEMORY;
   }
 
