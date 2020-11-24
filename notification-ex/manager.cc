@@ -28,6 +28,7 @@
 #include "notification-ex/ex_util.h"
 #include "notification-ex/item_info_internal.h"
 #include "notification-ex/null_item.h"
+#include "notification-ex/exception.h"
 
 #ifdef LOG_TAG
 #undef LOG_TAG
@@ -71,17 +72,6 @@ Manager::Impl::Impl(Manager* parent,
   sender_->RequestReturnValue(info);
 }
 
-int Manager::Impl::SendNotify(shared_ptr<item::AbstractItem> noti,
-    IEventInfo::EventType type) {
-  Bundle serialized = noti->Serialize();
-  EventInfo info(type, util::GetAppId(), noti->GetChannel(), noti->GetId());
-  list<Bundle> serialized_list {serialized};
-
-  /* Reply to Sender */
-  sender_->Notify(info, serialized_list, noti->GetSenderAppId());
-  return info.GetRequestId();
-}
-
 void Manager::SendError(const IEventInfo& info, NotificationError error) {
   list<Bundle> serialized_list {};
   IEventInfo& i = const_cast<IEventInfo&>(info);
@@ -90,44 +80,42 @@ void Manager::SendError(const IEventInfo& info, NotificationError error) {
   impl_->sender_->Notify(info, serialized_list, info.GetOwner());
 }
 
-int Manager::Update(shared_ptr<item::AbstractItem> noti, int& request_id) {
+int Manager::Update(shared_ptr<item::AbstractItem> noti) {
   Bundle serialized = noti->Serialize();
   EventInfo info(
       EventInfo::Update, util::GetAppId(), noti->GetChannel(), noti->GetId());
   list<Bundle> serialized_list {serialized};
-
-  request_id = info.GetRequestId();
-  return impl_->sender_->SendMessage(
+  impl_->sender_->SendMessage(
       info, serialized_list, noti->GetSenderAppId());
+  return info.GetRequestId();
 }
 
-int Manager::Delete(shared_ptr<item::AbstractItem> noti, int& request_id) {
+int Manager::Delete(shared_ptr<item::AbstractItem> noti) {
   Bundle serialized = noti->Serialize();
   EventInfo info(
       EventInfo::Delete, util::GetAppId(), noti->GetChannel(), noti->GetId());
   list<Bundle> serialized_list {serialized};
-
-  request_id = info.GetRequestId();
-  return impl_->sender_->SendMessage(
+  impl_->sender_->SendMessage(
       info, serialized_list, noti->GetSenderAppId());
+  return info.GetRequestId();
 }
 
-int Manager::DeleteAll(int& request_id) {
+int Manager::DeleteAll() {
   EventInfo info(EventInfo::DeleteAll, util::GetAppId(), "");
-  request_id = info.GetRequestId();
-  return impl_->sender_->RequestReturnValue(info);
+  impl_->sender_->RequestReturnValue(info);
+  return info.GetRequestId();
 }
 
-int Manager::DeleteByChannel(string channel, int& request_id) {
+int Manager::DeleteByChannel(string channel) {
   EventInfo info(EventInfo::DeleteAll, util::GetAppId(), channel);
-  request_id = info.GetRequestId();
-  return impl_->sender_->RequestReturnValue(info);
+  impl_->sender_->RequestReturnValue(info);
+  return info.GetRequestId();
 }
 
-int Manager::DeleteByAppId(string appId, int& request_id) {
+int Manager::DeleteByAppId(string appId) {
   EventInfo info(EventInfo::DeleteAll, util::GetAppId(), "", appId);
-  request_id = info.GetRequestId();
-  return impl_->sender_->RequestReturnValue(info);
+  impl_->sender_->RequestReturnValue(info);
+  return info.GetRequestId();
 }
 
 int Manager::GetCount() const {
@@ -135,7 +123,7 @@ int Manager::GetCount() const {
   return impl_->sender_->RequestReturnValue(info);
 }
 
-int Manager::Hide(shared_ptr<item::AbstractItem> noti, int& request_id) {
+int Manager::Hide(shared_ptr<item::AbstractItem> noti) {
   (reinterpret_cast<IItemInfoInternal*>(noti->GetInfo().get()))
       ->AddHideViewer(util::GetAppId());
 
@@ -143,19 +131,14 @@ int Manager::Hide(shared_ptr<item::AbstractItem> noti, int& request_id) {
       EventInfo::Update, util::GetAppId(), noti->GetChannel(), noti->GetId());
   Bundle serialized = noti->Serialize();
   list<Bundle> serialized_list {serialized};
-
-  request_id = info.GetRequestId();
-  return impl_->sender_->SendMessage(
+  impl_->sender_->SendMessage(
       info, serialized_list, noti->GetSenderAppId());
+  return info.GetRequestId();
 }
 
 unique_ptr<item::AbstractItem> Manager::FindByRootID(string id) {
   EventInfo info(EventInfo::Get, util::GetAppId(), "", id);
   list<Bundle> result = impl_->sender_->Request(info);
-  if (result.size() == 0) {
-    LOGE("Fail to get noti");
-    return unique_ptr<item::AbstractItem>{};
-  }
   Bundle b = result.front();
   unique_ptr<AbstractItem> gen_item = ItemInflator::Create(b);
   return gen_item;

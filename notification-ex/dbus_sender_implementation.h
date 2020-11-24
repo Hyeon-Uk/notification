@@ -39,16 +39,15 @@ class DBusSender::Impl {
  private:
   std::string GetBusName(
       std::string appid, std::string dest_appid) const;
-  bool EmitSignal(std::string bus_name,
+  void EmitSignal(std::string bus_name,
       std::string signal_name, GVariant* data);
-  GDBusMessage* MethodCall(std::string appid, std::string method_name,
+  int MethodCall(std::string appid, std::string method_name,
       tizen_base::Bundle serialized);
-  GDBusMessage* MethodCall(std::string appid, const IEventInfo& info,
+  void MethodCall(std::string appid, const IEventInfo& info,
       std::list<tizen_base::Bundle> serialized);
-  std::list<tizen_base::Bundle> MethodCallWithSocket(std::string appid,
+  std::list<tizen_base::Bundle> GetListMethodCall(std::string appid,
       std::string method_name, tizen_base::Bundle serialized);
   GUnixFDList* GetFdList(int fd);
-  int CheckReplyMessage(GDBusMessage* reply);
   std::string path_;
   DBusSender* parent_;
 };

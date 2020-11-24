@@ -28,6 +28,7 @@
 #include "notification-ex/ex_util.h"
 #include "notification-ex/item_info_internal.h"
 #include "notification-ex/shared_file.h"
+#include "notification-ex/exception.h"
 
 #ifdef LOG_TAG
 #undef LOG_TAG
@@ -58,15 +59,6 @@ Reporter::Impl::Impl(Reporter* parent,
   listener_->RegisterObserver(parent_);
 }
 
-int Reporter::Impl::SendNotify(shared_ptr<item::AbstractItem> noti,
-    IEventInfo::EventType type) {
-  Bundle serialized = noti->Serialize();
-  EventInfo info(type, util::GetAppId(), noti->GetChannel(), noti->GetId());
-  list<Bundle> serialized_list {serialized};
-  sender_->Notify(info, serialized_list);
-  return info.GetRequestId();
-}
-
 void Reporter::SendError(const IEventInfo& info, NotificationError error) {
   list<Bundle> serialized_list {};
   IEventInfo& i = const_cast<IEventInfo&>(info);
@@ -75,7 +67,7 @@ void Reporter::SendError(const IEventInfo& info, NotificationError error) {
   impl_->sender_->Notify(info, serialized_list, info.GetOwner());
 }
 
-int Reporter::Post(std::shared_ptr<item::AbstractItem> noti, int& request_id) {
+int Reporter::Post(std::shared_ptr<item::AbstractItem> noti) {
   LOGI("Post noti");
   static_pointer_cast<IItemInfoInternal>(noti->GetInfo())->SetTime(time(NULL));
   Bundle serialized = noti->Serialize();
@@ -85,12 +77,11 @@ int Reporter::Post(std::shared_ptr<item::AbstractItem> noti, int& request_id) {
   list<Bundle> serialized_list {serialized};
   SharedFile::CopyPrivateFile(noti);
 
-  request_id = info.GetRequestId();
-  return impl_->sender_->SendMessage(info, serialized_list);
+  impl_->sender_->SendMessage(info, serialized_list);
+  return info.GetRequestId();
 }
 
-int Reporter::Post(
-    std::list<std::shared_ptr<AbstractItem>> notiList, int& request_id) {
+int Reporter::Post(std::list<std::shared_ptr<AbstractItem>> notiList) {
   LOGI("Post noti list");
   EventInfo info(EventInfo::Post, util::GetAppId(), "");
   list<Bundle> serialized_list;
@@ -101,11 +92,11 @@ int Reporter::Post(
     SharedFile::CopyPrivateFile(i);
   }
 
-  request_id = info.GetRequestId();
-  return impl_->sender_->SendMessage(info, serialized_list);
+  impl_->sender_->SendMessage(info, serialized_list);
+  return info.GetRequestId();
 }
 
-int Reporter::Update(std::shared_ptr<AbstractItem> noti, int& request_id) {
+int Reporter::Update(std::shared_ptr<AbstractItem> noti) {
   static_pointer_cast<IItemInfoInternal>(noti->GetInfo())->SetTime(time(NULL));
   Bundle serialized = noti->Serialize();
 
@@ -114,12 +105,12 @@ int Reporter::Update(std::shared_ptr<AbstractItem> noti, int& request_id) {
   list<Bundle> serialized_list {serialized};
   SharedFile::CopyPrivateFile(noti);
 
-  request_id = info.GetRequestId();
-  return impl_->sender_->SendMessage(info, serialized_list);
+  impl_->sender_->SendMessage(info, serialized_list);
+  return info.GetRequestId();
 }
 
 int Reporter::Update(
-    std::list<std::shared_ptr<AbstractItem>> notiList, int& request_id) {
+    std::list<std::shared_ptr<AbstractItem>> notiList) {
   EventInfo info(EventInfo::Update, util::GetAppId(), "");
   list<Bundle> serialized_list;
   for (auto& i : notiList) {
@@ -129,23 +120,22 @@ int Reporter::Update(
     SharedFile::CopyPrivateFile(i);
   }
 
-  request_id = info.GetRequestId();
-  return impl_->sender_->SendMessage(info, serialized_list);
+  impl_->sender_->SendMessage(info, serialized_list);
+  return info.GetRequestId();
 }
 
-int Reporter::Delete(std::shared_ptr<AbstractItem> noti, int& request_id) {
+int Reporter::Delete(std::shared_ptr<AbstractItem> noti) {
   Bundle serialized = noti->Serialize();
   EventInfo info(
       EventInfo::Delete, util::GetAppId(), noti->GetChannel(), noti->GetId());
   list<Bundle> serialized_list {serialized};
-
-  request_id = info.GetRequestId();
-  return impl_->sender_->SendMessage(
+  impl_->sender_->SendMessage(
       info, serialized_list, noti->GetSenderAppId());
+  return info.GetRequestId();
 }
 
 int Reporter::Delete(
-    std::list<std::shared_ptr<AbstractItem>> notiList, int& request_id) {
+    std::list<std::shared_ptr<AbstractItem>> notiList) {
   EventInfo info(EventInfo::Delete, util::GetAppId(), "");
   list<Bundle> serialized_list;
   for (auto& i : notiList) {
@@ -155,29 +145,25 @@ int Reporter::Delete(
     SharedFile::CopyPrivateFile(i);
   }
 
-  request_id = info.GetRequestId();
-  return impl_->sender_->SendMessage(info, serialized_list);
+  impl_->sender_->SendMessage(info, serialized_list);
+  return info.GetRequestId();
 }
 
-int Reporter::DeleteAll(int& request_id) {
+int Reporter::DeleteAll() {
   EventInfo info(EventInfo::DeleteAll, util::GetAppId(), "");
-  request_id = info.GetRequestId();
-  return impl_->sender_->RequestReturnValue(info);
+  impl_->sender_->RequestReturnValue(info);
+  return info.GetRequestId();
 }
 
-int Reporter::DeleteByChannel(string channel, int& request_id) {
+int Reporter::DeleteByChannel(string channel) {
   EventInfo info(EventInfo::DeleteAll, util::GetAppId(), channel);
-  request_id = info.GetRequestId();
-  return impl_->sender_->RequestReturnValue(info);
+  impl_->sender_->RequestReturnValue(info);
+  return info.GetRequestId();
 }
 
 std::unique_ptr<AbstractItem> Reporter::FindByRootID(std::string id) {
   EventInfo info(EventInfo::Get, util::GetAppId(), "", id);
   list<Bundle> result = impl_->sender_->Request(info);
-  if (result.size() == 0) {
-    LOGE("Fail to get noti");
-    return unique_ptr<item::AbstractItem>{};
-  }
   Bundle b = result.front();
   unique_ptr<AbstractItem> gen_item = ItemInflator::Create(b);
   return gen_item;
@@ -186,11 +172,6 @@ std::unique_ptr<AbstractItem> Reporter::FindByRootID(std::string id) {
 list<unique_ptr<AbstractItem>> Reporter::FindByChannel(string channel) {
   EventInfo info(EventInfo::Get, util::GetAppId(), channel, "");
   list<Bundle> result = impl_->sender_->Request(info);
-  if (result.size() == 0) {
-    LOGE("Fail to get noti");
-    return list<unique_ptr<item::AbstractItem>>{};
-  }
-
   list<unique_ptr<AbstractItem>> gen_item_list;
   for (auto& i : result)
     gen_item_list.push_back(ItemInflator::Create(i));
@@ -201,11 +182,6 @@ list<unique_ptr<AbstractItem>> Reporter::FindByChannel(string channel) {
 list<unique_ptr<AbstractItem>> Reporter::FindAll() {
   EventInfo info(EventInfo::Get, util::GetAppId(), "", "");
   list<Bundle> result = impl_->sender_->Request(info);
-  if (result.size() == 0) {
-    LOGE("Fail to get noti");
-    return list<unique_ptr<item::AbstractItem>>{};
-  }
-
   list<unique_ptr<AbstractItem>> gen_item_list;
   for (auto& i : result)
     gen_item_list.push_back(ItemInflator::Create(i));
@@ -225,6 +201,7 @@ int Reporter::SendEvent(const IEventInfo& info,
     Bundle b = i->Serialize();
     serialized_list.push_back(b);
   }
+
   impl_->sender_->Notify(info, serialized_list);
   return info.GetRequestId();
 }

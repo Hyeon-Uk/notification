@@ -43,14 +43,14 @@ class EXPORT_API Reporter : public IEventObserver {
   int SendEvent(const IEventInfo& info,
       std::list<std::shared_ptr<item::AbstractItem>> notiList);
   void SendError(const IEventInfo& info, NotificationError error);
-  int Post(std::shared_ptr<item::AbstractItem> noti, int& request_id);
-  int Post(std::list<std::shared_ptr<item::AbstractItem>> notiList, int& request_id);
-  int Update(std::shared_ptr<item::AbstractItem> noti, int& request_id);
-  int Update(std::list<std::shared_ptr<item::AbstractItem>> notiList, int& request_id);
-  int Delete(std::shared_ptr<item::AbstractItem> noti, int& request_id);
-  int Delete(std::list<std::shared_ptr<item::AbstractItem>> notiList, int& request_id);
-  int DeleteAll(int& request_id);
-  int DeleteByChannel(std::string channel, int& request_id);
+  int Post(std::shared_ptr<item::AbstractItem> noti);
+  int Post(std::list<std::shared_ptr<item::AbstractItem>> notiList);
+  int Update(std::shared_ptr<item::AbstractItem> noti);
+  int Update(std::list<std::shared_ptr<item::AbstractItem>> notiList);
+  int Delete(std::shared_ptr<item::AbstractItem> noti);
+  int Delete(std::list<std::shared_ptr<item::AbstractItem>> notiList);
+  int DeleteAll();
+  int DeleteByChannel(std::string channel);
   std::unique_ptr<item::AbstractItem> FindByRootID(std::string id);
   std::list<std::unique_ptr<item::AbstractItem>> FindByChannel(std::string channel);
   std::list<std::unique_ptr<item::AbstractItem>> FindAll();

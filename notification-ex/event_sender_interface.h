@@ -36,7 +36,7 @@ class EXPORT_API IEventSender {
   virtual void Notify(const IEventInfo& info,
       std::list<tizen_base::Bundle> serialized,
       std::string dest_appid = "") = 0;
-  virtual int SendMessage(const IEventInfo& info,
+  virtual void SendMessage(const IEventInfo& info,
       std::list<tizen_base::Bundle> serialized,
       std::string dest_appid = "") = 0;
   virtual std::list<tizen_base::Bundle> Request(const IEventInfo& info) = 0;

@@ -27,6 +27,7 @@
 
 #include "notification-ex/ex_util.h"
 #include "notification-ex/socket_handler.h"
+#include "notification-ex/common.h"
 
 #ifdef LOG_TAG
 #undef LOG_TAG
@@ -287,6 +288,13 @@ int WriteSocket(int fd, const char* buffer, unsigned int nbytes) {
     return -1;
   }
   return 0;
+}
+
+int ConvertDBusError(int error) {
+  if (error == G_DBUS_ERROR_ACCESS_DENIED)
+    return ERROR_PERMISSION_DENIED;
+
+  return ERROR_IO_ERROR;
 }
 
 

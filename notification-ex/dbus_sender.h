@@ -37,7 +37,7 @@ class EXPORT_API DBusSender : public IEventSender {
   virtual ~DBusSender();
   void Notify(const IEventInfo& info, std::list<tizen_base::Bundle> serialized,
       std::string dest_appid = "") override;
-  int SendMessage(const IEventInfo& info, std::list<tizen_base::Bundle> serialized,
+  void SendMessage(const IEventInfo& info, std::list<tizen_base::Bundle> serialized,
       std::string dest_appid = "") override;
   std::list<tizen_base::Bundle> Request(const IEventInfo& info) override;
   int RequestReturnValue(const IEventInfo& info) override;

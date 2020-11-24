@@ -71,46 +71,34 @@ uid_t DBusEventListener::Impl::GetSenderUid(GDBusConnection* connection,
   auto cp = cache.find(sender_name);
   if (cp != cache.end())
     return cp->second;
+  std::unique_ptr<GDBusMessage, decltype(g_object_unref)*> msg_ptr(
+            g_dbus_message_new_method_call(DBUS_NAME, DBUS_OBJECT_PATH,
+                DBUS_INTERFACE_NAME, "GetConnectionUnixUser"),
+            g_object_unref);
 
-  GDBusMessage* msg = nullptr;
-  GDBusMessage* reply = nullptr;
+  g_dbus_message_set_body(msg_ptr.get(), g_variant_new("(s)", sender_name));
   GError* err = nullptr;
-  GVariant* body;
-  uid_t uid = 0;
-
-  msg = g_dbus_message_new_method_call(DBUS_NAME, DBUS_OBJECT_PATH,
-      DBUS_INTERFACE_NAME, "GetConnectionUnixUser");
-  if (!msg) {
-    LOGE("Failed to alloc new method call");
-    goto out;
-  }
-
-  g_dbus_message_set_body(msg, g_variant_new("(s)", sender_name));
-  reply = g_dbus_connection_send_message_with_reply_sync(connection, msg,
-      G_DBUS_SEND_MESSAGE_FLAGS_NONE, -1, nullptr, nullptr, &err);
+  GDBusMessage* reply = g_dbus_connection_send_message_with_reply_sync(
+      connection, msg_ptr.get(), G_DBUS_SEND_MESSAGE_FLAGS_NONE, -1, nullptr,
+      nullptr, &err);
 
   if (!reply) {
     if (err != nullptr) {
       LOGE("Failed to get uid [%s]", err->message);
       g_error_free(err);
     }
-    goto out;
+    THROW(ERROR_IO_ERROR);
   }
 
-  body = g_dbus_message_get_body(reply);
+  GVariant* body = g_dbus_message_get_body(reply);
+  uid_t uid = 0;
   g_variant_get(body, "(u)", &uid);
+  g_object_unref(reply);
 
   if (cache.size() >= MAX_CACHE_COUNT)
     cache.clear();
 
   cache[sender_name] = uid;
-
-out:
-  if (msg)
-    g_object_unref(msg);
-  if (reply)
-    g_object_unref(reply);
-
   return uid;
 }
 
@@ -121,45 +109,39 @@ pid_t DBusEventListener::Impl::GetSenderPid(GDBusConnection* connection,
   if (cp != cache.end())
     return cp->second;
 
-  GDBusMessage* msg = nullptr;
-  GDBusMessage* reply = nullptr;
-  GError* err = nullptr;
-  GVariant* body;
-  pid_t pid = 0;
+  std::unique_ptr<GDBusMessage, decltype(g_object_unref)*> msg_ptr(
+            g_dbus_message_new_method_call(DBUS_NAME, DBUS_OBJECT_PATH,
+                DBUS_INTERFACE_NAME, "GetConnectionUnixProcessID"),
+            g_object_unref);
 
-  msg = g_dbus_message_new_method_call(DBUS_NAME, DBUS_OBJECT_PATH,
-      DBUS_INTERFACE_NAME, "GetConnectionUnixProcessID");
-  if (!msg) {
+  if (!msg_ptr || !msg_ptr.get()) {
     LOGE("Failed to alloc new method call");
-    goto out;
+    THROW(ERROR_OUT_OF_MEMORY);
   }
 
-  g_dbus_message_set_body(msg, g_variant_new("(s)", sender_name));
-  reply = g_dbus_connection_send_message_with_reply_sync(connection, msg,
-      G_DBUS_SEND_MESSAGE_FLAGS_NONE, -1, nullptr, nullptr, &err);
+  g_dbus_message_set_body(msg_ptr.get(), g_variant_new("(s)", sender_name));
+  GError* err = nullptr;
+  GDBusMessage* reply = g_dbus_connection_send_message_with_reply_sync(
+      connection, msg_ptr.get(), G_DBUS_SEND_MESSAGE_FLAGS_NONE, -1,
+      nullptr, nullptr, &err);
 
   if (!reply) {
     if (err != nullptr) {
       LOGE("Failed to get uid [%s]", err->message);
       g_error_free(err);
     }
-    goto out;
+    THROW(ERROR_IO_ERROR);
   }
 
-  body = g_dbus_message_get_body(reply);
+  GVariant* body = g_dbus_message_get_body(reply);
+  pid_t pid = 0;
   g_variant_get(body, "(u)", &pid);
+  g_object_unref(reply);
 
   if (cache.size() >= MAX_CACHE_COUNT)
     cache.clear();
 
   cache[sender_name] = pid;
-
-out:
-  if (msg)
-    g_object_unref(msg);
-  if (reply)
-    g_object_unref(reply);
-
   return pid;
 }
 
@@ -214,7 +196,7 @@ void DBusEventListener::Impl::SignalCb(GDBusConnection* connection,
       }
     }
     dl->parent_->NotifyObserver(info, ret_list);
-  } catch(Exception &ex) {
+  } catch(Exception& ex) {
     LOGE("%s %d", ex.what(), ex.GetErrorCode());
   }
 }
@@ -391,7 +373,7 @@ void DBusEventListener::Impl::OnMethodCall(
             ERROR_IO_ERROR, "invalid operation");
       return;
     }
-  } catch (Exception &ex) {
+  } catch (Exception& ex) {
     LOGE("%s %d", ex.what(), ex.GetErrorCode());
     g_dbus_method_invocation_return_error(invocation, noti_ex_error_quark(),
             ERROR_IO_ERROR, "OnMethodCall fail");

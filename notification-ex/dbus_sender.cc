@@ -28,6 +28,7 @@
 #include "notification-ex/event_info_internal.h"
 #include "notification-ex/ex_util.h"
 #include "notification-ex/socket_handler.h"
+#include "notification-ex/exception.h"
 
 #ifdef LOG_TAG
 #undef LOG_TAG
@@ -58,7 +59,7 @@ DBusSender::~DBusSender() {
   LOGW("Destroyed");
 }
 
-bool DBusSender::Impl::EmitSignal(string bus_name, string signal_name,
+void DBusSender::Impl::EmitSignal(string bus_name, string signal_name,
     GVariant* data) {
   GError* err = nullptr;
   GDBusConnection* conn = DBusConnectionManager::GetInst().GetConnection();
@@ -70,21 +71,21 @@ bool DBusSender::Impl::EmitSignal(string bus_name, string signal_name,
   if (result == FALSE) {
     LOGE("g_dbus_connection_emit_signal() is failed. error(%s)",
         err ? err->message : "Unknown");
+    int err_code = util::ConvertDBusError(err->code);
     g_clear_error(&err);
-    return false;
+    THROW(err_code);
   }
 
   result = g_dbus_connection_flush_sync(conn, NULL, &err);
   if (result == FALSE) {
     LOGE("g_dbus_connection_flush_sync() is failed. error(%s)",
         err ? err->message : "Unknown");
+    int err_code = util::ConvertDBusError(err->code);
     g_clear_error(&err);
-    return false;
+    THROW(err_code);
   }
-
   LOGI("Successfully emit signal to %s, %s, %s",
       bus_name.c_str(), path_.c_str(), signal_name.c_str());
-  return true;
 }
 
 string DBusSender::Impl::GetBusName(string appid, string dest_appid) const {
@@ -104,40 +105,46 @@ void DBusSender::Notify(GVariantBuilder* builder,
   string bus_name = impl_->GetBusName(appid, dest_appid);
   LOGI("bus name %s, %s", dest_appid.c_str(), bus_name.c_str());
   impl_->EmitSignal(bus_name, signal_name, data);
-  g_variant_builder_unref(builder);
 }
 
 void DBusSender::Notify(const IEventInfo& info, list<Bundle> serialized,
     string dest_appid) {
-  GVariantBuilder* builder = g_variant_builder_new(G_VARIANT_TYPE("a(s)"));
+
+  std::unique_ptr<GVariantBuilder,
+      decltype(g_variant_builder_unref)*> builder_ptr(
+          g_variant_builder_new(G_VARIANT_TYPE("a(s)")),
+              g_variant_builder_unref);
   int idx = 0;
   for (auto& i : serialized) {
     if (idx != 0 && idx % 10 == 0) {
-      Notify(builder, info, dest_appid);
-      g_variant_builder_unref(builder);
-      builder = g_variant_builder_new(G_VARIANT_TYPE("a(s)"));
+      Notify(builder_ptr.get(), info, dest_appid);
+      builder_ptr.reset(g_variant_builder_new(G_VARIANT_TYPE("a(s)")));
     }
-    g_variant_builder_add(builder, "(s)",
+    g_variant_builder_add(builder_ptr.get(), "(s)",
         reinterpret_cast<char*>(i.ToRaw().first.get()));
     idx++;
   }
-  Notify(builder, info, dest_appid);
+  Notify(builder_ptr.get(), info, dest_appid);
 }
 
-
-GDBusMessage* DBusSender::Impl::MethodCall(string appid, string method_name,
+int DBusSender::Impl::MethodCall(string appid, string method_name,
     Bundle serialized) {
-  GDBusMessage* msg = g_dbus_message_new_method_call(
-      DBusConnectionManager::GetInst().GetDataProviderMasterName().c_str(),
-      path_.c_str(),
-      DBusConnectionManager::GetInst().GetInterfaceName().c_str(),
-      method_name.c_str());
-  if (!msg) {
+
+  std::string dpm_name = DBusConnectionManager::GetInst()
+      .GetDataProviderMasterName();
+  std::string interface_name = DBusConnectionManager::GetInst()
+      .GetInterfaceName();
+
+  std::unique_ptr<GDBusMessage, decltype(g_object_unref)*> msg_ptr(
+            g_dbus_message_new_method_call(dpm_name.c_str(), path_.c_str(),
+                interface_name.c_str(), method_name.c_str()),
+            g_object_unref);
+  if (!msg_ptr || !msg_ptr.get()) {
     LOGE("Can't allocate new method call");
-    return nullptr;
+    THROW(ERROR_OUT_OF_MEMORY);
   }
 
-  g_dbus_message_set_body(msg,
+  g_dbus_message_set_body(msg_ptr.get(),
       g_variant_new("(ss)",
         appid.c_str(),
         reinterpret_cast<char*>(serialized.ToRaw().first.get())));
@@ -146,36 +153,44 @@ GDBusMessage* DBusSender::Impl::MethodCall(string appid, string method_name,
       path_.c_str(), method_name.c_str(), appid.c_str());
 
   GError* err = nullptr;
-  GDBusMessage* reply = g_dbus_connection_send_message_with_reply_sync(
-      DBusConnectionManager::GetInst().GetConnection(), msg,
-      G_DBUS_SEND_MESSAGE_FLAGS_NONE, -1, NULL, NULL, &err);
+  std::unique_ptr<GDBusMessage, decltype(g_object_unref)*> reply_ptr(
+      g_dbus_connection_send_message_with_reply_sync(
+          DBusConnectionManager::GetInst().GetConnection(), msg_ptr.get(),
+          G_DBUS_SEND_MESSAGE_FLAGS_NONE, -1, NULL, NULL, &err),
+      g_object_unref);
   if (err != NULL) {
     LOGE("MethodCall, err[%s]", err->message);
-    if (err->code == G_DBUS_ERROR_ACCESS_DENIED)
-      set_last_result(ERROR_PERMISSION_DENIED);
-    else
-      set_last_result(ERROR_IO_ERROR);
+    int err_code = util::ConvertDBusError(err->code);
     g_error_free(err);
+    THROW(err_code);
   }
 
-  g_object_unref(msg);
-  return reply;
+  if (g_dbus_message_to_gerror(reply_ptr.get(), &err)) {
+    LOGE("RequestReturnValue got error %s", err->message);
+    int err_code = util::ConvertDBusError(err->code);
+    g_error_free(err);
+    THROW(err_code);
+  }
+
+  int num;
+  GVariant *reply_body = g_dbus_message_get_body(reply_ptr.get());
+  g_variant_get(reply_body, "(i)", &num);
+  return num;
 }
 
-std::list<Bundle> DBusSender::Impl::MethodCallWithSocket(
+std::list<Bundle> DBusSender::Impl::GetListMethodCall(
     string appid, string method_name, Bundle serialized) {
   list<Bundle> ret_list;
   int fds[2];
   int ret = socketpair(AF_UNIX, SOCK_STREAM | SOCK_NONBLOCK, 0, fds);
   if (ret < 0) {
-    LOGE("socketpair [%d]", ret);
-    return ret_list;
+    LOGE("socketpair fail [%d]", ret);
+    THROW(ERROR_IO_ERROR);
   }
   SocketHandler send_sock(fds[SEND_SOCK_IDX]);
   SocketHandler recv_sock(fds[RECV_SOCK_IDX]);
   std::unique_ptr<GUnixFDList, decltype(g_object_unref)*> fd_list_ptr(
           GetFdList(send_sock.Get()), g_object_unref);
-
 
   std::unique_ptr<GDBusMessage, decltype(g_object_unref)*> msg_ptr(
       g_dbus_message_new_method_call(
@@ -186,7 +201,7 @@ std::list<Bundle> DBusSender::Impl::MethodCallWithSocket(
       g_object_unref);
   if (!msg_ptr || !msg_ptr.get()) {
     LOGE("Can't allocate new method call");
-    return ret_list;
+    THROW(ERROR_OUT_OF_MEMORY);
   }
 
   g_dbus_message_set_unix_fd_list(msg_ptr.get(), fd_list_ptr.get());
@@ -206,16 +221,26 @@ std::list<Bundle> DBusSender::Impl::MethodCallWithSocket(
       g_object_unref);
   if (err != NULL) {
     LOGE("MethodCall, err[%s]", err->message);
-    if (err->code == G_DBUS_ERROR_ACCESS_DENIED)
-      set_last_result(ERROR_PERMISSION_DENIED);
-    else
-      set_last_result(ERROR_IO_ERROR);
+    int err_code = util::ConvertDBusError(err->code);
     g_error_free(err);
-  } else if (CheckReplyMessage(reply_ptr.get()) == 0) {
+    THROW(err_code);
+  } else {
+    GError* err = nullptr;
+    if (g_dbus_message_to_gerror(reply_ptr.get(), &err)) {
+      LOGE("Request got error %s", err->message);
+      int err_code = util::ConvertDBusError(err->code);
+      g_error_free(err);
+      THROW(err_code);
+    }
     GVariant *reply_body = g_dbus_message_get_body(reply_ptr.get());
     int cnt;
     g_variant_get(reply_body, "(i)", &cnt);
     ret_list = util::ReadBundleList(recv_sock.Get(), cnt);
+    if (ret_list.size() == 0)
+      THROW(ERROR_NOT_EXIST_ID);
+
+    if (static_cast<int>(ret_list.size()) != cnt)
+      THROW(ERROR_IO_ERROR);
   }
   return ret_list;
 }
@@ -233,13 +258,13 @@ GUnixFDList* DBusSender::Impl::GetFdList(int fd) {
   return fd_list;
 }
 
-GDBusMessage* DBusSender::Impl::MethodCall(string appid, const IEventInfo& info,
+void DBusSender::Impl::MethodCall(string appid, const IEventInfo& info,
     list<Bundle> serialized) {
   int fds[2];
   int ret = socketpair(AF_UNIX, SOCK_STREAM | SOCK_NONBLOCK, 0, fds);
   if (ret < 0) {
-    LOGE("socketpair [%d]", ret);
-    return nullptr;
+    LOGE("socketpair fail [%d]", ret);
+    THROW(ERROR_IO_ERROR);
   }
 
   SocketHandler send_sock(fds[SEND_SOCK_IDX]);
@@ -248,18 +273,24 @@ GDBusMessage* DBusSender::Impl::MethodCall(string appid, const IEventInfo& info,
   auto fd_list_ptr = std::unique_ptr<GUnixFDList, decltype(g_object_unref)*>(
           fd_list, g_object_unref);
 
-  GDBusMessage* msg = g_dbus_message_new_method_call(
-      DBusConnectionManager::GetInst().GetDataProviderMasterName().c_str(),
-      path_.c_str(),
-      DBusConnectionManager::GetInst().GetInterfaceName().c_str(),
-      EventInfo::GetString(info.GetEventType()).c_str());
-  if (!msg) {
+  std::string dpm_name = DBusConnectionManager::GetInst()
+      .GetDataProviderMasterName();
+  std::string interface_name = DBusConnectionManager::GetInst()
+      .GetInterfaceName();
+  std::unique_ptr<GDBusMessage, decltype(g_object_unref)*> msg_ptr(
+      g_dbus_message_new_method_call(
+          dpm_name.c_str(),
+          path_.c_str(),
+          interface_name.c_str(),
+          EventInfo::GetString(info.GetEventType()).c_str()),
+      g_object_unref);
+  if (!msg_ptr || !msg_ptr.get()) {
     LOGE("Can't allocate new method call");
-    return nullptr;
+    THROW(ERROR_OUT_OF_MEMORY);
   }
 
-  g_dbus_message_set_unix_fd_list(msg, fd_list);
-  g_dbus_message_set_body(msg,
+  g_dbus_message_set_unix_fd_list(msg_ptr.get(), fd_list);
+  g_dbus_message_set_body(msg_ptr.get(),
       g_variant_new("(ssi)",
           appid.c_str(),
           reinterpret_cast<char*>(info.Serialize().ToRaw().first.get()),
@@ -270,80 +301,45 @@ GDBusMessage* DBusSender::Impl::MethodCall(string appid, const IEventInfo& info,
       EventInfo::GetString(info.GetEventType()).c_str(), appid.c_str());
 
   GError* err = nullptr;
-  GDBusMessage* reply = g_dbus_connection_send_message_with_reply_sync(
-      DBusConnectionManager::GetInst().GetConnection(), msg,
-      G_DBUS_SEND_MESSAGE_FLAGS_NONE, -1, NULL, NULL, &err);
-  if (err != NULL) {
+  std::unique_ptr<GDBusMessage, decltype(g_object_unref)*> reply_ptr(
+      g_dbus_connection_send_message_with_reply_sync(
+          DBusConnectionManager::GetInst().GetConnection(), msg_ptr.get(),
+          G_DBUS_SEND_MESSAGE_FLAGS_NONE, -1, NULL, NULL, &err),
+      g_object_unref);
+  if (err != nullptr) {
     LOGE("MethodCall, err[%s]", err->message);
-    if (err->code == G_DBUS_ERROR_ACCESS_DENIED)
-      set_last_result(ERROR_PERMISSION_DENIED);
-    else
-      set_last_result(ERROR_IO_ERROR);
+    int err_code = util::ConvertDBusError(err->code);
     g_error_free(err);
-  } else {
-    for (auto& i : serialized) {
-      unsigned int data_size = static_cast<unsigned int>(
-          strlen(reinterpret_cast<char*>(i.ToRaw().first.get())));
-      int ret = util::WriteSocket(send_sock.Get(),
-          reinterpret_cast<char*>(&data_size), sizeof(data_size));
-      if (ret != 0)
-        break;
-      ret = util::WriteSocket(send_sock.Get(),
-          reinterpret_cast<char*>(i.ToRaw().first.get()), data_size);
-      if (ret != 0)
-        break;
-    }
+    THROW(err_code);
   }
 
-  g_object_unref(msg);
-  return reply;
+  if (g_dbus_message_to_gerror(reply_ptr.get(), &err)) {
+    LOGE("SendMessage got error %s", err->message);
+    int err_code = util::ConvertDBusError(err->code);
+    g_error_free(err);
+    THROW(err_code);
+  }
+
+  for (auto& i : serialized) {
+    unsigned int data_size = static_cast<unsigned int>(
+        strlen(reinterpret_cast<char*>(i.ToRaw().first.get())));
+    int ret = util::WriteSocket(send_sock.Get(),
+        reinterpret_cast<char*>(&data_size), sizeof(data_size));
+    if (ret != 0)
+      break;
+    ret = util::WriteSocket(send_sock.Get(),
+        reinterpret_cast<char*>(i.ToRaw().first.get()), data_size);
+    if (ret != 0)
+      break;
+  }
 }
 
-int DBusSender::SendMessage(const IEventInfo& info, list<Bundle> serialized,
+void DBusSender::SendMessage(const IEventInfo& info, list<Bundle> serialized,
     string dest_appid) {
   string appid = info.GetOwner();
   if (appid.length() == 0)
     appid = util::GetAppId();
-
-  GDBusMessage* reply = impl_->MethodCall(appid, info, serialized);
-  if (!reply)
-    return ERROR_IO_ERROR;
-
-  int ret = ERROR_NONE;
-  GError* err = nullptr;
-  if (g_dbus_message_to_gerror(reply, &err)) {
-    LOGE("SendMessage got error %s", err->message);
-    if (err->code == G_DBUS_ERROR_ACCESS_DENIED) {
-      set_last_result(ERROR_PERMISSION_DENIED);
-      ret = ERROR_PERMISSION_DENIED;
-    } else {
-      set_last_result(ERROR_IO_ERROR);
-      ret = ERROR_IO_ERROR;
-    }
-    g_error_free(err);
-    return ret;
-  } else {
-    set_last_result(ERROR_NONE);
-  }
-
-  return 0;
-}
-
-int DBusSender::Impl::CheckReplyMessage(GDBusMessage* reply) {
-  GError* err = nullptr;
-  if (g_dbus_message_to_gerror(reply, &err)) {
-    LOGE("Request got error %s", err->message);
-    if (err->code == G_DBUS_ERROR_ACCESS_DENIED)
-      set_last_result(ERROR_PERMISSION_DENIED);
-    else
-      set_last_result(ERROR_IO_ERROR);
-
-    g_error_free(err);
-    return -1;
-  } else {
-    set_last_result(ERROR_NONE);
-  }
-  return 0;
+  impl_->MethodCall(appid, info, serialized);
 }
 
 std::list<Bundle> DBusSender::Request(const IEventInfo& info) {
@@ -353,7 +349,7 @@ std::list<Bundle> DBusSender::Request(const IEventInfo& info) {
 
   string method_name = EventInfo::GetString(info.GetEventType());
   Bundle serialized = info.Serialize();
-  return impl_->MethodCallWithSocket(appid, method_name, serialized);
+  return impl_->GetListMethodCall(appid, method_name, serialized);
 }
 
 int DBusSender::RequestReturnValue(const IEventInfo& info) {
@@ -363,32 +359,7 @@ int DBusSender::RequestReturnValue(const IEventInfo& info) {
 
   string method_name = EventInfo::GetString(info.GetEventType());
   Bundle serialized = info.Serialize();
-
-  GDBusMessage* reply = impl_->MethodCall(appid, method_name, serialized);
-  if (!reply)
-    return 0;
-
-  auto reply_ptr = std::unique_ptr<GDBusMessage, decltype(g_object_unref)*>(
-      reply, g_object_unref);
-
-  GError* err = nullptr;
-  if (g_dbus_message_to_gerror(reply, &err)) {
-    LOGE("RequestReturnValue got error %s", err->message);
-    if (err->code == G_DBUS_ERROR_ACCESS_DENIED)
-      set_last_result(ERROR_PERMISSION_DENIED);
-    else
-      set_last_result(ERROR_IO_ERROR);
-
-    g_error_free(err);
-    return 0;
-  } else {
-    set_last_result(ERROR_NONE);
-  }
-
-  int num;
-  GVariant *reply_body = g_dbus_message_get_body(reply);
-  g_variant_get(reply_body, "(i)", &num);
-  return num;
+  return impl_->MethodCall(appid, method_name, serialized);
 }
 
 }  // namespace notification

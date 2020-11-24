@@ -37,6 +37,7 @@ namespace util {
   unsigned int ReadSocket(int fd, char* buffer, unsigned int nbytes);
   int WriteSocket(int fd, const char* buffer, unsigned int nbytes);
   std::list<tizen_base::Bundle> ReadBundleList(int recvfd, int noti_cnt);
+  int ConvertDBusError(int error);
 }  // namespace util
 }  // namespace notification
 
