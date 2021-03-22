@@ -254,7 +254,7 @@ int DBusEventListener::Impl::MethodCallHandler(
   if (noti_cnt > 0) {
     ret_list = dl->ReadNotiList(invocation, noti_cnt);
     if (ret_list.size() != static_cast<unsigned int>(noti_cnt)) {
-      LOGE("Read Noti List fail : Expect(%d), Actual(%lu)",
+      LOGE("Read Noti List fail : Expect(%d), Actual(%zu)",
           noti_cnt, ret_list.size());
       return -1;
     }
