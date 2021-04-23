@@ -79,7 +79,7 @@ find . -name '*.gcno' -exec cp '{}' gcov-obj ';'
 %endif
 
 %check
-ctest --output-on-failure %{?_smp_mflags}
+ctest -V
 %if 0%{?gcov:1}
 lcov -c --ignore-errors graph --no-external -q -d . -o notification-ex.info
 genhtml notification-ex.info -o notification-ex.out
