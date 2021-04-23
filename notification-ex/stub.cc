@@ -1565,6 +1565,8 @@ extern "C" EXPORT_API int noti_ex_style_get_padding(noti_ex_style_h handle,
       new (std::nothrow) Padding(*((*p)->GetPadding())));
   if (padd == nullptr || padd->get() == nullptr) {
     LOGE("Out-of-memory");
+    if (padd)
+      delete padd;
     *padding = nullptr;
     return NOTI_EX_ERROR_NONE;
   }
