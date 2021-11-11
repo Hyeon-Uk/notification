@@ -41,10 +41,17 @@
 #include <notification_internal.h>
 #include <notification_shared_file.h>
 
+#include <vconf.h>
+
 static void (*posted_toast_message_cb)(void *data);
 
 #define NOTI_TEXT_RESULT_LEN 4096
 #define REGULAR_UID_MIN 5000
+
+static char *_pkg_id = NULL;
+static char *_locale_directory = NULL;
+static char *_label = NULL;
+static int _cb_registered = -1;
 
 char *notification_get_app_id_by_pid(int pid)
 {
@@ -1416,6 +1423,42 @@ static int _notification_get_domain_name(const char *app_id, char **name)
 	return 0;
 }
 
+static void _language_key_changed_cb (keynode_t *node, void *user_data)
+{
+	int ret;
+	char *app_id = NULL;
+	char *label = NULL;
+	pkgmgrinfo_appinfo_h appinfo = NULL;
+
+	app_id = notification_get_app_id_by_pid(getpid());
+	if (app_id == NULL) {
+		ERR("Failed to get app_id");
+		goto out;
+	}
+
+	ret = pkgmgrinfo_appinfo_get_usr_appinfo(app_id, getuid(), &appinfo);
+	if (ret != PMINFO_R_OK || appinfo == NULL) {
+		WARN("Failed to get appinfo err[%d] app_id[%s]", ret, app_id);
+		goto out;
+	}
+
+	ret = pkgmgrinfo_appinfo_get_label(appinfo, &label);
+	if (ret != PMINFO_R_OK || label == NULL) {
+		WARN("Failed to get app_label [%d]", ret);
+		goto out;
+	}
+
+	free(_label);
+	_label = strdup(label);
+
+out:
+	if (appinfo)
+		pkgmgrinfo_appinfo_destroy_appinfo(appinfo);
+
+	if (app_id)
+		free(app_id);
+}
+
 static notification_h _notification_create(notification_type_e type)
 {
 #define NOTI_PKG_ID_LEN 512
@@ -1472,18 +1515,24 @@ static notification_h _notification_create(notification_type_e type)
 		if (noti->pkg_id == NULL)
 			err = -1;
 	} else {
-		err = aul_app_get_pkgid_bypid(getpid(), pkg_id, sizeof(pkg_id));
-		if (err != AUL_R_OK)
-			noti->pkg_id = strdup(noti->caller_app_id);
-		else
-			noti->pkg_id = strdup(pkg_id);
+		if (_pkg_id == NULL) {
+			err = aul_app_get_pkgid_bypid(getpid(), pkg_id, sizeof(pkg_id));
+			if (err != AUL_R_OK)
+				noti->pkg_id = strdup(noti->caller_app_id);
+			else
+				noti->pkg_id = strdup(pkg_id);
 
-		if (noti->pkg_id == NULL) {
-			err = -1;
-			goto out;
+			if (noti->pkg_id == NULL) {
+				err = -1;
+				goto out;
+			}
+
+			_pkg_id = strdup(noti->pkg_id);
+		} else {
+			noti->pkg_id = strdup(_pkg_id);
 		}
 
-		err = _notification_get_domain_name(pkg_id, &domain_name);
+		err = _notification_get_domain_name(_pkg_id, &domain_name);
 		if (err != 0 || domain_name == NULL) {
 			WARN("Failed to get domain_name");
 			err = 0;
@@ -1494,44 +1543,58 @@ static notification_h _notification_create(notification_type_e type)
 
 		noti->domain = strdup(domain_name);
 
-		err = package_info_create(pkg_id, &package_info);
-		if (err != PACKAGE_MANAGER_ERROR_NONE || package_info == NULL) {
-			/* LCOV_EXCL_START */
-			WARN("Failed to create package_info err[%d] pkg_id[%s]",
-					err, pkg_id);
-			goto out;
-			/* LCOV_EXCL_STOP */
+		if (_locale_directory == NULL) {
+			err = package_info_create(_pkg_id, &package_info);
+			if (err != PACKAGE_MANAGER_ERROR_NONE || package_info == NULL) {
+				/* LCOV_EXCL_START */
+				WARN("Failed to create package_info err[%d] pkg_id[%s]",
+						err, _pkg_id);
+				goto out;
+				/* LCOV_EXCL_STOP */
+			}
+
+			err = package_info_get_root_path(package_info, &app_root_path);
+			if (err != PACKAGE_MANAGER_ERROR_NONE || app_root_path == NULL) {
+				/* LCOV_EXCL_START */
+				WARN("Failed to get root path err[%d] path[%p]",
+						err, app_root_path);
+				goto out;
+				/* LCOV_EXCL_STOP */
+			}
+
+			snprintf(locale_directory, PATH_MAX, "%s/res/locale", app_root_path);
+			noti->dir = strdup(locale_directory);
+			_locale_directory = strdup(locale_directory);
+		} else {
+			noti->dir = strdup(_locale_directory);
 		}
 
-		err = package_info_get_root_path(package_info, &app_root_path);
-		if (err != PACKAGE_MANAGER_ERROR_NONE || app_root_path == NULL) {
-			/* LCOV_EXCL_START */
-			WARN("Failed to get root path err[%d] path[%p]",
-					err, app_root_path);
-			goto out;
-			/* LCOV_EXCL_STOP */
+		if (_cb_registered)
+			_cb_registered = vconf_notify_key_changed(VCONFKEY_LANGSET,
+					_language_key_changed_cb, NULL);
+
+		if (_label == NULL) {
+			err = pkgmgrinfo_appinfo_get_usr_appinfo(noti->caller_app_id,
+						getuid(), &appinfo);
+			if (err != PMINFO_R_OK || appinfo == NULL) {
+				WARN("Failed to get appinfo err[%d] caller_app_id[%s]",
+						err, noti->caller_app_id);
+				err = 0;
+				goto out;
+			}
+
+			err = pkgmgrinfo_appinfo_get_label(appinfo, &label);
+			if (err != PMINFO_R_OK || label == NULL) {
+				WARN("Failed to get app_label err[%d]", err);
+				err = 0;
+				goto out;
+			}
+
+			noti->app_label = strdup(label);
+			_label = strdup(label);
+		} else {
+			noti->app_label = strdup(_label);
 		}
-
-		snprintf(locale_directory, PATH_MAX, "%s/res/locale", app_root_path);
-		noti->dir    = strdup(locale_directory);
-
-		err = pkgmgrinfo_appinfo_get_usr_appinfo(noti->caller_app_id,
-					getuid(), &appinfo);
-		if (err != PMINFO_R_OK || appinfo == NULL) {
-			WARN("Failed to get appinfo err[%d] caller_app_id[%s]",
-					err, noti->caller_app_id);
-			err = 0;
-			goto out;
-		}
-
-		err = pkgmgrinfo_appinfo_get_label(appinfo, &label);
-		if (err != PMINFO_R_OK || label == NULL) {
-			WARN("Failed to get app_label err[%d]", err);
-			err = 0;
-			goto out;
-		}
-
-		noti->app_label = strdup(label);
 	}
 
 out:
