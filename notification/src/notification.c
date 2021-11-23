@@ -1516,17 +1516,17 @@ static notification_h _notification_create(notification_type_e type)
 	} else {
 		if (_pkg_id == NULL) {
 			err = aul_app_get_pkgid_bypid(getpid(), pkg_id, sizeof(pkg_id));
-			if (err != AUL_R_OK)
+			if (err != AUL_R_OK) {
 				noti->pkg_id = strdup(noti->caller_app_id);
-			else
+			} else {
 				noti->pkg_id = strdup(pkg_id);
+				_pkg_id = strdup(pkg_id);
+			}
 
 			if (noti->pkg_id == NULL) {
 				err = -1;
 				goto out;
 			}
-
-			_pkg_id = strdup(noti->pkg_id);
 		} else {
 			noti->pkg_id = strdup(_pkg_id);
 		}
