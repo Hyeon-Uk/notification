@@ -10,6 +10,35 @@ PATH=/bin:/usr/bin:/sbin:/usr/sbin
 DB_DIR=/opt/dbspace
 DB_NOTIFICATION=$DB_DIR/.notification.db
 
+CheckListTable() {
+  ADDED_COLUMN=`sqlite3 $DB_NOTIFICATION 'PRAGMA table_info(noti_list)' | grep b_event_handler_click_on_button_7`
+
+  echo "## Check list table"
+
+  if [ -z "${ADDED_COLUMN}" ]; then
+    echo "column empty"
+    return 1
+  else
+    echo "column exist"
+    return 0
+  fi
+}
+
+CheckTemplateTable() {
+  ADDED_COLUMN=`sqlite3 $DB_NOTIFICATION 'PRAGMA table_info(noti_template)' | grep template_name`
+
+  echo "## Check template table"
+
+  if [ -z "${ADDED_COLUMN}" ]; then
+    echo "column empty"
+    return 1
+  else
+    echo "column exist"
+    return 0
+  fi
+}
+
+UpdateListTable() {
 sqlite3 $DB_NOTIFICATION << EOF
 
 DROP TABLE IF EXISTS noti_list_temp;
@@ -86,7 +115,11 @@ INSERT INTO noti_list_temp (type, layout, pkg_id, caller_app_id, launch_app_id, 
 SELECT type, layout, pkg_id, caller_app_id, launch_app_id, image_path, priv_image_path, group_id, internal_group_id, priv_id, title_key, b_text, b_key, tag, b_format_args, num_format_args, text_domain, text_dir, time, insert_time, args, group_args, b_execute_option, b_service_responding, b_service_single_launch, b_service_multi_launch, b_event_handler_click_on_button_1, b_event_handler_click_on_button_2, b_event_handler_click_on_button_3, b_event_handler_click_on_button_4, b_event_handler_click_on_button_5, b_event_handler_click_on_button_6, b_event_handler_click_on_icon, b_event_handler_click_on_thumbnail, b_event_handler_click_on_text_input_button, sound_type, sound_path, priv_sound_path, vibration_type, vibration_path, priv_vibration_path, led_operation, led_argb, led_on_ms, led_off_ms, flags_for_property, flag_simmode, display_applist, progress_size, progress_percentage, ongoing_flag, ongoing_value_type, ongoing_current, ongoing_duration, auto_remove, default_button_index, hide_timeout, delete_timeout, text_input_max_length, event_flag, extension_image_size, uid FROM noti_list;
 DROP TABLE noti_list;
 ALTER TABLE noti_list_temp RENAME TO noti_list;
+EOF
+}
 
+UpdateTemplateTable() {
+sqlite3 $DB_NOTIFICATION << EOF
 
 DROP TABLE IF EXISTS noti_template_temp;
 CREATE TABLE noti_template_temp (
@@ -165,9 +198,39 @@ SELECT type, layout, pkg_id, caller_app_id, launch_app_id, image_path, priv_imag
 DROP TABLE noti_template;
 ALTER TABLE noti_template_temp RENAME TO noti_template;
 EOF
+}
+
+UpdatePermission() {
 
 chown app_fw:app_fw $DB_NOTIFICATION
 chown app_fw:app_fw $DB_NOTIFICATION-journal
 
 chsmack -a System $DB_NOTIFICATION
 chsmack -a System $DB_NOTIFICATION-journal
+}
+
+UpdateNotiDB() {
+  echo "## Update noti DB"
+
+  CheckListTable
+  RESULT=$?
+  if [ ${RESULT} == 1 ]; then
+    UpdateListTable
+    echo "update list table"
+  else
+    echo "list table already updated"
+  fi
+
+  CheckTemplateTable
+  RESULT=$?
+  if [ ${RESULT} == 1 ]; then
+    UpdateTemplateTable
+    echo "update template table"
+  else
+    echo "template table already updated"
+  fi
+
+  UpdatePermission
+}
+
+UpdateNotiDB
