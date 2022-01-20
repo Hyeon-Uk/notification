@@ -92,8 +92,8 @@ rm -rf %{buildroot}
 %make_install
 
 %if 0%{?gcov:1}
-mkdir -p %{buildroot}%{_datadir}/gcov/obj
-install -m 0644 gcov-obj/* %{buildroot}%{_datadir}/gcov/obj
+mkdir -p %{buildroot}%{_datadir}/gcov/obj/%{name}
+install -m 0644 gcov-obj/* %{buildroot}%{_datadir}/gcov/obj/%{name}
 %endif
 
 mkdir -p %{buildroot}%{upgrade_script_path}
