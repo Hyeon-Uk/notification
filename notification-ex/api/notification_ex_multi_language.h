@@ -39,7 +39,7 @@ typedef void *noti_ex_multi_lang_h;
  * @since_tizen 5.5
  * @remarks @a handle must be released using noti_ex_multi_lang_destroy().
  * @param[out] handle The multi-language item handle
- * @param[in] msgid The identifier of the message to be translated. One of the identifers declared in PO files. \n
+ * @param[in] msgid The identifier of the message to be translated. One of the identifiers declared in PO files. \n
  *          The message of @a msgid and @a format must contain the same specifiers and in the same order.
  * @param[in] format The string that contains the text to be written. \n
  *          It can optionally contain embedded format specifiers \n

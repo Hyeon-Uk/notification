@@ -91,7 +91,7 @@ int noti_ex_item_button_get_title(noti_ex_item_h handle, char **title);
 /**
  * @brief Sets the multi-language handle.
  * @since_tizen 5.5
- * @remarks After the multi-language handle setted successfully, noti_ex_item_button_get_title() \n
+ * @remarks After setting the multi-language handle successfully, noti_ex_item_button_get_title() \n
  *          will return the multi-language text.
  * @remarks The #noti_ex_item_h handle keeps its own copy of #noti_ex_multi_lang_h. \n
  *          Therefore, you can destroy @a multi after it was set for @a handle.

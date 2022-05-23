@@ -119,7 +119,7 @@ int noti_ex_item_input_selector_set_contents(noti_ex_item_h handle, const char *
 /**
  * @brief Sets the multi-language contents for input selector item.
  * @since_tizen 5.5
- * @remarks After the multi-language handle setted successfully, \n
+ * @remarks After setting the multi-language handle successfully, \n
  *          noti_ex_item_input_selector_get_contents() will return the multi-language text. \n
  * @remarks The #noti_ex_item_h handle keeps its own copy of #noti_ex_multi_lang_h list. \n
  *          Therefore, you can destroy @a multi_language_list after it was set for @a handle.
