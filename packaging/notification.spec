@@ -73,18 +73,13 @@ MAJORVER=`echo %{version} | awk 'BEGIN {FS="."}{print $1}'`
 	-DMAJORVER=${MAJORVER} -DFULLVER=%{version}
 %__make %{?jobs:-j%jobs}
 
-%if 0%{?gcov:1}
-mkdir -p gcov-obj
-find . -name '*.gcno' -exec cp '{}' gcov-obj ';'
-%endif
-
 %check
 ctest -V
 %if 0%{?gcov:1}
 lcov -c --ignore-errors graph --no-external -q -d . -o notification-ex.info
 genhtml notification-ex.info -o notification-ex.out
 zip -r notification-ex.zip notification-ex.out
-install -m 0644 notification-ex.zip %{buildroot}%{_datadir}/gcov/notification-ex.zip
+install -m 0644 notification-ex.zip %{buildroot}%{_datadir}/gcov/obj/notification-ex.zip
 %endif
 
 %install
@@ -92,9 +87,38 @@ rm -rf %{buildroot}
 %make_install
 
 %if 0%{?gcov:1}
-mkdir -p %{buildroot}%{_datadir}/gcov/obj/%{name}
-install -m 0644 gcov-obj/* %{buildroot}%{_datadir}/gcov/obj/%{name}
+builddir=$(basename $PWD)
+gcno_obj_dir=%{buildroot}%{_datadir}/gcov/obj/%{name}/"$builddir"
+mkdir -p "$gcno_obj_dir"
+find . -name '*.gcno' -exec cp --parents '{}' "$gcno_obj_dir" ';'
 %endif
+
+cat << EOF > run-unittest.sh
+#!/bin/sh
+setup() {
+    echo "setup start"
+}
+
+test_main() {
+    echo "test_main start"
+    /usr/bin/notification-ex_unittests
+}
+
+teardown() {
+    echo "teardown start"
+}
+
+main() {
+    setup
+    test_main
+    teardown
+}
+
+main "\$*"
+EOF
+
+mkdir -p %{buildroot}%{_bindir}/tizen-unittests/%{name}
+install -m 0755 run-unittest.sh %{buildroot}%{_bindir}/tizen-unittests/%{name}/
 
 mkdir -p %{buildroot}%{upgrade_script_path}
 cp -f scripts/505.notification_upgrade.sh %{buildroot}%{upgrade_script_path}
@@ -192,8 +216,9 @@ GTest for notification-ex
 
 %files -n notification-ex_unittests
 %{_bindir}/notification-ex_unittests
+%{_bindir}/tizen-unittests/%{name}/run-unittest.sh
 
 %if 0%{?gcov:1}
 %files gcov
-%{_datadir}/gcov/*
+%{_datadir}/gcov/obj/*
 %endif
