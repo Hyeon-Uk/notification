@@ -1497,6 +1497,10 @@ int notification_set_indirect_request(notification_h noti, pid_t pid, uid_t uid)
 int notification_delete_by_display_applist(int display_applist);
 int notification_delete_by_display_applist_for_uid(int display_applist, uid_t uid);
 
+int notification_set_do_not_show_again(notification_h noti, bool flag);
+int notification_get_do_not_show_again(notification_h noti, bool* flag);
+
+
 /**
  * @}
  */

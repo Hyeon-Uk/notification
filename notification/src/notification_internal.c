@@ -1722,7 +1722,8 @@ EXPORT_API int notification_send_event(notification_h noti, int event_type)
 		(event_type >= NOTIFICATION_EVENT_TYPE_HIDDEN_BY_USER
 		&& event_type <= NOTIFICATION_EVENT_TYPE_HIDDEN_BY_EXTERNAL) ||
 		(event_type >= NOTIFICATION_EVENT_TYPE_PRESSED
-		&& event_type <= NOTIFICATION_EVENT_TYPE_DELETED)))
+		&& event_type <= NOTIFICATION_EVENT_TYPE_DELETED) ||
+		(event_type == NOTIFICATION_EVENT_TYPE_DO_NOT_SHOW_AGAIN)))
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 
 	ret = notification_get_event_flag(noti, &event_flag);
@@ -1746,7 +1747,8 @@ EXPORT_API int notification_send_event_by_priv_id(int priv_id, int event_type)
 		(event_type >= NOTIFICATION_EVENT_TYPE_HIDDEN_BY_USER
 		&& event_type <= NOTIFICATION_EVENT_TYPE_HIDDEN_BY_EXTERNAL) ||
 		(event_type >= NOTIFICATION_EVENT_TYPE_PRESSED
-		&& event_type <= NOTIFICATION_EVENT_TYPE_DELETED)))
+		&& event_type <= NOTIFICATION_EVENT_TYPE_DELETED) ||
+		(event_type == NOTIFICATION_EVENT_TYPE_DO_NOT_SHOW_AGAIN)))
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 
 	ret = notification_ipc_send_event(NULL, event_type, priv_id);
@@ -2131,4 +2133,71 @@ int notification_delete_by_display_applist_for_uid(int display_applist, uid_t ui
 EXPORT_API int notification_delete_by_display_applist(int display_applist)
 {
 	return notification_delete_by_display_applist_for_uid(display_applist, getuid());
+}
+
+EXPORT_API int notification_set_do_not_show_again(notification_h noti,
+		bool flag)
+{
+	int err;
+	int ret = NOTIFICATION_ERROR_NONE;
+	char key[KEY_LEN];
+	char *del = NULL;
+
+	if (noti == NULL) {
+		ERR("Invalid parameter");
+		return NOTIFICATION_ERROR_INVALID_PARAMETER;
+	}
+
+	if (noti->args == NULL)
+		noti->args = bundle_create();
+
+	snprintf(key, sizeof(key), "%s%d", EXTENSION_EVENT_KEY,
+			NOTIFICATION_EVENT_TYPE_DO_NOT_SHOW_AGAIN);
+	bundle_get_str(noti->args, key, &del);
+	if (del != NULL) {
+		bundle_del(noti->args, key);
+		del = NULL;
+	}
+
+	if (flag)
+		err = bundle_add_str(noti->args, key, "true");
+	else
+		err = bundle_add_str(noti->args, key, "false");
+
+	if (err != BUNDLE_ERROR_NONE) {
+		ERR("Failed to add str to bundle [%d]", err);
+		return NOTIFICATION_ERROR_IO_ERROR;
+	}
+
+	return ret;
+}
+
+EXPORT_API int notification_get_do_not_show_again(notification_h noti,
+		bool* flag)
+{
+	int err;
+	int ret = NOTIFICATION_ERROR_NONE;
+	char *ret_str = NULL;
+	char key[KEY_LEN];
+
+	if (noti == NULL) {
+		ERR("Invalid parameter");
+		return NOTIFICATION_ERROR_INVALID_PARAMETER;
+	}
+
+	snprintf(key, sizeof(key), "%s%d", EXTENSION_EVENT_KEY,
+		NOTIFICATION_EVENT_TYPE_DO_NOT_SHOW_AGAIN);
+
+	bundle_get_str(noti->args, key, &ret_str);
+	if (ret_str == NULL) {
+		ERR("No key");
+		return NOTIFICATION_ERROR_INVALID_PARAMETER;
+	}
+
+	if (strncmp("true", ret_str, 4) == 0)
+		*flag = true;
+	else
+		*flag = false;
+
+	return ret;
 }
