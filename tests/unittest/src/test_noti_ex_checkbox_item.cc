@@ -17,6 +17,8 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
+#include "mock/app_common_mock.h"
+#include "mock/test_fixture.h"
 #include "notification-ex/checkbox_item.h"
 #include "notification-ex/item_inflator.h"
 
@@ -24,8 +26,14 @@ using namespace tizen_base;
 using namespace notification;
 using namespace notification::item;
 
-class CheckBoxItemTest : public ::testing::Test {
+namespace {
+class Mocks :
+    virtual public ::testing::NiceMock<AppCommonMock> {};
+} // namespace
+
+class CheckBoxItemTest : public TestFixture {
  public:
+  CheckBoxItemTest() : TestFixture(std::make_unique<::Mocks>()) {}
   CheckBoxItem* item;
   std::string id = "checkbox_id";
   std::string title = "title";

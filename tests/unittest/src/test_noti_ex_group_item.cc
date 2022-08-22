@@ -20,22 +20,38 @@
 #include "notification-ex/button_item.h"
 #include "notification-ex/text_item.h"
 #include "notification-ex/item_inflator.h"
-#include "mock/app_common.h"
+#include "mock/app_common_mock.h"
+#include "mock/test_fixture.h"
 
 using namespace tizen_base;
 using namespace notification;
 using namespace notification::item;
 using namespace std;
 
-namespace {
+using ::testing::_;
+using ::testing::Invoke;
 
-class GroupItemTest : public ::testing::Test {
+namespace {
+  int __fake_app_get_name(char** app_name) {
+    *app_name = strdup("unittest_appname");
+    return 0;
+  }
+class Mocks :
+    virtual public ::testing::NiceMock<AppCommonMock> {};
+} // namespace
+
+class GroupItemTest : public TestFixture {
+ public:
+  GroupItemTest() : TestFixture(std::make_unique<::Mocks>()) {}
  protected:
   void SetUp() override {}
   void TearDown() override {}
 };
 
 TEST_F(GroupItemTest, AddChild) {
+  EXPECT_CALL(GetMock<AppCommonMock>(), app_get_name(_))
+      .WillRepeatedly(Invoke(__fake_app_get_name));
+
   GroupItem item("GROUP1");
   item.AddChild(std::make_shared<ButtonItem>("btn1", "test1"));
   item.AddChild(std::make_shared<ButtonItem>("btn2", "test2"));
@@ -43,6 +59,9 @@ TEST_F(GroupItemTest, AddChild) {
 }
 
 TEST_F(GroupItemTest, RemoveChild) {
+  EXPECT_CALL(GetMock<AppCommonMock>(), app_get_name(_))
+      .WillRepeatedly(Invoke(__fake_app_get_name));
+
   GroupItem item("GROUP1");
   item.AddChild(std::make_shared<ButtonItem>("btn1", "test1"));
   item.AddChild(std::make_shared<ButtonItem>("btn2", "test2"));
@@ -52,13 +71,9 @@ TEST_F(GroupItemTest, RemoveChild) {
   ASSERT_EQ(item.GetChildren().size(), 1);
 }
 
-int __fake_app_get_name(char** app_name) {
-  *app_name = strdup("unittest_appname");
-  return 0;
-}
-
 TEST_F(GroupItemTest, SerializeDeserialize) {
-  app_get_name_fake.custom_fake = __fake_app_get_name;
+  EXPECT_CALL(GetMock<AppCommonMock>(), app_get_name(_))
+      .WillRepeatedly(Invoke(__fake_app_get_name));
 
   GroupItem item("GROUP1");
   item.AddChild(std::make_shared<ButtonItem>("btn1", "test1"));
@@ -86,6 +101,9 @@ TEST_F(GroupItemTest, SerializeDeserialize) {
 }
 
 TEST_F(GroupItemTest, FindByID) {
+  EXPECT_CALL(GetMock<AppCommonMock>(), app_get_name(_))
+      .WillRepeatedly(Invoke(__fake_app_get_name));
+
   GroupItem item("GROUP1");
   item.AddChild(std::make_shared<ButtonItem>("btn1", "test1"));
   item.AddChild(std::make_shared<ButtonItem>("btn2", "test2"));
@@ -97,6 +115,9 @@ TEST_F(GroupItemTest, FindByID) {
 }
 
 TEST_F(GroupItemTest, FindByIDGroupItem) {
+  EXPECT_CALL(GetMock<AppCommonMock>(), app_get_name(_))
+      .WillRepeatedly(Invoke(__fake_app_get_name));
+
   GroupItem item("GROUP1");
   shared_ptr<GroupItem> gr2 = shared_ptr<GroupItem>(new GroupItem("GROUP2"));
   shared_ptr<GroupItem> gr3 = shared_ptr<GroupItem>(new GroupItem("GROUP3"));
@@ -122,6 +143,9 @@ TEST_F(GroupItemTest, FindByIDGroupItem) {
 
 
 TEST_F(GroupItemTest, IsItemTypeExist) {
+  EXPECT_CALL(GetMock<AppCommonMock>(), app_get_name(_))
+      .WillRepeatedly(Invoke(__fake_app_get_name));
+
   GroupItem item("GROUP1");
   shared_ptr<GroupItem> gr2 = shared_ptr<GroupItem>(new GroupItem("GROUP2"));
   shared_ptr<GroupItem> gr3 = shared_ptr<GroupItem>(new GroupItem("GROUP3"));
@@ -142,6 +166,9 @@ TEST_F(GroupItemTest, IsItemTypeExist) {
 }
 
 TEST_F(GroupItemTest, FindByIDNullItemReturn) {
+  EXPECT_CALL(GetMock<AppCommonMock>(), app_get_name(_))
+      .WillRepeatedly(Invoke(__fake_app_get_name));
+
   GroupItem item("GROUP1");
   item.AddChild(std::make_shared<ButtonItem>("btn1", "test1"));
   item.AddChild(std::make_shared<ButtonItem>("btn2", "test2"));
@@ -152,7 +179,8 @@ TEST_F(GroupItemTest, FindByIDNullItemReturn) {
 }
 
 TEST_F(GroupItemTest, GetAppLabel) {
-  app_get_name_fake.custom_fake = __fake_app_get_name;
+  EXPECT_CALL(GetMock<AppCommonMock>(), app_get_name(_))
+      .WillRepeatedly(Invoke(__fake_app_get_name));
 
   GroupItem item("GROUP1");
   string app_label = item.GetAppLabel();
@@ -161,6 +189,9 @@ TEST_F(GroupItemTest, GetAppLabel) {
 }
 
 TEST_F(GroupItemTest, SetAppLabel) {
+  EXPECT_CALL(GetMock<AppCommonMock>(), app_get_name(_))
+      .WillRepeatedly(Invoke(__fake_app_get_name));
+
   GroupItem item("GROUP1");
   item.SetAppLabel("test");
   string app_label = item.GetAppLabel();
@@ -169,10 +200,11 @@ TEST_F(GroupItemTest, SetAppLabel) {
 }
 
 TEST_F(GroupItemTest, SetDirection) {
+  EXPECT_CALL(GetMock<AppCommonMock>(), app_get_name(_))
+      .WillRepeatedly(Invoke(__fake_app_get_name));
+
   GroupItem item("GROUP1");
   item.SetDirection(true);
 
   ASSERT_TRUE(item.IsVertical());
 }
-
-}  // namespace

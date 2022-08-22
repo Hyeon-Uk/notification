@@ -16,6 +16,8 @@
 
 #include <gmock/gmock.h>
 
+#include "mock/app_common_mock.h"
+#include "mock/test_fixture.h"
 #include "notification-ex/event_info_internal.h"
 
 using namespace tizen_base;
@@ -23,8 +25,13 @@ using namespace notification;
 using namespace std;
 
 namespace {
+class Mocks :
+    virtual public ::testing::NiceMock<AppCommonMock> {};
+} // namespace
 
-class EventInfoTest : public ::testing::Test {
+class EventInfoTest : public TestFixture {
+ public:
+  EventInfoTest() : TestFixture(std::make_unique<::Mocks>()) {}
  protected:
   void SetUp() override {}
   void TearDown() override {}
@@ -47,5 +54,3 @@ TEST_F(EventInfoTest, GetString) {
   ASSERT_EQ(EventInfo::GetString(EventInfo::Delete), "Delete");
   ASSERT_EQ(EventInfo::GetString(EventInfo::Get), "Get");
 }
-
-}  // namespace

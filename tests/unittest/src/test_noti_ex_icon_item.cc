@@ -17,6 +17,9 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
+#include "mock/app_common_mock.h"
+#include "mock/smack_mock.h"
+#include "mock/test_fixture.h"
 #include "notification-ex/icon_item.h"
 #include "notification-ex/item_inflator.h"
 
@@ -24,8 +27,15 @@ using namespace tizen_base;
 using namespace notification;
 using namespace notification::item;
 
-class IconItemTest : public ::testing::Test {
+namespace {
+class Mocks :
+    virtual public ::testing::NiceMock<SmackMock>,
+    virtual public ::testing::NiceMock<AppCommonMock> {};
+} // namespace
+
+class IconItemTest : public TestFixture {
  public:
+  IconItemTest() : TestFixture(std::make_unique<::Mocks>()) {}
   IconItem* item;
   std::string id = "icon_id";
   virtual void SetUp() {

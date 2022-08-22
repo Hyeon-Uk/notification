@@ -16,13 +16,14 @@
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
-#include <app_common.h>
 
+#include "mock/app_common_mock.h"
+#include "mock/test_fixture.h"
 #include "notification-ex/shared_file.h"
 #include "notification-ex/image_item.h"
 #include "notification-ex/common.h"
 
-#include "mock/gio_mock.h"
+#include "mock/glib_mock.h"
 #include "mock/smack_mock.h"
 #include "mock/tzplatform_config_mock.h"
 #include "mock/security_manager_mock.h"
@@ -32,25 +33,10 @@ using namespace notification;
 using namespace notification::item;
 using namespace std;
 
+using ::testing::_;
+using ::testing::Invoke;
+
 namespace {
-
-GFile* __fake_g_file_new_for_path(const char* path) {
-  GFile* noti_dir = {};
-  return noti_dir;
-}
-
-gboolean __fake_g_file_query_exists(GFile* file, GCancellable* cancellable) {
-  return false;
-}
-
-gboolean __fake_g_file_make_directory(GFile* file, GCancellable* cancellable,
-    GError** error) {
-  return true;
-}
-
-int __fake_access(const char* path, int mode) {
-  return 0;
-}
 
 // smack
 ssize_t __fake_smack_new_label_from_path(const char* path, const char* xattr,
@@ -60,7 +46,7 @@ ssize_t __fake_smack_new_label_from_path(const char* path, const char* xattr,
 }
 
 // tzplatform
-const char* __fake_tzplatform_getenv(tzplatform_variable_e id) {
+const char* __fake_tzplatform_getenv(tzplatform_variable id) {
   return "/opt/usr/home/owner/apps_rw";
 }
 
@@ -87,8 +73,16 @@ int __fake_security_manager_private_sharing_drop(const private_sharing_req* p_re
   return 0;
 }
 
-class SharedFileTest  : public ::testing::Test {
+class Mocks :
+    virtual public ::testing::NiceMock<GlibMock>,
+    virtual public ::testing::NiceMock<SmackMock>,
+    virtual public ::testing::NiceMock<TzplatformConfigMock>,
+    virtual public ::testing::NiceMock<SecurityManagerMock> {};
+} // namespace
+
+class SharedFileTest : public TestFixture {
  public:
+  SharedFileTest() : TestFixture(std::make_unique<::Mocks>()) {}
   std::shared_ptr<ImageItem> item;
   std::string id = "image_id";
   std::string image_path = "res/image.png";
@@ -96,23 +90,6 @@ class SharedFileTest  : public ::testing::Test {
   SharedFile* shared_file;
 
   virtual void SetUp() {
-    smack_new_label_from_path_fake.custom_fake = __fake_smack_new_label_from_path;
-    tzplatform_getenv_fake.custom_fake = __fake_tzplatform_getenv;
-    g_file_new_for_path_fake.custom_fake = __fake_g_file_new_for_path;
-    g_file_query_exists_fake.custom_fake = __fake_g_file_query_exists;
-    g_file_make_directory_fake.custom_fake = __fake_g_file_make_directory;
-    access_fake.custom_fake = __fake_access;
-    security_manager_private_sharing_req_new_fake.custom_fake =
-      __fake_security_manager_private_sharing_req_new;
-    security_manager_private_sharing_req_add_paths_fake.custom_fake =
-      __fake_security_manager_private_sharing_req_add_paths;
-    security_manager_private_sharing_req_set_target_appid_fake.custom_fake =
-      __fake_security_manager_private_sharing_req_set_target_appid;
-    security_manager_private_sharing_apply_fake.custom_fake =
-      __fake_security_manager_private_sharing_apply;
-    security_manager_private_sharing_drop_fake.custom_fake =
-      __fake_security_manager_private_sharing_drop;
-
     item = make_shared<ImageItem>(id, image_path);
     shared_file = new SharedFile();
   }
@@ -122,15 +99,37 @@ class SharedFileTest  : public ::testing::Test {
 };
 
 TEST_F(SharedFileTest, IsPrivatePath) {
+  EXPECT_CALL(GetMock<SmackMock>(), smack_new_label_from_path(_, _, _, _))
+      .WillRepeatedly(Invoke(__fake_smack_new_label_from_path));
+
   ASSERT_TRUE(shared_file->IsPrivatePath(SharedFileTest::image_path));
 }
 
 TEST_F(SharedFileTest, GetDataPath) {
+  EXPECT_CALL(GetMock<TzplatformConfigMock>(), tzplatform_getenv(_))
+      .WillRepeatedly(Invoke(__fake_tzplatform_getenv));
+
   ASSERT_EQ(shared_file->GetDataPath(item->GetSenderAppId(), SharedFileTest::image_path),
     "/opt/usr/home/owner/apps_rw/notification-ex_unittests/data/.notification_ex/image.png");
 }
 
 TEST_F(SharedFileTest, SetPrivateSharing) {
+  EXPECT_CALL(GetMock<SecurityManagerMock>(),
+      security_manager_private_sharing_req_new(_))
+      .WillRepeatedly(Invoke(__fake_security_manager_private_sharing_req_new));
+  EXPECT_CALL(GetMock<SecurityManagerMock>(),
+      security_manager_private_sharing_req_add_paths(_, _, _))
+      .WillRepeatedly(Invoke(__fake_security_manager_private_sharing_req_add_paths));
+  EXPECT_CALL(GetMock<SecurityManagerMock>(),
+      security_manager_private_sharing_req_set_target_appid(_, _))
+      .WillRepeatedly(Invoke(__fake_security_manager_private_sharing_req_set_target_appid));
+  EXPECT_CALL(GetMock<SecurityManagerMock>(),
+      security_manager_private_sharing_apply(_))
+      .WillRepeatedly(Invoke(__fake_security_manager_private_sharing_apply));
+  EXPECT_CALL(GetMock<SecurityManagerMock>(),
+      security_manager_private_sharing_drop(_))
+      .WillRepeatedly(Invoke(__fake_security_manager_private_sharing_drop));
+
   list<shared_ptr<item::AbstractItem>> notiList;
   notiList.push_back(SharedFileTest::item);
 
@@ -141,6 +140,22 @@ TEST_F(SharedFileTest, SetPrivateSharing) {
 }
 
 TEST_F(SharedFileTest, RemovePrivateSharing) {
+  EXPECT_CALL(GetMock<SecurityManagerMock>(),
+      security_manager_private_sharing_req_new(_))
+      .WillRepeatedly(Invoke(__fake_security_manager_private_sharing_req_new));
+  EXPECT_CALL(GetMock<SecurityManagerMock>(),
+      security_manager_private_sharing_req_add_paths(_, _, _))
+      .WillRepeatedly(Invoke(__fake_security_manager_private_sharing_req_add_paths));
+  EXPECT_CALL(GetMock<SecurityManagerMock>(),
+      security_manager_private_sharing_req_set_target_appid(_, _))
+      .WillRepeatedly(Invoke(__fake_security_manager_private_sharing_req_set_target_appid));
+  EXPECT_CALL(GetMock<SecurityManagerMock>(),
+      security_manager_private_sharing_apply(_))
+      .WillRepeatedly(Invoke(__fake_security_manager_private_sharing_apply));
+  EXPECT_CALL(GetMock<SecurityManagerMock>(),
+      security_manager_private_sharing_drop(_))
+      .WillRepeatedly(Invoke(__fake_security_manager_private_sharing_drop));
+
   list<shared_ptr<item::AbstractItem>> notiList;
   notiList.push_back(SharedFileTest::item);
 
@@ -149,5 +164,3 @@ TEST_F(SharedFileTest, RemovePrivateSharing) {
 
   ASSERT_EQ(shared_file->RemovePrivateSharing(notiList, map_), ERROR_NONE);
 }
-
-}  // namespace

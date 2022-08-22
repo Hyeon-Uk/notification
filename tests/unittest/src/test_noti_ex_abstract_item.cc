@@ -28,11 +28,18 @@
 #include "notification-ex/group_item.h"
 #include "notification-ex/button_item.h"
 
+#include "mock/test_fixture.h"
+#include "mock/smack_mock.h"
+#include "mock/app_common_mock.h"
+
 #define MY_ITEM_TYPE AbstractItem::Type::Custom + 1
 
 using namespace notification;
 using namespace tizen_base;
 using namespace notification::item;
+
+using ::testing::_;
+using ::testing::Invoke;
 
 namespace {
 class TestItem : public AbstractItem {
@@ -79,8 +86,15 @@ class MyFactory : public IItemFactory {
   }
 };
 
-class AbstractItemTest : public ::testing::Test {
+class Mocks :
+    virtual public ::testing::NiceMock<SmackMock>,
+    virtual public ::testing::NiceMock<AppCommonMock> {};
+} // namespace
+
+class AbstractItemTest : public TestFixture {
  public:
+  AbstractItemTest() : TestFixture(std::make_unique<::Mocks>()) {}
+
   virtual void SetUp() {
     FactoryManager::GetInst().RegisterFactory(std::unique_ptr<IItemFactory>(new MyFactory()));
   }
@@ -306,7 +320,8 @@ int __fake_app_get_name(char** app_name) {
 }
 
 TEST_F(AbstractItemTest, SetGetFindMainType) {
-  app_get_name_fake.custom_fake = __fake_app_get_name;
+  EXPECT_CALL(GetMock<AppCommonMock>(), app_get_name(_))
+      .WillRepeatedly(Invoke(__fake_app_get_name));
 
   auto root = std::make_shared<GroupItem>("test_group");
   auto item = std::make_shared<ButtonItem>("test_id", "title");
@@ -320,6 +335,9 @@ TEST_F(AbstractItemTest, SetGetFindMainType) {
 }
 
 TEST_F(AbstractItemTest, SetInvalidMainType) {
+  EXPECT_CALL(GetMock<AppCommonMock>(), app_get_name(_))
+      .WillRepeatedly(Invoke(__fake_app_get_name));
+
   auto root = std::make_shared<GroupItem>("test_group");
   auto item = std::make_shared<ButtonItem>("test_id", "title");
   root->AddChild(item);
@@ -327,5 +345,3 @@ TEST_F(AbstractItemTest, SetInvalidMainType) {
   bool ret = root->SetMainType("test_id", AbstractItem::MainTitle);
   EXPECT_FALSE(ret);
 }
-
-}  // namespace

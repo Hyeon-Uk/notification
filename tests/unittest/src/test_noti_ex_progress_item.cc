@@ -16,8 +16,11 @@
 
 #include <gmock/gmock.h>
 
+#include "mock/app_common_mock.h"
+#include "mock/test_fixture.h"
 #include "notification-ex/progress_item.h"
 #include "notification-ex/item_inflator.h"
+
 
 using namespace tizen_base;
 using namespace notification;
@@ -25,8 +28,13 @@ using namespace notification::item;
 using namespace std;
 
 namespace {
+class Mocks :
+    virtual public ::testing::NiceMock<AppCommonMock> {};
+} // namespace
 
-class ProgressItemTest : public ::testing::Test {
+class ProgressItemTest : public TestFixture {
+ public:
+  ProgressItemTest() : TestFixture(std::make_unique<::Mocks>()) {}
  protected:
   void SetUp() override {}
   void TearDown() override {}
@@ -67,5 +75,3 @@ TEST_F(ProgressItemTest, SetGetUnit) {
 
   ASSERT_EQ(item.GetDefaultUnit(), "byte");
 }
-
-}  // namespace

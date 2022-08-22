@@ -17,6 +17,9 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
+#include "mock/app_common_mock.h"
+#include "mock/test_fixture.h"
+
 #include "notification-ex/app_control_action.h"
 #include "notification-ex/action_inflator.h"
 
@@ -24,8 +27,14 @@ using namespace tizen_base;
 using namespace notification;
 using namespace notification::item;
 
-class AppControlActionTest : public ::testing::Test {
+namespace {
+class Mocks :
+    virtual public ::testing::NiceMock<AppCommonMock> {};
+} // namespace
+
+class AppControlActionTest : public TestFixture {
  public:
+  AppControlActionTest() : TestFixture(std::make_unique<::Mocks>()) {}
   AppControlAction* action;
   app_control_h app_control;
   const char* app_id = "test_appid";

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 Samsung Electronics Co., Ltd.
+ * Copyright (c) 2022 Samsung Electronics Co., Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,9 +14,23 @@
  * limitations under the License.
  */
 
-#ifndef MOCK_MOCK_H__
-#define MOCK_MOCK_H__
+#ifndef UNIT_TESTS_MOCK_APP_COMMON_MOCK_H_
+#define UNIT_TESTS_MOCK_APP_COMMON_MOCK_H_
 
-#include "fff.h"
+#include <gmock/gmock.h>
+#include <app_common.h>
 
-#endif // MOCK_MOCK_H__
+#include "module_mock.h"
+
+class AppCommonMock : public virtual ModuleMock {
+ public:
+  AppCommonMock() {
+    using ::testing::_;
+    using ::testing::Return;
+    using ::testing::Invoke;
+  }
+
+  MOCK_METHOD1(app_get_name, int (char**));
+};
+
+#endif  // UNIT_TESTS_MOCK_APP_COMMON_MOCK_H_

@@ -16,6 +16,8 @@
 
 #include <gmock/gmock.h>
 
+#include "mock/app_common_mock.h"
+#include "mock/test_fixture.h"
 #include "notification-ex/button_item.h"
 #include "notification-ex/item_inflator.h"
 
@@ -25,8 +27,13 @@ using namespace notification::item;
 using namespace std;
 
 namespace {
+class Mocks :
+    virtual public ::testing::NiceMock<AppCommonMock> {};
+} // namespace
 
-class ButtonItemTest : public ::testing::Test {
+class ButtonItemTest : public TestFixture {
+ public:
+  ButtonItemTest() : TestFixture(std::make_unique<::Mocks>()) {}
  protected:
   void SetUp() override {}
   void TearDown() override {}
@@ -57,5 +64,3 @@ TEST_F(ButtonItemTest, SerializeDeserializeGetTitle) {
   auto gen_btn = std::static_pointer_cast<ButtonItem>(gen_item);
   ASSERT_EQ(item.GetTitle(), gen_btn->GetTitle());
 }
-
-}  // namespace

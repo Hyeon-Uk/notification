@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 Samsung Electronics Co., Ltd.
+ * Copyright (c) 2022 Samsung Electronics Co., Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,36 +14,30 @@
  * limitations under the License.
  */
 
-#ifndef MOCK_SECURITY_MANAGER_H
-#define MOCK_SECURITY_MANAGER_H
+#ifndef UNIT_TESTS_MOCK_SECURITY_MANAGER_MOCK_H_
+#define UNIT_TESTS_MOCK_SECURITY_MANAGER_MOCK_H_
 
-#include "mock.h"
+#include <security-manager.h>
+#include <gmock/gmock.h>
 
-#include <string>
-#include <vector>
+#include "module_mock.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+class SecurityManagerMock : public virtual ModuleMock {
+ public:
+  SecurityManagerMock() {
+    using ::testing::_;
+    using ::testing::Return;
+    using ::testing::Invoke;
+  }
 
-struct private_sharing_req {
-    std::string ownerAppName;
-    std::string targetAppName;
-    std::vector<std::string> paths;
+  MOCK_METHOD1(security_manager_private_sharing_req_new, int (private_sharing_req**));
+  MOCK_METHOD1(security_manager_private_sharing_apply, int (const private_sharing_req*));
+  MOCK_METHOD1(security_manager_private_sharing_drop, int (const private_sharing_req*));
+  MOCK_METHOD2(security_manager_private_sharing_req_set_target_appid,
+      int (private_sharing_req*, const char*));
+  MOCK_METHOD3(security_manager_private_sharing_req_add_paths,
+      int (private_sharing_req*, const char**, size_t));
+
 };
 
-DECLARE_FAKE_VALUE_FUNC(int, security_manager_private_sharing_req_new,
-    private_sharing_req**);
-DECLARE_FAKE_VALUE_FUNC(int, security_manager_private_sharing_req_add_paths,
-    private_sharing_req*, const char**, size_t);
-DECLARE_FAKE_VALUE_FUNC(int, security_manager_private_sharing_req_set_target_appid,
-    private_sharing_req*, const char*);
-DECLARE_FAKE_VALUE_FUNC(int, security_manager_private_sharing_apply,
-    const private_sharing_req*);
-DECLARE_FAKE_VALUE_FUNC(int, security_manager_private_sharing_drop,
-    const private_sharing_req*);
-
-#ifdef __cplusplus
-}
-#endif
-#endif  /* MOCK_SECURITY_MANAGER_H */
+#endif  // UNIT_TESTS_MOCK_SECURITY_MANAGER_MOCK_H_

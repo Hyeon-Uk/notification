@@ -19,6 +19,8 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
+#include "mock/app_common_mock.h"
+#include "mock/test_fixture.h"
 #include "notification-ex/visibility_action.h"
 #include "notification-ex/action_inflator.h"
 
@@ -26,8 +28,14 @@ using namespace tizen_base;
 using namespace notification;
 using namespace notification::item;
 
-class VisibilityActionTest : public ::testing::Test {
+namespace {
+class Mocks :
+    virtual public ::testing::NiceMock<AppCommonMock> {};
+} // namespace
+
+class VisibilityActionTest : public TestFixture {
  public:
+  VisibilityActionTest() : TestFixture(std::make_unique<::Mocks>()) {}
   VisibilityAction* visibility;
   std::string id = "visibility_id";
   std::string extra = "visibility_extra";

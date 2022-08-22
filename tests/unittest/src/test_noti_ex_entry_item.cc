@@ -17,6 +17,8 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
+#include "mock/app_common_mock.h"
+#include "mock/test_fixture.h"
 #include "notification-ex/entry_item.h"
 #include "notification-ex/item_inflator.h"
 
@@ -25,9 +27,13 @@ using namespace notification;
 using namespace notification::item;
 
 namespace {
+class Mocks :
+    virtual public ::testing::NiceMock<AppCommonMock> {};
+} // namespace
 
-class EntryItemTest : public ::testing::Test {
+class EntryItemTest : public TestFixture {
  public:
+  EntryItemTest() : TestFixture(std::make_unique<::Mocks>()) {}
   virtual void SetUp() {}
   virtual void TearDown() {}
 };
@@ -70,5 +76,3 @@ TEST_F(EntryItemTest, GetTextLimit) {
 
   ASSERT_EQ(item.GetTextLimit(), 160);
 }
-
-}  // namespace

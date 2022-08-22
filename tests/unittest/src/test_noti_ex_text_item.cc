@@ -17,6 +17,8 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
+#include "mock/app_common_mock.h"
+#include "mock/test_fixture.h"
 #include "notification-ex/text_item.h"
 #include "notification-ex/item_inflator.h"
 
@@ -25,9 +27,13 @@ using namespace notification;
 using namespace notification::item;
 
 namespace {
+class Mocks :
+    virtual public ::testing::NiceMock<AppCommonMock> {};
+} // namespace
 
-class TexttItemTest : public ::testing::Test {
+class TexttItemTest : public TestFixture {
  public:
+  TexttItemTest() : TestFixture(std::make_unique<::Mocks>()) {}
   virtual void SetUp() {
   }
   virtual void TearDown() {
@@ -74,5 +80,3 @@ TEST_F(TexttItemTest, GetHyperLink) {
   TextItem item2("text_id", "contents", "hyperlink2");
   ASSERT_EQ(item2.GetHyperLink(), "hyperlink2");
 }
-
-}  // namespace

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 Samsung Electronics Co., Ltd.
+ * Copyright (c) 2022 Samsung Electronics Co., Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,20 +14,24 @@
  * limitations under the License.
  */
 
-#ifndef MOCK_SMACK_H
-#define MOCK_SMACK_H
+#ifndef UNIT_TESTS_MOCK_SMACK_MOCK_H_
+#define UNIT_TESTS_MOCK_SMACK_MOCK_H_
 
-#include "mock.h"
+#include <gmock/gmock.h>
+#include <sys/smack.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+#include "module_mock.h"
 
-DECLARE_FAKE_VALUE_FUNC(ssize_t, smack_new_label_from_path, const char*,
-    const char*, int, char**);
+class SmackMock : public virtual ModuleMock {
+ public:
+  SmackMock() {
+    using ::testing::_;
+    using ::testing::Return;
+    using ::testing::Invoke;
+  }
 
-#ifdef __cplusplus
-}
-#endif
-#endif  /* MOCK_SMACK_H */
+  MOCK_METHOD4(smack_new_label_from_path, ssize_t (const char*,
+    const char*, int, char**));
+};
 
+#endif  // UNIT_TESTS_MOCK_SMACK_MOCK_H_

@@ -17,6 +17,8 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
+#include "mock/app_common_mock.h"
+#include "mock/test_fixture.h"
 #include "notification-ex/time_item.h"
 #include "notification-ex/item_inflator.h"
 
@@ -24,8 +26,14 @@ using namespace tizen_base;
 using namespace notification;
 using namespace notification::item;
 
-class TimeItemTest : public ::testing::Test {
+namespace {
+class Mocks :
+    virtual public ::testing::NiceMock<AppCommonMock> {};
+} // namespace
+
+class TimeItemTest : public TestFixture {
  public:
+  TimeItemTest() : TestFixture(std::make_unique<::Mocks>()) {}
   TimeItem* item;
   time_t current_time;
   std::string id = "time_id";

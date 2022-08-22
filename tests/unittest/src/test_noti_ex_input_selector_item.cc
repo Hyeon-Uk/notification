@@ -16,6 +16,8 @@
 
 #include <gmock/gmock.h>
 
+#include "mock/app_common_mock.h"
+#include "mock/test_fixture.h"
 #include "notification-ex/input_selector_item.h"
 #include "notification-ex/item_inflator.h"
 
@@ -25,8 +27,13 @@ using namespace notification::item;
 using namespace std;
 
 namespace {
+class Mocks :
+    virtual public ::testing::NiceMock<AppCommonMock> {};
+} // namespace
 
-class InputSelectorItemTest : public ::testing::Test {
+class InputSelectorItemTest : public TestFixture {
+ public:
+  InputSelectorItemTest() : TestFixture(std::make_unique<::Mocks>()) {}
  protected:
   void SetUp() override {}
   void TearDown() override {}
@@ -56,5 +63,3 @@ TEST_F(InputSelectorItemTest, SerializeDeserialize) {
     it2++;
   }
 }
-
-}  // namespace

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 Samsung Electronics Co., Ltd.
+ * Copyright (c) 2022 Samsung Electronics Co., Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,23 +14,23 @@
  * limitations under the License.
  */
 
-#ifndef MOCK_TZPLATFORM_CONFIG_H_
-#define MOCK_TZPLATFORM_CONFIG_H_
+#ifndef UNIT_TESTS_MOCK_TZPLATFORM_CONFIG_MOCK_H_
+#define UNIT_TESTS_MOCK_TZPLATFORM_CONFIG_MOCK_H_
 
-#include "mock.h"
+#include <tzplatform_config.h>
+#include <gmock/gmock.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+#include "module_mock.h"
 
-typedef enum {
-	USER = 0,
-	SYSTEM = 1,
-}tzplatform_variable_e;
+class TzplatformConfigMock : public virtual ModuleMock {
+ public:
+  TzplatformConfigMock() {
+    using ::testing::_;
+    using ::testing::Return;
+    using ::testing::Invoke;
+  }
 
-DECLARE_FAKE_VALUE_FUNC(const char*, tzplatform_getenv, tzplatform_variable_e);
+  MOCK_METHOD1(tzplatform_getenv, const char* (enum tzplatform_variable));
+};
 
-#ifdef __cplusplus
-}
-#endif
-#endif  /* MOCK_TZPLATFORM_CONFIG_H_ */
+#endif  // UNIT_TESTS_MOCK_TZPLATFORM_CONFIG_MOCK_H_
