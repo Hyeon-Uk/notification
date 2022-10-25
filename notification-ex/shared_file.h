@@ -72,11 +72,11 @@ class EXPORT_API SharedFile {
   static int CopyFile(const char* source, const char* dest);
   std::vector<char*> ConvertListToArray(const std::list<std::string>& data);
   SharingData FindSharingData(std::string appid);
-  int SetSharingData(SharingData sharing_data,
+  int SetSharingData(const SharingData& sharing_data,
           std::list<std::string> new_shared_file_list,
           std::list<std::string> new_receiver_group_list,
           std::multimap<std::string, std::string> receiver_group_map);
-  int UnsetSharingData(SharingData sharing_data,
+  int UnsetSharingData(const SharingData& sharing_data,
           std::multimap<std::string, std::string> receiver_group_map);
 
   std::list<SharingData> sharing_data_list_;

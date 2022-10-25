@@ -229,7 +229,7 @@ string SharedFile::GetDataPath(string app_id, string path) const {
   return dir;
 }
 
-int SharedFile::SetSharingData(SharingData sharing_data,
+int SharedFile::SetSharingData(const SharingData& sharing_data,
     list<string> new_shared_file_list, list<string> new_receiver_group_list,
     multimap<string, string> receiver_group_map) {
   private_sharing_req* handle = nullptr;
@@ -305,7 +305,7 @@ int SharedFile::SetSharingData(SharingData sharing_data,
   return ERROR_NONE;
 }
 
-int SharedFile::UnsetSharingData(SharingData sharing_data,
+int SharedFile::UnsetSharingData(const SharingData& sharing_data,
     multimap<string, string> receiver_group_map) {
   private_sharing_req* handle = nullptr;
   vector<char*> path_array;
