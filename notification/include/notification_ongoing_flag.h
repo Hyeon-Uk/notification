@@ -17,6 +17,10 @@
 #ifndef __NOTIFICATION_ONGOING_FLAG_H__
 #define __NOTIFICATION_ONGOING_FLAG_H__
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <notification.h>
 
 /**
@@ -79,5 +83,8 @@ int notification_set_ongoing_flag(notification_h noti, bool ongoing_flag);
  */
 int notification_get_ongoing_flag(notification_h noti, bool *ongoing_flag);
 
+#ifdef __cplusplus
+}
+#endif
 #endif /* __NOTIFICATION_ONGOING_H__ */
 

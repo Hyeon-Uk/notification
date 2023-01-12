@@ -23,6 +23,10 @@
 #include <notification.h>
 #include <notification_list.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #define TAG_TIME "TIME"
 #define TAG_TYPE_INVALID -1
 #define TAG_TYPE_TIME 1
@@ -89,5 +93,8 @@ int notification_noti_delete_template(const char *pkg_id);
 void notification_noti_init_data(void);
 int notification_noti_check_limit(notification_h noti, uid_t uid, GList **list);
 
+#ifdef __cplusplus
+}
+#endif
 #endif /* __NOTIFICATION_NOTI_H__ */
 

@@ -26,6 +26,10 @@
 #define NOTIFICATION_EMPTY_STR ""
 #define NOTIFICATION_CHECK_STR(p) ((p) ? (p) : NOTIFICATION_EMPTY_STR)
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 sqlite3 *notification_db_open(void);
 int notification_db_close(sqlite3 **db);
 int notification_db_exec(sqlite3 *db, const char *query, int *num_changes);
@@ -33,5 +37,8 @@ char *notification_db_column_text(sqlite3_stmt *stmt, int col);
 bundle *notification_db_column_bundle(sqlite3_stmt *stmt, int col);
 int notification_db_init(void);
 
+#ifdef __cplusplus
+}
+#endif
 #endif /* __NOTIFICATION_DB_H__ */
 

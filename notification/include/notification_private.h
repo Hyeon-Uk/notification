@@ -19,6 +19,10 @@
 #include <sys/types.h>
 #include <notification_internal.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #ifndef EXPORT_API
 #define EXPORT_API __attribute__ ((visibility("default")))
 #endif
@@ -183,5 +187,8 @@ void notification_call_event_handler_cb(notification_h noti, int event_type);
 void notification_delete_event_handler_cb(int priv_id);
 char *notification_get_app_id_by_pid(int pid);
 
+#ifdef __cplusplus
+}
+#endif
 #endif /* __NOTIFICATION_PRIVATE_H__ */
 
