@@ -89,7 +89,9 @@
 	"  text_input_max_length INTEGER DEFAULT 0,\n" \
 	"  event_flag INTEGER DEFAULT 0,\n" \
 	"  extension_image_size INTEGER DEFAULT 0,\n" \
-	"  uid INTEGER );\n" \
+	"  uid INTEGER,\n" \
+	"  check_box INTEGER DEFAULT 0,\n" \
+	"  check_box_value INTEGER DEFAULT 0 );\n" \
 	"CREATE TABLE IF NOT EXISTS noti_group_data (\n" \
 	"  caller_app_id TEXT NOT NULL,\n" \
 	"  group_id INTEGER DEFAULT 0,\n" \
@@ -220,6 +222,8 @@
 	"  event_flag INTEGER DEFAULT 0,\n" \
 	"  extension_image_size INTEGER DEFAULT 0,\n" \
 	"  uid INTEGER,\n" \
+	"  check_box INTEGER DEFAULT 0,\n" \
+	"  check_box_value INTEGER DEFAULT 0,\n" \
 	"  template_name TEXT,\n" \
 	"  UNIQUE (caller_app_id, template_name));\n"
 
@@ -243,7 +247,7 @@
 	"progress_size, progress_percentage, ongoing_flag, ongoing_value_type, " \
 	"ongoing_current, ongoing_duration, auto_remove, default_button_index, " \
 	"hide_timeout, delete_timeout, text_input_max_length, event_flag, "\
-	"extension_image_size, uid"
+	"extension_image_size, uid, check_box, check_box_value"
 
 #define NOTI_LIST_DB_ATTRIBUTES_INSERT \
 	"type, layout, pkg_id, caller_app_id, launch_app_id, app_label, " \
@@ -265,13 +269,13 @@
 	"progress_size, progress_percentage, ongoing_flag, ongoing_value_type, " \
 	"ongoing_current, ongoing_duration, auto_remove, default_button_index, " \
 	"hide_timeout, delete_timeout, text_input_max_length, event_flag, " \
-	"extension_image_size, uid"
+	"extension_image_size, uid, check_box, check_box_value"
 
 #define NOTI_LIST_INSERT_VALUES \
 	"?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, " \
 	"?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, " \
 	"?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, " \
-	"?, ?, ?, ?, ?, ? "
+	"?, ?, ?, ?, ?, ?, ?, ? "
 
 #define NOTI_LIST_DB_ATTRIBUTES_UPDATE \
 	"type = ?, layout = ?, launch_app_id = ?, app_label = ?, " \
@@ -302,7 +306,8 @@
 	"ongoing_current = ?, ongoing_duration = ?, " \
 	"auto_remove = ?, default_button_index = ?, " \
 	"hide_timeout = ?, delete_timeout = ?, " \
-	"text_input_max_length = ?, event_flag = ?, extension_image_size = ? "
+	"text_input_max_length = ?, event_flag = ?, extension_image_size = ?, " \
+	"check_box = ?, check_box_value = ? "
 
 #define NOTIFICATION_SETTING_DB_ATTRIBUTES \
 	"package_name, app_id, allow_to_notify, do_not_disturb_except, "\

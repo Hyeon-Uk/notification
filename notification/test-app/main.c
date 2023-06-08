@@ -215,6 +215,9 @@ static int testapp_add_a_notification_to_bob()
 	noti_err  = notification_set_ongoing_flag(noti_handle, true);
 	noti_err  = notification_set_auto_remove(noti_handle, false);
 
+	noti_err  = notification_set_check_box(noti_handle, true, false);
+	noti_err  = notification_set_check_box_checked(noti_handle, true);
+
 	noti_err = notification_set_display_applist(noti_handle, NOTIFICATION_DISPLAY_APP_INDICATOR | NOTIFICATION_DISPLAY_APP_NOTIFICATION_TRAY | NOTIFICATION_DISPLAY_APP_TICKER);
 
 	noti_err  = notification_post_for_uid(noti_handle, 5002);
@@ -256,6 +259,9 @@ static int testapp_add_a_notification()
 
 	noti_err  = notification_set_ongoing_flag(noti_handle, true);
 	noti_err  = notification_set_auto_remove(noti_handle, false);
+
+	noti_err  = notification_set_check_box(noti_handle, true, false);
+	noti_err  = notification_set_check_box_checked(noti_handle, true);
 
 	noti_err = notification_set_display_applist(noti_handle, NOTIFICATION_DISPLAY_APP_INDICATOR | NOTIFICATION_DISPLAY_APP_NOTIFICATION_TRAY | NOTIFICATION_DISPLAY_APP_TICKER);
 
@@ -575,6 +581,8 @@ static int testapp_test_get_list()
 	int type;
 	bool ongoing_flag;
 	bool auto_remove;
+	bool check_box;
+	bool checked;
 
 	noti_err = notification_get_list(NOTIFICATION_TYPE_NONE, -1, &noti_list_handle);
 
@@ -592,7 +600,11 @@ static int testapp_test_get_list()
 		notification_get_ongoing_flag(noti_handle, &ongoing_flag);
 		notification_get_auto_remove(noti_handle, &auto_remove);
 
-		testapp_print("priv_id[%d] type[%d] ongoing_flag[%d] auto_remove[%d]\n", priv_id, type, ongoing_flag, auto_remove);
+		notification_get_check_box(noti_handle, &check_box, &checked);
+		notification_get_check_box_checked(noti_handle, &checked);
+
+		testapp_print("priv_id[%d] type[%d] ongoing_flag[%d] auto_remove[%d] check_box[%d] checked[%d]\n",
+				priv_id, type, ongoing_flag, auto_remove, check_box, checked);
 		noti_list_cursor_handle = notification_list_get_next(noti_list_cursor_handle);
 	}
 

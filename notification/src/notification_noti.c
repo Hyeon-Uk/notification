@@ -139,6 +139,8 @@ static void __notification_noti_populate_from_stmt(sqlite3_stmt *stmt, notificat
 	noti->event_flag = sqlite3_column_int(stmt, col++);
 	noti->extension_image_size = sqlite3_column_int(stmt, col++);
 	noti->uid = sqlite3_column_int(stmt, col++);
+	noti->check_box = sqlite3_column_int(stmt, col++);
+	noti->check_box_value = sqlite3_column_int(stmt, col++);
 
 	noti->app_icon_path = NULL;
 	noti->temp_title = NULL;
@@ -403,6 +405,8 @@ static int _create_insertion_query(sqlite3 *db, notification_h noti, sqlite3_stm
 	__BIND_INT(db, stmt, idx++, noti->event_flag, ret, out);
 	__BIND_INT(db, stmt, idx++, noti->extension_image_size, ret, out);
 	__BIND_INT(db, stmt, idx++, noti->uid, ret, out);
+	__BIND_INT(db, stmt, idx++, noti->check_box, ret, out);
+	__BIND_INT(db, stmt, idx++, noti->check_box_value, ret, out);
 
 out:
 	__free_encoded_data(b_image_path);

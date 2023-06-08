@@ -106,6 +106,9 @@ struct _notification {
 	bool is_translation;
 	int extension_image_size;
 
+	bool check_box;				/* check box flag */
+	bool check_box_value;		/* check box value */
+
 	uid_t uid;
 };
 
@@ -178,6 +181,8 @@ typedef enum notification_data_type {
 	NOTIFICATION_DATA_TYPE_EVENT_FLAG,
 	NOTIFICATION_DATA_TYPE_TRANSLATION,
 	NOTIFICATION_DATA_TYPE_EXTENSION_IMAGE_SIZE,
+	NOTIFICATION_DATA_TYPE_CHECK_BOX,
+	NOTIFICATION_DATA_TYPE_CHECK_BOX_VALUE,
 	NOTIFICATION_DATA_TYPE_UID,
 } notification_data_type_e;
 

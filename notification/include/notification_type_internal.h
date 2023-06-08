@@ -72,7 +72,7 @@ typedef enum _notification_event_type_extension {
 	NOTIFICATION_EVENT_TYPE_HIDDEN_BY_EXTERNAL = 102, /**< Hidden by external */
 	NOTIFICATION_EVENT_TYPE_PRESSED = 200, /**< Pressed by user */
 	NOTIFICATION_EVENT_TYPE_DELETED = 201, /**< Deleted by user */
-	NOTIFICATION_EVENT_TYPE_DO_NOT_SHOW_AGAIN = 300, /**< Do not show again */
+	NOTIFICATION_EVENT_TYPE_CHECK_BOX = 300, /**< Do not show again */
 } notification_event_type_extension_e;
 
 /**

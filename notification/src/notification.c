@@ -1509,6 +1509,9 @@ static notification_h _notification_create(notification_type_e type)
 		goto out;
 	}
 
+	noti->check_box = false;
+	noti->check_box_value = false;
+
 	if (getuid() < REGULAR_UID_MIN) {
 		noti->pkg_id = strdup(noti->caller_app_id);
 		if (noti->pkg_id == NULL)
@@ -1761,6 +1764,9 @@ EXPORT_API int notification_clone(notification_h noti, notification_h *clone)
 		new_noti->app_label = strdup(noti->app_label);
 
 	new_noti->uid = noti->uid;
+
+	new_noti->check_box = noti->check_box;
+	new_noti->check_box_value = noti->check_box_value;
 
 	*clone = new_noti;
 

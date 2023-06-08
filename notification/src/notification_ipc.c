@@ -2210,6 +2210,8 @@ EXPORT_API GVariant *notification_ipc_make_gvariant_from_noti(notification_h not
 	g_variant_builder_add(&builder, "{iv}", NOTIFICATION_DATA_TYPE_EVENT_FLAG, g_variant_new_int32(noti->event_flag));
 	g_variant_builder_add(&builder, "{iv}", NOTIFICATION_DATA_TYPE_TRANSLATION, g_variant_new_int32(noti->is_translation));
 	g_variant_builder_add(&builder, "{iv}", NOTIFICATION_DATA_TYPE_EXTENSION_IMAGE_SIZE, g_variant_new_int32(noti->extension_image_size));
+	g_variant_builder_add(&builder, "{iv}", NOTIFICATION_DATA_TYPE_CHECK_BOX, g_variant_new_int32(noti->check_box));
+	g_variant_builder_add(&builder, "{iv}", NOTIFICATION_DATA_TYPE_CHECK_BOX_VALUE, g_variant_new_int32(noti->check_box_value));
 	g_variant_builder_add(&builder, "{iv}", NOTIFICATION_DATA_TYPE_UID, g_variant_new_int32(noti->uid));
 
 	result_body = g_variant_builder_end(&builder);
@@ -2382,6 +2384,8 @@ EXPORT_API int notification_ipc_make_noti_from_gvariant(notification_h noti,
 	_variant_dict_lookup(dict, NOTIFICATION_DATA_TYPE_EVENT_FLAG, "i", &noti->event_flag);
 	_variant_dict_lookup(dict, NOTIFICATION_DATA_TYPE_TRANSLATION, "i", &noti->is_translation);
 	_variant_dict_lookup(dict, NOTIFICATION_DATA_TYPE_EXTENSION_IMAGE_SIZE, "i", &noti->extension_image_size);
+	_variant_dict_lookup(dict, NOTIFICATION_DATA_TYPE_CHECK_BOX, "i", &noti->check_box);
+	_variant_dict_lookup(dict, NOTIFICATION_DATA_TYPE_CHECK_BOX_VALUE, "i", &noti->check_box_value);
 	_variant_dict_lookup(dict, NOTIFICATION_DATA_TYPE_UID, "i", &noti->uid);
 
 	if (noti->pkg_id)

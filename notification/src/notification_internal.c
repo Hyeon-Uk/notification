@@ -1723,7 +1723,7 @@ EXPORT_API int notification_send_event(notification_h noti, int event_type)
 		&& event_type <= NOTIFICATION_EVENT_TYPE_HIDDEN_BY_EXTERNAL) ||
 		(event_type >= NOTIFICATION_EVENT_TYPE_PRESSED
 		&& event_type <= NOTIFICATION_EVENT_TYPE_DELETED) ||
-		(event_type == NOTIFICATION_EVENT_TYPE_DO_NOT_SHOW_AGAIN)))
+		(event_type == NOTIFICATION_EVENT_TYPE_CHECK_BOX)))
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 
 	ret = notification_get_event_flag(noti, &event_flag);
@@ -1748,7 +1748,7 @@ EXPORT_API int notification_send_event_by_priv_id(int priv_id, int event_type)
 		&& event_type <= NOTIFICATION_EVENT_TYPE_HIDDEN_BY_EXTERNAL) ||
 		(event_type >= NOTIFICATION_EVENT_TYPE_PRESSED
 		&& event_type <= NOTIFICATION_EVENT_TYPE_DELETED) ||
-		(event_type == NOTIFICATION_EVENT_TYPE_DO_NOT_SHOW_AGAIN)))
+		(event_type == NOTIFICATION_EVENT_TYPE_CHECK_BOX)))
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 
 	ret = notification_ipc_send_event(NULL, event_type, priv_id);
@@ -2135,69 +2135,59 @@ EXPORT_API int notification_delete_by_display_applist(int display_applist)
 	return notification_delete_by_display_applist_for_uid(display_applist, getuid());
 }
 
-EXPORT_API int notification_set_do_not_show_again(notification_h noti,
-		bool flag)
+EXPORT_API int notification_set_check_box(notification_h noti,
+		bool flag, bool checked)
 {
-	int err;
-	int ret = NOTIFICATION_ERROR_NONE;
-	char key[KEY_LEN];
-	char *del = NULL;
-
 	if (noti == NULL) {
 		ERR("Invalid parameter");
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 	}
 
-	if (noti->args == NULL)
-		noti->args = bundle_create();
+	noti->check_box = flag;
+	noti->check_box_value = checked;
 
-	snprintf(key, sizeof(key), "%s%d", EXTENSION_EVENT_KEY,
-			NOTIFICATION_EVENT_TYPE_DO_NOT_SHOW_AGAIN);
-	bundle_get_str(noti->args, key, &del);
-	if (del != NULL) {
-		bundle_del(noti->args, key);
-		del = NULL;
-	}
-
-	if (flag)
-		err = bundle_add_str(noti->args, key, "true");
-	else
-		err = bundle_add_str(noti->args, key, "false");
-
-	if (err != BUNDLE_ERROR_NONE) {
-		ERR("Failed to add str to bundle [%d]", err);
-		return NOTIFICATION_ERROR_IO_ERROR;
-	}
-
-	return ret;
+	return NOTIFICATION_ERROR_NONE;
 }
 
-EXPORT_API int notification_get_do_not_show_again(notification_h noti,
-		bool* flag)
+EXPORT_API int notification_get_check_box(notification_h noti,
+		bool *flag, bool *checked)
 {
-	int err;
-	int ret = NOTIFICATION_ERROR_NONE;
-	char *ret_str = NULL;
-	char key[KEY_LEN];
+	if (noti == NULL || flag == NULL || checked == NULL) {
+		ERR("Invalid parameter");
+		return NOTIFICATION_ERROR_INVALID_PARAMETER;
+	}
 
+	*flag = noti->check_box;
+	*checked = noti->check_box_value;
+
+	return NOTIFICATION_ERROR_NONE;
+}
+
+EXPORT_API int notification_set_check_box_checked(notification_h noti,
+		bool checked)
+{
 	if (noti == NULL) {
 		ERR("Invalid parameter");
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 	}
 
-	snprintf(key, sizeof(key), "%s%d", EXTENSION_EVENT_KEY,
-		NOTIFICATION_EVENT_TYPE_DO_NOT_SHOW_AGAIN);
+	noti->check_box_value = checked;
 
-	bundle_get_str(noti->args, key, &ret_str);
-	if (ret_str == NULL) {
-		ERR("No key");
+	return NOTIFICATION_ERROR_NONE;
+}
+
+EXPORT_API int notification_get_check_box_checked(notification_h noti,
+		bool *checked)
+{
+	if (noti == NULL || checked == NULL) {
+		ERR("Invalid parameter");
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 	}
 
-	if (strncmp("true", ret_str, 4) == 0)
-		*flag = true;
+	if (noti->check_box)
+		*checked = noti->check_box_value;
 	else
-		*flag = false;
+		*checked = false;
 
-	return ret;
+	return NOTIFICATION_ERROR_NONE;
 }
