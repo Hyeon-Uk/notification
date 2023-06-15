@@ -143,7 +143,7 @@ fi
 %license LICENSE
 %attr(755,root,root) %{_sysconfdir}/gumd/useradd.d/11_notification-add.post
 %{_bindir}/notification_init
-%{upgrade_script_path}/505.notification_upgrade.sh
+%attr(0755,root,root) %{upgrade_script_path}/505.notification_upgrade.sh
 #%{_bindir}/notification-test-app
 
 %files devel
