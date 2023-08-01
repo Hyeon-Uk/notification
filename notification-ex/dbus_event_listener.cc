@@ -230,7 +230,9 @@ list<Bundle> DBusEventListener::Impl::ReadNotiList(
     LOGE("Fail to get socket fd");
     return ret_list;
   }
-  ret_list = util::ReadBundleList(recvfd, noti_cnt);
+  SocketHandler recv_sock(recvfd);
+
+  ret_list = util::ReadBundleList(recv_sock.Get(), noti_cnt);
   return ret_list;
 }
 

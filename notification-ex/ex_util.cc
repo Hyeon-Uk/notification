@@ -234,14 +234,14 @@ unsigned int ReadSocket(int fd, char* buffer, unsigned int nbytes) {
 list<tizen_base::Bundle> ReadBundleList(int recvfd, int noti_cnt) {
   list<tizen_base::Bundle> ret_list;
   list<tizen_base::Bundle> empty_list;
-  SocketHandler recv_sock(recvfd);
   unsigned int buf_size = 0;
   unsigned int data_size = 0;
-  buf_size = util::GetSocketBufferSize(recv_sock.Get(), SO_RCVBUF);
+
+  buf_size = util::GetSocketBufferSize(recvfd, SO_RCVBUF);
   std::unique_ptr<char, decltype(std::free)*> data_ptr(
       static_cast<char*>(calloc(buf_size, sizeof(char))), std::free);
   for (int i = 0; i < noti_cnt; i++) {
-    int ret = util::ReadSocket(recv_sock.Get(),
+    int ret = util::ReadSocket(recvfd,
         reinterpret_cast<char*>(&data_size), sizeof(data_size));
     if (ret != 0)
       return empty_list;
@@ -250,7 +250,7 @@ list<tizen_base::Bundle> ReadBundleList(int recvfd, int noti_cnt) {
       data_ptr.reset(static_cast<char*>(calloc(buf_size, sizeof(char))));
     }
     memset(data_ptr.get(), 0, buf_size);
-    ret = util::ReadSocket(recv_sock.Get(), data_ptr.get(), data_size);
+    ret = util::ReadSocket(recvfd, data_ptr.get(), data_size);
     if (ret != 0)
       return empty_list;
     ret_list.emplace_back(data_ptr.get());
