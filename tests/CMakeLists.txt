@@ -1,2 +1,2 @@
-ADD_SUBDIRECTORY(unittest)
-ADD_DEPENDENCIES(notification-ex_unittests notification-ex)
+ADD_SUBDIRECTORY(noti_unittest)
+ADD_SUBDIRECTORY(noti_ex_unittest)

@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-#include "app_common_mock.h"
+#include "app_common_mock.hh"
 
-#include "mock_hook.h"
-#include "test_fixture.h"
+#include "mock_hook.hh"
+#include "test_fixture.hh"
 
 extern "C" int app_get_name(char** arg1) {
   return MOCK_HOOK_P1(AppCommonMock, app_get_name, arg1);

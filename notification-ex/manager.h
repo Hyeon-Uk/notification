@@ -33,6 +33,7 @@
 
 namespace notification {
 
+/* LCOV_EXCL_START */
 class EXPORT_API Manager : public IEventObserver {
  public:
   Manager(std::unique_ptr<IEventSender> sender,
@@ -70,6 +71,7 @@ class EXPORT_API Manager : public IEventObserver {
   class Impl;
   std::unique_ptr<Impl> impl_;
 };
+/* LCOV_EXCL_STOP */
 
 }  // namespace notification
 

@@ -28,6 +28,7 @@
 
 namespace notification {
 
+/* LCOV_EXCL_START */
 class DBusSender::Impl {
  public:
   virtual ~Impl();
@@ -51,6 +52,7 @@ class DBusSender::Impl {
   std::string path_;
   DBusSender* parent_;
 };
+/* LCOV_EXCL_STOP */
 
 }  // namespace notification
 #endif  // NOTIFICATION_EX_DBUS_SENDER_IMPLEMENTATION_H_

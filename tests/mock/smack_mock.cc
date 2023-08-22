@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-#include "smack_mock.h"
+#include "smack_mock.hh"
 
-#include "mock_hook.h"
-#include "test_fixture.h"
+#include "mock_hook.hh"
+#include "test_fixture.hh"
 
 extern "C" ssize_t smack_new_label_from_path(const char* arg1,
     const char* arg2, int arg3, char** arg4) {

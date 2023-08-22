@@ -27,6 +27,7 @@
 
 namespace notification {
 
+/* LCOV_EXCL_START */
 static const GDBusErrorEntry dbus_error_entries[] = {
   {ERROR_INVALID_PARAMETER, "org.freedesktop.Notification-ex.Error.INVALID_PARAMETER"},
   {ERROR_OUT_OF_MEMORY,     "org.freedesktop.Notification-ex.Error.OUT_OF_MEMORY"},
@@ -55,5 +56,6 @@ GQuark noti_ex_error_quark(void) {
         dbus_error_entries, G_N_ELEMENTS(dbus_error_entries));
   return (GQuark)quark_volatile;
 }
+/* LCOV_EXCL_STOP */
 
 }  // namespace notification

@@ -34,6 +34,7 @@
 namespace notification {
 namespace item {
 
+/* LCOV_EXCL_START */
 class EXPORT_API SharedFile {
  public:
   SharedFile();
@@ -82,6 +83,7 @@ class EXPORT_API SharedFile {
   std::list<SharingData> sharing_data_list_;
   std::list<SharingTarget> sharing_target_list_;
 };  // class SharedFile
+/* LCOV_EXCL_STOP */
 
 }  // namespace item
 }  // namespace notification

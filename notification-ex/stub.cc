@@ -61,6 +61,7 @@ using namespace notification;
 
 namespace {
 
+/* LCOV_EXCL_START */
 class Handle {
  public:
   explicit Handle(item::AbstractItem* ref) : ref_(ref) { }
@@ -276,9 +277,11 @@ class ReporterStub : public Reporter {
  private:
   unique_ptr<ReporterCallbackInfo> cb_;
 };
+/* LCOV_EXCL_STOP */
 
 }  // namespace
 
+/* LCOV_EXCL_START */
 void __noti_ex_free_str_array(char** val, int length) {
   int i;
   for (i = 0; i < length ; i++)
@@ -3778,3 +3781,4 @@ extern "C" EXPORT_API int noti_ex_item_icon_get_icon_path(noti_ex_item_h handle,
 
   return NOTI_EX_ERROR_NONE;
 }
+/* LCOV_EXCL_STOP */

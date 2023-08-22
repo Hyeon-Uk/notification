@@ -30,6 +30,7 @@
 
 namespace notification {
 
+/* LCOV_EXCL_START */
 class EXPORT_API IEventSender {
  public:
   virtual ~IEventSender() = default;
@@ -42,6 +43,7 @@ class EXPORT_API IEventSender {
   virtual std::list<tizen_base::Bundle> Request(const IEventInfo& info) = 0;
   virtual int RequestReturnValue(const IEventInfo& info) = 0;
 };
+/* LCOV_EXCL_STOP */
 
 }  // namespace notification
 

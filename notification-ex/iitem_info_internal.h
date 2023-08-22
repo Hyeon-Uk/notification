@@ -29,6 +29,7 @@
 namespace notification {
 namespace item {
 
+/* LCOV_EXCL_START */
 class EXPORT_API IItemInfoInternal : public IItemInfo {
  public:
   virtual ~IItemInfoInternal() = default;
@@ -43,6 +44,7 @@ class EXPORT_API IItemInfoInternal : public IItemInfo {
   virtual void SetTime(time_t time) = 0;
   virtual bool CanReceive(std::string receiver_group) const = 0;
 };
+/* LCOV_EXCL_STOP */
 
 }  // namespace item
 }  // namespace notification

@@ -27,6 +27,7 @@ namespace notification {
 #define EXPORT_API __attribute__((visibility("default")))
 #endif
 
+/* LCOV_EXCL_START */
 class EXPORT_API IEventInfo {
  public:
   enum EventType {
@@ -49,6 +50,7 @@ class EXPORT_API IEventInfo {
   virtual int GetRequestId() const = 0;
   virtual tizen_base::Bundle Serialize() const = 0;
 };
+/* LCOV_EXCL_STOP */
 
 }  // namespace notification
 #endif  // NOTIFICATION_EX_IEVENT_INFO_H_

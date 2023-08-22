@@ -44,6 +44,7 @@ using namespace std;
 using namespace tizen_base;
 namespace notification {
 
+/* LCOV_EXCL_START */
 DBusSender::DBusSender(string path) : impl_(new Impl(this, path)) {
   LOGW("Created (%s)", path.c_str());
 }
@@ -361,5 +362,6 @@ int DBusSender::RequestReturnValue(const IEventInfo& info) {
   Bundle serialized = info.Serialize();
   return impl_->MethodCall(appid, method_name, serialized);
 }
+/* LCOV_EXCL_STOP */
 
 }  // namespace notification

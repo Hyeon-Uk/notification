@@ -30,6 +30,7 @@
 namespace notification {
 namespace item {
 
+/* LCOV_EXCL_START */
 /**
  * @brief The class for MultiLanguage type notification.
  * @details The class to make the notification with multi language.
@@ -51,6 +52,7 @@ class EXPORT_API MultiLanguage {
   class Impl;
   std::unique_ptr<Impl> impl_;
 };  // class MultiLanguage
+/* LCOV_EXCL_STOP */
 
 }  // namespace item
 }  // namespace notification

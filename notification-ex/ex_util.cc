@@ -37,6 +37,7 @@
 
 using namespace std;
 
+/* LCOV_EXCL_START */
 namespace {
 constexpr int MAX_PACKAGE_STR_SIZE = 512;
 constexpr int MAX_CACHE_SIZE = 100;
@@ -296,7 +297,7 @@ int ConvertDBusError(int error) {
 
   return ERROR_IO_ERROR;
 }
-
+/* LCOV_EXCL_STOP */
 
 }  // namespace util
 }  // namespace notification

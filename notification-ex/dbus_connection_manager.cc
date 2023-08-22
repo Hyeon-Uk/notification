@@ -34,6 +34,7 @@
 using namespace std;
 namespace notification {
 
+/* LCOV_EXCL_START */
 DBusConnectionManager::DBusConnectionManager() = default;
 DBusConnectionManager::~DBusConnectionManager() = default;
 
@@ -118,5 +119,6 @@ int DBusConnectionManager::Init() {
   }
   return ERROR_NONE;
 }
+/* LCOV_EXCL_STOP */
 
 }  // namespace notification

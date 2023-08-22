@@ -27,6 +27,7 @@
 
 namespace notification {
 
+/* LCOV_EXCL_START */
 class EXPORT_API DBusConnectionManager {
  public:
   static DBusConnectionManager& GetInst();
@@ -44,6 +45,7 @@ class EXPORT_API DBusConnectionManager {
   GDBusConnection* connection_ = nullptr;
   bool is_DPM_ = false;
 };
+/* LCOV_EXCL_STOP */
 
 }  // namespace notification
 

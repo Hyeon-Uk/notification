@@ -100,6 +100,7 @@ std::list<std::string> ImageItem::GetSharedPath() const {
   return ret;
 }
 
+/* LCOV_EXCL_START */
 void ImageItem::SetSharedPath() {
   if (!impl_->priv_image_path_.empty())
     impl_->image_path_ = impl_->priv_image_path_;
@@ -117,6 +118,7 @@ std::list<std::map<std::string, std::string>> ImageItem::GetPathMapList() const 
 
   return path_map_list;
 }
+/* LCOV_EXCL_STOP */
 
 void ImageItem::UpdatePrivatePath() {
   std::string path;

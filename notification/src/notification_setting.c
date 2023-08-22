@@ -49,6 +49,7 @@ struct _noti_dnd_cb_info {
 
 static GHashTable *_noti_dnd_cb_hash = NULL;
 
+/* LCOV_EXCL_START */
 EXPORT_API int notification_setting_get_setting_array_for_uid(notification_setting_h *setting_array, int *count, uid_t uid)
 {
 	if (setting_array == NULL || count == NULL) {
@@ -73,6 +74,7 @@ EXPORT_API int notification_setting_get_setting_by_appid_for_uid(const char *app
 
 	return notification_ipc_request_get_setting_by_app_id(app_id, setting, uid);
 }
+/* LCOV_EXCL_STOP */
 
 /* LCOV_EXCL_START */
 EXPORT_API int notification_setting_get_setting_by_package_name(const char *package_name, notification_setting_h *setting)
@@ -99,6 +101,7 @@ EXPORT_API int notification_setting_get_setting(notification_setting_h *setting)
 }
 /* LCOV_EXCL_STOP */
 
+/* LCOV_EXCL_START */
 EXPORT_API int notification_setting_get_package_name(notification_setting_h setting, char **value)
 {
 	if (setting == NULL || value == NULL) {
@@ -107,17 +110,17 @@ EXPORT_API int notification_setting_get_package_name(notification_setting_h sett
 	}
 
 	if (setting->package_name == NULL) {
-		/* LCOV_EXCL_START */
 		ERR("setting->package_name is null");
 		return NOTIFICATION_ERROR_NOT_EXIST_ID;
-		/* LCOV_EXCL_STOP */
 	}
 
 	*value = SAFE_STRDUP(setting->package_name);
 
 	return NOTIFICATION_ERROR_NONE;
 }
+/* LCOV_EXCL_STOP */
 
+/* LCOV_EXCL_START */
 EXPORT_API int notification_setting_get_appid(notification_setting_h setting, char **app_id)
 {
 	if (setting == NULL || app_id == NULL) {
@@ -126,17 +129,17 @@ EXPORT_API int notification_setting_get_appid(notification_setting_h setting, ch
 	}
 
 	if (setting->app_id == NULL) {
-		/* LCOV_EXCL_START */
 		ERR("setting->app_id is null");
 		return NOTIFICATION_ERROR_NOT_EXIST_ID;
-		/* LCOV_EXCL_STOP */
 	}
 
 	*app_id = SAFE_STRDUP(setting->app_id);
 
 	return NOTIFICATION_ERROR_NONE;
 }
+/* LCOV_EXCL_STOP */
 
+/* LCOV_EXCL_START */
 EXPORT_API int notification_setting_get_allow_to_notify(notification_setting_h setting, bool *value)
 {
 	if (setting == NULL || value == NULL) {
@@ -184,6 +187,7 @@ EXPORT_API int notification_setting_set_do_not_disturb_except(notification_setti
 
 	return NOTIFICATION_ERROR_NONE;
 }
+/* LCOV_EXCL_STOP */
 
 EXPORT_API int notification_setting_get_visibility_class(notification_setting_h setting, int *value)
 {
@@ -209,6 +213,7 @@ EXPORT_API int notification_setting_set_visibility_class(notification_setting_h 
 	return NOTIFICATION_ERROR_NONE;
 }
 
+/* LCOV_EXCL_START */
 EXPORT_API int notification_setting_get_pop_up_notification(notification_setting_h setting, bool *value)
 {
 	if (setting == NULL || value == NULL) {
@@ -266,6 +271,7 @@ EXPORT_API int notification_setting_get_app_disabled(notification_setting_h sett
 
 	return NOTIFICATION_ERROR_NONE;
 }
+/* LCOV_EXCL_STOP */
 
 EXPORT_API int notification_setting_update_setting_for_uid(notification_setting_h setting, uid_t uid)
 {
@@ -299,6 +305,7 @@ EXPORT_API int notification_setting_free_notification(notification_setting_h set
 	return NOTIFICATION_ERROR_NONE;
 }
 
+/* LCOV_EXCL_START */
 static bool _is_package_in_setting_table(sqlite3 *db, const char *package_name,
 			const char *app_id, uid_t uid)
 {
@@ -319,20 +326,16 @@ static bool _is_package_in_setting_table(sqlite3 *db, const char *package_name,
 					uid, package_name);
 
 	if (query == NULL) {
-		/* LCOV_EXCL_START */
 		ERR("fail to alloc query");
 		return false;
-		/* LCOV_EXCL_STOP */
 	}
 
 	sql_ret = sqlite3_prepare_v2(db, query, -1, &stmt, NULL);
 	if (sql_ret != SQLITE_OK) {
-		/* LCOV_EXCL_START */
 		ERR("sqlite3_prepare_v2 failed [%d][%s]", sql_ret,
 				sqlite3_errmsg(db));
 		err = false;
 		goto out;
-		/* LCOV_EXCL_STOP */
 	}
 
 	sql_ret = sqlite3_step(stmt);
@@ -344,12 +347,10 @@ static bool _is_package_in_setting_table(sqlite3 *db, const char *package_name,
 	}
 
 	if (sql_ret != SQLITE_OK && sql_ret != SQLITE_ROW) {
-		/* LCOV_EXCL_START */
 		ERR("sqlite3_step failed [%d][%s]", sql_ret,
 				sqlite3_errmsg(db));
 		err = false;
 		goto out;
-		/* LCOV_EXCL_STOP */
 	}
 
 out:
@@ -361,7 +362,9 @@ out:
 
 	return err;
 }
+/* LCOV_EXCL_STOP */
 
+/* LCOV_EXCL_START */
 static int _foreach_app_info_callback(const pkgmgrinfo_appinfo_h handle,
 				void *user_data)
 {
@@ -375,21 +378,17 @@ static int _foreach_app_info_callback(const pkgmgrinfo_appinfo_h handle,
 
 	ret = pkgmgrinfo_appinfo_get_appid(handle, &app_id);
 	if (ret != PACKAGE_MANAGER_ERROR_NONE) {
-		/* LCOV_EXCL_START */
 		ERR("Failed to get appid from pkgmgrinfo [%d]",
 				ret);
 		err = false;
 		goto out;
-		/* LCOV_EXCL_STOP */
 	}
 
 	ret = pkgmgrinfo_appinfo_get_pkgname(handle, &package_name);
 	if (ret != PACKAGE_MANAGER_ERROR_NONE) {
-		/* LCOV_EXCL_START */
 		ERR("Failed to get pkgname from pkgmgrinfo[%d]",
 				ret);
 		goto out;
-		/* LCOV_EXCL_STOP */
 	}
 
 	if (_is_package_in_setting_table(db, package_name, app_id, info->uid) == true) {
@@ -403,11 +402,9 @@ static int _foreach_app_info_callback(const pkgmgrinfo_appinfo_h handle,
 				NOTIFICATION_SETTING_DB_TABLE,
 				info->uid, package_name, app_id);
 	if (query == NULL) {
-		/* LCOV_EXCL_START */
 		ERR("fail to alloc query");
 		err = false;
 		goto out;
-		/* LCOV_EXCL_STOP */
 	}
 
 	ret = notification_db_exec(db, query, NULL);
@@ -423,7 +420,9 @@ out:
 
 	return err;
 }
+/* LCOV_EXCL_STOP */
 
+/* LCOV_EXCL_START */
 static int _install_and_update_package(const char *package_name, uid_t uid)
 {
 	sqlite3 *db;
@@ -438,31 +437,25 @@ static int _install_and_update_package(const char *package_name, uid_t uid)
 
 	pkgmgr_ret = pkgmgrinfo_appinfo_filter_create(&handle);
 	if (pkgmgr_ret != PMINFO_R_OK) {
-		/* LCOV_EXCL_START */
 		ERR("Failed to create appinfo_filter[%d]", pkgmgr_ret);
 		err = NOTIFICATION_ERROR_FROM_DB;
 		goto out;
-		/* LCOV_EXCL_STOP */
 	}
 
 	pkgmgr_ret = pkgmgrinfo_appinfo_filter_add_string(handle,
 			PMINFO_APPINFO_PROP_PRIVILEGE, NOTIFICATION_PRIVILEGE);
 	if (pkgmgr_ret != PMINFO_R_OK) {
-		/* LCOV_EXCL_START */
 		ERR("Failed to add string to appinfo_filter[%d]", pkgmgr_ret);
 		err = NOTIFICATION_ERROR_FROM_DB;
 		goto out;
-		/* LCOV_EXCL_STOP */
 	}
 
 	pkgmgr_ret = pkgmgrinfo_appinfo_filter_add_string(handle,
 			PMINFO_APPINFO_PROP_APP_PACKAGE, package_name);
 	if (pkgmgr_ret != PMINFO_R_OK) {
-		/* LCOV_EXCL_START */
 		ERR("Failed to add string to appinfo_filter[%d]", pkgmgr_ret);
 		err = NOTIFICATION_ERROR_FROM_DB;
 		goto out;
-		/* LCOV_EXCL_STOP */
 	}
 
 	info.db = db;
@@ -470,11 +463,9 @@ static int _install_and_update_package(const char *package_name, uid_t uid)
 	pkgmgr_ret = pkgmgrinfo_appinfo_usr_filter_foreach_appinfo(handle,
 			_foreach_app_info_callback, &info, uid);
 	if (pkgmgr_ret != PMINFO_R_OK) {
-		/* LCOV_EXCL_START */
 		ERR("Failed to iterate appinfo[%d]", pkgmgr_ret);
 		err = NOTIFICATION_ERROR_FROM_DB;
 		goto out;
-		/* LCOV_EXCL_STOP */
 	}
 
 out:
@@ -486,7 +477,9 @@ out:
 
 	return err;
 }
+/* LCOV_EXCL_STOP */
 
+/* LCOV_EXCL_START */
 static int _delete_package_from_setting_db(const char *package_name, uid_t uid)
 {
 	sqlite3 *db = NULL;
@@ -510,11 +503,9 @@ static int _delete_package_from_setting_db(const char *package_name, uid_t uid)
 				NOTIFICATION_SETTING_DB_TABLE, uid,
 				package_name);
 	if (query == NULL) {
-		/* LCOV_EXCL_START */
 		ERR("Failed to alloc query");
 		err = NOTIFICATION_ERROR_OUT_OF_MEMORY;
 		goto out;
-		/* LCOV_EXCL_STOP */
 	}
 
 	err = notification_db_exec(db, query, NULL);
@@ -528,6 +519,7 @@ out:
 
 	return err;
 }
+/* LCOV_EXCL_STOP */
 
 /* LCOV_EXCL_START */
 EXPORT_API int notification_setting_refresh_setting_table(uid_t uid)
@@ -580,6 +572,7 @@ out:
 }
 /* LCOV_EXCL_STOP */
 
+/* LCOV_EXCL_START */
 EXPORT_API int notification_setting_insert_package_for_uid(const char *package_name, uid_t uid)
 {
 	return _install_and_update_package(package_name, uid);
@@ -888,6 +881,7 @@ static gint _noti_dnd_cb_compare(gconstpointer a, gconstpointer b)
 
 	return 1;
 }
+/* LCOV_EXCL_STOP */
 
 /* LCOV_EXCL_START */
 void notification_call_dnd_changed_cb_for_uid(int do_not_disturb, uid_t uid)
@@ -915,6 +909,7 @@ void notification_call_dnd_changed_cb_for_uid(int do_not_disturb, uid_t uid)
 }
 /* LCOV_EXCL_STOP */
 
+/* LCOV_EXCL_START */
 EXPORT_API int notification_register_system_setting_dnd_changed_cb_for_uid(dnd_changed_cb callback, void *user_data, uid_t uid)
 {
 	GList *noti_dnd_list = NULL;
@@ -925,10 +920,8 @@ EXPORT_API int notification_register_system_setting_dnd_changed_cb_for_uid(dnd_c
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 
 	if (notification_ipc_monitor_init(uid) != NOTIFICATION_ERROR_NONE) {
-		/* LCOV_EXCL_START */
 		ERR("Failed to init monitor");
 		return NOTIFICATION_ERROR_IO_ERROR;
-		/* LCOV_EXCL_STOP */
 	}
 
 	if (_noti_dnd_cb_hash == NULL)
@@ -960,7 +953,9 @@ EXPORT_API int notification_register_system_setting_dnd_changed_cb_for_uid(dnd_c
 
 	return NOTIFICATION_ERROR_NONE;
 }
+/* LCOV_EXCL_STOP */
 
+/* LCOV_EXCL_START */
 EXPORT_API int notification_register_system_setting_dnd_changed_cb(dnd_changed_cb callback, void *user_data)
 {
 	return notification_register_system_setting_dnd_changed_cb_for_uid(callback, user_data, getuid());
@@ -1006,11 +1001,14 @@ EXPORT_API int notification_unregister_system_setting_dnd_changed_cb_for_uid(dnd
 
 	return NOTIFICATION_ERROR_NONE;
 }
+/* LCOV_EXCL_STOP */
 
+/* LCOV_EXCL_START */
 EXPORT_API int notification_unregister_system_setting_dnd_changed_cb(dnd_changed_cb callback)
 {
 	return notification_unregister_system_setting_dnd_changed_cb_for_uid(callback, getuid());
 }
+/* LCOV_EXCL_STOP */
 
 /* LCOV_EXCL_START */
 static bool _is_uid_in_system_setting_table(sqlite3 *db, uid_t uid)

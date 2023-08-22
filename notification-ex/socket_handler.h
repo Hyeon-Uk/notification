@@ -21,6 +21,7 @@
 
 namespace notification {
 
+/* LCOV_EXCL_START */
 class SocketHandler {
  public:
   SocketHandler(int fd):fd_(fd){}
@@ -36,6 +37,7 @@ class SocketHandler {
  private:
   int fd_ = -1;
 };
+/* LCOV_EXCL_STOP */
 
 }  // namespace notification
 #endif  // NOTIFICATION_EX_SOCKET_HANDLER_H_

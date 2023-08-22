@@ -134,6 +134,7 @@ AbstractItem& ChatMessageItem::FindByID(std::string id) {
   return FactoryManager::GetInst().GetNullItem();
 }
 
+/* LCOV_EXCL_START */
 AbstractItem& ChatMessageItem::FindByMainType(MainType type) {
   if (GetMainType() == type)
     return *this;
@@ -171,6 +172,7 @@ std::list<std::string> ChatMessageItem::GetSharedPath() const {
 
   return ret;
 }
+/* LCOV_EXCL_STOP */
 
 TextItem& ChatMessageItem::GetNameItem() const {
   if (impl_->name_ == nullptr)

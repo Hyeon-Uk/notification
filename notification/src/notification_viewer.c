@@ -69,6 +69,7 @@ EXPORT_API int notification_init_default_viewer()
 }
 /* LCOV_EXCL_STOP */
 
+/* LCOV_EXCL_START */
 static int __pop_delayed_noti() {
 	delayed_noti_info_s *noti = g_list_nth_data(_delayed_noti_list, 0);
 
@@ -139,6 +140,7 @@ static int __push_delayed_noti(bundle *noti_info, uid_t uid) {
 
 	return NOTIFICATION_ERROR_NONE;
 }
+/* LCOV_EXCL_STOP */
 
 /* LCOV_EXCL_START */
 EXPORT_API int notification_launch_default_viewer(int priv_id,

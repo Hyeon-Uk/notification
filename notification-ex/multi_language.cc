@@ -42,6 +42,7 @@ using namespace tizen_base;
 namespace notification {
 namespace item {
 
+/* LCOV_EXCL_START */
 MultiLanguage::MultiLanguage(string msgid, string format,
       vector<string> args)
     : impl_(new Impl(msgid, format, args, this)) {
@@ -130,6 +131,7 @@ void MultiLanguage::UpdateString(string domain, string locale_directory) {
 string MultiLanguage::GetTranslatedString() {
   return impl_->translated_;
 }
+/* LCOV_EXCL_STOP */
 
 }  // namespace item
 }  // namespace notification

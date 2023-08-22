@@ -49,6 +49,7 @@ using namespace tizen_base;
 
 namespace notification {
 
+/* LCOV_EXCL_START */
 DBusEventListener::DBusEventListener(string path)
     : impl_(new Impl(this, path)) {
   LOGW("Created (%s)", path.c_str());
@@ -521,5 +522,6 @@ list<Bundle> DBusEventListener::NotifyObserver(const IEventInfo& info) {
 int DBusEventListener::NotifyNumberRequest(const IEventInfo& info) {
   return impl_->observer_->OnRequestNumber(info);
 }
+/* LCOV_EXCL_STOP */
 
 }  // namespace notification

@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-#include "tzplatform_config_mock.h"
+#include "tzplatform_config_mock.hh"
 
-#include "mock_hook.h"
-#include "test_fixture.h"
+#include "mock_hook.hh"
+#include "test_fixture.hh"
 
 extern "C" const char* tzplatform_getenv(enum tzplatform_variable arg1) {
   return MOCK_HOOK_P1(TzplatformConfigMock, tzplatform_getenv, arg1);

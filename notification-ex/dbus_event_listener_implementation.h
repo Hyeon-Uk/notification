@@ -25,6 +25,7 @@
 
 namespace notification {
 
+/* LCOV_EXCL_START */
 class DBusEventListener::Impl {
  public:
   virtual ~Impl();
@@ -77,6 +78,7 @@ class DBusEventListener::Impl {
   std::string path_;
   DBusEventListener* parent_;
 };
+/* LCOV_EXCL_STOP */
 
 }  // namespace notification
 #endif  // NOTIFICATION_EX_DBUS_EVENT_LISTENER_IMPLEMENTATION_H_

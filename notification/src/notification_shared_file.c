@@ -84,6 +84,7 @@ typedef struct target_app_info {
 	char *dbus_sender_name;
 } target_app_info_s;
 
+/* LCOV_EXCL_START */
 static const char *__last_index_of(const char *path, const char *search);
 static bool __make_sharing_dir(const char *dir)
 {
@@ -98,20 +99,20 @@ static bool __make_sharing_dir(const char *dir)
 		return false;
 
 	if (g_file_make_directory(noti_dir, NULL, &g_err) == false) {
-		/* LCOV_EXCL_START */
 		if (g_err) {
 			ERR("Failed to make sharing dir[%s]", g_err->message);
 			g_error_free(g_err);
 		}
 		g_object_unref(noti_dir);
 		return false;
-		/* LCOV_EXCL_STOP */
 	}
 
 	g_object_unref(noti_dir);
 	return true;
 }
+/* LCOV_EXCL_STOP */
 
+/* LCOV_EXCL_START */
 static char *__get_data_path_by_pkg_id(const char *pkg_id,
 					const char *file_path, uid_t uid)
 {
@@ -181,6 +182,7 @@ static const char *__last_index_of(const char *path, const char *search)
 
 	return NULL;
 }
+/* LCOV_EXCL_STOP */
 
 /* Check path that include res directory */
 /* LCOV_EXCL_START */
@@ -200,6 +202,7 @@ static bool __is_private_file(const char *smack_label, const char *pkg_id)
 }
 /* LCOV_EXCL_STOP */
 
+/* LCOV_EXCL_START */
 static bool __is_RO_file(const char *smack_label)
 {
 #define CHECK_LABEL "::RO"
@@ -213,8 +216,10 @@ static bool __is_RO_file(const char *smack_label)
 
 	return ret;
 }
+/* LCOV_EXCL_STOP */
 
 /* file copy from /res to /data */
+/* LCOV_EXCL_START */
 int notification_copy_private_file(const char *src_path,
 					const char *dst_path)
 {
@@ -226,11 +231,9 @@ int notification_copy_private_file(const char *src_path,
 
 	dst = g_file_new_for_path(dst_path);
 	if (dst == NULL) {
-		/* LCOV_EXCL_START */
 		ERR("dst path is wrong [%s]", dst_path);
 		ret = NOTIFICATION_ERROR_IO_ERROR;
 		goto out;
-		/* LCOV_EXCL_STOP */
 	}
 
 	if (g_file_query_exists(dst, NULL) == true) {
@@ -241,16 +244,13 @@ int notification_copy_private_file(const char *src_path,
 
 	src = g_file_new_for_path(src_path);
 	if (src == NULL) {
-		/* LCOV_EXCL_START */
 		ERR("src path is wrong [%s]", src_path);
 		ret = NOTIFICATION_ERROR_IO_ERROR;
 		goto out;
-		/* LCOV_EXCL_STOP */
 	}
 
 	if (!g_file_copy(src, dst, G_FILE_COPY_NOFOLLOW_SYMLINKS, NULL, NULL,
 			NULL, &g_err)) {
-		/* LCOV_EXCL_START */
 		if (g_err) {
 			ERR("Copying file from [%s] to [%s] is failed [%s]",
 				src_path, dst_path, g_err->message);
@@ -258,7 +258,6 @@ int notification_copy_private_file(const char *src_path,
 		}
 		ret = NOTIFICATION_ERROR_IO_ERROR;
 		goto out;
-		/* LCOV_EXCL_STOP */
 	}
 
 	ut.modtime = time(NULL);
@@ -273,7 +272,9 @@ out:
 
 	return ret;
 }
+/* LCOV_EXCL_STOP */
 
+/* LCOV_EXCL_START */
 static void __free_file_info(gpointer data)
 {
 	sharing_file_info_s *info = (sharing_file_info_s *)data;
@@ -286,6 +287,7 @@ static void __free_file_info(gpointer data)
 		free(info);
 	}
 }
+/* LCOV_EXCL_STOP */
 
 /* LCOV_EXCL_START */
 static void __free_req_info(gpointer data)
@@ -307,6 +309,7 @@ static void __free_req_info(gpointer data)
 }
 /* LCOV_EXCL_STOP */
 
+/* LCOV_EXCL_START */
 static char **__convert_list_to_array(GList *list, int *length)
 {
 	int len, i;
@@ -341,6 +344,7 @@ static gint __comp_str(gconstpointer a, gconstpointer b)
 
 	return strcmp(new_file, file);
 }
+/* LCOV_EXCL_STOP */
 
 /* LCOV_EXCL_START */
 static gint __comp_file_info(gconstpointer a, gconstpointer b)
@@ -368,6 +372,7 @@ static gint __comp_dst_path(gconstpointer a, gconstpointer b)
 }
 /* LCOV_EXCL_STOP */
 
+/* LCOV_EXCL_START */
 static sharing_file_info_s *__dup_file_info(sharing_file_info_s *src)
 {
 	sharing_file_info_s *file_info;
@@ -920,7 +925,9 @@ out:
 
 	return ret;
 }
+/* LCOV_EXCL_STOP */
 
+/* LCOV_EXCL_START */
 int __set_sharing_for_new_file(sharing_req_data_s *req_data,
 				GList *new_file_list, bool is_overlapping)
 {
@@ -946,21 +953,17 @@ int __set_sharing_for_new_file(sharing_req_data_s *req_data,
 	ret = security_manager_private_sharing_req_set_owner_appid(handle,
 					req_data->app_id);
 	if (ret != SECURITY_MANAGER_SUCCESS) {
-		/* LCOV_EXCL_START */
 		ERR("Failed to set owner appid[%s][%d]", req_data->app_id, ret);
 		ret = NOTIFICATION_ERROR_IO_ERROR;
 		goto out;
-		/* LCOV_EXCL_STOP */
 	}
 
 	ret = security_manager_private_sharing_req_add_paths(handle,
 						(const char **)path_array, len);
 	if (ret != SECURITY_MANAGER_SUCCESS) {
-		/* LCOV_EXCL_START */
 		ERR("Failed to add paths [%d]", ret);
 		ret = NOTIFICATION_ERROR_IO_ERROR;
 		goto out;
-		/* LCOV_EXCL_STOP */
 	}
 
 	if (is_overlapping == true) {
@@ -969,21 +972,17 @@ int __set_sharing_for_new_file(sharing_req_data_s *req_data,
 			ret = security_manager_private_sharing_req_set_target_appid(
 							handle, (const char *)iter->data);
 			if (ret != SECURITY_MANAGER_SUCCESS) {
-				/* LCOV_EXCL_START */
 				ERR("Failed to set target appid [%s]",
 					(const char *)iter->data);
 				ret = NOTIFICATION_ERROR_IO_ERROR;
 				goto out;
-				/* LCOV_EXCL_STOP */
 			}
 
 			ret = security_manager_private_sharing_drop(handle);
 			if (ret != SECURITY_MANAGER_SUCCESS) {
-				/* LCOV_EXCL_START */
 				ERR("Failed to drop [%d]", ret);
 				ret = NOTIFICATION_ERROR_IO_ERROR;
 				goto out;
-				/* LCOV_EXCL_STOP */
 			}
 		}
 	}
@@ -993,21 +992,17 @@ int __set_sharing_for_new_file(sharing_req_data_s *req_data,
 		ret = security_manager_private_sharing_req_set_target_appid(handle,
 							(const char *)iter->data);
 		if (ret != SECURITY_MANAGER_SUCCESS) {
-			/* LCOV_EXCL_START */
 			ERR("Failed to set target appid [%s]",
 				(const char *)iter->data);
 			ret = NOTIFICATION_ERROR_IO_ERROR;
 			goto out;
-			/* LCOV_EXCL_STOP */
 		}
 
 		ret = security_manager_private_sharing_apply(handle);
 		if (ret != SECURITY_MANAGER_SUCCESS) {
-			/* LCOV_EXCL_START */
 			ERR("Failed to apply PS [%d]", ret);
 			ret = NOTIFICATION_ERROR_IO_ERROR;
 			goto out;
-			/* LCOV_EXCL_STOP */
 		}
 	}
 
@@ -1020,7 +1015,9 @@ out:
 
 	return ret;
 }
+/* LCOV_EXCL_STOP */
 
+/* LCOV_EXCL_START */
 EXPORT_API int notification_set_private_sharing(notification_h noti,
 						uid_t uid)
 {
@@ -1297,3 +1294,4 @@ EXPORT_API void notification_remove_private_sharing(
 	}
 
 }
+/* LCOV_EXCL_STOP */

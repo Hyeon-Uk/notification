@@ -43,6 +43,7 @@ using namespace tizen_base;
 using namespace notification::item;
 namespace notification {
 
+/* LCOV_EXCL_START */
 Reporter::Reporter(
     unique_ptr<IEventSender> sender, unique_ptr<IEventListener> listener)
   : impl_(new Impl(this, move(sender), move(listener))) {
@@ -256,5 +257,6 @@ string Reporter::GetPath() {
 
 void Reporter::OnRegister(const IEventInfo& info) {
 }
+/* LCOV_EXCL_STOP */
 
 }  // namespace notification

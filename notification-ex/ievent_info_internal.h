@@ -22,6 +22,7 @@
 
 namespace notification {
 
+/* LCOV_EXCL_START */
 class IEventInfoInternal : public IEventInfo {
  public:
   virtual ~IEventInfoInternal() = default;
@@ -35,6 +36,7 @@ class IEventInfoInternal : public IEventInfo {
   virtual void SetError(NotificationError error) = 0;
   virtual void SetEventType(int type) = 0;
 };
+/* LCOV_EXCL_STOP */
 
 }  // namespace notification
 #endif  // NOTIFICATION_EX_IEVENT_INFO_INTERNAL_H_

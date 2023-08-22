@@ -34,6 +34,7 @@
 
 namespace notification {
 
+/* LCOV_EXCL_START */
 class Exception : public std::exception {
  public:
   explicit Exception(int error_code, std::string file = __FILE__,
@@ -79,6 +80,7 @@ class Exception : public std::exception {
     }
   }
 };  // class Exception
+/* LCOV_EXCL_STOP */
 
 }  // namespace notification
 

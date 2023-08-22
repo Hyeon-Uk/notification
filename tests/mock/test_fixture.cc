@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-#include "test_fixture.h"
+#include "test_fixture.hh"
 
 #include <memory>
 

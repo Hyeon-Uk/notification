@@ -200,6 +200,7 @@ int notification_ipc_is_master_ready(void)
 /*
  * store tasks when daemon stopped
  */
+ /* LCOV_EXCL_START */
 int notification_ipc_add_deffered_task(
 		void (*deferred_task_cb)(void *data),
 		void *user_data)
@@ -272,6 +273,7 @@ int notification_ipc_del_deffered_task(
 
 	return NOTIFICATION_ERROR_INVALID_PARAMETER;
 }
+/* LCOV_EXCL_STOP */
 
 /* LCOV_EXCL_START */
 static void _do_deffered_task(void)
@@ -504,6 +506,7 @@ static void _delete_multiple_notify(GVariant *parameters)
 }
 /* LCOV_EXCL_STOP */
 
+/* LCOV_EXCL_START */
 static void _delete_by_display_applist_notify(GVariant *parameters)
 {
 	int *buf;
@@ -545,6 +548,7 @@ static void _delete_by_display_applist_notify(GVariant *parameters)
 	free(noti_op);
 	free(buf);
 }
+/* LCOV_EXCL_STOP */
 
 /* LCOV_EXCL_START */
 static void _change_dnd_notify(GVariant *parameters)
@@ -589,6 +593,7 @@ static void _handle_noti_notify(GDBusConnection *connection,
 }
 /* LCOV_EXCL_STOP */
 
+/* LCOV_EXCL_START */
 static void _send_event(GVariant *parameters)
 {
 	int ret;
@@ -599,10 +604,8 @@ static void _send_event(GVariant *parameters)
 
 	noti = notification_create(NOTIFICATION_TYPE_NOTI);
 	if (noti == NULL) {
-		/* LCOV_EXCL_START */
 		ERR("Failed to create notification handle");
 		return;
-		/* LCOV_EXCL_STOP */
 	}
 
 	g_variant_get(parameters, "(vi)", &coupled_body, &event_type);
@@ -612,16 +615,15 @@ static void _send_event(GVariant *parameters)
 	g_variant_unref(coupled_body);
 	g_variant_unref(body);
 	if (ret != NOTIFICATION_ERROR_NONE) {
-		/* LCOV_EXCL_START */
 		ERR("Failed to make notification handle from gvariant");
 		notification_free(noti);
 		return;
-		/* LCOV_EXCL_STOP */
 	}
 
 	notification_call_event_handler_cb(noti, event_type);
 	notification_free(noti);
 }
+/* LCOV_EXCL_STOP */
 
 /* LCOV_EXCL_START */
 static void _delete_event(GVariant *parameters)
@@ -633,6 +635,7 @@ static void _delete_event(GVariant *parameters)
 }
 /* LCOV_EXCL_STOP */
 
+/* LCOV_EXCL_START */
 static void _handle_noti_event_handler_notify(GDBusConnection *connection,
 		const gchar     *sender_name,
 		const gchar     *object_path,
@@ -649,7 +652,9 @@ static void _handle_noti_event_handler_notify(GDBusConnection *connection,
 	else if (g_strcmp0(signal_name, "delete_noti") == 0)
 		_delete_event(parameters);
 }
+/* LCOV_EXCL_STOP */
 
+/* LCOV_EXCL_START */
 static int _dbus_event_handler_signal_init(void)
 {
 	int id;
@@ -669,10 +674,8 @@ static int _dbus_event_handler_signal_init(void)
 
 		DBG("subscribe id[%d]", id);
 		if (id == 0) {
-			/* LCOV_EXCL_START */
 			ret = NOTIFICATION_ERROR_IO_ERROR;
 			ERR("Failed to subscribe connection signal");
-			/* LCOV_EXCL_STOP */
 		} else {
 			event_monitor_id = id;
 		}
@@ -681,6 +684,7 @@ static int _dbus_event_handler_signal_init(void)
 	return ret;
 }
 
+/* LCOV_EXCL_START */
 static int _dbus_signal_init(void)
 {
 	int id;
@@ -700,10 +704,8 @@ static int _dbus_signal_init(void)
 
 		DBG("subscribe id : %d", id);
 		if (id == 0) {
-			/* LCOV_EXCL_START */
 			ret = NOTIFICATION_ERROR_IO_ERROR;
 			ERR("Failed to register dbus_interface");
-			/* LCOV_EXCL_STOP */
 		} else {
 			monitor_id = id;
 			ret = NOTIFICATION_ERROR_NONE;
@@ -712,6 +714,7 @@ static int _dbus_signal_init(void)
 
 	return ret;
 }
+/* LCOV_EXCL_STOP */
 
 static GDBusMessage *__get_new_msg(GVariant *body, const char *cmd)
 {
@@ -830,6 +833,7 @@ static int _send_sync_noti(GVariant *body, GDBusMessage **reply, char *cmd)
 	return ret;
 }
 
+/* LCOV_EXCL_START */
 static void _send_message_with_reply_async_cb(GDBusConnection *connection,
 		GAsyncResult *res,
 		gpointer user_data)
@@ -842,10 +846,8 @@ static void _send_message_with_reply_async_cb(GDBusConnection *connection,
 	result_cb_item *cb_item = (result_cb_item *)user_data;
 
 	if (cb_item == NULL) {
-		/* LCOV_EXCL_START */
 		ERR("Failed to get a callback item");
 		return;
-		/* LCOV_EXCL_START */
 	}
 
 	reply = g_dbus_connection_send_message_with_reply_finish(
@@ -854,16 +856,13 @@ static void _send_message_with_reply_async_cb(GDBusConnection *connection,
 			&err);
 
 	if (!reply) {
-		/* LCOV_EXCL_START */
 		if (err != NULL) {
 			ERR("No reply[%s]", err->message);
 			g_error_free(err);
 		}
 		result = NOTIFICATION_ERROR_SERVICE_NOT_READY;
-		/* LCOV_EXCL_STOP */
 
 	} else if (g_dbus_message_to_gerror(reply, &err)) {
-		/* LCOV_EXCL_START */
 		if (err->code == G_DBUS_ERROR_ACCESS_DENIED)
 			result = NOTIFICATION_ERROR_PERMISSION_DENIED;
 		else
@@ -871,7 +870,6 @@ static void _send_message_with_reply_async_cb(GDBusConnection *connection,
 
 		ERR("Failed to send message[%s]", err->message);
 		g_error_free(err);
-		/* LCOV_EXCL_STOP */
 	}
 
 	INFO("Async message callback result[%d]", result);
@@ -890,7 +888,9 @@ static void _send_message_with_reply_async_cb(GDBusConnection *connection,
 		g_object_unref(reply);
 	free(cb_item);
 }
+/* LCOV_EXCL_STOP */
 
+/* LCOV_EXCL_START */
 static int _send_async_noti(GVariant *body, result_cb_item *cb_item, char *cmd)
 {
 	GDBusMessage *msg;
@@ -901,10 +901,8 @@ static int _send_async_noti(GVariant *body, result_cb_item *cb_item, char *cmd)
 			PROVIDER_NOTI_INTERFACE_NAME,
 			cmd);
 	if (!msg) {
-		/* LCOV_EXCL_START */
 		ERR("Failed to alloc new method call");
 		return NOTIFICATION_ERROR_OUT_OF_MEMORY;
-		/* LCOV_EXCL_STOP */
 	}
 
 	if (g_variant_is_floating(body))
@@ -929,6 +927,8 @@ static int _send_async_noti(GVariant *body, result_cb_item *cb_item, char *cmd)
 	DBG("Success to send async message");
 	return NOTIFICATION_ERROR_NONE;
 }
+/* LCOV_EXCL_STOP */
+
 
 int notification_ipc_request_insert(notification_h noti, int *priv_id)
 {
@@ -1026,6 +1026,7 @@ int notification_ipc_request_update(notification_h noti)
 	return result;
 }
 
+/* LCOV_EXCL_START */
 int notification_ipc_request_update_async(notification_h noti,
 		void (*result_cb)(int priv_id, int result, void *data), void *user_data)
 {
@@ -1035,10 +1036,8 @@ int notification_ipc_request_update_async(notification_h noti,
 
 	result = _dbus_init();
 	if (result != NOTIFICATION_ERROR_NONE) {
-		/* LCOV_EXCL_START */
 		ERR("Failed to init dbus connection[%d]", result);
 		return result;
-		/* LCOV_EXCL_STOP */
 	}
 
 	cb_item = calloc(1, sizeof(result_cb_item));
@@ -1050,28 +1049,26 @@ int notification_ipc_request_update_async(notification_h noti,
 
 	body = notification_ipc_make_gvariant_from_noti(noti, false);
 	if (body == NULL) {
-		/* LCOV_EXCL_START */
 		ERR("Failed to make gvariant from notification handle");
 		free(cb_item);
 		return NOTIFICATION_ERROR_OUT_OF_MEMORY;
-		/* LCOV_EXCL_STOP */
 	}
 
 	result = _send_async_noti(body, cb_item, "update_noti");
 	DBG("Update async result[%d]", result);
 
 	if (result != NOTIFICATION_ERROR_NONE) {
-		/* LCOV_EXCL_START */
 		free(cb_item);
 		cb_item = NULL;
-		/* LCOV_EXCL_STOP */
 	}
 
 	g_variant_unref(body);
 
 	return result;
 }
+/* LCOV_EXCL_STOP */
 
+/* LCOV_EXCL_START */
 int notification_ipc_request_refresh(uid_t uid)
 {
 	int result;
@@ -1080,10 +1077,8 @@ int notification_ipc_request_refresh(uid_t uid)
 
 	result = _dbus_init();
 	if (result != NOTIFICATION_ERROR_NONE) {
-		/* LCOV_EXCL_START */
 		ERR("Failed to init dbus connection[%d]", result);
 		return result;
-		/* LCOV_EXCL_STOP */
 	}
 
 	body = g_variant_new("(i)", uid);
@@ -1095,6 +1090,7 @@ int notification_ipc_request_refresh(uid_t uid)
 	DBG("result[%d]", result);
 	return result;
 }
+/* LCOV_EXCL_STOP */
 
 int notification_ipc_request_delete_single(notification_type_e type, char *app_id, int priv_id, uid_t uid)
 {
@@ -1162,6 +1158,7 @@ int notification_ipc_request_delete_multiple(notification_type_e type, char *app
 	return result;
 }
 
+/* LCOV_EXCL_START */
 int notification_ipc_request_delete_by_display_applist(int display_applist, uid_t uid)
 {
 	int result;
@@ -1191,6 +1188,7 @@ int notification_ipc_request_delete_by_display_applist(int display_applist, uid_
 	DBG("result[%d]", result);
 	return result;
 }
+/* LCOV_EXCL_STOP */
 
 int notification_ipc_request_load_noti_by_tag(notification_h noti, const char *app_id, const char *tag, uid_t uid)
 {
@@ -1470,6 +1468,7 @@ int notification_ipc_request_load_noti_detail_list(const char *app_id,
 	return result;
 }
 
+/* LCOV_EXCL_START */
 int notification_ipc_request_get_setting_array(
 		notification_setting_h *setting_array,
 		int *count,
@@ -1487,10 +1486,8 @@ int notification_ipc_request_get_setting_array(
 
 	result = _dbus_init();
 	if (result != NOTIFICATION_ERROR_NONE) {
-		/* LCOV_EXCL_START */
 		ERR("Failed to init dbus connection[%d]", result);
 		return result;
-		/* LCOV_EXCL_STOP */
 	}
 
 	result = _send_sync_noti(g_variant_new("(i)", uid), &reply, "get_setting_array");
@@ -1502,12 +1499,10 @@ int notification_ipc_request_get_setting_array(
 		DBG("get setting arr cnt: %d", setting_cnt);
 		result_setting_array = (struct notification_setting *)malloc(sizeof(struct notification_setting) * setting_cnt);
 		if (result_setting_array == NULL) {
-			/* LCOV_EXCL_START */
 			ERR("malloc failed");
 			g_object_unref(reply);
 			g_variant_iter_free(iter);
 			return NOTIFICATION_ERROR_OUT_OF_MEMORY;
-			/* LCOV_EXCL_STOP */
 		}
 
 		setting_idx = 0;
@@ -1528,7 +1523,9 @@ int notification_ipc_request_get_setting_array(
 	DBG("result[%d]", result);
 	return result;
 }
+/* LCOV_EXCL_STOP */
 
+/* LCOV_EXCL_START */
 int notification_ipc_request_get_setting_by_app_id(
 		const char *app_id, notification_setting_h *setting, uid_t uid)
 {
@@ -1554,12 +1551,10 @@ int notification_ipc_request_get_setting_by_app_id(
 
 		result_setting = (struct notification_setting *)malloc(sizeof(struct notification_setting));
 		if (result_setting == NULL) {
-			/* LCOV_EXCL_START */
 			ERR("malloc failed");
 			g_object_unref(reply);
 			g_variant_unref(body);
 			return NOTIFICATION_ERROR_OUT_OF_MEMORY;
-			/* LCOV_EXCL_STOP */
 		}
 		notification_ipc_make_setting_from_gvariant(result_setting, setting_body);
 
@@ -1573,7 +1568,9 @@ int notification_ipc_request_get_setting_by_app_id(
 	DBG("result[%d]", result);
 	return result;
 }
+/* LCOV_EXCL_STOP */
 
+/* LCOV_EXCL_START */
 int notification_ipc_request_load_system_setting(notification_system_setting_h *setting, uid_t uid)
 {
 	int result;
@@ -1588,10 +1585,8 @@ int notification_ipc_request_load_system_setting(notification_system_setting_h *
 
 	result = _dbus_init();
 	if (result != NOTIFICATION_ERROR_NONE) {
-		/* LCOV_EXCL_START */
 		ERR("Failed to init dbus connection[%d]", result);
 		return result;
-		/* LCOV_EXCL_STOP */
 	}
 
 	result = _send_sync_noti(g_variant_new("(i)", uid), &reply, "load_system_setting");
@@ -1601,11 +1596,9 @@ int notification_ipc_request_load_system_setting(notification_system_setting_h *
 
 		result_setting = (struct notification_system_setting *)calloc(1, sizeof(struct notification_system_setting));
 		if (result_setting == NULL) {
-			/* LCOV_EXCL_START */
 			ERR("malloc failed");
 			result = NOTIFICATION_ERROR_OUT_OF_MEMORY;
 			goto out;
-			/* LCOV_EXCL_STOP */
 		}
 
 		notification_ipc_make_system_setting_from_gvariant(result_setting, setting_body);
@@ -1623,12 +1616,10 @@ int notification_ipc_request_load_system_setting(notification_system_setting_h *
 			while (g_variant_iter_loop(iter, "(v)", &iter_body)) {
 				dnd_allow_exception = (dnd_allow_exception_h)calloc(1, sizeof(struct notification_system_setting_dnd_allow_exception));
 				if (dnd_allow_exception == NULL) {
-					/* LCOV_EXCL_START */
 					ERR("Out of memory");
 					result = NOTIFICATION_ERROR_OUT_OF_MEMORY;
 					g_variant_unref(iter_body);
 					goto out;
-					/* LCOV_EXCL_STOP */
 				}
 
 				notification_ipc_make_dnd_allow_exception_from_gvariant(dnd_allow_exception, iter_body);
@@ -1652,6 +1643,7 @@ out:
 	DBG("result[%d]", result);
 	return result;
 }
+/* LCOV_EXCL_START */
 
 int notification_ipc_update_setting(notification_setting_h setting, uid_t uid)
 {
@@ -1686,6 +1678,7 @@ int notification_ipc_update_setting(notification_setting_h setting, uid_t uid)
 	return result;
 }
 
+/* LCOV_EXCL_START */
 int notification_ipc_update_system_setting(notification_system_setting_h system_setting, uid_t uid)
 {
 	int result;
@@ -1696,10 +1689,8 @@ int notification_ipc_update_system_setting(notification_system_setting_h system_
 
 	result = _dbus_init();
 	if (result != NOTIFICATION_ERROR_NONE) {
-		/* LCOV_EXCL_START */
 		ERR("Failed to init dbus connection[%d]", result);
 		return result;
-		/* LCOV_EXCL_STOP */
 	}
 
 	body = g_variant_new("(iiiiiiiiii)",
@@ -1735,6 +1726,7 @@ int notification_ipc_update_system_setting(notification_system_setting_h system_
 	DBG("result[%d]", result);
 	return result;
 }
+/* LCOV_EXCL_STOP */
 
 int notification_ipc_request_save_as_template(notification_h noti, const char *template_name)
 {
@@ -1801,6 +1793,7 @@ int notification_ipc_request_create_from_template(notification_h noti, const cha
 	return result;
 }
 
+/* LCOV_EXCL_START */
 int notification_ipc_request_create_from_package_template(notification_h noti, const char *app_id, const char *template_name)
 {
 	int result;
@@ -1811,10 +1804,8 @@ int notification_ipc_request_create_from_package_template(notification_h noti, c
 
 	result = _dbus_init();
 	if (result != NOTIFICATION_ERROR_NONE) {
-		/* LCOV_EXCL_START */
 		ERR("Failed to init dbus connection[%d]", result);
 		return result;
-		/* LCOV_EXCL_STOP */
 	}
 
 	body = g_variant_new("(ss)", app_id, template_name);
@@ -1836,6 +1827,7 @@ int notification_ipc_request_create_from_package_template(notification_h noti, c
 
 	return result;
 }
+/* LCOV_EXCL_STOP */
 
 int notification_ipc_get_noti_block_state(const char *app_id, int *do_not_disturb,
 					  int *do_not_disturb_except, int *allow_to_notify,
@@ -1883,6 +1875,7 @@ int notification_ipc_get_noti_block_state(const char *app_id, int *do_not_distur
 	return ret;
 }
 
+/* LCOV_EXCL_START */
 int notification_ipc_request_get_all_count(notification_type_e type, int *count, uid_t uid)
 {
 	int ret;
@@ -1972,6 +1965,7 @@ int notification_ipc_check_event_receiver(int priv_id, bool *available)
 	DBG("result[%d]", ret);
 	return ret;
 }
+/* LCOV_EXCL_STOP */
 
 /* LCOV_EXCL_START */
 void notification_ipc_reset_event_handler(int priv_id)
@@ -2440,6 +2434,7 @@ EXPORT_API int notification_ipc_make_noti_from_gvariant(notification_h noti,
 	return NOTIFICATION_ERROR_NONE;
 }
 
+/* LCOV_EXCL_START */
 EXPORT_API GVariant *notification_ipc_make_gvariant_from_system_setting(struct notification_system_setting *noti_setting)
 {
 	GVariant *body = NULL;
@@ -2627,6 +2622,7 @@ static int _ipc_monitor_register(uid_t uid)
 {
 	return  _send_service_register(uid);
 }
+/* LCOV_EXCL_STOP */
 
 /* LCOV_EXCL_START */
 static void _on_name_appeared(GDBusConnection *connection,
@@ -2658,32 +2654,27 @@ static void _on_name_vanished(GDBusConnection *connection,
 }
 /* LCOV_EXCL_STOP */
 
+/* LCOV_EXCL_START */
 int notification_ipc_monitor_init(uid_t uid)
 {
 	int ret;
 
 	ret = _dbus_init();
 	if (ret != NOTIFICATION_ERROR_NONE) {
-		/* LCOV_EXCL_START */
 		ERR("Failed to init dbus connection[%d]", ret);
 		return ret;
-		/* LCOV_EXCL_STOP */
 	}
 
 	ret = _dbus_signal_init();
 	if (ret != NOTIFICATION_ERROR_NONE) {
-		/* LCOV_EXCL_START */
 		ERR("Failed to init signal[%d]", ret);
 		return ret;
-		/* LCOV_EXCL_STOP */
 	}
 
 	ret = _ipc_monitor_register(uid);
 	if (ret != NOTIFICATION_ERROR_NONE) {
-		/* LCOV_EXCL_START */
 		ERR("Failed to register service[%d]", ret);
 		return ret;
-		/* LCOV_EXCL_STOP */
 	}
 
 	if (provider_monitor_id == 0) {
@@ -2696,18 +2687,18 @@ int notification_ipc_monitor_init(uid_t uid)
 				GINT_TO_POINTER((int)uid),
 				NULL);
 		if (provider_monitor_id == 0) {
-			/* LCOV_EXCL_START */
 			g_dbus_connection_signal_unsubscribe(_gdbus_conn, monitor_id);
 			monitor_id = 0;
 			ERR("Failed to watch name");
 			return NOTIFICATION_ERROR_IO_ERROR;
-			/* LCOV_EXCL_STOP */
 		}
 	}
 
 	return NOTIFICATION_ERROR_NONE;
 }
+/* LCOV_EXCL_STOP */
 
+/* LCOV_EXCL_START */
 static int _ipc_monitor_deregister(void)
 {
 	if (provider_monitor_id) {
@@ -2727,6 +2718,7 @@ int notification_ipc_monitor_fini(void)
 {
 	return  _ipc_monitor_deregister();
 }
+/* LCOV_EXCL_STOP */
 
 /* LCOV_EXCL_START */
 void notification_ipc_event_monitor_fini(void)

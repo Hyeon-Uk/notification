@@ -68,6 +68,7 @@ struct _notification_event_cb_info {
 static GHashTable *_noti_cb_hash = NULL;
 static GList *__noti_event_cb_list = NULL;
 
+/* LCOV_EXCL_START */
 void notification_reset_event_handler_list(void)
 {
 	GList *iter;
@@ -85,7 +86,6 @@ void notification_reset_event_handler_list(void)
 	}
 }
 
-/* LCOV_EXCL_START */
 static void __free_changed_cb_info(gpointer data)
 {
 	notification_cb_info_s *noti_cb_info = (notification_cb_info_s *)data;
@@ -95,6 +95,7 @@ static void __free_changed_cb_info(gpointer data)
 }
 /* LCOV_EXCL_STOP */
 
+/* LCOV_EXCL_START */
 void notification_call_changed_cb_for_uid(notification_op *op_list, int op_num, uid_t uid)
 {
 	notification_type_e type = NOTIFICATION_TYPE_NOTI;
@@ -167,6 +168,7 @@ void notification_call_event_handler_cb(notification_h noti, int event_type)
 	info = g_list_nth_data(find_list, 0);
 	info->cb(noti, event_type, info->userdata);
 }
+/* LCOV_EXCL_STOP */
 
 /* LCOV_EXCL_START */
 void notification_delete_event_handler_cb(int priv_id)
@@ -195,6 +197,7 @@ void notification_delete_event_handler_cb(int priv_id)
 }
 /* LCOV_EXCL_STOP */
 
+/* LCOV_EXCL_START */
 EXPORT_API int notification_add_deferred_task(
 		void (*deferred_task_cb)(void *data), void *user_data)
 {
@@ -212,7 +215,9 @@ EXPORT_API int notification_del_deferred_task(
 
 	return notification_ipc_del_deffered_task(deferred_task_cb);
 }
+/* LCOV_EXCL_STOP */
 
+/* LCOV_EXCL_START */
 EXPORT_API int notification_resister_changed_cb_for_uid(
 		void (*changed_cb)(void *data, notification_type_e type),
 		void *user_data, uid_t uid)
@@ -228,10 +233,8 @@ EXPORT_API int notification_resister_changed_cb_for_uid(
 
 	noti_cb_info_new = (notification_cb_info_s *)malloc(sizeof(notification_cb_info_s));
 	if (noti_cb_info_new == NULL) {
-		/* LCOV_EXCL_START */
 		ERR("Failed to alloc memory");
 		return NOTIFICATION_ERROR_OUT_OF_MEMORY;
-		/* LCOV_EXCL_STOP */
 	}
 
 	noti_cb_info_new->cb_type = NOTIFICATION_CB_NORMAL;
@@ -255,7 +258,9 @@ EXPORT_API int notification_resister_changed_cb_for_uid(
 
 	return NOTIFICATION_ERROR_NONE;
 }
+/* LCOV_EXCL_STOP */
 
+/* LCOV_EXCL_START */
 EXPORT_API int notification_resister_changed_cb(
 		void (*changed_cb)(void *data, notification_type_e type),
 		void *user_data)
@@ -431,6 +436,7 @@ EXPORT_API int notification_update_content(notification_h noti,
 
 	return ret;
 }
+/* LCOV_EXCL_STOP */
 
 /* notification_set_icon will be removed */
 /* LCOV_EXCL_START */
@@ -459,6 +465,7 @@ EXPORT_API int notification_get_icon(notification_h noti,
 }
 /* LCOV_EXCL_STOP */
 
+/* LCOV_EXCL_START */
 EXPORT_API int notification_translate_localized_text(notification_h noti)
 {
 	int ret = NOTIFICATION_ERROR_NONE;
@@ -502,6 +509,7 @@ EXPORT_API int notification_translate_localized_text(notification_h noti)
 
 	return ret;
 }
+/* LCOV_EXCL_STOP */
 
 /* LCOV_EXCL_START */
 EXPORT_API int notification_set_title(notification_h noti,
@@ -815,6 +823,7 @@ EXPORT_API int notification_set_pkgname(notification_h noti,
 }
 /* LCOV_EXCL_STOP */
 
+/* LCOV_EXCL_START */
 EXPORT_API int notification_set_app_id(notification_h noti,
 		const char *app_id)
 {
@@ -831,6 +840,7 @@ EXPORT_API int notification_set_app_id(notification_h noti,
 
 	return NOTIFICATION_ERROR_NONE;
 }
+/* LCOV_EXCL_STOP */
 
 /* LCOV_EXCL_START */
 int notification_delete_all_by_type_for_uid(const char *app_id,
@@ -998,6 +1008,7 @@ EXPORT_API int notification_get_id(notification_h noti,
 }
 /* LCOV_EXCL_STOP */
 
+/* LCOV_EXCL_START */
 EXPORT_API int notification_set_priv_id(notification_h noti, int priv_id)
 {
 	if (noti == NULL || priv_id <= 0)
@@ -1007,6 +1018,7 @@ EXPORT_API int notification_set_priv_id(notification_h noti, int priv_id)
 
 	return NOTIFICATION_ERROR_NONE;
 }
+/* LCOV_EXCL_STOP */
 
 /* LCOV_EXCL_START */
 notification_h notification_load_for_uid(char *app_id,
@@ -1124,6 +1136,7 @@ EXPORT_API int notification_get_execute_option(notification_h noti,
 }
 /* LCOV_EXCL_STOP */
 
+/* LCOV_EXCL_START */
 EXPORT_API int notification_insert_for_uid(notification_h noti,
 		int *priv_id, uid_t uid)
 {
@@ -1177,7 +1190,9 @@ EXPORT_API int notification_update_async(notification_h noti,
 {
 	return notification_update_async_for_uid(noti, result_cb, user_data, getuid());
 }
+/* LCOV_EXCL_STOP */
 
+/* LCOV_EXCL_START */
 EXPORT_API int notification_register_detailed_changed_cb_for_uid(
 		void (*detailed_changed_cb)(void *data, notification_type_e type, notification_op *op_list, int num_op),
 		void *user_data, uid_t uid)
@@ -1193,10 +1208,8 @@ EXPORT_API int notification_register_detailed_changed_cb_for_uid(
 
 	noti_cb_info_new = (notification_cb_info_s *)malloc(sizeof(notification_cb_info_s));
 	if (noti_cb_info_new == NULL) {
-		/* LCOV_EXCL_START */
 		ERR("Failed to alloc memory");
 		return NOTIFICATION_ERROR_OUT_OF_MEMORY;
-		/* LCOV_EXCL_STOP */
 	}
 
 	noti_cb_info_new->cb_type = NOTIFICATION_CB_DETAILED;
@@ -1220,7 +1233,9 @@ EXPORT_API int notification_register_detailed_changed_cb_for_uid(
 
 	return NOTIFICATION_ERROR_NONE;
 }
+/* LCOV_EXCL_STOP */
 
+/* LCOV_EXCL_START */
 EXPORT_API int notification_register_detailed_changed_cb(
 		void (*detailed_changed_cb)(void *data, notification_type_e type, notification_op *op_list, int num_op),
 		void *user_data)
@@ -1293,6 +1308,7 @@ EXPORT_API int notification_unregister_detailed_changed_cb(
 {
 	return notification_unregister_detailed_changed_cb_for_uid(detailed_changed_cb, user_data, getuid());
 }
+/* LCOV_EXCL_STOP */
 
 /* LCOV_EXCL_START */
 EXPORT_API int notification_is_service_ready(void)
@@ -1301,6 +1317,7 @@ EXPORT_API int notification_is_service_ready(void)
 }
 /* LCOV_EXCL_STOP */
 
+/* LCOV_EXCL_START */
 EXPORT_API int notification_set_uid(notification_h noti,
 		uid_t uid)
 {
@@ -1372,6 +1389,7 @@ static GList *__copy_private_file(notification_h noti)
 
 	return file_list;
 }
+/* LCOV_EXCL_STOP */
 
 /* LCOV_EXCL_START */
 static void __remove_private_file(gpointer data, gpointer user_data)
@@ -1387,6 +1405,7 @@ static void __remove_private_file(gpointer data, gpointer user_data)
 }
 /* LCOV_EXCL_STOP */
 
+/* LCOV_EXCL_START */
 EXPORT_API int notification_post_for_uid(notification_h noti, uid_t uid)
 {
 	int ret = 0;
@@ -1459,7 +1478,9 @@ EXPORT_API int notification_delete_all_for_uid(notification_type_e type, uid_t u
 
 	return ret;
 }
+/* LCOV_EXCL_STOP */
 
+/* LCOV_EXCL_START */
 EXPORT_API notification_h notification_load_by_tag_for_uid(const char *tag, uid_t uid)
 {
 	int ret;
@@ -1474,22 +1495,18 @@ EXPORT_API notification_h notification_load_by_tag_for_uid(const char *tag, uid_
 
 	caller_app_id = notification_get_app_id_by_pid(getpid());
 	if (!caller_app_id) {
-		/* LCOV_EXCL_START */
 		ERR("Failed to get a package name");
 		set_last_result(NOTIFICATION_ERROR_OUT_OF_MEMORY);
 		return NULL;
-		/* LCOV_EXCL_STOP */
 	}
 
 	noti = (notification_h)calloc(1, sizeof(struct _notification));
 	if (noti == NULL) {
-		/* LCOV_EXCL_START */
 		ERR("Failed to alloc a new notification");
 		set_last_result(NOTIFICATION_ERROR_OUT_OF_MEMORY);
 		free(caller_app_id);
 
 		return NULL;
-		/* LCOV_EXCL_STOP */
 	}
 
 	ret = notification_ipc_request_load_noti_by_tag(noti, caller_app_id, (char *)tag, uid);
@@ -1503,7 +1520,9 @@ EXPORT_API notification_h notification_load_by_tag_for_uid(const char *tag, uid_
 
 	return noti;
 }
+/* LCOV_EXCL_STOP */
 
+/* LCOV_EXCL_START */
 EXPORT_API notification_h notification_create_from_package_template(const char *app_id, const char *template_name)
 {
 	int ret;
@@ -1517,11 +1536,9 @@ EXPORT_API notification_h notification_create_from_package_template(const char *
 
 	noti = (notification_h)calloc(1, sizeof(struct _notification));
 	if (noti == NULL) {
-		/* LCOV_EXCL_START */
 		ERR("Failed to alloc memory");
 		set_last_result(NOTIFICATION_ERROR_OUT_OF_MEMORY);
 		return NULL;
-		/* LCOV_EXCL_STOP */
 	}
 
 	ret = notification_ipc_request_create_from_package_template(noti, app_id, template_name);
@@ -1533,7 +1550,9 @@ EXPORT_API notification_h notification_create_from_package_template(const char *
 
 	return noti;
 }
+/* LCOV_EXCL_STOP */
 
+/* LCOV_EXCL_START */
 EXPORT_API int notification_set_default_button(notification_h noti, notification_button_index_e index)
 {
 	if (noti == NULL)
@@ -1654,7 +1673,9 @@ EXPORT_API int notification_get_text_input_max_length(notification_h noti, int *
 
 	return NOTIFICATION_ERROR_NONE;
 }
+/* LCOV_EXCL_STOP */
 
+/* LCOV_EXCL_START */
 EXPORT_API int notification_post_with_event_cb_for_uid(notification_h noti, event_handler_cb cb,
 							void *userdata, uid_t uid)
 {
@@ -1690,10 +1711,8 @@ EXPORT_API int notification_post_with_event_cb_for_uid(notification_h noti, even
 	} else {
 		info = (notification_event_cb_info_s *)malloc(sizeof(notification_event_cb_info_s));
 		if (info == NULL) {
-			/* LCOV_EXCL_START */
 			ERR("Failed to alloc memory");
 			return NOTIFICATION_ERROR_OUT_OF_MEMORY;
-			/* LCOV_EXCL_STOP */
 		}
 		info->priv_id = priv_id;
 		info->cb = cb;
@@ -1703,7 +1722,9 @@ EXPORT_API int notification_post_with_event_cb_for_uid(notification_h noti, even
 
 	return ret;
 }
+/* LCOV_EXCL_STOP */
 
+/* LCOV_EXCL_START */
 EXPORT_API int notification_post_with_event_cb(notification_h noti, event_handler_cb cb, void *userdata)
 {
 	return notification_post_with_event_cb_for_uid(noti, cb, userdata, getuid());
@@ -1860,9 +1881,12 @@ EXPORT_API int notification_get_extension_data(notification_h noti, const char *
 
 	return NOTIFICATION_ERROR_NONE;
 }
+/* LCOV_EXCL_STOP */
 
 #define KEY_LEN 40
 #define EXTENSION_EVENT_KEY "_NOTIFICATION_EXTENSION_EVENT_"
+
+/* LCOV_EXCL_START */
 EXPORT_API int notification_set_extension_event_handler(notification_h noti,
 					notification_event_type_extension_e event,
 					app_control_h event_handler)
@@ -1898,29 +1922,23 @@ EXPORT_API int notification_set_extension_event_handler(notification_h noti,
 
 	err = app_control_export_as_bundle(event_handler, &app_control_bundle);
 	if (err != APP_CONTROL_ERROR_NONE) {
-		/* LCOV_EXCL_START */
 		ERR("Failed to export app_control to bundle [%d]", err);
 		ret = NOTIFICATION_ERROR_IO_ERROR;
 		goto out;
-		/* LCOV_EXCL_STOP */
 	}
 
 	err = bundle_encode(app_control_bundle, &b_raw, &len);
 	if (err != BUNDLE_ERROR_NONE) {
-		/* LCOV_EXCL_START */
 		ERR("Failed to encode bundle [%d]", err);
 		ret = NOTIFICATION_ERROR_IO_ERROR;
 		goto out;
-		/* LCOV_EXCL_STOP */
 	}
 
 	err = bundle_add_str(noti->args, key, (const char *)b_raw);
 	if (err != BUNDLE_ERROR_NONE) {
-		/* LCOV_EXCL_START */
 		ERR("Failed to add str to bundle [%d]", err);
 		ret = NOTIFICATION_ERROR_IO_ERROR;
 		goto out;
-		/* LCOV_EXCL_STOP */
 	}
 
 out:
@@ -1931,7 +1949,9 @@ out:
 
 	return ret;
 }
+/* LCOV_EXCL_STOP */
 
+/* LCOV_EXCL_START */
 EXPORT_API int notification_get_extension_event_handler(notification_h noti,
 					notification_event_type_extension_e event,
 					app_control_h *event_handler)
@@ -1964,29 +1984,23 @@ EXPORT_API int notification_get_extension_event_handler(notification_h noti,
 
 	app_control_bundle = _create_bundle_from_bundle_raw((bundle_raw *)ret_str);
 	if (app_control_bundle == NULL) {
-		/* LCOV_EXCL_START */
 		ERR("Failed to create bundle");
 		return NOTIFICATION_ERROR_IO_ERROR;
-		/* LCOV_EXCL_STOP */
 	}
 
 	err = app_control_create(&ret_app_control);
 	if (err != APP_CONTROL_ERROR_NONE) {
-		/* LCOV_EXCL_START */
 		ERR("Failed to create app control [%d]", err);
 		ret = NOTIFICATION_ERROR_IO_ERROR;
 		goto out;
-		/* LCOV_EXCL_STOP */
 	}
 
 	err = app_control_import_from_bundle(ret_app_control, app_control_bundle);
 	if (err != APP_CONTROL_ERROR_NONE) {
-		/* LCOV_EXCL_START */
 		ERR("Failed to import app control from bundle [%d]", err);
 		app_control_destroy(ret_app_control);
 		ret = NOTIFICATION_ERROR_IO_ERROR;
 		goto out;
-		/* LCOV_EXCL_STOP */
 	}
 
 	*event_handler = ret_app_control;
@@ -1997,7 +2011,9 @@ out:
 
 	return ret;
 }
+/* LCOV_EXCL_STOP */
 
+/* LCOV_EXCL_START */
 EXPORT_API int notification_get_all_count_for_uid(notification_type_e type, int *count, uid_t uid)
 {
 	int ret;
@@ -2191,3 +2207,4 @@ EXPORT_API int notification_get_check_box_checked(notification_h noti,
 
 	return NOTIFICATION_ERROR_NONE;
 }
+/* LCOV_EXCL_STOP */

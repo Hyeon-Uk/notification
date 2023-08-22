@@ -69,12 +69,14 @@ EXPORT_API int notification_ipc_socket_get_read_buf_size(int fd, unsigned int *s
 	return __get_socket_buffer_size(fd, size, SO_RCVBUF);
 }
 
+/* LCOV_EXCL_START */
 EXPORT_API int notification_ipc_socket_get_write_buf_size(int fd, unsigned int *size)
 {
 	return __get_socket_buffer_size(fd, size, SO_SNDBUF);
 }
+/* LCOV_EXCL_STOP */
 
-
+/* LCOV_EXCL_START */
 EXPORT_API int notification_ipc_socket_write(int fd, const char *buffer, unsigned int nbytes)
 {
 	int retry_cnt = 0;
@@ -86,7 +88,6 @@ EXPORT_API int notification_ipc_socket_write(int fd, const char *buffer, unsigne
 		errno = 0;
 		nb = write(fd, buffer, left);
 		if (nb == -1) {
-			/* LCOV_EXCL_START */
 			if (errno == EINTR || errno == EAGAIN || errno == EWOULDBLOCK) {
 				ERR("continue..");
 				retry_cnt++;
@@ -95,7 +96,6 @@ EXPORT_API int notification_ipc_socket_write(int fd, const char *buffer, unsigne
 			}
 			ERR("error fd [%d] errno [%d]", fd, errno);
 			return NOTIFICATION_ERROR_IO_ERROR;
-			/* LCOV_EXCL_STOP */
 		}
 
 		left -= nb;
@@ -110,31 +110,30 @@ EXPORT_API int notification_ipc_socket_write(int fd, const char *buffer, unsigne
 
 	return NOTIFICATION_ERROR_NONE;
 }
+/* LCOV_EXCL_STOP */
 
+/* LCOV_EXCL_START */
 EXPORT_API int notification_ipc_socket_write_string(int fd, const char *buffer, unsigned int string_len)
 {
 	int ret;
 
 	ret = notification_ipc_socket_write(fd, (char *)&string_len, sizeof(string_len));
 	if (ret != NOTIFICATION_ERROR_NONE) {
-		/* LCOV_EXCL_START */
 		ERR("write string_len fail");
 		return ret;
-		/* LCOV_EXCL_STOP */
 	}
 
 	if (string_len > 0) {
 		ret = notification_ipc_socket_write(fd, buffer, string_len);
 		if (ret != NOTIFICATION_ERROR_NONE) {
-			/* LCOV_EXCL_START */
 			ERR("write string fail");
 			return ret;
-			/* LCOV_EXCL_STOP */
 		}
 	}
 
 	return NOTIFICATION_ERROR_NONE;
 }
+/* LCOV_EXCL_STOP */
 
 EXPORT_API int notification_ipc_socket_read(int fd, char *buffer, unsigned int nbytes)
 {

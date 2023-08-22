@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-#include "security_manager_mock.h"
+#include "security_manager_mock.hh"
 
-#include "mock_hook.h"
-#include "test_fixture.h"
+#include "mock_hook.hh"
+#include "test_fixture.hh"
 
 extern "C" int security_manager_private_sharing_req_new(private_sharing_req** arg1) {
   return MOCK_HOOK_P1(SecurityManagerMock, security_manager_private_sharing_req_new, arg1);

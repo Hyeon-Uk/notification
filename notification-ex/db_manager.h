@@ -32,6 +32,7 @@
 
 namespace notification {
 
+/* LCOV_EXCL_START */
 class EXPORT_API DBManager {
  public:
   static int InitializeDB();
@@ -65,6 +66,8 @@ class EXPORT_API DBManager {
   static int UpdateReceiverList(std::shared_ptr<item::AbstractItem> updatedItem,  sqlite3* db);
   static std::list<std::shared_ptr<item::AbstractItem>> ExecuteGetList(char* query);
 };
+/* LCOV_EXCL_STOP */
+
 }  // namespace notification
 
 #endif  // NOTIFICATION_EX_DB_MANAGER_H_

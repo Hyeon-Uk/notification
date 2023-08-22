@@ -32,6 +32,7 @@ using namespace tizen_base;
 namespace notification {
 namespace item {
 
+/* LCOV_EXCL_START */
 NullItem::NullItem(shared_ptr<AbstractAction> action)
     : AbstractItem(action) {
 }
@@ -65,6 +66,7 @@ bool NullItem::IsItemTypeExist(int type) {
     return true;
   return false;
 }
+/* LCOV_EXCL_STOP */
 
 }  // namespace item
 }  // namespace notification

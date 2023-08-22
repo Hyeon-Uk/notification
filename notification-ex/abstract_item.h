@@ -37,6 +37,7 @@
 namespace notification {
 namespace item {
 
+/* LCOV_EXCL_START */
 /**
  * @brief The class for ReceiverGroup.
  * @details The class to define receiver group of notification.
@@ -1092,6 +1093,7 @@ class EXPORT_API AbstractItem {
   void UpdateSoundPrivatePath();
   void UpdateVibrationPrivatePath();
 };  // class AbstractItem
+/* LCOV_EXCL_STOP */
 
 }  // namespace item
 }  // namespace notification

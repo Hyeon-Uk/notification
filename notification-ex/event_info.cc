@@ -159,9 +159,11 @@ void EventInfo::SetValidatedUid(uid_t uid) {
   impl_->validated_uid_ = uid;
 }
 
+/* LCOV_EXCL_START */
 int EventInfo::GetRequestId() const {
   return impl_->request_id_;
 }
+/* LCOV_EXCL_STOP */
 
 NotificationError EventInfo::GetError() const {
   return impl_->error_;

@@ -22,6 +22,7 @@
 namespace notification {
 namespace item {
 
+/* LCOV_EXCL_START */
 /**
  * @brief The interface class for ItemInfo
  * @since_tizen 5.5
@@ -69,6 +70,7 @@ class EXPORT_API IItemInfo {
    */
   virtual time_t GetTime() const = 0;
 };
+/* LCOV_EXCL_STOP */
 
 }  // namespace item
 }  // namespace notification

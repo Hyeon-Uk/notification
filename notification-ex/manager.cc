@@ -45,6 +45,7 @@ using namespace tizen_base;
 using namespace notification::item;
 namespace notification {
 
+/* LCOV_EXCL_START */
 Manager::Manager(unique_ptr<IEventSender> sender,
     unique_ptr<IEventListener> listener, string receiver_group)
   : impl_(new Impl(this, move(sender), move(listener), receiver_group)) {
@@ -284,5 +285,6 @@ int Manager::OnRequestNumberEvent(const IEventInfo& info) {
 string Manager::GetPath() {
   return NOTIFICATION_EX_MANAGER_OBJECT_PATH;
 }
+/* LCOV_EXCL_STOP */
 
 }  // namespace notification

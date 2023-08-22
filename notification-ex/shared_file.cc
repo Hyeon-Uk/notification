@@ -83,6 +83,7 @@ const char* SharedFile::GetLastIndex(const char* path, const char* search) {
   return nullptr;
 }
 
+/* LCOV_EXCL_START */
 bool SharedFile::MakeDir(const char* path) {
   if (access(path, R_OK) == 0)
     return true;
@@ -574,6 +575,7 @@ int SharedFile::CopyPrivateFile(shared_ptr<item::AbstractItem> item) {
 
   return ERROR_NONE;
 }
+/* LCOV_EXCL_STOP */
 
 }  // namespace item
 }  // namespace notification

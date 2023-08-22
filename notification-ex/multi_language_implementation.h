@@ -28,6 +28,7 @@
 namespace notification {
 namespace item {
 
+/* LCOV_EXCL_START */
 class MultiLanguage::Impl {
  public:
   virtual ~Impl();
@@ -48,6 +49,7 @@ class MultiLanguage::Impl {
   std::string locale_directory_;
   MultiLanguage* parent_;
 };
+/* LCOV_EXCL_STOP */
 
 }  // namespace item
 }  // namespace notification

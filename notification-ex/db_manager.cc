@@ -73,6 +73,7 @@ namespace notification {
 DBManager::DBManager() = default;
 DBManager::~DBManager() = default;
 
+/* LCOV_EXCL_START */
 sqlite3* DBManager::OpenDB() {
   int ret;
   sqlite3* db;
@@ -105,10 +106,8 @@ int DBManager::ExecuteQuery(sqlite3* db, const char* query, int* num_changes) {
 
   ret = sqlite3_prepare_v2(db, query, strlen(query), &stmt, nullptr);
   if (ret != SQLITE_OK) {
-    /* LCOV_EXCL_START */
     LOGE("Sqlite3 err[%d][%s]", ret, sqlite3_errmsg(db));
     return ERROR_FROM_DB;
-    /* LCOV_EXCL_STOP */
   }
 
   ret = sqlite3_step(stmt);
@@ -117,10 +116,8 @@ int DBManager::ExecuteQuery(sqlite3* db, const char* query, int* num_changes) {
     *num_changes = sqlite3_changes(db);
     ret = ERROR_NONE;
   } else {
-    /* LCOV_EXCL_START */
     LOGE("Sqlite err[%d][%s]", ret, sqlite3_errmsg(db));
     ret = ERROR_FROM_DB;
-    /* LCOV_EXCL_STOP */
   }
 
   sqlite3_finalize(stmt);
@@ -154,10 +151,8 @@ int DBManager::GetSequence(sqlite3* db, int64_t* seq) {
       " FROM noti_ex_list";
   ret = sqlite3_prepare_v2(db, query.c_str(), query.size(), &stmt, nullptr);
   if (ret != SQLITE_OK) {
-    /* LCOV_EXCL_START */
     LOGE("Sqlite3 err[%d][%s]", ret, sqlite3_errmsg(db));
     return ERROR_FROM_DB;
-    /* LCOV_EXCL_STOP */
   }
 
   ret = sqlite3_step(stmt);
@@ -169,10 +164,8 @@ int DBManager::GetSequence(sqlite3* db, int64_t* seq) {
       *seq = sqlite3_column_int64(stmt, 1) + 1;
     ret = ERROR_NONE;
   } else {
-    /* LCOV_EXCL_START */
     LOGE("Sqlite err [%d][%s]", ret, sqlite3_errmsg(db));
     ret = ERROR_FROM_DB;
-    /* LCOV_EXCL_STOP */
   }
 
   sqlite3_finalize(stmt);
@@ -307,10 +300,8 @@ void DBManager::CheckLimit(shared_ptr<item::AbstractItem> addedItem, sqlite3* db
 
   ret = sqlite3_prepare_v2(db, query, -1, &stmt, nullptr);
   if (ret != SQLITE_OK) {
-    /* LCOV_EXCL_START */
     LOGE("sqlite3_prepare_v2 Failed [%d][%s]", ret, sqlite3_errmsg(db));
     goto out;
-    /* LCOV_EXCL_STOP */
   }
 
   count -= NOTI_LIMIT;
@@ -327,10 +318,8 @@ void DBManager::CheckLimit(shared_ptr<item::AbstractItem> addedItem, sqlite3* db
 
   ret = sqlite3_prepare_v2(db, query, -1, &delete_stmt, nullptr);
   if (ret != SQLITE_OK) {
-    /* LCOV_EXCL_START */
     LOGE("sqlite3_prepare_v2 Failed [%d][%s]", ret, sqlite3_errmsg(db));
     goto out;
-    /* LCOV_EXCL_STOP */
   }
 
   while (sqlite3_step(stmt) == SQLITE_ROW && count > 0) {
@@ -876,4 +865,6 @@ string DBManager::GetPkgId(const string& app_id, uid_t uid) {
   }
   return pkgid;
 }
+/* LCOV_EXCL_STOP */
+
 }  // namespace notification
