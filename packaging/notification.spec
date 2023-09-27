@@ -121,10 +121,6 @@ mkdir -p %{buildroot}%{_bindir}/tizen-unittests/%{name}
 install -m 0755 run-unittest.sh %{buildroot}%{_bindir}/tizen-unittests/%{name}/
 sed -i -e 's/<NAME>/notification/g' %{buildroot}%{_bindir}/tizen-unittests/%{name}/run-unittest.sh
 
-mkdir -p %{buildroot}%{_bindir}/tizen-unittests/%{name}-ex
-install -m 0755 run-unittest.sh %{buildroot}%{_bindir}/tizen-unittests/%{name}-ex/
-sed -i -e 's/<NAME>/notification-ex/g' %{buildroot}%{_bindir}/tizen-unittests/%{name}-ex/run-unittest.sh
-
 mkdir -p %{buildroot}%{upgrade_script_path}
 cp -f scripts/505.notification_upgrade.sh %{buildroot}%{upgrade_script_path}
 
@@ -210,20 +206,6 @@ Header & package configuration files to support development of the notification.
 %attr(0644,root,root) %{_libdir}/libnotification-ex.so
 
 #################################################
-# notification-ex-unittests
-#################################################
-%package -n notification-ex-unittests
-Summary:    GTest for notification-ex
-Group:      Development/Libraries
-
-%description -n notification-ex-unittests
-GTest for notification-ex
-
-%files -n notification-ex-unittests
-%{_bindir}/notification-ex-unittests
-%{_bindir}/tizen-unittests/%{name}/run-unittest.sh
-
-#################################################
 # notification-unittests
 #################################################
 %package -n notification-unittests
@@ -235,7 +217,7 @@ GTest for notification
 
 %files -n notification-unittests
 %{_bindir}/notification-unittests
-%{_bindir}/tizen-unittests/%{name}-ex/run-unittest.sh
+%{_bindir}/tizen-unittests/%{name}/run-unittest.sh
 
 %if 0%{?gcov:1}
 %files gcov

@@ -93,7 +93,7 @@ class SharedFileTest : public TestFixture {
   virtual void SetUp() {
     item = make_shared<ImageItem>(id, image_path);
     shared_file = new SharedFile();
-    item->SetSenderAppId("notification-ex-unittests");
+    item->SetSenderAppId("notification-unittests");
   }
 
   virtual void TearDown() {
@@ -112,7 +112,7 @@ TEST_F(SharedFileTest, GetDataPath) {
       .WillRepeatedly(Invoke(__fake_tzplatform_getenv));
 
   ASSERT_EQ(shared_file->GetDataPath(item->GetSenderAppId(), SharedFileTest::image_path),
-    "/opt/usr/home/owner/apps_rw/notification-ex-unittests/data/.notification_ex/image.png");
+    "/opt/usr/home/owner/apps_rw/notification-unittests/data/.notification_ex/image.png");
 }
 
 TEST_F(SharedFileTest, SetPrivateSharing) {
