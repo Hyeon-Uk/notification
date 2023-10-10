@@ -90,9 +90,6 @@ TEST_F(NotificationDBTest, notification_db_test) {
     .WillOnce(Invoke(__fake_sqlite3_column_text))
     .WillOnce(Invoke(__fake_sqlite3_column_text_bundle));
 
-  EXPECT_CALL(GetMock<GlibMock>(), access(_, _))
-    .WillOnce(Return(0));
-
   int ret;
 
   sqlite3* db = nullptr;

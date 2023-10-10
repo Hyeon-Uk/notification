@@ -16,6 +16,8 @@
 
 #include "glib_mock.hh"
 
+#include <dlfcn.h>
+
 #include "mock_hook.hh"
 #include "test_fixture.hh"
 
@@ -37,7 +39,15 @@ extern "C" gboolean g_file_make_directory(GFile* arg1, GCancellable* arg2,
 }
 
 extern "C" int access(const char* arg1, int arg2) {
-  return MOCK_HOOK_P2(GlibMock, access, arg1, arg2);
+  if (strstr(arg1, ".notification.db") ||
+      strstr(arg1, "notification.ini"))
+    return 0;
+
+  int (*access_func)(const char*, int) =
+      reinterpret_cast<int (*)(const char*, int)>(dlsym(RTLD_NEXT, "access"));
+  if (access_func) return access_func(arg1, arg2);
+
+  return 0;
 }
 
 extern "C" ssize_t read(int fd, void *buf, size_t count) {

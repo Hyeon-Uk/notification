@@ -57,6 +57,7 @@ TARGET_LINK_LIBRARIES(${PROJECT_NAME} ${notification-unittests_LDFLAGS}
     gmock
     notification
     notification-ex
+    "-ldl"
 )
 
 INSTALL(TARGETS ${PROJECT_NAME} DESTINATION /usr/bin/)

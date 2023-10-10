@@ -85,9 +85,6 @@ TEST_F(NotificationNotiTest, notification_noti_test) {
   EXPECT_CALL(GetMock<AulMock>(), aul_app_get_appid_bypid(_, _, _))
       .WillRepeatedly(Invoke(__fake_aul_app_get_appid_bypid));
 
-  EXPECT_CALL(GetMock<GlibMock>(), access(_, _))
-      .WillRepeatedly(Return(0));
-
   EXPECT_CALL(GetMock<SqliteMock>(), sqlite3_open_v2(_, _, _, _))
       .WillRepeatedly(Invoke(__fake_sqlite3_open_v2));
 
