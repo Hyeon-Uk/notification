@@ -9,3 +9,9 @@ ENABLE_TESTING()
 SET(NOTIFICATION_UNIT_TESTS notification-unittests)
 ADD_TEST(NAME ${NOTIFICATION_UNIT_TESTS} COMMAND ${NOTIFICATION_UNIT_TESTS})
 ADD_DEPENDENCIES(${NOTIFICATION_UNIT_TESTS} notification)
+
+CONFIGURE_FILE(${CMAKE_CURRENT_SOURCE_DIR}/scripts/505.notification_upgrade.sh.in 505.notification_upgrade.sh @ONLY)
+INSTALL(FILES ${CMAKE_CURRENT_SOURCE_DIR}/505.notification_upgrade.sh DESTINATION /usr/share/upgrade/scripts/)
+
+CONFIGURE_FILE(${CMAKE_CURRENT_SOURCE_DIR}/scripts/505.notification_upgrade.sh.in upgrade.sh @ONLY)
+INSTALL(FILES ${CMAKE_CURRENT_SOURCE_DIR}/upgrade.sh DESTINATION /etc/notification/)

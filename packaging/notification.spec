@@ -121,9 +121,6 @@ mkdir -p %{buildroot}%{_bindir}/tizen-unittests/%{name}
 install -m 0755 run-unittest.sh %{buildroot}%{_bindir}/tizen-unittests/%{name}/
 sed -i -e 's/<NAME>/notification/g' %{buildroot}%{_bindir}/tizen-unittests/%{name}/run-unittest.sh
 
-mkdir -p %{buildroot}%{upgrade_script_path}
-cp -f scripts/505.notification_upgrade.sh %{buildroot}%{upgrade_script_path}
-
 %clean
 rm -rf %{buildroot}
 
@@ -146,6 +143,7 @@ fi
 %{_bindir}/notification_init
 %attr(0755,root,root) %{upgrade_script_path}/505.notification_upgrade.sh
 #%{_bindir}/notification-test-app
+%attr(0755,root,root) /etc/notification/upgrade.sh
 
 %files devel
 %defattr(-,root,root,-)
