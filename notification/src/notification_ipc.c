@@ -644,7 +644,7 @@ static void _handle_noti_event_handler_notify(GDBusConnection *connection,
 		GVariant        *parameters,
 		gpointer         user_data)
 {
-	DBG("own_name : %s signal_name: %s",
+	WARN("own_name : %s signal_name: %s",
 			 g_dbus_connection_get_unique_name(connection), signal_name);
 
 	if (g_strcmp0(signal_name, "send_event") == 0)
@@ -2632,7 +2632,7 @@ static void _on_name_appeared(GDBusConnection *connection,
 {
 	int uid = GPOINTER_TO_INT(user_data);
 
-	DBG("uid[%d] name[%s]", uid, name);
+	WARN("uid[%d] name[%s]", uid, name);
 
 	if (is_master_started == 0)
 		_ipc_monitor_register(uid);

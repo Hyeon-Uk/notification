@@ -138,6 +138,7 @@ static gint __priv_id_compare(gconstpointer a, gconstpointer b)
 		return -1;
 
 	info = (notification_event_cb_info_s *)a;
+	WARN("src id [%d] dst id [%d]", GPOINTER_TO_INT(b), info->priv_id);
 
 	if (info->priv_id == GPOINTER_TO_INT(b))
 		return 0;
@@ -151,6 +152,8 @@ void notification_call_event_handler_cb(notification_h noti, int event_type)
 	int priv_id;
 	GList *find_list;
 	notification_event_cb_info_s *info;
+
+	WARN("call noti id [%d] event[%d]", info->priv_id, event_type);
 
 	if (__noti_event_cb_list == NULL)
 		return;
@@ -167,6 +170,7 @@ void notification_call_event_handler_cb(notification_h noti, int event_type)
 
 	info = g_list_nth_data(find_list, 0);
 	info->cb(noti, event_type, info->userdata);
+	WARN("done");
 }
 /* LCOV_EXCL_STOP */
 
@@ -175,6 +179,8 @@ void notification_delete_event_handler_cb(int priv_id)
 {
 	GList *delete_list;
 	notification_event_cb_info_s *info;
+
+	WARN("delete noti id [%d]", priv_id);
 
 	if (__noti_event_cb_list == NULL)
 		return;
@@ -194,6 +200,7 @@ void notification_delete_event_handler_cb(int priv_id)
 
 	if (__noti_event_cb_list == NULL)
 		notification_ipc_event_monitor_fini();
+	WARN("done");
 }
 /* LCOV_EXCL_STOP */
 
@@ -1448,6 +1455,7 @@ EXPORT_API int notification_update_for_uid(notification_h noti, uid_t uid)
 	noti->uid = uid;
 	/* Update insert time ? */
 	noti->insert_time = time(NULL);
+	WARN("updated notification id[%d]", noti->priv_id);
 
 	return notification_ipc_request_update(noti);
 }
@@ -1700,6 +1708,8 @@ EXPORT_API int notification_post_with_event_cb_for_uid(notification_h noti, even
 
 	noti->priv_id = priv_id;
 
+	WARN("Posted notification id[%d]", priv_id);
+
 	__noti_event_cb_list = g_list_first(__noti_event_cb_list);
 	find_list = g_list_find_custom(__noti_event_cb_list, GINT_TO_POINTER(priv_id),
 				       (GCompareFunc)__priv_id_compare);
@@ -1708,6 +1718,7 @@ EXPORT_API int notification_post_with_event_cb_for_uid(notification_h noti, even
 		info = g_list_nth_data(find_list, 0);
 		info->cb = cb;
 		info->userdata = userdata;
+		WARN("event cb is existed id[%d]", priv_id);
 	} else {
 		info = (notification_event_cb_info_s *)malloc(sizeof(notification_event_cb_info_s));
 		if (info == NULL) {
@@ -1718,6 +1729,7 @@ EXPORT_API int notification_post_with_event_cb_for_uid(notification_h noti, even
 		info->cb = cb;
 		info->userdata = userdata;
 		__noti_event_cb_list = g_list_append(__noti_event_cb_list, info);
+		WARN("new event cb appended id[%d]", priv_id);
 	}
 
 	return ret;
