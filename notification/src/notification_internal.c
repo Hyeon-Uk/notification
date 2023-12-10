@@ -153,7 +153,7 @@ void notification_call_event_handler_cb(notification_h noti, int event_type)
 	GList *find_list;
 	notification_event_cb_info_s *info;
 
-	WARN("call noti id [%d] event[%d]", info->priv_id, event_type);
+	WARN("call event[%d]", event_type);
 
 	if (__noti_event_cb_list == NULL)
 		return;
@@ -161,6 +161,8 @@ void notification_call_event_handler_cb(notification_h noti, int event_type)
 	ret = notification_get_id(noti, NULL, &priv_id);
 	if (ret != NOTIFICATION_ERROR_NONE)
 		return;
+
+	WARN("noti id : [%d]", priv_id);
 
 	__noti_event_cb_list = g_list_first(__noti_event_cb_list);
 	find_list = g_list_find_custom(__noti_event_cb_list, GINT_TO_POINTER(priv_id),
