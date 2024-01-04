@@ -371,7 +371,7 @@ static void _add_noti_notify(GVariant *parameters)
 	GVariant *body = NULL;
 	uid_t uid;
 
-	DBG("add noti notify");
+	WARN("add noti notify");
 	noti = notification_create(NOTIFICATION_TYPE_NOTI);
 	if (!noti) {
 		ERR("Failed to create notification handle");
@@ -572,7 +572,7 @@ static void _handle_noti_notify(GDBusConnection *connection,
 		GVariant        *parameters,
 		gpointer         user_data)
 {
-	DBG("own_name : %s signal_name: %s",
+	WARN("own_name : %s signal_name: %s",
 			g_dbus_connection_get_unique_name(connection),
 			signal_name);
 
@@ -672,7 +672,7 @@ static int _dbus_event_handler_signal_init(void)
 				NULL,
 				NULL);
 
-		DBG("subscribe id[%d]", id);
+		WARN("subscribe id[%d]", id);
 		if (id == 0) {
 			ret = NOTIFICATION_ERROR_IO_ERROR;
 			ERR("Failed to subscribe connection signal");
@@ -684,7 +684,6 @@ static int _dbus_event_handler_signal_init(void)
 	return ret;
 }
 
-/* LCOV_EXCL_START */
 static int _dbus_signal_init(void)
 {
 	int id;
@@ -702,7 +701,7 @@ static int _dbus_signal_init(void)
 				NULL,
 				NULL);
 
-		DBG("subscribe id : %d", id);
+		WARN("subscribe id : %d", id);
 		if (id == 0) {
 			ret = NOTIFICATION_ERROR_IO_ERROR;
 			ERR("Failed to register dbus_interface");
@@ -929,32 +928,21 @@ static int _send_async_noti(GVariant *body, result_cb_item *cb_item, char *cmd)
 }
 /* LCOV_EXCL_STOP */
 
-
 int notification_ipc_request_insert(notification_h noti, int *priv_id)
 {
 	int result;
 	int id = NOTIFICATION_PRIV_ID_NONE;
-	bool event_flag;
 	GDBusMessage *reply = NULL;
 	GVariant *body;
 	GVariant *reply_body;
 
+	WARN("request insert noti");
 	result = _dbus_init();
 	if (result != NOTIFICATION_ERROR_NONE) {
 		/* LCOV_EXCL_START */
 		ERR("Failed to init dbus connection[%d]", result);
 		return result;
 		/* LCOV_EXCL_STOP */
-	}
-
-	result = notification_get_event_flag(noti, &event_flag);
-	if (result != NOTIFICATION_ERROR_NONE)
-		return result;
-
-	if (event_flag == true && event_monitor_id == 0) {
-		result = _dbus_event_handler_signal_init();
-		if (result != NOTIFICATION_ERROR_NONE)
-			return result;
 	}
 
 	/* Initialize private ID */
@@ -984,7 +972,7 @@ int notification_ipc_request_insert(notification_h noti, int *priv_id)
 	if (reply)
 		g_object_unref(reply);
 
-	DBG("priv_id[%d] result[%d]", id, result);
+	WARN("priv_id[%d] result[%d]", id, result);
 	return result;
 }
 
@@ -1100,6 +1088,7 @@ int notification_ipc_request_delete_single(notification_type_e type, char *app_i
 	GVariant *body;
 	GVariant *reply_body;
 
+	WARN("request del noti [%d]", priv_id);
 	result = _dbus_init();
 	if (result != NOTIFICATION_ERROR_NONE) {
 		/* LCOV_EXCL_START */
@@ -1119,7 +1108,7 @@ int notification_ipc_request_delete_single(notification_type_e type, char *app_i
 	if (reply)
 		g_object_unref(reply);
 
-	DBG("result[%d]", result);
+	WARN("result[%d]", result);
 	return result;
 }
 
@@ -2728,5 +2717,14 @@ void notification_ipc_event_monitor_fini(void)
 
 	g_dbus_connection_signal_unsubscribe(_gdbus_conn, event_monitor_id);
 	event_monitor_id = 0;
+	WARN("event monitor fini");
+}
+/* LCOV_EXCL_STOP */
+
+/* LCOV_EXCL_START */
+int notification_ipc_event_monitor_init(void)
+{
+	WARN("event monitor init");
+	return _dbus_event_handler_signal_init();
 }
 /* LCOV_EXCL_STOP */

@@ -107,6 +107,8 @@ int notification_ipc_socket_get_write_buf_size(int fd, unsigned int *size);
 int notification_ipc_socket_write(int fd, const char *buffer, unsigned int nbytes);
 int notification_ipc_socket_write_string(int fd, const char *buffer, unsigned int string_len);
 int notification_ipc_socket_read(int fd, char *buffer, unsigned int nbytes);
+
+int notification_ipc_event_monitor_init(void);
 #ifdef __cplusplus
 }
 #endif

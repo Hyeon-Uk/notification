@@ -1151,6 +1151,7 @@ EXPORT_API int notification_insert_for_uid(notification_h noti,
 {
 	int ret;
 	int id;
+	bool event_flag;
 
 	if (noti == NULL)
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
@@ -1171,6 +1172,16 @@ EXPORT_API int notification_insert_for_uid(notification_h noti,
 	/* If priv_id is valid data, set priv_id */
 	if (priv_id != NULL)
 		*priv_id = noti->priv_id;
+
+	ret = notification_get_event_flag(noti, &event_flag);
+	if (ret != NOTIFICATION_ERROR_NONE)
+		return ret;
+
+	if (event_flag == true) {
+		ret = notification_ipc_event_monitor_init();
+		if (ret != NOTIFICATION_ERROR_NONE)
+			return ret;
+	}
 
 	return NOTIFICATION_ERROR_NONE;
 }
@@ -1420,6 +1431,7 @@ EXPORT_API int notification_post_for_uid(notification_h noti, uid_t uid)
 	int ret = 0;
 	int id = 0;
 	GList *file_list;
+	bool event_flag;
 
 	if (noti == NULL)
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
@@ -1437,6 +1449,16 @@ EXPORT_API int notification_post_for_uid(notification_h noti, uid_t uid)
 	if (ret == NOTIFICATION_ERROR_NONE) {
 		noti->priv_id = id;
 		INFO("Posted notification id[%d]", id);
+
+		ret = notification_get_event_flag(noti, &event_flag);
+		if (ret != NOTIFICATION_ERROR_NONE)
+			return ret;
+
+		if (event_flag == true) {
+			ret = notification_ipc_event_monitor_init();
+			if (ret != NOTIFICATION_ERROR_NONE)
+				return ret;
+		}
 	} else {
 		g_list_foreach(file_list, __remove_private_file, NULL);
 	}
@@ -1715,6 +1737,10 @@ EXPORT_API int notification_post_with_event_cb_for_uid(notification_h noti, even
 	__noti_event_cb_list = g_list_first(__noti_event_cb_list);
 	find_list = g_list_find_custom(__noti_event_cb_list, GINT_TO_POINTER(priv_id),
 				       (GCompareFunc)__priv_id_compare);
+
+	ret = notification_ipc_event_monitor_init();
+	if (ret != NOTIFICATION_ERROR_NONE)
+		return ret;
 
 	if (find_list) {
 		info = g_list_nth_data(find_list, 0);
