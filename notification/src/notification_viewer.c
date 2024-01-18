@@ -21,8 +21,6 @@
 
 #include <app_control_internal.h>
 #include <iniparser.h>
-#include <aul_svc.h>
-#include <aul_app_lifecycle.h>
 
 #include <notification.h>
 #include <notification_debug.h>
@@ -30,14 +28,11 @@
 
 #define DEFAULT_VIEWER_CONF_FILE "/usr/share/notification/notification.ini"
 static char *_default_viewer;
-
 static GList *_delayed_noti_list;
-static int _cb_registered = -1;
+static guint _timer;
 
-typedef struct delayed_noti {
-	uid_t uid;
-	bundle *noti_info;
-} delayed_noti_info_s;
+static void __app_control_result_cb(app_control_h app_control,
+		app_control_error_e result, void *user_data);
 
 /* LCOV_EXCL_START */
 EXPORT_API int notification_init_default_viewer()
@@ -70,77 +65,61 @@ EXPORT_API int notification_init_default_viewer()
 /* LCOV_EXCL_STOP */
 
 /* LCOV_EXCL_START */
-static int __pop_delayed_noti() {
-	delayed_noti_info_s *noti = g_list_nth_data(_delayed_noti_list, 0);
-
-	int ret = aul_svc_run_service_async_for_uid(noti->noti_info,
-			0, NULL, NULL, noti->uid);
-	if (ret < 0) {
-		ERR("Failed to request app launch[%d]", ret);
-		return ret;
-	}
-
-	_delayed_noti_list = g_list_remove(_delayed_noti_list, noti);
-
-	bundle_free(noti->noti_info);
-	free(noti);
-
-	return NOTIFICATION_ERROR_NONE;
-}
-
-static void __aul_app_lifecycle_state_changed_cb(const char *app_id, pid_t pid,
-		aul_app_lifecycle_state_e state, bool has_focus, void *user_data) {
+static gboolean __pop_delayed_noti_cb(gpointer user_data)
+{
+	app_control_h app_control;
 	int ret;
 
-	if (strncmp(app_id, _default_viewer, strlen(app_id)))
-		return;
-
-	if (state == AUL_APP_LIFECYCLE_STATE_CREATED ||
-		state == AUL_APP_LIFECYCLE_STATE_DESTROYED) {
-		while (g_list_length(_delayed_noti_list) != 0) {
-			ret = __pop_delayed_noti();
-			if (ret != NOTIFICATION_ERROR_NONE) {
-				ERR("Failed to pop delayed noti");
-				return;
-			}
-		}
-
-		ret = aul_app_lifecycle_deregister_state_changed_cb();
-		if (ret == AUL_R_OK)
-			_cb_registered = -1;
-		else
-			ERR("Failed to deregister lifecycle cb");
+	if (_delayed_noti_list == NULL) {
+		_timer = 0;
+		return G_SOURCE_REMOVE;
 	}
+
+	app_control = g_list_nth_data(_delayed_noti_list, 0);
+	ret = app_control_send_launch_request_async(app_control,
+			__app_control_result_cb, NULL, NULL);
+	if (ret != APP_CONTROL_ERROR_NONE) {
+		ERR("Failed to send launch request. error(%d)", ret);
+		return G_SOURCE_CONTINUE;
+	}
+
+	_delayed_noti_list = g_list_remove(_delayed_noti_list, app_control);
+	app_control_destroy(app_control);
+	return G_SOURCE_CONTINUE;
 }
 
-static int __push_delayed_noti(bundle *noti_info, uid_t uid) {
-	delayed_noti_info_s *noti = (delayed_noti_info_s *)calloc(1,
-			sizeof(delayed_noti_info_s));
-	if (noti == NULL) {
-		ERR("Failed to calloc delayed noti info");
+static int __push_delayed_noti(app_control_h app_control)
+{
+	app_control_h handle = NULL;
+	int ret;
+
+	ret = app_control_clone(&handle, app_control);
+	if (ret != APP_CONTROL_ERROR_NONE) {
+		ERR("Failed to clone app control. error(%d)", ret);
 		return NOTIFICATION_ERROR_OUT_OF_MEMORY;
 	}
 
-	noti->uid = uid;
-	noti->noti_info = bundle_dup(noti_info);
-	if (noti->noti_info == NULL) {
-		ERR("Failed to bundle_dup ");
-		free(noti);
-		return NOTIFICATION_ERROR_OUT_OF_MEMORY;
-	}
+	_delayed_noti_list = g_list_append(_delayed_noti_list, handle);
 
-	_delayed_noti_list = g_list_append(_delayed_noti_list, noti);
-
-	if (_cb_registered) {
-		_cb_registered = aul_app_lifecycle_register_state_changed_cb(
-				__aul_app_lifecycle_state_changed_cb, NULL);
-		if (_cb_registered)
-			ERR("Failed to register app lifecycle cb");
-	}
+	if (_timer == 0)
+		_timer = g_timeout_add(100, __pop_delayed_noti_cb, NULL);
 
 	return NOTIFICATION_ERROR_NONE;
 }
 /* LCOV_EXCL_STOP */
+
+static void __app_control_result_cb(app_control_h app_control,
+		app_control_error_e result, void *user_data)
+{
+	bundle *b = NULL;
+
+	INFO("result(%d)", result);
+	if (result != APP_CONTROL_ERROR_NONE) {
+		ERR("Failed to send launch request. error(%d)", result);
+		if (__push_delayed_noti(app_control) != NOTIFICATION_ERROR_NONE)
+			ERR("Failed to push delayed noti");
+	}
+}
 
 /* LCOV_EXCL_START */
 EXPORT_API int notification_launch_default_viewer(int priv_id,
@@ -149,58 +128,65 @@ EXPORT_API int notification_launch_default_viewer(int priv_id,
 	int ret;
 	char buf[32] = {0,};
 	bundle *b = NULL;
+	app_control_h app_control = NULL;
 
 	if (_default_viewer == NULL)
 		return NOTIFICATION_ERROR_NONE;
 
-	b = bundle_create();
-	if (b == NULL) {
-		ERR("Failed to create bundle");
+	ret = app_control_create(&app_control);
+	if (ret != APP_CONTROL_ERROR_NONE) {
+		ERR("Failed to create app control. error(%d)", ret);
 		return NOTIFICATION_ERROR_OUT_OF_MEMORY;
 	}
 
-	ret = aul_svc_set_appid(b, _default_viewer);
-	if (ret != AUL_SVC_RET_OK) {
-		ERR("Failed to set appid to bundle[%x]", ret);
+	ret = app_control_set_app_id(app_control, _default_viewer);
+	if (ret != APP_CONTROL_ERROR_NONE) {
+		ERR("Failed to set appid to app_control. error(%d)", ret);
+		ret = NOTIFICATION_ERROR_OUT_OF_MEMORY;
 		goto out;
 	}
 
 	snprintf(buf, sizeof(buf), "%d", priv_id);
-
-	ret = aul_svc_add_data(b, "NOTIFICATION_PRIVATE_ID", buf);
-	if (ret != AUL_SVC_RET_OK) {
-		ERR("Failed to add extra_data[%x]", ret);
+	ret = app_control_add_extra_data(app_control, "NOTIFICATION_PRIVATE_ID",
+			buf);
+	if (ret != APP_CONTROL_ERROR_NONE) {
+		ERR("Failed to add extra data. error(%d)", ret);
+		ret = NOTIFICATION_ERROR_OUT_OF_MEMORY;
 		goto out;
 	}
 
 	memset(buf, 0, sizeof(buf));
 	snprintf(buf, sizeof(buf), "%d", status);
-
-	ret = aul_svc_add_data(b, "NOTIFICATION_OP_TYPE", buf);
-	if (ret != AUL_SVC_RET_OK) {
-		ERR("Failed to add extra_data[%x]", ret);
+	ret = app_control_add_extra_data(app_control, "NOTIFICATION_OP_TYPE",
+			buf);
+	if (ret != APP_CONTROL_ERROR_NONE) {
+		ERR("Failed to add operation type. error(%d)", ret);
+		ret = NOTIFICATION_ERROR_OUT_OF_MEMORY;
 		goto out;
 	}
 
-	ret = aul_svc_run_service_async_for_uid(b, 0, NULL, NULL, uid);
-	if (ret < 0) {
-		ERR("Failed to request app launch[%d]", ret);
-		if (__push_delayed_noti(b, uid) != NOTIFICATION_ERROR_NONE)
+	if (_delayed_noti_list != NULL) {
+		ret = __push_delayed_noti(app_control);
+		if (ret != NOTIFICATION_ERROR_NONE)
 			ERR("Failed to push delayed noti");
+		else
+			__pop_delayed_noti_cb(NULL);
 	} else {
-		INFO("successed to request app launch[%d],[%d]",
-				ret, uid);
-		ret = APP_CONTROL_ERROR_NONE;
+		ret = app_control_send_launch_request_async(app_control,
+				__app_control_result_cb, NULL, NULL);
+		if (ret != APP_CONTROL_ERROR_NONE) {
+			ERR("Failed to send launch request. error(%d)", ret);
+			ret = __push_delayed_noti(app_control);
+			if (ret != NOTIFICATION_ERROR_NONE)
+				ERR("Failed to push delayed noti");
+		} else {
+			INFO("Successful");
+		}
 	}
 
 out:
-	if (b)
-		bundle_free(b);
-
-	if (ret == 0)
-		ret = NOTIFICATION_ERROR_NONE;
-	else
-		ret = NOTIFICATION_ERROR_IO_ERROR;
+	if (app_control)
+		app_control_destroy(app_control);
 
 	return ret;
 }
