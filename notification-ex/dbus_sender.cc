@@ -70,19 +70,25 @@ void DBusSender::Impl::EmitSignal(string bus_name, string signal_name,
       DBusConnectionManager::GetInst().GetInterfaceName().c_str(),
       signal_name.c_str(), data, &err);
   if (result == FALSE) {
+    int err_code = ERROR_IO_ERROR;
     LOGE("g_dbus_connection_emit_signal() is failed. error(%s)",
         err ? err->message : "Unknown");
-    int err_code = util::ConvertDBusError(err->code);
-    g_clear_error(&err);
+    if (err) {
+      err_code = util::ConvertDBusError(err->code);
+      g_clear_error(&err);
+    }
     THROW(err_code);
   }
 
   result = g_dbus_connection_flush_sync(conn, NULL, &err);
   if (result == FALSE) {
+    int err_code = ERROR_IO_ERROR;
     LOGE("g_dbus_connection_flush_sync() is failed. error(%s)",
         err ? err->message : "Unknown");
-    int err_code = util::ConvertDBusError(err->code);
-    g_clear_error(&err);
+    if (err) {
+      err_code = util::ConvertDBusError(err->code);
+      g_clear_error(&err);
+    }
     THROW(err_code);
   }
   LOGI("Successfully emit signal to %s, %s, %s",
