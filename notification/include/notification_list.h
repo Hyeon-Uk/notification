@@ -37,7 +37,7 @@ extern "C" {
 
 /**
  * @brief Notification list handle.
- * @since_tizen @if WEARABLE 2.3.1 @elseif MOBILE 2.3 @endif
+ * @since_tizen 2.3
  */
 typedef struct _notification_list *notification_list_h;
 
@@ -46,7 +46,7 @@ typedef struct _notification_list *notification_list_h;
  * @internal
  * @brief Returns the notification list handle.
  * @details If count is equal to @c -1, all notifications are returned.
- * @since_tizen @if MOBILE 2.3 @elseif WEARABLE 2.3.1 @endif
+ * @since_tizen 2.3
  * @privlevel public
  * @privilege %http://tizen.org/privilege/notification
  * @remarks The @a list should be released using notification_free_list().
@@ -112,7 +112,7 @@ int notification_get_list_by_page_for_uid(notification_type_e type,
  * @internal
  * @brief Returns the notification detail list handle of grouping data.
  * @details If count is equal to c -1, all notifications are returned.
- * @since_tizen @if MOBILE 2.3 @elseif WEARABLE 2.3.1 @endif
+ * @since_tizen 2.3
  * @privlevel public
  * @privilege %http://tizen.org/privilege/notification
  * @remarks The @a list should be released using notification_free_list().
@@ -160,7 +160,7 @@ int notification_get_detail_list_for_uid(const char *app_id,
 /**
  * @internal
  * @brief Frees a notification list.
- * @since_tizen @if MOBILE 2.3 @elseif WEARABLE 2.3.1 @endif
+ * @since_tizen 2.3
  * @privlevel public
  * @privilege %http://tizen.org/privilege/notification
  * @param[in] list The notification list handle
@@ -194,7 +194,7 @@ int notification_free_list(notification_list_h list);
 /**
  * @internal
  * @brief Gets the head pointer of the notification list.
- * @since_tizen @if WEARABLE 2.3.1 @elseif MOBILE 2.3 @endif
+ * @since_tizen 2.3
  * @remarks The specific error code can be obtained using the get_last_result() method. Error codes are described in Exception section.
  *          The returned value should be released using notification_free_list().
  * @param[in] list Notification list handle
@@ -226,7 +226,7 @@ notification_list_h notification_list_get_head(notification_list_h list);
 /**
  * @internal
  * @brief Gets the tail pointer to the notification list.
- * @since_tizen @if MOBILE 2.3 @elseif WEARABLE 2.3.1 @endif
+ * @since_tizen 2.3
  * @remarks The specific error code can be obtained using the get_last_result() method. Error codes are described in Exception section.
  *          The returned value should be released using notification_free_list().
  * @param[in] list Notification list handle
@@ -258,7 +258,7 @@ notification_list_h notification_list_get_tail(notification_list_h list);
 /**
  * @internal
  * @brief Gets the previous pointer of the current notification list.
- * @since_tizen @if WEARABLE 2.3.1 @elseif MOBILE 2.3 @endif
+ * @since_tizen 2.3
  * @remarks The specific error code can be obtained using the get_last_result() method. Error codes are described in Exception section.
  *          The returned value should be released using notification_free_list().
  * @param[in] list Notification list handle
@@ -290,7 +290,7 @@ notification_list_h notification_list_get_prev(notification_list_h list);
 /**
  * @internal
  * @brief Gets the next pointer of the current notification list.
- * @since_tizen @if WEARABLE 2.3.1 @elseif MOBILE 2.3 @endif
+ * @since_tizen 2.3
  * @remarks The specific error code can be obtained using the get_last_result() method. Error codes are described in Exception section.
  *          The returned value should be released using notification_free_list().
  * @param[in] list Notification list handle
@@ -322,7 +322,7 @@ notification_list_h notification_list_get_next(notification_list_h list);
 /**
  * @internal
  * @brief Gets the notification handle that the list has.
- * @since_tizen @if WEARABLE 2.3.1 @elseif MOBILE 2.3 @endif
+ * @since_tizen 2.3
  * @remarks The specific error code can be obtained using the get_last_result() method. Error codes are described in Exception section.
  *          The returned value should be released using notification_free().
  * @param[in] list Notification list handle
@@ -387,7 +387,7 @@ int notification_list_get_count(notification_list_h list);
 /**
  * @internal
  * @brief Appends notification data to the notification list.
- * @since_tizen @if WEARABLE 2.3.1 @elseif MOBILE 2.3 @endif
+ * @since_tizen 2.3
  * @remarks The specific error code can be obtained using the get_last_result() method. Error codes are described in Exception section.
  * @param[in] list Notification list handle
  * @param[in] noti Notification handle
@@ -421,7 +421,7 @@ notification_list_h notification_list_append(notification_list_h list,
 /**
  * @internal
  * @brief Removes notification data from the notification list.
- * @since_tizen @if WEARABLE 2.3.1 @elseif MOBILE 2.3 @endif
+ * @since_tizen 2.3
  * @remarks The specific error code can be obtained using the get_last_result() method. Error codes are described in Exception section.
  * @param[in] list The notification list handle
  * @param[in] noti The notification handle

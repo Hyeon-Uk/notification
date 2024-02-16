@@ -76,7 +76,7 @@ int notification_ongoing_update_cb_unset(void);
 
 /**
  * @brief Updates progress.
- * @since_tizen @if MOBILE 2.3 @elseif WEARABLE 2.3.1 @endif
+ * @since_tizen 2.3
  * @param[in] caller_app_id
  * @param[in] priv_id
  * @param[in] progress
@@ -91,7 +91,7 @@ int notification_ongoing_update_progress(const char *caller_app_id,
 
 /**
  * @brief Updates size.
- * @since_tizen @if MOBILE 2.3 @elseif WEARABLE 2.3.1 @endif
+ * @since_tizen 2.3
  * @param[in] caller_app_id
  * @param[in] priv_id
  * @param[in] size
@@ -106,7 +106,7 @@ int notification_ongoing_update_size(const char *caller_app_id,
 
 /**
  * @brief Updates content.
- * @since_tizen @if MOBILE 2.3 @elseif WEARABLE 2.3.1 @endif
+ * @since_tizen 2.3
  * @param[in] caller_app_id
  * @param[in] priv_id
  * @param[in] content

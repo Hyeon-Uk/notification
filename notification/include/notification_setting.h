@@ -31,7 +31,7 @@ typedef struct notification_setting *notification_setting_h;
 /**
  * @internal
  * @brief Gets setting handle of current process.
- * @since_tizen @if MOBILE 2.4 @elseif WEARABLE 3.0 @endif
+ * @since_tizen 2.4
  * @param[out] setting The setting handle
  * @return #NOTIFICATION_ERROR_NONE on success,
  *         otherwise any other value on failure
@@ -203,7 +203,7 @@ int notification_setting_free_notification(notification_setting_h setting);
 /**
  * @internal
  * @brief Refreshs the setting table of current user.
- * @since_tizen @if MOBILE 2.4 @elseif WEARABLE 3.0 @endif
+ * @since_tizen 2.4
  * @param[in] uid User id
  * @return #NOTIFICATION_ERROR_NONE on success,
  *         otherwise any other value on failure
@@ -228,7 +228,7 @@ int notification_setting_refresh_setting_table(uid_t uid);
 /**
  * @internal
  * @brief Initializes the system setting table of the current user.
- * @since_tizen @if MOBILE 2.4 @elseif WEARABLE 3.0 @endif
+ * @since_tizen 2.4
  * @param[in] uid User id
  * @return #NOTIFICATION_ERROR_NONE on success,
  *         otherwise any other value on failure

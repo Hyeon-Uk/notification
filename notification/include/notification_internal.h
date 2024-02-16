@@ -81,7 +81,7 @@ int notification_unresister_changed_cb_for_uid(
 /**
  * @brief Updates the progress of the inserted notification. This only works for the ongoing notification (NOTIFICATION_TYPE_ONGOING).
  * @details The Notification view on the notification area could be updated.
- * @since_tizen @if MOBILE 2.3 @elseif WEARABLE 2.3.1 @endif
+ * @since_tizen 2.3
  * @param[in] noti Notification handle or NULL if priv_id is valid
  * @param[in] priv_id Private ID
  * @param[in] progress Percentage value of progressive data
@@ -107,7 +107,7 @@ int notification_update_progress(notification_h noti, int priv_id, double progre
 /**
  * @brief Updates the size of inserted notification data. This only works for the ongoing notification (NOTIFICATION_TYPE_ONGOING).
  * @details Notification view on notification area could be updated.
- * @since_tizen @if MOBILE 2.3 @elseif WEARABLE 2.3.1 @endif
+ * @since_tizen 2.3
  * @param[in] noti Notification handle or NULL if priv_id is valid
  * @param[in] priv_id Private ID
  * @param[in] size Bytes of progressive data
@@ -133,7 +133,7 @@ int notification_update_size(notification_h noti, int priv_id, double size);
 /**
  * @brief Updates the content of the inserted notification data. This is only for the ongoing notification (NOTIFICATION_TYPE_ONGOING).
  * @details Notification view on notification area could be updated.
- * @since_tizen @if MOBILE 2.3 @elseif WEARABLE 2.3.1 @endif
+ * @since_tizen 2.3
  * @param[in] noti Notification handle or NULL if priv_id is valid
  * @param[in] priv_id Private ID
  * @param[in] content Text to update
@@ -580,7 +580,7 @@ int notification_get_execute_option(notification_h noti,
  * @brief Inserts a notification.
  * @details The notification will be inserted to the database and then it will appear in the notification area.
  *          When notification_create() is called, if priv_id is #NOTIFICATION_PRIV_ID_NONE, priv_id returns the internally set priv_id.
- * @since_tizen @if MOBILE 2.3 @elseif WEARABLE 2.3.1 @endif
+ * @since_tizen 2.3
  * @privlevel public
  * @privilege %http://tizen.org/privilege/notification
  * @param[in] noti The notification handle
@@ -613,7 +613,7 @@ int notification_insert_for_uid(notification_h noti, int *priv_id, uid_t uid);
  * @internal
  * @brief Updates a notification, asynchronously.
  * @details The updated notification will appear in the notification area.
- * @since_tizen @if MOBILE 2.3 @elseif WEARABLE 2.3.1 @endif
+ * @since_tizen 2.3
  * @privlevel public
  * @privilege %http://tizen.org/privilege/notification
  * @remarks This function updates the notification asynchronously.
@@ -649,7 +649,7 @@ int notification_update_async_for_uid(notification_h noti,
  * @internal
  * @brief Registers a callback for all notification events.
  * @details The registered callback could be called for all notification events.
- * @since_tizen @if MOBILE 2.3 @elseif WEARABLE 2.3.1 @endif
+ * @since_tizen 2.3
  * @privlevel public
  * @privilege %http://tizen.org/privilege/notification
  * @param[in] changed_cb The callback function
@@ -682,7 +682,7 @@ int notification_register_detailed_changed_cb_for_uid(
 /**
  * @internal
  * @brief Unregisters a callback for all notification events.
- * @since_tizen @if MOBILE 2.3 @elseif WEARABLE 2.3.1 @endif
+ * @since_tizen 2.3
  * @privlevel public
  * @privilege %http://tizen.org/privilege/notification
  * @param[in] changed_cb The callback function

@@ -44,7 +44,7 @@ extern "C" {
 
 /**
  * @brief Sets an absolute path for an image file to display on the notification view.
- * @since_tizen @if WEARABLE 2.3.1 @elseif MOBILE 2.3 @endif
+ * @since_tizen 2.3
  * @param[in] noti The notification handle
  * @param[in] type The notification image type
  * @param[in] image_path The image file full path
@@ -80,7 +80,7 @@ int notification_set_image(notification_h noti, notification_image_type_e type, 
 
 /**
  * @brief Gets the absolute path of an image file.
- * @since_tizen @if WEARABLE 2.3.1 @elseif MOBILE 2.3 @endif
+ * @since_tizen 2.3
  * @remarks Do not free @a image_path. It will be freed when notification_free() is called.
  * @param[in] noti Notification handle
  * @param[in] type Notification image type
@@ -112,7 +112,7 @@ int notification_get_image(notification_h noti, notification_image_type_e type, 
 /**
  * @brief Sets a timestamp.
  * @details If input_time is @c 0, time information is taken from the current time.
- * @since_tizen @if WEARABLE 2.3.1 @elseif MOBILE 2.3 @endif
+ * @since_tizen 2.3
  * @param[in] noti The notification handle
  * @param[in] input_time The input time. If you want the time stamp to not be shown, set this as #NOTIFICATION_DO_NOT_SHOW_TIME_STAMP
  * @return #NOTIFICATION_ERROR_NONE on success,
@@ -148,7 +148,7 @@ int notification_set_time(notification_h noti, time_t input_time);
 /**
  * @brief Gets a timestamp.
  * @details If ret_time is @c 0, time information is not set before.
- * @since_tizen @if WEARABLE 2.3.1 @elseif MOBILE 2.3 @endif
+ * @since_tizen 2.3
  * @param[in] noti The notification handle
  * @param[out] ret_time The return time value
  * @return #NOTIFICATION_ERROR_NONE on success,
@@ -177,7 +177,7 @@ int notification_get_time(notification_h noti, time_t *ret_time);
 /**
  * @brief Gets an insertion timestamp of the notification.
  * @details If ret_time is @c 0, this notification data is not inserted before.
- * @since_tizen @if WEARABLE 2.3.1 @elseif MOBILE 2.3 @endif
+ * @since_tizen 2.3
  * @param[in] noti The notification handle
  * @param[out] ret_time The return time value
  * @return #NOTIFICATION_ERROR_NONE on success,
@@ -217,7 +217,7 @@ int notification_get_insert_time(notification_h noti, time_t *ret_time);
  *          The application must supply a String KEY as the fourth argument to support localization.
  *          If the language on the system changes, the contents of the notification are also translated.
  *
- * @since_tizen @if WEARABLE 2.3.1 @elseif MOBILE 2.3 @endif
+ * @since_tizen 2.3
  * @param[in] noti The notification handle
  * @param[in] type The notification text type
  * @param[in] text The basic text
@@ -255,7 +255,7 @@ int notification_set_text(notification_h noti, notification_text_type_e type,
 
 /**
  * @brief Gets the text from the notification handle.
- * @since_tizen @if WEARABLE 2.3.1 @elseif MOBILE 2.3 @endif
+ * @since_tizen 2.3
  * @remarks Do not free @a text. It will be freed when notification_free() is called.
  * @param[in] noti The notification handle
  * @param[in] type The notification text type
@@ -286,7 +286,7 @@ int notification_get_text(notification_h noti, notification_text_type_e type, ch
 /**
  * @brief Sets the timestamp to display on the notification view.
  * @details The timestamp will be converted to a formatted string and it will be displayed on the set text area.
- * @since_tizen @if WEARABLE 2.3.1 @elseif MOBILE 2.3 @endif
+ * @since_tizen 2.3
  * @param[in] noti The notification handle
  * @param[in] type The notification text type
  * @param[in] time The timestamp
@@ -301,7 +301,7 @@ int notification_set_time_to_text(notification_h noti, notification_text_type_e 
 
 /**
  * @brief Gets the timestamp from the notification handle.
- * @since_tizen @if WEARABLE 2.3.1 @elseif MOBILE 2.3 @endif
+ * @since_tizen 2.3
  * @param[in] noti The notification handle
  * @param[in] type The notification text type
  * @param[in] time The pointer of time stamp
@@ -316,7 +316,7 @@ int notification_get_time_from_text(notification_h noti, notification_text_type_
 
 /**
  * @brief Sets the sound type for the notification.
- * @since_tizen @if WEARABLE 2.3.1 @elseif MOBILE 2.3 @endif
+ * @since_tizen 2.3
  * @param[in] noti The notification handle
  * @param[in] type The notification sound type
  * @param[in] path The user sound file path
@@ -344,7 +344,7 @@ int notification_set_sound(notification_h noti, notification_sound_type_e type, 
 
 /**
  * @brief Gets the sound type from the notification handle.
- * @since_tizen @if WEARABLE 2.3.1 @elseif MOBILE 2.3 @endif
+ * @since_tizen 2.3
  * @remarks Do not free @a path. It will be freed when notification_free() is called.
  * @param[in] noti The notification handle
  * @param[out] type The notification sound type
@@ -374,7 +374,7 @@ int notification_get_sound(notification_h noti, notification_sound_type_e *type,
 
 /**
  * @brief Sets the vibration type for the notification.
- * @since_tizen @if WEARABLE 2.3.1 @elseif MOBILE 2.3 @endif
+ * @since_tizen 2.3
  * @param[in] noti The notification handle
  * @param[in] type The notification vibration type
  * @param[in] path The user vibration file path
@@ -402,7 +402,7 @@ int notification_set_vibration(notification_h noti, notification_vibration_type_
 
 /**
  * @brief Gets the vibrate type from the notification handle.
- * @since_tizen @if WEARABLE 2.3.1 @elseif MOBILE 2.3 @endif
+ * @since_tizen 2.3
  * @remarks Do not free @a path. It will be freed when notification_free() is called.
  * @param[in] noti The notification handle
  * @param[out] type The notification sound type
@@ -432,7 +432,7 @@ int notification_get_vibration(notification_h noti, notification_vibration_type_
 
 /**
  * @brief Sets the LED displaying option.
- * @since_tizen @if WEARABLE 2.3.1 @elseif MOBILE 2.3 @endif
+ * @since_tizen 2.3
  * @param[in] noti The notification handle
  * @param[in] operation The LED notification operation
  * @param[in] led_argb The notification LED color
@@ -460,7 +460,7 @@ int notification_set_led(notification_h noti, notification_led_op_e operation, i
 
 /**
  * @brief Gets the LED displaying option from the notification handle.
- * @since_tizen @if WEARABLE 2.3.1 @elseif MOBILE 2.3 @endif
+ * @since_tizen 2.3
  * @param[in] noti The notification handle
  * @param[out] operation The LED notification operation
  * @param[out] led_argb The notification LED color
@@ -489,7 +489,7 @@ int notification_get_led(notification_h noti, notification_led_op_e *operation, 
 
 /**
  * @brief Sets the time period of flashing the LED.
- * @since_tizen @if WEARABLE 2.3.1 @elseif MOBILE 2.3 @endif
+ * @since_tizen 2.3
  * @param[in] noti The notification handle
  * @param[in] on_ms The time for turning on the LED
  * @param[in] off_ms The time for turning off the LED
@@ -517,7 +517,7 @@ int notification_set_led_time_period(notification_h noti, int on_ms, int off_ms)
 
 /**
  * @brief Gets the time period of flashing the LED from the notification handle.
- * @since_tizen @if WEARABLE 2.3.1 @elseif MOBILE 2.3 @endif
+ * @since_tizen 2.3
  * @param[in] noti The notification handle
  * @param[out] on_ms The time for turning on the LED
  * @param[out] off_ms The time for turning on the LED
@@ -548,7 +548,7 @@ int notification_get_led_time_period(notification_h noti, int *on_ms, int *off_m
 /**
  * @brief Sets the launch option for a notification.
  * @details When notification data selected in display application, application launched by app_control_send_launch_request with app_control handle.
- * @since_tizen @if WEARABLE 2.3.1 @elseif MOBILE 2.3 @endif
+ * @since_tizen 2.3
  * @privlevel public
  * @privilege %http://tizen.org/privilege/appmanager.launch
  * @remarks Since 4.0, %http://tizen.org/privilege/appmanager.launch privilege is additionally required.
@@ -591,7 +591,7 @@ int notification_set_launch_option(notification_h noti, notification_launch_opti
 
 /**
  * @brief Gets the launch option from the notification handle.
- * @since_tizen @if WEARABLE 2.3.1 @elseif MOBILE 2.3 @endif
+ * @since_tizen 2.3
  * @remarks You must release @a option using app_control_destroy().
  * @param[in] noti The notification handle
  * @param[in] type Launching option type
@@ -624,7 +624,7 @@ int notification_get_launch_option(notification_h noti, notification_launch_opti
  * @brief Sets the handler for a specific event.
  * @details When some event occurs on notification, application launched by app_control_send_launch_request with app_control handle. \n
  *          Setting event handler of a button means that the notification will show the button.
- * @since_tizen @if MOBILE 2.4 @elseif WEARABLE 3.0 @endif
+ * @since_tizen 2.4
  * @privlevel public
  * @privilege %http://tizen.org/privilege/appmanager.launch
  * @remarks Since 4.0, %http://tizen.org/privilege/appmanager.launch privilege is additionally required.
@@ -668,7 +668,7 @@ int notification_set_event_handler(notification_h noti, notification_event_type_
 
 /**
  * @brief Gets the event handler of a specific event.
- * @since_tizen @if MOBILE 2.4 @elseif WEARABLE 3.0 @endif
+ * @since_tizen 2.4
  * @remarks You must release @a event_handler using app_control_destroy().
  * @param[in] noti The notification handle
  * @param[in] event_type Launching option type
@@ -702,7 +702,7 @@ int notification_get_event_handler(notification_h noti, notification_event_type_
 
 /**
  * @brief Sets the property of the notification.
- * @since_tizen @if WEARABLE 2.3.1 @elseif MOBILE 2.3 @endif
+ * @since_tizen 2.3
  * @param[in] noti The notification handle
  * @param[in] flags The property with | operation
  * @return #NOTIFICATION_ERROR_NONE on success,
@@ -735,7 +735,7 @@ int notification_set_property(notification_h noti, int flags);
 
 /**
  * @brief Gets the property of the notification from the notification handle.
- * @since_tizen @if WEARABLE 2.3.1 @elseif MOBILE 2.3 @endif
+ * @since_tizen 2.3
  * @param[in] noti The notification handle
  * @param[out] flags The notification property
  * @return #NOTIFICATION_ERROR_NONE on success,
@@ -764,7 +764,7 @@ int notification_get_property(notification_h noti, int *flags);
 /**
  * @brief Sets applications to display the notification.
  * @details All display application is enabled(#NOTIFICATION_DISPLAY_APP_ALL) if you do not call this function.
- * @since_tizen @if WEARABLE 2.3.1 @elseif MOBILE 2.3 @endif
+ * @since_tizen 2.3
  * @param[in] noti The notification handle
  * @param[in] applist The with | operation
  * @return #NOTIFICATION_ERROR_NONE on success,
@@ -798,7 +798,7 @@ int notification_set_display_applist(notification_h noti, int applist);
 
 /**
  * @brief Gets the application list displaying the notification from the notification handle.
- * @since_tizen @if WEARABLE 2.3.1 @elseif MOBILE 2.3 @endif
+ * @since_tizen 2.3
  * @param[in] noti The notification handle
  * @param[out] applist The display application list
  * @return #NOTIFICATION_ERROR_NONE on success,
@@ -827,7 +827,7 @@ int notification_get_display_applist(notification_h noti, int *applist);
 /**
  * @brief Sets the initial size for the ongoing type.
  * @details After notification_post() call, the size is not updated.
- * @since_tizen @if WEARABLE 2.3.1 @elseif MOBILE 2.3 @endif
+ * @since_tizen 2.3
  * @param[in] noti The notification handle
  * @param[in] size The double type size
  * @return #NOTIFICATION_ERROR_NONE on success,
@@ -859,7 +859,7 @@ int notification_set_size(notification_h noti, double size);
 
 /**
  * @brief Gets the progress size.
- * @since_tizen @if WEARABLE 2.3.1 @elseif MOBILE 2.3 @endif
+ * @since_tizen 2.3
  * @param[in] noti The notification handle
  * @param[out] size The progress size
  * @return #NOTIFICATION_ERROR_NONE on success,
@@ -887,7 +887,7 @@ int notification_get_size(notification_h noti, double *size);
 /**
  * @brief Sets the initial progress for the ongoing type.
  * @details After the notification_post() call, the progress is not updated.
- * @since_tizen @if WEARABLE 2.3.1 @elseif MOBILE 2.3 @endif
+ * @since_tizen 2.3
  * @param[in] noti The notification handle
  * @param[in] percentage The progress percentage
  * @return #NOTIFICATION_ERROR_NONE on success,
@@ -919,7 +919,7 @@ int notification_set_progress(notification_h noti, double percentage);
 
 /**
  * @brief Gets the progress from the notification handle.
- * @since_tizen @if WEARABLE 2.3.1 @elseif MOBILE 2.3 @endif
+ * @since_tizen 2.3
  * @remarks At the end of the operation, the progress should be @c 1.0.
  * @param[in] noti The notification handle
  * @param[out] percentage The progress percentage
@@ -949,7 +949,7 @@ int notification_get_progress(notification_h noti, double *percentage);
 /**
  * @brief Sets the layout of the notification view.
  * @details Caller can set displaying layout of notification.
- * @since_tizen @if WEARABLE 2.3.1 @elseif MOBILE 2.3 @endif
+ * @since_tizen 2.3
  * @param[in] noti The notification handle
  * @param[in] layout The type of layout
  * @return #NOTIFICATION_ERROR_NONE on success,
@@ -963,7 +963,7 @@ int notification_set_layout(notification_h noti, notification_ly_type_e layout);
 
 /**
  * @brief Gets the layout of the notification view from the notification handle.
- * @since_tizen @if WEARABLE 2.3.1 @elseif MOBILE 2.3 @endif
+ * @since_tizen 2.3
  * @param[in] noti The notification handle
  * @param[out] layout The type of layout
  * @return #NOTIFICATION_ERROR_NONE on success,
@@ -977,7 +977,7 @@ int notification_get_layout(notification_h noti, notification_ly_type_e *layout)
 
 /**
  * @brief Gets the type of a notification.
- * @since_tizen @if WEARABLE 2.3.1 @elseif MOBILE 2.3 @endif
+ * @since_tizen 2.3
  * @param[in] noti The notification handle
  * @param[out] type The notification type
  * @return #NOTIFICATION_ERROR_NONE on success,
@@ -1004,7 +1004,7 @@ int notification_get_type(notification_h noti, notification_type_e *type);
 /**
  * @brief Updates notification data.
  * @details The updated notification will appear in the notification area.
- * @since_tizen @if WEARABLE 2.3.1 @elseif MOBILE 2.3 @endif
+ * @since_tizen 2.3
  * @privlevel public
  * @privilege %http://tizen.org/privilege/notification
  * @param[in] noti The notification handle that is created by notification_create()
@@ -1033,7 +1033,7 @@ int notification_update(notification_h noti);
 /**
  * @brief Deletes a notification with the given handle.
  * @details notification_delete() removes notification data from database and notification_free() releases memory of notification data.
- * @since_tizen @if WEARABLE 2.3.1 @elseif MOBILE 2.3 @endif
+ * @since_tizen 2.3
  * @privlevel public
  * @privilege %http://tizen.org/privilege/notification
  * @param[in] noti The notification handle
@@ -1067,7 +1067,7 @@ int notification_delete(notification_h noti);
  * @details Available type is #NOTIFICATION_TYPE_NOTI and #NOTIFICATION_TYPE_ONGOING.
  *          #NOTIFICATION_TYPE_NOTI is remaining notification data even if device is restarted.
  *          #NOTIFICATION_TYPE_ONGOING can display progress on a notification with #NOTIFICATION_LY_ONGOING_PROGRESS layout.
- * @since_tizen @if WEARABLE 2.3.1 @elseif MOBILE 2.3 @endif
+ * @since_tizen 2.3
  * @remarks The specific error code can be obtained using the get_last_result() method. Error codes are described in Exception section.
  *          The returned value should be released using notification_free().
  * @param[in] type The notification type
@@ -1101,7 +1101,7 @@ notification_h notification_create(notification_type_e type);
 /**
  * @brief Creates a notification clone.
  * @details Newly created notification handle is returned.
- * @since_tizen @if WEARABLE 2.3.1 @elseif MOBILE 2.3 @endif
+ * @since_tizen 2.3
  * @remarks This cloned notification handle should be freed using notification_free().
  * @param[in] noti The notification handle
  * @param[out] clone The newly created notification handle that has same with input @a noti
@@ -1131,7 +1131,7 @@ int notification_clone(notification_h noti, notification_h *clone);
 /**
  * @brief Frees the internal structure data of a notification handle.
  * @details Internal data of a notification handle is released. Data of the inserted notification is not deleted.
- * @since_tizen @if WEARABLE 2.3.1 @elseif MOBILE 2.3 @endif
+ * @since_tizen 2.3
  * @param[in] noti The notification handle
  * @return #NOTIFICATION_ERROR_NONE on success,
  *         otherwise any other value on failure
@@ -1164,7 +1164,7 @@ int notification_free(notification_h noti);
 
 /**
  * @brief Sets the tag of the notification handle.
- * @since_tizen @if WEARABLE 2.3.1 @elseif MOBILE 2.3 @endif
+ * @since_tizen 2.3
  * @param[in] noti Notification handle
  * @param[in] tag Tag for loading notification handle
  * @return #NOTIFICATION_ERROR_NONE on success,
@@ -1198,7 +1198,7 @@ int notification_set_tag(notification_h noti, const char *tag);
 
 /**
  * @brief Gets the tag of the notification handle.
- * @since_tizen @if WEARABLE 2.3.1 @elseif MOBILE 2.3 @endif
+ * @since_tizen 2.3
  * @remarks Do not free @a tag. It will be freed when notification_free() is called.
  * @param[in] noti Notification handle
  * @param[out] tag Tag for loading notification handle
@@ -1229,7 +1229,7 @@ int notification_get_tag(notification_h noti, const char **tag);
 
 /**
  * @brief Loads a notification from the notification's database with the tag.
- * @since_tizen @if WEARABLE 2.3.1 @elseif MOBILE 2.3 @endif
+ * @since_tizen 2.3
  * @privlevel public
  * @privilege %http://tizen.org/privilege/notification
  * @remarks The specific error code can be obtained using the get_last_result() method. Error codes are described in Exception section.
@@ -1263,7 +1263,7 @@ notification_h notification_load_by_tag(const char *tag);
 
 /**
  * @brief Deletes all notifications of the given type.
- * @since_tizen @if WEARABLE 2.3.1 @elseif MOBILE 2.3 @endif
+ * @since_tizen 2.3
  * @privlevel public
  * @privilege %http://tizen.org/privilege/notification
  * @param[in] type Notification type
@@ -1291,7 +1291,7 @@ int notification_delete_all(notification_type_e type);
 
 /**
  * @brief Posts a notification.
- * @since_tizen @if WEARABLE 2.3.1 @elseif MOBILE 2.3 @endif
+ * @since_tizen 2.3
  * @privlevel public
  * @privilege %http://tizen.org/privilege/notification
  * @param[in] noti Notification handle
@@ -1321,7 +1321,7 @@ int notification_post(notification_h noti);
 
 /**
  * @brief Gets the package name of the notification.
- * @since_tizen @if MOBILE 2.4 @elseif WEARABLE 3.0 @endif
+ * @since_tizen 2.4
  * @remarks Do not free @a pkgname. It will be freed when notification_free() is called.
  * @param[in] noti Notification handle
  * @param[out] pkgname The package name of the notification
@@ -1355,7 +1355,7 @@ int notification_get_pkgname(notification_h noti, char **pkgname);
 
 /**
  * @brief Adds a button on the notification.
- * @since_tizen @if MOBILE 2.4 @elseif WEARABLE 3.0 @endif
+ * @since_tizen 2.4
  * @param[in] noti Notification handle
  * @param[in] button_index Button index
  * @return #NOTIFICATION_ERROR_NONE on success,
@@ -1387,7 +1387,7 @@ int notification_add_button(notification_h noti, notification_button_index_e but
 
 /**
  * @brief Removes a button on the notification.
- * @since_tizen @if MOBILE 2.4 @elseif WEARABLE 3.0 @endif
+ * @since_tizen 2.4
  * @param[in] noti Notification handle
  * @param[in] button_index Button index
  * @return #NOTIFICATION_ERROR_NONE on success,
@@ -1420,7 +1420,7 @@ int notification_remove_button(notification_h noti, notification_button_index_e 
 /**
  * @brief Sets the 'auto remove' option of the active notification.
  * @details The 'auto remove' option lets the active notification be removed several seconds after it shows. Default value is true.
- * @since_tizen @if MOBILE 2.4 @elseif WEARABLE 3.0 @endif
+ * @since_tizen 2.4
  * @remarks When 'auto_remove' is set as false, the active notification will not be removed
  *          as long as the user removes the active notification or the app which posted the active notification removes the active notification.
  * @param[in] noti Notification handle
@@ -1453,7 +1453,7 @@ int notification_set_auto_remove(notification_h noti, bool auto_remove);
 /**
  * @brief Gets the 'auto remove' option of the active notification.
  * @details The 'auto remove' option lets the active notification be removed several seconds after it shows. Default value is true.
- * @since_tizen @if MOBILE 2.4 @elseif WEARABLE 3.0 @endif
+ * @since_tizen 2.4
  * @param[in] noti Notification handle
  * @param[out] auto_remove Auto remove option
  * @return #NOTIFICATION_ERROR_NONE On success, other value on failure

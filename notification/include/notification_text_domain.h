@@ -23,7 +23,7 @@ extern "C" {
 
 /**
  * @brief Sets the text domain to localize the notification.
- * @since_tizen @if MOBILE 2.3 @elseif WEARABLE 2.3.1 @endif
+ * @since_tizen 2.3
  * @param[in] noti   The notification handle
  * @param[in] domain The text domain
  * @param[in] dir    The text dir
@@ -58,7 +58,7 @@ int notification_set_text_domain(notification_h noti,
 
 /**
  * @brief Gets the text domain from the notification handle.
- * @since_tizen @if MOBILE 2.3 @elseif WEARABLE 2.3.1 @endif
+ * @since_tizen 2.3
  * @remarks Do not free returned domain and dir. They are freed when notification_free() or notification_free_list() is called.
  * @param[in]  noti   The notification handle
  * @param[out] domain The domain

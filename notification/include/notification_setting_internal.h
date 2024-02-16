@@ -122,7 +122,7 @@ struct notification_system_setting_dnd_allow_exception {
 /**
  * @internal
  * @brief Gets the array of notification setting.
- * @since_tizen @if WEARABLE 2.3.1 @elseif MOBILE 2.3 @endif
+ * @since_tizen 2.3
  * @privlevel public
  * @privilege %http://tizen.org/privilege/notification
  * @param[out] setting_array The array of notification setting
