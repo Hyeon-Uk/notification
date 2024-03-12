@@ -76,7 +76,7 @@ MAJORVER=`echo %{version} | awk 'BEGIN {FS="."}{print $1}'`
 %check
 ctest -V
 %if 0%{?gcov:1}
-lcov -c --ignore-errors graph --no-external -q -d . -o notification.info
+lcov -c --ignore-errors mismatch,graph,unused --no-external -q -d . -o notification.info
 genhtml notification.info -o notification.out
 zip -r notification.zip notification.out
 install -m 0644 notification.zip %{buildroot}%{_datadir}/gcov/obj/notification.zip
