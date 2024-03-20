@@ -72,7 +72,6 @@ static GHashTable *_noti_cb_hash = NULL;
 static GList *__noti_event_cb_list = NULL;
 
 static GRecMutex __rec_mutex;
-static gint __init_mutex = 0;
 
 NOTIFICATION_CTOR static void __notification_init(void)
 {
@@ -745,7 +744,6 @@ EXPORT_API int notification_delete_group_by_group_id(const char *app_id,
 
 	__notification_mutex_unlock();
 
-out:
 	if (caller_app_id)
 		free(caller_app_id);
 
@@ -772,7 +770,6 @@ int notification_delete_group_by_priv_id_for_uid(const char *app_id,
 
 	__notification_mutex_unlock();
 
-out:
 	if (caller_app_id)
 		free(caller_app_id);
 
@@ -930,7 +927,6 @@ int notification_delete_all_by_type_for_uid(const char *app_id,
 
 	__notification_mutex_unlock();
 
-out:
 	if (caller_app_id)
 		free(caller_app_id);
 
@@ -967,7 +963,6 @@ int notification_delete_by_priv_id_for_uid(const char *app_id,
 
 	__notification_mutex_unlock();
 
-out:
 	if (caller_app_id)
 		free(caller_app_id);
 
@@ -1617,7 +1612,6 @@ EXPORT_API int notification_delete_all_for_uid(notification_type_e type, uid_t u
 
 	__notification_mutex_unlock();
 
-out:
 	if (caller_app_id)
 		free(caller_app_id);
 
