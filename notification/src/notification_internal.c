@@ -74,12 +74,12 @@ static GList *__noti_event_cb_list = NULL;
 static GRecMutex __rec_mutex;
 static gint __init_mutex = 0;
 
-NOTIFICATION_CTOR __notification_init(void)
+NOTIFICATION_CTOR static void __notification_init(void)
 {
 	g_rec_mutex_init(&__rec_mutex);
 }
 
-NOTIFICATION_DTOR __notification_fini(void)
+NOTIFICATION_DTOR static void __notification_fini(void)
 {
 	g_rec_mutex_clear(&__rec_mutex);
 }
