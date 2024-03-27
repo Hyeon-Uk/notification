@@ -567,6 +567,8 @@ static int _create_update_query(sqlite3 *db, notification_h noti, sqlite3_stmt *
 	__BIND_INT(db, stmt, idx++, noti->text_input_max_length, ret, out);
 	__BIND_INT(db, stmt, idx++, noti->event_flag, ret, out);
 	__BIND_INT(db, stmt, idx++, noti->extension_image_size, ret, out);
+	__BIND_INT(db, stmt, idx++, noti->check_box, ret, out);
+	__BIND_INT(db, stmt, idx++, noti->check_box_value, ret, out);
 
 out:
 	__free_encoded_data(b_image_path);
