@@ -9,18 +9,17 @@ PATH=/bin:/usr/bin:/sbin:/usr/sbin
 
 DB_DIR=/opt/dbspace
 DB_NOTIFICATION=$DB_DIR/.notification.db
-DB_VERSION=1
+DB_VERSION=2
+
+CURRENT_VERSION=`sqlite3 $DB_NOTIFICATION 'PRAGMA user_version'`
 
 CheckListTable() {
   ADDED_COLUMN=`sqlite3 $DB_NOTIFICATION 'PRAGMA table_info(noti_list)' | grep b_event_handler_click_on_button_7`
-
   CHECKBOX_COLUMN=`sqlite3 $DB_NOTIFICATION 'PRAGMA table_info(noti_list)' | grep check_box`
-
-  CURRENT_VERSION=`sqlite3 $DB_NOTIFICATION 'PRAGMA user_version'`
 
   echo "## Check list table"
 
-  if [ -z "${ADDED_COLUMN}" ] || [ -z "${CHECKBOX_COLUMN}" ] || [ ${CURRENT_VERSION} -ne ${DB_VERSION} ]; then
+  if [ -z "${ADDED_COLUMN}" ] || [ -z "${CHECKBOX_COLUMN}" ]; then
     echo "column empty"
     return 1
   else
@@ -31,14 +30,11 @@ CheckListTable() {
 
 CheckTemplateTable() {
   ADDED_COLUMN=`sqlite3 $DB_NOTIFICATION 'PRAGMA table_info(noti_template)' | grep template_name`
-
   CHECKBOX_COLUMN=`sqlite3 $DB_NOTIFICATION 'PRAGMA table_info(noti_template)' | grep check_box`
-
-  CURRENT_VERSION=`sqlite3 $DB_NOTIFICATION 'PRAGMA user_version'`
 
   echo "## Check template table"
 
-  if [ -z "${ADDED_COLUMN}" ] || [ -z "${CHECKBOX_COLUMN}" ] || [ ${CURRENT_VERSION} -ne ${DB_VERSION} ]; then
+  if [ -z "${ADDED_COLUMN}" ] || [ -z "${CHECKBOX_COLUMN}" ]; then
     echo "column empty"
     return 1
   else
@@ -236,7 +232,6 @@ UpdateNotiDB() {
   RESULT=$?
   if [ ${RESULT} == 1 ]; then
     UpdateListTable
-    UpdateDBVersion
     echo "update list table"
   else
     echo "list table already updated"
@@ -251,7 +246,10 @@ UpdateNotiDB() {
     echo "template table already updated"
   fi
 
+  UpdateDBVersion
   UpdatePermission
 }
 
-UpdateNotiDB
+if [[ $CURRENT_VERSION -lt $DB_VERSION ]]; then
+  UpdateNotiDB
+fi
