@@ -92,14 +92,14 @@ EXPORT_API int notification_db_init(void)
 	sql_ret = sqlite3_open_v2(DBPATH, &db,
 			SQLITE_OPEN_CREATE | SQLITE_OPEN_READWRITE, NULL);
 	if (sql_ret != SQLITE_OK) {
-		ERR("Failed to open db[%d]", ret);
+		ERR("Failed to open db[%d]", sql_ret);
 		ret = NOTIFICATION_ERROR_FROM_DB;
 		goto out;
 	}
 
 	sql_ret = sqlite3_exec(db, CREATE_NOTIFICATION_TABLE, NULL, NULL, &errmsg);
 	if (sql_ret != SQLITE_OK) {
-		ERR("Failed to exec sqlite[%d][%s]", ret, errmsg);
+		ERR("Failed to exec sqlite[%d][%s]", sql_ret, errmsg);
 		ret = NOTIFICATION_ERROR_FROM_DB;
 		goto out;
 	}
