@@ -73,6 +73,9 @@ static GList *__noti_event_cb_list = NULL;
 
 static GRecMutex __rec_mutex;
 
+static disturb_cb _disturb_callback = NULL;
+static void *_disturb_user_data = NULL;
+
 NOTIFICATION_CTOR static void __notification_init(void)
 {
 	g_rec_mutex_init(&__rec_mutex);
@@ -236,7 +239,7 @@ void notification_delete_event_handler_cb(int priv_id)
 	if (info)
 		free(info);
 
-	if (__noti_event_cb_list == NULL)
+	if (__noti_event_cb_list == NULL && _disturb_callback == NULL)
 		notification_ipc_event_monitor_fini();
 
 	__notification_mutex_unlock();
@@ -2382,6 +2385,120 @@ EXPORT_API int notification_get_check_box_checked(notification_h noti,
 		*checked = noti->check_box_value;
 	else
 		*checked = false;
+
+	return NOTIFICATION_ERROR_NONE;
+}
+/* LCOV_EXCL_STOP */
+
+/* LCOV_EXCL_START */
+EXPORT_API int notification_register_do_not_disturb_app(disturb_cb callback, void *user_data)
+{
+	int ret;
+
+	WARN("register dnd app");
+
+	if (callback == NULL)
+		return NOTIFICATION_ERROR_INVALID_PARAMETER;
+
+	__notification_mutex_lock();
+
+	ret = notification_ipc_request_register_dnd_app(getuid(), getpid());
+	if (ret != NOTIFICATION_ERROR_NONE)
+		goto out;
+
+	ret = notification_ipc_event_monitor_init();
+	if (ret != NOTIFICATION_ERROR_NONE)
+		goto out;
+
+	_disturb_callback = callback;
+	_disturb_user_data = user_data;
+
+out:
+	__notification_mutex_unlock();
+
+	WARN("register dnd app done");
+
+	return ret;
+}
+
+EXPORT_API int notification_unregister_do_not_disturb_app(void)
+{
+	WARN("unregister dnd app");
+
+	_disturb_callback = NULL;
+
+	if (__noti_event_cb_list == NULL)
+		notification_ipc_event_monitor_fini();
+
+	return NOTIFICATION_ERROR_NONE;
+}
+
+void notification_call_disturb_cb(void)
+{
+	WARN("call disturb callback");
+
+	if (_disturb_callback == NULL) {
+		ERR("no disturb callback");
+		return;
+	}
+
+	_disturb_callback(_disturb_user_data);
+
+	WARN("done");
+}
+/* LCOV_EXCL_STOP */
+
+#define PAIRING_TYPE_KEY "_NOTIFICATION_TYPE_PAIRING_"
+
+/* LCOV_EXCL_START */
+EXPORT_API int notification_set_pairing_type(notification_h noti, bool pairing)
+{
+	char *del = NULL;
+
+	WARN("set pairing");
+
+	if (noti == NULL)
+		return NOTIFICATION_ERROR_INVALID_PARAMETER;
+
+	if (noti->args == NULL)
+		noti->args = bundle_create();
+
+	bundle_get_str(noti->args, PAIRING_TYPE_KEY, &del);
+	if (del != NULL) {
+		bundle_del(noti->args, PAIRING_TYPE_KEY);
+		del = NULL;
+	}
+
+	if (pairing)
+		bundle_add_str(noti->args, PAIRING_TYPE_KEY, "true");
+	else
+		bundle_add_str(noti->args, PAIRING_TYPE_KEY, "false");
+
+	WARN("set pairing done");
+
+	return NOTIFICATION_ERROR_NONE;
+}
+
+EXPORT_API int notification_get_pairing_type(notification_h noti, bool *pairing)
+{
+	int ret;
+	char *value = NULL;
+
+	WARN("get pairing");
+
+	if (noti == NULL || noti->args == NULL || pairing == NULL)
+		return NOTIFICATION_ERROR_INVALID_PARAMETER;
+
+	ret = bundle_get_str(noti->args, PAIRING_TYPE_KEY, &value);
+	if (ret != BUNDLE_ERROR_NONE || value == NULL)
+		return NOTIFICATION_ERROR_INVALID_PARAMETER;
+
+	if (strcmp("true", value) == 0)
+		*pairing = true;
+	else
+		*pairing = false;
+
+	WARN("get pairing done");
 
 	return NOTIFICATION_ERROR_NONE;
 }

@@ -1503,6 +1503,12 @@ int notification_get_check_box(notification_h noti, bool *flag, bool *checked);
 int notification_set_check_box_checked(notification_h noti, bool checked);
 int notification_get_check_box_checked(notification_h noti, bool *checked);
 
+typedef void (*disturb_cb)(void *user_data);
+int notification_register_do_not_disturb_app(disturb_cb callback, void *user_data);
+int notification_unregister_do_not_disturb_app(void);
+int notification_set_pairing_type(notification_h noti, bool pairing);
+int notification_get_pairing_type(notification_h noti, bool *pairing);
+
 
 /**
  * @}

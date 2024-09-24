@@ -636,6 +636,13 @@ static void _delete_event(GVariant *parameters)
 /* LCOV_EXCL_STOP */
 
 /* LCOV_EXCL_START */
+static void _disturb_app(GVariant *parameters)
+{
+	notification_call_disturb_cb();
+}
+/* LCOV_EXCL_STOP */
+
+/* LCOV_EXCL_START */
 static void _handle_noti_event_handler_notify(GDBusConnection *connection,
 		const gchar     *sender_name,
 		const gchar     *object_path,
@@ -651,6 +658,8 @@ static void _handle_noti_event_handler_notify(GDBusConnection *connection,
 		_send_event(parameters);
 	else if (g_strcmp0(signal_name, "delete_noti") == 0)
 		_delete_event(parameters);
+	else if (g_strcmp0(signal_name, "disturb_app") == 0)
+		_disturb_app(parameters);
 }
 /* LCOV_EXCL_STOP */
 
@@ -928,6 +937,7 @@ static int _send_async_noti(GVariant *body, result_cb_item *cb_item, char *cmd)
 }
 /* LCOV_EXCL_STOP */
 
+/* LCOV_EXCL_START */
 int notification_ipc_request_insert(notification_h noti, int *priv_id)
 {
 	int result;
@@ -975,6 +985,7 @@ int notification_ipc_request_insert(notification_h noti, int *priv_id)
 	WARN("priv_id[%d] result[%d]", id, result);
 	return result;
 }
+/* LCOV_EXCL_STOP */
 
 int notification_ipc_request_update(notification_h noti)
 {
@@ -2728,3 +2739,27 @@ int notification_ipc_event_monitor_init(void)
 	return _dbus_event_handler_signal_init();
 }
 /* LCOV_EXCL_STOP */
+
+int notification_ipc_request_register_dnd_app(uid_t uid, pid_t pid)
+{
+	int ret;
+	GVariant *body;
+	GDBusMessage *reply = NULL;
+
+	WARN("request register dnd app");
+	ret = _dbus_init();
+	if (ret != NOTIFICATION_ERROR_NONE) {
+		ERR("Failed to init dbus connection[%d]", ret);
+		return ret;
+	}
+
+	body = g_variant_new("(ii)", uid, pid);
+
+	ret = _send_sync_noti(body, &reply, "register_dnd_app");
+	if (reply)
+		g_object_unref(reply);
+
+	WARN("send sync noti [%d]", ret);
+
+	return ret;
+}

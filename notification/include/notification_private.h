@@ -192,6 +192,8 @@ void notification_call_event_handler_cb(notification_h noti, int event_type);
 void notification_delete_event_handler_cb(int priv_id);
 char *notification_get_app_id_by_pid(int pid);
 
+void notification_call_disturb_cb(void);
+
 #ifdef __cplusplus
 }
 #endif

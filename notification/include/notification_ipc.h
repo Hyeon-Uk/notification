@@ -109,6 +109,9 @@ int notification_ipc_socket_write_string(int fd, const char *buffer, unsigned in
 int notification_ipc_socket_read(int fd, char *buffer, unsigned int nbytes);
 
 int notification_ipc_event_monitor_init(void);
+
+int notification_ipc_request_register_dnd_app(uid_t uid, pid_t pid);
+
 #ifdef __cplusplus
 }
 #endif
