@@ -13,6 +13,7 @@ PKG_CHECK_MODULES(notification-unittests REQUIRED
     aul
     security-manager
     libtzplatform-config
+    pkgmgr-info
 )
 
 FOREACH(flag ${notification-unittests_CFLAGS})
