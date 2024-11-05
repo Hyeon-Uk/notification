@@ -2763,3 +2763,27 @@ int notification_ipc_request_register_dnd_app(uid_t uid, pid_t pid)
 
 	return ret;
 }
+
+int notification_ipc_request_unregister_dnd_app(uid_t uid, pid_t pid)
+{
+	int ret;
+	GVariant *body;
+	GDBusMessage *reply = NULL;
+
+	WARN("request unregister dnd app");
+	ret = _dbus_init();
+	if (ret != NOTIFICATION_ERROR_NONE) {
+		ERR("Failed to init dbus connection[%d]", ret);
+		return ret;
+	}
+
+	body = g_variant_new("(ii)", uid, pid);
+
+	ret = _send_sync_noti(body, &reply, "unregister_dnd_app");
+	if (reply)
+		g_object_unref(reply);
+
+	WARN("send sync noti [%d]", ret);
+
+	return ret;
+}

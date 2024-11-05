@@ -2423,14 +2423,29 @@ out:
 
 EXPORT_API int notification_unregister_do_not_disturb_app(void)
 {
+	int ret;
+
 	WARN("unregister dnd app");
+
+	__notification_mutex_lock();
+
+	ret = notification_ipc_request_unregister_dnd_app(getuid(), getpid());
+	if (ret != NOTIFICATION_ERROR_NONE) {
+		ERR("failed to unregister dnd app");
+		__notification_mutex_unlock();
+		return ret;
+	}
 
 	_disturb_callback = NULL;
 
 	if (__noti_event_cb_list == NULL)
 		notification_ipc_event_monitor_fini();
 
-	return NOTIFICATION_ERROR_NONE;
+	__notification_mutex_unlock();
+
+	WARN("unregister dnd app done");
+
+	return ret;
 }
 
 void notification_call_disturb_cb(void)
