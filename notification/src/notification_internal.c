@@ -202,10 +202,12 @@ void notification_call_event_handler_cb(notification_h noti, int event_type)
 		return;
 	}
 
+	__notification_mutex_unlock();
+
+	WARN("call event callback");
+
 	info = g_list_nth_data(find_list, 0);
 	info->cb(noti, event_type, info->userdata);
-
-	__notification_mutex_unlock();
 
 	WARN("done");
 }
