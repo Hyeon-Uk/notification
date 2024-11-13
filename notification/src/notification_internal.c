@@ -180,6 +180,7 @@ void notification_call_event_handler_cb(notification_h noti, int event_type)
 	int priv_id;
 	GList *find_list;
 	notification_event_cb_info_s *info;
+	notification_event_cb_info_s dup_info;
 
 	WARN("call event[%d]", event_type);
 
@@ -202,12 +203,14 @@ void notification_call_event_handler_cb(notification_h noti, int event_type)
 		return;
 	}
 
+	info = g_list_nth_data(find_list, 0);
+	dup_info = *info;
+
 	__notification_mutex_unlock();
 
 	WARN("call event callback");
 
-	info = g_list_nth_data(find_list, 0);
-	info->cb(noti, event_type, info->userdata);
+	dup_info.cb(noti, event_type, dup_info.userdata);
 
 	WARN("done");
 }
