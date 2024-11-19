@@ -140,7 +140,7 @@ static char *__get_data_path_by_pkg_id(const char *pkg_id,
 	snprintf(rel_file_path, sizeof(rel_file_path), "%s",
 			pkg_path + strlen(pkg_id));
 
-	for (int i = 0; i < strlen(rel_file_path); i++) {
+	for (size_t i = 0; i < strlen(rel_file_path); i++) {
 		if (rel_file_path[i] == '/')
 		  rel_file_path[i] = '_';
 	}
