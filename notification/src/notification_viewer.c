@@ -21,6 +21,7 @@
 
 #include <app_control_internal.h>
 #include <iniparser.h>
+#include <unistd.h>
 
 #include <notification.h>
 #include <notification_debug.h>
