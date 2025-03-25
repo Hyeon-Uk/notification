@@ -346,6 +346,10 @@ void DBusSender::SendMessage(const IEventInfo& info, list<Bundle> serialized,
   string appid = info.GetOwner();
   if (appid.length() == 0)
     appid = util::GetAppId();
+
+  if (appid == "d::org.tizen.appfw.service.esd")
+    appid = "data-provider-master";
+
   impl_->MethodCall(appid, info, serialized);
 }
 

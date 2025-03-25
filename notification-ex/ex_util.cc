@@ -111,6 +111,9 @@ string GetAppId(pid_t pid) {
       appid = string(&appid_buf[last_slash_index + 1]);
   }
 
+  if (appid == "d::org.tizen.appfw.service.esd")
+    appid = "data-provider-master";
+
   LOGI("appid(%s)", appid.c_str());
   appid_cache[pid] = appid;
   return appid;
