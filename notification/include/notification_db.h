@@ -37,6 +37,8 @@ char *notification_db_column_text(sqlite3_stmt *stmt, int col);
 bundle *notification_db_column_bundle(sqlite3_stmt *stmt, int col);
 int notification_db_init(void);
 
+int notification_upgrade_db(void);
+
 #ifdef __cplusplus
 }
 #endif

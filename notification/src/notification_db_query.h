@@ -18,6 +18,7 @@
 #define NOTIFICATION_SETTING_DB_TABLE "notification_setting"
 #define NOTIFICATION_SYSTEM_SETTING_DB_TABLE "notification_system_setting"
 #define NOTIFICATION_DND_ALLOW_EXCEPTION "dnd_allow_exception"
+#define DB_VERSION 2
 
 #define CREATE_NOTIFICATION_TABLE \
 	"PRAGMA journal_mode = PERSIST;\n" \
@@ -318,6 +319,162 @@
 	"do_not_disturb, visibility_class, dnd_schedule_enabled, " \
 	"dnd_schedule_day, dnd_start_hour, dnd_start_min, dnd_end_hour, " \
 	"dnd_end_min, lock_screen_content_level"
+
+#define NOTIFICATION_UPGRADE_DB \
+	"DROP TABLE IF EXISTS noti_list_temp;\n" \
+	"CREATE TABLE noti_list_temp (\n" \
+	"	type INTEGER NOT NULL,\n" \
+	"	layout INTEGER NOT NULL default 0,\n" \
+	"	pkg_id TEXT NOT NULL,\n" \
+	"	caller_app_id TEXT NOT NULL,\n" \
+	"	launch_app_id TEXT,\n" \
+	"	app_label TEXT,\n" \
+	"	image_path TEXT,\n" \
+	"	priv_image_path TEXT,\n" \
+	"	group_id INTEGER default 0,\n" \
+	"	internal_group_id INTEGER default 0,\n" \
+	"	priv_id INTEGER PRIMARY KEY AUTOINCREMENT,\n" \
+	"	title_key TEXT,\n" \
+	"	b_text TEXT,\n" \
+	"	b_key TEXT,\n" \
+	"	tag TEXT,\n" \
+	"	b_format_args TEXT,\n" \
+	"	num_format_args INTEGER default 0,\n" \
+	"	text_domain TEXT,\n" \
+	"	text_dir TEXT,\n" \
+	"	time INTEGER default 0,\n" \
+	"	insert_time INTEGER default 0,\n" \
+	"	args TEXT,\n" \
+	"	group_args TEXT,\n" \
+	"	b_execute_option TEXT,\n" \
+	"	b_service_responding TEXT,\n" \
+	"	b_service_single_launch TEXT,\n" \
+	"	b_service_multi_launch TEXT,\n" \
+	"	b_event_handler_click_on_button_1 TEXT,\n" \
+	"	b_event_handler_click_on_button_2 TEXT,\n" \
+	"	b_event_handler_click_on_button_3 TEXT,\n" \
+	"	b_event_handler_click_on_button_4 TEXT,\n" \
+	"	b_event_handler_click_on_button_5 TEXT,\n" \
+	"	b_event_handler_click_on_button_6 TEXT,\n" \
+	"	b_event_handler_click_on_icon TEXT,\n" \
+	"	b_event_handler_click_on_thumbnail TEXT,\n" \
+	"	b_event_handler_click_on_text_input_button TEXT,\n" \
+	"	b_event_handler_click_on_button_7 TEXT,\n" \
+	"	b_event_handler_click_on_button_8 TEXT,\n" \
+	"	b_event_handler_click_on_button_9 TEXT,\n" \
+	"	b_event_handler_click_on_button_10 TEXT,\n" \
+	"	sound_type INTEGER default 0,\n" \
+	"	sound_path TEXT,\n" \
+	"	priv_sound_path TEXT,\n" \
+	"	vibration_type INTEGER default 0,\n" \
+	"	vibration_path TEXT,\n" \
+	"	priv_vibration_path TEXT,\n" \
+	"	led_operation INTEGER default 0,\n" \
+	"	led_argb INTEGER default 0,\n" \
+	"	led_on_ms INTEGER default -1,\n" \
+	"	led_off_ms INTEGER default -1,\n" \
+	"	flags_for_property INTEGER default 0,\n" \
+	"	flag_simmode INTEGER default 0,\n" \
+	"	display_applist INTEGER,\n" \
+	"	progress_size DOUBLE default 0,\n" \
+	"	progress_percentage DOUBLE default 0,\n" \
+	"	ongoing_flag INTEGER default 0,\n" \
+	"	ongoing_value_type INTEGER default 0,\n" \
+	"	ongoing_current INTEGER default 0,\n" \
+	"	ongoing_duration INTEGER default 0,\n" \
+	"	auto_remove INTEGER default 1,\n" \
+	"	default_button_index INTEGER default 0,\n" \
+	"	hide_timeout INTEGER default 0,\n" \
+	"	delete_timeout INTEGER default 0,\n" \
+	"	text_input_max_length INTEGER default 0,\n" \
+	"	event_flag INTEGER default 0,\n" \
+	"	extension_image_size INTEGER default 0,\n" \
+	"	uid INTEGER,\n" \
+	"	check_box INTEGER DEFAULT 0,\n" \
+	"	check_box_value INTEGER DEFAULT 0 );\n" \
+	"	INSERT INTO noti_list_temp (type, layout, pkg_id, caller_app_id, launch_app_id, image_path, priv_image_path, group_id, internal_group_id, priv_id, title_key, b_text, b_key, tag, b_format_args, num_format_args, text_domain, text_dir, time, insert_time, args, group_args, b_execute_option, b_service_responding, b_service_single_launch, b_service_multi_launch, b_event_handler_click_on_button_1, b_event_handler_click_on_button_2, b_event_handler_click_on_button_3, b_event_handler_click_on_button_4, b_event_handler_click_on_button_5, b_event_handler_click_on_button_6, b_event_handler_click_on_icon, b_event_handler_click_on_thumbnail, b_event_handler_click_on_text_input_button, sound_type, sound_path, priv_sound_path, vibration_type, vibration_path, priv_vibration_path, led_operation, led_argb, led_on_ms, led_off_ms, flags_for_property, flag_simmode, display_applist, progress_size, progress_percentage, ongoing_flag, ongoing_value_type, ongoing_current, ongoing_duration, auto_remove, default_button_index, hide_timeout, delete_timeout, text_input_max_length, event_flag, extension_image_size, uid) \n" \
+	"	SELECT type, layout, pkg_id, caller_app_id, launch_app_id, image_path, priv_image_path, group_id, internal_group_id, priv_id, title_key, b_text, b_key, tag, b_format_args, num_format_args, text_domain, text_dir, time, insert_time, args, group_args, b_execute_option, b_service_responding, b_service_single_launch, b_service_multi_launch, b_event_handler_click_on_button_1, b_event_handler_click_on_button_2, b_event_handler_click_on_button_3, b_event_handler_click_on_button_4, b_event_handler_click_on_button_5, b_event_handler_click_on_button_6, b_event_handler_click_on_icon, b_event_handler_click_on_thumbnail, b_event_handler_click_on_text_input_button, sound_type, sound_path, priv_sound_path, vibration_type, vibration_path, priv_vibration_path, led_operation, led_argb, led_on_ms, led_off_ms, flags_for_property, flag_simmode, display_applist, progress_size, progress_percentage, ongoing_flag, ongoing_value_type, ongoing_current, ongoing_duration, auto_remove, default_button_index, hide_timeout, delete_timeout, text_input_max_length, event_flag, extension_image_size, uid FROM noti_list;\n" \
+	"	DROP TABLE noti_list;\n" \
+	"	ALTER TABLE noti_list_temp RENAME TO noti_list;\n"
+
+#define NOTIFICATION_UPGRADE_TEMPLATE_DB \
+	"DROP TABLE IF EXISTS noti_template_temp;\n" \
+	"CREATE TABLE noti_template_temp (\n" \
+	"	type INTEGER NOT NULL,\n" \
+	"	layout INTEGER NOT NULL default 0,\n" \
+	"	pkg_id TEXT NOT NULL,\n" \
+	"	caller_app_id TEXT NOT NULL,\n" \
+	"	launch_app_id TEXT,\n" \
+	"	app_label TEXT,\n" \
+	"	image_path TEXT,\n" \
+	"	priv_image_path TEXT,\n" \
+	"	group_id INTEGER default 0,\n" \
+	"	internal_group_id INTEGER default 0,\n" \
+	"	priv_id INTEGER PRIMARY KEY AUTOINCREMENT,\n" \
+	"	title_key TEXT,\n" \
+	"	b_text TEXT,\n" \
+	"	b_key TEXT,\n" \
+	"	tag TEXT,\n" \
+	"	b_format_args TEXT,\n" \
+	"	num_format_args INTEGER default 0,\n" \
+	"	text_domain TEXT,\n" \
+	"	text_dir TEXT,\n" \
+	"	time INTEGER default 0,\n" \
+	"	insert_time INTEGER default 0,\n" \
+	"	args TEXT,\n" \
+	"	group_args TEXT,\n" \
+	"	b_execute_option TEXT,\n" \
+	"	b_service_responding TEXT,\n" \
+	"	b_service_single_launch TEXT,\n" \
+	"	b_service_multi_launch TEXT,\n" \
+	"	b_event_handler_click_on_button_1 TEXT,\n" \
+	"	b_event_handler_click_on_button_2 TEXT,\n" \
+	"	b_event_handler_click_on_button_3 TEXT,\n" \
+	"	b_event_handler_click_on_button_4 TEXT,\n" \
+	"	b_event_handler_click_on_button_5 TEXT,\n" \
+	"	b_event_handler_click_on_button_6 TEXT,\n" \
+	"	b_event_handler_click_on_icon TEXT,\n" \
+	"	b_event_handler_click_on_thumbnail TEXT,\n" \
+	"	b_event_handler_click_on_text_input_button TEXT,\n" \
+	"	b_event_handler_click_on_button_7 TEXT,\n" \
+	"	b_event_handler_click_on_button_8 TEXT,\n" \
+	"	b_event_handler_click_on_button_9 TEXT,\n" \
+	"	b_event_handler_click_on_button_10 TEXT,\n" \
+	"	sound_type INTEGER default 0,\n" \
+	"	sound_path TEXT,\n" \
+	"	priv_sound_path TEXT,\n" \
+	"	vibration_type INTEGER default 0,\n" \
+	"	vibration_path TEXT,\n" \
+	"	priv_vibration_path TEXT,\n" \
+	"	led_operation INTEGER default 0,\n" \
+	"	led_argb INTEGER default 0,\n" \
+	"	led_on_ms INTEGER default -1,\n" \
+	"	led_off_ms INTEGER default -1,\n" \
+	"	flags_for_property INTEGER default 0,\n" \
+	"	flag_simmode INTEGER default 0,\n" \
+	"	display_applist INTEGER,\n" \
+	"	progress_size DOUBLE default 0,\n" \
+	"	progress_percentage DOUBLE default 0,\n" \
+	"	ongoing_flag INTEGER default 0,\n" \
+	"	ongoing_value_type INTEGER default 0,\n" \
+	"	ongoing_current INTEGER default 0,\n" \
+	"	ongoing_duration INTEGER default 0,\n" \
+	"	auto_remove INTEGER default 1,\n" \
+	"	default_button_index INTEGER default 0,\n" \
+	"	hide_timeout INTEGER default 0,\n" \
+	"	delete_timeout INTEGER default 0,\n" \
+	"	text_input_max_length INTEGER default 0,\n" \
+	"	event_flag INTEGER default 0,\n" \
+	"	extension_image_size INTEGER default 0,\n" \
+	"	uid INTEGER,\n" \
+	"	check_box INTEGER DEFAULT 0,\n" \
+	"	check_box_value INTEGER DEFAULT 0,\n" \
+	"	template_name TEXT,\n" \
+	"	UNIQUE (caller_app_id, template_name) );\n" \
+	"	INSERT INTO noti_template_temp (type, layout, pkg_id, caller_app_id, launch_app_id, image_path, priv_image_path, group_id, internal_group_id, priv_id, title_key, b_text, b_key, tag, b_format_args, num_format_args, text_domain, text_dir, time, insert_time, args, group_args, b_execute_option, b_service_responding, b_service_single_launch, b_service_multi_launch, b_event_handler_click_on_button_1, b_event_handler_click_on_button_2, b_event_handler_click_on_button_3, b_event_handler_click_on_button_4, b_event_handler_click_on_button_5, b_event_handler_click_on_button_6, b_event_handler_click_on_icon, b_event_handler_click_on_thumbnail, b_event_handler_click_on_text_input_button, sound_type, sound_path, priv_sound_path, vibration_type, vibration_path, priv_vibration_path, led_operation, led_argb, led_on_ms, led_off_ms, flags_for_property, flag_simmode, display_applist, progress_size, progress_percentage, ongoing_flag, ongoing_value_type, ongoing_current, ongoing_duration, auto_remove, default_button_index, hide_timeout, delete_timeout, text_input_max_length, event_flag, extension_image_size, uid) \n" \
+	"	SELECT type, layout, pkg_id, caller_app_id, launch_app_id, image_path, priv_image_path, group_id, internal_group_id, priv_id, title_key, b_text, b_key, tag, b_format_args, num_format_args, text_domain, text_dir, time, insert_time, args, group_args, b_execute_option, b_service_responding, b_service_single_launch, b_service_multi_launch, b_event_handler_click_on_button_1, b_event_handler_click_on_button_2, b_event_handler_click_on_button_3, b_event_handler_click_on_button_4, b_event_handler_click_on_button_5, b_event_handler_click_on_button_6, b_event_handler_click_on_icon, b_event_handler_click_on_thumbnail, b_event_handler_click_on_text_input_button, sound_type, sound_path, priv_sound_path, vibration_type, vibration_path, priv_vibration_path, led_operation, led_argb, led_on_ms, led_off_ms, flags_for_property, flag_simmode, display_applist, progress_size, progress_percentage, ongoing_flag, ongoing_value_type, ongoing_current, ongoing_duration, auto_remove, default_button_index, hide_timeout, delete_timeout, text_input_max_length, event_flag, extension_image_size, uid FROM noti_template;\n" \
+	"	DROP TABLE noti_template;\n" \
+	"	ALTER TABLE noti_template_temp RENAME TO noti_template;\n"
 
 #define __BIND_TEXT(db, stmt, i, text, ret, label) \
 do { \

@@ -227,3 +227,174 @@ bundle *notification_db_column_bundle(sqlite3_stmt *stmt, int col)
 	return bundle_decode(col_bundle, strlen((char *)col_bundle));
 }
 
+/* db upgrade sequece*/
+static int __check_db_version(sqlite3 *db) {
+	int ret;
+	int result;
+	sqlite3_stmt *stmt = NULL;
+
+	WARN("@@ __check_db_version");
+
+	ret = sqlite3_prepare_v2(db, "PRAGMA user_version", -1, &stmt, NULL);
+	if (ret != SQLITE_OK) {
+		ERR("@@ Failed to sqlite3_prepare_v2[%d][%s]",
+		ret, sqlite3_errmsg(db));
+		return -1;
+	}
+
+	ret = sqlite3_step(stmt);
+	if (ret == SQLITE_ROW)
+		result = sqlite3_column_int(stmt, 0);
+	else
+		result = 0;
+
+	WARN("@@ db version : %d", result);
+
+	if (stmt)
+		sqlite3_finalize(stmt);
+
+	if (result != DB_VERSION) {
+		WARN("@@ db is not latest version");
+		return -1;
+	}
+
+	return 0;
+}
+
+static int __upgrade_noti_table(sqlite3 *db) {
+	int ret;
+	char *errmsg = NULL;
+
+	WARN("@@ upgrade noti list");
+
+	ret = sqlite3_table_column_metadata(db, NULL, "noti_list",
+		"b_event_handler_click_on_button_7", NULL, NULL, NULL, NULL, NULL);
+	if (ret != SQLITE_OK) {
+		WARN("@@ btn column not exist");
+		goto upgrade;
+	}
+
+	ret = sqlite3_table_column_metadata(db, NULL, "noti_list",
+		"check_box", NULL, NULL, NULL, NULL, NULL);
+	if (ret == SQLITE_OK) {
+		WARN("@@ columns are exist");
+		return NOTIFICATION_ERROR_NONE;
+	}
+
+upgrade:
+	ret = sqlite3_exec(db, NOTIFICATION_UPGRADE_DB, NULL, NULL, &errmsg);
+	if (ret != SQLITE_OK) {
+		ERR("@@ Failed to upgrade noti db[%d][%s]", ret, errmsg);
+		ret = NOTIFICATION_ERROR_FROM_DB;
+	} else {
+		ret = NOTIFICATION_ERROR_NONE;
+	}
+
+	if (errmsg)
+		sqlite3_free(errmsg);
+
+	WARN("@@ upgrade noti list done");
+
+	return ret;
+}
+
+static int __upgrade_noti_template_table(sqlite3 *db) {
+	int ret;
+	char *errmsg = NULL;
+
+	WARN("@@ upgrade noti templage");
+
+	ret = sqlite3_table_column_metadata(db, NULL, "noti_template",
+		"b_event_handler_click_on_button_7", NULL, NULL, NULL, NULL, NULL);
+	if (ret != SQLITE_OK) {
+		WARN("@@ btn column not exist");
+		goto upgrade;
+	}
+
+	ret = sqlite3_table_column_metadata(db, NULL, "noti_template",
+		"check_box", NULL, NULL, NULL, NULL, NULL);
+	if (ret == SQLITE_OK) {
+		WARN("@@ columns are exist");
+		return NOTIFICATION_ERROR_NONE;
+	}
+
+upgrade:
+	ret = sqlite3_exec(db, NOTIFICATION_UPGRADE_TEMPLATE_DB, NULL, NULL, &errmsg);
+	if (ret != SQLITE_OK) {
+		ERR("@@ Failed to upgrade noti db[%d][%s]", ret, errmsg);
+		ret = NOTIFICATION_ERROR_FROM_DB;
+	} else {
+		ret = NOTIFICATION_ERROR_NONE;
+	}
+
+	if (errmsg)
+		sqlite3_free(errmsg);
+
+	WARN("@@ upgrade noti templage done");
+
+	return ret;
+}
+
+EXPORT_API int notification_upgrade_db(void)
+{
+	sqlite3 *db;
+	int ret = NOTIFICATION_ERROR_NONE;
+	char *errmsg = NULL;
+	char *query = NULL;
+
+	WARN("@@ upgrade db");
+
+	ret = sqlite3_open_v2(DBPATH, &db, SQLITE_OPEN_READWRITE, NULL);
+	if (ret != SQLITE_OK) {
+		ERR("@@ Failed to open db");
+		ret = NOTIFICATION_ERROR_FROM_DB;
+		goto out;
+	}
+
+	// 1. check version
+	if (__check_db_version(db) == 0) {
+		WARN("@@ db is latest version");
+		ret = NOTIFICATION_ERROR_NONE;
+		goto out;
+	}
+
+	// 2. run upgrade query
+	ret = __upgrade_noti_table(db);
+	if (ret != NOTIFICATION_ERROR_NONE) {
+		ERR("@@ Failed to upgrade noti table");
+		goto out;
+	}
+
+	ret = __upgrade_noti_template_table(db);
+	if (ret != NOTIFICATION_ERROR_NONE) {
+		ERR("@@ Failed to upgrade noti template table");
+		goto out;
+	}
+
+	// 3. set new version
+	query = sqlite3_mprintf("PRAGMA user_version=%d", DB_VERSION);
+	if (query == NULL) {
+		ERR("@@ Failed to set verion query");
+		ret = NOTIFICATION_ERROR_OUT_OF_MEMORY;
+		goto out;
+	}
+
+	ret = sqlite3_exec(db, query, NULL, NULL, &errmsg);
+	if (ret != SQLITE_OK) {
+		ERR("@@ Failed to ser user version[%d][%s]", ret, errmsg);
+		ret = NOTIFICATION_ERROR_FROM_DB;
+	}
+	WARN("@@ upgrade db done");
+
+out:
+	if (errmsg)
+		sqlite3_free(errmsg);
+
+	if (query)
+		sqlite3_free(query);
+
+	if (db)
+		notification_db_close(&db);
+
+	return NOTIFICATION_ERROR_NONE;
+}
