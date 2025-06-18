@@ -27,8 +27,8 @@
 
 #include <tzplatform_config.h>
 #include <security-manager.h>
-#include <sys/smack.h>
 #include <sys/stat.h>
+#include <sys/statvfs.h>
 #include <linux/xattr.h>
 #include <sys/types.h>
 #include <utime.h>
@@ -186,33 +186,64 @@ static const char *__last_index_of(const char *path, const char *search)
 
 /* Check path that include res directory */
 /* LCOV_EXCL_START */
-static bool __is_private_file(const char *smack_label, const char *pkg_id)
+static bool __is_res_file(const char *file_path, const char *pkg_id)
 {
-	const char *smack_index;
+	const char *path_index;
 	bool ret = false;
+	char res_path[PATH_MAX];
 
-	if (smack_label == NULL || pkg_id == NULL)
+	if (file_path == NULL || pkg_id == NULL)
 		return ret;
 
-	smack_index = __last_index_of(smack_label, pkg_id);
-	if (smack_index != NULL && (strlen(smack_index) == strlen(pkg_id)))
+	snprintf(res_path, sizeof(res_path), "%s/res", pkg_id);
+
+	path_index = __last_index_of(file_path, pkg_id);
+	if (path_index != NULL &&
+		(strncmp(path_index, res_path, strlen(res_path)) == 0))
 		ret = true;
+
+	return ret;
+}
+
+static bool __is_private_file(const char *file_path, const char *pkg_id)
+{
+	const char *path_index;
+	bool ret = false;
+	char shared_path[PATH_MAX];
+
+	if (file_path == NULL || pkg_id == NULL)
+		return ret;
+
+	snprintf(shared_path, sizeof(shared_path), "%s/shared", pkg_id);
+
+	path_index = __last_index_of(file_path, pkg_id);
+	if (path_index != NULL &&
+		(strncmp(path_index, pkg_id, strlen(pkg_id)) == 0)) {
+		if (strncmp(path_index, shared_path, strlen(shared_path)) == 0)
+			ret = false;
+		else
+			ret = true;
+	}
 
 	return ret;
 }
 /* LCOV_EXCL_STOP */
 
 /* LCOV_EXCL_START */
-static bool __is_RO_file(const char *smack_label)
+static bool __is_RO_file(const char *file_path)
 {
-#define CHECK_LABEL "::RO"
-
-	const char *smack_index;
+	struct statvfs stat_info;
 	bool ret = false;
 
-	smack_index = __last_index_of(smack_label, CHECK_LABEL);
-	if (smack_index != NULL && (strlen(smack_index) == strlen(CHECK_LABEL)))
-		ret = true;
+	if (statvfs(file_path, &stat_info) == 0) {
+		if (stat_info.f_flag & ST_RDONLY)
+			ret = true;
+		else
+			ret = false;
+	} else {
+		ERR("failed to get stat : %s", file_path);
+		ret = false;
+	}
 
 	return ret;
 }
@@ -692,33 +723,34 @@ EXPORT_API void notification_add_private_sharing_target_id(pid_t pid,
 char *notification_check_file_path_is_private(const char *pkg_id,
 							const char *file_path)
 {
-	char *smack_label = NULL;
 	char *dst_path = NULL;
-	int size;
 	uid_t uid = getuid();
 	char err_buf[ERR_BUFFER_SIZE];
 	char *err_str;
+	int ret;
 
-	errno = 0;
-	size = smack_new_label_from_path(file_path, XATTR_NAME_SMACK,
-							TRUE, &smack_label);
-	if (size <= 0) {
-		err_str = strerror_r(errno, err_buf, sizeof(err_buf));
-		ERR("Failed to get smack info : %d [%s][%s]", errno, err_str,
-			file_path);
+	if (access(file_path, R_OK) != 0) {
+		ERR("failed to access file : %s", file_path);
 		return NULL;
 	}
 
-	if (__is_RO_file(smack_label))
+	if (__is_RO_file(file_path)) {
+		WARN("is RO");
 		dst_path = __get_data_path_by_pkg_id(pkg_id, file_path, uid);
-
-	if (dst_path == NULL && __is_private_file(smack_label, pkg_id)) {
-		dst_path = strdup(file_path);
-		if (dst_path == NULL)
-			ERR("Failed to strdup");
 	}
 
-	free(smack_label);
+	if (dst_path == NULL && __is_private_file(file_path, pkg_id)) {
+		WARN("is private");
+		if (__is_res_file(file_path, pkg_id)) {
+			WARN("path res");
+			dst_path = __get_data_path_by_pkg_id(pkg_id, file_path, uid);
+		} else {
+			dst_path = strdup(file_path);
+			if (dst_path == NULL)
+				ERR("Failed to strdup");
+		}
+	}
+
 	return dst_path;
 }
 

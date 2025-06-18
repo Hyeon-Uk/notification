@@ -24,7 +24,6 @@
 #include "notification-ex/common.h"
 
 #include "mock/glib_mock.hh"
-#include "mock/smack_mock.hh"
 #include "mock/tzplatform_config_mock.hh"
 #include "mock/security_manager_mock.hh"
 #include "mock/aul_mock.hh"
@@ -38,13 +37,6 @@ using ::testing::_;
 using ::testing::Invoke;
 
 namespace {
-
-// smack
-ssize_t __fake_smack_new_label_from_path(const char* path, const char* xattr,
-    int follow, char** label) {
-  *label = strdup("User::Pkg::unittest::RO");
-  return 1;
-}
 
 // tzplatform
 const char* __fake_tzplatform_getenv(tzplatform_variable id) {
@@ -76,7 +68,6 @@ int __fake_security_manager_private_sharing_drop(const private_sharing_req* p_re
 
 class Mocks :
     virtual public ::testing::NiceMock<GlibMock>,
-    virtual public ::testing::NiceMock<SmackMock>,
     virtual public ::testing::NiceMock<TzplatformConfigMock>,
     virtual public ::testing::NiceMock<SecurityManagerMock> {};
 } // namespace
@@ -101,10 +92,7 @@ class SharedFileTest : public TestFixture {
 };
 
 TEST_F(SharedFileTest, IsPrivatePath) {
-  EXPECT_CALL(GetMock<SmackMock>(), smack_new_label_from_path(_, _, _, _))
-      .WillRepeatedly(Invoke(__fake_smack_new_label_from_path));
-
-  ASSERT_TRUE(shared_file->IsPrivatePath(SharedFileTest::image_path));
+  ASSERT_FALSE(shared_file->IsPrivatePath(SharedFileTest::image_path));
 }
 
 TEST_F(SharedFileTest, GetDataPath) {

@@ -29,7 +29,6 @@
 #include "notification-ex/button_item.h"
 
 #include "mock/test_fixture.hh"
-#include "mock/smack_mock.hh"
 #include "mock/app_common_mock.hh"
 #include "mock/aul_mock.hh"
 
@@ -89,7 +88,6 @@ class MyFactory : public IItemFactory {
 
 class Mocks :
     virtual public ::testing::NiceMock<AulMock>,
-    virtual public ::testing::NiceMock<SmackMock>,
     virtual public ::testing::NiceMock<AppCommonMock> {};
 } // namespace
 

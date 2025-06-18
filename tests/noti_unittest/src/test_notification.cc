@@ -20,7 +20,6 @@
 #include "mock/test_fixture.hh"
 #include "mock/aul_mock.hh"
 #include "mock/package_manager_mock.hh"
-#include "mock/smack_mock.hh"
 #include "mock/tzplatform_config_mock.hh"
 #include "mock/glib_mock.hh"
 
@@ -81,12 +80,6 @@ int __fake_pkgmgrinfo_appinfo_get_label(pkgmgrinfo_appinfo_h handle, char** labe
   return PMINFO_R_OK;
 }
 
-ssize_t __fake_smack_new_label_from_path(const char* path, const char* xattr,
-    int follow, char** label) {
-  *label = strdup("User::Pkg::unittest::RO");
-  return 1;
-}
-
 const char* __fake_tzplatform_getenv(tzplatform_variable id) {
   return "/opt/usr/home/owner/apps_rw";
 }
@@ -121,7 +114,6 @@ GDBusMessage* __fake_g_dbus_message_new_method_call(const gchar* arg0,
 
 class Mocks :
     virtual public ::testing::NiceMock<AulMock>,
-    virtual public ::testing::NiceMock<SmackMock>,
     virtual public ::testing::NiceMock<TzplatformConfigMock>,
     virtual public ::testing::NiceMock<GlibMock>,
     virtual public ::testing::NiceMock<PackageManagerMock> {};
@@ -157,12 +149,6 @@ TEST_F(NotificationTest, notification_test) {
 
   EXPECT_CALL(GetMock<PackageManagerMock>(), pkgmgrinfo_appinfo_get_label(_, _))
       .WillOnce(Invoke(__fake_pkgmgrinfo_appinfo_get_label));
-
-  EXPECT_CALL(GetMock<SmackMock>(), smack_new_label_from_path(_, _, _, _))
-      .WillOnce(Invoke(__fake_smack_new_label_from_path));
-
-  EXPECT_CALL(GetMock<TzplatformConfigMock>(), tzplatform_getenv(_))
-      .WillOnce(Invoke(__fake_tzplatform_getenv));
 
   EXPECT_CALL(GetMock<GlibMock>(), g_bus_get_sync(_, _, _))
       .WillRepeatedly(Invoke(__fake_g_bus_get_sync));

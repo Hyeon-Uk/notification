@@ -33,7 +33,6 @@ pkg_check_modules(pkgs REQUIRED
 	gio-unix-2.0
 	iniparser
 	security-manager
-	libsmack
 )
 
 FOREACH(flag ${pkgs_CFLAGS})

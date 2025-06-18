@@ -20,7 +20,6 @@ BuildRequires: pkgconfig(libtzplatform-config)
 BuildRequires: pkgconfig(glib-2.0)
 BuildRequires: pkgconfig(iniparser)
 BuildRequires: pkgconfig(security-manager)
-BuildRequires: pkgconfig(libsmack)
 BuildRequires: pkgconfig(gmock)
 BuildRequires: pkgconfig(uuid)
 

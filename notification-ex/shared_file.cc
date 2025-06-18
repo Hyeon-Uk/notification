@@ -20,12 +20,12 @@
 #include <unistd.h>
 #include <dlog.h>
 #include <linux/xattr.h>
-#include <sys/smack.h>
 #include <gio/gio.h>
 #include <glib/gstdio.h>
 #include <utime.h>
 #include <tzplatform_config.h>
 #include <security-manager.h>
+#include <sys/statvfs.h>
 
 #include <string>
 #include <list>
@@ -42,7 +42,6 @@
 #endif
 
 #define LOG_TAG "NOTIFICATION_EX"
-#define CHECK_LABEL "::RO"
 #define NOTI_PRIV_DATA_DIR "data/.notification_ex"
 #define ERR_BUFFER_SIZE 1024
 
@@ -187,27 +186,29 @@ vector<char*> SharedFile::ConvertListToArray(const list<string>& data) {
 }
 
 bool SharedFile::IsPrivatePath(string path) const {
-  char* smack_label = nullptr;
   bool ret = false;
-  char err_buf[ERR_BUFFER_SIZE];
+  struct statvfs stat_info;
 
   if (path.empty()) {
     LOGE("Invalid parameter");
     return false;
   }
 
-  errno = 0;
-  if (smack_new_label_from_path(path.c_str(), XATTR_NAME_SMACK, 1, &smack_label)
-        <= 0) {
-    LOGE("smack_new_label_from_path failed  : %d [%s][%s]",
-        errno, strerror_r(errno, err_buf, sizeof(err_buf)), path.c_str());
+  if (access(path.c_str(), R_OK) != 0) {
+    LOGE("failed to access file : %s", path.c_str());
     return false;
   }
 
-  if (GetLastIndex(smack_label, CHECK_LABEL) != nullptr)
-    ret = true;
+  if (statvfs(path.c_str(), &stat_info) == 0) {
+    if (stat_info.f_flag & ST_RDONLY)
+      ret = true;
+    else
+      ret = false;
+  } else {
+    LOGE("failed to get stat : %s", path.c_str());
+    ret = false;
+  }
 
-  free(smack_label);
   return ret;
 }
 

@@ -17,7 +17,6 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
-#include "mock/smack_mock.hh"
 #include "mock/app_common_mock.hh"
 #include "mock/test_fixture.hh"
 #include "notification-ex/image_item.h"
@@ -29,7 +28,6 @@ using namespace notification::item;
 
 namespace {
 class Mocks :
-    virtual public ::testing::NiceMock<SmackMock>,
     virtual public ::testing::NiceMock<AppCommonMock> {};
 } // namespace
 
