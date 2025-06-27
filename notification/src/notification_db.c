@@ -263,36 +263,54 @@ static int __check_db_version(sqlite3 *db) {
 
 static int __upgrade_noti_table(sqlite3 *db) {
 	int ret;
-	char *errmsg = NULL;
+	int version_num = 0;
 
 	WARN("@@ upgrade noti list");
 
 	ret = sqlite3_table_column_metadata(db, NULL, "noti_list",
-		"b_event_handler_click_on_button_7", NULL, NULL, NULL, NULL, NULL);
+		"check_box", NULL, NULL, NULL, NULL, NULL);
 	if (ret != SQLITE_OK) {
-		WARN("@@ btn column not exist");
+		WARN("@@ check_box not exist");
+		version_num = 2;
 		goto upgrade;
 	}
 
 	ret = sqlite3_table_column_metadata(db, NULL, "noti_list",
-		"check_box", NULL, NULL, NULL, NULL, NULL);
+		"channel_name", NULL, NULL, NULL, NULL, NULL);
 	if (ret == SQLITE_OK) {
 		WARN("@@ columns are exist");
 		return NOTIFICATION_ERROR_NONE;
 	}
+	version_num = 3;
 
 upgrade:
-	ret = sqlite3_exec(db, NOTIFICATION_UPGRADE_DB, NULL, NULL, &errmsg);
+	ret = sqlite3_exec(db, NOTIFICATION_CREATE_UPGRADE_DB,
+			NULL, NULL, NULL);
 	if (ret != SQLITE_OK) {
-		ERR("@@ Failed to upgrade noti db[%d][%s]", ret, errmsg);
+		ERR("@@ Failed to create upgrade table[%d][%s]", ret, sqlite3_errmsg(db));
 		ret = NOTIFICATION_ERROR_FROM_DB;
-	} else {
-		ret = NOTIFICATION_ERROR_NONE;
+		version_num = -1;
 	}
 
-	if (errmsg)
-		sqlite3_free(errmsg);
-
+	if (version_num == 2) {
+		ret = sqlite3_exec(db, NOTIFICATION_UPGRADE_DB_TO_2,
+				NULL, NULL, NULL);
+		if (ret != SQLITE_OK) {
+			ERR("@@ Failed to upgrade noti db to 2[%d][%s]", ret, sqlite3_errmsg(db));
+			ret = NOTIFICATION_ERROR_FROM_DB;
+		} else {
+			ret = NOTIFICATION_ERROR_NONE;
+		}
+	} else if (version_num == 3) {
+		ret = sqlite3_exec(db, NOTIFICATION_UPGRADE_DB_TO_3,
+				NULL, NULL, NULL);
+		if (ret != SQLITE_OK) {
+			ERR("@@ Failed to upgrade noti db to 3[%d][%s]", ret, sqlite3_errmsg(db));
+			ret = NOTIFICATION_ERROR_FROM_DB;
+		} else {
+			ret = NOTIFICATION_ERROR_NONE;
+		}
+	}
 	WARN("@@ upgrade noti list done");
 
 	return ret;
@@ -300,36 +318,54 @@ upgrade:
 
 static int __upgrade_noti_template_table(sqlite3 *db) {
 	int ret;
-	char *errmsg = NULL;
+	int version_num = 0;
 
-	WARN("@@ upgrade noti templage");
+	WARN("@@ upgrade noti template");
 
 	ret = sqlite3_table_column_metadata(db, NULL, "noti_template",
-		"b_event_handler_click_on_button_7", NULL, NULL, NULL, NULL, NULL);
+		"check_box", NULL, NULL, NULL, NULL, NULL);
 	if (ret != SQLITE_OK) {
-		WARN("@@ btn column not exist");
+		WARN("@@ check_box not exist");
+		version_num = 2;
 		goto upgrade;
 	}
 
 	ret = sqlite3_table_column_metadata(db, NULL, "noti_template",
-		"check_box", NULL, NULL, NULL, NULL, NULL);
+		"channel_name", NULL, NULL, NULL, NULL, NULL);
 	if (ret == SQLITE_OK) {
 		WARN("@@ columns are exist");
 		return NOTIFICATION_ERROR_NONE;
 	}
+	version_num = 3;
 
 upgrade:
-	ret = sqlite3_exec(db, NOTIFICATION_UPGRADE_TEMPLATE_DB, NULL, NULL, &errmsg);
+	ret = sqlite3_exec(db, NOTIFICATION_CREATE_UPGRADE_TEMPLATE_DB,
+			NULL, NULL, NULL);
 	if (ret != SQLITE_OK) {
-		ERR("@@ Failed to upgrade noti db[%d][%s]", ret, errmsg);
+		ERR("@@ Failed to create tempate table[%d][%s]", ret, sqlite3_errmsg(db));
 		ret = NOTIFICATION_ERROR_FROM_DB;
-	} else {
-		ret = NOTIFICATION_ERROR_NONE;
+		version_num = -1;
 	}
 
-	if (errmsg)
-		sqlite3_free(errmsg);
-
+	if (version_num == 2) {
+		ret = sqlite3_exec(db, NOTIFICATION_UPGRADE_TEMPLATE_DB_TO_2,
+				NULL, NULL, NULL);
+		if (ret != SQLITE_OK) {
+			ERR("@@ Failed to upgrade tempate db to 2[%d][%s]", ret, sqlite3_errmsg(db));
+			ret = NOTIFICATION_ERROR_FROM_DB;
+		} else {
+			ret = NOTIFICATION_ERROR_NONE;
+		}
+	} else if (version_num == 3) {
+		ret = sqlite3_exec(db, NOTIFICATION_UPGRADE_TEMPLATE_DB_TO_3,
+					NULL, NULL, NULL);
+		if (ret != SQLITE_OK) {
+			ERR("@@ Failed to upgrade tempate db to 2[%d][%s]", ret, sqlite3_errmsg(db));
+			ret = NOTIFICATION_ERROR_FROM_DB;
+		} else {
+			ret = NOTIFICATION_ERROR_NONE;
+		}
+	}
 	WARN("@@ upgrade noti templage done");
 
 	return ret;
@@ -347,8 +383,15 @@ EXPORT_API int notification_upgrade_db(void)
 	ret = sqlite3_open_v2(DBPATH, &db, SQLITE_OPEN_READWRITE, NULL);
 	if (ret != SQLITE_OK) {
 		ERR("@@ Failed to open db");
-		ret = NOTIFICATION_ERROR_FROM_DB;
-		goto out;
+		return NOTIFICATION_ERROR_FROM_DB;
+	}
+
+	// add transaction
+	ret = sqlite3_exec(db, "BEGIN TRANSACTION", NULL, NULL, NULL);
+	if (ret != SQLITE_OK) {
+		ERR("@@ Failed to begin transaction db[%d][%s]", ret, sqlite3_errmsg(db));
+		notification_db_close(&db);
+		return NOTIFICATION_ERROR_FROM_DB;
 	}
 
 	// 1. check version
@@ -384,9 +427,24 @@ EXPORT_API int notification_upgrade_db(void)
 		ERR("@@ Failed to ser user version[%d][%s]", ret, errmsg);
 		ret = NOTIFICATION_ERROR_FROM_DB;
 	}
+	ret = NOTIFICATION_ERROR_NONE;
 	WARN("@@ upgrade db done");
 
 out:
+	if (ret == NOTIFICATION_ERROR_NONE) {
+		ret = sqlite3_exec(db, "END TRANSACTION", NULL, NULL, NULL);
+		if (ret != SQLITE_OK) {
+			ERR("@@ Failed to end transaction db[%d][%s]", ret, sqlite3_errmsg(db));
+			ret = NOTIFICATION_ERROR_FROM_DB;
+		}
+	} else {
+		ret = sqlite3_exec(db, "ROLLBACK TRANSACTION", NULL, NULL, NULL);
+		if (ret != SQLITE_OK) {
+			ERR("@@ Failed to rollback transaction db[%d][%s]", ret, sqlite3_errmsg(db));
+			ret = NOTIFICATION_ERROR_FROM_DB;
+		}
+	}
+
 	if (errmsg)
 		sqlite3_free(errmsg);
 
@@ -396,5 +454,5 @@ out:
 	if (db)
 		notification_db_close(&db);
 
-	return NOTIFICATION_ERROR_NONE;
+	return ret;
 }

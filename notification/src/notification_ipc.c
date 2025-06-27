@@ -2208,6 +2208,9 @@ EXPORT_API GVariant *notification_ipc_make_gvariant_from_noti(notification_h not
 	g_variant_builder_add(&builder, "{iv}", NOTIFICATION_DATA_TYPE_CHECK_BOX_VALUE, g_variant_new_int32(noti->check_box_value));
 	g_variant_builder_add(&builder, "{iv}", NOTIFICATION_DATA_TYPE_UID, g_variant_new_int32(noti->uid));
 
+	if (noti->channel_name != NULL)
+		g_variant_builder_add(&builder, "{iv}", NOTIFICATION_DATA_TYPE_CHANNEL_NAME, g_variant_new_string((const gchar *)noti->channel_name));
+
 	result_body = g_variant_builder_end(&builder);
 	body = g_variant_new("(v)", result_body);
 
@@ -2296,6 +2299,7 @@ EXPORT_API int notification_ipc_make_noti_from_gvariant(notification_h noti,
 	char *temp_title = NULL;
 	char *temp_content = NULL;
 	char *tag = NULL;
+	char *channel_name = NULL;
 
 	if (noti == NULL) {
 		ERR("Invalid noti NULL");
@@ -2381,6 +2385,7 @@ EXPORT_API int notification_ipc_make_noti_from_gvariant(notification_h noti,
 	_variant_dict_lookup(dict, NOTIFICATION_DATA_TYPE_CHECK_BOX, "i", &noti->check_box);
 	_variant_dict_lookup(dict, NOTIFICATION_DATA_TYPE_CHECK_BOX_VALUE, "i", &noti->check_box_value);
 	_variant_dict_lookup(dict, NOTIFICATION_DATA_TYPE_UID, "i", &noti->uid);
+	_variant_dict_lookup(dict, NOTIFICATION_DATA_TYPE_CHANNEL_NAME, "&s", &channel_name);
 
 	if (noti->pkg_id)
 		free(noti->pkg_id);
@@ -2428,6 +2433,7 @@ EXPORT_API int notification_ipc_make_noti_from_gvariant(notification_h noti,
 	noti->temp_title = _dup_string(temp_title);
 	noti->temp_content = _dup_string(temp_content);
 	noti->tag = _dup_string(tag);
+	noti->channel_name = _dup_string(channel_name);
 
 	g_hash_table_unref(dict);
 
@@ -2784,6 +2790,170 @@ int notification_ipc_request_unregister_dnd_app(uid_t uid, pid_t pid)
 		g_object_unref(reply);
 
 	WARN("send sync noti [%d]", ret);
+
+	return ret;
+}
+
+/* for channel */
+int notification_ipc_request_insert_channel(const char *app_id,
+		const char *channel_name, bool blockable, bool is_blocked, uid_t uid)
+{
+	int ret;
+	GVariant *body;
+	GDBusMessage *reply = NULL;
+
+	WARN("request insert channel");
+
+	ret = _dbus_init();
+	if (ret != NOTIFICATION_ERROR_NONE) {
+		ERR("Failed to init dbus connection[%d]", ret);
+		return ret;
+	}
+
+	body = g_variant_new("(ssiii)", app_id, channel_name,
+			blockable ? 1 : 0, is_blocked ? 1 : 0, uid);
+	ret = _send_sync_noti(body, &reply, "channel_insert");
+	if (reply)
+		g_object_unref(reply);
+
+	WARN("request insert channel done [%d]", ret);
+
+	return ret;
+}
+
+int notification_ipc_request_delete_channel(const char *app_id,
+		const char *channel_name, uid_t uid)
+{
+	int ret;
+	GVariant *body;
+	GDBusMessage *reply = NULL;
+
+	WARN("request delete channel");
+
+	ret = _dbus_init();
+	if (ret != NOTIFICATION_ERROR_NONE) {
+		ERR("Failed to init dbus connection[%d]", ret);
+		return ret;
+	}
+
+	body = g_variant_new("(ssi)", app_id, channel_name, uid);
+	ret = _send_sync_noti(body, &reply, "channel_delete");
+	if (reply)
+		g_object_unref(reply);
+
+	WARN("request delete channel done [%d]", ret);
+
+	return ret;
+}
+
+int notification_ipc_request_update_channel(const char *app_id,
+		const char *channel_name, bool blockable, bool is_blocked, uid_t uid)
+{
+	int ret;
+	GVariant *body;
+	GDBusMessage *reply = NULL;
+
+	WARN("request update channel");
+
+	ret = _dbus_init();
+	if (ret != NOTIFICATION_ERROR_NONE) {
+		ERR("Failed to init dbus connection[%d]", ret);
+		return ret;
+	}
+
+	body = g_variant_new("(ssiii)", app_id, channel_name,
+			blockable ? 1 : 0, is_blocked ? 1 : 0, uid);
+	ret = _send_sync_noti(body, &reply, "channel_update");
+	if (reply)
+		g_object_unref(reply);
+
+	WARN("request update channel done [%d]", ret);
+
+	return ret;
+}
+
+int notification_ipc_request_get_channel(const char *app_id,
+		const char *channel_name, bool *blockable, bool *is_blocked, uid_t uid)
+{
+	int ret;
+	GVariant *body;
+	GVariant *reply_body;
+	GDBusMessage *reply = NULL;
+	int _blockable;
+	int _is_blocked;
+
+	WARN("request channel get");
+
+	ret = _dbus_init();
+	if (ret != NOTIFICATION_ERROR_NONE) {
+		ERR("Failed to init dbus connection[%d]", ret);
+		return ret;
+	}
+
+	body = g_variant_new("(ssi)", app_id, channel_name, uid);
+	ret = _send_sync_noti(body, &reply, "channel_get");
+	if (ret == NOTIFICATION_ERROR_NONE) {
+		reply_body = g_dbus_message_get_body(reply);
+		g_variant_get(reply_body, "(ii)", &_blockable, &_is_blocked);
+
+		*blockable = (_blockable == 1) ? true : false;
+		*is_blocked = (_is_blocked == 1) ? true : false;
+	}
+
+	if (reply)
+		g_object_unref(reply);
+
+	WARN("request channel get done [%d]", ret);
+
+	return ret;
+}
+
+
+int notification_ipc_request_channel_get_list(const char *app_id,
+		GList **channel_list, uid_t uid)
+{
+	int ret;
+	GVariant *body;
+	GVariant *reply_body;
+	GDBusMessage *reply = NULL;
+	GVariantIter *iter;
+	GVariant *iter_body = NULL;
+	char *channel_name;
+	int blockable;
+	int is_blocked;
+	notification_channel_h channel;
+
+	WARN("request channel list");
+
+	ret = _dbus_init();
+	if (ret != NOTIFICATION_ERROR_NONE) {
+		ERR("Failed to init dbus connection[%d]", ret);
+		return ret;
+	}
+
+	body = g_variant_new("(si)", app_id, uid);
+	ret = _send_sync_noti(body, &reply, "channel_get_list");
+	if (ret == NOTIFICATION_ERROR_NONE) {
+		reply_body = g_dbus_message_get_body(reply);
+		g_variant_get(reply_body, "(a(v))", &iter);
+
+		while (g_variant_iter_loop(iter, "(v)", &iter_body)) {
+			g_variant_get(iter_body, "(&sii)", &channel_name, &blockable, &is_blocked);
+
+			notification_channel_create_with_info(app_id, channel_name,
+				blockable, is_blocked, &channel);
+
+			if (channel)
+				*channel_list = g_list_append(*channel_list, channel);
+
+			g_object_unref(iter_body);
+		}
+	}
+
+	if (reply)
+		g_object_unref(reply);
+
+	WARN("request channel list done [%d]", ret);
 
 	return ret;
 }

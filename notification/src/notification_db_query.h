@@ -18,7 +18,8 @@
 #define NOTIFICATION_SETTING_DB_TABLE "notification_setting"
 #define NOTIFICATION_SYSTEM_SETTING_DB_TABLE "notification_system_setting"
 #define NOTIFICATION_DND_ALLOW_EXCEPTION "dnd_allow_exception"
-#define DB_VERSION 2
+#define NOTIFICATION_CHANNEL_DB_TABLE "noti_channel"
+#define DB_VERSION 3
 
 #define CREATE_NOTIFICATION_TABLE \
 	"PRAGMA journal_mode = PERSIST;\n" \
@@ -92,7 +93,8 @@
 	"  extension_image_size INTEGER DEFAULT 0,\n" \
 	"  uid INTEGER,\n" \
 	"  check_box INTEGER DEFAULT 0,\n" \
-	"  check_box_value INTEGER DEFAULT 0 );\n" \
+	"  check_box_value INTEGER DEFAULT 0,\n" \
+	"  channel_name TEXT);\n" \
 	"CREATE TABLE IF NOT EXISTS noti_group_data (\n" \
 	"  caller_app_id TEXT NOT NULL,\n" \
 	"  group_id INTEGER DEFAULT 0,\n" \
@@ -225,8 +227,15 @@
 	"  uid INTEGER,\n" \
 	"  check_box INTEGER DEFAULT 0,\n" \
 	"  check_box_value INTEGER DEFAULT 0,\n" \
+	"  channel_nmae TEXT,\n" \
 	"  template_name TEXT,\n" \
-	"  UNIQUE (caller_app_id, template_name));\n"
+	"  UNIQUE (caller_app_id, template_name));\n" \
+	"CREATE TABLE IF NOT EXISTS noti_channel (\n" \
+	"  app_id TEXT NOT NULL,\n" \
+	"  channel_name TEXT NOT NULL, \n" \
+	"  blockable INTEGER DEFAULT 0, \n" \
+	"  is_blocked INTEGER DEFAULT 0, \n" \
+	"  UNIQUE (app_id, channel_name));\n"
 
 #define NOTI_LIST_DB_ATTRIBUTES_SELECT \
 	"type, layout, pkg_id, caller_app_id, launch_app_id, app_label, "\
@@ -248,7 +257,7 @@
 	"progress_size, progress_percentage, ongoing_flag, ongoing_value_type, " \
 	"ongoing_current, ongoing_duration, auto_remove, default_button_index, " \
 	"hide_timeout, delete_timeout, text_input_max_length, event_flag, "\
-	"extension_image_size, uid, check_box, check_box_value"
+	"extension_image_size, uid, check_box, check_box_value, channel_name"
 
 #define NOTI_LIST_DB_ATTRIBUTES_INSERT \
 	"type, layout, pkg_id, caller_app_id, launch_app_id, app_label, " \
@@ -270,13 +279,13 @@
 	"progress_size, progress_percentage, ongoing_flag, ongoing_value_type, " \
 	"ongoing_current, ongoing_duration, auto_remove, default_button_index, " \
 	"hide_timeout, delete_timeout, text_input_max_length, event_flag, " \
-	"extension_image_size, uid, check_box, check_box_value"
+	"extension_image_size, uid, check_box, check_box_value, channel_name"
 
 #define NOTI_LIST_INSERT_VALUES \
 	"?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, " \
 	"?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, " \
 	"?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, " \
-	"?, ?, ?, ?, ?, ?, ?, ? "
+	"?, ?, ?, ?, ?, ?, ?, ?, ? "
 
 #define NOTI_LIST_DB_ATTRIBUTES_UPDATE \
 	"type = ?, layout = ?, launch_app_id = ?, app_label = ?, " \
@@ -308,7 +317,7 @@
 	"auto_remove = ?, default_button_index = ?, " \
 	"hide_timeout = ?, delete_timeout = ?, " \
 	"text_input_max_length = ?, event_flag = ?, extension_image_size = ?, " \
-	"check_box = ?, check_box_value = ? "
+	"check_box = ?, check_box_value = ?, channel_name = ? "
 
 #define NOTIFICATION_SETTING_DB_ATTRIBUTES \
 	"package_name, app_id, allow_to_notify, do_not_disturb_except, "\
@@ -320,7 +329,7 @@
 	"dnd_schedule_day, dnd_start_hour, dnd_start_min, dnd_end_hour, " \
 	"dnd_end_min, lock_screen_content_level"
 
-#define NOTIFICATION_UPGRADE_DB \
+#define NOTIFICATION_CREATE_UPGRADE_DB \
 	"DROP TABLE IF EXISTS noti_list_temp;\n" \
 	"CREATE TABLE noti_list_temp (\n" \
 	"	type INTEGER NOT NULL,\n" \
@@ -391,13 +400,22 @@
 	"	extension_image_size INTEGER default 0,\n" \
 	"	uid INTEGER,\n" \
 	"	check_box INTEGER DEFAULT 0,\n" \
-	"	check_box_value INTEGER DEFAULT 0 );\n" \
+	"	check_box_value INTEGER DEFAULT 0, \n" \
+	"	channel_name TEXT);\n" \
+
+#define NOTIFICATION_UPGRADE_DB_TO_2 \
 	"	INSERT INTO noti_list_temp (type, layout, pkg_id, caller_app_id, launch_app_id, image_path, priv_image_path, group_id, internal_group_id, priv_id, title_key, b_text, b_key, tag, b_format_args, num_format_args, text_domain, text_dir, time, insert_time, args, group_args, b_execute_option, b_service_responding, b_service_single_launch, b_service_multi_launch, b_event_handler_click_on_button_1, b_event_handler_click_on_button_2, b_event_handler_click_on_button_3, b_event_handler_click_on_button_4, b_event_handler_click_on_button_5, b_event_handler_click_on_button_6, b_event_handler_click_on_icon, b_event_handler_click_on_thumbnail, b_event_handler_click_on_text_input_button, sound_type, sound_path, priv_sound_path, vibration_type, vibration_path, priv_vibration_path, led_operation, led_argb, led_on_ms, led_off_ms, flags_for_property, flag_simmode, display_applist, progress_size, progress_percentage, ongoing_flag, ongoing_value_type, ongoing_current, ongoing_duration, auto_remove, default_button_index, hide_timeout, delete_timeout, text_input_max_length, event_flag, extension_image_size, uid) \n" \
 	"	SELECT type, layout, pkg_id, caller_app_id, launch_app_id, image_path, priv_image_path, group_id, internal_group_id, priv_id, title_key, b_text, b_key, tag, b_format_args, num_format_args, text_domain, text_dir, time, insert_time, args, group_args, b_execute_option, b_service_responding, b_service_single_launch, b_service_multi_launch, b_event_handler_click_on_button_1, b_event_handler_click_on_button_2, b_event_handler_click_on_button_3, b_event_handler_click_on_button_4, b_event_handler_click_on_button_5, b_event_handler_click_on_button_6, b_event_handler_click_on_icon, b_event_handler_click_on_thumbnail, b_event_handler_click_on_text_input_button, sound_type, sound_path, priv_sound_path, vibration_type, vibration_path, priv_vibration_path, led_operation, led_argb, led_on_ms, led_off_ms, flags_for_property, flag_simmode, display_applist, progress_size, progress_percentage, ongoing_flag, ongoing_value_type, ongoing_current, ongoing_duration, auto_remove, default_button_index, hide_timeout, delete_timeout, text_input_max_length, event_flag, extension_image_size, uid FROM noti_list;\n" \
 	"	DROP TABLE noti_list;\n" \
 	"	ALTER TABLE noti_list_temp RENAME TO noti_list;\n"
 
-#define NOTIFICATION_UPGRADE_TEMPLATE_DB \
+#define NOTIFICATION_UPGRADE_DB_TO_3 \
+	"	INSERT INTO noti_list_temp (type, layout, pkg_id, caller_app_id, launch_app_id, image_path, priv_image_path, group_id, internal_group_id, priv_id, title_key, b_text, b_key, tag, b_format_args, num_format_args, text_domain, text_dir, time, insert_time, args, group_args, b_execute_option, b_service_responding, b_service_single_launch, b_service_multi_launch, b_event_handler_click_on_button_1, b_event_handler_click_on_button_2, b_event_handler_click_on_button_3, b_event_handler_click_on_button_4, b_event_handler_click_on_button_5, b_event_handler_click_on_button_6, b_event_handler_click_on_icon, b_event_handler_click_on_thumbnail, b_event_handler_click_on_text_input_button, sound_type, sound_path, priv_sound_path, vibration_type, vibration_path, priv_vibration_path, led_operation, led_argb, led_on_ms, led_off_ms, flags_for_property, flag_simmode, display_applist, progress_size, progress_percentage, ongoing_flag, ongoing_value_type, ongoing_current, ongoing_duration, auto_remove, default_button_index, hide_timeout, delete_timeout, text_input_max_length, event_flag, extension_image_size, uid, check_box, check_box_value) \n" \
+	"	SELECT type, layout, pkg_id, caller_app_id, launch_app_id, image_path, priv_image_path, group_id, internal_group_id, priv_id, title_key, b_text, b_key, tag, b_format_args, num_format_args, text_domain, text_dir, time, insert_time, args, group_args, b_execute_option, b_service_responding, b_service_single_launch, b_service_multi_launch, b_event_handler_click_on_button_1, b_event_handler_click_on_button_2, b_event_handler_click_on_button_3, b_event_handler_click_on_button_4, b_event_handler_click_on_button_5, b_event_handler_click_on_button_6, b_event_handler_click_on_icon, b_event_handler_click_on_thumbnail, b_event_handler_click_on_text_input_button, sound_type, sound_path, priv_sound_path, vibration_type, vibration_path, priv_vibration_path, led_operation, led_argb, led_on_ms, led_off_ms, flags_for_property, flag_simmode, display_applist, progress_size, progress_percentage, ongoing_flag, ongoing_value_type, ongoing_current, ongoing_duration, auto_remove, default_button_index, hide_timeout, delete_timeout, text_input_max_length, event_flag, extension_image_size, uid, check_box, check_box_value FROM noti_list;\n" \
+	"	DROP TABLE noti_list;\n" \
+	"	ALTER TABLE noti_list_temp RENAME TO noti_list;\n"
+
+#define NOTIFICATION_CREATE_UPGRADE_TEMPLATE_DB \
 	"DROP TABLE IF EXISTS noti_template_temp;\n" \
 	"CREATE TABLE noti_template_temp (\n" \
 	"	type INTEGER NOT NULL,\n" \
@@ -469,10 +487,19 @@
 	"	uid INTEGER,\n" \
 	"	check_box INTEGER DEFAULT 0,\n" \
 	"	check_box_value INTEGER DEFAULT 0,\n" \
+	"	channel_name TEXT,\n" \
 	"	template_name TEXT,\n" \
-	"	UNIQUE (caller_app_id, template_name) );\n" \
+	"	UNIQUE (caller_app_id, template_name));\n" \
+
+#define NOTIFICATION_UPGRADE_TEMPLATE_DB_TO_2 \
 	"	INSERT INTO noti_template_temp (type, layout, pkg_id, caller_app_id, launch_app_id, image_path, priv_image_path, group_id, internal_group_id, priv_id, title_key, b_text, b_key, tag, b_format_args, num_format_args, text_domain, text_dir, time, insert_time, args, group_args, b_execute_option, b_service_responding, b_service_single_launch, b_service_multi_launch, b_event_handler_click_on_button_1, b_event_handler_click_on_button_2, b_event_handler_click_on_button_3, b_event_handler_click_on_button_4, b_event_handler_click_on_button_5, b_event_handler_click_on_button_6, b_event_handler_click_on_icon, b_event_handler_click_on_thumbnail, b_event_handler_click_on_text_input_button, sound_type, sound_path, priv_sound_path, vibration_type, vibration_path, priv_vibration_path, led_operation, led_argb, led_on_ms, led_off_ms, flags_for_property, flag_simmode, display_applist, progress_size, progress_percentage, ongoing_flag, ongoing_value_type, ongoing_current, ongoing_duration, auto_remove, default_button_index, hide_timeout, delete_timeout, text_input_max_length, event_flag, extension_image_size, uid) \n" \
 	"	SELECT type, layout, pkg_id, caller_app_id, launch_app_id, image_path, priv_image_path, group_id, internal_group_id, priv_id, title_key, b_text, b_key, tag, b_format_args, num_format_args, text_domain, text_dir, time, insert_time, args, group_args, b_execute_option, b_service_responding, b_service_single_launch, b_service_multi_launch, b_event_handler_click_on_button_1, b_event_handler_click_on_button_2, b_event_handler_click_on_button_3, b_event_handler_click_on_button_4, b_event_handler_click_on_button_5, b_event_handler_click_on_button_6, b_event_handler_click_on_icon, b_event_handler_click_on_thumbnail, b_event_handler_click_on_text_input_button, sound_type, sound_path, priv_sound_path, vibration_type, vibration_path, priv_vibration_path, led_operation, led_argb, led_on_ms, led_off_ms, flags_for_property, flag_simmode, display_applist, progress_size, progress_percentage, ongoing_flag, ongoing_value_type, ongoing_current, ongoing_duration, auto_remove, default_button_index, hide_timeout, delete_timeout, text_input_max_length, event_flag, extension_image_size, uid FROM noti_template;\n" \
+	"	DROP TABLE noti_template;\n" \
+	"	ALTER TABLE noti_template_temp RENAME TO noti_template;\n"
+
+#define NOTIFICATION_UPGRADE_TEMPLATE_DB_TO_3 \
+	"	INSERT INTO noti_template_temp (type, layout, pkg_id, caller_app_id, launch_app_id, image_path, priv_image_path, group_id, internal_group_id, priv_id, title_key, b_text, b_key, tag, b_format_args, num_format_args, text_domain, text_dir, time, insert_time, args, group_args, b_execute_option, b_service_responding, b_service_single_launch, b_service_multi_launch, b_event_handler_click_on_button_1, b_event_handler_click_on_button_2, b_event_handler_click_on_button_3, b_event_handler_click_on_button_4, b_event_handler_click_on_button_5, b_event_handler_click_on_button_6, b_event_handler_click_on_icon, b_event_handler_click_on_thumbnail, b_event_handler_click_on_text_input_button, sound_type, sound_path, priv_sound_path, vibration_type, vibration_path, priv_vibration_path, led_operation, led_argb, led_on_ms, led_off_ms, flags_for_property, flag_simmode, display_applist, progress_size, progress_percentage, ongoing_flag, ongoing_value_type, ongoing_current, ongoing_duration, auto_remove, default_button_index, hide_timeout, delete_timeout, text_input_max_length, event_flag, extension_image_size, uid, check_box, check_box_value) \n" \
+	"	SELECT type, layout, pkg_id, caller_app_id, launch_app_id, image_path, priv_image_path, group_id, internal_group_id, priv_id, title_key, b_text, b_key, tag, b_format_args, num_format_args, text_domain, text_dir, time, insert_time, args, group_args, b_execute_option, b_service_responding, b_service_single_launch, b_service_multi_launch, b_event_handler_click_on_button_1, b_event_handler_click_on_button_2, b_event_handler_click_on_button_3, b_event_handler_click_on_button_4, b_event_handler_click_on_button_5, b_event_handler_click_on_button_6, b_event_handler_click_on_icon, b_event_handler_click_on_thumbnail, b_event_handler_click_on_text_input_button, sound_type, sound_path, priv_sound_path, vibration_type, vibration_path, priv_vibration_path, led_operation, led_argb, led_on_ms, led_off_ms, flags_for_property, flag_simmode, display_applist, progress_size, progress_percentage, ongoing_flag, ongoing_value_type, ongoing_current, ongoing_duration, auto_remove, default_button_index, hide_timeout, delete_timeout, text_input_max_length, event_flag, extension_image_size, uid, check_box, check_box_value FROM noti_template;\n" \
 	"	DROP TABLE noti_template;\n" \
 	"	ALTER TABLE noti_template_temp RENAME TO noti_template;\n"
 

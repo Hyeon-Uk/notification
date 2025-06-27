@@ -1093,7 +1093,7 @@ typedef void (*event_handler_cb)(notification_h noti, int event_type, void *user
  * @retval #NOTIFICATION_ERROR_NONE Success
  * @retval #NOTIFICATION_ERROR_INVALID_PARAMETER Invalid parameter
  * @retval #NOTIFICATION_ERROR_IO_ERROR I/O Error
- * @retval #NOTIFICATION_PERMISSION_DENIED Permission denied
+ * @retval #NOTIFICATION_ERROR_PERMISSION_DENIED Permission denied
  * @pre Notification handle should be created by notification_create().
  * @par Sample code:
  * @code
@@ -1143,7 +1143,7 @@ int notification_post_with_event_cb_for_uid(notification_h noti,
  * @retval #NOTIFICATION_ERROR_NONE Success
  * @retval #NOTIFICATION_ERROR_INVALID_PARAMETER Invalid parameter
  * @retval #NOTIFICATION_ERROR_IO_ERROR I/O Error
- * @retval #NOTIFICATION_PERMISSION_DENIED Permission denied
+ * @retval #NOTIFICATION_ERROR_PERMISSION_DENIED Permission denied
  * @see #notification_event_type_e
  * @see #notification_event_type_extension_e
  * @par Sample code:
@@ -1509,6 +1509,35 @@ int notification_unregister_do_not_disturb_app(void);
 int notification_set_pairing_type(notification_h noti, bool pairing);
 int notification_get_pairing_type(notification_h noti, bool *pairing);
 
+/* for channel */
+int notification_set_channel_name(notification_h noti, const char *channel_name);
+int notification_get_channel_name(notification_h noti, const char **channel_name);
+
+typedef void *notification_channel_h;
+int notification_channel_create(const char *channel_name,
+		notification_channel_h *channel);
+void notification_channel_free(notification_channel_h channel);
+int notification_channel_add(notification_channel_h channel);
+int notification_channel_update(notification_channel_h channel);
+int notification_channel_remove(notification_channel_h channel);
+int notification_channel_set_blockable(notification_channel_h channel,
+		bool blockable);
+int notification_channel_get_blockable(notification_channel_h channel,
+		bool *blockable);
+int notification_channel_set_block(notification_channel_h channel,
+		bool block);
+int notification_channel_get_block(notification_channel_h channel,
+		bool *block);
+int notification_channel_get_name(notification_channel_h channel,
+		const char **channel_name);
+int notification_channel_get_by_name(const char *channel_name,
+		notification_channel_h *channel);
+int notification_channel_clone(notification_channel_h channel,
+		notification_channel_h *clone);
+
+typedef void (*notification_channel_foreach_cb)(notification_channel_h channel, void *user_data);
+int notification_channel_foreach(notification_channel_foreach_cb cb,
+		void *user_data);
 
 /**
  * @}

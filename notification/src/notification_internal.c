@@ -76,6 +76,14 @@ static GRecMutex __rec_mutex;
 static disturb_cb _disturb_callback = NULL;
 static void *_disturb_user_data = NULL;
 
+/* for channel */
+typedef struct _notification_channel {
+	char *app_id;
+	char *channel_name;
+	bool blockable;
+	bool is_blocked;
+} notification_channel_s;
+
 NOTIFICATION_CTOR static void __notification_init(void)
 {
 	g_rec_mutex_init(&__rec_mutex);
@@ -2523,3 +2531,418 @@ EXPORT_API int notification_get_pairing_type(notification_h noti, bool *pairing)
 	return NOTIFICATION_ERROR_NONE;
 }
 /* LCOV_EXCL_STOP */
+
+/* for channel */
+EXPORT_API int notification_set_channel_name(notification_h noti,
+		const char *channel_name)
+{
+	if (noti == NULL || channel_name == NULL) {
+		ERR("Invalid parameter");
+		return NOTIFICATION_ERROR_INVALID_PARAMETER;
+	}
+
+	if (noti->channel_name)
+		free(noti->channel_name);
+
+	noti->channel_name = strdup(channel_name);
+
+	WARN("notification_set_channel_name done");
+
+	return NOTIFICATION_ERROR_NONE;
+}
+
+EXPORT_API int notification_get_channel_name(notification_h noti,
+		const char **channel_name)
+{
+	if (noti == NULL || channel_name == NULL) {
+		ERR("Invalid parameter");
+		return NOTIFICATION_ERROR_INVALID_PARAMETER;
+	}
+
+	*channel_name = noti->channel_name;
+
+	WARN("notification_set_channel_name done");
+
+	return NOTIFICATION_ERROR_NONE;
+}
+
+int notification_channel_create_with_info(const char *app_id,
+		const char *channel_name, int blockable, int is_blocked,
+		notification_channel_h *channel)
+{
+	notification_channel_s *noti_channel = NULL;
+
+	if (app_id == NULL || channel_name == NULL) {
+		ERR("Invalid parameter");
+		return NOTIFICATION_ERROR_INVALID_PARAMETER;
+	}
+
+	noti_channel = (notification_channel_s *)calloc(1,
+			sizeof(notification_channel_s));
+	if (noti_channel == NULL) {
+		ERR("Out of memory");
+		return NOTIFICATION_ERROR_OUT_OF_MEMORY;
+	}
+	noti_channel->app_id = strdup(app_id);
+	noti_channel->channel_name = strdup(channel_name);
+	noti_channel->blockable = (blockable == 1) ? true : false;
+	noti_channel->is_blocked = (is_blocked == 1) ? true : false;
+
+	*channel = noti_channel;
+
+	WARN("notification_channel_create_with_info done");
+
+	return NOTIFICATION_ERROR_NONE;
+}
+
+EXPORT_API int notification_channel_create(const char *channel_name,
+		notification_channel_h *channel)
+{
+	notification_channel_s *noti_channel = NULL;
+
+	if (channel == NULL || channel_name == NULL) {
+		ERR("Invalid parameter");
+		return NOTIFICATION_ERROR_INVALID_PARAMETER;
+	}
+
+	noti_channel = (notification_channel_s *)calloc(1,
+			sizeof(notification_channel_s));
+	if (noti_channel == NULL) {
+		ERR("Out of memory");
+		return NOTIFICATION_ERROR_OUT_OF_MEMORY;
+	}
+	noti_channel->app_id = notification_get_app_id_by_pid(getpid());
+	noti_channel->channel_name = strdup(channel_name);
+	noti_channel->blockable = false;
+	noti_channel->is_blocked = false;
+
+	*channel = noti_channel;
+
+	WARN("notification_channel_create done");
+
+	return NOTIFICATION_ERROR_NONE;
+}
+
+EXPORT_API void notification_channel_free(notification_channel_h channel)
+{
+	notification_channel_s *noti_channel = channel;
+
+	if (noti_channel == NULL) {
+		ERR("Invalid parameter");
+		return;
+	}
+
+	if (noti_channel->app_id)
+		free(noti_channel->app_id);
+
+	if (noti_channel->channel_name)
+		free(noti_channel->channel_name);
+
+	free(noti_channel);
+
+	WARN("notification_channel_free done");
+}
+
+EXPORT_API int notification_channel_add(notification_channel_h channel)
+{
+	int ret;
+	notification_channel_s *noti_channel = channel;
+
+	WARN("notification_channel_add");
+
+	if (noti_channel == NULL || noti_channel->app_id == NULL
+		|| noti_channel->channel_name == NULL) {
+		ERR("Invalid parameter");
+		return NOTIFICATION_ERROR_INVALID_PARAMETER;
+	}
+
+	__notification_mutex_lock();
+
+	ret = notification_ipc_request_insert_channel(noti_channel->app_id,
+			noti_channel->channel_name, noti_channel->blockable,
+			noti_channel->is_blocked, getuid());
+	if (ret != NOTIFICATION_ERROR_NONE) {
+		ERR("failed to insert channel");
+		__notification_mutex_unlock();
+		return ret;
+	}
+	__notification_mutex_unlock();
+
+	WARN("notification_channel_add done");
+
+	return ret;
+}
+
+EXPORT_API int notification_channel_remove(notification_channel_h channel)
+{
+	int ret;
+	notification_channel_s *noti_channel = channel;
+
+	WARN("notification_channel_remove");
+
+	if (noti_channel == NULL || noti_channel->app_id == NULL
+		|| noti_channel->channel_name == NULL) {
+		ERR("Invalid parameter");
+		return NOTIFICATION_ERROR_INVALID_PARAMETER;
+	}
+
+	__notification_mutex_lock();
+
+	ret = notification_ipc_request_delete_channel(noti_channel->app_id,
+			noti_channel->channel_name, getuid());
+	if (ret != NOTIFICATION_ERROR_NONE) {
+		ERR("failed to remove channel");
+		__notification_mutex_unlock();
+		return ret;
+	}
+	__notification_mutex_unlock();
+
+	WARN("notification_channel_remove done");
+
+	return ret;
+}
+
+EXPORT_API int notification_channel_update(notification_channel_h channel)
+{
+	int ret;
+	notification_channel_s *noti_channel = channel;
+
+	WARN("notification_channel_update");
+
+	if (noti_channel == NULL || noti_channel->app_id == NULL
+		|| noti_channel->channel_name == NULL) {
+		ERR("Invalid parameter");
+		return NOTIFICATION_ERROR_INVALID_PARAMETER;
+	}
+
+	__notification_mutex_lock();
+
+	ret = notification_ipc_request_update_channel(noti_channel->app_id,
+			noti_channel->channel_name, noti_channel->blockable,
+			noti_channel->is_blocked, getuid());
+	if (ret != NOTIFICATION_ERROR_NONE) {
+		ERR("failed to update channel");
+		__notification_mutex_unlock();
+		return ret;
+	}
+	__notification_mutex_unlock();
+
+	WARN("notification_channel_update done");
+
+	return NOTIFICATION_ERROR_NONE;
+}
+
+EXPORT_API int notification_channel_get_by_name(const char *channel_name,
+		notification_channel_h *channel)
+{
+	int ret;
+	char *app_id;
+	bool blockable;
+	bool is_blocked;
+	notification_channel_s *noti_channel = NULL;
+
+	WARN("notification_channel_get_by_name");
+
+	app_id = notification_get_app_id_by_pid(getpid());
+	if (channel_name == NULL || channel == NULL || app_id == NULL) {
+		ERR("Invalid parameter");
+		ret = NOTIFICATION_ERROR_INVALID_PARAMETER;
+		goto out;
+	}
+
+	noti_channel = (notification_channel_s *)calloc(1,
+			sizeof(notification_channel_s));
+	if (noti_channel == NULL) {
+		ERR("Out of memory");
+		ret = NOTIFICATION_ERROR_OUT_OF_MEMORY;
+		goto out;
+	}
+
+	__notification_mutex_lock();
+
+	ret = notification_ipc_request_get_channel(app_id, channel_name,
+			&blockable, &is_blocked, getuid());
+	if (ret != NOTIFICATION_ERROR_NONE) {
+		ERR("failed to update channel");
+		__notification_mutex_unlock();
+		free(noti_channel);
+		goto out;
+	}
+	noti_channel->app_id = strdup(app_id);
+	noti_channel->channel_name = strdup(channel_name);
+	noti_channel->blockable = blockable;
+	noti_channel->is_blocked = is_blocked;
+
+	*channel = noti_channel;
+	__notification_mutex_unlock();
+
+out:
+	if (app_id)
+		free(app_id);
+
+	WARN("notification_channel_get_by_name done : %d", ret);
+
+	return ret;
+}
+
+EXPORT_API int notification_channel_set_blockable(
+		notification_channel_h channel,bool blockable)
+{
+	notification_channel_s *noti_channel = channel;
+
+	if (noti_channel == NULL) {
+		ERR("Invalid parameter");
+		return NOTIFICATION_ERROR_INVALID_PARAMETER;
+	}
+
+	noti_channel->blockable = blockable;
+
+	WARN("notification_channel_set_blockable done");
+
+	return NOTIFICATION_ERROR_NONE;
+}
+
+EXPORT_API int notification_channel_get_blockable(
+		notification_channel_h channel, bool *blockable)
+{
+	notification_channel_s *noti_channel = channel;
+
+	if (noti_channel == NULL) {
+		ERR("Invalid parameter");
+		return NOTIFICATION_ERROR_INVALID_PARAMETER;
+	}
+
+	*blockable = noti_channel->blockable;
+
+	WARN("notification_channel_get_blockable done");
+
+	return NOTIFICATION_ERROR_NONE;
+}
+
+EXPORT_API int notification_channel_set_block(
+		notification_channel_h channel, bool block)
+{
+	notification_channel_s *noti_channel = channel;
+
+	if (noti_channel == NULL) {
+		ERR("Invalid parameter");
+		return NOTIFICATION_ERROR_INVALID_PARAMETER;
+	}
+
+	noti_channel->is_blocked = block;
+
+	WARN("notification_channel_set_block done");
+
+	return NOTIFICATION_ERROR_NONE;
+}
+
+EXPORT_API int notification_channel_get_block(
+		notification_channel_h channel, bool *block)
+{
+	notification_channel_s *noti_channel = channel;
+
+	if (noti_channel == NULL) {
+		ERR("Invalid parameter");
+		return NOTIFICATION_ERROR_INVALID_PARAMETER;
+	}
+
+	*block = noti_channel->is_blocked;
+
+	WARN("notification_channel_get_block done");
+
+	return NOTIFICATION_ERROR_NONE;
+}
+
+EXPORT_API int notification_channel_get_name(notification_channel_h channel,
+		const char **channel_name)
+{
+	notification_channel_s *noti_channel = channel;
+
+	if (noti_channel == NULL || channel_name == NULL) {
+		ERR("Invalid parameter");
+		return NOTIFICATION_ERROR_INVALID_PARAMETER;
+	}
+
+	*channel_name = noti_channel->channel_name;
+
+	WARN("notification_channel_get_name done");
+
+	return NOTIFICATION_ERROR_NONE;
+}
+
+EXPORT_API int notification_channel_clone(notification_channel_h channel,
+		notification_channel_h *clone)
+{
+	notification_channel_s *new_channel = NULL;
+	notification_channel_s *noti_channel = channel;
+
+	if (noti_channel == NULL || noti_channel->app_id == NULL
+		|| noti_channel->channel_name == NULL || clone == NULL ) {
+		ERR("Invalid parameter");
+		return NOTIFICATION_ERROR_INVALID_PARAMETER;
+	}
+
+	new_channel = (notification_channel_s *)calloc(1,
+			sizeof(notification_channel_s));
+	if (new_channel == NULL) {
+		ERR("Out of memory");
+		return NOTIFICATION_ERROR_OUT_OF_MEMORY;
+	}
+	new_channel->app_id = strdup(noti_channel->app_id);
+	new_channel->channel_name = strdup(noti_channel->channel_name);
+	new_channel->blockable = noti_channel->blockable;
+	new_channel->is_blocked = noti_channel->is_blocked;
+
+	*clone = new_channel;
+
+	WARN("notification_channel_clone done");
+
+	return NOTIFICATION_ERROR_NONE;
+}
+
+EXPORT_API int notification_channel_foreach(notification_channel_foreach_cb cb,
+		void *user_data)
+{
+	int ret;
+	char *app_id;
+	GList *channel_list = NULL;
+	notification_channel_h channel;
+
+	WARN("notification_channel_foreach");
+
+	app_id = notification_get_app_id_by_pid(getpid());
+	if (cb == NULL || app_id == NULL) {
+		ERR("Invalid parameter");
+		ret = NOTIFICATION_ERROR_INVALID_PARAMETER;
+		goto out;
+	}
+
+	__notification_mutex_lock();
+
+	ret = notification_ipc_request_channel_get_list(app_id,
+			&channel_list, getuid());
+	if (ret != NOTIFICATION_ERROR_NONE) {
+		ERR("failed to get is blocked");
+		__notification_mutex_unlock();
+		goto out;
+	}
+
+	channel_list = g_list_first(channel_list);
+	while (channel_list) {
+		channel = g_list_nth_data(channel_list, 0);
+		cb(channel, user_data);
+		channel_list = g_list_next(channel_list);
+	}
+	__notification_mutex_unlock();
+
+out:
+	if (channel_list)
+		g_list_free_full(channel_list, notification_channel_free);
+
+	if (app_id)
+			free(app_id);
+
+	WARN("notification_channel_foreach done : %d", ret);
+
+	return ret;
+}

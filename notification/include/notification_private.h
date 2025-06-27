@@ -110,6 +110,8 @@ struct _notification {
 	bool check_box_value;		/* check box value */
 
 	uid_t uid;
+
+	char *channel_name;			/* channel name to take care show state */
 };
 
 typedef enum notification_data_type {
@@ -184,6 +186,7 @@ typedef enum notification_data_type {
 	NOTIFICATION_DATA_TYPE_CHECK_BOX,
 	NOTIFICATION_DATA_TYPE_CHECK_BOX_VALUE,
 	NOTIFICATION_DATA_TYPE_UID,
+	NOTIFICATION_DATA_TYPE_CHANNEL_NAME,
 } notification_data_type_e;
 
 void notification_call_changed_cb_for_uid(notification_op *op_list, int op_num, uid_t uid);
@@ -193,6 +196,10 @@ void notification_delete_event_handler_cb(int priv_id);
 char *notification_get_app_id_by_pid(int pid);
 
 void notification_call_disturb_cb(void);
+
+/* for channel */
+int notification_channel_create_with_info(const char *app_id, const char *channel_name,
+		int blockable, int is_blocked, notification_channel_h *channel);
 
 #ifdef __cplusplus
 }

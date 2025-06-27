@@ -113,6 +113,19 @@ int notification_ipc_event_monitor_init(void);
 int notification_ipc_request_register_dnd_app(uid_t uid, pid_t pid);
 int notification_ipc_request_unregister_dnd_app(uid_t uid, pid_t pid);
 
+/* for channel */
+int notification_ipc_request_insert_channel(const char *app_id,
+		const char *channel_name, bool blockable, bool is_blocked, uid_t uid);
+int notification_ipc_request_delete_channel(const char *app_id,
+		const char *channel_name, uid_t uid);
+int notification_ipc_request_update_channel(const char *app_id,
+		const char *channel_name, bool blockable, bool is_blocked, uid_t uid);
+int notification_ipc_request_get_channel(const char *app_id,
+		const char *channel_name, bool *blockable, bool *is_blocked, uid_t uid);
+
+int notification_ipc_request_channel_get_list(const char *app_id,
+		GList **channel_list, uid_t uid);
+
 #ifdef __cplusplus
 }
 #endif

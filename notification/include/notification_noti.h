@@ -93,6 +93,18 @@ int notification_noti_delete_template(const char *pkg_id);
 void notification_noti_init_data(void);
 int notification_noti_check_limit(notification_h noti, uid_t uid, GList **list);
 
+/* for channel */
+int notification_noti_get_channel(const char *app_id,
+		const char *channel_name, int *blockable, int *is_blocked);
+int notification_noti_insert_channel(const char *app_id,
+		const char *channel_name, int blockable, int is_blocked);
+int notification_noti_delete_channel(const char *app_id,
+		const char *channel_name);
+int notification_noti_update_channel(const char *app_id,
+		const char *channel_name, int blockable, int is_blocked);
+int notification_noti_get_channel_list(const char *app_id,
+		GList **channel_list);
+
 #ifdef __cplusplus
 }
 #endif

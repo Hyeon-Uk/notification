@@ -1511,6 +1511,7 @@ static notification_h _notification_create(notification_type_e type)
 
 	noti->check_box = false;
 	noti->check_box_value = false;
+	noti->channel_name = NULL;
 
 	if (getuid() < REGULAR_UID_MIN) {
 		noti->pkg_id = strdup(noti->caller_app_id);
@@ -1859,6 +1860,9 @@ EXPORT_API int notification_free(notification_h noti)
 
 	if (noti->tag)
 		free(noti->tag);
+
+	if (noti->channel_name)
+		free(noti->channel_name);
 
 	free(noti);
 
