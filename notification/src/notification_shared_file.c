@@ -726,6 +726,9 @@ char *notification_check_file_path_is_private(const char *pkg_id,
 	char *dst_path = NULL;
 	uid_t uid = getuid();
 
+	if (pkg_id == NULL || file_path == NULL)
+		return NULL;
+
 	if (access(file_path, R_OK) != 0) {
 		ERR("failed to access file : %s", file_path);
 		return NULL;
