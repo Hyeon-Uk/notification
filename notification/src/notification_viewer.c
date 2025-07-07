@@ -112,8 +112,6 @@ static int __push_delayed_noti(app_control_h app_control)
 static void __app_control_result_cb(app_control_h app_control,
 		app_control_error_e result, void *user_data)
 {
-	bundle *b = NULL;
-
 	INFO("result(%d)", result);
 	if (result != APP_CONTROL_ERROR_NONE) {
 		ERR("Failed to send launch request. error(%d)", result);
@@ -128,7 +126,6 @@ EXPORT_API int notification_launch_default_viewer(int priv_id,
 {
 	int ret;
 	char buf[32] = {0,};
-	bundle *b = NULL;
 	app_control_h app_control = NULL;
 
 	if (_default_viewer == NULL)

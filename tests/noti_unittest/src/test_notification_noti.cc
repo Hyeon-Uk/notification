@@ -163,7 +163,9 @@ TEST_F(NotificationNotiTest, notification_noti_test2) {
       .WillRepeatedly(Return(nullptr));
 
   int ret;
-  ret = notification_noti_get_by_tag(noti, "org.tizen.testappid", "test_tag", 5001);
+  ret = notification_noti_get_by_tag(noti,
+      const_cast<char*>("org.tizen.testappid"),
+      const_cast<char*>("test_tag"), 5001);
   ASSERT_EQ(ret, NOTIFICATION_ERROR_NONE);
 }
 
@@ -248,7 +250,6 @@ TEST_F(NotificationNotiTest, notification_noti_test6) {
       .WillOnce(Return(SQLITE_ROW));
 
   int ret;
-  int count;
   notification_list_h group_list;
   int list_count;
   ret = notification_noti_get_grouping_list(NOTIFICATION_TYPE_NOTI, 1,1, &group_list, &list_count, 5001);
@@ -319,7 +320,8 @@ TEST_F(NotificationNotiTest, notification_noti_test10) {
       .WillOnce(Return(SQLITE_OK));
 
   int ret;
-  ret = notification_noti_add_template(noti, "test_template");
+  ret = notification_noti_add_template(noti,
+      const_cast<char*>("test_template"));
   ASSERT_EQ(ret, NOTIFICATION_ERROR_NONE);
 }
 
@@ -334,7 +336,9 @@ TEST_F(NotificationNotiTest, notification_noti_test11) {
       .WillOnce(Return(SQLITE_ROW));
 
   int ret;
-  ret = notification_noti_get_package_template(noti, "org.tizen.testappid", "test_template");
+  ret = notification_noti_get_package_template(noti,
+      const_cast<char*>("org.tizen.testappid"),
+      const_cast<char*>("test_template"));
   ASSERT_EQ(ret, NOTIFICATION_ERROR_NONE);
 }
 

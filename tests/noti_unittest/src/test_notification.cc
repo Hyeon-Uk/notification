@@ -80,10 +80,6 @@ int __fake_pkgmgrinfo_appinfo_get_label(pkgmgrinfo_appinfo_h handle, char** labe
   return PMINFO_R_OK;
 }
 
-const char* __fake_tzplatform_getenv(tzplatform_variable id) {
-  return "/opt/usr/home/owner/apps_rw";
-}
-
 GDBusConnection* __fake_g_bus_get_sync(GBusType type, GCancellable* cancellable, GError** error) {
   GDBusConnection* conn = reinterpret_cast<GDBusConnection*>(calloc(1, 4));
 

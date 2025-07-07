@@ -191,4 +191,5 @@ TEST_F(NotificationListTest, notification_list_test2) {
 
   notification_list_h get_list_detail = nullptr;
   ret = notification_get_detail_list("org.tizen.testappid", 1, 1, 1, &get_list_detail);
+  ASSERT_EQ(ret, NOTIFICATION_ERROR_IO_ERROR);
 }

@@ -102,7 +102,7 @@ TEST_F(NotificationDBTest, notification_db_test) {
   EXPECT_EQ(num_changed, 3);
 
   char* column_text = nullptr;
-  sqlite3_stmt *stmt;
+  sqlite3_stmt *stmt = nullptr;
   column_text = notification_db_column_text(stmt, 3);
   EXPECT_STREQ(column_text, "testcolumn");
 
