@@ -125,8 +125,8 @@ out:
 
 sqlite3 *notification_db_open()
 {
-	int ret = 0;
-	sqlite3 *db = 0;
+	int ret;
+	sqlite3 *db;
 
 	ret = access(DBPATH, R_OK | W_OK);
 	if (ret != 0) {
