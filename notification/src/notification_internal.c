@@ -2561,7 +2561,7 @@ EXPORT_API int notification_get_channel_name(notification_h noti,
 
 	*channel_name = noti->channel_name;
 
-	WARN("notification_set_channel_name done");
+	WARN("notification_get_channel_name done");
 
 	return NOTIFICATION_ERROR_NONE;
 }
