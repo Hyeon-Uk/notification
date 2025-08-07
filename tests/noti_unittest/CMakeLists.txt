@@ -14,6 +14,7 @@ PKG_CHECK_MODULES(notification-unittests REQUIRED
     security-manager
     libtzplatform-config
     pkgmgr-info
+    tizen-core
 )
 
 FOREACH(flag ${notification-unittests_CFLAGS})

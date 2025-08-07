@@ -33,6 +33,7 @@ pkg_check_modules(pkgs REQUIRED
 	gio-unix-2.0
 	iniparser
 	security-manager
+	tizen-core
 )
 
 FOREACH(flag ${pkgs_CFLAGS})

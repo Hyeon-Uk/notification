@@ -22,6 +22,7 @@ BuildRequires: pkgconfig(iniparser)
 BuildRequires: pkgconfig(security-manager)
 BuildRequires: pkgconfig(gmock)
 BuildRequires: pkgconfig(uuid)
+BuildRequires: pkgconfig(tizen-core)
 
 %if 0%{?gcov:1}
 BuildRequires:  lcov

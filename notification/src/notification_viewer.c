@@ -22,18 +22,45 @@
 #include <app_control_internal.h>
 #include <iniparser.h>
 #include <unistd.h>
+#include <tizen_core.h>
 
 #include <notification.h>
 #include <notification_debug.h>
 #include <notification_viewer.h>
 
 #define DEFAULT_VIEWER_CONF_FILE "/usr/share/notification/notification.ini"
+
+#define NOTIFICATION_VIEWER_CTOR __attribute__((constructor))
+#define NOTIFICATION_VIEWER_DTOR __attribute__((destructor))
+
 static char *_default_viewer;
 static GList *_delayed_noti_list;
-static guint _timer;
+static bool _is_timer_added = false;
+static GRecMutex __rec_mutex;
 
 static void __app_control_result_cb(app_control_h app_control,
 		app_control_error_e result, void *user_data);
+
+
+NOTIFICATION_VIEWER_CTOR static void __notification_init(void)
+{
+	g_rec_mutex_init(&__rec_mutex);
+}
+
+NOTIFICATION_VIEWER_DTOR static void __notification_fini(void)
+{
+	g_rec_mutex_clear(&__rec_mutex);
+}
+
+static void __notification_mutex_lock(void)
+{
+	g_rec_mutex_lock(&__rec_mutex);
+}
+
+static void __notification_mutex_unlock(void)
+{
+	g_rec_mutex_unlock(&__rec_mutex);
+}
 
 /* LCOV_EXCL_START */
 EXPORT_API int notification_init_default_viewer()
@@ -66,14 +93,17 @@ EXPORT_API int notification_init_default_viewer()
 /* LCOV_EXCL_STOP */
 
 /* LCOV_EXCL_START */
-static gboolean __pop_delayed_noti_cb(gpointer user_data)
+static bool __pop_delayed_noti_cb(void *user_data)
 {
 	app_control_h app_control;
 	int ret;
 
+	__notification_mutex_lock();
+
 	if (_delayed_noti_list == NULL) {
-		_timer = 0;
-		return G_SOURCE_REMOVE;
+		_is_timer_added = false;
+		__notification_mutex_unlock();
+		return false;
 	}
 
 	app_control = g_list_nth_data(_delayed_noti_list, 0);
@@ -81,29 +111,53 @@ static gboolean __pop_delayed_noti_cb(gpointer user_data)
 			__app_control_result_cb, NULL, NULL);
 	if (ret != APP_CONTROL_ERROR_NONE) {
 		ERR("Failed to send launch request. error(%d)", ret);
-		return G_SOURCE_CONTINUE;
+		__notification_mutex_unlock();
+		return true;
 	}
 
 	_delayed_noti_list = g_list_remove(_delayed_noti_list, app_control);
 	app_control_destroy(app_control);
-	return G_SOURCE_CONTINUE;
+	__notification_mutex_unlock();
+
+	return true;
 }
 
 static int __push_delayed_noti(app_control_h app_control)
 {
 	app_control_h handle = NULL;
+	tizen_core_h core = NULL;
+	tizen_core_source_h source = NULL;
 	int ret;
+
+	__notification_mutex_lock();
 
 	ret = app_control_clone(&handle, app_control);
 	if (ret != APP_CONTROL_ERROR_NONE) {
 		ERR("Failed to clone app control. error(%d)", ret);
+		__notification_mutex_unlock();
 		return NOTIFICATION_ERROR_OUT_OF_MEMORY;
 	}
 
 	_delayed_noti_list = g_list_append(_delayed_noti_list, handle);
 
-	if (_timer == 0)
-		_timer = g_timeout_add(100, __pop_delayed_noti_cb, NULL);
+	if (!_is_timer_added) {
+		ret = tizen_core_find("data-provider-master", &core);
+		if (ret != TIZEN_CORE_ERROR_NONE) {
+			LOGE("Failed to find data-provider-master core. ret(%d)", ret);
+			__notification_mutex_unlock();
+			return NOTIFICATION_ERROR_IO_ERROR;
+		}
+
+		ret = tizen_core_add_timer(core, 100, __pop_delayed_noti_cb, NULL, &source);
+		if (ret != TIZEN_CORE_ERROR_NONE) {
+			LOGE("Failed to add timer. ret(%d)", ret);
+			__notification_mutex_unlock();
+			return NOTIFICATION_ERROR_IO_ERROR;
+		}
+
+		_is_timer_added = true;
+	}
+	__notification_mutex_unlock();
 
 	return NOTIFICATION_ERROR_NONE;
 }
