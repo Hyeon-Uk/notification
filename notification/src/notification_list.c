@@ -24,6 +24,7 @@
 #include <notification_debug.h>
 #include <notification_private.h>
 #include <notification_ipc.h>
+#include "notification_internal.h"
 
 
 struct _notification_list {
@@ -271,7 +272,8 @@ EXPORT_API int notification_get_list(notification_type_e type,
 		int count,
 		notification_list_h *list)
 {
-	return notification_get_list_for_uid(type, count, list, getuid());
+	return notification_get_list_for_uid(type, count, list,
+			notification_get_app_owner_uid());
 }
 
 EXPORT_API int notification_get_list_by_page_for_uid(notification_type_e type,
@@ -317,7 +319,7 @@ EXPORT_API int notification_get_list_by_page(notification_type_e type,
 	int page_number, int count_per_page, notification_list_h *list)
 {
 	return notification_get_list_by_page_for_uid(type,
-			page_number, count_per_page, list, getuid());
+			page_number, count_per_page, list, notification_get_app_owner_uid());
 }
 
 EXPORT_API int notification_get_detail_list_for_uid(const char *app_id,
@@ -351,7 +353,7 @@ EXPORT_API int notification_get_detail_list(const char *app_id,
 		notification_list_h *list)
 {
 	return notification_get_detail_list_for_uid(app_id, group_id,
-			priv_id, count, list, getuid());
+			priv_id, count, list, notification_get_app_owner_uid());
 }
 
 EXPORT_API int notification_free_list(notification_list_h list)

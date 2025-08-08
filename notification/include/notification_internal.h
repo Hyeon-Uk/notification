@@ -1538,6 +1538,7 @@ int notification_channel_clone(notification_channel_h channel,
 typedef void (*notification_channel_foreach_cb)(notification_channel_h channel, void *user_data);
 int notification_channel_foreach(notification_channel_foreach_cb cb,
 		void *user_data);
+uid_t notification_get_app_owner_uid(void);
 
 /**
  * @}

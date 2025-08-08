@@ -39,6 +39,7 @@
 #include "notification_debug.h"
 #include "notification_shared_file.h"
 #include <notification_private.h>
+#include "notification_internal.h"
 
 #define NOTI_PRIV_DATA_DIR "data/.notification"
 #define MAX_TIMEOUT 5000
@@ -724,7 +725,7 @@ char *notification_check_file_path_is_private(const char *pkg_id,
 							const char *file_path)
 {
 	char *dst_path = NULL;
-	uid_t uid = getuid();
+	uid_t uid = notification_get_app_owner_uid();
 
 	if (pkg_id == NULL || file_path == NULL)
 		return NULL;

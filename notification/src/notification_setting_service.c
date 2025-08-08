@@ -32,6 +32,7 @@
 #include <notification_setting_internal.h>
 #include <notification_setting_service.h>
 #include "notification_db_query.h"
+#include "notification_internal.h"
 
 /* LCOV_EXCL_START */
 static int _get_table_field_data_int(char **table, int *buf, int index)

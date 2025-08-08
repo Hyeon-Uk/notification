@@ -1383,22 +1383,22 @@ EXPORT_API int notification_get_type(notification_h noti,
 
 EXPORT_API int notification_post(notification_h noti)
 {
-	return notification_post_for_uid(noti, getuid());
+	return notification_post_for_uid(noti, notification_get_app_owner_uid());
 }
 
 EXPORT_API int notification_update(notification_h noti)
 {
-	return notification_update_for_uid(noti, getuid());
+	return notification_update_for_uid(noti, notification_get_app_owner_uid());
 }
 
 EXPORT_API int notification_delete_all(notification_type_e type)
 {
-	return notification_delete_all_for_uid(type, getuid());
+	return notification_delete_all_for_uid(type, notification_get_app_owner_uid());
 }
 
 EXPORT_API int notification_delete(notification_h noti)
 {
-	return notification_delete_for_uid(noti, getuid());
+	return notification_delete_for_uid(noti, notification_get_app_owner_uid());
 }
 
 static int _notification_get_domain_name(const char *app_id, char **name)
@@ -1435,7 +1435,7 @@ static void _language_key_changed_cb (keynode_t *node, void *user_data)
 		goto out;
 	}
 
-	ret = pkgmgrinfo_appinfo_get_usr_appinfo(app_id, getuid(), &appinfo);
+	ret = pkgmgrinfo_appinfo_get_usr_appinfo(app_id, notification_get_app_owner_uid(), &appinfo);
 	if (ret != PMINFO_R_OK || appinfo == NULL) {
 		WARN("Failed to get appinfo err[%d] app_id[%s]", ret, app_id);
 		goto out;
@@ -1513,7 +1513,7 @@ static notification_h _notification_create(notification_type_e type)
 	noti->check_box_value = false;
 	noti->channel_name = NULL;
 
-	if (getuid() < REGULAR_UID_MIN) {
+	if (notification_get_app_owner_uid() < REGULAR_UID_MIN) {
 		noti->pkg_id = strdup(noti->caller_app_id);
 		if (noti->pkg_id == NULL)
 			err = -1;
@@ -1578,7 +1578,7 @@ static notification_h _notification_create(notification_type_e type)
 
 		if (_label == NULL) {
 			err = pkgmgrinfo_appinfo_get_usr_appinfo(noti->caller_app_id,
-						getuid(), &appinfo);
+						notification_get_app_owner_uid(), &appinfo);
 			if (err != PMINFO_R_OK || appinfo == NULL) {
 				WARN("Failed to get appinfo err[%d] caller_app_id[%s]",
 						err, noti->caller_app_id);
@@ -1636,7 +1636,7 @@ EXPORT_API notification_h notification_create(notification_type_e type)
 
 EXPORT_API notification_h notification_load_by_tag(const char *tag)
 {
-	return notification_load_by_tag_for_uid(tag, getuid());
+	return notification_load_by_tag_for_uid(tag, notification_get_app_owner_uid());
 }
 
 EXPORT_API int notification_clone(notification_h noti, notification_h *clone)
@@ -2020,7 +2020,7 @@ EXPORT_API int notification_get_noti_block_state(notification_block_state_e *sta
 
 	app_id = notification_get_app_id_by_pid(getpid());
 
-	ret = notification_ipc_get_noti_block_state(app_id, &do_not_disturb, &do_not_disturb_except, &allow_to_notify, getuid());
+	ret = notification_ipc_get_noti_block_state(app_id, &do_not_disturb, &do_not_disturb_except, &allow_to_notify, notification_get_app_owner_uid());
 
 	if (ret != NOTIFICATION_ERROR_NONE) {
 		if (app_id)

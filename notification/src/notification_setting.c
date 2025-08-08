@@ -32,6 +32,7 @@
 #include <notification_setting.h>
 #include <notification_setting_internal.h>
 #include "notification_db_query.h"
+#include "notification_internal.h"
 
 #define NOTIFICATION_PRIVILEGE "http://tizen.org/privilege/notification"
 
@@ -62,7 +63,7 @@ EXPORT_API int notification_setting_get_setting_array_for_uid(notification_setti
 
 EXPORT_API int notification_setting_get_setting_array(notification_setting_h *setting_array, int *count)
 {
-	return notification_setting_get_setting_array_for_uid(setting_array, count, getuid());
+	return notification_setting_get_setting_array_for_uid(setting_array, count, notification_get_app_owner_uid());
 }
 
 EXPORT_API int notification_setting_get_setting_by_appid_for_uid(const char *app_id, notification_setting_h *setting, uid_t uid)
@@ -79,7 +80,7 @@ EXPORT_API int notification_setting_get_setting_by_appid_for_uid(const char *app
 /* LCOV_EXCL_START */
 EXPORT_API int notification_setting_get_setting_by_package_name(const char *package_name, notification_setting_h *setting)
 {
-	return notification_setting_get_setting_by_appid_for_uid(package_name, setting, getuid());
+	return notification_setting_get_setting_by_appid_for_uid(package_name, setting, notification_get_app_owner_uid());
 }
 /* LCOV_EXCL_STOP */
 
@@ -285,7 +286,7 @@ EXPORT_API int notification_setting_update_setting_for_uid(notification_setting_
 
 EXPORT_API int notification_setting_update_setting(notification_setting_h setting)
 {
-	return notification_setting_update_setting_for_uid(setting, getuid());
+	return notification_setting_update_setting_for_uid(setting, notification_get_app_owner_uid());
 }
 
 EXPORT_API int notification_setting_free_notification(notification_setting_h setting)
@@ -595,7 +596,7 @@ EXPORT_API int notification_system_setting_load_system_setting_for_uid(notificat
 
 EXPORT_API int notification_system_setting_load_system_setting(notification_system_setting_h *system_setting)
 {
-	return notification_system_setting_load_system_setting_for_uid(system_setting, getuid());
+	return notification_system_setting_load_system_setting_for_uid(system_setting, notification_get_app_owner_uid());
 }
 
 EXPORT_API int notification_system_setting_update_system_setting_for_uid(notification_system_setting_h system_setting, uid_t uid)
@@ -610,7 +611,7 @@ EXPORT_API int notification_system_setting_update_system_setting_for_uid(notific
 
 EXPORT_API int notification_system_setting_update_system_setting(notification_system_setting_h system_setting)
 {
-	return notification_system_setting_update_system_setting_for_uid(system_setting, getuid());
+	return notification_system_setting_update_system_setting_for_uid(system_setting, notification_get_app_owner_uid());
 }
 
 EXPORT_API int notification_system_setting_free_system_setting(notification_system_setting_h system_setting)
@@ -958,7 +959,7 @@ EXPORT_API int notification_register_system_setting_dnd_changed_cb_for_uid(dnd_c
 /* LCOV_EXCL_START */
 EXPORT_API int notification_register_system_setting_dnd_changed_cb(dnd_changed_cb callback, void *user_data)
 {
-	return notification_register_system_setting_dnd_changed_cb_for_uid(callback, user_data, getuid());
+	return notification_register_system_setting_dnd_changed_cb_for_uid(callback, user_data, notification_get_app_owner_uid());
 }
 
 EXPORT_API int notification_unregister_system_setting_dnd_changed_cb_for_uid(dnd_changed_cb callback, uid_t uid)
@@ -1006,7 +1007,7 @@ EXPORT_API int notification_unregister_system_setting_dnd_changed_cb_for_uid(dnd
 /* LCOV_EXCL_START */
 EXPORT_API int notification_unregister_system_setting_dnd_changed_cb(dnd_changed_cb callback)
 {
-	return notification_unregister_system_setting_dnd_changed_cb_for_uid(callback, getuid());
+	return notification_unregister_system_setting_dnd_changed_cb_for_uid(callback, notification_get_app_owner_uid());
 }
 /* LCOV_EXCL_STOP */
 
