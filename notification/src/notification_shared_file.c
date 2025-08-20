@@ -92,8 +92,10 @@ static bool __make_sharing_dir(const char *dir)
 	GFile *noti_dir = NULL;
 	GError *g_err = NULL;
 
-	if (access(dir, R_OK) == 0)
+	if (access(dir, R_OK) == 0) {
+		WARN("__make_sharing_dir exist : %s", dir);
 		return true;
+	}
 
 	noti_dir = g_file_new_for_path(dir);
 	if (noti_dir == NULL)
@@ -107,6 +109,8 @@ static bool __make_sharing_dir(const char *dir)
 		g_object_unref(noti_dir);
 		return false;
 	}
+
+	WARN("__make_sharing_dir done : %s", dir);
 
 	g_object_unref(noti_dir);
 	return true;
@@ -302,6 +306,8 @@ out:
 	if (dst)
 		g_object_unref(dst);
 
+	WARN("copy private file done : %d", ret);
+
 	return ret;
 }
 /* LCOV_EXCL_STOP */
@@ -477,7 +483,7 @@ static void __make_file_info(char *src_path, char *dst_path,
 	} else if (ret == NOTIFICATION_ERROR_NONE) {
 		*is_overlapping = true;
 	}
-
+	WARN("__make_file_info none");
 }
 
 static GList *__get_new_file_list(notification_h noti,
@@ -488,7 +494,6 @@ static GList *__get_new_file_list(notification_h noti,
 	char *src_path, *dst_path, *dup_str;
 	char buf_key[32] = { 0, };
 	int i = NOTIFICATION_IMAGE_TYPE_ICON;
-
 
 	if (noti->priv_sound_path != NULL &&  noti->sound_path != NULL) {
 		dst_path = noti->priv_sound_path;
@@ -727,6 +732,7 @@ char *notification_check_file_path_is_private(const char *pkg_id,
 	char *dst_path = NULL;
 	uid_t uid = notification_get_app_owner_uid();
 
+	WARN("check file path : %s", file_path);
 	if (pkg_id == NULL || file_path == NULL)
 		return NULL;
 
@@ -884,8 +890,10 @@ int __set_sharing_for_new_target(sharing_req_data_s *req_data,
 		target_info = (target_app_info_s *)iter->data;
 		tmp = g_list_find_custom(req_data->target_app_table,
 					target_info->app_id, __comp_str);
-		if (tmp != NULL)
+		if (tmp != NULL) {
+			ERR("tmp not null continue");
 			continue;
+		}
 
 		app_info = strdup(target_info->app_id);
 		if (app_info == NULL) {
@@ -914,6 +922,7 @@ int __set_sharing_for_new_target(sharing_req_data_s *req_data,
 					req_data->shared_file_list, &len);
 			if (path_array == NULL) {
 				ret = NOTIFICATION_ERROR_OUT_OF_MEMORY;
+				ERR("path array is null");
 				goto out;
 			}
 
@@ -956,6 +965,8 @@ out:
 	if (path_array != NULL)
 		free(path_array);
 
+	WARN("__set_sharing_for_new_target done : %d", ret);
+
 	return ret;
 }
 /* LCOV_EXCL_STOP */
@@ -972,6 +983,7 @@ int __set_sharing_for_new_file(sharing_req_data_s *req_data,
 
 	path_array = __convert_list_to_array(new_file_list, &len);
 	if (path_array == NULL) {
+		ERR("path array is null");
 		ret = NOTIFICATION_ERROR_OUT_OF_MEMORY;
 		goto out;
 	}
@@ -1046,6 +1058,8 @@ out:
 	if (path_array != NULL)
 		free(path_array);
 
+	WARN("__set_sharing_for_new_file done");
+
 	return ret;
 }
 /* LCOV_EXCL_STOP */
@@ -1061,6 +1075,8 @@ EXPORT_API int notification_set_private_sharing(notification_h noti,
 	uid_info_s *uid_info;
 	GList *req_list, *iter, *tmp;
 	GList *new_file_list = NULL;
+
+	WARN("notification_set_private_sharing");
 
 	if (noti == NULL || noti->caller_app_id == NULL)
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
@@ -1117,6 +1133,7 @@ EXPORT_API int notification_set_private_sharing(notification_h noti,
 	if (new_file_list != NULL) {
 		if (__set_sharing_for_new_file(req_data, new_file_list,
 				is_overlapping) != NOTIFICATION_ERROR_NONE) {
+			ERR("__set_sharing_for_new_file out");
 			ret = NOTIFICATION_ERROR_IO_ERROR;
 			goto out;
 		}
@@ -1139,6 +1156,7 @@ EXPORT_API int notification_set_private_sharing(notification_h noti,
 
 	if (__set_sharing_for_new_target(req_data, uid_info->target_app_list)
 						!= NOTIFICATION_ERROR_NONE) {
+		WARN("__set_sharing_for_new_target out");
 		ret = NOTIFICATION_ERROR_IO_ERROR;
 		goto out;
 	}
@@ -1154,6 +1172,9 @@ out:
 	if (ret != NOTIFICATION_ERROR_NONE)
 		req_data->priv_id_list = g_list_remove(req_data->priv_id_list,
 						GINT_TO_POINTER(noti->priv_id));
+
+	WARN("notification_set_private_sharing done");
+
 	return ret;
 }
 
@@ -1169,6 +1190,8 @@ static gboolean __timeout_handler(void *data)
 	uid_info_s *uid_info;
 	int ret = SECURITY_MANAGER_SUCCESS;
 	int len;
+
+	WARN("__timeout_handler");
 
 	req_data = (sharing_req_data_s *)data;
 	if (g_list_length(req_data->priv_id_list) > 0) {
@@ -1278,6 +1301,8 @@ out:
 	}
 	__free_req_info(req_data);
 
+	WARN("__timeout_handler done");
+
 	return FALSE;
 }
 
@@ -1290,6 +1315,8 @@ EXPORT_API void notification_remove_private_sharing(
 	GList *priv_id_info = NULL;
 	GList *tmp_list = NULL;
 	int len;
+
+	WARN("notification_remove_private_sharing");
 
 	tmp_list = g_list_find_custom(__uid_list, GINT_TO_POINTER(uid),
 			__comp_uid_info_list);
@@ -1326,5 +1353,6 @@ EXPORT_API void notification_remove_private_sharing(
 		__timeout_handler(req_data);
 	}
 
+	WARN("notification_remove_private_sharing done");
 }
 /* LCOV_EXCL_STOP */

@@ -1532,6 +1532,7 @@ static void __remove_private_file(gpointer data, gpointer user_data)
 		g_file_delete(src, NULL, NULL);
 		g_object_unref(src);
 	}
+	WARN("__remove_private_file : %s", path);
 }
 /* LCOV_EXCL_STOP */
 
