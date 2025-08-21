@@ -1856,6 +1856,7 @@ EXPORT_API int notification_post_with_event_cb_for_uid(notification_h noti, even
 	int priv_id;
 	notification_event_cb_info_s *info = NULL;
 	GList *find_list;
+	GList *file_list;
 
 	if (noti == NULL || cb == NULL)
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
@@ -1869,9 +1870,13 @@ EXPORT_API int notification_post_with_event_cb_for_uid(notification_h noti, even
 
 	__notification_mutex_lock();
 
+	file_list = __copy_private_file(noti);
 	ret = notification_ipc_request_insert(noti, &priv_id);
-	if (ret != NOTIFICATION_ERROR_NONE)
+	if (ret != NOTIFICATION_ERROR_NONE) {
+		ERR("Failed to post notification id[%d]", priv_id);
+		g_list_foreach(file_list, __remove_private_file, NULL);
 		goto out;
+	}
 
 	noti->priv_id = priv_id;
 
@@ -1905,6 +1910,9 @@ EXPORT_API int notification_post_with_event_cb_for_uid(notification_h noti, even
 	}
 
 out:
+	if (file_list)
+		g_list_free_full(file_list, free);
+
 	__notification_mutex_unlock();
 
 	return ret;

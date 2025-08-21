@@ -343,6 +343,8 @@ static void __free_req_info(gpointer data)
 	if (info->target_app_table)
 		g_list_free_full(info->target_app_table, free);
 
+	WARN("__free_req_info done");
+
 	free(info);
 }
 /* LCOV_EXCL_STOP */
@@ -439,6 +441,9 @@ static void __make_file_info(char *src_path, char *dst_path,
 	sharing_file_info_s *dup_file_info;
 	struct stat stat_buf = {0,};
 
+	WARN("__make_file_info : %s", src_path);
+	WARN("__make_file_info : %s", dst_path);
+
 	/*
 	* If the file copy is successful,
 	* ignore the shared_file_list check for private sharing
@@ -448,6 +453,8 @@ static void __make_file_info(char *src_path, char *dst_path,
 		tmp = g_list_find_custom(shared_file_list, dst_path,
 				__comp_dst_path);
 		if (tmp == NULL) {
+			WARN("__make_file_info tmp null");
+
 			file_info = (sharing_file_info_s *)calloc(1,
 					sizeof(sharing_file_info_s));
 			__OOM_CHECK(file_info, DUMMY_PARAM, DUMMY_PARAM);
@@ -466,6 +473,8 @@ static void __make_file_info(char *src_path, char *dst_path,
 
 			*new_file_list = g_list_append(*new_file_list, file_info);
 		} else {
+			WARN("__make_file_info tmp not null");
+
 			file_info = (sharing_file_info_s *)tmp->data;
 
 			if (stat(file_info->dst_path, &stat_buf) != 0)
@@ -483,7 +492,7 @@ static void __make_file_info(char *src_path, char *dst_path,
 	} else if (ret == NOTIFICATION_ERROR_NONE) {
 		*is_overlapping = true;
 	}
-	WARN("__make_file_info none");
+	WARN("__make_file_info done");
 }
 
 static GList *__get_new_file_list(notification_h noti,
@@ -494,6 +503,8 @@ static GList *__get_new_file_list(notification_h noti,
 	char *src_path, *dst_path, *dup_str;
 	char buf_key[32] = { 0, };
 	int i = NOTIFICATION_IMAGE_TYPE_ICON;
+
+	WARN("__get_new_file_list");
 
 	if (noti->priv_sound_path != NULL &&  noti->sound_path != NULL) {
 		dst_path = noti->priv_sound_path;
@@ -539,8 +550,10 @@ static GList *__get_new_file_list(notification_h noti,
 
 			bundle_del(noti->b_image_path, buf_key);
 			bundle_add_str(noti->b_image_path, buf_key, dst_path);
+			WARN("__get_new_file_list changed path %d : %s", i, dst_path);
 		}
 	}
+	WARN("__get_new_file_list done");
 
 	return new_file_list;
 }
@@ -593,6 +606,8 @@ static char *__get_shared_dir(notification_h noti)
 	__OOM_CHECK(dir, NULL, DUMMY_PARAM);
 
 	snprintf(dir, dir_len, "%s", shared_path);
+
+	WARN("__get_shared_dir : %s", dir);
 
 	return dir;
 }
@@ -653,6 +668,8 @@ EXPORT_API void notification_remove_private_sharing_target_id(
 	uid_info_s *uid_info;
 	GList *sharing_req_list, *target_app;
 
+	WARN("notification_remove_private_sharing_target_id : %s", sender);
+
 	sharing_req_list = g_list_find_custom(__uid_list, GINT_TO_POINTER(uid),
 						__comp_uid_info_list);
 	if (sharing_req_list == NULL)
@@ -674,6 +691,7 @@ EXPORT_API void notification_remove_private_sharing_target_id(
 			target_info = NULL;
 		}
 	}
+	WARN("notification_remove_private_sharing_target_id done");
 }
 
 EXPORT_API void notification_add_private_sharing_target_id(pid_t pid,
@@ -684,9 +702,13 @@ EXPORT_API void notification_add_private_sharing_target_id(pid_t pid,
 	uid_info_s *uid_info;
 	GList *sharing_req_list, *target_app;
 
+	WARN("notification_add_private_sharing_target_id : [%s]", sender);
+
 	sharing_req_list = g_list_find_custom(__uid_list, GINT_TO_POINTER(uid),
 						__comp_uid_info_list);
 	if (sharing_req_list == NULL) {
+		WARN("sharing list null");
+
 		uid_info = (uid_info_s *)calloc(1, sizeof(uid_info_s));
 		__OOM_CHECK(uid_info, DUMMY_PARAM, DUMMY_PARAM);
 		uid_info->uid = uid;
@@ -699,6 +721,8 @@ EXPORT_API void notification_add_private_sharing_target_id(pid_t pid,
 	target_app = g_list_find_custom(uid_info->target_app_list, sender,
 						__comp_target_app);
 	if (target_app == NULL) {
+		WARN("target app null");
+
 		app_id = notification_get_app_id_by_pid((int)pid);
 		if (app_id == NULL) {
 			ERR("Failed to get app id by pid");
@@ -724,6 +748,7 @@ EXPORT_API void notification_add_private_sharing_target_id(pid_t pid,
 		uid_info->target_app_list = g_list_append(
 			uid_info->target_app_list, target_info);
 	}
+	WARN("notification_add_private_sharing_target_id done");
 }
 
 char *notification_check_file_path_is_private(const char *pkg_id,
@@ -787,16 +812,20 @@ EXPORT_API bool notification_validate_private_sharing(
 
 			if (strcmp(updated_path, private_path) == 0)
 				return false;
+
+			WARN("validate private sharing image path : %d", i);
 		}
 	}
 
 	if (updated_noti->sound_path && updated_noti->priv_sound_path) {
+		WARN("validate private sharing sound path");
 		if (strcmp(updated_noti->sound_path,
 					updated_noti->priv_sound_path) == 0)
 			return false;
 	}
 
 	if (updated_noti->vibration_path && updated_noti->priv_vibration_path) {
+		WARN("validate private sharing vibration path");
 		if (strcmp(updated_noti->vibration_path,
 					updated_noti->priv_vibration_path) == 0)
 			return false;
@@ -838,12 +867,15 @@ EXPORT_API void notification_calibrate_private_sharing(
 						buf_key);
 					bundle_add_str(updated_noti->b_image_path,
 						buf_key, source_path);
+					WARN("calibrate private sharing set path : %s", source_path);
 				}
 			}
+			WARN("calibrate private sharing image path : %d", i);
 		}
 	}
 
 	if (updated_noti->sound_path && updated_noti->priv_sound_path) {
+		WARN("calibrate private sharing sound path");
 		if (strcmp(updated_noti->sound_path,
 				updated_noti->priv_sound_path) == 0) {
 			free(updated_noti->sound_path);
@@ -858,6 +890,7 @@ EXPORT_API void notification_calibrate_private_sharing(
 	}
 
 	if (updated_noti->vibration_path && updated_noti->priv_vibration_path) {
+		WARN("calibrate private sharing vibration path");
 		if (strcmp(updated_noti->vibration_path,
 				updated_noti->priv_vibration_path) == 0) {
 			free(updated_noti->vibration_path);
@@ -884,6 +917,9 @@ int __set_sharing_for_new_target(sharing_req_data_s *req_data,
 	GList *iter, *tmp;
 	target_app_info_s *target_info;
 	char *app_info = NULL;
+
+	WARN("__set_sharing_for_new_target : %d",
+			g_list_length(target_app_list));
 
 	iter = target_app_list;
 	for (; iter != NULL; iter = g_list_next(iter)) {
@@ -944,12 +980,14 @@ int __set_sharing_for_new_target(sharing_req_data_s *req_data,
 			goto out;
 		}
 
+		WARN("set private sharing start");
 		ret = security_manager_private_sharing_apply(handle);
 		if (ret != SECURITY_MANAGER_SUCCESS) {
 			ret = NOTIFICATION_ERROR_IO_ERROR;
 			ERR("Failed to apply PS %d", ret);
 			goto out;
 		}
+		WARN("set private sharing end");
 
 		req_data->target_app_table = g_list_append(
 				req_data->target_app_table, app_info);
@@ -980,6 +1018,8 @@ int __set_sharing_for_new_file(sharing_req_data_s *req_data,
 	int len;
 	private_sharing_req *handle = NULL;
 	GList *iter;
+
+	WARN("__set_sharing_for_new_file %d", (int)is_overlapping);
 
 	path_array = __convert_list_to_array(new_file_list, &len);
 	if (path_array == NULL) {
@@ -1031,6 +1071,7 @@ int __set_sharing_for_new_file(sharing_req_data_s *req_data,
 			}
 		}
 	}
+	WARN("taget app table : %d", g_list_length(req_data->target_app_table));
 
 	iter = req_data->target_app_table;
 	for (; iter != NULL; iter = g_list_next(iter)) {
@@ -1043,12 +1084,14 @@ int __set_sharing_for_new_file(sharing_req_data_s *req_data,
 			goto out;
 		}
 
+		WARN("set private sharing start");
 		ret = security_manager_private_sharing_apply(handle);
 		if (ret != SECURITY_MANAGER_SUCCESS) {
 			ERR("Failed to apply PS [%d]", ret);
 			ret = NOTIFICATION_ERROR_IO_ERROR;
 			goto out;
 		}
+		WARN("set private sharing end");
 	}
 
 out:
@@ -1076,14 +1119,14 @@ EXPORT_API int notification_set_private_sharing(notification_h noti,
 	GList *req_list, *iter, *tmp;
 	GList *new_file_list = NULL;
 
-	WARN("notification_set_private_sharing");
-
 	if (noti == NULL || noti->caller_app_id == NULL)
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 
 	tmp = g_list_find_custom(__uid_list, GINT_TO_POINTER(uid),
 						__comp_uid_info_list);
 	if (tmp == NULL) {
+		WARN("set private sharing uid info null");
+
 		uid_info = (uid_info_s *)calloc(1, sizeof(uid_info_s));
 		__OOM_CHECK(uid_info, NOTIFICATION_ERROR_OUT_OF_MEMORY, DUMMY_PARAM);
 
@@ -1096,6 +1139,8 @@ EXPORT_API int notification_set_private_sharing(notification_h noti,
 	req_list = g_list_find_custom(uid_info->sharing_req_list,
 				noti->caller_app_id, __comp_sharing_req_list);
 	if (req_list == NULL) {
+		WARN("set private sharing req list null");
+
 		req_data = (sharing_req_data_s *)calloc(1, sizeof(sharing_req_data_s));
 		__OOM_CHECK(req_data, NOTIFICATION_ERROR_OUT_OF_MEMORY, DUMMY_PARAM);
 
@@ -1109,6 +1154,8 @@ EXPORT_API int notification_set_private_sharing(notification_h noti,
 		uid_info->sharing_req_list = g_list_append(
 			uid_info->sharing_req_list, req_data);
 	} else {
+		WARN("set private sharing req list exist");
+
 		req_data = (sharing_req_data_s *)req_list->data;
 		if (req_data->dir == NULL)
 			req_data->dir = __get_shared_dir(noti);
