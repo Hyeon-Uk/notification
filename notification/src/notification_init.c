@@ -17,6 +17,7 @@
 
 #define _GNU_SOURCE
 
+#include <aul.h>
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -44,7 +45,7 @@
 static int _is_authorized(void)
 {
 	/* pkg_init db should be called by as root privilege. */
-	uid_t uid = getuid();
+	uid_t uid = aul_getuid();
 
 	if ((uid_t) OWNER_ROOT == uid)
 		return 1;

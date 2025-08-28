@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+#include <aul.h>
 #include <dlog.h>
 #include <uuid/uuid.h>
 #include <unistd.h>
@@ -149,7 +150,7 @@ Bundle AbstractItem::Serialize() const {
   char buf[80] = {0, };
 
   if (impl_->uid_ == 0)
-    impl_->uid_ = getuid();
+    impl_->uid_ = aul_getuid();
 
   if (!impl_->channel_.empty())
     b.Add(ABSTRACT_ITEM_CHANNEL_KEY, impl_->channel_);

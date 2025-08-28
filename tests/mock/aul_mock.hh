@@ -31,6 +31,7 @@ class AulMock : public virtual ModuleMock {
  public:
   virtual ~AulMock() {}
 
+  MOCK_METHOD0(aul_getuid, uid_t());
   MOCK_METHOD3(aul_app_get_appid_bypid, int(int, char*, int));
   MOCK_METHOD3(aul_app_get_pkgid_bypid, int(int, char*, int));
 };

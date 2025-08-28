@@ -19,6 +19,10 @@
 #include "mock_hook.hh"
 #include "test_fixture.hh"
 
+extern "C" uid_t aul_getuid() {
+  return 5001;
+}
+
 extern "C" int aul_app_get_appid_bypid(int pid, char* appid, int len) {
   return MOCK_HOOK_P3(AulMock, aul_app_get_appid_bypid, pid, appid, len);
 }

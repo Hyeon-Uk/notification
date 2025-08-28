@@ -21,10 +21,6 @@
 #include "mock_hook.hh"
 #include "test_fixture.hh"
 
-extern "C" uid_t getuid() {
-  return 5001;
-}
-
 extern "C" GFile* g_file_new_for_path(const char* arg1) {
   return MOCK_HOOK_P1(GlibMock, g_file_new_for_path, arg1);
 }

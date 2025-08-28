@@ -31,7 +31,6 @@ class GlibMock : public virtual ModuleMock {
     using ::testing::Invoke;
   }
 
-  MOCK_METHOD0(getuid, uid_t());
   MOCK_METHOD1(g_file_new_for_path, GFile* (const char*));
   MOCK_METHOD2(g_file_query_exists, gboolean (GFile*, GCancellable*));
   MOCK_METHOD3(g_file_make_directory, gboolean (GFile*, GCancellable*, GError**));

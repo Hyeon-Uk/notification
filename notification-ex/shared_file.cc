@@ -17,6 +17,7 @@
 #define _GNU_SOURCE
 #endif
 
+#include <aul.h>
 #include <unistd.h>
 #include <dlog.h>
 #include <linux/xattr.h>
@@ -221,7 +222,7 @@ string SharedFile::GetDataPath(string app_id, string path) const {
     return nullptr;
   }
 
-  tzplatform_set_user(getuid());
+  tzplatform_set_user(aul_getuid());
   user_app = tzplatform_getenv(TZ_USER_APP);
   tzplatform_reset_user();
 

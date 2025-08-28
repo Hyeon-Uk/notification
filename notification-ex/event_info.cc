@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+#include <aul.h>
 #include <dlog.h>
 #include <unistd.h>
 
@@ -51,7 +52,7 @@ EventInfo::Impl::Impl(EventInfo* parent, int type, std::string owner,
     std::string channel, std::string item_id)
     : type_(type), owner_(owner), channel_(channel), item_id_(item_id),
     parent_(parent) {
-  uid_ = getuid();
+  uid_ = aul_getuid();
   request_id_ = util::GetRequestId();
   error_ = ERROR_NONE;
   validated_uid_ = 0;

@@ -17,6 +17,7 @@
 #define _GNU_SOURCE
 #endif
 
+#include <aul.h>
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -755,7 +756,7 @@ char *notification_check_file_path_is_private(const char *pkg_id,
 							const char *file_path)
 {
 	char *dst_path = NULL;
-	uid_t uid = notification_get_app_owner_uid();
+	uid_t uid = aul_getuid();
 
 	WARN("check file path : %s", file_path);
 	if (pkg_id == NULL || file_path == NULL)
