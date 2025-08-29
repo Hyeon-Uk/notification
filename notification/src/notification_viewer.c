@@ -98,9 +98,12 @@ static bool __pop_delayed_noti_cb(void *user_data)
 	app_control_h app_control;
 	int ret;
 
+	WARN("__pop_delayed_noti_cb");
+
 	__notification_mutex_lock();
 
 	if (_delayed_noti_list == NULL) {
+		WARN("pop delayed noti not exist");
 		_is_timer_added = false;
 		__notification_mutex_unlock();
 		return false;
@@ -119,6 +122,8 @@ static bool __pop_delayed_noti_cb(void *user_data)
 	app_control_destroy(app_control);
 	__notification_mutex_unlock();
 
+	WARN("__pop_delayed_noti_cb done");
+
 	return true;
 }
 
@@ -128,6 +133,8 @@ static int __push_delayed_noti(app_control_h app_control)
 	tizen_core_h core = NULL;
 	tizen_core_source_h source = NULL;
 	int ret;
+
+	WARN("__push_delayed_noti");
 
 	__notification_mutex_lock();
 
@@ -159,18 +166,54 @@ static int __push_delayed_noti(app_control_h app_control)
 	}
 	__notification_mutex_unlock();
 
+	WARN("__push_delayed_noti done");
+
 	return NOTIFICATION_ERROR_NONE;
+}
+
+static bool __push_delayed_noti_task(void *user_data)
+{
+	app_control_h app_control = (app_control_h)user_data;
+
+	if (__push_delayed_noti(app_control) != NOTIFICATION_ERROR_NONE)
+		ERR("Failed to push noti");
+
+	app_control_destroy(app_control);
+
+	return false;
 }
 /* LCOV_EXCL_STOP */
 
 static void __app_control_result_cb(app_control_h app_control,
 		app_control_error_e result, void *user_data)
 {
+	int ret;
+	tizen_core_h core = NULL;
+	tizen_core_source_h source = NULL;
+	app_control_h cloned;
+
 	INFO("result(%d)", result);
 	if (result != APP_CONTROL_ERROR_NONE) {
-		ERR("Failed to send launch request. error(%d)", result);
-		if (__push_delayed_noti(app_control) != NOTIFICATION_ERROR_NONE)
-			ERR("Failed to push delayed noti");
+		ret = app_control_clone(&cloned, app_control);
+		if (ret != APP_CONTROL_ERROR_NONE) {
+			ERR("Failed to clone app control. error(%d)", ret);
+			return;
+		}
+
+		ret = tizen_core_find("data-provider-master", &core);
+		if (ret != TIZEN_CORE_ERROR_NONE) {
+			LOGE("Failed to find data-provider-master core. ret(%d)", ret);
+			app_control_destroy(cloned);
+			return;
+		}
+
+		ret = tizen_core_add_idle_job(core, __push_delayed_noti_task,
+				cloned, &source);
+		if (ret != TIZEN_CORE_ERROR_NONE) {
+			LOGE("Failed to add idle job. ret(%d)", ret);
+			app_control_destroy(cloned);
+			return;
+		}
 	}
 }
 
