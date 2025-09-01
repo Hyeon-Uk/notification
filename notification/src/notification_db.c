@@ -426,6 +426,7 @@ EXPORT_API int notification_upgrade_db(void)
 	if (ret != SQLITE_OK) {
 		ERR("@@ Failed to ser user version[%d][%s]", ret, errmsg);
 		ret = NOTIFICATION_ERROR_FROM_DB;
+		goto out;
 	}
 	ret = NOTIFICATION_ERROR_NONE;
 	WARN("@@ upgrade db done");
