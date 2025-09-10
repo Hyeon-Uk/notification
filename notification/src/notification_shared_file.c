@@ -748,6 +748,7 @@ EXPORT_API void notification_add_private_sharing_target_id(pid_t pid,
 
 		uid_info->target_app_list = g_list_append(
 			uid_info->target_app_list, target_info);
+		WARN("target app [%s]", app_id);
 	}
 	WARN("notification_add_private_sharing_target_id done");
 }
@@ -981,7 +982,7 @@ int __set_sharing_for_new_target(sharing_req_data_s *req_data,
 			goto out;
 		}
 
-		WARN("set private sharing start");
+		WARN("set private sharing start [%s]", target_info->app_id);
 		ret = security_manager_private_sharing_apply(handle);
 		if (ret != SECURITY_MANAGER_SUCCESS) {
 			ret = NOTIFICATION_ERROR_IO_ERROR;
@@ -1064,6 +1065,7 @@ int __set_sharing_for_new_file(sharing_req_data_s *req_data,
 				goto out;
 			}
 
+			WARN("drop sharing [%s]", (const char *)iter->data);
 			ret = security_manager_private_sharing_drop(handle);
 			if (ret != SECURITY_MANAGER_SUCCESS) {
 				ERR("Failed to drop [%d]", ret);
@@ -1085,7 +1087,7 @@ int __set_sharing_for_new_file(sharing_req_data_s *req_data,
 			goto out;
 		}
 
-		WARN("set private sharing start");
+		WARN("set private sharing start [%s]", (const char *)iter->data);
 		ret = security_manager_private_sharing_apply(handle);
 		if (ret != SECURITY_MANAGER_SUCCESS) {
 			ERR("Failed to apply PS [%d]", ret);
@@ -1302,6 +1304,7 @@ static gboolean __timeout_handler(void *data)
 				goto out;
 			}
 
+			WARN("drop sharing [%s]", target_appid);
 			ret = security_manager_private_sharing_drop(handle);
 			if (ret != SECURITY_MANAGER_SUCCESS) {
 				ERR("Failed to drop %d", ret);
@@ -1364,7 +1367,7 @@ EXPORT_API void notification_remove_private_sharing(
 	GList *tmp_list = NULL;
 	int len;
 
-	WARN("notification_remove_private_sharing");
+	WARN("notification_remove_private_sharing [%d]", priv_id);
 
 	tmp_list = g_list_find_custom(__uid_list, GINT_TO_POINTER(uid),
 			__comp_uid_info_list);
