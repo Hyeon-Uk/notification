@@ -2646,7 +2646,7 @@ EXPORT_API int notification_channel_create(const char *channel_name,
 
 	*channel = noti_channel;
 
-	WARN("notification_channel_create done");
+	WARN("notification_channel_create done [%s]", noti_channel->app_id);
 
 	return NOTIFICATION_ERROR_NONE;
 }
@@ -2928,26 +2928,35 @@ EXPORT_API int notification_channel_clone(notification_channel_h channel,
 	return NOTIFICATION_ERROR_NONE;
 }
 
-EXPORT_API int notification_channel_foreach(notification_channel_foreach_cb cb,
+EXPORT_API int notification_channel_foreach(const char *app_id,
+		notification_channel_foreach_cb cb,
 		void *user_data)
 {
 	int ret;
-	char *app_id;
+	char *_app_id = NULL;
 	GList *channel_list = NULL;
 	notification_channel_h channel;
 
-	WARN("notification_channel_foreach");
-
-	app_id = notification_get_app_id_by_pid(getpid());
-	if (cb == NULL || app_id == NULL) {
+	if (cb == NULL) {
 		ERR("Invalid parameter");
 		ret = NOTIFICATION_ERROR_INVALID_PARAMETER;
 		goto out;
 	}
 
+	if (app_id == NULL) {
+		_app_id = notification_get_app_id_by_pid(getpid());
+		if (_app_id == NULL) {
+			ERR("failed to get app id");
+			ret = NOTIFICATION_ERROR_IO_ERROR;
+			goto out;
+		}
+	}
+	WARN("notification_channel_foreach : %s", (app_id != NULL) ? app_id : _app_id);
+
 	__notification_mutex_lock();
 
-	ret = notification_ipc_request_channel_get_list(app_id,
+	ret = notification_ipc_request_channel_get_list(
+			(app_id != NULL) ? app_id : _app_id,
 			&channel_list, aul_getuid());
 	if (ret != NOTIFICATION_ERROR_NONE) {
 		ERR("failed to get is blocked");
@@ -2967,8 +2976,8 @@ out:
 	if (channel_list)
 		g_list_free_full(channel_list, notification_channel_free);
 
-	if (app_id)
-			free(app_id);
+	if (_app_id)
+		free(_app_id);
 
 	WARN("notification_channel_foreach done : %d", ret);
 

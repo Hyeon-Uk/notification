@@ -1536,7 +1536,7 @@ int notification_channel_clone(notification_channel_h channel,
 		notification_channel_h *clone);
 
 typedef void (*notification_channel_foreach_cb)(notification_channel_h channel, void *user_data);
-int notification_channel_foreach(notification_channel_foreach_cb cb,
+int notification_channel_foreach(const char* app_id, notification_channel_foreach_cb cb,
 		void *user_data);
 
 /**
