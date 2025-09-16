@@ -211,7 +211,7 @@ static bool __is_res_file(const char *file_path, const char *pkg_id)
 	return ret;
 }
 
-static bool __is_private_file(const char *file_path, const char *pkg_id)
+static bool __is_shared_file(const char *file_path, const char *pkg_id)
 {
 	const char *path_index;
 	bool ret = false;
@@ -757,9 +757,9 @@ char *notification_check_file_path_is_private(const char *pkg_id,
 							const char *file_path)
 {
 	char *dst_path = NULL;
-	uid_t uid = aul_getuid();
 
-	WARN("check file path : %s", file_path);
+	WARN("check file path [%s][[%s]", file_path, pkg_id);
+
 	if (pkg_id == NULL || file_path == NULL)
 		return NULL;
 
@@ -768,21 +768,12 @@ char *notification_check_file_path_is_private(const char *pkg_id,
 		return NULL;
 	}
 
-	if (__is_RO_file(file_path)) {
+	if (__is_shared_file(file_path, pkg_id)) {
+		WARN("is shared");
+	} else if (__is_res_file(file_path, pkg_id)) {
+		WARN("path res");
+	} else if (__is_RO_file(file_path)) {
 		WARN("is RO");
-		dst_path = __get_data_path_by_pkg_id(pkg_id, file_path, uid);
-	}
-
-	if (dst_path == NULL && __is_private_file(file_path, pkg_id)) {
-		WARN("is private");
-		if (__is_res_file(file_path, pkg_id)) {
-			WARN("path res");
-			dst_path = __get_data_path_by_pkg_id(pkg_id, file_path, uid);
-		} else {
-			dst_path = strdup(file_path);
-			if (dst_path == NULL)
-				ERR("Failed to strdup");
-		}
 	}
 
 	return dst_path;
