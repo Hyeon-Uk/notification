@@ -23,7 +23,7 @@ extern "C" {
 
 int notification_init_default_viewer();
 int notification_launch_default_viewer(int priv_id,
-				notification_op_type_e status, uid_t uid);
+				notification_op_type_e status, uid_t uid, bool candidate);
 
 #ifdef __cplusplus
 }

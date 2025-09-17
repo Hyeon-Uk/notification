@@ -219,7 +219,7 @@ static void __app_control_result_cb(app_control_h app_control,
 
 /* LCOV_EXCL_START */
 EXPORT_API int notification_launch_default_viewer(int priv_id,
-		notification_op_type_e status, uid_t uid)
+		notification_op_type_e status, uid_t uid, bool candidate)
 {
 	int ret;
 	char buf[32] = {0,};
@@ -258,6 +258,16 @@ EXPORT_API int notification_launch_default_viewer(int priv_id,
 		ERR("Failed to add operation type. error(%d)", ret);
 		ret = NOTIFICATION_ERROR_OUT_OF_MEMORY;
 		goto out;
+	}
+
+	/* for candidate */
+	if (candidate) {
+		WARN("set candidate for viewer");
+		ret = app_control_add_extra_data(app_control,
+				"__K_EX_USE_CANDIDATE_PROCESS", "true");
+		if (ret != APP_CONTROL_ERROR_NONE) {
+			ERR("Failed to set candidate key(%d)", ret);
+		}
 	}
 
 	if (_delayed_noti_list != NULL) {
