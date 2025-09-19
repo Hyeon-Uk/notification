@@ -28,12 +28,11 @@
 #include <notification_list.h>
 #include <notification_noti.h>
 #include <notification_debug.h>
-#include <notification_ipc.h>
 #include <notification_private.h>
 #include <notification_setting.h>
 #include <notification_setting_internal.h>
+#include <notification_tidl.h>
 #include "notification_db_query.h"
-#include "notification_internal.h"
 
 #define NOTIFICATION_PRIVILEGE "http://tizen.org/privilege/notification"
 
@@ -59,7 +58,7 @@ EXPORT_API int notification_setting_get_setting_array_for_uid(notification_setti
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 	}
 
-	return notification_ipc_request_get_setting_array(setting_array, count, uid);
+	return notification_tidl_request_get_setting_array(setting_array, count, uid);
 }
 
 EXPORT_API int notification_setting_get_setting_array(notification_setting_h *setting_array, int *count)
@@ -74,7 +73,7 @@ EXPORT_API int notification_setting_get_setting_by_appid_for_uid(const char *app
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 	}
 
-	return notification_ipc_request_get_setting_by_app_id(app_id, setting, uid);
+	return notification_tidl_request_get_setting_by_app_id(app_id, setting, uid);
 }
 /* LCOV_EXCL_STOP */
 
@@ -282,7 +281,7 @@ EXPORT_API int notification_setting_update_setting_for_uid(notification_setting_
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 	}
 
-	return notification_ipc_update_setting(setting, uid);
+	return notification_tidl_update_setting(setting, uid);
 }
 
 EXPORT_API int notification_setting_update_setting(notification_setting_h setting)
@@ -316,7 +315,7 @@ static bool _is_package_in_setting_table(sqlite3 *db, const char *package_name,
 	int sql_ret;
 	bool err = true;
 
-	if (app_id != NULL)
+	if (app_id != NULL && strlen(app_id) > 0)
 		query = sqlite3_mprintf("SELECT app_id FROM %s WHERE uid = %d "
 					"AND package_name = %Q AND app_id = %Q",
 					NOTIFICATION_SETTING_DB_TABLE,
@@ -592,7 +591,7 @@ EXPORT_API int notification_system_setting_load_system_setting_for_uid(notificat
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 	}
 
-	return notification_ipc_request_load_system_setting(system_setting, uid);
+	return notification_tidl_request_load_system_setting(system_setting, uid);
 }
 
 EXPORT_API int notification_system_setting_load_system_setting(notification_system_setting_h *system_setting)
@@ -607,7 +606,7 @@ EXPORT_API int notification_system_setting_update_system_setting_for_uid(notific
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 	}
 
-	return notification_ipc_update_system_setting(system_setting, uid);
+	return notification_tidl_update_system_setting(system_setting, uid);
 }
 
 EXPORT_API int notification_system_setting_update_system_setting(notification_system_setting_h system_setting)
@@ -921,7 +920,7 @@ EXPORT_API int notification_register_system_setting_dnd_changed_cb_for_uid(dnd_c
 	if (callback == NULL)
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 
-	if (notification_ipc_monitor_init(uid) != NOTIFICATION_ERROR_NONE) {
+	if (notification_tidl_monitor_init() != NOTIFICATION_ERROR_NONE) {
 		ERR("Failed to init monitor");
 		return NOTIFICATION_ERROR_IO_ERROR;
 	}
@@ -999,7 +998,7 @@ EXPORT_API int notification_unregister_system_setting_dnd_changed_cb_for_uid(dnd
 	}
 
 	if (g_hash_table_size(_noti_dnd_cb_hash) == 0)
-		notification_ipc_monitor_fini();
+		notification_tidl_monitor_fini();
 
 	return NOTIFICATION_ERROR_NONE;
 }

@@ -38,7 +38,7 @@
 #include <notification_noti.h>
 #include <notification_ongoing.h>
 #include <notification_group.h>
-#include <notification_ipc.h>
+#include <notification_tidl.h>
 #include <notification_internal.h>
 #include <notification_shared_file.h>
 
@@ -1776,6 +1776,8 @@ EXPORT_API int notification_clone(notification_h noti, notification_h *clone)
 
 EXPORT_API int notification_free(notification_h noti)
 {
+	WARN("notification_free");
+
 	int i = 0;
 
 	if (noti == NULL)
@@ -1865,6 +1867,8 @@ EXPORT_API int notification_free(notification_h noti)
 		free(noti->channel_name);
 
 	free(noti);
+
+	WARN("notification_free done");
 
 	return NOTIFICATION_ERROR_NONE;
 }
@@ -1973,7 +1977,7 @@ EXPORT_API int notification_save_as_template(notification_h noti, const char *te
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 	}
 
-	return notification_ipc_request_save_as_template(noti, template_name);
+	return notification_tidl_request_save_as_template(noti, template_name);
 }
 
 EXPORT_API notification_h notification_create_from_template(const char *template_name)
@@ -1987,19 +1991,12 @@ EXPORT_API notification_h notification_create_from_template(const char *template
 		return NULL;
 	}
 
-	noti = (notification_h)calloc(1, sizeof(struct _notification));
-	if (noti == NULL) {
-		/* LCOV_EXCL_START */
-		ERR("Failed to alloc memory");
-		set_last_result(NOTIFICATION_ERROR_OUT_OF_MEMORY);
-		return NULL;
-		/* LCOV_EXCL_STOP */
-	}
-
-	ret = notification_ipc_request_create_from_template(noti, template_name);
+	ret = notification_tidl_request_create_from_template(&noti, template_name);
 
 	set_last_result(ret);
 	if (ret != NOTIFICATION_ERROR_NONE) {
+		ERR("failed to create noti from template : %d", ret);
+
 		notification_free(noti);
 		return NULL;
 	}
@@ -2020,8 +2017,7 @@ EXPORT_API int notification_get_noti_block_state(notification_block_state_e *sta
 
 	app_id = notification_get_app_id_by_pid(getpid());
 
-	ret = notification_ipc_get_noti_block_state(app_id, &do_not_disturb, &do_not_disturb_except, &allow_to_notify, aul_getuid());
-
+	ret = notification_tidl_get_noti_block_state(app_id, &do_not_disturb, &do_not_disturb_except, &allow_to_notify, aul_getuid());
 	if (ret != NOTIFICATION_ERROR_NONE) {
 		if (app_id)
 			free(app_id);

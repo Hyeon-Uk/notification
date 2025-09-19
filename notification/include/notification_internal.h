@@ -24,6 +24,8 @@
 #include <notification_list.h>
 #include <notification_type_internal.h>
 
+#include <notification_setting_internal.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -36,6 +38,17 @@ extern "C" {
 #define NOTIFICATION_ERROR (notification_error_quark())
 
 GQuark notification_error_quark(void);
+
+
+/**
+ * @brief changed callback
+ */
+typedef void (*notification_changed_cb)(void *data, notification_type_e type);
+
+/**
+ * @brief detailed changed callback
+ */
+typedef void (*notification_detailed_changed_cb)(void *data, notification_type_e type, notification_op *op_list, int num_op);
 
 /**
  * @brief This function add deferred task. The registered task will be executed when notification service become ready.
@@ -62,21 +75,18 @@ int notification_del_deferred_task(
  * @brief This function will be removed.
  * @see notification_register_detailed_changed_cb()
  */
-int notification_resister_changed_cb(
-	void (*changed_cb)(void *data, notification_type_e type),
+int notification_resister_changed_cb(notification_changed_cb callback,
 	void *user_data);
-int notification_resister_changed_cb_for_uid(
-	void (*changed_cb)(void *data, notification_type_e type),
+int notification_resister_changed_cb_for_uid(notification_changed_cb callback,
 	void *user_data, uid_t uid);
 
 /**
  * @brief This function will be removed.
  * @see notification_unregister_detailed_changed_cb()
  */
-int notification_unresister_changed_cb(
-	void (*changed_cb)(void *data, notification_type_e type));
-int notification_unresister_changed_cb_for_uid(
-	void (*changed_cb)(void *data, notification_type_e type), uid_t uid);
+int notification_unresister_changed_cb(notification_changed_cb callback);
+int notification_unresister_changed_cb_for_uid(notification_changed_cb callback,
+	uid_t uid);
 
 /**
  * @brief Updates the progress of the inserted notification. This only works for the ongoing notification (NOTIFICATION_TYPE_ONGOING).
@@ -652,7 +662,7 @@ int notification_update_async_for_uid(notification_h noti,
  * @since_tizen 2.3
  * @privlevel public
  * @privilege %http://tizen.org/privilege/notification
- * @param[in] changed_cb The callback function
+ * @param[in] callback The callback function
  * @param[in] user_data  The user data
  * @return #NOTIFICATION_ERROR_NONE on success,
  *         otherwise any other value on failure
@@ -673,10 +683,10 @@ int notification_update_async_for_uid(notification_h noti,
  * @endcode
  */
 int notification_register_detailed_changed_cb(
-		void (*detailed_changed_cb)(void *data, notification_type_e type, notification_op *op_list, int num_op),
+		notification_detailed_changed_cb callback,
 		void *user_data);
 int notification_register_detailed_changed_cb_for_uid(
-		void (*detailed_changed_cb)(void *data, notification_type_e type, notification_op *op_list, int num_op),
+		notification_detailed_changed_cb callback,
 		void *user_data, uid_t uid);
 
 /**
@@ -685,7 +695,7 @@ int notification_register_detailed_changed_cb_for_uid(
  * @since_tizen 2.3
  * @privlevel public
  * @privilege %http://tizen.org/privilege/notification
- * @param[in] changed_cb The callback function
+ * @param[in] callback The callback function
  * @return #NOTIFICATION_ERROR_NONE on success,
  *         otherwise any other value on failure
  * @retval #NOTIFICATION_ERROR_NONE Success
@@ -705,11 +715,10 @@ int notification_register_detailed_changed_cb_for_uid(
  * @endcode
  */
 int notification_unregister_detailed_changed_cb(
-		void (*detailed_changed_cb)(void *data, notification_type_e type, notification_op *op_list, int num_op),
+		notification_detailed_changed_cb callback,
 		void *user_data);
 int notification_unregister_detailed_changed_cb_for_uid(
-		void (*detailed_changed_cb)(void *data, notification_type_e type, notification_op *op_list, int num_op),
-		void *user_data, uid_t uid);
+		notification_detailed_changed_cb callback, void *user_data, uid_t uid);
 
 /**
  * @brief Sets the default button to display highlight on the notification.
@@ -1536,8 +1545,25 @@ int notification_channel_clone(notification_channel_h channel,
 		notification_channel_h *clone);
 
 typedef void (*notification_channel_foreach_cb)(notification_channel_h channel, void *user_data);
-int notification_channel_foreach(const char* app_id, notification_channel_foreach_cb cb,
+int notification_channel_foreach(const char *app_id, notification_channel_foreach_cb cb,
 		void *user_data);
+
+/*
+ * for TIDL
+ */
+int make_empty_notification(void *notihandle);
+int make_noti_from_notification(notification_h *noti, void *notihandle);
+int make_notification_from_noti(void *notihandle, notification_h noti, bool translate);
+int make_setting_from_noti_system_setting(notification_system_setting_h *setting,
+		void *settinghandle);
+int make_setting_from_noti_setting(notification_setting_h setting,
+		void *settinghandle);
+int make_noti_setting_from_setting(void *settinghandle,
+		notification_setting_h setting);
+int make_noti_system_setting_from_setting(void *settinghandle,
+		notification_system_setting_h setting);
+int make_dnd_allow_exception_from_exception(void *exception_handle,
+		dnd_allow_exception_h dnd_allow_exception);
 
 /**
  * @}

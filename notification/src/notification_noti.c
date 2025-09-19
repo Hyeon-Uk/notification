@@ -270,23 +270,24 @@ static int _create_insertion_query(sqlite3 *db, notification_h noti, sqlite3_stm
 	if (noti == NULL || stmt == NULL)
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 
-	if (noti->b_image_path)
+	if (noti->b_image_path && bundle_get_count(noti->b_image_path) > 0)
 		bundle_encode(noti->b_image_path, (bundle_raw **)&b_image_path,
 				&b_encode_len);
 
-	if (noti->b_priv_image_path)
+	if (noti->b_priv_image_path && bundle_get_count(noti->b_priv_image_path) > 0)
 		bundle_encode(noti->b_priv_image_path,
 				(bundle_raw **)&b_priv_image_path, &b_encode_len);
 
 	/* Get title key */
-	if (noti->b_key != NULL) {
+	if (noti->b_key != NULL && bundle_get_count(noti->b_key) > 0) {
 		snprintf(buf_key, sizeof(buf_key), "%d",
 					NOTIFICATION_TEXT_TYPE_TITLE);
 
 		bundle_get_str(noti->b_key, buf_key, &title_key);
 	}
 
-	if (title_key == NULL && noti->b_text != NULL) {
+	if (title_key == NULL
+		&& (noti->b_text != NULL && bundle_get_count(noti->b_text) > 0)) {
 		snprintf(buf_key, sizeof(buf_key), "%d",
 					NOTIFICATION_TEXT_TYPE_TITLE);
 
@@ -296,36 +297,36 @@ static int _create_insertion_query(sqlite3 *db, notification_h noti, sqlite3_stm
 	if (title_key == NULL)
 		title_key = noti->caller_app_id;
 
-	if (noti->b_text)
+	if (noti->b_text && bundle_get_count(noti->b_text) > 0)
 		bundle_encode(noti->b_text, (bundle_raw **)&b_text, &b_encode_len);
 
-	if (noti->b_key)
+	if (noti->b_key && bundle_get_count(noti->b_key) > 0)
 		bundle_encode(noti->b_key, (bundle_raw **)&b_key, &b_encode_len);
 
-	if (noti->b_format_args)
+	if (noti->b_format_args && bundle_get_count(noti->b_format_args) > 0)
 		bundle_encode(noti->b_format_args,
 			(bundle_raw **)&b_format_args, &b_encode_len);
 
-	if (noti->args)
+	if (noti->args && bundle_get_count(noti->args) > 0)
 		bundle_encode(noti->args, (bundle_raw **)&args, &b_encode_len);
 
-	if (noti->group_args)
+	if (noti->group_args && bundle_get_count(noti->group_args) > 0)
 		bundle_encode(noti->group_args, (bundle_raw **)&group_args,
 			&b_encode_len);
 
-	if (noti->b_execute_option)
+	if (noti->b_execute_option && bundle_get_count(noti->b_execute_option) > 0)
 		bundle_encode(noti->b_execute_option,
 			(bundle_raw **)&b_execute_option, &b_encode_len);
 
-	if (noti->b_service_responding)
+	if (noti->b_service_responding && bundle_get_count(noti->b_service_responding) > 0)
 		bundle_encode(noti->b_service_responding,
 			(bundle_raw **)&b_service_responding, &b_encode_len);
 
-	if (noti->b_service_single_launch)
+	if (noti->b_service_single_launch && bundle_get_count(noti->b_service_single_launch) > 0)
 		bundle_encode(noti->b_service_single_launch,
 			(bundle_raw **)&b_service_single_launch, &b_encode_len);
 
-	if (noti->b_service_multi_launch)
+	if (noti->b_service_multi_launch && bundle_get_count(noti->b_service_multi_launch) > 0)
 		bundle_encode(noti->b_service_multi_launch,
 			(bundle_raw **)&b_service_multi_launch, &b_encode_len);
 
@@ -1053,6 +1054,8 @@ EXPORT_API int notification_noti_insert(notification_h noti)
 	sqlite3_stmt *stmt = NULL;
 	char *query = NULL;
 
+	ERR("@@ notification_noti_insert");
+
 	if (noti == NULL) {
 		ERR("Invalid notification handle");
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
@@ -1124,6 +1127,8 @@ err:
 
 	if (db)
 		notification_db_close(&db);
+
+	ERR("@@ notification_noti_insert done");
 
 	return ret;
 }
@@ -1962,8 +1967,13 @@ EXPORT_API int notification_noti_check_tag(notification_h noti)
 	int ret = NOTIFICATION_ERROR_NONE;
 	int result = 0;
 
-	if (noti->tag == NULL)
+	WARN("@@ check tag : %s", noti->tag);
+
+	if (noti->tag == NULL || strlen(noti->tag) == 0) {
+		WARN("@@ return not exist");
 		return NOTIFICATION_ERROR_NOT_EXIST_ID;
+	}
+	WARN("@@ continue check tag");
 
 	db = notification_db_open();
 	if (!db)

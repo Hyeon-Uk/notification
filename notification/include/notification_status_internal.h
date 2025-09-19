@@ -32,35 +32,6 @@ extern "C" {
 
 /**
  * @internal
- * @brief Unregisters a callback for all notification events.
- * @since_tizen 2.3
- * @privlevel public
- * @privilege %http://tizen.org/privilege/notification
- * @param[in] changed_cb The callback function
- * @return #NOTIFICATION_ERROR_NONE on success,
- *         otherwise any other value on failure
- * @retval #NOTIFICATION_ERROR_NONE         Success
- * @retval #NOTIFICATION_ERROR_INVALID_PARAMETER Invalid parameter
- * @retval #NOTIFICATION_ERROR_PERMISSION_DENIED The application does not have the privilege to call this method
- * @see notification_register_detailed_changed_cb()
- * @par Sample code:
- * @code
-#include <notification.h>
-...
-{
-	noti_err = notification_register_detailed_changed_cb(app_changed_cb, user_data);
-	if (noti_err != NOTIFICATION_ERROR_NONE) {
-		return;
-	}
-}
- * @endcode
- */
-int notification_unregister_detailed_changed_cb(
-		void (*detailed_changed_cb)(void *data, notification_type_e type, notification_op *op_list, int num_op),
-		void *user_data);
-
-/**
- * @internal
  * @brief Called when a new message is posted.
  * @since_tizen 2.3
  * @param[in] message The message posted

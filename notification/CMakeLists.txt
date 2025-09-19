@@ -33,6 +33,8 @@ pkg_check_modules(pkgs REQUIRED
 	gio-unix-2.0
 	iniparser
 	security-manager
+	capi-appfw-app-common
+	rpc-port
 	tizen-core
 )
 
@@ -63,6 +65,8 @@ INSTALL(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/
 		PATTERN "*_private.h" EXCLUDE
 		PATTERN "*_group.h" EXCLUDE
 		PATTERN "*_debug.h" EXCLUDE
+		PATTERN "*_tidl.h" EXCLUDE
+		PATTERN "*_tidl_proxy.h" EXCLUDE
         PATTERN "*.h")
 
 INSTALL(FILES ${CMAKE_CURRENT_SOURCE_DIR}/11_notification-add.post DESTINATION ${SYSCONF_INSTALL_DIR}/gumd/useradd.d/)

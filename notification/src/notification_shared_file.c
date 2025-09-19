@@ -83,7 +83,7 @@ typedef struct sharing_file_info {
 
 typedef struct target_app_info {
 	char *app_id;
-	char *dbus_sender_name;
+	char *tidl_sender_name;
 } target_app_info_s;
 
 /* LCOV_EXCL_START */
@@ -226,9 +226,9 @@ static bool __is_shared_file(const char *file_path, const char *pkg_id)
 	if (path_index != NULL &&
 		(strncmp(path_index, pkg_id, strlen(pkg_id)) == 0)) {
 		if (strncmp(path_index, shared_path, strlen(shared_path)) == 0)
-			ret = false;
-		else
 			ret = true;
+		else
+			ret = false;
 	}
 
 	return ret;
@@ -656,10 +656,10 @@ static gint __comp_target_app(gconstpointer a, gconstpointer b)
 	target_app_info_s *target = (target_app_info_s *)a;
 	char *sender = (char *)b;
 
-	if (!target || !sender || !target->dbus_sender_name)
+	if (!target || !sender || !target->tidl_sender_name)
 		return -1;
 
-	return strcmp(sender, target->dbus_sender_name);
+	return strcmp(sender, target->tidl_sender_name);
 }
 
 EXPORT_API void notification_remove_private_sharing_target_id(
@@ -687,7 +687,7 @@ EXPORT_API void notification_remove_private_sharing_target_id(
 					uid_info->target_app_list, target_info);
 
 			free(target_info->app_id);
-			free(target_info->dbus_sender_name);
+			free(target_info->tidl_sender_name);
 			free(target_info);
 			target_info = NULL;
 		}
@@ -738,8 +738,8 @@ EXPORT_API void notification_add_private_sharing_target_id(pid_t pid,
 		}
 
 		target_info->app_id = app_id;
-		target_info->dbus_sender_name = strdup(sender);
-		if (target_info->dbus_sender_name == NULL) {
+		target_info->tidl_sender_name = strdup(sender);
+		if (target_info->tidl_sender_name == NULL) {
 			ERR("Failed to alloc memory");
 			free(target_info);
 			free(app_id);
@@ -757,6 +757,7 @@ char *notification_check_file_path_is_private(const char *pkg_id,
 							const char *file_path)
 {
 	char *dst_path = NULL;
+	// uid_t uid = aul_getuid();
 
 	WARN("check file path [%s][[%s]", file_path, pkg_id);
 
@@ -768,6 +769,11 @@ char *notification_check_file_path_is_private(const char *pkg_id,
 		return NULL;
 	}
 
+	// 1. shared in other package
+	// 2. shared/[pkgid]/res
+	// 3. [pkgid]/shared/res
+	// 4. other cases
+
 	if (__is_shared_file(file_path, pkg_id)) {
 		WARN("is shared");
 	} else if (__is_res_file(file_path, pkg_id)) {
@@ -775,6 +781,23 @@ char *notification_check_file_path_is_private(const char *pkg_id,
 	} else if (__is_RO_file(file_path)) {
 		WARN("is RO");
 	}
+
+	// if (__is_RO_file(file_path)) {
+	// 	WARN("is RO");
+	// 	dst_path = __get_data_path_by_pkg_id(pkg_id, file_path, uid);
+	// }
+
+	// if (dst_path == NULL && __is_shared_file(file_path, pkg_id)) {
+	// 	WARN("is private");
+	// 	if (__is_res_file(file_path, pkg_id)) {
+	// 		WARN("path res");
+	// 		dst_path = __get_data_path_by_pkg_id(pkg_id, file_path, uid);
+	// 	} else {
+	// 		dst_path = strdup(file_path);
+	// 		if (dst_path == NULL)
+	// 			ERR("Failed to strdup");
+	// 	}
+	// }
 
 	return dst_path;
 }

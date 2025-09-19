@@ -41,7 +41,6 @@ static GRecMutex __rec_mutex;
 static void __app_control_result_cb(app_control_h app_control,
 		app_control_error_e result, void *user_data);
 
-
 NOTIFICATION_VIEWER_CTOR static void __notification_init(void)
 {
 	g_rec_mutex_init(&__rec_mutex);

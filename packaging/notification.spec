@@ -6,6 +6,7 @@ Release:    1
 Group:      Applications/Core Applications
 License:    Apache-2.0
 Source0:    %{name}-%{version}.tar.gz
+BuildRequires: tidl
 BuildRequires: pkgconfig(sqlite3)
 BuildRequires: pkgconfig(vconf)
 BuildRequires: pkgconfig(bundle)
@@ -22,6 +23,7 @@ BuildRequires: pkgconfig(iniparser)
 BuildRequires: pkgconfig(security-manager)
 BuildRequires: pkgconfig(gmock)
 BuildRequires: pkgconfig(uuid)
+BuildRequires: pkgconfig(rpc-port)
 BuildRequires: pkgconfig(tizen-core)
 
 %if 0%{?gcov:1}
@@ -50,6 +52,7 @@ gcov objects of a notification library
 
 %prep
 %setup -q
+/bin/bash ./tidl/prebuild.sh
 
 %package devel
 Summary:    Notification library (devel)
@@ -160,7 +163,6 @@ fi
 %{_includedir}/notification/notification_status_internal.h
 %{_includedir}/notification/notification_setting.h
 %{_includedir}/notification/notification_setting_internal.h
-%{_includedir}/notification/notification_ipc.h
 %{_includedir}/notification/notification_noti.h
 %{_includedir}/notification/notification_setting_service.h
 %{_includedir}/notification/notification_viewer.h

@@ -1,0 +1,160 @@
+struct notification
+{
+	int type;    /* notification_type_e */
+	int layout;  /* notification_ly_type_e */
+
+	int group_id;    /* Group ID */
+	int internal_group_id;  /* Internal Group ID */
+	int priv_id;     /* Private ID */
+
+	string pkg_id;
+	string caller_app_id;   /* Caller App ID */
+	string launch_app_id;   /* Launch App ID */
+	bundle args;
+	bundle group_args;
+
+	bundle execute_option;
+	bundle service_responding;
+	bundle service_single_launch;
+	bundle service_multi_launch;
+
+	array<bundle> event_handler;    /* NOTIFICATION_EVENT_TYPE_MAX+1 */
+
+	string domain;    /* Text domain for localization */
+	string dir;     /* Text dir for localization */
+
+	bundle text;		/* basic text */
+	bundle key;		/* key for localized text */
+	bundle format_args;	/* args type and value for format string */
+	int num_format_args;	/* number of format string args */
+
+	bundle image_path;	/* image path */
+	bundle priv_image_path;	/* resource path for image */
+
+	int sound_type;    /* notification_sound_type_e */
+	string sound_path;
+	string priv_sound_path; /* resource path for sound */
+	int vibration_type;   /* notification_vibration_type_e */
+	string vibration_path;
+	string priv_vibration_path; /* resource path for vibration */
+	int led_operation;  /* notification_led_op_e */
+	int led_argb;
+	int led_on_ms;
+	int led_off_ms;
+
+	long time;		/* time_t time set by application */
+	long insert_time;	/* time_t insert time */
+
+	int flags_for_property;	/* property NOTIFICATION_PROP_XXX */
+	int display_applist;	/* display app list  NOTIFICATION_DISPLAY_APP_XXX */
+
+	double progress_size;	/* size of progress */
+	double progress_percentage;	/* percentage of progress */
+
+	string app_icon_path;	/* Temporary stored app icon path from AIL */
+	string app_label;
+	string temp_title;
+	string temp_content;
+	string tag;
+	bool ongoing_flag;
+	int ongoing_value_type;
+	int ongoing_current;		/* Ongoing current time */
+	int ongoing_duration;		/* Ongoing duration time */
+	bool auto_remove;
+	int default_button_index;   /* notification_button_index_e */
+	int hide_timeout;		/* Time for hide in banner */
+	int delete_timeout;		/* Time for delete in view notification */
+	int text_input_max_length;
+	bool event_flag;
+	bool is_translation;
+	int extension_image_size;
+
+	bool check_box;				/* check box flag */
+	bool check_box_value;		/* check box value */
+	string channel_name;		/* channel name */
+
+	int uid;    /* uid_t */
+}
+
+struct noti_setting {
+	string package_name;
+	string app_id;
+	bool allow_to_notify;
+	bool do_not_disturb_except;
+	bool pop_up_notification;
+	int visibility_class;
+	int lock_screen_content_level;
+	bool app_disabled;
+}
+
+struct noti_system_setting_dnd_allow_exception {
+	int type;
+	int value;
+}
+
+struct noti_system_setting {
+	bool do_not_disturb;
+	int visibility_class;
+	bool dnd_schedule_enabled;
+	int dnd_schedule_day;
+	int dnd_start_hour;
+	int dnd_start_min;
+	int dnd_end_hour;
+	int dnd_end_min;
+	int lock_screen_content_level;
+	list<noti_system_setting_dnd_allow_exception> dnd_allow_exceptions;
+}
+
+struct noti_channel {
+	string app_id;
+	string channel_name;
+	bool blockable;
+	bool is_blocked;
+}
+
+[privilege = "http://tizen.org/privilege/notification"]
+interface noti_service
+{
+  void changed(notification notihandle, string command, array<int> extra) delegate;  /* callback for viewer to notify changed */
+  int register_changed(changed callback, int uid);
+  int unregister_changed();
+
+  void event_received(notification notihandle, string command, int event_type) delegate;   /* callback to recieve event from viewer */
+  int register_event(event_received callback);
+  int unregister_event();
+
+  int register_service(int uid);
+  int add_noti(notification notihandle, out int priv_id);
+  int update_noti(notification notihandle, out int priv_id);
+  int refresh_noti(int uid);
+  int delete_single_noti(string app_id, int priv_id, int uid);
+  int delete_multiple_noti(string app_id, int noti_type, int uid, out int deleted_num);
+  int delete_noti_by_display_applist(int display_applist, int uid);
+  int get_noti_count(int type, string app_id, int group_id, int priv_id, int uid, out int ret_count);
+  int get_all_noti_count(int type, int uid, out int ret_count);
+  int update_noti_setting(noti_setting setting, int uid);
+  int update_noti_sys_setting(noti_system_setting setting, int uid);
+  int load_noti_by_tag(string app_id, string tag, int uid, out notification notihandle);
+  int load_noti_by_priv_id(string app_id, int priv_id, int uid, out notification notihandle);
+  int load_noti_grouping_list(int type, int count, int count_per_page, int uid, out list<notification> noti_list);
+  int load_noti_detail_list(string app_id, int group_id, int priv_id, int count, int uid, out list<notification> noti_list);
+  int get_setting_array(int uid, out array<noti_setting> setting_arr);
+  int get_setting_by_app_id(string app_id, int uid, out noti_setting setting);
+  int load_system_setting(int uid, out noti_system_setting setting);
+  int save_as_template(notification notihandle, string name);
+  int create_from_template(string name, out notification notihandle);
+  int create_from_package_template(string app_id, string name, out notification notihandle);
+  int get_noti_block_state(string app_id, int uid, out int dnd, out int dnd_except, out int allow_to_notify);
+  int update_dnd_allow_exception(int type, int value, int uid);
+  int send_event(notification notihandle, int type);
+  int send_event_by_priv_id(int priv_id, int type);
+  int check_event_receiver(int priv_id, out bool available);
+  int reset_event_handler(int priv_id);
+  int register_dnd_app(int uid, int pid);
+  int unregister_dnd_app(int uid, int pid);
+  int channel_insert(string app_id, string channel_name, bool blockable, bool is_blocked, int uid);
+  int channel_delete(string app_id, string channel_name, int uid);
+  int channel_update(string app_id, string channel_name, bool blockable, bool is_blocked, int uid);
+  int channel_get(string app_id, string channel_name, out bool blockable, out bool is_blocked, int uid);
+  int channel_get_list(string app_id, int uid, out list<noti_channel> channel_list);
+}

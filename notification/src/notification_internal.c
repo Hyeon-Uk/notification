@@ -30,7 +30,6 @@
 #include <app_control.h>
 #include <app_control_internal.h>
 #include <pkgmgr-info.h>
-#include <app-runtime.h>
 
 #include <notification.h>
 #include <notification_list.h>
@@ -39,9 +38,10 @@
 #include <notification_noti.h>
 #include <notification_ongoing.h>
 #include <notification_group.h>
-#include <notification_ipc.h>
 #include <notification_internal.h>
 #include <notification_shared_file.h>
+
+#include <notification_tidl.h>
 
 #define REGULAR_UID_MIN 5000
 
@@ -58,8 +58,8 @@ typedef enum __notification_cb_type {
 
 struct _notification_cb_info {
 	_notification_cb_type_e cb_type;
-	void (*changed_cb)(void *data, notification_type_e type);
-	void (*detailed_changed_cb)(void *data, notification_type_e type, notification_op *op_list, int num_op);
+	notification_changed_cb changed_cb;
+	notification_detailed_changed_cb detailed_changed_cb;
 	void *data;
 };
 
@@ -118,7 +118,7 @@ void notification_reset_event_handler_list(void)
 	while (iter) {
 		info = g_list_nth_data(iter, 0);
 		if (info)
-			notification_ipc_reset_event_handler(info->priv_id);
+			notification_tidl_reset_event_handler(info->priv_id);
 		iter = g_list_next(iter);
 	}
 }
@@ -254,7 +254,7 @@ void notification_delete_event_handler_cb(int priv_id)
 		free(info);
 
 	if (__noti_event_cb_list == NULL && _disturb_callback == NULL)
-		notification_ipc_event_monitor_fini();
+		notification_tidl_event_monitor_fini();
 
 	__notification_mutex_unlock();
 
@@ -269,7 +269,7 @@ EXPORT_API int notification_add_deferred_task(
 	if (deferred_task_cb == NULL)
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 
-	return notification_ipc_add_deffered_task(deferred_task_cb, user_data);
+	return notification_tidl_add_deffered_task(deferred_task_cb, user_data);
 }
 
 EXPORT_API int notification_del_deferred_task(
@@ -278,19 +278,18 @@ EXPORT_API int notification_del_deferred_task(
 	if (deferred_task_cb == NULL)
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 
-	return notification_ipc_del_deffered_task(deferred_task_cb);
+	return notification_tidl_del_deffered_task(deferred_task_cb);
 }
 /* LCOV_EXCL_STOP */
 
 /* LCOV_EXCL_START */
 EXPORT_API int notification_resister_changed_cb_for_uid(
-		void (*changed_cb)(void *data, notification_type_e type),
-		void *user_data, uid_t uid)
+		notification_changed_cb callback, void *user_data, uid_t uid)
 {
 	GList *noti_cb_list;
 	notification_cb_info_s *noti_cb_info_new;
 
-	if (changed_cb == NULL)
+	if (callback == NULL)
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 
 	if (_noti_cb_hash == NULL)
@@ -303,7 +302,7 @@ EXPORT_API int notification_resister_changed_cb_for_uid(
 	}
 
 	noti_cb_info_new->cb_type = NOTIFICATION_CB_NORMAL;
-	noti_cb_info_new->changed_cb = changed_cb;
+	noti_cb_info_new->changed_cb = callback;
 	noti_cb_info_new->detailed_changed_cb = NULL;
 	noti_cb_info_new->data = user_data;
 
@@ -316,8 +315,8 @@ EXPORT_API int notification_resister_changed_cb_for_uid(
 		noti_cb_list = g_list_append(noti_cb_list, noti_cb_info_new);
 	}
 
-	if (notification_ipc_monitor_init(uid) != NOTIFICATION_ERROR_NONE) {
-		notification_unresister_changed_cb_for_uid(changed_cb, uid);
+	if (notification_tidl_monitor_init() != NOTIFICATION_ERROR_NONE) {
+		notification_unresister_changed_cb_for_uid(callback, uid);
 		return NOTIFICATION_ERROR_IO_ERROR;
 	}
 
@@ -327,11 +326,9 @@ EXPORT_API int notification_resister_changed_cb_for_uid(
 
 /* LCOV_EXCL_START */
 EXPORT_API int notification_resister_changed_cb(
-		void (*changed_cb)(void *data, notification_type_e type),
-		void *user_data)
+		notification_changed_cb callback, void *user_data)
 {
-	return notification_resister_changed_cb_for_uid(changed_cb, user_data,
-			aul_getuid());
+	return notification_resister_changed_cb_for_uid(callback, user_data, aul_getuid());
 }
 
 static gint _noti_changed_compare(gconstpointer a, gconstpointer b)
@@ -349,13 +346,13 @@ static gint _noti_changed_compare(gconstpointer a, gconstpointer b)
 }
 
 EXPORT_API int notification_unresister_changed_cb_for_uid(
-		void (*changed_cb)(void *data, notification_type_e type), uid_t uid)
+		notification_changed_cb callback, uid_t uid)
 {
 	notification_cb_info_s *noti_cb_info;
 	GList *noti_cb_list;
 	GList *delete_cb_list;
 
-	if (changed_cb == NULL)
+	if (callback == NULL)
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 
 	if (_noti_cb_hash == NULL)
@@ -366,7 +363,7 @@ EXPORT_API int notification_unresister_changed_cb_for_uid(
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 
 	noti_cb_list = g_list_first(noti_cb_list);
-	delete_cb_list = g_list_find_custom(noti_cb_list, (gconstpointer)changed_cb,
+	delete_cb_list = g_list_find_custom(noti_cb_list, (gconstpointer)callback,
 					    (GCompareFunc)_noti_changed_compare);
 	if (delete_cb_list) {
 		noti_cb_info = g_list_nth_data(delete_cb_list, 0);
@@ -385,16 +382,15 @@ EXPORT_API int notification_unresister_changed_cb_for_uid(
 	}
 
 	if (g_hash_table_size(_noti_cb_hash) == 0)
-		notification_ipc_monitor_fini();
+		notification_tidl_monitor_fini();
 
 	return NOTIFICATION_ERROR_NONE;
 }
 
 EXPORT_API int notification_unresister_changed_cb(
-		void (*changed_cb)(void *data, notification_type_e type))
+		notification_changed_cb callback)
 {
-	return notification_unresister_changed_cb_for_uid(changed_cb,
-			aul_getuid());
+	return notification_unresister_changed_cb_for_uid(callback, aul_getuid());
 }
 
 EXPORT_API int notification_update_progress(notification_h noti,
@@ -740,8 +736,7 @@ int notification_get_grouping_list_for_uid(notification_type_e type, int count,
 EXPORT_API int notification_get_grouping_list(notification_type_e type, int count,
 		notification_list_h *list)
 {
-	return notification_get_grouping_list_for_uid(type, count, list,
-			aul_getuid());
+	return notification_get_grouping_list_for_uid(type, count, list, aul_getuid());
 }
 /* LCOV_EXCL_STOP */
 
@@ -760,8 +755,7 @@ EXPORT_API int notification_delete_group_by_group_id(const char *app_id,
 
 	__notification_mutex_lock();
 
-	ret = notification_ipc_request_delete_multiple(type, caller_app_id,
-			aul_getuid());
+	ret = notification_tidl_request_delete_multiple(type, caller_app_id, aul_getuid());
 
 	__notification_mutex_unlock();
 
@@ -787,7 +781,7 @@ int notification_delete_group_by_priv_id_for_uid(const char *app_id,
 
 	__notification_mutex_lock();
 
-	ret = notification_ipc_request_delete_single(type, caller_app_id, priv_id, uid);
+	ret = notification_tidl_request_delete_single(caller_app_id, priv_id, uid);
 
 	__notification_mutex_unlock();
 
@@ -803,8 +797,7 @@ EXPORT_API int notification_delete_group_by_priv_id(const char *app_id,
 		notification_type_e type,
 		int priv_id)
 {
-	return notification_delete_group_by_priv_id_for_uid(app_id, type, priv_id,
-			aul_getuid());
+	return notification_delete_group_by_priv_id_for_uid(app_id, type, priv_id, aul_getuid());
 }
 
 int notification_get_count_for_uid(notification_type_e type,
@@ -824,7 +817,7 @@ int notification_get_count_for_uid(notification_type_e type,
 	else
 		caller_app_id = strdup(app_id);
 
-	ret = notification_ipc_request_get_count(
+	ret = notification_tidl_request_get_count(
 			type,
 			caller_app_id,
 			group_id,
@@ -845,8 +838,7 @@ EXPORT_API int notification_get_count(notification_type_e type,
 		int group_id,
 		int priv_id, int *count)
 {
-	return notification_get_count_for_uid(type, app_id, group_id, priv_id, count,
-			aul_getuid());
+	return notification_get_count_for_uid(type, app_id, group_id, priv_id, count, aul_getuid());
 }
 
 int notification_clear_for_uid(notification_type_e type, uid_t uid)
@@ -858,7 +850,7 @@ int notification_clear_for_uid(notification_type_e type, uid_t uid)
 
 	__notification_mutex_lock();
 
-	ret = notification_ipc_request_delete_multiple(type, NULL, uid);
+	ret = notification_tidl_request_delete_multiple(type, NULL, uid);
 
 	__notification_mutex_unlock();
 
@@ -946,7 +938,7 @@ int notification_delete_all_by_type_for_uid(const char *app_id,
 
 	__notification_mutex_lock();
 
-	ret = notification_ipc_request_delete_multiple(type, caller_app_id, uid);
+	ret = notification_tidl_request_delete_multiple(type, caller_app_id, uid);
 
 	__notification_mutex_unlock();
 
@@ -961,8 +953,7 @@ int notification_delete_all_by_type_for_uid(const char *app_id,
 EXPORT_API int notification_delete_all_by_type(const char *app_id,
 		notification_type_e type)
 {
-	return notification_delete_all_by_type_for_uid(app_id, type,
-			aul_getuid());
+	return notification_delete_all_by_type_for_uid(app_id, type, aul_getuid());
 }
 
 int notification_delete_by_priv_id_for_uid(const char *app_id,
@@ -983,7 +974,7 @@ int notification_delete_by_priv_id_for_uid(const char *app_id,
 
 	__notification_mutex_lock();
 
-	ret = notification_ipc_request_delete_single(type, caller_app_id, priv_id, uid);
+	ret = notification_tidl_request_delete_single(caller_app_id, priv_id, uid);
 
 	__notification_mutex_unlock();
 
@@ -999,8 +990,7 @@ EXPORT_API int notification_delete_by_priv_id(const char *app_id,
 		notification_type_e type,
 		int priv_id)
 {
-	return notification_delete_by_priv_id_for_uid(app_id, type, priv_id,
-			aul_getuid());
+	return notification_delete_by_priv_id_for_uid(app_id, type, priv_id, aul_getuid());
 }
 
 EXPORT_API int notification_set_execute_option(notification_h noti,
@@ -1124,18 +1114,10 @@ notification_h notification_load_for_uid(char *app_id,
 	int ret;
 	notification_h noti;
 
-	noti = (notification_h)calloc(1, sizeof(struct _notification));
-	if (noti == NULL) {
-		ERR("Failed to alloc memory");
-		set_last_result(NOTIFICATION_ERROR_OUT_OF_MEMORY);
-		return NULL;
-	}
-
 	__notification_mutex_lock();
 
-	ret = notification_ipc_request_load_noti_by_priv_id(noti, app_id, priv_id, uid);
+	ret = notification_tidl_request_load_noti_by_priv_id(&noti, app_id, priv_id, uid);
 	if (ret != NOTIFICATION_ERROR_NONE) {
-		notification_free(noti);
 		set_last_result(ret);
 		__notification_mutex_unlock();
 		return NULL;
@@ -1153,8 +1135,7 @@ notification_h notification_load_for_uid(char *app_id,
 EXPORT_API notification_h notification_load(char *app_id,
 		int priv_id)
 {
-	return notification_load_for_uid(app_id, priv_id,
-			aul_getuid());
+	return notification_load_for_uid(app_id, priv_id, aul_getuid());
 }
 /* LCOV_EXCL_STOP */
 
@@ -1259,7 +1240,7 @@ EXPORT_API int notification_insert_for_uid(notification_h noti,
 
 	__notification_mutex_lock();
 
-	ret = notification_ipc_request_insert(noti, &id);
+	ret = notification_tidl_request_insert(noti, &id);
 	if (ret != NOTIFICATION_ERROR_NONE)
 		goto out;
 
@@ -1274,7 +1255,7 @@ EXPORT_API int notification_insert_for_uid(notification_h noti,
 		goto out;
 
 	if (event_flag == true) {
-		ret = notification_ipc_event_monitor_init();
+		ret = notification_tidl_event_monitor_init();
 		if (ret != NOTIFICATION_ERROR_NONE)
 			goto out;
 	}
@@ -1288,8 +1269,7 @@ out:
 EXPORT_API int notification_insert(notification_h noti,
 		int *priv_id)
 {
-	return notification_insert_for_uid(noti, priv_id,
-			aul_getuid());
+	return notification_insert_for_uid(noti, priv_id, aul_getuid());
 }
 
 EXPORT_API int notification_update_async_for_uid(notification_h noti,
@@ -1306,7 +1286,7 @@ EXPORT_API int notification_update_async_for_uid(notification_h noti,
 
 	__notification_mutex_lock();
 
-	ret = notification_ipc_request_update_async(noti, result_cb, user_data);
+	ret = notification_tidl_request_update(noti);
 
 	__notification_mutex_unlock();
 
@@ -1322,13 +1302,13 @@ EXPORT_API int notification_update_async(notification_h noti,
 
 /* LCOV_EXCL_START */
 EXPORT_API int notification_register_detailed_changed_cb_for_uid(
-		void (*detailed_changed_cb)(void *data, notification_type_e type, notification_op *op_list, int num_op),
+		notification_detailed_changed_cb callback,
 		void *user_data, uid_t uid)
 {
 	GList *noti_cb_list = NULL;
 	notification_cb_info_s *noti_cb_info_new = NULL;
 
-	if (detailed_changed_cb == NULL)
+	if (callback == NULL)
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 
 	if (_noti_cb_hash == NULL)
@@ -1342,7 +1322,7 @@ EXPORT_API int notification_register_detailed_changed_cb_for_uid(
 
 	noti_cb_info_new->cb_type = NOTIFICATION_CB_DETAILED;
 	noti_cb_info_new->changed_cb = NULL;
-	noti_cb_info_new->detailed_changed_cb = detailed_changed_cb;
+	noti_cb_info_new->detailed_changed_cb = callback;
 	noti_cb_info_new->data = user_data;
 
 	noti_cb_list = g_hash_table_lookup(_noti_cb_hash, GUINT_TO_POINTER(uid));
@@ -1354,8 +1334,8 @@ EXPORT_API int notification_register_detailed_changed_cb_for_uid(
 		noti_cb_list = g_list_append(noti_cb_list, noti_cb_info_new);
 	}
 
-	if (notification_ipc_monitor_init(uid) != NOTIFICATION_ERROR_NONE) {
-		notification_unregister_detailed_changed_cb_for_uid(detailed_changed_cb, user_data, uid);
+	if (notification_tidl_monitor_init() != NOTIFICATION_ERROR_NONE) {
+		notification_unregister_detailed_changed_cb_for_uid(callback, user_data, uid);
 		return NOTIFICATION_ERROR_IO_ERROR;
 	}
 
@@ -1365,11 +1345,9 @@ EXPORT_API int notification_register_detailed_changed_cb_for_uid(
 
 /* LCOV_EXCL_START */
 EXPORT_API int notification_register_detailed_changed_cb(
-		void (*detailed_changed_cb)(void *data, notification_type_e type, notification_op *op_list, int num_op),
-		void *user_data)
+		notification_detailed_changed_cb callback, void *user_data)
 {
-	return notification_register_detailed_changed_cb_for_uid(detailed_changed_cb, user_data,
-			aul_getuid());
+	return notification_register_detailed_changed_cb_for_uid(callback, user_data, aul_getuid());
 }
 
 static gint _noti_detailed_changed_compare(gconstpointer a, gconstpointer b)
@@ -1387,14 +1365,13 @@ static gint _noti_detailed_changed_compare(gconstpointer a, gconstpointer b)
 }
 
 EXPORT_API int notification_unregister_detailed_changed_cb_for_uid(
-		void (*detailed_changed_cb)(void *data, notification_type_e type, notification_op *op_list, int num_op),
-		void *user_data, uid_t uid)
+		notification_detailed_changed_cb callback, void *user_data, uid_t uid)
 {
 	notification_cb_info_s *noti_cb_info;
 	GList *noti_cb_list;
 	GList *delete_cb_list;
 
-	if (detailed_changed_cb == NULL)
+	if (callback == NULL)
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 
 	if (_noti_cb_hash == NULL)
@@ -1406,7 +1383,7 @@ EXPORT_API int notification_unregister_detailed_changed_cb_for_uid(
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 
 	noti_cb_list = g_list_first(noti_cb_list);
-	delete_cb_list = g_list_find_custom(noti_cb_list, (gconstpointer)detailed_changed_cb,
+	delete_cb_list = g_list_find_custom(noti_cb_list, (gconstpointer)callback,
 					    (GCompareFunc)_noti_detailed_changed_compare);
 
 	if (delete_cb_list) {
@@ -1425,25 +1402,24 @@ EXPORT_API int notification_unregister_detailed_changed_cb_for_uid(
 	}
 
 	if (g_hash_table_size(_noti_cb_hash) == 0)
-		notification_ipc_monitor_fini();
+		notification_tidl_monitor_fini();
 
 	return NOTIFICATION_ERROR_NONE;
 
 }
 
 EXPORT_API int notification_unregister_detailed_changed_cb(
-		void (*detailed_changed_cb)(void *data, notification_type_e type, notification_op *op_list, int num_op),
-		void *user_data)
+		notification_detailed_changed_cb callback, void *user_data)
 {
-	return notification_unregister_detailed_changed_cb_for_uid(detailed_changed_cb, user_data,
-			aul_getuid());
+	return notification_unregister_detailed_changed_cb_for_uid(
+			callback, user_data, aul_getuid());
 }
 /* LCOV_EXCL_STOP */
 
 /* LCOV_EXCL_START */
 EXPORT_API int notification_is_service_ready(void)
 {
-	return notification_ipc_is_master_ready();
+	return notification_tidl_is_master_ready();
 }
 /* LCOV_EXCL_STOP */
 
@@ -1532,7 +1508,6 @@ static void __remove_private_file(gpointer data, gpointer user_data)
 		g_file_delete(src, NULL, NULL);
 		g_object_unref(src);
 	}
-	WARN("__remove_private_file : %s", path);
 }
 /* LCOV_EXCL_STOP */
 
@@ -1555,10 +1530,12 @@ EXPORT_API int notification_post_for_uid(notification_h noti, uid_t uid)
 	noti->insert_time = time(NULL);
 	noti->uid = uid;
 
+	INFO("notification post [%d]", (int)uid);
+
 	__notification_mutex_lock();
 
 	file_list = __copy_private_file(noti);
-	ret = notification_ipc_request_insert(noti, &id);
+	ret = notification_tidl_request_insert(noti, &id);
 	if (ret == NOTIFICATION_ERROR_NONE) {
 		noti->priv_id = id;
 		INFO("Posted notification id[%d]", id);
@@ -1568,7 +1545,7 @@ EXPORT_API int notification_post_for_uid(notification_h noti, uid_t uid)
 			goto out;
 
 		if (event_flag == true) {
-			ret = notification_ipc_event_monitor_init();
+			ret = notification_tidl_event_monitor_init();
 			if (ret != NOTIFICATION_ERROR_NONE)
 				goto out;
 		}
@@ -1592,7 +1569,8 @@ EXPORT_API int notification_update_for_uid(notification_h noti, uid_t uid)
 	__notification_mutex_lock();
 
 	if (noti == NULL) {
-		notification_ipc_request_refresh(uid);
+		WARN("updated notification noti null, uid : %d", uid);
+		notification_tidl_request_refresh(uid);
 		__notification_mutex_unlock();
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 	}
@@ -1602,7 +1580,7 @@ EXPORT_API int notification_update_for_uid(notification_h noti, uid_t uid)
 	noti->insert_time = time(NULL);
 	WARN("updated notification id[%d]", noti->priv_id);
 
-	ret = notification_ipc_request_update(noti);
+	ret = notification_tidl_request_update(noti);
 
 	__notification_mutex_unlock();
 
@@ -1618,8 +1596,7 @@ EXPORT_API int notification_delete_for_uid(notification_h noti, uid_t uid)
 
 	__notification_mutex_lock();
 
-	ret = notification_ipc_request_delete_single(NOTIFICATION_TYPE_NONE,
-				noti->caller_app_id, noti->priv_id, uid);
+	ret = notification_tidl_request_delete_single(noti->caller_app_id, noti->priv_id, uid);
 
 	__notification_mutex_unlock();
 
@@ -1638,7 +1615,7 @@ EXPORT_API int notification_delete_all_for_uid(notification_type_e type, uid_t u
 
 	__notification_mutex_lock();
 
-	ret = notification_ipc_request_delete_multiple(type, caller_app_id, uid);
+	ret = notification_tidl_request_delete_multiple(type, caller_app_id, uid);
 
 	__notification_mutex_unlock();
 
@@ -1669,27 +1646,17 @@ EXPORT_API notification_h notification_load_by_tag_for_uid(const char *tag, uid_
 		return NULL;
 	}
 
-	noti = (notification_h)calloc(1, sizeof(struct _notification));
-	if (noti == NULL) {
-		ERR("Failed to alloc a new notification");
-		set_last_result(NOTIFICATION_ERROR_OUT_OF_MEMORY);
-		free(caller_app_id);
-
-		return NULL;
-	}
-
 	__notification_mutex_lock();
 
-	ret = notification_ipc_request_load_noti_by_tag(noti, caller_app_id, (char *)tag, uid);
-
-	__notification_mutex_unlock();
-
+	ret = notification_tidl_request_load_noti_by_tag(&noti, caller_app_id, tag, uid);
 	free(caller_app_id);
 	set_last_result(ret);
 	if (ret != NOTIFICATION_ERROR_NONE) {
-		notification_free(noti);
+		__notification_mutex_unlock();
 		return NULL;
 	}
+
+	__notification_mutex_unlock();
 
 	return noti;
 }
@@ -1699,7 +1666,7 @@ EXPORT_API notification_h notification_load_by_tag_for_uid(const char *tag, uid_
 EXPORT_API notification_h notification_create_from_package_template(const char *app_id, const char *template_name)
 {
 	int ret;
-	notification_h noti;
+	notification_h noti = NULL;
 
 	if (app_id == NULL || template_name == NULL) {
 		ERR("Invalid parameter");
@@ -1707,14 +1674,7 @@ EXPORT_API notification_h notification_create_from_package_template(const char *
 		return NULL;
 	}
 
-	noti = (notification_h)calloc(1, sizeof(struct _notification));
-	if (noti == NULL) {
-		ERR("Failed to alloc memory");
-		set_last_result(NOTIFICATION_ERROR_OUT_OF_MEMORY);
-		return NULL;
-	}
-
-	ret = notification_ipc_request_create_from_package_template(noti, app_id, template_name);
+	ret = notification_tidl_request_create_from_package_template(&noti, app_id, template_name);
 	set_last_result(ret);
 	if (ret != NOTIFICATION_ERROR_NONE) {
 		notification_free(noti);
@@ -1871,7 +1831,7 @@ EXPORT_API int notification_post_with_event_cb_for_uid(notification_h noti, even
 	__notification_mutex_lock();
 
 	file_list = __copy_private_file(noti);
-	ret = notification_ipc_request_insert(noti, &priv_id);
+	ret = notification_tidl_request_insert(noti, &priv_id);
 	if (ret != NOTIFICATION_ERROR_NONE) {
 		ERR("Failed to post notification id[%d]", priv_id);
 		g_list_foreach(file_list, __remove_private_file, NULL);
@@ -1886,7 +1846,7 @@ EXPORT_API int notification_post_with_event_cb_for_uid(notification_h noti, even
 	find_list = g_list_find_custom(__noti_event_cb_list, GINT_TO_POINTER(priv_id),
 				       (GCompareFunc)__priv_id_compare);
 
-	ret = notification_ipc_event_monitor_init();
+	ret = notification_tidl_event_monitor_init();
 	if (ret != NOTIFICATION_ERROR_NONE)
 		goto out;
 
@@ -1920,11 +1880,9 @@ out:
 /* LCOV_EXCL_STOP */
 
 /* LCOV_EXCL_START */
-EXPORT_API int notification_post_with_event_cb(notification_h noti,
-                                               event_handler_cb cb,
-                                               void *userdata) {
-  return notification_post_with_event_cb_for_uid(
-      noti, cb, userdata, aul_getuid());
+EXPORT_API int notification_post_with_event_cb(notification_h noti, event_handler_cb cb, void *userdata)
+{
+	return notification_post_with_event_cb_for_uid(noti, cb, userdata, aul_getuid());
 }
 
 EXPORT_API int notification_send_event(notification_h noti, int event_type)
@@ -1950,7 +1908,7 @@ EXPORT_API int notification_send_event(notification_h noti, int event_type)
 
 	__notification_mutex_lock();
 
-	ret = notification_ipc_send_event(noti, event_type, -1);
+	ret = notification_tidl_send_event(noti, event_type, -1);
 
 	__notification_mutex_unlock();
 
@@ -1975,7 +1933,7 @@ EXPORT_API int notification_send_event_by_priv_id(int priv_id, int event_type)
 
 	__notification_mutex_lock();
 
-	ret = notification_ipc_send_event(NULL, event_type, priv_id);
+	ret = notification_tidl_send_event(NULL, event_type, priv_id);
 
 	__notification_mutex_unlock();
 
@@ -2008,7 +1966,7 @@ EXPORT_API int notification_check_event_receiver_available(notification_h noti, 
 
 	__notification_mutex_lock();
 
-	ret = notification_ipc_check_event_receiver(priv_id, available);
+	ret = notification_tidl_check_event_receiver(priv_id, available);
 
 	__notification_mutex_unlock();
 
@@ -2224,33 +2182,32 @@ out:
 /* LCOV_EXCL_STOP */
 
 /* LCOV_EXCL_START */
-EXPORT_API int notification_get_all_count_for_uid(notification_type_e type,
-                                                  int *count, uid_t uid) {
-  int ret;
+EXPORT_API int notification_get_all_count_for_uid(notification_type_e type, int *count, uid_t uid)
+{
+	int ret;
 
-  if (count == NULL) {
-    ERR("Invalid parameter - count is null");
-    return NOTIFICATION_ERROR_INVALID_PARAMETER;
-  }
+	if (count == NULL) {
+		ERR("Invalid parameter - count is null");
+		return NOTIFICATION_ERROR_INVALID_PARAMETER;
+	}
 
-  if (type < NOTIFICATION_TYPE_NONE || type > NOTIFICATION_TYPE_MAX) {
-    ERR("Invalid parameter - wrong type");
-    return NOTIFICATION_ERROR_INVALID_PARAMETER;
-  }
+	if (type < NOTIFICATION_TYPE_NONE || type > NOTIFICATION_TYPE_MAX) {
+		ERR("Invalid parameter - wrong type");
+		return NOTIFICATION_ERROR_INVALID_PARAMETER;
+	}
 
-  ret = notification_ipc_request_get_all_count(type, count, uid);
-  if (ret != NOTIFICATION_ERROR_NONE) {
-    ERR("Failed to get count [%d]", ret);
-    return ret;
-  }
+	ret = notification_tidl_request_get_all_count(type, count, uid);
+	if (ret != NOTIFICATION_ERROR_NONE) {
+		ERR("Failed to get count [%d]", ret);
+		return ret;
+	}
 
-  return ret;
+	return ret;
 }
 
 EXPORT_API int notification_get_all_count(notification_type_e type, int *count)
 {
-	return notification_get_all_count_for_uid(type, count,
-			aul_getuid());
+	return notification_get_all_count_for_uid(type, count, aul_getuid());
 }
 
 EXPORT_API int notification_set_app_label(notification_h noti, char *label)
@@ -2358,7 +2315,7 @@ int notification_delete_by_display_applist_for_uid(int display_applist, uid_t ui
 
 	__notification_mutex_lock();
 
-	ret = notification_ipc_request_delete_by_display_applist(display_applist, uid);
+	ret = notification_tidl_request_delete_by_display_applist(display_applist, uid);
 
 	__notification_mutex_unlock();
 
@@ -2367,8 +2324,7 @@ int notification_delete_by_display_applist_for_uid(int display_applist, uid_t ui
 
 EXPORT_API int notification_delete_by_display_applist(int display_applist)
 {
-	return notification_delete_by_display_applist_for_uid(display_applist,
-			aul_getuid());
+	return notification_delete_by_display_applist_for_uid(display_applist, aul_getuid());
 }
 
 EXPORT_API int notification_set_check_box(notification_h noti,
@@ -2441,12 +2397,11 @@ EXPORT_API int notification_register_do_not_disturb_app(disturb_cb callback, voi
 
 	__notification_mutex_lock();
 
-	ret = notification_ipc_request_register_dnd_app(
-			aul_getuid(), getpid());
+	ret = notification_tidl_request_register_dnd_app(aul_getuid(), getpid());
 	if (ret != NOTIFICATION_ERROR_NONE)
 		goto out;
 
-	ret = notification_ipc_event_monitor_init();
+	ret = notification_tidl_event_monitor_init();
 	if (ret != NOTIFICATION_ERROR_NONE)
 		goto out;
 
@@ -2469,8 +2424,7 @@ EXPORT_API int notification_unregister_do_not_disturb_app(void)
 
 	__notification_mutex_lock();
 
-	ret = notification_ipc_request_unregister_dnd_app(
-			aul_getuid(), getpid());
+	ret = notification_tidl_request_unregister_dnd_app(aul_getuid(), getpid());
 	if (ret != NOTIFICATION_ERROR_NONE) {
 		ERR("failed to unregister dnd app");
 		__notification_mutex_unlock();
@@ -2480,7 +2434,7 @@ EXPORT_API int notification_unregister_do_not_disturb_app(void)
 	_disturb_callback = NULL;
 
 	if (__noti_event_cb_list == NULL)
-		notification_ipc_event_monitor_fini();
+		notification_tidl_event_monitor_fini();
 
 	__notification_mutex_unlock();
 
@@ -2589,7 +2543,7 @@ EXPORT_API int notification_get_channel_name(notification_h noti,
 
 	*channel_name = noti->channel_name;
 
-	WARN("notification_get_channel_name done");
+	WARN("notification_set_channel_name done");
 
 	return NOTIFICATION_ERROR_NONE;
 }
@@ -2686,7 +2640,7 @@ EXPORT_API int notification_channel_add(notification_channel_h channel)
 
 	__notification_mutex_lock();
 
-	ret = notification_ipc_request_insert_channel(noti_channel->app_id,
+	ret = notification_tidl_request_insert_channel(noti_channel->app_id,
 			noti_channel->channel_name, noti_channel->blockable,
 			noti_channel->is_blocked, aul_getuid());
 	if (ret != NOTIFICATION_ERROR_NONE) {
@@ -2716,7 +2670,7 @@ EXPORT_API int notification_channel_remove(notification_channel_h channel)
 
 	__notification_mutex_lock();
 
-	ret = notification_ipc_request_delete_channel(noti_channel->app_id,
+	ret = notification_tidl_request_delete_channel(noti_channel->app_id,
 			noti_channel->channel_name, aul_getuid());
 	if (ret != NOTIFICATION_ERROR_NONE) {
 		ERR("failed to remove channel");
@@ -2745,7 +2699,7 @@ EXPORT_API int notification_channel_update(notification_channel_h channel)
 
 	__notification_mutex_lock();
 
-	ret = notification_ipc_request_update_channel(noti_channel->app_id,
+	ret = notification_tidl_request_update_channel(noti_channel->app_id,
 			noti_channel->channel_name, noti_channel->blockable,
 			noti_channel->is_blocked, aul_getuid());
 	if (ret != NOTIFICATION_ERROR_NONE) {
@@ -2788,7 +2742,7 @@ EXPORT_API int notification_channel_get_by_name(const char *channel_name,
 
 	__notification_mutex_lock();
 
-	ret = notification_ipc_request_get_channel(app_id, channel_name,
+	ret = notification_tidl_request_get_channel(app_id, channel_name,
 			&blockable, &is_blocked, aul_getuid());
 	if (ret != NOTIFICATION_ERROR_NONE) {
 		ERR("failed to update channel");
@@ -2929,20 +2883,16 @@ EXPORT_API int notification_channel_clone(notification_channel_h channel,
 }
 
 EXPORT_API int notification_channel_foreach(const char *app_id,
-		notification_channel_foreach_cb cb,
-		void *user_data)
+		notification_channel_foreach_cb cb, void *user_data)
 {
 	int ret;
 	char *_app_id = NULL;
-	GList *channel_list = NULL;
-	notification_channel_h channel;
 
 	if (cb == NULL) {
 		ERR("Invalid parameter");
 		ret = NOTIFICATION_ERROR_INVALID_PARAMETER;
 		goto out;
 	}
-
 	if (app_id == NULL) {
 		_app_id = notification_get_app_id_by_pid(getpid());
 		if (_app_id == NULL) {
@@ -2955,27 +2905,18 @@ EXPORT_API int notification_channel_foreach(const char *app_id,
 
 	__notification_mutex_lock();
 
-	ret = notification_ipc_request_channel_get_list(
+	ret = notification_tidl_request_channel_get_list(
 			(app_id != NULL) ? app_id : _app_id,
-			&channel_list, aul_getuid());
+			cb, user_data, aul_getuid());
 	if (ret != NOTIFICATION_ERROR_NONE) {
 		ERR("failed to get is blocked");
 		__notification_mutex_unlock();
 		goto out;
 	}
 
-	channel_list = g_list_first(channel_list);
-	while (channel_list) {
-		channel = g_list_nth_data(channel_list, 0);
-		cb(channel, user_data);
-		channel_list = g_list_next(channel_list);
-	}
 	__notification_mutex_unlock();
 
 out:
-	if (channel_list)
-		g_list_free_full(channel_list, notification_channel_free);
-
 	if (_app_id)
 		free(_app_id);
 

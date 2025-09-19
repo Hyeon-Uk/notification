@@ -24,8 +24,7 @@
 #include <notification_noti.h>
 #include <notification_debug.h>
 #include <notification_private.h>
-#include <notification_ipc.h>
-#include "notification_internal.h"
+#include <notification_tidl.h>
 
 
 struct _notification_list {
@@ -259,7 +258,7 @@ EXPORT_API int notification_get_list_for_uid(notification_type_e type,
 	if (list == NULL)
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 
-	ret = notification_ipc_request_load_noti_grouping_list(type, 1, count, &get_list, uid);
+	ret = notification_tidl_request_load_noti_grouping_list(type, 1, count, &get_list, uid);
 	if (ret != NOTIFICATION_ERROR_NONE)
 		return ret;
 
@@ -273,8 +272,7 @@ EXPORT_API int notification_get_list(notification_type_e type,
 		int count,
 		notification_list_h *list)
 {
-	return notification_get_list_for_uid(type, count, list,
-			aul_getuid());
+	return notification_get_list_for_uid(type, count, list, aul_getuid());
 }
 
 EXPORT_API int notification_get_list_by_page_for_uid(notification_type_e type,
@@ -304,7 +302,7 @@ EXPORT_API int notification_get_list_by_page_for_uid(notification_type_e type,
 		count_per_page = COUNT_PER_PAGE_MAX;
 	}
 
-	ret = notification_ipc_request_load_noti_grouping_list(type,
+	ret = notification_tidl_request_load_noti_grouping_list(type,
 			page_number, count_per_page, &get_list, uid);
 	if (ret != NOTIFICATION_ERROR_NONE) {
 		ERR("fail request load noti grouping list");
@@ -336,7 +334,7 @@ EXPORT_API int notification_get_detail_list_for_uid(const char *app_id,
 	if (list == NULL || app_id == NULL)
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 
-	ret = notification_ipc_request_load_noti_detail_list(app_id, group_id, priv_id, count,
+	ret = notification_tidl_request_load_noti_detail_list(app_id, group_id, priv_id, count,
 			&get_list, uid);
 	if (ret != NOTIFICATION_ERROR_NONE)
 		return ret;

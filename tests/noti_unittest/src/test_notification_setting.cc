@@ -28,22 +28,6 @@
 
 namespace {
 
-GDBusMessage* __fake_g_dbus_connection_send_message_with_reply_sync(
-    GDBusConnection* conn, GDBusMessage* msg, GDBusSendMessageFlags flags,
-    gint timeout, volatile guint32* out_serial, GCancellable* cancellable,
-    GError** error) {
-  GDBusMessage* ret_msg = static_cast<GDBusMessage*>(g_object_new(G_TYPE_OBJECT, NULL));
-
-  return ret_msg;
-}
-
-GDBusMessage* __fake_g_dbus_message_new_method_call(const gchar* arg0,
-    const gchar* arg1, const gchar* arg2, const gchar* arg3) {
-  GDBusMessage* ret_msg = static_cast<GDBusMessage*>(g_object_new(G_TYPE_OBJECT, NULL));
-
-  return ret_msg;
-}
-
 class Mocks :
     virtual public ::testing::NiceMock<AulMock>,
     virtual public ::testing::NiceMock<GlibMock> {};
@@ -63,15 +47,6 @@ class NotificationSettingTest : public TestFixture {
 };
 
 TEST_F(NotificationSettingTest, notification_setting_test) {
-  EXPECT_CALL(GetMock<GlibMock>(), g_bus_watch_name(_, _, _, _, _, _, _))
-      .WillOnce(Return(1));
-
-  EXPECT_CALL(GetMock<GlibMock>(), g_dbus_message_new_method_call(_, _, _, _))
-      .WillOnce(Invoke(__fake_g_dbus_message_new_method_call));
-
-  EXPECT_CALL(GetMock<GlibMock>(), g_dbus_connection_send_message_with_reply_sync(_, _, _, _, _, _, _))
-      .WillOnce(Invoke(__fake_g_dbus_connection_send_message_with_reply_sync));
-
   int ret;
 
   notification_setting_h setting;
@@ -93,8 +68,8 @@ TEST_F(NotificationSettingTest, notification_setting_test) {
   ret = notification_setting_set_visibility_class(setting, 3);
   ASSERT_EQ(ret, NOTIFICATION_ERROR_NONE);
 
-  ret = notification_setting_update_setting(setting);
-  ASSERT_EQ(ret, NOTIFICATION_ERROR_NONE);
+  ret = notification_setting_update_setting(nullptr);
+  ASSERT_EQ(ret, NOTIFICATION_ERROR_INVALID_PARAMETER);
 
   ret = notification_setting_free_notification(setting);
   ASSERT_EQ(ret, NOTIFICATION_ERROR_NONE);
