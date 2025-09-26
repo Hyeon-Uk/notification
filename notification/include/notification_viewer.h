@@ -23,7 +23,10 @@ extern "C" {
 
 int notification_init_default_viewer();
 int notification_launch_default_viewer(int priv_id,
-				notification_op_type_e status, uid_t uid, bool candidate);
+		notification_op_type_e status, uid_t uid);
+
+int notification_launch_default_viewer_without_candidate_process(
+		int priv_id, notification_op_type_e status, uid_t uid);
 
 #ifdef __cplusplus
 }

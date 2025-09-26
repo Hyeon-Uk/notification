@@ -217,7 +217,7 @@ static void __app_control_result_cb(app_control_h app_control,
 }
 
 /* LCOV_EXCL_START */
-EXPORT_API int notification_launch_default_viewer(int priv_id,
+static int __launch_default_viewer(int priv_id,
 		notification_op_type_e status, uid_t uid, bool candidate)
 {
 	int ret;
@@ -293,5 +293,17 @@ out:
 		app_control_destroy(app_control);
 
 	return ret;
+}
+
+EXPORT_API int notification_launch_default_viewer(int priv_id,
+		notification_op_type_e status, uid_t uid)
+{
+	return __launch_default_viewer(priv_id, status, uid, true);
+}
+
+EXPORT_API int notification_launch_default_viewer_without_candidate_process(
+		int priv_id, notification_op_type_e status, uid_t uid)
+{
+	return __launch_default_viewer(priv_id, status, uid, false);
 }
 /* LCOV_EXCL_STOP */
