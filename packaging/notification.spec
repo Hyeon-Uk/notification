@@ -163,6 +163,7 @@ fi
 %{_includedir}/notification/notification_status_internal.h
 %{_includedir}/notification/notification_setting.h
 %{_includedir}/notification/notification_setting_internal.h
+%{_includedir}/notification/notification_ipc.h
 %{_includedir}/notification/notification_noti.h
 %{_includedir}/notification/notification_setting_service.h
 %{_includedir}/notification/notification_viewer.h
