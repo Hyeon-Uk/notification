@@ -1591,11 +1591,11 @@ static bool _rpc_port_proxy_list_noti_channel_cb (
 		rpc_port_proxy_noti_channel_h noti_channel, void *user_data)
 {
 	channel_foreach_cb_info *cb_info = (channel_foreach_cb_info *)user_data;
-	char *app_id;
-	char *channel_name;
+	char *app_id = NULL;
+	char *channel_name = NULL;
 	bool blockable;
 	bool is_blocked;
-	notification_channel_h channel;
+	notification_channel_h channel = NULL;
 
 	rpc_port_proxy_noti_channel_get_app_id(noti_channel, &app_id);
 	rpc_port_proxy_noti_channel_get_channel_name(noti_channel, &channel_name);
@@ -1608,6 +1608,15 @@ static bool _rpc_port_proxy_list_noti_channel_cb (
 	WARN("channel list foreach [%s][%s][%d][%d]", app_id, channel_name, (int)blockable, (int)is_blocked);
 
 	cb_info->cb(channel ,cb_info->user_data);
+
+	if (channel)
+		notification_channel_free(channel);
+
+	if (app_id)
+		free(app_id);
+
+	if (channel_name)
+		free(channel_name);
 
 	return true;
 }
