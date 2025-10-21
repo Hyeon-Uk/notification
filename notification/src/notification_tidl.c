@@ -518,7 +518,7 @@ void notification_tidl_event_monitor_fini(void)
 		WARN("tidl init fail");
 		return;
 	}
-	WARN("event fini tidl init done");
+	WARN("event fini");
 
 	ret = rpc_port_proxy_noti_service_invoke_unregister_event(service_handle);
 	if (ret != RPC_PORT_ERROR_NONE) {
@@ -527,7 +527,7 @@ void notification_tidl_event_monitor_fini(void)
 	}
 
 	if (event_handle) {
-		rpc_port_proxy_noti_service_event_received_destroy(event_handle);
+		rpc_port_proxy_noti_service_event_received_dispose(service_handle, event_handle);
 		event_handle = NULL;
 	}
 
@@ -595,7 +595,7 @@ int notification_tidl_monitor_fini(void)
 		WARN("tidl init fail");
 		return ret;
 	}
-	WARN("monitor fini tidl init done");
+	WARN("monitor fini");
 
 	ret = rpc_port_proxy_noti_service_invoke_unregister_changed(service_handle);
 	if (ret != RPC_PORT_ERROR_NONE) {
@@ -604,7 +604,7 @@ int notification_tidl_monitor_fini(void)
 	}
 
 	if (changed_handle) {
-		rpc_port_proxy_noti_service_changed_destroy(changed_handle);
+		rpc_port_proxy_noti_service_changed_dispose(service_handle, changed_handle);
 		changed_handle = NULL;
 	}
 
