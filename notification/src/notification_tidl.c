@@ -32,16 +32,40 @@
 /*
  * for TIDL
  */
+#define NOTIFICATION_CTOR __attribute__((constructor))
+#define NOTIFICATION_DTOR __attribute__((destructor))
+
 static rpc_port_proxy_noti_service_h service_handle;
 static rpc_port_proxy_noti_service_event_received_h event_handle;
 static rpc_port_proxy_noti_service_changed_h changed_handle;
 
 static bool _connected = false;
+static GRecMutex __rec_mutex;
 
 typedef struct _channel_foreach_cb_info {
 	notification_channel_foreach_cb cb;
 	void *user_data;
 } channel_foreach_cb_info;
+
+NOTIFICATION_CTOR static void __notification_init(void)
+{
+	g_rec_mutex_init(&__rec_mutex);
+}
+
+NOTIFICATION_DTOR static void __notification_fini(void)
+{
+	g_rec_mutex_clear(&__rec_mutex);
+}
+
+static void __notification_mutex_lock(void)
+{
+	g_rec_mutex_lock(&__rec_mutex);
+}
+
+static void __notification_mutex_unlock(void)
+{
+	g_rec_mutex_unlock(&__rec_mutex);
+}
 
 static void _rpc_port_proxy_noti_service_connected_cb (rpc_port_proxy_noti_service_h h, void *user_data)
 {
@@ -428,6 +452,8 @@ static int _tidl_init()
 	int ret;
 	rpc_port_proxy_noti_service_callback_s callbacks = {0,};
 
+	__notification_mutex_lock();
+
 	if (service_handle == NULL) {
 		callbacks.connected = _rpc_port_proxy_noti_service_connected_cb;
 		callbacks.disconnected = _rpc_port_proxy_noti_service_disconnected_cb;
@@ -436,6 +462,7 @@ static int _tidl_init()
 		ret = rpc_port_proxy_noti_service_create("d::org.tizen.appfw.service.esd", &callbacks, NULL, &service_handle);
 		if (ret != RPC_PORT_ERROR_NONE) {
 			WARN("service create fail");
+			__notification_mutex_unlock();
 			return ret;
 		}
 		WARN("service create");
@@ -447,12 +474,15 @@ static int _tidl_init()
 		ret = rpc_port_proxy_noti_service_connect_sync(service_handle);
 		if (ret != RPC_PORT_ERROR_NONE) {
 			WARN("service connect fail");
+			__notification_mutex_unlock();
 			return ret;
 		}
 		WARN("service connect");
 	} else {
 		WARN("service already connected");
 	}
+
+	__notification_mutex_unlock();
 
 	return NOTIFICATION_ERROR_NONE;
 }
