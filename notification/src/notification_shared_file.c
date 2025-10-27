@@ -119,49 +119,6 @@ static bool __make_sharing_dir(const char *dir)
 /* LCOV_EXCL_STOP */
 
 /* LCOV_EXCL_START */
-static char *__get_data_path_by_pkg_id(const char *pkg_id,
-					const char *file_path, uid_t uid)
-{
-	const char *path;
-	char dir[PATH_MAX * 2];
-	char rel_file_path[PATH_MAX];
-	const char *pkg_path;
-
-	if (pkg_id == NULL)
-		return NULL;
-
-	tzplatform_set_user(uid);
-	path = tzplatform_getenv(TZ_USER_APP);
-	tzplatform_reset_user();
-
-	if (path == NULL)
-		return NULL;
-
-	pkg_path = __last_index_of(file_path, pkg_id);
-	if (pkg_path == NULL) {
-		ERR("Wrong file path : cannot find pkgid");
-		return NULL;
-	}
-
-	snprintf(rel_file_path, sizeof(rel_file_path), "%s",
-			pkg_path + strlen(pkg_id));
-
-	for (size_t i = 0; i < strlen(rel_file_path); i++) {
-		if (rel_file_path[i] == '/')
-		  rel_file_path[i] = '_';
-	}
-
-	snprintf(dir, sizeof(dir), "%s/%s/%s",
-			path, pkg_id, NOTI_PRIV_DATA_DIR);
-	if (__make_sharing_dir(dir) == false)
-		return NULL;
-
-	snprintf(dir, sizeof(dir), "%s/%s/%s/%s", path, pkg_id,
-					NOTI_PRIV_DATA_DIR, rel_file_path);
-
-	return strdup(dir);
-}
-
 static const char *__last_index_of(const char *path, const char *search)
 {
 	int i;
