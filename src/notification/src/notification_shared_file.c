@@ -26,6 +26,7 @@
 #include <gio/gio.h>
 #include <glib/gstdio.h>
 
+#include <tizen_core.h>
 #include <tzplatform_config.h>
 #include <security-manager.h>
 #include <sys/stat.h>
@@ -67,7 +68,7 @@ typedef struct uid_info {
 typedef struct sharing_req_data {
 	char *app_id;
 	char *dir;
-	guint timer;
+	tizen_core_source_h timer;
 	int drop_retry_count;
 	uid_t uid;
 	GList *priv_id_list;
@@ -1134,9 +1135,9 @@ EXPORT_API int notification_set_private_sharing(notification_h noti,
 		if (req_data->dir == NULL)
 			req_data->dir = __get_shared_dir(noti);
 
-		if (req_data->timer > 0) {
-			g_source_remove(req_data->timer);
-			req_data->timer = 0;
+		if (req_data->timer) {
+			tizen_core_source_destroy(req_data->timer);
+			req_data->timer = NULL;
 		}
 	}
 
@@ -1199,7 +1200,7 @@ out:
 	return ret;
 }
 
-static gboolean __timeout_handler(void *data)
+static bool __timeout_handler(void *data)
 {
 	char **path_array = NULL;
 	char *dst_path;
@@ -1216,8 +1217,8 @@ static gboolean __timeout_handler(void *data)
 
 	req_data = (sharing_req_data_s *)data;
 	if (g_list_length(req_data->priv_id_list) > 0) {
-		req_data->timer = 0;
-		return FALSE;
+		req_data->timer = NULL;
+		return false;
 	}
 
 	req_data->drop_retry_count++;
@@ -1297,7 +1298,7 @@ out:
 
 	if (ret != SECURITY_MANAGER_SUCCESS && req_data->drop_retry_count < MAX_RETRY_CNT) {
 		ERR("drop_retry_count %d", req_data->drop_retry_count);
-		return TRUE;
+		return true;
 	}
 
 	if (req_data->dir != NULL) {
@@ -1325,7 +1326,7 @@ out:
 
 	WARN("__timeout_handler done");
 
-	return FALSE;
+	return false;
 }
 
 EXPORT_API void notification_remove_private_sharing(
@@ -1336,7 +1337,10 @@ EXPORT_API void notification_remove_private_sharing(
 	GList *req_list;
 	GList *priv_id_info = NULL;
 	GList *tmp_list = NULL;
+	tizen_core_h core = NULL;
+	tizen_core_source_h source = NULL;
 	int len;
+	int ret;
 
 	WARN("notification_remove_private_sharing [%d]", priv_id);
 
@@ -1365,12 +1369,17 @@ EXPORT_API void notification_remove_private_sharing(
 	if (len > 0)
 		return;
 
-	if (req_data->timer > 0)
-		g_source_remove(req_data->timer);
+	if (req_data->timer)
+		tizen_core_source_destroy(req_data->timer);
 
-	req_data->timer = g_timeout_add(MAX_TIMEOUT, __timeout_handler, req_data);
+	req_data->timer = NULL;
 	req_data->drop_retry_count = 0;
-	if (req_data->timer == 0) {
+	tizen_core_find_from_this_thread(&core);
+	ret = tizen_core_add_timer(core, MAX_TIMEOUT, __timeout_handler,
+			req_data, &source);
+
+	req_data->timer = source;
+	if (ret != TIZEN_CORE_ERROR_NONE) {
 		ERR("Failed to add timer");
 		__timeout_handler(req_data);
 	}
