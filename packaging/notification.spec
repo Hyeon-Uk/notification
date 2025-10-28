@@ -6,6 +6,9 @@ Release:    1
 Group:      Applications/Core Applications
 License:    Apache-2.0
 Source0:    %{name}-%{version}.tar.gz
+Source1001:  %{name}.manifest
+Source1002:  %{name}-ex.manifest
+
 BuildRequires: tidl
 BuildRequires: pkgconfig(sqlite3)
 BuildRequires: pkgconfig(vconf)
@@ -52,7 +55,9 @@ gcov objects of a notification library
 
 %prep
 %setup -q
-/bin/bash ./tidl/prebuild.sh
+cp %{SOURCE1001} .
+cp %{SOURCE1002} .
+/bin/bash ./src/tidl/prebuild.sh
 
 %package devel
 Summary:    Notification library (devel)
@@ -77,6 +82,7 @@ MAJORVER=`echo %{version} | awk 'BEGIN {FS="."}{print $1}'`
 %__make %{?jobs:-j%jobs}
 
 %check
+export LD_LIBRARY_PATH="../../src/notification:../../src/notification-ex"
 ctest -V
 %if 0%{?gcov:1}
 lcov -c --ignore-errors mismatch,graph,unused --no-external -q -d . -o notification.info
@@ -145,7 +151,7 @@ fi
 %attr(755,root,root) %{_sysconfdir}/gumd/useradd.d/11_notification-add.post
 %{_bindir}/notification_init
 %attr(0755,root,root) %{upgrade_script_path}/505.notification_upgrade.sh
-#%{_bindir}/notification-test-app
+%{_bindir}/notification-test-app
 %attr(0755,root,root) /etc/notification/upgrade.sh
 
 %files devel

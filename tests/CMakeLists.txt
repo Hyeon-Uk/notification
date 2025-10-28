@@ -1,1 +1,1 @@
-ADD_SUBDIRECTORY(noti_unittest)
+ADD_SUBDIRECTORY(unittests)
