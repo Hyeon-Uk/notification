@@ -51,33 +51,13 @@ static const char *__get_str_value(char *value)
 	return "";
 }
 
-static bundle *__get_bundle_value(bundle *value, bool *empty)
-{
-	// how about follwing ?
-	// released notification_free
-	// unncessary memory allocation
-	////////////////////////////////
-	// if (value == NULL)
-	// 	*value = bundle_create();
-
-	// return *value;
-
-	if (value != NULL) {
-		*empty = false;
-		return value;
-	}
-	// *empty = true;
-	*empty = false;
-
-	return bundle_create();
-}
-
 /*
  * for TIDL
  */
 EXPORT_API int make_empty_notification(void *notihandle)
 {
 	int ret;
+	bundle *empty_bundle = bundle_create();
 
 	WARN("make_empty_notification");
 
@@ -115,56 +95,33 @@ EXPORT_API int make_empty_notification(void *notihandle)
 	if (ret != RPC_PORT_ERROR_NONE)
 		WARN("rpc_port_proxy_notification_set_launch_app_id : %d", ret);
 
-	bundle *args = bundle_create();
-	ret = rpc_port_proxy_notification_set_args(handle, args);
+	ret = rpc_port_proxy_notification_set_args(handle, empty_bundle);
 	if (ret != RPC_PORT_ERROR_NONE)
 		WARN("rpc_port_proxy_notification_set_args : %d", ret);
 
-	bundle_free(args);
-
-	bundle *group_args = bundle_create();
-	ret = rpc_port_proxy_notification_set_group_args(handle, group_args);
+	ret = rpc_port_proxy_notification_set_group_args(handle, empty_bundle);
 	if (ret != RPC_PORT_ERROR_NONE)
 		WARN("rpc_port_proxy_notification_set_group_args : %d", ret);
 
-	bundle_free(group_args);
-
-	bundle *b_execute_option = bundle_create();
-	ret = rpc_port_proxy_notification_set_execute_option(handle, b_execute_option);
+	ret = rpc_port_proxy_notification_set_execute_option(handle, empty_bundle);
 	if (ret != RPC_PORT_ERROR_NONE)
 		WARN("rpc_port_proxy_notification_set_execute_option : %d", ret);
 
-	bundle_free(b_execute_option);
-
-	bundle *b_service_responding = bundle_create();
-	ret = rpc_port_proxy_notification_set_service_responding(handle, b_service_responding);
+	ret = rpc_port_proxy_notification_set_service_responding(handle, empty_bundle);
 	if (ret != RPC_PORT_ERROR_NONE)
 		WARN("rpc_port_proxy_notification_set_service_responding : %d", ret);
 
-	bundle_free(b_service_responding);
-
-	bundle *b_service_single_launch = bundle_create();
-	ret = rpc_port_proxy_notification_set_service_single_launch(handle, b_service_single_launch);
+	ret = rpc_port_proxy_notification_set_service_single_launch(handle, empty_bundle);
 	if (ret != RPC_PORT_ERROR_NONE)
 		WARN("rpc_port_proxy_notification_set_service_single_launch : %d", ret);
 
-	bundle_free(b_service_single_launch);
-
-	bundle *b_service_multi_launch = bundle_create();
-	ret = rpc_port_proxy_notification_set_service_multi_launch(handle, b_service_multi_launch);
+	ret = rpc_port_proxy_notification_set_service_multi_launch(handle, empty_bundle);
 	if (ret != RPC_PORT_ERROR_NONE)
 		WARN("rpc_port_proxy_notification_set_service_multi_launch : %d", ret);
-
-	bundle_free(b_service_multi_launch);
 
 // start
 	rpc_port_proxy_array_bundle_h _event_handler;
 	rpc_port_proxy_array_bundle_create(&_event_handler);
-
-	// bundle *bundle_array = bundle_create();
-	// rpc_port_proxy_array_bundle_set(_event_handler, &bundle_array, 1);
-
-	// bundle_free(bundle_array);
 
 	ret = rpc_port_proxy_notification_set_event_handler(handle, _event_handler);
 	if (ret != RPC_PORT_ERROR_NONE)
@@ -181,44 +138,29 @@ EXPORT_API int make_empty_notification(void *notihandle)
 	if (ret != RPC_PORT_ERROR_NONE)
 		WARN("rpc_port_proxy_notification_set_dir : %d", ret);
 
-	bundle *b_text = bundle_create();
-	ret = rpc_port_proxy_notification_set_text(handle, b_text);
+	ret = rpc_port_proxy_notification_set_text(handle, empty_bundle);
 	if (ret != RPC_PORT_ERROR_NONE)
 		WARN("rpc_port_proxy_notification_set_text : %d", ret);
 
-	bundle_free(b_text);
-
-	bundle *b_key = bundle_create();
-	ret = rpc_port_proxy_notification_set_key(handle, b_key);
+	ret = rpc_port_proxy_notification_set_key(handle, empty_bundle);
 	if (ret != RPC_PORT_ERROR_NONE)
 		WARN("rpc_port_proxy_notification_set_key : %d", ret);
 
-	bundle_free(b_key);
-
-	bundle *b_format_args = bundle_create();
-	ret = rpc_port_proxy_notification_set_format_args(handle, b_format_args);
+	ret = rpc_port_proxy_notification_set_format_args(handle, empty_bundle);
 	if (ret != RPC_PORT_ERROR_NONE)
 		WARN("rpc_port_proxy_notification_set_format_args : %d", ret);
-
-	bundle_free(b_format_args);
 
 	ret = rpc_port_proxy_notification_set_num_format_args(handle, -1);
 	if (ret != RPC_PORT_ERROR_NONE)
 		WARN("rpc_port_proxy_notification_set_num_format_args : %d", ret);
 
-	bundle *b_image_path = bundle_create();
-	ret = rpc_port_proxy_notification_set_image_path(handle, b_image_path);
+	ret = rpc_port_proxy_notification_set_image_path(handle, empty_bundle);
 	if (ret != RPC_PORT_ERROR_NONE)
 		WARN("rpc_port_proxy_notification_set_image_path : %d", ret);
 
-	bundle_free(b_image_path);
-
-	bundle *b_priv_image_path = bundle_create();
-	ret = rpc_port_proxy_notification_set_priv_image_path(handle, b_priv_image_path);
+	ret = rpc_port_proxy_notification_set_priv_image_path(handle, empty_bundle);
 	if (ret != RPC_PORT_ERROR_NONE)
 		WARN("rpc_port_proxy_notification_set_priv_image_path : %d", ret);
-
-	bundle_free(b_priv_image_path);
 
 	ret = rpc_port_proxy_notification_set_sound_type(handle, -1);
 	if (ret != RPC_PORT_ERROR_NONE)
@@ -368,6 +310,8 @@ EXPORT_API int make_empty_notification(void *notihandle)
 	if (ret != RPC_PORT_ERROR_NONE)
 		WARN("rpc_port_proxy_notification_set_uid : %d", ret);
 
+	bundle_free(empty_bundle);
+
 	WARN("make_empty_notification done");
 
 	return NOTIFICATION_ERROR_NONE;
@@ -377,7 +321,7 @@ EXPORT_API int make_notification_from_noti(void *notihandle,
 		notification_h noti, bool translate)
 {
 	int ret;
-	bool empty;
+	bundle *empty_bundle = bundle_create();
 
 	WARN("make_notification_from_noti");
 
@@ -418,53 +362,35 @@ EXPORT_API int make_notification_from_noti(void *notihandle,
 	if (ret != RPC_PORT_ERROR_NONE)
 		WARN("rpc_port_proxy_notification_set_launch_app_id : %d", ret);
 
-	bundle *args = __get_bundle_value(noti->args, &empty);
-	ret = rpc_port_proxy_notification_set_args(handle, args);
+	ret = rpc_port_proxy_notification_set_args(handle,
+			noti->args ? noti->args : empty_bundle);
 	if (ret != RPC_PORT_ERROR_NONE)
 		WARN("rpc_port_proxy_notification_set_args : %d", ret);
 
-	if (empty)
-		bundle_free(args);
-
-	bundle *group_args = __get_bundle_value(noti->group_args, &empty);
-	ret = rpc_port_proxy_notification_set_group_args(handle, group_args);
+	ret = rpc_port_proxy_notification_set_group_args(handle,
+			noti->group_args ? noti->group_args : empty_bundle);
 	if (ret != RPC_PORT_ERROR_NONE)
 		WARN("rpc_port_proxy_notification_set_group_args : %d", ret);
 
-	if (empty)
-		bundle_free(group_args);
-
-	bundle *b_execute_option = __get_bundle_value(noti->b_execute_option, &empty);
-	ret = rpc_port_proxy_notification_set_execute_option(handle, b_execute_option);
+	ret = rpc_port_proxy_notification_set_execute_option(handle,
+			noti->b_execute_option ? noti->b_execute_option : empty_bundle);
 	if (ret != RPC_PORT_ERROR_NONE)
 		WARN("rpc_port_proxy_notification_set_execute_option : %d", ret);
 
-	if (empty)
-		bundle_free(b_execute_option);
-
-	bundle *b_service_responding = __get_bundle_value(noti->b_service_responding, &empty);
-	ret = rpc_port_proxy_notification_set_service_responding(handle, b_service_responding);
+	ret = rpc_port_proxy_notification_set_service_responding(handle,
+			noti->b_service_responding ? noti->b_service_responding : empty_bundle);
 	if (ret != RPC_PORT_ERROR_NONE)
 		WARN("rpc_port_proxy_notification_set_service_responding : %d", ret);
 
-	if (empty)
-		bundle_free(b_service_responding);
-
-	bundle *b_service_single_launch = __get_bundle_value(noti->b_service_single_launch, &empty);
-	ret = rpc_port_proxy_notification_set_service_single_launch(handle, b_service_single_launch);
+	ret = rpc_port_proxy_notification_set_service_single_launch(handle,
+			noti->b_service_single_launch ? noti->b_service_single_launch : empty_bundle);
 	if (ret != RPC_PORT_ERROR_NONE)
 		WARN("rpc_port_proxy_notification_set_service_single_launch : %d", ret);
 
-	if (empty)
-		bundle_free(b_service_single_launch);
-
-	bundle *b_service_multi_launch = __get_bundle_value(noti->b_service_multi_launch, &empty);
-	ret = rpc_port_proxy_notification_set_service_multi_launch(handle, b_service_multi_launch);
+	ret = rpc_port_proxy_notification_set_service_multi_launch(handle,
+			noti->b_service_multi_launch ? noti->b_service_multi_launch : empty_bundle);
 	if (ret != RPC_PORT_ERROR_NONE)
 		WARN("rpc_port_proxy_notification_set_service_multi_launch : %d", ret);
-
-	if (empty)
-		bundle_free(b_service_multi_launch);
 
 // start
 	rpc_port_proxy_array_bundle_h _event_handler;
@@ -472,7 +398,8 @@ EXPORT_API int make_notification_from_noti(void *notihandle,
 
 	for (int i = 0; i < NOTIFICATION_EVENT_TYPE_MAX+1; i++) {
 		// should be changed ?
-		noti->b_event_handler[i] = __get_bundle_value(noti->b_event_handler[i], &empty);
+		if (noti->b_event_handler[i] == NULL)
+			noti->b_event_handler[i] = bundle_create();
 	}
 
 	rpc_port_proxy_array_bundle_set(_event_handler, noti->b_event_handler, NOTIFICATION_EVENT_TYPE_MAX+1);
@@ -492,49 +419,34 @@ EXPORT_API int make_notification_from_noti(void *notihandle,
 	if (ret != RPC_PORT_ERROR_NONE)
 		WARN("rpc_port_proxy_notification_set_dir : %d", ret);
 
-	bundle *b_text = __get_bundle_value(noti->b_text, &empty);
-	ret = rpc_port_proxy_notification_set_text(handle, b_text);
+	ret = rpc_port_proxy_notification_set_text(handle,
+			noti->b_text ? noti->b_text : empty_bundle);
 	if (ret != RPC_PORT_ERROR_NONE)
 		WARN("rpc_port_proxy_notification_set_text : %d", ret);
 
-	if (empty)
-		bundle_free(b_text);
-
-	bundle *b_key = __get_bundle_value(noti->b_key, &empty);
-	ret = rpc_port_proxy_notification_set_key(handle, b_key);
+	ret = rpc_port_proxy_notification_set_key(handle,
+			noti->b_key ? noti->b_key : empty_bundle);
 	if (ret != RPC_PORT_ERROR_NONE)
 		WARN("rpc_port_proxy_notification_set_key : %d", ret);
 
-	if (empty)
-		bundle_free(b_key);
-
-	bundle *b_format_args = __get_bundle_value(noti->b_format_args, &empty);
-	ret = rpc_port_proxy_notification_set_format_args(handle, b_format_args);
+	ret = rpc_port_proxy_notification_set_format_args(handle,
+			noti->b_format_args ? noti->b_format_args : empty_bundle);
 	if (ret != RPC_PORT_ERROR_NONE)
 		WARN("rpc_port_proxy_notification_set_format_args : %d", ret);
-
-	if (empty)
-		bundle_free(b_format_args);
 
 	ret = rpc_port_proxy_notification_set_num_format_args(handle, noti->num_format_args);
 	if (ret != RPC_PORT_ERROR_NONE)
 		WARN("rpc_port_proxy_notification_set_num_format_args : %d", ret);
 
-	bundle *b_image_path = __get_bundle_value(noti->b_image_path, &empty);
-	ret = rpc_port_proxy_notification_set_image_path(handle, b_image_path);
+	ret = rpc_port_proxy_notification_set_image_path(handle,
+			noti->b_image_path ? noti->b_image_path : empty_bundle);
 	if (ret != RPC_PORT_ERROR_NONE)
 		WARN("rpc_port_proxy_notification_set_image_path : %d", ret);
 
-	if (empty)
-		bundle_free(b_image_path);
-
-	bundle *b_priv_image_path = __get_bundle_value(noti->b_priv_image_path, &empty);
-	ret = rpc_port_proxy_notification_set_priv_image_path(handle, b_priv_image_path);
+	ret = rpc_port_proxy_notification_set_priv_image_path(handle,
+			noti->b_priv_image_path ? noti->b_priv_image_path : empty_bundle);
 	if (ret != RPC_PORT_ERROR_NONE)
 		WARN("rpc_port_proxy_notification_set_priv_image_path : %d", ret);
-
-	if (empty)
-		bundle_free(b_priv_image_path);
 
 	ret = rpc_port_proxy_notification_set_sound_type(handle, (int)noti->sound_type);
 	if (ret != RPC_PORT_ERROR_NONE)
@@ -683,6 +595,8 @@ EXPORT_API int make_notification_from_noti(void *notihandle,
 	ret = rpc_port_proxy_notification_set_uid(handle, (int)noti->uid);
 	if (ret != RPC_PORT_ERROR_NONE)
 		WARN("rpc_port_proxy_notification_set_uid : %d", ret);
+
+	bundle_free(empty_bundle);
 
 	WARN("make_notification_from_noti done");
 
