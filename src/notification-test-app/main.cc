@@ -157,6 +157,7 @@ void testapp_show_menu(testapp_menu_type_e menu) {
       testapp_print("4.  Refresh setting table\n");
       testapp_print("0.  Exit \n");
       testapp_print("------------------------------------------\n");
+      break;
     case TESTAPP_MENU_TYPE_EX_TEST_MENU:
       testapp_print("==========================================\n");
       testapp_print("    Notification-ex test menu \n");
@@ -1036,6 +1037,10 @@ static int testapp_ex_test_post_chat_message_notification() {
 
   ret = noti_ex_reporter_post(handle, chatmessage_item, &request_id);
   testapp_print("notification-ex post[%d]", ret);
+
+  noti_ex_item_destroy(name_handle);
+  noti_ex_item_destroy(text_handle);
+  noti_ex_item_destroy(image_handle);
   noti_ex_item_destroy(chatmessage_item);
 
   noti_ex_reporter_destroy(handle);
@@ -1075,9 +1080,19 @@ static int testapp_ex_test_get_notifications() {
   testapp_print("notification-ex Get by_channel [%d] [%d][%s]\n", ret, count,
                 id);
 
+  for (int i = 0; i < count; i++)
+    noti_ex_item_destroy(noti_list_channel[i]);
+
+  free(noti_list_channel);
+
   noti_ex_reporter_find_all(handle, &noti_list_all, &count);
   noti_ex_item_get_id(noti_list_all[0], &id);
   testapp_print("notification-ex Get all[%d] [%d][%s]\n", ret, count, id);
+
+  for (int i = 0; i < count; i++)
+    noti_ex_item_destroy(noti_list_all[i]);
+
+  free(noti_list_all);
 
   noti_ex_reporter_destroy(handle);
   return ret;
