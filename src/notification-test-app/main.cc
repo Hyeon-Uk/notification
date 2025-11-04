@@ -1041,6 +1041,7 @@ static int testapp_ex_test_post_chat_message_notification() {
   noti_ex_item_destroy(name_handle);
   noti_ex_item_destroy(text_handle);
   noti_ex_item_destroy(image_handle);
+  noti_ex_item_destroy(time_handle);
   noti_ex_item_destroy(chatmessage_item);
 
   noti_ex_reporter_destroy(handle);
@@ -1084,6 +1085,7 @@ static int testapp_ex_test_get_notifications() {
     noti_ex_item_destroy(noti_list_channel[i]);
 
   free(noti_list_channel);
+  free(id);
 
   noti_ex_reporter_find_all(handle, &noti_list_all, &count);
   noti_ex_item_get_id(noti_list_all[0], &id);
@@ -1093,6 +1095,7 @@ static int testapp_ex_test_get_notifications() {
     noti_ex_item_destroy(noti_list_all[i]);
 
   free(noti_list_all);
+  free(id);
 
   noti_ex_reporter_destroy(handle);
   return ret;
