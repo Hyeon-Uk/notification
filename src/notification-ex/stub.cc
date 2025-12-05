@@ -66,7 +66,7 @@ class Handle {
  public:
   explicit Handle(item::AbstractItem* ref) : ref_(ref) { }
   explicit Handle(std::shared_ptr<item::AbstractItem> ptr)
-      : ref_(nullptr), ptr_(move(ptr)) { }
+      : ref_(nullptr), ptr_(std::move(ptr)) { }
   virtual ~Handle() = default;
   item::AbstractItem* Get() const {
     if (ptr_ == nullptr)
@@ -167,7 +167,7 @@ class ManagerStub : public Manager {
  public:
   ManagerStub(std::unique_ptr<IEventSender> sender,
       std::unique_ptr<IEventListener> listener, std::string receiver_group = "")
-    : Manager(move(sender), move(listener), receiver_group) {
+    : Manager(std::move(sender), std::move(listener), receiver_group) {
   }
 
   void OnAdd(const IEventInfo& info,
@@ -190,7 +190,7 @@ class ManagerStub : public Manager {
   }
 
   int SetManagerCallbackInfo(unique_ptr<ManagerCallbackInfo> ci) {
-    cb_ = move(ci);
+    cb_ = std::move(ci);
     return NOTI_EX_ERROR_NONE;
   }
 
@@ -252,7 +252,7 @@ class ReporterStub : public Reporter {
  public:
   ReporterStub(std::unique_ptr<IEventSender> sender,
       std::unique_ptr<IEventListener> listener)
-    : Reporter(move(sender), move(listener)) {
+    : Reporter(std::move(sender), std::move(listener)) {
   }
 
   void OnEvent(const IEventInfo& info,
@@ -265,7 +265,7 @@ class ReporterStub : public Reporter {
   }
 
   int SetReporterCallbackInfo(unique_ptr<ReporterCallbackInfo> ci) {
-    cb_ = move(ci);
+    cb_ = std::move(ci);
     return NOTI_EX_ERROR_NONE;
   }
 
@@ -1224,7 +1224,7 @@ extern "C" EXPORT_API int noti_ex_item_input_selector_set_contents(
   for (int i = 0; i < count; i++) {
     new_contents.push_back(contents[i]);
   }
-  p->SetContents(move(new_contents));
+  p->SetContents(std::move(new_contents));
 
   return NOTI_EX_ERROR_NONE;
 }
@@ -2680,7 +2680,7 @@ extern "C" EXPORT_API int noti_ex_manager_get(noti_ex_manager_h handle,
 
     int idx = 0;
     for (auto& i : item_list) {
-      added_item[idx++] = static_cast<noti_ex_item_h>(new Handle(move(i)));
+      added_item[idx++] = static_cast<noti_ex_item_h>(new Handle(std::move(i)));
     }
     *items = added_item;
     *count = item_list.size();
@@ -2718,7 +2718,7 @@ extern "C" EXPORT_API int noti_ex_manager_get_by_channel(
 
     int idx = 0;
     for (auto& i : item_list) {
-      added_item[idx++] = static_cast<noti_ex_item_h>(new Handle(move(i)));
+      added_item[idx++] = static_cast<noti_ex_item_h>(new Handle(std::move(i)));
     }
     *items = added_item;
     *count = item_list.size();

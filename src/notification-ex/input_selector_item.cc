@@ -85,7 +85,7 @@ list<string> InputSelectorItem::GetContents() const {
 }
 
 void InputSelectorItem::SetContents(list<string> contents) {
-  impl_->contents_ = move(contents);
+  impl_->contents_ = std::move(contents);
 }
 
 }  // namespace item

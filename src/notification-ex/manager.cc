@@ -48,7 +48,7 @@ namespace notification {
 /* LCOV_EXCL_START */
 Manager::Manager(unique_ptr<IEventSender> sender,
     unique_ptr<IEventListener> listener, string receiver_group)
-  : impl_(new Impl(this, move(sender), move(listener), receiver_group)) {
+  : impl_(new Impl(this, std::move(sender), std::move(listener), receiver_group)) {
 }
 Manager::~Manager() = default;
 
@@ -60,7 +60,7 @@ Manager::Impl::~Impl() {
 Manager::Impl::Impl(Manager* parent,
     unique_ptr<IEventSender> sender,
     unique_ptr<IEventListener> listener, string receiver_group)
-  : sender_(move(sender)), listener_(move(listener)),
+  : sender_(std::move(sender)), listener_(std::move(listener)),
     receiver_group_(receiver_group),
     parent_(parent) {
   LOGI("impl created");
@@ -151,7 +151,7 @@ list<unique_ptr<item::AbstractItem>> Manager::Get(string channel) {
   list<unique_ptr<item::AbstractItem>> gen_list;
   for (auto& i : result) {
     unique_ptr<AbstractItem> gen_item = ItemInflator::Create(i);
-    gen_list.push_back(move(gen_item));
+    gen_list.push_back(std::move(gen_item));
   }
   return gen_list;
 }

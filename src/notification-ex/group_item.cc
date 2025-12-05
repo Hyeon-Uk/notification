@@ -155,12 +155,12 @@ list<string> GroupItem::GetSharedPath() const {
 
   auto r = AbstractItem::GetSharedPath();
   for (auto& shared_path_r : r)
-    ret.push_back(move(shared_path_r));
+    ret.push_back(std::move(shared_path_r));
 
   for (auto& i : impl_->children_list_) {
     auto c = i->GetSharedPath();
     for (auto& shared_path_c : c)
-      ret.push_back(move(shared_path_c));
+      ret.push_back(std::move(shared_path_c));
   }
 
   return ret;
@@ -176,12 +176,12 @@ list<map<string, string>> GroupItem::GetPathMapList() const {
 
   auto r = AbstractItem::GetPathMapList();
   for (auto& path_map_r : r)
-    path_map_list.push_back(move(path_map_r));
+    path_map_list.push_back(std::move(path_map_r));
 
   for (auto& i : impl_->children_list_) {
     auto c = i->GetPathMapList();
     for (auto& path_map_c : c)
-      path_map_list.push_back(move(path_map_c));
+      path_map_list.push_back(std::move(path_map_c));
   }
 
   return path_map_list;

@@ -46,7 +46,7 @@ namespace notification {
 /* LCOV_EXCL_START */
 Reporter::Reporter(
     unique_ptr<IEventSender> sender, unique_ptr<IEventListener> listener)
-  : impl_(new Impl(this, move(sender), move(listener))) {
+  : impl_(new Impl(this, std::move(sender), std::move(listener))) {
 }
 Reporter::~Reporter() = default;
 
@@ -55,7 +55,7 @@ Reporter::Impl::~Impl() {
 }
 Reporter::Impl::Impl(Reporter* parent,
     unique_ptr<IEventSender> sender, unique_ptr<IEventListener> listener)
-  : sender_(move(sender)), listener_(move(listener)), parent_(parent) {
+  : sender_(std::move(sender)), listener_(std::move(listener)), parent_(parent) {
   LOGI("impl created");
   listener_->RegisterObserver(parent_);
 }
