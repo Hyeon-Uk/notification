@@ -15,22 +15,24 @@
  */
 
 #include <glib.h>
-#include <notification_ex_internal.h>
+#include <notification.h>
 #include <notification_ex.h>
+#include <notification_ex_internal.h>
 #include <notification_internal.h>
 #include <notification_list.h>
 #include <notification_ongoing_flag.h>
-#include <notification_setting_internal.h>
 #include <notification_setting.h>
+#include <notification_setting_internal.h>
 #include <notification_status.h>
 #include <notification_text_domain.h>
-#include <notification.h>
 #include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/time.h>
 #include <tzplatform_config.h>
 #include <unistd.h>
+
+#include <vector>
 
 #define PATH_FMT_RO_APP_ROOT tzplatform_getenv(TZ_SYS_RO_APP)
 #define TIZEN_PATH_MAX 1024
@@ -41,7 +43,8 @@ typedef enum testapp_menu_type {
   TESTAPP_MENU_TYPE_MAIN_MENU = 1,
   TESTAPP_MENU_TYPE_BASIC_TEST_MENU = 2,
   TESTAPP_MENU_TYPE_SETTING_TEST_MENU = 3,
-  TESTAPP_MENU_TYPE_EX_TEST_MENU = 4
+  TESTAPP_MENU_TYPE_EX_TEST_MENU = 4,
+  TESTAPP_MENU_TYPE_VIEWER_TEST_MENU = 5
 } testapp_menu_type_e;
 
 /*-----------------------------------------------------------------------------------------*/
@@ -49,6 +52,10 @@ typedef enum testapp_menu_type {
 static void testapp_system_signal_handler(int signal_number);
 void testapp_show_prompt(testapp_menu_type_e menu);
 
+/*-----------------------------------------------------------------------------------------*/
+/* global variables */
+GMainLoop* main_loop = nullptr;
+GThread* loop_thread = nullptr;
 /*-----------------------------------------------------------------------------------------*/
 /* implementation */
 void testapp_print(const char* fmt, ...) {
@@ -127,6 +134,7 @@ void testapp_show_menu(testapp_menu_type_e menu) {
       testapp_print("1. Notification Test\n");
       testapp_print("2. Setting Test\n");
       testapp_print("3. Notification-ex Test\n");
+      testapp_print("4. Notification-viewer Test\n");
       testapp_print("0. Exit \n");
       testapp_print("------------------------------------------\n");
       break;
@@ -141,9 +149,12 @@ void testapp_show_menu(testapp_menu_type_e menu) {
       testapp_print("5.  Delete all notification\n");
       testapp_print("6.  Post a heads notification with a button\n");
       testapp_print("7.  Post a notification with domain text\n");
-      testapp_print("8.  Load by tag\n");
-      testapp_print("9.  Get list\n");
-      testapp_print("10. Post noti to 5002 \n");
+      testapp_print("8.  Post a notification with event-echo-callback\n");
+      testapp_print("9.  Post a notification with submit-reject-callback\n");
+      testapp_print("10.  Post a notification with icon-callback\n");
+      testapp_print("11.  Load by tag\n");
+      testapp_print("12.  Get list\n");
+      testapp_print("13. Post noti to 5002 \n");
       testapp_print("0.  Exit \n");
       testapp_print("------------------------------------------\n");
       break;
@@ -170,6 +181,13 @@ void testapp_show_menu(testapp_menu_type_e menu) {
       testapp_print("0.  Exit \n");
       testapp_print("------------------------------------------\n");
       break;
+    case TESTAPP_MENU_TYPE_VIEWER_TEST_MENU:
+      testapp_print("==========================================\n");
+      testapp_print("    Notification-viewer test menu \n");
+      testapp_print("==========================================\n");
+      testapp_print("1.  Get list and send event\n");
+      testapp_print("0.  Exit\n");
+      break;
     default:
       break;
   }
@@ -183,7 +201,7 @@ static int testapp_add_a_notification_to_bob() {
   noti_handle = notification_create(NOTIFICATION_TYPE_NOTI);
 
   if (noti_handle == NULL) {
-    testapp_print("notification_create failed");
+    testapp_print("notification_create failed\n");
     goto FINISH_OFF;
   }
 
@@ -229,7 +247,7 @@ static int testapp_add_a_notification_to_bob() {
   noti_err = notification_post_for_uid(noti_handle, 5002);
 
   if (noti_err != NOTIFICATION_ERROR_NONE) {
-    testapp_print("notification_post failed[%d]", noti_err);
+    testapp_print("notification_post failed[%d]\n", noti_err);
     goto FINISH_OFF;
   }
 
@@ -247,7 +265,7 @@ static int testapp_add_a_notification() {
   noti_handle = notification_create(NOTIFICATION_TYPE_NOTI);
 
   if (noti_handle == NULL) {
-    testapp_print("notification_create failed");
+    testapp_print("notification_create failed\n");
     goto FINISH_OFF;
   }
 
@@ -293,7 +311,7 @@ static int testapp_add_a_notification() {
   noti_err = notification_post(noti_handle);
 
   if (noti_err != NOTIFICATION_ERROR_NONE) {
-    testapp_print("notification_post failed[%d]", noti_err);
+    testapp_print("notification_post failed[%d]\n", noti_err);
     goto FINISH_OFF;
   }
 
@@ -313,7 +331,7 @@ static int testapp_test_post_notification() {
   int err = NOTIFICATION_ERROR_NONE;
 
   if ((err = testapp_add_a_notification()) != NOTIFICATION_ERROR_NONE) {
-    testapp_print("testapp_add_a_notification failed[%d]", err);
+    testapp_print("testapp_add_a_notification failed[%d]\n", err);
     goto FINISH_OFF;
   }
 
@@ -330,13 +348,13 @@ static int testapp_test_post_notifications() {
   testapp_print("Input count : ");
 
   if (0 >= scanf("%d", &repeat_count)) {
-    testapp_print("Invalid input");
+    testapp_print("Invalid input\n");
     goto FINISH_OFF;
   }
 
   for (i = 0; i < repeat_count; i++) {
     if ((err = testapp_add_a_notification()) != NOTIFICATION_ERROR_NONE) {
-      testapp_print("testapp_add_a_notification failed[%d]", err);
+      testapp_print("testapp_add_a_notification failed[%d]\n", err);
       goto FINISH_OFF;
     }
   }
@@ -355,7 +373,7 @@ static int testapp_test_post_notification_on_indicator() {
   noti_handle = notification_create(NOTIFICATION_TYPE_ONGOING);
 
   if (noti_handle == NULL) {
-    testapp_print("notification_create failed");
+    testapp_print("notification_create failed\n");
     goto FINISH_OFF;
   }
 
@@ -378,14 +396,14 @@ static int testapp_test_post_notification_on_indicator() {
       NOTIFICATION_DISPLAY_APP_TICKER | NOTIFICATION_DISPLAY_APP_INDICATOR);
 
   if (noti_err != NOTIFICATION_ERROR_NONE) {
-    testapp_print("notification_set_display_applist failed[%d]", noti_err);
+    testapp_print("notification_set_display_applist failed[%d]\n", noti_err);
     goto FINISH_OFF;
   }
 
   noti_err = notification_post(noti_handle);
 
   if (noti_err != NOTIFICATION_ERROR_NONE) {
-    testapp_print("notification_post failed[%d]", noti_err);
+    testapp_print("notification_post failed[%d]\n", noti_err);
     goto FINISH_OFF;
   }
 
@@ -402,7 +420,7 @@ static int testapp_test_post_status_message() {
   noti_err = notification_status_message_post("This is only a test");
 
   if (noti_err != NOTIFICATION_ERROR_NONE)
-    testapp_print("notification_status_message_post failed[%d]", noti_err);
+    testapp_print("notification_status_message_post failed[%d]\n", noti_err);
 
   return noti_err;
 }
@@ -414,7 +432,7 @@ static int testapp_test_delete_all_notifications() {
   noti_err = notification_delete_by_display_applist(
       NOTIFICATION_DISPLAY_APP_NOTIFICATION_TRAY);
 
-  testapp_print("notification_delete_all returns[%d]", noti_err);
+  testapp_print("notification_delete_all returns[%d]\n", noti_err);
 
   return noti_err;
 }
@@ -427,7 +445,7 @@ static int testapp_test_post_heads_up_notification_with_button() {
 
   noti = notification_create(NOTIFICATION_TYPE_NOTI);
   if (noti == NULL) {
-    testapp_print("notification_create failed");
+    testapp_print("notification_create failed\n");
     return get_last_result();
   }
 
@@ -469,7 +487,7 @@ static int testapp_test_post_heads_up_notification_with_button() {
   err = notification_set_event_handler(
       noti, NOTIFICATION_EVENT_TYPE_CLICK_ON_BUTTON_1, app_control);
   if (err != NOTIFICATION_ERROR_NONE) {
-    testapp_print("set event_handler failed[%d]", err);
+    testapp_print("set event_handler failed[%d]\n", err);
     goto FINISH_OFF;
   }
 
@@ -483,7 +501,7 @@ static int testapp_test_post_heads_up_notification_with_button() {
   err = notification_set_event_handler(
       noti, NOTIFICATION_EVENT_TYPE_CLICK_ON_TEXT_INPUT_BUTTON, app_control);
   if (err != NOTIFICATION_ERROR_NONE) {
-    testapp_print("set event_handler failed[%d]", err);
+    testapp_print("set event_handler failed[%d]\n", err);
     goto FINISH_OFF;
   }
 
@@ -510,7 +528,7 @@ static int testapp_test_post_heads_up_notification_with_button() {
 
   err = notification_post(noti);
   if (err != NOTIFICATION_ERROR_NONE) {
-    testapp_print("notification_post failed[%d]", err);
+    testapp_print("notification_post failed[%d]\n", err);
     goto FINISH_OFF;
   }
 
@@ -535,7 +553,7 @@ static int testapp_test_post_notification_with_domain_text() {
   noti_handle = notification_create(NOTIFICATION_TYPE_NOTI);
 
   if (noti_handle == NULL) {
-    testapp_print("notification_create failed");
+    testapp_print("notification_create failed\n");
     goto FINISH_OFF;
   }
 
@@ -576,7 +594,7 @@ static int testapp_test_post_notification_with_domain_text() {
   noti_err = notification_post(noti_handle);
 
   if (noti_err != NOTIFICATION_ERROR_NONE) {
-    testapp_print("notification_post failed[%d]", noti_err);
+    testapp_print("notification_post failed[%d]\n", noti_err);
     goto FINISH_OFF;
   }
 
@@ -588,6 +606,247 @@ FINISH_OFF:
   return noti_err;
 }
 
+static void event_echo_callback(notification_h noti, int event_type,
+                                void* userdata) {
+  int priv_id = 0;
+  int group_id = 0;
+  int noti_err = notification_get_id(noti, &group_id, &priv_id);
+  if (noti_err != NOTIFICATION_ERROR_NONE) {
+    testapp_print("notification_get_id failed[%d]\n", noti_err);
+    return;
+  }
+  testapp_print(
+      "Hello! here is event_echo_callback method called by priv_id(%d), "
+      "group_id(%d), event_type = [%d]\n",
+      priv_id, group_id, event_type);
+}
+
+static void submit_reject_callback(notification_h noti, int event_type,
+                                   void* userdata) {
+  int priv_id = 0;
+  int group_id = 0;
+  int noti_err = notification_get_id(noti, &group_id, &priv_id);
+  if (noti_err != NOTIFICATION_ERROR_NONE) {
+    testapp_print("notification_get_id failed[%d]\n", noti_err);
+    return;
+  }
+
+  // Handle Submit/Reject button events
+  switch (event_type) {
+    case NOTIFICATION_EVENT_TYPE_CLICK_ON_BUTTON_1:
+      testapp_print("priv_id = [%d], Submit clicked!\n", priv_id);
+      break;
+    case NOTIFICATION_EVENT_TYPE_CLICK_ON_BUTTON_2:
+      testapp_print("priv_id = [%d], Reject clicked!\n", priv_id);
+      break;
+    case NOTIFICATION_EVENT_TYPE_CLICK_ON_ICON: {
+      char* icon_path = NULL;
+      noti_err = notification_get_image(noti, NOTIFICATION_IMAGE_TYPE_ICON,
+                                        &icon_path);
+      if (noti_err == NOTIFICATION_ERROR_NONE && icon_path != NULL) {
+        testapp_print("priv_id = [%d], Icon path: %s\n", priv_id, icon_path);
+        free(icon_path);
+      } else {
+        testapp_print("priv_id = [%d], Failed to get icon path\n", priv_id);
+      }
+    } break;
+    default:
+      testapp_print("Undefined event type [%d]\n", event_type);
+      break;
+  }
+}
+
+static void icon_callback(notification_h noti, int event_type, void* userdata) {
+  int priv_id = 0;
+  int group_id = 0;
+  int noti_err = notification_get_id(noti, &group_id, &priv_id);
+  char* icon_path = NULL;
+  if (noti_err != NOTIFICATION_ERROR_NONE) {
+    testapp_print("notification_get_id failed[%d]\n", noti_err);
+    return;
+  }
+  switch (event_type) {
+    case NOTIFICATION_EVENT_TYPE_CLICK_ON_ICON:
+      noti_err = notification_get_image(noti, NOTIFICATION_IMAGE_TYPE_ICON,
+                                        &icon_path);
+      if (noti_err == NOTIFICATION_ERROR_NONE && icon_path != NULL) {
+        testapp_print("priv_id = [%d], Icon path: %s\n", priv_id, icon_path);
+      } else {
+        testapp_print("priv_id = [%d], Failed to get icon path\n", priv_id);
+      }
+      break;
+    default:
+      testapp_print("Undefined event type [%d]\n", event_type);
+      break;
+  }
+}
+
+static int testapp_test_post_notification_with_submit_reject_buttons() {
+  notification_h noti = NULL;
+  int err = NOTIFICATION_ERROR_NONE;
+  int priv_id = 0;
+
+  noti = notification_create(NOTIFICATION_TYPE_NOTI);
+  if (noti == NULL) {
+    testapp_print("notification_create failed\n");
+    return get_last_result();
+  }
+
+  err = notification_set_text(noti, NOTIFICATION_TEXT_TYPE_TITLE,
+                              "Submit/Reject Test", NULL,
+                              NOTIFICATION_VARIABLE_TYPE_NONE);
+  if (err != NOTIFICATION_ERROR_NONE) {
+    testapp_print("set title failed[%d]\n", err);
+    goto FINISH_OFF;
+  }
+
+  err = notification_set_text(noti, NOTIFICATION_TEXT_TYPE_CONTENT,
+                              "Please select Submit or Reject", NULL,
+                              NOTIFICATION_VARIABLE_TYPE_NONE);
+  if (err != NOTIFICATION_ERROR_NONE) {
+    testapp_print("set content failed[%d]\n", err);
+    goto FINISH_OFF;
+  }
+
+  err = notification_set_display_applist(
+      noti, NOTIFICATION_DISPLAY_APP_ACTIVE |
+                NOTIFICATION_DISPLAY_APP_NOTIFICATION_TRAY);
+  if (err != NOTIFICATION_ERROR_NONE) {
+    testapp_print("set display_applist failed[%d]\n", err);
+    goto FINISH_OFF;
+  }
+
+  err = notification_post_with_event_cb(noti, submit_reject_callback, NULL);
+  if (err != NOTIFICATION_ERROR_NONE) {
+    testapp_print("notification_post_with_event_cb failed[%d]\n", err);
+    goto FINISH_OFF;
+  }
+
+  notification_get_id(noti, NULL, &priv_id);
+  testapp_print(
+      "Notification with Submit/Reject buttons posted successfully (ID: %d)\n",
+      priv_id);
+
+FINISH_OFF:
+  if (noti) notification_free(noti);
+
+  return err;
+}
+
+static int testapp_test_post_notification_with_icon(const char* icon_path) {
+  notification_h noti = NULL;
+  int err = NOTIFICATION_ERROR_NONE;
+  int priv_id = 0;
+
+  noti = notification_create(NOTIFICATION_TYPE_NOTI);
+  if (noti == NULL) {
+    testapp_print("notification_create failed\n");
+    return get_last_result();
+  }
+
+  err = notification_set_text(noti, NOTIFICATION_TEXT_TYPE_TITLE, "Icon Test",
+                              NULL, NOTIFICATION_VARIABLE_TYPE_NONE);
+  if (err != NOTIFICATION_ERROR_NONE) {
+    testapp_print("set title failed[%d]\n", err);
+    goto FINISH_OFF;
+  }
+
+  err = notification_set_text(noti, NOTIFICATION_TEXT_TYPE_CONTENT,
+                              "Please click the icon", NULL,
+                              NOTIFICATION_VARIABLE_TYPE_NONE);
+  if (err != NOTIFICATION_ERROR_NONE) {
+    testapp_print("set content failed[%d]\n", err);
+    goto FINISH_OFF;
+  }
+
+  // Set icon
+  err = notification_set_image(noti, NOTIFICATION_IMAGE_TYPE_ICON, icon_path);
+  if (err != NOTIFICATION_ERROR_NONE) {
+    testapp_print("set icon failed[%d]\n", err);
+    goto FINISH_OFF;
+  }
+
+  err = notification_set_display_applist(
+      noti, NOTIFICATION_DISPLAY_APP_ACTIVE |
+                NOTIFICATION_DISPLAY_APP_NOTIFICATION_TRAY);
+  if (err != NOTIFICATION_ERROR_NONE) {
+    testapp_print("set display_applist failed[%d]\n", err);
+    goto FINISH_OFF;
+  }
+
+  err = notification_post_with_event_cb(noti, icon_callback, NULL);
+  if (err != NOTIFICATION_ERROR_NONE) {
+    testapp_print("notification_post_with_event_cb failed[%d]\n", err);
+    goto FINISH_OFF;
+  }
+
+  notification_get_id(noti, NULL, &priv_id);
+  testapp_print("Notification with icon posted successfully (ID: %d)\n",
+                priv_id);
+
+FINISH_OFF:
+  if (noti) notification_free(noti);
+
+  return err;
+}
+
+static int testapp_test_post_notification_with_event_echo_callback() {
+  notification_h noti_handle = NULL;
+  int noti_err = NOTIFICATION_ERROR_NONE;
+  int priv_id = 0;
+  int group_id = 0;
+
+  noti_handle = notification_create(NOTIFICATION_TYPE_NOTI);
+
+  if (noti_handle == NULL) {
+    testapp_print("notification_create failed\n");
+    goto FINISH_OFF;
+  }
+
+  noti_err =
+      notification_set_text(noti_handle, NOTIFICATION_TEXT_TYPE_TITLE,
+                            "event_echo_callback TEST",
+                            "TITLE", NOTIFICATION_VARIABLE_TYPE_NONE);
+  if (noti_err != NOTIFICATION_ERROR_NONE) {
+    testapp_print("notification_set_text failed[%d]\n", noti_err);
+    goto FINISH_OFF;
+  }
+
+  noti_err = notification_set_text(
+      noti_handle, NOTIFICATION_TEXT_TYPE_CONTENT,
+      "This notification has event handler CLICK_ON_BUTTON_1", "CONTENT",
+      NOTIFICATION_VARIABLE_TYPE_NONE);
+  if (noti_err != NOTIFICATION_ERROR_NONE) {
+    testapp_print("notification_set_text failed[%d]\n", noti_err);
+    goto FINISH_OFF;
+  }
+
+  noti_err = notification_set_display_applist(
+      noti_handle, NOTIFICATION_DISPLAY_APP_NOTIFICATION_TRAY |
+                       NOTIFICATION_DISPLAY_APP_ACTIVE);
+  if (noti_err != NOTIFICATION_ERROR_NONE) {
+    testapp_print("notification_set_display_applist failed[%d]\n", noti_err);
+    goto FINISH_OFF;
+  }
+
+  noti_err =
+      notification_post_with_event_cb(noti_handle, event_echo_callback, NULL);
+  if (noti_err != NOTIFICATION_ERROR_NONE) {
+    testapp_print("notification_post failed[%d]\n", noti_err);
+    goto FINISH_OFF;
+  }
+
+  notification_get_id(noti_handle, &group_id, &priv_id);
+
+  testapp_print("Notification with event handler sent successfully (ID: %d)\n",
+                priv_id);
+
+FINISH_OFF:
+  if (noti_handle) notification_free(noti_handle);
+
+  return noti_err;
+}
+
 static int testapp_test_load_by_tag() {
   notification_h noti_handle = NULL;
   int noti_err = NOTIFICATION_ERROR_NONE;
@@ -595,7 +854,7 @@ static int testapp_test_load_by_tag() {
   noti_handle = notification_load_by_tag("hfe4fif#$sd$ew");
 
   if (noti_handle == NULL) {
-    testapp_print("notification_load_by_tag failed");
+    testapp_print("notification_load_by_tag failed\n");
     goto FINISH_OFF;
   }
 
@@ -687,13 +946,26 @@ static gboolean testapp_interpret_command_basic_test(int selected_number) {
       break;
 
     case 8:
-      testapp_test_load_by_tag();
+      testapp_test_post_notification_with_event_echo_callback();
       break;
 
     case 9:
-      testapp_test_get_list();
+      testapp_test_post_notification_with_submit_reject_buttons();
       break;
     case 10:
+      testapp_test_post_notification_with_icon(
+          "/opt/share/icons/default/small/org.tizen.bt-syspopup.png");
+      break;
+
+    case 11:
+      testapp_test_load_by_tag();
+      break;
+
+    case 12:
+      testapp_test_get_list();
+      break;
+
+    case 13:
       testapp_add_a_notification_to_bob();
       break;
 
@@ -704,7 +976,6 @@ static gboolean testapp_interpret_command_basic_test(int selected_number) {
     default:
       break;
   }
-
   return go_to_loop;
 }
 
@@ -716,8 +987,7 @@ void testapp_notification_main() {
     testapp_show_menu(TESTAPP_MENU_TYPE_BASIC_TEST_MENU);
     testapp_show_prompt(TESTAPP_MENU_TYPE_BASIC_TEST_MENU);
 
-    if (0 >= scanf("%d", &menu_number))
-      testapp_print("Invalid input");
+    if (0 >= scanf("%d", &menu_number)) testapp_print("Invalid input\n");
 
     go_to_loop = testapp_interpret_command_basic_test(menu_number);
   }
@@ -779,7 +1049,7 @@ static int testapp_test_update_setting() {
 
   if (err != NOTIFICATION_ERROR_NONE || setting == NULL) {
     testapp_print(
-        "notification_setting_get_setting_by_package_name failed [%d]", err);
+        "notification_setting_get_setting_by_package_name failed [%d]\n", err);
   } else {
     notification_setting_set_allow_to_notify(setting, 0);
     notification_setting_update_setting(setting);
@@ -916,8 +1186,7 @@ void testapp_setting_main() {
     testapp_show_menu(TESTAPP_MENU_TYPE_SETTING_TEST_MENU);
     testapp_show_prompt(TESTAPP_MENU_TYPE_SETTING_TEST_MENU);
 
-    if (0 >= scanf("%d", &menu_number))
-      testapp_print("Invalid input");
+    if (0 >= scanf("%d", &menu_number)) testapp_print("Invalid input\n");
 
     go_to_loop = testapp_interpret_command_setting_test(menu_number);
   }
@@ -961,7 +1230,7 @@ static int testapp_ex_test_post_notification() {
   noti_ex_item_destroy(child_item);
 
   ret = noti_ex_reporter_post(handle, group_item, &request_id);
-  testapp_print("notification-ex post[%d]", ret);
+  testapp_print("notification-ex post[%d]\n", ret);
 
   noti_ex_item_destroy(group_item);
   noti_ex_reporter_destroy(handle);
@@ -996,7 +1265,7 @@ static int testapp_ex_test_post_notifications() {
   noti_ex_item_destroy(child_item);
 
   ret = noti_ex_reporter_post_list(handle, noti_list, 2, &request_id);
-  testapp_print("notification-ex post multi[%d]", ret);
+  testapp_print("notification-ex post multi[%d]\n", ret);
 
   noti_ex_item_destroy(noti_list[0]);
   noti_ex_item_destroy(noti_list[1]);
@@ -1033,10 +1302,10 @@ static int testapp_ex_test_post_chat_message_notification() {
   ret = noti_ex_item_chat_message_create(
       &chatmessage_item, "message_id", name_handle, text_handle, image_handle,
       time_handle, NOTI_EX_ITEM_CHAT_MESSAGE_TYPE_USER);
-  testapp_print("notification-ex chat message create [%d]", ret);
+  testapp_print("notification-ex chat message create [%d]\n", ret);
 
   ret = noti_ex_reporter_post(handle, chatmessage_item, &request_id);
-  testapp_print("notification-ex post[%d]", ret);
+  testapp_print("notification-ex post[%d]\n", ret);
 
   noti_ex_item_destroy(name_handle);
   noti_ex_item_destroy(text_handle);
@@ -1121,11 +1390,11 @@ static int testapp_ex_test_delete_notifications() {
   noti_ex_item_destroy(child_item);
 
   ret = noti_ex_reporter_post(handle, group_item, &request_id);
-  testapp_print("notification-ex delete - post [%d]", ret);
+  testapp_print("notification-ex delete - post [%d]\n", ret);
   noti_ex_item_destroy(group_item);
 
   noti_ex_reporter_delete_all(handle, &request_id);
-  testapp_print("notification-ex delete - delete all [%d]", ret);
+  testapp_print("notification-ex delete - delete all [%d]\n", ret);
   noti_ex_reporter_destroy(handle);
   return ret;
 }
@@ -1173,13 +1442,228 @@ void testapp_notification_ex_main() {
     testapp_show_menu(TESTAPP_MENU_TYPE_EX_TEST_MENU);
     testapp_show_prompt(TESTAPP_MENU_TYPE_EX_TEST_MENU);
 
-    if (0 >= scanf("%d", &menu_number))
-      testapp_print("Invalid input");
+    if (0 >= scanf("%d", &menu_number)) testapp_print("Invalid input\n");
 
     go_to_loop = testapp_interpret_command_ex_test(menu_number);
   }
 }
 /* Ex Test } ---------------------------------------------------------------*/
+
+/* Viewer Test { ------------------------------------------------------------*/
+gboolean send_event(gpointer data) {
+  auto* p = (std::pair<int, notification_event_type_e>*)data;
+  notification_send_event_by_priv_id(p->first, p->second);
+  return FALSE;
+}
+
+static void testapp_show_event_list() {
+  testapp_print("==========================================\n");
+  testapp_print("    Available Events \n");
+  testapp_print("==========================================\n");
+  testapp_print("0.  Cancel\n");
+  testapp_print("1.  NOTIFICATION_EVENT_TYPE_CLICK_ON_BUTTON_1\n");
+  testapp_print("2.  NOTIFICATION_EVENT_TYPE_CLICK_ON_BUTTON_2\n");
+  testapp_print("3.  NOTIFICATION_EVENT_TYPE_CLICK_ON_BUTTON_3\n");
+  testapp_print("4.  NOTIFICATION_EVENT_TYPE_CLICK_ON_BUTTON_4\n");
+  testapp_print("5.  NOTIFICATION_EVENT_TYPE_CLICK_ON_BUTTON_5\n");
+  testapp_print("6.  NOTIFICATION_EVENT_TYPE_CLICK_ON_BUTTON_6\n");
+  testapp_print("7.  NOTIFICATION_EVENT_TYPE_CLICK_ON_ICON\n");
+  testapp_print("8.  NOTIFICATION_EVENT_TYPE_CLICK_ON_THUMBNAIL\n");
+  testapp_print("9.  NOTIFICATION_EVENT_TYPE_CLICK_ON_TEXT_INPUT_BUTTON\n");
+  testapp_print("10. NOTIFICATION_EVENT_TYPE_CLICK_ON_BUTTON_7\n");
+  testapp_print("11. NOTIFICATION_EVENT_TYPE_CLICK_ON_BUTTON_8\n");
+  testapp_print("12. NOTIFICATION_EVENT_TYPE_CLICK_ON_BUTTON_9\n");
+  testapp_print("13. NOTIFICATION_EVENT_TYPE_CLICK_ON_BUTTON_10\n");
+  testapp_print("------------------------------------------\n");
+}
+
+static notification_event_type_e testapp_get_event_type_from_selection(
+    int selection) {
+  switch (selection) {
+    case 1:
+      return NOTIFICATION_EVENT_TYPE_CLICK_ON_BUTTON_1;
+    case 2:
+      return NOTIFICATION_EVENT_TYPE_CLICK_ON_BUTTON_2;
+    case 3:
+      return NOTIFICATION_EVENT_TYPE_CLICK_ON_BUTTON_3;
+    case 4:
+      return NOTIFICATION_EVENT_TYPE_CLICK_ON_BUTTON_4;
+    case 5:
+      return NOTIFICATION_EVENT_TYPE_CLICK_ON_BUTTON_5;
+    case 6:
+      return NOTIFICATION_EVENT_TYPE_CLICK_ON_BUTTON_6;
+    case 7:
+      return NOTIFICATION_EVENT_TYPE_CLICK_ON_ICON;
+    case 8:
+      return NOTIFICATION_EVENT_TYPE_CLICK_ON_THUMBNAIL;
+    case 9:
+      return NOTIFICATION_EVENT_TYPE_CLICK_ON_TEXT_INPUT_BUTTON;
+    case 10:
+      return NOTIFICATION_EVENT_TYPE_CLICK_ON_BUTTON_7;
+    case 11:
+      return NOTIFICATION_EVENT_TYPE_CLICK_ON_BUTTON_8;
+    case 12:
+      return NOTIFICATION_EVENT_TYPE_CLICK_ON_BUTTON_9;
+    case 13:
+      return NOTIFICATION_EVENT_TYPE_CLICK_ON_BUTTON_10;
+    default:
+      return (notification_event_type_e)-1;  // Invalid selection
+  }
+}
+
+static int testapp_viewer_test_select_and_send_event() {
+  notification_list_h noti_list_handle = NULL;
+  notification_list_h noti_list_cursor_handle = NULL;
+  notification_h noti_handle = NULL;
+  int priv_id, group_id;
+  notification_type_e type;
+  char* title = NULL;
+  int selection = 0;
+  int event_selection = 0;
+  int i = 0;
+
+  int noti_err =
+      notification_get_list(NOTIFICATION_TYPE_NOTI, -1, &noti_list_handle);
+  if (noti_err != NOTIFICATION_ERROR_NONE) {
+    testapp_print("notification_get_list failed[%d]\n", noti_err);
+    return noti_err;
+  }
+
+  if (!noti_list_handle) {
+    testapp_print("No notifications found\n");
+    return NOTIFICATION_ERROR_NONE;
+  }
+
+  int count = 0;
+  noti_list_cursor_handle = notification_list_get_head(noti_list_handle);
+  while (noti_list_cursor_handle) {
+    noti_handle = notification_list_get_data(noti_list_cursor_handle);
+
+    bool event_flag = false;
+    notification_get_event_flag(noti_handle, &event_flag);
+    if (event_flag) {
+      count++;
+    }
+    noti_list_cursor_handle =
+        notification_list_get_next(noti_list_cursor_handle);
+  }
+
+  if (count == 0) {
+    testapp_print("No notifications found\n");
+    notification_free_list(noti_list_handle);
+    return NOTIFICATION_ERROR_NONE;
+  }
+
+  testapp_print("Found %d notifications:\n", count);
+
+  noti_list_cursor_handle = notification_list_get_head(noti_list_handle);
+  std::vector<int> event_priv_ids;
+  i = 1;
+  while (noti_list_cursor_handle) {
+    noti_handle = notification_list_get_data(noti_list_cursor_handle);
+
+    bool event_flag = false;
+    notification_get_event_flag(noti_handle, &event_flag);
+
+    if (event_flag) {
+      notification_get_id(noti_handle, &group_id, &priv_id);
+      notification_get_type(noti_handle, &type);
+      notification_get_text(noti_handle, NOTIFICATION_TEXT_TYPE_TITLE, &title);
+
+      testapp_print("%d. ID: %d, Title: %s\n", i, priv_id,
+                    title ? title : "No title");
+      event_priv_ids.push_back(priv_id);
+      i++;
+    }
+
+    noti_list_cursor_handle =
+        notification_list_get_next(noti_list_cursor_handle);
+  }
+
+  testapp_print(
+      "Select a notification to execution event handler (0 to cancel): ");
+  if (0 >= scanf("%d", &selection)) {
+    testapp_print("Invalid input\n");
+    notification_free_list(noti_list_handle);
+    return NOTIFICATION_ERROR_INVALID_PARAMETER;
+  }
+
+  if (selection == 0) {
+    testapp_print("Operation cancelled\n");
+    notification_free_list(noti_list_handle);
+    return NOTIFICATION_ERROR_NONE;
+  }
+
+  if (selection < 1 || selection > count) {
+    testapp_print("Invalid selection\n");
+    notification_free_list(noti_list_handle);
+    return NOTIFICATION_ERROR_INVALID_PARAMETER;
+  }
+
+  testapp_show_event_list();
+  testapp_print("Select an event to send (0 to cancel): ");
+  if (0 >= scanf("%d", &event_selection)) {
+    testapp_print("Invalid input\n");
+    notification_free_list(noti_list_handle);
+    return NOTIFICATION_ERROR_INVALID_PARAMETER;
+  }
+
+  if (event_selection == 0) {
+    testapp_print("Operation cancelled\n");
+    notification_free_list(noti_list_handle);
+    return NOTIFICATION_ERROR_NONE;
+  }
+
+  notification_event_type_e event_type =
+      testapp_get_event_type_from_selection(event_selection);
+  if ((int)event_type == -1) {
+    testapp_print("Invalid event selection\n");
+    notification_free_list(noti_list_handle);
+    return NOTIFICATION_ERROR_INVALID_PARAMETER;
+  }
+
+  std::pair<int, notification_event_type_e> event_data(
+      event_priv_ids[selection - 1], event_type);
+  g_main_context_invoke(NULL, send_event, &event_data);
+  testapp_print("Send event %d to notification [%d]!\n", event_selection,
+                event_priv_ids[selection - 1]);
+
+  return NOTIFICATION_ERROR_NONE;
+}
+
+static gboolean testapp_interpret_command_viewer_test(int selected_number) {
+  gboolean go_to_loop = TRUE;
+
+  switch (selected_number) {
+    case 1:
+      testapp_viewer_test_select_and_send_event();
+      break;
+
+    case 0:
+      go_to_loop = FALSE;
+      break;
+
+    default:
+      break;
+  }
+
+  return go_to_loop;
+}
+
+void testapp_notification_viewer_main() {
+  gboolean go_to_loop = TRUE;
+  int menu_number = 0;
+
+  while (go_to_loop) {
+    testapp_show_menu(TESTAPP_MENU_TYPE_VIEWER_TEST_MENU);
+    testapp_show_prompt(TESTAPP_MENU_TYPE_VIEWER_TEST_MENU);
+
+    if (0 >= scanf("%d", &menu_number)) testapp_print("Invalid input\n");
+
+    go_to_loop = testapp_interpret_command_viewer_test(menu_number);
+  }
+}
+/* Viewer Test } -----------------------------------------------------------*/
 
 /* Main {
  * ---------------------------------------------------------------------*/
@@ -1197,6 +1681,10 @@ static gboolean testapp_interpret_command(int menu_number) {
 
     case 3:
       testapp_notification_ex_main();
+      break;
+
+    case 4:
+      testapp_notification_viewer_main();
       break;
 
     case 0:
@@ -1227,28 +1715,41 @@ void testapp_show_prompt(testapp_menu_type_e menu) {
     case TESTAPP_MENU_TYPE_EX_TEST_MENU:
       testapp_print("[NOTIFICATION-EX_TEST]# ");
       break;
+
+    case TESTAPP_MENU_TYPE_VIEWER_TEST_MENU:
+      testapp_print("[NOTIFICATION_VIEWER_TEST]# ");
+      break;
   }
 }
 
-int main(int argc, char* argv[]) {
+gpointer main_loop_create(gpointer data) {
   gboolean go_to_loop = TRUE;
   int menu_number = 0;
 
+  while (go_to_loop) {
+    testapp_show_menu(TESTAPP_MENU_TYPE_MAIN_MENU);
+    testapp_show_prompt(TESTAPP_MENU_TYPE_MAIN_MENU);
+    if (0 >= scanf("%d", &menu_number)) testapp_print("Invalid input\n");
+    go_to_loop = testapp_interpret_command(menu_number);
+  }
+
+  g_main_loop_quit(main_loop);
+  return NULL;
+}
+
+int main(int argc, char* argv[]) {
   if (testapp_initialize_testing() == FALSE) {
     testapp_print("Initializing failed.\n");
     return 1;
   }
 
-  while (go_to_loop) {
-    testapp_show_menu(TESTAPP_MENU_TYPE_MAIN_MENU);
-    testapp_show_prompt(TESTAPP_MENU_TYPE_MAIN_MENU);
-    if (0 >= scanf("%d", &menu_number))
-      testapp_print("Invalid input");
-    go_to_loop = testapp_interpret_command(menu_number);
-  }
+  main_loop = g_main_loop_new(NULL, FALSE);
+  loop_thread = g_thread_new("LoopThread", main_loop_create, NULL);
 
+  g_main_loop_run(main_loop);
+  g_thread_join(loop_thread);
+  g_main_loop_unref(main_loop);
   testapp_finalize_testing();
-
   return 0;
 }
 /* Main }
