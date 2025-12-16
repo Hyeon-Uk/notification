@@ -78,7 +78,12 @@ export LDFLAGS+=" -lgcov"
 MAJORVER=`echo %{version} | awk 'BEGIN {FS="."}{print $1}'`
 %cmake . \
 	-DCMAKE_INSTALL_PREFIX=%{_prefix} \
-	-DMAJORVER=${MAJORVER} -DFULLVER=%{version}
+	-DMAJORVER=${MAJORVER} -DFULLVER=%{version} \
+    %if 0%{?asan} != 1
+     -DASAN_ENABLED=FALSE
+    %else
+     -DASAN_ENABLED=TRUE
+    %endif
 %__make %{?jobs:-j%jobs}
 
 %check
