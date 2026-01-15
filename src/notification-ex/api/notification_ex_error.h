@@ -34,6 +34,7 @@
 
 
 /**
+ * @deprecated Deprecated since 11.0.
  * @brief Enumeration for notification errors.
  * @since_tizen 5.5
  */
@@ -57,4 +58,3 @@ typedef enum _noti_ex_error {
 
 
 #endif /* __TIZEN_APPFW_NOTIFICATION_EX_ERROR_H__ */
-

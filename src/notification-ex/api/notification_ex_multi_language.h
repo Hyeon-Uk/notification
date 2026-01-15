@@ -29,12 +29,14 @@ extern "C" {
  */
 
 /**
+ * @deprecated Deprecated since 11.0.
  * @brief The notification_ex multi-language item handle.
  * @since_tizen 5.5
  */
 typedef void *noti_ex_multi_lang_h;
 
 /**
+ * @deprecated Deprecated since 11.0.
  * @brief Creates the multi-language item handle.
  * @since_tizen 5.5
  * @remarks @a handle must be released using noti_ex_multi_lang_destroy().
@@ -70,9 +72,10 @@ typedef void *noti_ex_multi_lang_h;
  * @endcode
  */
 int noti_ex_multi_lang_create(noti_ex_multi_lang_h *handle,
-		const char *msgid, const char *format, ...);
+		const char *msgid, const char *format, ...) TIZEN_DEPRECATED_API;
 
 /**
+ * @deprecated Deprecated since 11.0.
  * @brief Destroys the multi-language item handle.
  * @since_tizen 5.5
  * @param[in] handle The multi-language item handle
@@ -95,7 +98,7 @@ int noti_ex_multi_lang_create(noti_ex_multi_lang_h *handle,
 }
  * @endcode
  */
-int noti_ex_multi_lang_destroy(noti_ex_multi_lang_h handle);
+int noti_ex_multi_lang_destroy(noti_ex_multi_lang_h handle) TIZEN_DEPRECATED_API;
 
 /**
  * @}

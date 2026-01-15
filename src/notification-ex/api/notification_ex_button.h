@@ -30,6 +30,7 @@ extern "C" {
  */
 
 /**
+ * @deprecated Deprecated since 11.0.
  * @brief Creates the notification_ex item handle with a button.
  * @details The notification_ex item is the predefined type of notifications.
  *          The notification can be created with one item or group of items.
@@ -58,9 +59,10 @@ extern "C" {
 }
  * @endcode
  */
-int noti_ex_item_button_create(noti_ex_item_h *handle, const char *id, const char *title);
+int noti_ex_item_button_create(noti_ex_item_h *handle, const char *id, const char *title) TIZEN_DEPRECATED_API;
 
 /**
+ * @deprecated Deprecated since 11.0.
  * @brief Gets the title of a button item.
  * @since_tizen 5.5
  * @remarks @a title must be released using free().
@@ -86,9 +88,10 @@ int noti_ex_item_button_create(noti_ex_item_h *handle, const char *id, const cha
 }
  * @endcode
  */
-int noti_ex_item_button_get_title(noti_ex_item_h handle, char **title);
+int noti_ex_item_button_get_title(noti_ex_item_h handle, char **title) TIZEN_DEPRECATED_API;
 
 /**
+ * @deprecated Deprecated since 11.0.
  * @brief Sets the multi-language handle.
  * @since_tizen 5.5
  * @remarks After setting the multi-language handle successfully, noti_ex_item_button_get_title() \n
@@ -121,7 +124,7 @@ int noti_ex_item_button_get_title(noti_ex_item_h handle, char **title);
  * @endcode
  */
 int noti_ex_item_button_set_multi_language_title(noti_ex_item_h handle,
-		noti_ex_multi_lang_h multi);
+		noti_ex_multi_lang_h multi) TIZEN_DEPRECATED_API;
 
 /**
  * @}

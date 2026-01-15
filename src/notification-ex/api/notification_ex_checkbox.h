@@ -30,6 +30,7 @@ extern "C" {
  */
 
 /**
+ * @deprecated Deprecated since 11.0.
  * @brief Creates the notification_ex item handle with checkbox.
  * @details The notification_ex item is the predefined type of notifications.
  *          The notification can be created with one item or group of items.
@@ -59,9 +60,10 @@ extern "C" {
 }
  * @endcode
  */
-int noti_ex_item_checkbox_create(noti_ex_item_h *handle, const char *id, const char *title, bool checked);
+int noti_ex_item_checkbox_create(noti_ex_item_h *handle, const char *id, const char *title, bool checked) TIZEN_DEPRECATED_API;
 
 /**
+ * @deprecated Deprecated since 11.0.
  * @brief Gets the title of a checkbox.
  * @since_tizen 5.5
  * @remarks @a title must be released using free().
@@ -87,9 +89,10 @@ int noti_ex_item_checkbox_create(noti_ex_item_h *handle, const char *id, const c
 }
  * @endcode
  */
-int noti_ex_item_checkbox_get_title(noti_ex_item_h handle, char **title);
+int noti_ex_item_checkbox_get_title(noti_ex_item_h handle, char **title) TIZEN_DEPRECATED_API;
 
 /**
+ * @deprecated Deprecated since 11.0.
  * @brief Sets the multi-language handle.
  * @since_tizen 5.5
  * @remarks After setting the multi-language handle successfully, \n
@@ -123,9 +126,10 @@ int noti_ex_item_checkbox_get_title(noti_ex_item_h handle, char **title);
  * @endcode
  */
 int noti_ex_item_checkbox_set_multi_language_title(noti_ex_item_h handle,
-		noti_ex_multi_lang_h multi);
+		noti_ex_multi_lang_h multi) TIZEN_DEPRECATED_API;
 
 /**
+ * @deprecated Deprecated since 11.0.
  * @brief Gets the check state of a checkbox.
  * @since_tizen 5.5
  * @param[in] handle The notification_ex item handle
@@ -147,9 +151,10 @@ int noti_ex_item_checkbox_set_multi_language_title(noti_ex_item_h handle,
 }
  * @endcode
  */
-int noti_ex_item_checkbox_get_check_state(noti_ex_item_h handle, bool *checked);
+int noti_ex_item_checkbox_get_check_state(noti_ex_item_h handle, bool *checked) TIZEN_DEPRECATED_API;
 
 /**
+ * @deprecated Deprecated since 11.0.
  * @brief Sets the check state of a checkbox.
  * @since_tizen 5.5
  * @param[in] handle The notification_ex item handle
@@ -170,7 +175,7 @@ int noti_ex_item_checkbox_get_check_state(noti_ex_item_h handle, bool *checked);
 }
  * @endcode
  */
-int noti_ex_item_checkbox_set_check_state(noti_ex_item_h handle, bool checked);
+int noti_ex_item_checkbox_set_check_state(noti_ex_item_h handle, bool checked) TIZEN_DEPRECATED_API;
 
 /**
  * @}
