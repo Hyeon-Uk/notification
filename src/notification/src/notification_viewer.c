@@ -33,6 +33,8 @@
 #define NOTIFICATION_VIEWER_CTOR __attribute__((constructor))
 #define NOTIFICATION_VIEWER_DTOR __attribute__((destructor))
 
+#define DELAY_LIMIT 50
+
 static char *_default_viewer;
 static GList *_delayed_noti_list;
 static bool _is_timer_added = false;
@@ -92,6 +94,34 @@ EXPORT_API int notification_init_default_viewer()
 /* LCOV_EXCL_STOP */
 
 /* LCOV_EXCL_START */
+static void __check_limit()
+{
+	app_control_h app_control;
+	char *priv_id = NULL;
+	int ret;
+	guint count = g_list_length(_delayed_noti_list);
+
+	INFO("_delayed_noti_list length : [%u]", count);
+	if (count <= DELAY_LIMIT)
+		return;
+
+	app_control = (app_control_h)_delayed_noti_list->data;
+
+	ret = app_control_get_extra_data(app_control, "NOTIFICATION_PRIVATE_ID",
+			&priv_id);
+	if (ret != APP_CONTROL_ERROR_NONE)
+		ERR("app_control_get_extra_data failed:[%d]", ret);
+
+	ERR("_delayed_noti_list has exceeded the maximum limit." \
+			"[del priv id : %s]", priv_id);
+	free(priv_id);
+
+	_delayed_noti_list = g_list_remove(_delayed_noti_list, app_control);
+	app_control_destroy(app_control);
+}
+/* LCOV_EXCL_STOP */
+
+/* LCOV_EXCL_START */
 static bool __pop_delayed_noti_cb(void *user_data)
 {
 	app_control_h app_control;
@@ -145,6 +175,7 @@ static int __push_delayed_noti(app_control_h app_control)
 	}
 
 	_delayed_noti_list = g_list_append(_delayed_noti_list, handle);
+	__check_limit();
 
 	if (!_is_timer_added) {
 		ret = tizen_core_find("data-provider-master", &core);
