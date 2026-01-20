@@ -30,7 +30,6 @@ extern "C" {
  */
 
 /**
- * @deprecated Deprecated since 11.0.
  * @brief Creates the notification_ex item handle with text.
  * @details The notification_ex item is the predefined type of notifications.
  *          The notification can be created with one item or group of items.
@@ -60,10 +59,9 @@ extern "C" {
 }
  * @endcode
  */
-int noti_ex_item_text_create(noti_ex_item_h *handle, const char *id, const char *text, const char *hyperlink) TIZEN_DEPRECATED_API;
+int noti_ex_item_text_create(noti_ex_item_h *handle, const char *id, const char *text, const char *hyperlink);
 
 /**
- * @deprecated Deprecated since 11.0.
  * @brief Sets the text contents of the text item.
  * @since_tizen 5.5
  * @remarks If the multi-language handle is set by noti_ex_item_text_set_multi_language(), \n
@@ -86,10 +84,9 @@ int noti_ex_item_text_create(noti_ex_item_h *handle, const char *id, const char 
 }
  * @endcode
  */
-int noti_ex_item_text_set_contents(noti_ex_item_h handle, const char *contents) TIZEN_DEPRECATED_API;
+int noti_ex_item_text_set_contents(noti_ex_item_h handle, const char *contents);
 
 /**
- * @deprecated Deprecated since 11.0.
  * @brief Gets the text contents of the text item.
  * @since_tizen 5.5
  * @remarks @a contents must be released using free().
@@ -115,10 +112,9 @@ int noti_ex_item_text_set_contents(noti_ex_item_h handle, const char *contents) 
 }
  * @endcode
  */
-int noti_ex_item_text_get_contents(noti_ex_item_h handle, char **contents) TIZEN_DEPRECATED_API;
+int noti_ex_item_text_get_contents(noti_ex_item_h handle, char **contents);
 
 /**
- * @deprecated Deprecated since 11.0.
  * @brief Gets the hyperlink of the text item.
  * @since_tizen 5.5
  * @remarks @a hyperlink must be released using free().
@@ -141,10 +137,9 @@ int noti_ex_item_text_get_contents(noti_ex_item_h handle, char **contents) TIZEN
 }
  * @endcode
  */
-int noti_ex_item_text_get_hyperlink(noti_ex_item_h handle, char **hyperlink) TIZEN_DEPRECATED_API;
+int noti_ex_item_text_get_hyperlink(noti_ex_item_h handle, char **hyperlink);
 
 /**
- * @deprecated Deprecated since 11.0.
  * @brief Sets the multi-language handle.
  * @since_tizen 5.5
  * @remarks After setting the multi-language handle successfully, \n
@@ -178,7 +173,7 @@ int noti_ex_item_text_get_hyperlink(noti_ex_item_h handle, char **hyperlink) TIZ
  * @endcode
  */
 int noti_ex_item_text_set_multi_language(noti_ex_item_h handle,
-		noti_ex_multi_lang_h multi) TIZEN_DEPRECATED_API;
+		noti_ex_multi_lang_h multi);
 
 /**
  * @}

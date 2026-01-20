@@ -45,7 +45,6 @@ extern "C" {
  */
 
 /**
- * @deprecated Deprecated since 11.0.
  * @brief Header for all notification_ex APIs.
  * @since_tizen 5.5
  */

@@ -30,7 +30,6 @@ extern "C" {
  */
 
 /**
- * @deprecated Deprecated since 11.0.
  * @brief Creates the notification_ex action handle with app control handle.
  * @details The notification_ex can define the action with #noti_ex_action_h.
  *          If it is necessary to use app control handle for an action,
@@ -68,10 +67,9 @@ extern "C" {
 }
  * @endcode
  */
-int noti_ex_action_app_control_create(noti_ex_action_h *handle, app_control_h app_control, const char *extra) TIZEN_DEPRECATED_API;
+int noti_ex_action_app_control_create(noti_ex_action_h *handle, app_control_h app_control, const char *extra);
 
 /**
- * @deprecated Deprecated since 11.0.
  * @brief Sets the app control handle for notification_ex action.
  * @since_tizen 5.5
  * @param[in] handle The notification_ex action handle
@@ -96,10 +94,9 @@ int noti_ex_action_app_control_create(noti_ex_action_h *handle, app_control_h ap
 }
  * @endcode
  */
-int noti_ex_action_app_control_set(noti_ex_action_h handle, app_control_h app_control) TIZEN_DEPRECATED_API;
+int noti_ex_action_app_control_set(noti_ex_action_h handle, app_control_h app_control);
 
 /**
- * @deprecated Deprecated since 11.0.
  * @brief Gets the app control handle from notification_ex action.
  * @since_tizen 5.5
  * @remarks The @a app_control should be released using app_control_destroy().
@@ -122,7 +119,7 @@ int noti_ex_action_app_control_set(noti_ex_action_h handle, app_control_h app_co
 }
  * @endcode
  */
-int noti_ex_action_app_control_get(noti_ex_action_h handle, app_control_h *app_control) TIZEN_DEPRECATED_API;
+int noti_ex_action_app_control_get(noti_ex_action_h handle, app_control_h *app_control);
 
 /**
  * @}

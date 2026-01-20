@@ -27,7 +27,6 @@ extern "C" {
  */
 
 /**
- * @deprecated Deprecated since 11.0.
  * @brief Enumeration for the type of notification event.
  * @since_tizen 5.5
  */
@@ -41,14 +40,12 @@ typedef enum _noti_ex_event_info_type {
 } noti_ex_event_info_type_e;
 
 /**
- * @deprecated Deprecated since 11.0.
  * @brief The handle for the notification event information.
  * @since_tizen 5.5
  */
 typedef void *noti_ex_event_info_h;
 
 /**
- * @deprecated Deprecated since 11.0.
  * @brief Clones the notification event info handle.
  * @details The event for notification item is defined as
  *          notification event info handle.
@@ -77,10 +74,9 @@ void _manager_events_update_cb(noti_ex_manager_h handle,
  * @endcode
  */
 int noti_ex_event_info_clone(noti_ex_event_info_h handle,
-		noti_ex_event_info_h *cloned_handle) TIZEN_DEPRECATED_API;
+		noti_ex_event_info_h *cloned_handle);
 
 /**
- * @deprecated Deprecated since 11.0.
  * @brief Releases the notification event info handle.
  * @since_tizen 5.5
  * @param[in] handle The notification event info handle
@@ -103,10 +99,9 @@ void _manager_events_update_cb(noti_ex_manager_h handle,
 }
  * @endcode
  */
-int noti_ex_event_info_destroy(noti_ex_event_info_h handle) TIZEN_DEPRECATED_API;
+int noti_ex_event_info_destroy(noti_ex_event_info_h handle);
 
 /**
- * @deprecated Deprecated since 11.0.
  * @brief Gets the type of an event.
  * @since_tizen 5.5
  * @param[in] handle The notification event info handle
@@ -128,10 +123,9 @@ int noti_ex_event_info_destroy(noti_ex_event_info_h handle) TIZEN_DEPRECATED_API
 }
  * @endcode
  */
-int noti_ex_event_info_get_event_type(noti_ex_event_info_h handle, noti_ex_event_info_type_e *event_type) TIZEN_DEPRECATED_API;
+int noti_ex_event_info_get_event_type(noti_ex_event_info_h handle, noti_ex_event_info_type_e *event_type);
 
 /**
- * @deprecated Deprecated since 11.0.
  * @brief Gets the app id of event owner.
  * @since_tizen 5.5
  * @remarks @a owner must be released using free().
@@ -154,10 +148,9 @@ int noti_ex_event_info_get_event_type(noti_ex_event_info_h handle, noti_ex_event
 }
  * @endcode
  */
-int noti_ex_event_info_get_owner(noti_ex_event_info_h handle, char **owner) TIZEN_DEPRECATED_API;
+int noti_ex_event_info_get_owner(noti_ex_event_info_h handle, char **owner);
 
 /**
- * @deprecated Deprecated since 11.0.
  * @brief Gets the channel of an event.
  * @since_tizen 5.5
  * @remarks @a channel must be released using free().
@@ -180,10 +173,9 @@ int noti_ex_event_info_get_owner(noti_ex_event_info_h handle, char **owner) TIZE
 }
  * @endcode
  */
-int noti_ex_event_info_get_channel(noti_ex_event_info_h handle, char **channel) TIZEN_DEPRECATED_API;
+int noti_ex_event_info_get_channel(noti_ex_event_info_h handle, char **channel);
 
 /**
- * @deprecated Deprecated since 11.0.
  * @brief Gets the id of a notification_ex item.
  * @since_tizen 5.5
  * @remarks @a item_id must be released using free().
@@ -206,10 +198,9 @@ int noti_ex_event_info_get_channel(noti_ex_event_info_h handle, char **channel) 
 }
  * @endcode
  */
-int noti_ex_event_info_get_item_id(noti_ex_event_info_h handle, char **item_id) TIZEN_DEPRECATED_API;
+int noti_ex_event_info_get_item_id(noti_ex_event_info_h handle, char **item_id);
 
 /**
- * @deprecated Deprecated since 11.0.
  * @brief Gets the id of request for an event.
  * @since_tizen 5.5
  * @param[in] handle The notification event info handle
@@ -231,7 +222,7 @@ int noti_ex_event_info_get_item_id(noti_ex_event_info_h handle, char **item_id) 
 }
  * @endcode
  */
-int noti_ex_event_info_get_request_id(noti_ex_event_info_h handle, int *req_id) TIZEN_DEPRECATED_API;
+int noti_ex_event_info_get_request_id(noti_ex_event_info_h handle, int *req_id);
 
 /**
  * @}

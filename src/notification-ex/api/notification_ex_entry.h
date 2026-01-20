@@ -29,7 +29,6 @@ extern "C" {
  */
 
 /**
- * @deprecated Deprecated since 11.0.
  * @brief Creates the notification_ex item handle for an entry item.
  * @details The notification_ex item is the predefined type of notifications.
  *          The notification can be created with one item or group of items.
@@ -57,10 +56,9 @@ extern "C" {
 }
  * @endcode
  */
-int noti_ex_item_entry_create(noti_ex_item_h *handle, const char *id) TIZEN_DEPRECATED_API;
+int noti_ex_item_entry_create(noti_ex_item_h *handle, const char *id);
 
 /**
- * @deprecated Deprecated since 11.0.
  * @brief Gets the text of an entry item.
  * @since_tizen 5.5
  * @remarks @a text must be released using free().
@@ -86,10 +84,9 @@ int noti_ex_item_entry_create(noti_ex_item_h *handle, const char *id) TIZEN_DEPR
 }
  * @endcode
  */
-int noti_ex_item_entry_get_text(noti_ex_item_h handle, char **text) TIZEN_DEPRECATED_API;
+int noti_ex_item_entry_get_text(noti_ex_item_h handle, char **text);
 
 /**
- * @deprecated Deprecated since 11.0.
  * @brief Sets the text of an entry item.
  * @since_tizen 5.5
  * @param[in] handle The notification_ex item handle
@@ -110,10 +107,9 @@ int noti_ex_item_entry_get_text(noti_ex_item_h handle, char **text) TIZEN_DEPREC
 }
  * @endcode
  */
-int noti_ex_item_entry_set_text(noti_ex_item_h handle, const char *text) TIZEN_DEPRECATED_API;
+int noti_ex_item_entry_set_text(noti_ex_item_h handle, const char *text);
 
 /**
- * @deprecated Deprecated since 11.0.
  * @brief Sets the multi-language handle.
  * @since_tizen 5.5
  * @remarks After setting the multi-language handle successfully, \n
@@ -146,7 +142,7 @@ int noti_ex_item_entry_set_text(noti_ex_item_h handle, const char *text) TIZEN_D
  * @endcode
  */
 int noti_ex_item_entry_set_multi_language(noti_ex_item_h handle,
-		noti_ex_multi_lang_h multi) TIZEN_DEPRECATED_API;
+		noti_ex_multi_lang_h multi);
 
 /**
  * @}

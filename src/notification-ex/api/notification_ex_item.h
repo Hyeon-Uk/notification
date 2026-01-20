@@ -30,56 +30,48 @@ extern "C" {
  */
 
 /**
- * @deprecated Deprecated since 11.0.
  * @brief Predefined receiver group for the Panel.
  * @since_tizen 5.5
  */
 #define NOTI_EX_RECEIVER_GROUP_PANEL "tizen.org/receiver/panel"
 
 /**
- * @deprecated Deprecated since 11.0.
  * @brief Predefined receiver group for the Ticker.
  * @since_tizen 5.5
  */
 #define NOTI_EX_RECEIVER_GROUP_TICKER "tizen.org/receiver/ticker"
 
 /**
- * @deprecated Deprecated since 11.0.
  * @brief Predefined receiver group for the Lockscreen.
  * @since_tizen 5.5
  */
 #define NOTI_EX_RECEIVER_GROUP_LOCKSCREEN "tizen.org/receiver/lockscreen"
 
 /**
- * @deprecated Deprecated since 11.0.
  * @brief Predefined receiver group for the Indicator.
  * @since_tizen 5.5
  */
 #define NOTI_EX_RECEIVER_GROUP_INDICATOR "tizen.org/receiver/indicator"
 
 /**
- * @deprecated Deprecated since 11.0.
  * @brief Predefined receiver group for the Popup.
  * @since_tizen 5.5
  */
 #define NOTI_EX_RECEIVER_GROUP_POPUP "tizen.org/receiver/popup"
 
 /**
- * @deprecated Deprecated since 11.0.
  * @brief Default sound.
  * @since_tizen 5.5
  */
 #define NOTI_EX_SOUND_TYPE_DEFAULT "__SOUND_TYPE_DEFAULT__"
 
 /**
- * @deprecated Deprecated since 11.0.
  * @brief Default vibration.
  * @since_tizen 5.5
  */
 #define NOTI_EX_VIBRATION_TYPE_DEFAULT "__VIBRATION_TYPE_DEFAULT__"
 
 /**
- * @deprecated Deprecated since 11.0.
  * @brief Enumeration for notification_ex item types.
  * @since_tizen 5.5
  */
@@ -101,7 +93,6 @@ typedef enum _noti_ex_item_type {
 } noti_ex_item_type_e;
 
 /**
- * @deprecated Deprecated since 11.0.
  * @brief Enumeration for notification_ex action type.
  * @since_tizen 5.5
  */
@@ -113,7 +104,6 @@ typedef enum _noti_ex_action_type {
 } noti_ex_action_type_e;
 
 /**
- * @deprecated Deprecated since 11.0.
  * @brief Enumeration for notification_ex item policy.
  * @since_tizen 5.5
  */
@@ -125,7 +115,6 @@ typedef enum _noti_ex_item_policy {
 } noti_ex_item_policy_e;
 
 /**
- * @deprecated Deprecated since 11.0.
  * @brief Enumeration for main types of notification_ex item.
  * @since_tizen 5.5
  */
@@ -157,14 +146,12 @@ typedef enum _noti_ex_item_main_type {
 } noti_ex_item_main_type_e;
 
 /**
- * @deprecated Deprecated since 11.0.
  * @brief The handle for the color information.
  * @since_tizen 5.5
  */
 typedef void *noti_ex_color_h;
 
 /**
- * @deprecated Deprecated since 11.0.
  * @brief Creates the notification_ex color handle.
  * @details Color information can be defined as a notification_ex color handle
  *          with alpha, red, green, blue value.
@@ -193,10 +180,9 @@ typedef void *noti_ex_color_h;
 }
  * @endcode
  */
-int noti_ex_color_create(noti_ex_color_h *handle, unsigned char a, unsigned char r, unsigned char g, unsigned char b) TIZEN_DEPRECATED_API;
+int noti_ex_color_create(noti_ex_color_h *handle, unsigned char a, unsigned char r, unsigned char g, unsigned char b);
 
 /**
- * @deprecated Deprecated since 11.0.
  * @brief Releases a notification_ex color handle.
  * @since_tizen 5.5
  * @param[in] handle The notification_ex color handle
@@ -215,10 +201,9 @@ int noti_ex_color_create(noti_ex_color_h *handle, unsigned char a, unsigned char
 }
  * @endcode
  */
-int noti_ex_color_destroy(noti_ex_color_h handle) TIZEN_DEPRECATED_API;
+int noti_ex_color_destroy(noti_ex_color_h handle);
 
 /**
- * @deprecated Deprecated since 11.0.
  * @brief Gets the alpha value of a color.
  * @since_tizen 5.5
  * @param[in] handle The notification_ex color handle
@@ -240,10 +225,9 @@ int noti_ex_color_destroy(noti_ex_color_h handle) TIZEN_DEPRECATED_API;
 }
  * @endcode
  */
-int noti_ex_color_get_alpha(noti_ex_color_h handle, unsigned char *val) TIZEN_DEPRECATED_API;
+int noti_ex_color_get_alpha(noti_ex_color_h handle, unsigned char *val);
 
 /**
- * @deprecated Deprecated since 11.0.
  * @brief Gets the red value of a color.
  * @since_tizen 5.5
  * @param[in] handle The notification_ex color handle
@@ -265,10 +249,9 @@ int noti_ex_color_get_alpha(noti_ex_color_h handle, unsigned char *val) TIZEN_DE
 }
  * @endcode
  */
-int noti_ex_color_get_red(noti_ex_color_h handle, unsigned char *val) TIZEN_DEPRECATED_API;
+int noti_ex_color_get_red(noti_ex_color_h handle, unsigned char *val);
 
 /**
- * @deprecated Deprecated since 11.0.
  * @brief Gets the green value of a color.
  * @since_tizen 5.5
  * @param[in] handle The notification_ex color handle
@@ -290,10 +273,9 @@ int noti_ex_color_get_red(noti_ex_color_h handle, unsigned char *val) TIZEN_DEPR
 }
  * @endcode
  */
-int noti_ex_color_get_green(noti_ex_color_h handle, unsigned char *val) TIZEN_DEPRECATED_API;
+int noti_ex_color_get_green(noti_ex_color_h handle, unsigned char *val);
 
 /**
- * @deprecated Deprecated since 11.0.
  * @brief Gets the blue value of a color.
  * @since_tizen 5.5
  * @param[in] handle The notification_ex color handle
@@ -315,17 +297,15 @@ int noti_ex_color_get_green(noti_ex_color_h handle, unsigned char *val) TIZEN_DE
 }
  * @endcode
  */
-int noti_ex_color_get_blue(noti_ex_color_h handle, unsigned char *val) TIZEN_DEPRECATED_API;
+int noti_ex_color_get_blue(noti_ex_color_h handle, unsigned char *val);
 
 /**
- * @deprecated Deprecated since 11.0.
  * @brief The handle for the padding information.
  * @since_tizen 5.5
  */
 typedef void *noti_ex_padding_h;
 
 /**
- * @deprecated Deprecated since 11.0.
  * @brief Creates the notification_ex padding handle.
  * @details Padding information can be defined as a notification_ex padding handle
  *          with left, right, top and bottom values.
@@ -354,10 +334,9 @@ typedef void *noti_ex_padding_h;
 }
  * @endcode
  */
-int noti_ex_padding_create(noti_ex_padding_h *handle, int left, int top, int right, int bottom) TIZEN_DEPRECATED_API;
+int noti_ex_padding_create(noti_ex_padding_h *handle, int left, int top, int right, int bottom);
 
 /**
- * @deprecated Deprecated since 11.0.
  * @brief Releases a notification_ex padding handle.
  * @since_tizen 5.5
  * @param[in] handle The notification_ex padding handle
@@ -376,10 +355,9 @@ int noti_ex_padding_create(noti_ex_padding_h *handle, int left, int top, int rig
 }
  * @endcode
  */
-int noti_ex_padding_destroy(noti_ex_padding_h handle) TIZEN_DEPRECATED_API;
+int noti_ex_padding_destroy(noti_ex_padding_h handle);
 
 /**
- * @deprecated Deprecated since 11.0.
  * @brief Gets the left value of padding.
  * @since_tizen 5.5
  * @param[in] handle The notification_ex padding handle
@@ -401,10 +379,9 @@ int noti_ex_padding_destroy(noti_ex_padding_h handle) TIZEN_DEPRECATED_API;
 }
  * @endcode
  */
-int noti_ex_padding_get_left(noti_ex_padding_h handle, int *val) TIZEN_DEPRECATED_API;
+int noti_ex_padding_get_left(noti_ex_padding_h handle, int *val);
 
 /**
- * @deprecated Deprecated since 11.0.
  * @brief Gets the top value of padding.
  * @since_tizen 5.5
  * @param[in] handle The notification_ex padding handle
@@ -426,10 +403,9 @@ int noti_ex_padding_get_left(noti_ex_padding_h handle, int *val) TIZEN_DEPRECATE
 }
  * @endcode
  */
-int noti_ex_padding_get_top(noti_ex_padding_h handle, int *val) TIZEN_DEPRECATED_API;
+int noti_ex_padding_get_top(noti_ex_padding_h handle, int *val);
 
 /**
- * @deprecated Deprecated since 11.0.
  * @brief Gets the right value of padding.
  * @since_tizen 5.5
  * @param[in] handle The notification_ex padding handle
@@ -451,10 +427,9 @@ int noti_ex_padding_get_top(noti_ex_padding_h handle, int *val) TIZEN_DEPRECATED
 }
  * @endcode
  */
-int noti_ex_padding_get_right(noti_ex_padding_h handle, int *val) TIZEN_DEPRECATED_API;
+int noti_ex_padding_get_right(noti_ex_padding_h handle, int *val);
 
 /**
- * @deprecated Deprecated since 11.0.
  * @brief Gets the bottom value of padding.
  * @since_tizen 5.5
  * @param[in] handle The notification_ex padding handle
@@ -476,17 +451,15 @@ int noti_ex_padding_get_right(noti_ex_padding_h handle, int *val) TIZEN_DEPRECAT
 }
  * @endcode
  */
-int noti_ex_padding_get_bottom(noti_ex_padding_h handle, int *val) TIZEN_DEPRECATED_API;
+int noti_ex_padding_get_bottom(noti_ex_padding_h handle, int *val);
 
 /**
- * @deprecated Deprecated since 11.0.
  * @brief The handle for the geometry information.
  * @since_tizen 5.5
  */
 typedef void *noti_ex_geometry_h;
 
 /**
- * @deprecated Deprecated since 11.0.
  * @brief Creates the notification_ex geometry handle.
  * @details Geometry information can be defined as a notification_ex geometry handle
  *          with x, y, width and height value.
@@ -515,10 +488,9 @@ typedef void *noti_ex_geometry_h;
 }
  * @endcode
  */
-int noti_ex_geometry_create(noti_ex_geometry_h *handle, int x, int y, int w, int h) TIZEN_DEPRECATED_API;
+int noti_ex_geometry_create(noti_ex_geometry_h *handle, int x, int y, int w, int h);
 
 /**
- * @deprecated Deprecated since 11.0.
  * @brief Releases the notification_ex geometry handle.
  * @since_tizen 5.5
  * @param[in] handle The notification_ex geometry handle
@@ -537,10 +509,9 @@ int noti_ex_geometry_create(noti_ex_geometry_h *handle, int x, int y, int w, int
 }
  * @endcode
  */
-int noti_ex_geometry_destroy(noti_ex_geometry_h handle) TIZEN_DEPRECATED_API;
+int noti_ex_geometry_destroy(noti_ex_geometry_h handle);
 
 /**
- * @deprecated Deprecated since 11.0.
  * @brief Gets the x position value.
  * @since_tizen 5.5
  * @param[in] handle The notification_ex geometry handle
@@ -562,10 +533,9 @@ int noti_ex_geometry_destroy(noti_ex_geometry_h handle) TIZEN_DEPRECATED_API;
 }
  * @endcode
  */
-int noti_ex_geometry_get_x(noti_ex_geometry_h handle, int *val) TIZEN_DEPRECATED_API;
+int noti_ex_geometry_get_x(noti_ex_geometry_h handle, int *val);
 
 /**
- * @deprecated Deprecated since 11.0.
  * @brief Gets the y position value.
  * @since_tizen 5.5
  * @param[in] handle The notification_ex geometry handle
@@ -587,10 +557,9 @@ int noti_ex_geometry_get_x(noti_ex_geometry_h handle, int *val) TIZEN_DEPRECATED
 }
  * @endcode
  */
-int noti_ex_geometry_get_y(noti_ex_geometry_h handle, int *val) TIZEN_DEPRECATED_API;
+int noti_ex_geometry_get_y(noti_ex_geometry_h handle, int *val);
 
 /**
- * @deprecated Deprecated since 11.0.
  * @brief Gets the width value.
  * @since_tizen 5.5
  * @param[in] handle The notification_ex geometry handle
@@ -612,10 +581,9 @@ int noti_ex_geometry_get_y(noti_ex_geometry_h handle, int *val) TIZEN_DEPRECATED
 }
  * @endcode
  */
-int noti_ex_geometry_get_width(noti_ex_geometry_h handle, int *val) TIZEN_DEPRECATED_API;
+int noti_ex_geometry_get_width(noti_ex_geometry_h handle, int *val);
 
 /**
- * @deprecated Deprecated since 11.0.
  * @brief Gets the height value.
  * @since_tizen 5.5
  * @param[in] handle The notification_ex geometry handle
@@ -637,17 +605,15 @@ int noti_ex_geometry_get_width(noti_ex_geometry_h handle, int *val) TIZEN_DEPREC
 }
  * @endcode
  */
-int noti_ex_geometry_get_height(noti_ex_geometry_h handle, int *val) TIZEN_DEPRECATED_API;
+int noti_ex_geometry_get_height(noti_ex_geometry_h handle, int *val);
 
 /**
- * @deprecated Deprecated since 11.0.
  * @brief The handle for the style information.
  * @since_tizen 5.5
  */
 typedef void *noti_ex_style_h;
 
 /**
- * @deprecated Deprecated since 11.0.
  * @brief Creates the notification_ex style handle.
  * @details Style information can be defined as a notification_ex style handle
  *          with color, padding and geometry information.
@@ -691,10 +657,9 @@ typedef void *noti_ex_style_h;
  * @endcode
  */
 int noti_ex_style_create(noti_ex_style_h *handle, noti_ex_color_h color,
-		noti_ex_padding_h padding, noti_ex_geometry_h geometry) TIZEN_DEPRECATED_API;
+		noti_ex_padding_h padding, noti_ex_geometry_h geometry);
 
 /**
- * @deprecated Deprecated since 11.0.
  * @brief Releases the notification_ex style handle.
  * @since_tizen 5.5
  * @param[in] handle The notification_ex style handle
@@ -713,10 +678,9 @@ int noti_ex_style_create(noti_ex_style_h *handle, noti_ex_color_h color,
 }
  * @endcode
  */
-int noti_ex_style_destroy(noti_ex_style_h handle) TIZEN_DEPRECATED_API;
+int noti_ex_style_destroy(noti_ex_style_h handle);
 
 /**
- * @deprecated Deprecated since 11.0.
  * @brief Gets the padding information from a style.
  * @since_tizen 5.5
  * @remarks @a padding must be released using noti_ex_padding_destroy().
@@ -740,10 +704,9 @@ int noti_ex_style_destroy(noti_ex_style_h handle) TIZEN_DEPRECATED_API;
 }
  * @endcode
  */
-int noti_ex_style_get_padding(noti_ex_style_h handle, noti_ex_padding_h *padding) TIZEN_DEPRECATED_API;
+int noti_ex_style_get_padding(noti_ex_style_h handle, noti_ex_padding_h *padding);
 
 /**
- * @deprecated Deprecated since 11.0.
  * @brief Gets the color information from a style.
  * @since_tizen 5.5
  * @remarks @a color must be released using noti_ex_color_destroy().
@@ -767,10 +730,9 @@ int noti_ex_style_get_padding(noti_ex_style_h handle, noti_ex_padding_h *padding
 }
  * @endcode
  */
-int noti_ex_style_get_color(noti_ex_style_h handle, noti_ex_color_h *color) TIZEN_DEPRECATED_API;
+int noti_ex_style_get_color(noti_ex_style_h handle, noti_ex_color_h *color);
 
 /**
- * @deprecated Deprecated since 11.0.
  * @brief Gets the geometry information from style.
  * @since_tizen 5.5
  * @remarks @a geometry must be released using noti_ex_geometry_destroy().
@@ -794,10 +756,9 @@ int noti_ex_style_get_color(noti_ex_style_h handle, noti_ex_color_h *color) TIZE
 }
  * @endcode
  */
-int noti_ex_style_get_geometry(noti_ex_style_h handle, noti_ex_geometry_h *geometry) TIZEN_DEPRECATED_API;
+int noti_ex_style_get_geometry(noti_ex_style_h handle, noti_ex_geometry_h *geometry);
 
 /**
- * @deprecated Deprecated since 11.0.
  * @brief Gets the background image path from style.
  * @since_tizen 5.5
  * @remarks The @a image_path should be released using free().
@@ -821,10 +782,9 @@ int noti_ex_style_get_geometry(noti_ex_style_h handle, noti_ex_geometry_h *geome
  * @endcode
  */
 int noti_ex_style_get_background_image(noti_ex_style_h handle,
-		char **image_path) TIZEN_DEPRECATED_API;
+		char **image_path);
 
 /**
- * @deprecated Deprecated since 11.0.
  * @brief Sets the background image path of a style.
  * @since_tizen 5.5
  * @param[in] handle The notification_ex style handle
@@ -851,10 +811,9 @@ int noti_ex_style_get_background_image(noti_ex_style_h handle,
  * @endcode
  */
 int noti_ex_style_set_background_image(noti_ex_style_h handle,
-		char *image_path) TIZEN_DEPRECATED_API;
+		char *image_path);
 
 /**
- * @deprecated Deprecated since 11.0.
  * @brief Gets the background color of a style.
  * @since_tizen 5.5
  * @remarks @a color must be released using noti_ex_color_destroy().
@@ -878,10 +837,9 @@ int noti_ex_style_set_background_image(noti_ex_style_h handle,
  * @endcode
  */
 int noti_ex_style_get_background_color(noti_ex_style_h handle,
-		noti_ex_color_h *color) TIZEN_DEPRECATED_API;
+		noti_ex_color_h *color);
 
 /**
- * @deprecated Deprecated since 11.0.
  * @brief Sets the background color of a style.
  * @since_tizen 5.5
  * @remarks @a color must be released using noti_ex_color_destroy().
@@ -907,17 +865,15 @@ int noti_ex_style_get_background_color(noti_ex_style_h handle,
  * @endcode
  */
 int noti_ex_style_set_background_color(noti_ex_style_h handle,
-		noti_ex_color_h color) TIZEN_DEPRECATED_API;
+		noti_ex_color_h color);
 
 /**
- * @deprecated Deprecated since 11.0.
  * @brief The handle for the LED information.
  * @since_tizen 5.5
  */
 typedef void *noti_ex_led_info_h;
 
 /**
- * @deprecated Deprecated since 11.0.
  * @brief Creates the notification_ex LED info handle.
  * @details LED information can be defined as a notification_ex LED handle
  *          with color information.
@@ -950,10 +906,9 @@ typedef void *noti_ex_led_info_h;
 }
  * @endcode
  */
-int noti_ex_led_info_create(noti_ex_led_info_h *handle, noti_ex_color_h color) TIZEN_DEPRECATED_API;
+int noti_ex_led_info_create(noti_ex_led_info_h *handle, noti_ex_color_h color);
 
 /**
- * @deprecated Deprecated since 11.0.
  * @brief Releases the notification_ex LED info handle.
  * @since_tizen 5.5
  * @param[in] handle The notification_ex LED info handle
@@ -972,10 +927,9 @@ int noti_ex_led_info_create(noti_ex_led_info_h *handle, noti_ex_color_h color) T
 }
  * @endcode
  */
-int noti_ex_led_info_destroy(noti_ex_led_info_h handle) TIZEN_DEPRECATED_API;
+int noti_ex_led_info_destroy(noti_ex_led_info_h handle);
 
 /**
- * @deprecated Deprecated since 11.0.
  * @brief Sets the time period for turning on the LED.
  * @since_tizen 5.5
  * @param[in] handle The notification_ex LED info handle
@@ -996,10 +950,9 @@ int noti_ex_led_info_destroy(noti_ex_led_info_h handle) TIZEN_DEPRECATED_API;
 }
  * @endcode
  */
-int noti_ex_led_info_set_on_period(noti_ex_led_info_h handle, int ms) TIZEN_DEPRECATED_API;
+int noti_ex_led_info_set_on_period(noti_ex_led_info_h handle, int ms);
 
 /**
- * @deprecated Deprecated since 11.0.
  * @brief Gets the time period for turning on the LED.
  * @since_tizen 5.5
  * @param[in] handle The notification_ex LED info handle
@@ -1021,10 +974,9 @@ int noti_ex_led_info_set_on_period(noti_ex_led_info_h handle, int ms) TIZEN_DEPR
 }
  * @endcode
  */
-int noti_ex_led_info_get_on_period(noti_ex_led_info_h handle, int *ms) TIZEN_DEPRECATED_API;
+int noti_ex_led_info_get_on_period(noti_ex_led_info_h handle, int *ms);
 
 /**
- * @deprecated Deprecated since 11.0.
  * @brief Sets the time period for turning off the LED.
  * @since_tizen 5.5
  * @param[in] handle The notification_ex LED info handle
@@ -1045,10 +997,9 @@ int noti_ex_led_info_get_on_period(noti_ex_led_info_h handle, int *ms) TIZEN_DEP
 }
  * @endcode
  */
-int noti_ex_led_info_set_off_period(noti_ex_led_info_h handle, int ms) TIZEN_DEPRECATED_API;
+int noti_ex_led_info_set_off_period(noti_ex_led_info_h handle, int ms);
 
 /**
- * @deprecated Deprecated since 11.0.
  * @brief Gets the time period for turning off the LED.
  * @since_tizen 5.5
  * @param[in] handle The notification_ex LED info handle
@@ -1070,10 +1021,9 @@ int noti_ex_led_info_set_off_period(noti_ex_led_info_h handle, int ms) TIZEN_DEP
 }
  * @endcode
  */
-int noti_ex_led_info_get_off_period(noti_ex_led_info_h handle, int *ms) TIZEN_DEPRECATED_API;
+int noti_ex_led_info_get_off_period(noti_ex_led_info_h handle, int *ms);
 
 /**
- * @deprecated Deprecated since 11.0.
  * @brief Gets the color information from LED info.
  * @since_tizen 5.5
  * @remarks @a color must be released using noti_ex_color_destroy().
@@ -1097,31 +1047,27 @@ int noti_ex_led_info_get_off_period(noti_ex_led_info_h handle, int *ms) TIZEN_DE
 }
  * @endcode
  */
-int noti_ex_led_info_get_color(noti_ex_led_info_h handle, noti_ex_color_h *color) TIZEN_DEPRECATED_API;
+int noti_ex_led_info_get_color(noti_ex_led_info_h handle, noti_ex_color_h *color);
 
 /**
- * @deprecated Deprecated since 11.0.
  * @brief The notification_ex action handle.
  * @since_tizen 5.5
  */
 typedef void *noti_ex_action_h;
 
 /**
- * @deprecated Deprecated since 11.0.
  * @brief The notification_ex item handle.
  * @since_tizen 5.5
  */
 typedef void *noti_ex_item_h;
 
 /**
- * @deprecated Deprecated since 11.0.
  * @brief The notification_ex item_info handle.
  * @since_tizen 5.5
  */
 typedef void *noti_ex_item_info_h;
 
 /**
- * @deprecated Deprecated since 11.0.
  * @brief Releases the notification_ex action handle.
  * @since_tizen 5.5
  * @param[in] handle The notification_ex action handle
@@ -1140,10 +1086,9 @@ typedef void *noti_ex_item_info_h;
 }
  * @endcode
  */
-int noti_ex_action_destroy(noti_ex_action_h handle) TIZEN_DEPRECATED_API;
+int noti_ex_action_destroy(noti_ex_action_h handle);
 
 /**
- * @deprecated Deprecated since 11.0.
  * @brief Gets the type of an action.
  * @details The action type is equal to one of the values of #noti_ex_action_type_e
  * @since_tizen 5.5
@@ -1170,10 +1115,9 @@ int noti_ex_action_destroy(noti_ex_action_h handle) TIZEN_DEPRECATED_API;
 }
  * @endcode
  */
-int noti_ex_action_get_type(noti_ex_action_h handle, int *type) TIZEN_DEPRECATED_API;
+int noti_ex_action_get_type(noti_ex_action_h handle, int *type);
 
 /**
- * @deprecated Deprecated since 11.0.
  * @brief Gets the local state of an action.
  * @since_tizen 5.5
  * @param[in] handle The notification_ex action handle
@@ -1194,10 +1138,9 @@ int noti_ex_action_get_type(noti_ex_action_h handle, int *type) TIZEN_DEPRECATED
 }
  * @endcode
  */
-int noti_ex_action_is_local(noti_ex_action_h handle, bool *local) TIZEN_DEPRECATED_API;
+int noti_ex_action_is_local(noti_ex_action_h handle, bool *local);
 
 /**
- * @deprecated Deprecated since 11.0.
  * @brief Executes the action for a notification_ex item.
  * @since_tizen 5.5
  * @param[in] handle The notification_ex action handle
@@ -1224,10 +1167,9 @@ int noti_ex_action_is_local(noti_ex_action_h handle, bool *local) TIZEN_DEPRECAT
 }
  * @endcode
  */
-int noti_ex_action_execute(noti_ex_action_h handle, noti_ex_item_h item) TIZEN_DEPRECATED_API;
+int noti_ex_action_execute(noti_ex_action_h handle, noti_ex_item_h item);
 
 /**
- * @deprecated Deprecated since 11.0.
  * @brief Gets the extra data for an action.
  * @since_tizen 5.5
  * @remarks @a extra must be released using free().
@@ -1249,10 +1191,9 @@ int noti_ex_action_execute(noti_ex_action_h handle, noti_ex_item_h item) TIZEN_D
 }
  * @endcode
  */
-int noti_ex_action_get_extra(noti_ex_action_h handle, char **extra) TIZEN_DEPRECATED_API;
+int noti_ex_action_get_extra(noti_ex_action_h handle, char **extra);
 
 /**
- * @deprecated Deprecated since 11.0.
  * @brief Gets the time to hide the notification_ex item.
  * @since_tizen 5.5
  * @param[in] handle The notification_ex item info handle
@@ -1277,10 +1218,9 @@ int noti_ex_action_get_extra(noti_ex_action_h handle, char **extra) TIZEN_DEPREC
 }
  * @endcode
  */
-int noti_ex_item_info_get_hide_time(noti_ex_item_info_h handle, int *hide_time) TIZEN_DEPRECATED_API;
+int noti_ex_item_info_get_hide_time(noti_ex_item_info_h handle, int *hide_time);
 
 /**
- * @deprecated Deprecated since 11.0.
  * @brief Sets the time to hide the notification_ex item.
  * @since_tizen 5.5
  * @param[in] handle The notification_ex item info handle
@@ -1304,10 +1244,9 @@ int noti_ex_item_info_get_hide_time(noti_ex_item_info_h handle, int *hide_time) 
 }
  * @endcode
  */
-int noti_ex_item_info_set_hide_time(noti_ex_item_info_h handle, int hide_time) TIZEN_DEPRECATED_API;
+int noti_ex_item_info_set_hide_time(noti_ex_item_info_h handle, int hide_time);
 
 /**
- * @deprecated Deprecated since 11.0.
  * @brief Gets the time to delete the notification_ex item.
  * @since_tizen 5.5
  * @param[in] handle The notification_ex item info handle
@@ -1332,10 +1271,9 @@ int noti_ex_item_info_set_hide_time(noti_ex_item_info_h handle, int hide_time) T
 }
  * @endcode
  */
-int noti_ex_item_info_get_delete_time(noti_ex_item_info_h handle, int *delete_time) TIZEN_DEPRECATED_API;
+int noti_ex_item_info_get_delete_time(noti_ex_item_info_h handle, int *delete_time);
 
 /**
- * @deprecated Deprecated since 11.0.
  * @brief Sets the time to delete the notification_ex item.
  * @since_tizen 5.5
  * @param[in] handle The notification_ex item info handle
@@ -1359,10 +1297,9 @@ int noti_ex_item_info_get_delete_time(noti_ex_item_info_h handle, int *delete_ti
 }
  * @endcode
  */
-int noti_ex_item_info_set_delete_time(noti_ex_item_info_h handle, int delete_time) TIZEN_DEPRECATED_API;
+int noti_ex_item_info_set_delete_time(noti_ex_item_info_h handle, int delete_time);
 
 /**
- * @deprecated Deprecated since 11.0.
  * @brief Gets the time information.
  * @since_tizen 5.5
  * @param[in] handle The notification_ex item info handle
@@ -1387,10 +1324,9 @@ int noti_ex_item_info_set_delete_time(noti_ex_item_info_h handle, int delete_tim
 }
  * @endcode
  */
-int noti_ex_item_info_get_time(noti_ex_item_info_h handle, time_t *time) TIZEN_DEPRECATED_API;
+int noti_ex_item_info_get_time(noti_ex_item_info_h handle, time_t *time);
 
 /**
- * @deprecated Deprecated since 11.0.
  * @brief Releases the notification_ex item handle.
  * @since_tizen 5.5
  * @param[in] handle The notification_ex item handle
@@ -1409,10 +1345,9 @@ int noti_ex_item_info_get_time(noti_ex_item_info_h handle, time_t *time) TIZEN_D
 }
  * @endcode
  */
-int noti_ex_item_destroy(noti_ex_item_h handle) TIZEN_DEPRECATED_API;
+int noti_ex_item_destroy(noti_ex_item_h handle);
 
 /**
- * @deprecated Deprecated since 11.0.
  * @brief Finds the notification_ex item handle by notification_ex item id.
  * @since_tizen 5.5
  * @param[in] handle The notification_ex item handle
@@ -1434,10 +1369,9 @@ int noti_ex_item_destroy(noti_ex_item_h handle) TIZEN_DEPRECATED_API;
 }
  * @endcode
  */
-int noti_ex_item_find_by_id(noti_ex_item_h handle, const char *id, noti_ex_item_h *item) TIZEN_DEPRECATED_API;
+int noti_ex_item_find_by_id(noti_ex_item_h handle, const char *id, noti_ex_item_h *item);
 
 /**
- * @deprecated Deprecated since 11.0.
  * @brief Gets the type of notification_ex item.
  * @details The item type is equal to one of the values of #noti_ex_item_type_e.
  * @since_tizen 5.5
@@ -1464,10 +1398,9 @@ int noti_ex_item_find_by_id(noti_ex_item_h handle, const char *id, noti_ex_item_
 }
  * @endcode
  */
-int noti_ex_item_get_type(noti_ex_item_h handle, int *type) TIZEN_DEPRECATED_API;
+int noti_ex_item_get_type(noti_ex_item_h handle, int *type);
 
 /**
- * @deprecated Deprecated since 11.0.
  * @brief Gets the id of a notification_ex item.
  * @since_tizen 5.5
  * @remarks @a id must be released using free().
@@ -1489,10 +1422,9 @@ int noti_ex_item_get_type(noti_ex_item_h handle, int *type) TIZEN_DEPRECATED_API
 }
  * @endcode
  */
-int noti_ex_item_get_id(noti_ex_item_h handle, char **id) TIZEN_DEPRECATED_API;
+int noti_ex_item_get_id(noti_ex_item_h handle, char **id);
 
 /**
- * @deprecated Deprecated since 11.0.
  * @brief Sets the id of a notification_ex item.
  * @since_tizen 5.5
  * @param[in] handle The notification_ex item handle
@@ -1512,10 +1444,9 @@ int noti_ex_item_get_id(noti_ex_item_h handle, char **id) TIZEN_DEPRECATED_API;
 }
  * @endcode
  */
-int noti_ex_item_set_id(noti_ex_item_h handle, const char *id) TIZEN_DEPRECATED_API;
+int noti_ex_item_set_id(noti_ex_item_h handle, const char *id);
 
 /**
- * @deprecated Deprecated since 11.0.
  * @brief Gets the action for a notification_ex item.
  * @details The action is defined as notification_ex action handle.
  * @since_tizen 5.5
@@ -1539,10 +1470,9 @@ int noti_ex_item_set_id(noti_ex_item_h handle, const char *id) TIZEN_DEPRECATED_
 }
  * @endcode
  */
-int noti_ex_item_get_action(noti_ex_item_h handle, noti_ex_action_h *action) TIZEN_DEPRECATED_API;
+int noti_ex_item_get_action(noti_ex_item_h handle, noti_ex_action_h *action);
 
 /**
- * @deprecated Deprecated since 11.0.
  * @brief Sets the action of a notification_ex item.
  * @details The action is defined as notification_ex action handle.
  * @since_tizen 5.5
@@ -1574,10 +1504,9 @@ int noti_ex_item_get_action(noti_ex_item_h handle, noti_ex_action_h *action) TIZ
 }
  * @endcode
  */
-int noti_ex_item_set_action(noti_ex_item_h handle, noti_ex_action_h action) TIZEN_DEPRECATED_API;
+int noti_ex_item_set_action(noti_ex_item_h handle, noti_ex_action_h action);
 
 /**
- * @deprecated Deprecated since 11.0.
  * @brief Gets the style of a notification_ex item.
  * @details The style is defined as notification_ex style handle.
  * @since_tizen 5.5
@@ -1601,10 +1530,9 @@ int noti_ex_item_set_action(noti_ex_item_h handle, noti_ex_action_h action) TIZE
 }
  * @endcode
  */
-int noti_ex_item_get_style(noti_ex_item_h handle, noti_ex_style_h *style) TIZEN_DEPRECATED_API;
+int noti_ex_item_get_style(noti_ex_item_h handle, noti_ex_style_h *style);
 
 /**
- * @deprecated Deprecated since 11.0.
  * @brief Sets the style of a notification_ex item.
  * @details The style is defined as notification_ex style handle.
  * @since_tizen 5.5
@@ -1627,10 +1555,9 @@ int noti_ex_item_get_style(noti_ex_item_h handle, noti_ex_style_h *style) TIZEN_
 }
  * @endcode
  */
-int noti_ex_item_set_style(noti_ex_item_h handle, noti_ex_style_h style) TIZEN_DEPRECATED_API;
+int noti_ex_item_set_style(noti_ex_item_h handle, noti_ex_style_h style);
 
 /**
- * @deprecated Deprecated since 11.0.
  * @brief Sets the visibility state of a notification_ex item.
  * @since_tizen 5.5
  * @param[in] handle The notification_ex item handle
@@ -1650,10 +1577,9 @@ int noti_ex_item_set_style(noti_ex_item_h handle, noti_ex_style_h style) TIZEN_D
 }
  * @endcode
  */
-int noti_ex_item_set_visible(noti_ex_item_h handle, bool visible) TIZEN_DEPRECATED_API;
+int noti_ex_item_set_visible(noti_ex_item_h handle, bool visible);
 
 /**
- * @deprecated Deprecated since 11.0.
  * @brief Gets the visibility state of a notification_ex item.
  * @since_tizen 5.5
  * @param[in] handle The notification_ex item handle
@@ -1674,10 +1600,9 @@ int noti_ex_item_set_visible(noti_ex_item_h handle, bool visible) TIZEN_DEPRECAT
 }
  * @endcode
  */
-int noti_ex_item_get_visible(noti_ex_item_h handle, bool *visible) TIZEN_DEPRECATED_API;
+int noti_ex_item_get_visible(noti_ex_item_h handle, bool *visible);
 
 /**
- * @deprecated Deprecated since 11.0.
  * @brief Sets the enabled state of a notification_ex item.
  * @since_tizen 5.5
  * @param[in] handle The notification_ex item handle
@@ -1697,10 +1622,9 @@ int noti_ex_item_get_visible(noti_ex_item_h handle, bool *visible) TIZEN_DEPRECA
 }
  * @endcode
  */
-int noti_ex_item_set_enable(noti_ex_item_h handle, bool enable) TIZEN_DEPRECATED_API;
+int noti_ex_item_set_enable(noti_ex_item_h handle, bool enable);
 
 /**
- * @deprecated Deprecated since 11.0.
  * @brief Gets the enabled state of a notification_ex item.
  * @since_tizen 5.5
  * @param[in] handle The notification_ex item handle
@@ -1721,10 +1645,9 @@ int noti_ex_item_set_enable(noti_ex_item_h handle, bool enable) TIZEN_DEPRECATED
 }
  * @endcode
  */
-int noti_ex_item_get_enable(noti_ex_item_h handle, bool *enable) TIZEN_DEPRECATED_API;
+int noti_ex_item_get_enable(noti_ex_item_h handle, bool *enable);
 
 /**
- * @deprecated Deprecated since 11.0.
  * @brief Adds the receiver group of a notification_ex item.
  * @since_tizen 5.5
  * @param[in] handle The notification_ex item handle
@@ -1744,10 +1667,9 @@ int noti_ex_item_get_enable(noti_ex_item_h handle, bool *enable) TIZEN_DEPRECATE
 }
  * @endcode
  */
-int noti_ex_item_add_receiver(noti_ex_item_h handle, const char *receiver_group) TIZEN_DEPRECATED_API;
+int noti_ex_item_add_receiver(noti_ex_item_h handle, const char *receiver_group);
 
 /**
- * @deprecated Deprecated since 11.0.
  * @brief Removes the receiver group from a notification_ex item.
  * @since_tizen 5.5
  * @param[in] handle The notification_ex item handle
@@ -1767,10 +1689,9 @@ int noti_ex_item_add_receiver(noti_ex_item_h handle, const char *receiver_group)
 }
  * @endcode
  */
-int noti_ex_item_remove_receiver(noti_ex_item_h handle, const char *receiver_group) TIZEN_DEPRECATED_API;
+int noti_ex_item_remove_receiver(noti_ex_item_h handle, const char *receiver_group);
 
 /**
- * @deprecated Deprecated since 11.0.
  * @brief Gets the list of receiver group of a notification_ex item.
  * @since_tizen 5.5
  * @remarks Each member of the list must be released using free(), then the @a list must be released using free().
@@ -1794,10 +1715,9 @@ int noti_ex_item_remove_receiver(noti_ex_item_h handle, const char *receiver_gro
 }
  * @endcode
  */
-int noti_ex_item_get_receiver_list(noti_ex_item_h handle, char ***list, int *count) TIZEN_DEPRECATED_API;
+int noti_ex_item_get_receiver_list(noti_ex_item_h handle, char ***list, int *count);
 
 /**
- * @deprecated Deprecated since 11.0.
  * @brief Sets the policy of a notification_ex item.
  * @details @a policy should be set to values of #noti_ex_item_policy_e combined with bitwise 'or'.
  * @since_tizen 5.5
@@ -1820,10 +1740,9 @@ int noti_ex_item_get_receiver_list(noti_ex_item_h handle, char ***list, int *cou
 }
  * @endcode
  */
-int noti_ex_item_set_policy(noti_ex_item_h handle, int policy) TIZEN_DEPRECATED_API;
+int noti_ex_item_set_policy(noti_ex_item_h handle, int policy);
 
 /**
- * @deprecated Deprecated since 11.0.
  * @brief Gets the policy of a notification_ex item.
  * @details @a policy is equal to values of #noti_ex_item_policy_e combined with bitwise 'or'.
  * @since_tizen 5.5
@@ -1846,10 +1765,9 @@ int noti_ex_item_set_policy(noti_ex_item_h handle, int policy) TIZEN_DEPRECATED_
 }
  * @endcode
  */
-int noti_ex_item_get_policy(noti_ex_item_h handle, int *policy) TIZEN_DEPRECATED_API;
+int noti_ex_item_get_policy(noti_ex_item_h handle, int *policy);
 
 /**
- * @deprecated Deprecated since 11.0.
  * @brief Gets the channel of a notification_ex item.
  * @since_tizen 5.5
  * @remarks @a channel must be released using free().
@@ -1871,10 +1789,9 @@ int noti_ex_item_get_policy(noti_ex_item_h handle, int *policy) TIZEN_DEPRECATED
 }
  * @endcode
  */
-int noti_ex_item_get_channel(noti_ex_item_h handle, char **channel) TIZEN_DEPRECATED_API;
+int noti_ex_item_get_channel(noti_ex_item_h handle, char **channel);
 
 /**
- * @deprecated Deprecated since 11.0.
  * @brief Sets the channel of a notification_ex item.
  * @since_tizen 5.5
  * @param[in] handle The notification_ex item handle
@@ -1894,10 +1811,9 @@ int noti_ex_item_get_channel(noti_ex_item_h handle, char **channel) TIZEN_DEPREC
 }
  * @endcode
  */
-int noti_ex_item_set_channel(noti_ex_item_h handle, const char *channel) TIZEN_DEPRECATED_API;
+int noti_ex_item_set_channel(noti_ex_item_h handle, const char *channel);
 
 /**
- * @deprecated Deprecated since 11.0.
  * @brief Sets the LED information of a notification_ex item.
  * @details The LED information is defined as notification_ex LED info handle
  * @since_tizen 5.5
@@ -1920,10 +1836,9 @@ int noti_ex_item_set_channel(noti_ex_item_h handle, const char *channel) TIZEN_D
 }
  * @endcode
  */
-int noti_ex_item_set_led_info(noti_ex_item_h handle, noti_ex_led_info_h led) TIZEN_DEPRECATED_API;
+int noti_ex_item_set_led_info(noti_ex_item_h handle, noti_ex_led_info_h led);
 
 /**
- * @deprecated Deprecated since 11.0.
  * @brief Gets the LED information of a notification_ex item.
  * @details The LED information is defined as notification_ex LED info handle
  * @since_tizen 5.5
@@ -1947,10 +1862,9 @@ int noti_ex_item_set_led_info(noti_ex_item_h handle, noti_ex_led_info_h led) TIZ
 }
  * @endcode
  */
-int noti_ex_item_get_led_info(noti_ex_item_h handle, noti_ex_led_info_h *led) TIZEN_DEPRECATED_API;
+int noti_ex_item_get_led_info(noti_ex_item_h handle, noti_ex_led_info_h *led);
 
 /**
- * @deprecated Deprecated since 11.0.
  * @brief Sets the sound path of a notification_ex item.
  * @since_tizen 5.5
  * @param[in] handle The notification_ex item handle
@@ -1971,10 +1885,9 @@ int noti_ex_item_get_led_info(noti_ex_item_h handle, noti_ex_led_info_h *led) TI
 }
  * @endcode
  */
-int noti_ex_item_set_sound_path(noti_ex_item_h handle, const char *path) TIZEN_DEPRECATED_API;
+int noti_ex_item_set_sound_path(noti_ex_item_h handle, const char *path);
 
 /**
- * @deprecated Deprecated since 11.0.
  * @brief Gets the sound path of a notification_ex item.
  * @since_tizen 5.5
  * @remarks @a path must be released using free().
@@ -1998,10 +1911,9 @@ int noti_ex_item_set_sound_path(noti_ex_item_h handle, const char *path) TIZEN_D
 }
  * @endcode
  */
-int noti_ex_item_get_sound_path(noti_ex_item_h handle, char **path) TIZEN_DEPRECATED_API;
+int noti_ex_item_get_sound_path(noti_ex_item_h handle, char **path);
 
 /**
- * @deprecated Deprecated since 11.0.
  * @brief Sets the vibration path of a notification_ex item.
  * @since_tizen 5.5
  * @param[in] handle The notification_ex item handle
@@ -2022,10 +1934,9 @@ int noti_ex_item_get_sound_path(noti_ex_item_h handle, char **path) TIZEN_DEPREC
 }
  * @endcode
  */
-int noti_ex_item_set_vibration_path(noti_ex_item_h handle, const char *path) TIZEN_DEPRECATED_API;
+int noti_ex_item_set_vibration_path(noti_ex_item_h handle, const char *path);
 
 /**
- * @deprecated Deprecated since 11.0.
  * @brief Gets the vibration path of a notification_ex item.
  * @since_tizen 5.5
  * @remarks @a path must be released using free().
@@ -2049,10 +1960,9 @@ int noti_ex_item_set_vibration_path(noti_ex_item_h handle, const char *path) TIZ
 }
  * @endcode
  */
-int noti_ex_item_get_vibration_path(noti_ex_item_h handle, char **path) TIZEN_DEPRECATED_API;
+int noti_ex_item_get_vibration_path(noti_ex_item_h handle, char **path);
 
 /**
- * @deprecated Deprecated since 11.0.
  * @brief Gets the information of a notification_ex item.
  * @details The information of notification_ex item is defined as
  *          notification_ex item info handle.
@@ -2078,10 +1988,9 @@ int noti_ex_item_get_vibration_path(noti_ex_item_h handle, char **path) TIZEN_DE
 }
  * @endcode
  */
-int noti_ex_item_get_info(noti_ex_item_h handle, noti_ex_item_info_h *info) TIZEN_DEPRECATED_API;
+int noti_ex_item_get_info(noti_ex_item_h handle, noti_ex_item_info_h *info);
 
 /**
- * @deprecated Deprecated since 11.0.
  * @brief Gets the sender app id of a notification_ex item.
  * @since_tizen 5.5
  * @remarks @a id must be released using free().
@@ -2103,10 +2012,9 @@ int noti_ex_item_get_info(noti_ex_item_h handle, noti_ex_item_info_h *info) TIZE
 }
  * @endcode
  */
-int noti_ex_item_get_sender_app_id(noti_ex_item_h handle, char **id) TIZEN_DEPRECATED_API;
+int noti_ex_item_get_sender_app_id(noti_ex_item_h handle, char **id);
 
 /**
- * @deprecated Deprecated since 11.0.
  * @brief Gets the tag of a notification_ex item.
  * @since_tizen 5.5
  * @remarks @a tag must be released using free().
@@ -2128,10 +2036,9 @@ int noti_ex_item_get_sender_app_id(noti_ex_item_h handle, char **id) TIZEN_DEPRE
 }
  * @endcode
  */
-int noti_ex_item_get_tag(noti_ex_item_h handle, char **tag) TIZEN_DEPRECATED_API;
+int noti_ex_item_get_tag(noti_ex_item_h handle, char **tag);
 
 /**
- * @deprecated Deprecated since 11.0.
  * @brief Sets the tag of a notification_ex item.
  * @since_tizen 5.5
  * @param[in] handle The notification_ex item handle
@@ -2151,10 +2058,9 @@ int noti_ex_item_get_tag(noti_ex_item_h handle, char **tag) TIZEN_DEPRECATED_API
 }
  * @endcode
  */
-int noti_ex_item_set_tag(noti_ex_item_h handle, const char *tag) TIZEN_DEPRECATED_API;
+int noti_ex_item_set_tag(noti_ex_item_h handle, const char *tag);
 
 /**
- * @deprecated Deprecated since 11.0.
  * @brief Gets the value indicating whether a notification is currently ongoing.
  * @since_tizen 5.5
  * @param[in] handle The notification_ex item handle
@@ -2175,10 +2081,9 @@ int noti_ex_item_set_tag(noti_ex_item_h handle, const char *tag) TIZEN_DEPRECATE
 }
  * @endcode
  */
-int noti_ex_item_get_ongoing_state(noti_ex_item_h handle, bool *ongoing) TIZEN_DEPRECATED_API;
+int noti_ex_item_get_ongoing_state(noti_ex_item_h handle, bool *ongoing);
 
 /**
- * @deprecated Deprecated since 11.0.
  * @brief Sets the value indicating whether a notification is currently ongoing.
  * @since_tizen 5.5
  * @param[in] handle The notification_ex item handle
@@ -2198,10 +2103,9 @@ int noti_ex_item_get_ongoing_state(noti_ex_item_h handle, bool *ongoing) TIZEN_D
 }
  * @endcode
  */
-int noti_ex_item_set_ongoing_state(noti_ex_item_h handle, bool ongoing) TIZEN_DEPRECATED_API;
+int noti_ex_item_set_ongoing_state(noti_ex_item_h handle, bool ongoing);
 
 /**
- * @deprecated Deprecated since 11.0.
  * @brief Checks if an item of a specified type is included in a notification_ex item.
  * @since_tizen 5.5
  * @param[in] handle The notification_ex item handle
@@ -2225,10 +2129,9 @@ int noti_ex_item_set_ongoing_state(noti_ex_item_h handle, bool ongoing) TIZEN_DE
 }
  * @endcode
  */
-int noti_ex_item_check_type_exist(noti_ex_item_h handle, int type, bool *exist) TIZEN_DEPRECATED_API;
+int noti_ex_item_check_type_exist(noti_ex_item_h handle, int type, bool *exist);
 
 /**
- * @deprecated Deprecated since 11.0.
  * @brief Gets the main type of a notification item.
  * @details The type is equal to one of the values of #noti_ex_item_main_type_e.
  * @since_tizen 5.5
@@ -2255,10 +2158,9 @@ int noti_ex_item_check_type_exist(noti_ex_item_h handle, int type, bool *exist) 
 }
  * @endcode
  */
-int noti_ex_item_get_main_type(noti_ex_item_h handle, int *type) TIZEN_DEPRECATED_API;
+int noti_ex_item_get_main_type(noti_ex_item_h handle, int *type);
 
 /**
- * @deprecated Deprecated since 11.0.
  * @brief Sets the main type of a notification item.
  * @details Use this function to configure main type among multiple items.
  *          In other words, if there is only one item, it should not be used.
@@ -2292,10 +2194,9 @@ int noti_ex_item_get_main_type(noti_ex_item_h handle, int *type) TIZEN_DEPRECATE
 }
  * @endcode
  */
-int noti_ex_item_set_main_type(noti_ex_item_h handle, const char *id, int type) TIZEN_DEPRECATED_API;
+int noti_ex_item_set_main_type(noti_ex_item_h handle, const char *id, int type);
 
 /**
- * @deprecated Deprecated since 11.0.
  * @brief Finds the notification item of the specified main type.
  * @details Finds the item that matches the main type among the group items.
  * @since_tizen 5.5
@@ -2326,10 +2227,9 @@ int noti_ex_item_set_main_type(noti_ex_item_h handle, const char *id, int type) 
  * @endcode
  */
 int noti_ex_item_find_by_main_type(noti_ex_item_h handle, int type,
-		noti_ex_item_h *item) TIZEN_DEPRECATED_API;
+		noti_ex_item_h *item);
 
 /**
- * @deprecated Deprecated since 11.0.
  * @brief Gets the extension data.
  * @since_tizen 5.5
  * @remarks The @a value should be released using bundle_free().
@@ -2356,10 +2256,9 @@ int noti_ex_item_find_by_main_type(noti_ex_item_h handle, int type,
  * @endcode
  */
 int noti_ex_item_get_extension_data(noti_ex_item_h handle, const char *key,
-		bundle **value) TIZEN_DEPRECATED_API;
+		bundle **value);
 
 /**
- * @deprecated Deprecated since 11.0.
  * @brief Sets the extension data.
  * @since_tizen 5.5
  * @param[in] handle The notification_ex item handle
@@ -2385,7 +2284,7 @@ int noti_ex_item_get_extension_data(noti_ex_item_h handle, const char *key,
  * @endcode
  */
 int noti_ex_item_set_extension_data(noti_ex_item_h handle, const char *key,
-		bundle *value) TIZEN_DEPRECATED_API;
+		bundle *value);
 
 /**
  * @}

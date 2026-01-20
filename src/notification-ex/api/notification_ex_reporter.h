@@ -31,14 +31,12 @@ extern "C" {
  */
 
 /**
- * @deprecated Deprecated since 11.0.
  * @brief The notification_ex reporter handle.
  * @since_tizen 5.5
  */
 typedef void *noti_ex_reporter_h;
 
 /**
- * @deprecated Deprecated since 11.0.
  * @brief Called when the error event is received.
  * @details The errors are passed from noti_ex_manager_send_error().
  *          If this callback is set to NULL in @a event_callbacks, error events cannot be received.
@@ -55,7 +53,6 @@ typedef void (*noti_ex_reporter_events_error_cb)(noti_ex_reporter_h handle,
 		noti_ex_error_e error, int request_id, void *user_data);
 
 /**
- * @deprecated Deprecated since 11.0.
  * @brief Called when the notification event is received.
  * @details If this callback is set to NULL in @a event_callbacks, notification events cannot be received.
  * @since_tizen 5.5
@@ -79,7 +76,6 @@ typedef void (*noti_ex_reporter_events_event_cb)(noti_ex_reporter_h handle,
 		void *user_data);
 
 /**
- * @deprecated Deprecated since 11.0.
  * @brief The structure type to contain the set of callback functions for handling the notification events.
  * @since_tizen 5.5
  *
@@ -92,7 +88,6 @@ typedef struct {
 } noti_ex_reporter_events_s;
 
 /**
- * @deprecated Deprecated since 11.0.
  * @brief Creates the notification_ex reporter handle.
  * @details The reporter handle is created with event callbacks and
  *          the user can listen notification events through the event callbacks.
@@ -137,10 +132,9 @@ void _reporter_events_error_cb(noti_ex_reporter_h handle,
  * @endcode
  */
 int noti_ex_reporter_create(noti_ex_reporter_h *handle,
-		noti_ex_reporter_events_s event_callbacks, void *user_data) TIZEN_DEPRECATED_API;
+		noti_ex_reporter_events_s event_callbacks, void *user_data);
 
 /**
- * @deprecated Deprecated since 11.0.
  * @brief Destroys the notification_ex reporter handle.
  * @since_tizen 5.5
  * @param[in] handle The notification reporter handle
@@ -167,10 +161,9 @@ void _reporter_events_error_cb(noti_ex_reporter_h handle, noti_ex_error_e error,
 }
  * @endcode
  */
-int noti_ex_reporter_destroy(noti_ex_reporter_h handle) TIZEN_DEPRECATED_API;
+int noti_ex_reporter_destroy(noti_ex_reporter_h handle);
 
 /**
- * @deprecated Deprecated since 11.0.
  * @brief Sends error to the manager.
  * @since_tizen 5.5
  * @privlevel public
@@ -213,10 +206,9 @@ void _reporter_events_error_cb(noti_ex_reporter_h handle,
  * @endcode
  */
 int noti_ex_reporter_send_error(noti_ex_reporter_h handle,
-		noti_ex_event_info_h info, noti_ex_error_e error) TIZEN_DEPRECATED_API;
+		noti_ex_event_info_h info, noti_ex_error_e error);
 
 /**
- * @deprecated Deprecated since 11.0.
  * @brief Posts a notification.
  * @since_tizen 5.5
  * @privlevel public
@@ -259,10 +251,9 @@ void _reporter_events_error_cb(noti_ex_reporter_h handle, noti_ex_error_e error,
  * @endcode
  */
 int noti_ex_reporter_post(noti_ex_reporter_h handle, noti_ex_item_h noti,
-		int *request_id) TIZEN_DEPRECATED_API;
+		int *request_id);
 
 /**
- * @deprecated Deprecated since 11.0.
  * @brief Posts notifications contained in a list.
  * @since_tizen 5.5
  * @privlevel public
@@ -315,10 +306,9 @@ void _reporter_events_error_cb(noti_ex_reporter_h handle, noti_ex_error_e error,
  * @endcode
  */
 int noti_ex_reporter_post_list(noti_ex_reporter_h handle, noti_ex_item_h *noti_list, int count,
-		int *request_id) TIZEN_DEPRECATED_API;
+		int *request_id);
 
 /**
- * @deprecated Deprecated since 11.0.
  * @brief Updates a notification.
  * @since_tizen 5.5
  * @privlevel public
@@ -357,10 +347,9 @@ void _reporter_events_error_cb(noti_ex_reporter_h handle, noti_ex_error_e error,
  * @endcode
  */
 int noti_ex_reporter_update(noti_ex_reporter_h handle, noti_ex_item_h noti,
-		int *request_id) TIZEN_DEPRECATED_API;
+		int *request_id);
 
 /**
- * @deprecated Deprecated since 11.0.
  * @brief Deletes a notification.
  * @since_tizen 5.5
  * @privlevel public
@@ -398,10 +387,9 @@ void _reporter_events_error_cb(noti_ex_reporter_h handle, noti_ex_error_e error,
  * @endcode
  */
 int noti_ex_reporter_delete(noti_ex_reporter_h handle, noti_ex_item_h noti,
-		int *request_id) TIZEN_DEPRECATED_API;
+		int *request_id);
 
 /**
- * @deprecated Deprecated since 11.0.
  * @brief Deletes all notifications.
  * @since_tizen 5.5
  * @privlevel public
@@ -437,10 +425,9 @@ void _reporter_events_error_cb(noti_ex_reporter_h handle, noti_ex_error_e error,
  * @endcode
  */
 int noti_ex_reporter_delete_all(noti_ex_reporter_h handle,
-		int *request_id) TIZEN_DEPRECATED_API;
+		int *request_id);
 
 /**
- * @deprecated Deprecated since 11.0.
  * @brief Finds notification by root id.
  * @since_tizen 5.5
  * @privlevel public
@@ -480,7 +467,7 @@ void _reporter_events_error_cb(noti_ex_reporter_h handle, noti_ex_error_e error,
  * @endcode
  */
 int noti_ex_reporter_find_by_root_id(noti_ex_reporter_h handle, const char *root_id,
-		noti_ex_item_h *item) TIZEN_DEPRECATED_API;
+		noti_ex_item_h *item);
 
 /**
  * @}

@@ -292,9 +292,6 @@ void __noti_ex_free_str_array(char** val, int length) {
 extern "C" EXPORT_API int noti_ex_action_app_control_create(
     noti_ex_action_h *handle, app_control_h app_control,
     const char *extra) {
-  LOGW(
-      "DEPRECATION WARNING: noti_ex_action_app_control_create() is "
-      "deprecated and will be removed from next release.");
   if (handle == nullptr || app_control == nullptr) {
     LOGE("Invalid parameter");
     return NOTI_EX_ERROR_INVALID_PARAMETER;
@@ -322,9 +319,6 @@ extern "C" EXPORT_API int noti_ex_action_app_control_create(
 
 extern "C" EXPORT_API int noti_ex_action_app_control_set(
     noti_ex_action_h handle, app_control_h app_control) {
-  LOGW(
-      "DEPRECATION WARNING: noti_ex_action_app_control_set() is "
-      "deprecated and will be removed from next release.");
   if (handle == nullptr || app_control == nullptr) {
     LOGE("Invalid parameter");
     return NOTI_EX_ERROR_INVALID_PARAMETER;
@@ -340,9 +334,6 @@ extern "C" EXPORT_API int noti_ex_action_app_control_set(
 
 extern "C" EXPORT_API int noti_ex_action_app_control_get(
     noti_ex_action_h handle, app_control_h *app_control) {
-  LOGW(
-      "DEPRECATION WARNING: noti_ex_action_app_control_get() is "
-      "deprecated and will be removed from next release.");
   if (handle == nullptr || app_control == nullptr) {
     LOGE("Invalid parameter");
     return NOTI_EX_ERROR_INVALID_PARAMETER;
@@ -366,10 +357,8 @@ extern "C" EXPORT_API int noti_ex_action_app_control_get(
 
 extern "C" EXPORT_API int noti_ex_item_button_create(noti_ex_item_h *handle,
     const char *id, const char *title) {
-  LOGW(
-    "DEPRECATION WARNING: noti_ex_item_button_create() is deprecated "
-    "and will be removed from next release.");
   ButtonItem* p;
+
   if (handle == nullptr || title == nullptr) {
     LOGE("Invalid parameter");
     return NOTI_EX_ERROR_INVALID_PARAMETER;
@@ -391,9 +380,6 @@ extern "C" EXPORT_API int noti_ex_item_button_create(noti_ex_item_h *handle,
 
 extern "C" EXPORT_API int noti_ex_item_button_get_title(noti_ex_item_h handle,
     char **title) {
-  LOGW(
-      "DEPRECATION WARNING: noti_ex_item_button_get_title() is "
-      "deprecated and will be removed from next release.");
   if (handle == nullptr || title == nullptr) {
     LOGE("Invalid parameter");
     return NOTI_EX_ERROR_INVALID_PARAMETER;
@@ -424,9 +410,6 @@ extern "C" EXPORT_API int noti_ex_item_button_get_title(noti_ex_item_h handle,
 
 extern "C" EXPORT_API int noti_ex_item_button_set_multi_language_title(
     noti_ex_item_h handle, noti_ex_multi_lang_h multi) {
-  LOGW(
-      "DEPRECATION WARNING: noti_ex_item_button_set_multi_language_title() "
-      "is deprecated and will be removed from next release.");
   if (handle == nullptr) {
     LOGE("Invalid parameter");
     return NOTI_EX_ERROR_INVALID_PARAMETER;
@@ -455,9 +438,6 @@ extern "C" EXPORT_API int noti_ex_item_button_set_multi_language_title(
 
 extern "C" EXPORT_API int noti_ex_item_button_set_image(
     noti_ex_item_h handle, const char *path) {
-  LOGW(
-      "DEPRECATION WARNING: noti_ex_item_button_set_image() is "
-      "deprecated and will be removed from next release.");
   if (handle == nullptr || path == nullptr) {
     LOGE("Invalid parameter");
     return NOTI_EX_ERROR_INVALID_PARAMETER;
@@ -477,9 +457,6 @@ extern "C" EXPORT_API int noti_ex_item_button_set_image(
 
 extern "C" EXPORT_API int noti_ex_item_button_get_image(
     noti_ex_item_h handle, char **path) {
-  LOGW(
-      "DEPRECATION WARNING: noti_ex_item_button_get_image() is "
-      "deprecated and will be removed from next release.");
   if (handle == nullptr || path == nullptr) {
     LOGE("Invalid parameter");
     return NOTI_EX_ERROR_INVALID_PARAMETER;
@@ -502,9 +479,6 @@ extern "C" EXPORT_API int noti_ex_item_button_get_image(
 
 extern "C" EXPORT_API int noti_ex_item_button_set_contents(
     noti_ex_item_h handle, const char *contents) {
-  LOGW(
-      "DEPRECATION WARNING: noti_ex_item_button_set_contents() is "
-      "deprecated and will be removed from next release.");
   if (handle == nullptr || contents == nullptr) {
     LOGE("Invalid parameter");
     return NOTI_EX_ERROR_INVALID_PARAMETER;
@@ -524,9 +498,6 @@ extern "C" EXPORT_API int noti_ex_item_button_set_contents(
 
 extern "C" EXPORT_API int noti_ex_item_button_get_contents(
     noti_ex_item_h handle, char **contents) {
-  LOGW(
-      "DEPRECATION WARNING: noti_ex_item_button_get_contents() is "
-      "deprecated and will be removed from next release.");
   if (handle == nullptr || contents == nullptr) {
     LOGE("Invalid parameter");
     return NOTI_EX_ERROR_INVALID_PARAMETER;
@@ -551,9 +522,6 @@ extern "C" EXPORT_API int noti_ex_item_chat_message_create(
     noti_ex_item_h *handle, const char *id, noti_ex_item_h name,
     noti_ex_item_h text, noti_ex_item_h image, noti_ex_item_h time,
     noti_ex_item_chat_message_type_e message_type) {
-  LOGW(
-      "DEPRECATION WARNING: noti_ex_item_chat_message_create() is "
-      "deprecated and will be removed from next release.");
   if (handle == nullptr || (text == nullptr && image == nullptr)
       || name == nullptr || time == nullptr
       || message_type > NOTI_EX_ITEM_CHAT_MESSAGE_TYPE_SENDER) {
@@ -584,9 +552,6 @@ extern "C" EXPORT_API int noti_ex_item_chat_message_create(
 
 extern "C" EXPORT_API int noti_ex_item_chat_message_get_name(
     noti_ex_item_h handle, noti_ex_item_h *name) {
-  LOGW(
-      "DEPRECATION WARNING: noti_ex_item_chat_message_get_name() is "
-      "deprecated and will be removed from next release.");
   if (handle == nullptr || name == nullptr) {
     LOGE("Invalid parameter");
     return NOTI_EX_ERROR_INVALID_PARAMETER;
@@ -607,9 +572,6 @@ extern "C" EXPORT_API int noti_ex_item_chat_message_get_name(
 
 extern "C" EXPORT_API int noti_ex_item_chat_message_get_text(
     noti_ex_item_h handle, noti_ex_item_h *text) {
-  LOGW(
-      "DEPRECATION WARNING: noti_ex_item_chat_message_get_text() is "
-      "deprecated and will be removed from next release.");
   if (handle == nullptr || text == nullptr) {
     LOGE("Invalid parameter");
     return NOTI_EX_ERROR_INVALID_PARAMETER;
@@ -631,9 +593,6 @@ extern "C" EXPORT_API int noti_ex_item_chat_message_get_text(
 
 extern "C" EXPORT_API int noti_ex_item_chat_message_get_image(
     noti_ex_item_h handle, noti_ex_item_h *image) {
-  LOGW(
-      "DEPRECATION WARNING: noti_ex_item_chat_message_get_image() is "
-      "deprecated and will be removed from next release.");
   if (handle == nullptr || image == nullptr) {
     LOGE("Invalid parameter");
     return NOTI_EX_ERROR_INVALID_PARAMETER;
@@ -655,9 +614,6 @@ extern "C" EXPORT_API int noti_ex_item_chat_message_get_image(
 
 extern "C" EXPORT_API int noti_ex_item_chat_message_get_time(
     noti_ex_item_h handle, noti_ex_item_h *time) {
-  LOGW(
-      "DEPRECATION WARNING: noti_ex_item_chat_message_get_time() is "
-      "deprecated and will be removed from next release.");
   if (handle == nullptr || time == nullptr) {
     LOGE("Invalid parameter");
     return NOTI_EX_ERROR_INVALID_PARAMETER;
@@ -679,9 +635,6 @@ extern "C" EXPORT_API int noti_ex_item_chat_message_get_time(
 
 extern "C" EXPORT_API int noti_ex_item_chat_message_get_message_type(
     noti_ex_item_h handle, noti_ex_item_chat_message_type_e *message_type) {
-  LOGW(
-      "DEPRECATION WARNING: noti_ex_item_chat_message_get_message_type() is "
-      "deprecated and will be removed from next release.");
   if (handle == nullptr || message_type == nullptr) {
     LOGE("Invalid parameter");
     return NOTI_EX_ERROR_INVALID_PARAMETER;
@@ -700,9 +653,6 @@ extern "C" EXPORT_API int noti_ex_item_chat_message_get_message_type(
 
 extern "C" EXPORT_API int noti_ex_item_checkbox_create(noti_ex_item_h *handle,
     const char *id, const char *title, bool checked) {
-  LOGW(
-      "DEPRECATION WARNING: noti_ex_item_checkbox_create() is "
-      "deprecated and will be removed from next release.");
   CheckBoxItem* p;
 
   if (handle == nullptr || title == nullptr) {
@@ -726,9 +676,6 @@ extern "C" EXPORT_API int noti_ex_item_checkbox_create(noti_ex_item_h *handle,
 
 extern "C" EXPORT_API int noti_ex_item_checkbox_get_title(noti_ex_item_h handle,
     char **title) {
-  LOGW(
-      "DEPRECATION WARNING: noti_ex_item_checkbox_get_title() is "
-      "deprecated and will be removed from next release.");
   if (handle == nullptr || title == nullptr) {
     LOGE("Invalid parameter");
     return NOTI_EX_ERROR_INVALID_PARAMETER;
@@ -758,9 +705,6 @@ extern "C" EXPORT_API int noti_ex_item_checkbox_get_title(noti_ex_item_h handle,
 
 extern "C" EXPORT_API int noti_ex_item_checkbox_set_multi_language_title(
     noti_ex_item_h handle, noti_ex_multi_lang_h multi) {
-  LOGW(
-      "DEPRECATION WARNING: noti_ex_item_checkbox_set_multi_language_title() "
-      "is deprecated and will be removed from next release.");
   if (handle == nullptr) {
     LOGE("Invalid parameter");
     return NOTI_EX_ERROR_INVALID_PARAMETER;
@@ -788,9 +732,6 @@ extern "C" EXPORT_API int noti_ex_item_checkbox_set_multi_language_title(
 
 extern "C" EXPORT_API int noti_ex_item_checkbox_get_check_state(
     noti_ex_item_h handle, bool *checked) {
-  LOGW(
-      "DEPRECATION WARNING: noti_ex_item_checkbox_get_check_state() is "
-      "deprecated and will be removed from next release.");
   if (handle == nullptr || checked == nullptr) {
     LOGE("Invalid parameter");
     return NOTI_EX_ERROR_INVALID_PARAMETER;
@@ -808,9 +749,6 @@ extern "C" EXPORT_API int noti_ex_item_checkbox_get_check_state(
 
 extern "C" EXPORT_API int noti_ex_item_checkbox_set_check_state(
     noti_ex_item_h handle, bool checked) {
-  LOGW(
-      "DEPRECATION WARNING: noti_ex_item_checkbox_set_check_state() is "
-      "deprecated and will be removed from next release.");
   if (handle == nullptr) {
     LOGE("Invalid parameter");
     return NOTI_EX_ERROR_INVALID_PARAMETER;
@@ -830,9 +768,6 @@ extern "C" EXPORT_API int noti_ex_item_checkbox_set_check_state(
 
 extern "C" EXPORT_API int noti_ex_item_entry_create(noti_ex_item_h *handle,
     const char *id) {
-  LOGW(
-      "DEPRECATION WARNING: noti_ex_item_entry_create() is "
-      "deprecated and will be removed from next release.");
   EntryItem* p;
 
   if (handle == nullptr) {
@@ -857,9 +792,6 @@ extern "C" EXPORT_API int noti_ex_item_entry_create(noti_ex_item_h *handle,
 
 extern "C" EXPORT_API int noti_ex_item_entry_get_text(noti_ex_item_h handle,
     char **text) {
-  LOGW(
-      "DEPRECATION WARNING: noti_ex_item_entry_get_text() is "
-      "deprecated and will be removed from next release.");
   if (handle == nullptr || text == nullptr) {
     LOGE("Invalid parameter");
     return NOTI_EX_ERROR_INVALID_PARAMETER;
@@ -890,9 +822,6 @@ extern "C" EXPORT_API int noti_ex_item_entry_get_text(noti_ex_item_h handle,
 
 extern "C" EXPORT_API int noti_ex_item_entry_set_text(noti_ex_item_h handle,
     const char *text) {
-  LOGW(
-      "DEPRECATION WARNING: noti_ex_item_entry_set_text() is "
-      "deprecated and will be removed from next release.");
   if (handle == nullptr || text == nullptr) {
     LOGE("Invalid parameter");
     return NOTI_EX_ERROR_INVALID_PARAMETER;
@@ -910,9 +839,6 @@ extern "C" EXPORT_API int noti_ex_item_entry_set_text(noti_ex_item_h handle,
 
 extern "C" EXPORT_API int noti_ex_item_entry_set_multi_language(
     noti_ex_item_h handle, noti_ex_multi_lang_h multi) {
-  LOGW(
-      "DEPRECATION WARNING: noti_ex_item_entry_set_multi_language() is "
-      "deprecated and will be removed from next release.");
   if (handle == nullptr) {
     LOGE("Invalid parameter");
     return NOTI_EX_ERROR_INVALID_PARAMETER;
@@ -940,9 +866,6 @@ extern "C" EXPORT_API int noti_ex_item_entry_set_multi_language(
 
 extern "C" EXPORT_API int noti_ex_event_info_clone(noti_ex_event_info_h handle,
 		noti_ex_event_info_h* cloned_handle) {
-  LOGW(
-      "DEPRECATION WARNING: noti_ex_event_info_clone() is "
-      "deprecated and will be removed from next release.");
   if (handle == nullptr || cloned_handle == nullptr) {
     LOGE("Invalid parameter");
     return NOTI_EX_ERROR_INVALID_PARAMETER;
@@ -956,9 +879,6 @@ extern "C" EXPORT_API int noti_ex_event_info_clone(noti_ex_event_info_h handle,
 
 extern "C" EXPORT_API int noti_ex_event_info_destroy(
     noti_ex_event_info_h handle) {
-  LOGW(
-      "DEPRECATION WARNING: noti_ex_event_info_destroy() is "
-      "deprecated and will be removed from next release.");
   if (handle == nullptr) {
     LOGE("Invalid parameter");
     return NOTI_EX_ERROR_INVALID_PARAMETER;
@@ -970,9 +890,6 @@ extern "C" EXPORT_API int noti_ex_event_info_destroy(
 
 extern "C" EXPORT_API int noti_ex_event_info_get_event_type(
     noti_ex_event_info_h handle, noti_ex_event_info_type_e *event_type) {
-  LOGW(
-      "DEPRECATION WARNING: noti_ex_event_info_get_event_type() is "
-      "deprecated and will be removed from next release.");
   if (handle == nullptr || event_type == nullptr) {
     LOGE("Invalid parameter");
     return NOTI_EX_ERROR_INVALID_PARAMETER;
@@ -985,9 +902,6 @@ extern "C" EXPORT_API int noti_ex_event_info_get_event_type(
 
 extern "C" EXPORT_API int noti_ex_event_info_get_owner(
     noti_ex_event_info_h handle, char **owner) {
-  LOGW(
-      "DEPRECATION WARNING: noti_ex_event_info_get_owner() is "
-      "deprecated and will be removed from next release.");
   if (handle == nullptr || owner == nullptr) {
     LOGE("Invalid parameter");
     return NOTI_EX_ERROR_INVALID_PARAMETER;
@@ -999,9 +913,6 @@ extern "C" EXPORT_API int noti_ex_event_info_get_owner(
 
 extern "C" EXPORT_API int noti_ex_event_info_get_channel(
     noti_ex_event_info_h handle, char **channel) {
-  LOGW(
-      "DEPRECATION WARNING: noti_ex_event_info_get_channel() is "
-      "deprecated and will be removed from next release.");
   if (handle == nullptr || channel == nullptr) {
     LOGE("Invalid parameter");
     return NOTI_EX_ERROR_INVALID_PARAMETER;
@@ -1013,9 +924,6 @@ extern "C" EXPORT_API int noti_ex_event_info_get_channel(
 
 extern "C" EXPORT_API int noti_ex_event_info_get_item_id(
     noti_ex_event_info_h handle, char **item_id) {
-  LOGW(
-      "DEPRECATION WARNING: noti_ex_event_info_get_item_id() is "
-      "deprecated and will be removed from next release.");
   if (handle == nullptr || item_id == nullptr) {
     LOGE("Invalid parameter");
     return NOTI_EX_ERROR_INVALID_PARAMETER;
@@ -1027,9 +935,6 @@ extern "C" EXPORT_API int noti_ex_event_info_get_item_id(
 
 extern "C" EXPORT_API int noti_ex_event_info_get_request_id(
     noti_ex_event_info_h handle, int *req_id) {
-  LOGW(
-      "DEPRECATION WARNING: noti_ex_event_info_get_request_id() is "
-      "deprecated and will be removed from next release.");
   if (handle == nullptr || req_id == nullptr) {
     LOGE("Invalid parameter");
     return NOTI_EX_ERROR_INVALID_PARAMETER;
@@ -1041,9 +946,6 @@ extern "C" EXPORT_API int noti_ex_event_info_get_request_id(
 
 extern "C" EXPORT_API int noti_ex_item_group_create(noti_ex_item_h *handle,
     const char *id) {
-  LOGW(
-      "DEPRECATION WARNING: noti_ex_item_group_create() is "
-      "deprecated and will be removed from next release.");
   GroupItem* p;
 
   if (handle == nullptr) {
@@ -1068,9 +970,6 @@ extern "C" EXPORT_API int noti_ex_item_group_create(noti_ex_item_h *handle,
 
 extern "C" EXPORT_API int noti_ex_item_group_set_direction(noti_ex_item_h handle,
     bool vertical) {
-  LOGW(
-      "DEPRECATION WARNING: noti_ex_item_group_set_direction() is "
-      "deprecated and will be removed from next release.");
   if (handle == nullptr) {
     LOGE("Invalid parameter");
     return NOTI_EX_ERROR_INVALID_PARAMETER;
@@ -1088,9 +987,6 @@ extern "C" EXPORT_API int noti_ex_item_group_set_direction(noti_ex_item_h handle
 
 extern "C" EXPORT_API int noti_ex_item_group_is_vertical(noti_ex_item_h handle,
     bool *vertical) {
-  LOGW(
-      "DEPRECATION WARNING: noti_ex_item_group_is_vertical() is "
-      "deprecated and will be removed from next release.");
   if (handle == nullptr) {
     LOGE("Invalid parameter");
     return NOTI_EX_ERROR_INVALID_PARAMETER;
@@ -1108,9 +1004,6 @@ extern "C" EXPORT_API int noti_ex_item_group_is_vertical(noti_ex_item_h handle,
 
 extern "C" EXPORT_API int noti_ex_item_group_get_app_label(noti_ex_item_h handle,
     char **label) {
-  LOGW(
-      "DEPRECATION WARNING: noti_ex_item_group_get_app_label() is "
-      "deprecated and will be removed from next release.");
   if (handle == nullptr) {
     LOGE("Invalid parameter");
     return NOTI_EX_ERROR_INVALID_PARAMETER;
@@ -1134,9 +1027,6 @@ extern "C" EXPORT_API int noti_ex_item_group_get_app_label(noti_ex_item_h handle
 
 extern "C" EXPORT_API int noti_ex_item_group_add_child(noti_ex_item_h handle,
     noti_ex_item_h child) {
-  LOGW(
-      "DEPRECATION WARNING: noti_ex_item_group_add_child() is "
-      "deprecated and will be removed from next release.");
   if (handle == nullptr || child == nullptr) {
     LOGE("Invalid parameter");
     return NOTI_EX_ERROR_INVALID_PARAMETER;
@@ -1154,9 +1044,6 @@ extern "C" EXPORT_API int noti_ex_item_group_add_child(noti_ex_item_h handle,
 
 extern "C" EXPORT_API int noti_ex_item_group_remove_child(noti_ex_item_h handle,
     const char *item_id) {
-  LOGW(
-      "DEPRECATION WARNING: noti_ex_item_group_remove_child() is "
-      "deprecated and will be removed from next release.");
   if (handle == nullptr || item_id == nullptr) {
     LOGE("Invalid parameter");
     return NOTI_EX_ERROR_INVALID_PARAMETER;
@@ -1174,9 +1061,6 @@ extern "C" EXPORT_API int noti_ex_item_group_remove_child(noti_ex_item_h handle,
 
 extern "C" EXPORT_API int noti_ex_item_group_foreach_child(noti_ex_item_h handle,
     noti_ex_item_group_foreach_child_cb callback, void *data) {
-  LOGW(
-      "DEPRECATION WARNING: noti_ex_item_group_foreach_child() is "
-      "deprecated and will be removed from next release.");
   if (handle == nullptr || callback == nullptr) {
     LOGE("Invalid parameter");
     return NOTI_EX_ERROR_INVALID_PARAMETER;
@@ -1205,9 +1089,6 @@ extern "C" EXPORT_API int noti_ex_item_group_foreach_child(noti_ex_item_h handle
 
 extern "C" EXPORT_API int noti_ex_item_image_create(noti_ex_item_h *handle,
     const char *id, const char *image_path) {
-  LOGW(
-      "DEPRECATION WARNING: noti_ex_item_image_create() is "
-      "deprecated and will be removed from next release.");
   ImageItem* p;
 
   if (handle == nullptr  || image_path == nullptr) {
@@ -1232,9 +1113,6 @@ extern "C" EXPORT_API int noti_ex_item_image_create(noti_ex_item_h *handle,
 
 extern "C" EXPORT_API int noti_ex_item_image_get_image_path(
     noti_ex_item_h handle, char **image_path) {
-  LOGW(
-      "DEPRECATION WARNING: noti_ex_item_image_get_image_path() is "
-      "deprecated and will be removed from next release.");
   if (handle == nullptr || image_path == nullptr) {
     LOGE("Invalid parameter");
     return NOTI_EX_ERROR_INVALID_PARAMETER;
@@ -1260,9 +1138,6 @@ extern "C" EXPORT_API int noti_ex_item_image_get_image_path(
 
 extern "C" EXPORT_API int noti_ex_item_input_selector_create(
     noti_ex_item_h *handle, const char *id) {
-  LOGW(
-      "DEPRECATION WARNING: noti_ex_item_input_selector_create() is "
-      "deprecated and will be removed from next release.");
   InputSelectorItem* p;
 
   if (handle == nullptr) {
@@ -1287,9 +1162,6 @@ extern "C" EXPORT_API int noti_ex_item_input_selector_create(
 
 extern "C" EXPORT_API int noti_ex_item_input_selector_get_contents(
     noti_ex_item_h handle, char ***contents_list, int *count) {
-  LOGW(
-      "DEPRECATION WARNING: noti_ex_item_input_selector_get_contents() is "
-      "deprecated and will be removed from next release.");
   if (handle == nullptr || contents_list == nullptr || count == nullptr) {
     LOGE("Invalid parameter");
     return NOTI_EX_ERROR_INVALID_PARAMETER;
@@ -1337,9 +1209,6 @@ extern "C" EXPORT_API int noti_ex_item_input_selector_get_contents(
 
 extern "C" EXPORT_API int noti_ex_item_input_selector_set_contents(
     noti_ex_item_h handle, const char **contents, int count) {
-  LOGW(
-      "DEPRECATION WARNING: noti_ex_item_input_selector_set_contents() is "
-      "deprecated and will be removed from next release.");
   if (handle == nullptr || contents == nullptr) {
     LOGE("Invalid parameter");
     return NOTI_EX_ERROR_INVALID_PARAMETER;
@@ -1362,10 +1231,6 @@ extern "C" EXPORT_API int noti_ex_item_input_selector_set_contents(
 
 extern "C" EXPORT_API int noti_ex_item_input_selector_set_multi_language_contents(
     noti_ex_item_h handle, noti_ex_multi_lang_h* multi_language_list, int count) {
-  LOGW(
-      "DEPRECATION WARNING: "
-      "noti_ex_item_input_selector_set_multi_language_contents() is "
-      "deprecated and will be removed from next release.");
   if (handle == nullptr) {
     LOGE("Invalid parameter");
     return NOTI_EX_ERROR_INVALID_PARAMETER;
@@ -1393,9 +1258,6 @@ extern "C" EXPORT_API int noti_ex_item_input_selector_set_multi_language_content
 
 extern "C" EXPORT_API int noti_ex_color_create(noti_ex_color_h *handle,
     unsigned char a, unsigned char r, unsigned char g, unsigned char b) {
-  LOGW(
-      "DEPRECATION WARNING: noti_ex_color_create() is "
-      "deprecated and will be removed from next release.");
   if (handle == nullptr) {
     LOGE("Invalid parameter");
     return NOTI_EX_ERROR_INVALID_PARAMETER;
@@ -1414,9 +1276,6 @@ extern "C" EXPORT_API int noti_ex_color_create(noti_ex_color_h *handle,
 }
 
 extern "C" EXPORT_API int noti_ex_color_destroy(noti_ex_color_h handle) {
-  LOGW(
-      "DEPRECATION WARNING: noti_ex_color_destroy() is "
-      "deprecated and will be removed from next release.");
   if (handle == nullptr) {
     LOGE("Invalid parameter");
     return NOTI_EX_ERROR_INVALID_PARAMETER;
@@ -1430,9 +1289,6 @@ extern "C" EXPORT_API int noti_ex_color_destroy(noti_ex_color_h handle) {
 
 extern "C" EXPORT_API int noti_ex_color_get_alpha(noti_ex_color_h handle,
     unsigned char *val) {
-  LOGW(
-      "DEPRECATION WARNING: noti_ex_color_get_alpha() is "
-      "deprecated and will be removed from next release.");
   if (handle == nullptr || val == nullptr) {
     LOGE("Invalid parameter");
     return NOTI_EX_ERROR_INVALID_PARAMETER;
@@ -1446,9 +1302,6 @@ extern "C" EXPORT_API int noti_ex_color_get_alpha(noti_ex_color_h handle,
 
 extern "C" EXPORT_API int noti_ex_color_get_red(noti_ex_color_h handle,
     unsigned char *val) {
-  LOGW(
-      "DEPRECATION WARNING: noti_ex_color_get_red() is "
-      "deprecated and will be removed from next release.");
   if (handle == nullptr || val == nullptr) {
     LOGE("Invalid parameter");
     return NOTI_EX_ERROR_INVALID_PARAMETER;
@@ -1462,9 +1315,6 @@ extern "C" EXPORT_API int noti_ex_color_get_red(noti_ex_color_h handle,
 
 extern "C" EXPORT_API int noti_ex_color_get_green(noti_ex_color_h handle,
     unsigned char *val) {
-  LOGW(
-      "DEPRECATION WARNING: noti_ex_color_get_green() is "
-      "deprecated and will be removed from next release.");
   if (handle == nullptr || val == nullptr) {
     LOGE("Invalid parameter");
     return NOTI_EX_ERROR_INVALID_PARAMETER;
@@ -1478,9 +1328,6 @@ extern "C" EXPORT_API int noti_ex_color_get_green(noti_ex_color_h handle,
 
 extern "C" EXPORT_API int noti_ex_color_get_blue(noti_ex_color_h handle,
     unsigned char *val) {
-  LOGW(
-      "DEPRECATION WARNING: noti_ex_color_get_blue() is "
-      "deprecated and will be removed from next release.");
   if (handle == nullptr || val == nullptr) {
     LOGE("Invalid parameter");
     return NOTI_EX_ERROR_INVALID_PARAMETER;
@@ -1494,9 +1341,6 @@ extern "C" EXPORT_API int noti_ex_color_get_blue(noti_ex_color_h handle,
 
 extern "C" EXPORT_API int noti_ex_padding_create(noti_ex_padding_h *handle,
     int left, int top, int right, int bottom) {
-  LOGW(
-      "DEPRECATION WARNING: noti_ex_padding_create() is "
-      "deprecated and will be removed from next release.");
   if (handle == nullptr) {
     LOGE("Invalid parameter");
     return NOTI_EX_ERROR_INVALID_PARAMETER;
@@ -1517,9 +1361,6 @@ extern "C" EXPORT_API int noti_ex_padding_create(noti_ex_padding_h *handle,
 }
 
 extern "C" EXPORT_API int noti_ex_padding_destroy(noti_ex_padding_h handle) {
-  LOGW(
-      "DEPRECATION WARNING: noti_ex_padding_destroy() is "
-      "deprecated and will be removed from next release.");
   if (handle == nullptr) {
     LOGE("Invalid parameter");
     return NOTI_EX_ERROR_INVALID_PARAMETER;
@@ -1533,9 +1374,6 @@ extern "C" EXPORT_API int noti_ex_padding_destroy(noti_ex_padding_h handle) {
 
 extern "C" EXPORT_API int noti_ex_padding_get_left(noti_ex_padding_h handle,
     int *val) {
-  LOGW(
-      "DEPRECATION WARNING: noti_ex_padding_get_left() is "
-      "deprecated and will be removed from next release.");
   if (handle == nullptr || val == nullptr) {
     LOGE("Invalid parameter");
     return NOTI_EX_ERROR_INVALID_PARAMETER;
@@ -1549,9 +1387,6 @@ extern "C" EXPORT_API int noti_ex_padding_get_left(noti_ex_padding_h handle,
 
 extern "C" EXPORT_API int noti_ex_padding_get_top(noti_ex_padding_h handle,
     int *val) {
-  LOGW(
-      "DEPRECATION WARNING: noti_ex_padding_get_top() is "
-      "deprecated and will be removed from next release.");
   if (handle == nullptr || val == nullptr) {
     LOGE("Invalid parameter");
     return NOTI_EX_ERROR_INVALID_PARAMETER;
@@ -1565,9 +1400,6 @@ extern "C" EXPORT_API int noti_ex_padding_get_top(noti_ex_padding_h handle,
 
 extern "C" EXPORT_API int noti_ex_padding_get_right(noti_ex_padding_h handle,
     int *val) {
-  LOGW(
-      "DEPRECATION WARNING: noti_ex_padding_get_right() is "
-      "deprecated and will be removed from next release.");
   if (handle == nullptr || val == nullptr) {
     LOGE("Invalid parameter");
     return NOTI_EX_ERROR_INVALID_PARAMETER;
@@ -1581,9 +1413,6 @@ extern "C" EXPORT_API int noti_ex_padding_get_right(noti_ex_padding_h handle,
 
 extern "C" EXPORT_API int noti_ex_padding_get_bottom(noti_ex_padding_h handle,
     int *val) {
-  LOGW(
-      "DEPRECATION WARNING: noti_ex_padding_get_bottom() is "
-      "deprecated and will be removed from next release.");
   if (handle == nullptr || val == nullptr) {
     LOGE("Invalid parameter");
     return NOTI_EX_ERROR_INVALID_PARAMETER;
@@ -1597,9 +1426,6 @@ extern "C" EXPORT_API int noti_ex_padding_get_bottom(noti_ex_padding_h handle,
 
 extern "C" EXPORT_API int noti_ex_geometry_create(noti_ex_geometry_h *handle,
     int x, int y, int w, int h) {
-  LOGW(
-      "DEPRECATION WARNING: noti_ex_geometry_create() is "
-      "deprecated and will be removed from next release.");
   if (handle == nullptr) {
     LOGE("Invalid parameter");
     return NOTI_EX_ERROR_INVALID_PARAMETER;
@@ -1620,9 +1446,6 @@ extern "C" EXPORT_API int noti_ex_geometry_create(noti_ex_geometry_h *handle,
 }
 
 extern "C" EXPORT_API int noti_ex_geometry_destroy(noti_ex_geometry_h handle) {
-  LOGW(
-      "DEPRECATION WARNING: noti_ex_geometry_destroy() is "
-      "deprecated and will be removed from next release.");
   if (handle == nullptr) {
     LOGE("Invalid parameter");
     return NOTI_EX_ERROR_INVALID_PARAMETER;
@@ -1636,9 +1459,6 @@ extern "C" EXPORT_API int noti_ex_geometry_destroy(noti_ex_geometry_h handle) {
 
 extern "C" EXPORT_API int noti_ex_geometry_get_x(noti_ex_geometry_h handle,
     int *val) {
-  LOGW(
-      "DEPRECATION WARNING: noti_ex_geometry_get_x() is "
-      "deprecated and will be removed from next release.");
   if (handle == nullptr || val == nullptr) {
     LOGE("Invalid parameter");
     return NOTI_EX_ERROR_INVALID_PARAMETER;
@@ -1652,9 +1472,6 @@ extern "C" EXPORT_API int noti_ex_geometry_get_x(noti_ex_geometry_h handle,
 
 extern "C" EXPORT_API int noti_ex_geometry_get_y(noti_ex_geometry_h handle,
     int *val) {
-  LOGW(
-      "DEPRECATION WARNING: noti_ex_geometry_get_y() is "
-      "deprecated and will be removed from next release.");
   if (handle == nullptr || val == nullptr) {
     LOGE("Invalid parameter");
     return NOTI_EX_ERROR_INVALID_PARAMETER;
@@ -1668,9 +1485,6 @@ extern "C" EXPORT_API int noti_ex_geometry_get_y(noti_ex_geometry_h handle,
 
 extern "C" EXPORT_API int noti_ex_geometry_get_width(noti_ex_geometry_h handle,
     int *val) {
-  LOGW(
-      "DEPRECATION WARNING: noti_ex_geometry_get_width() is "
-      "deprecated and will be removed from next release.");
   if (handle == nullptr || val == nullptr) {
     LOGE("Invalid parameter");
     return NOTI_EX_ERROR_INVALID_PARAMETER;
@@ -1684,9 +1498,6 @@ extern "C" EXPORT_API int noti_ex_geometry_get_width(noti_ex_geometry_h handle,
 
 extern "C" EXPORT_API int noti_ex_geometry_get_height(noti_ex_geometry_h handle,
     int *val) {
-  LOGW(
-      "DEPRECATION WARNING: noti_ex_geometry_get_height() is "
-      "deprecated and will be removed from next release.");
   if (handle == nullptr || val == nullptr) {
     LOGE("Invalid parameter");
     return NOTI_EX_ERROR_INVALID_PARAMETER;
@@ -1702,9 +1513,6 @@ extern "C" EXPORT_API int noti_ex_style_create(noti_ex_style_h *handle,
     noti_ex_color_h color,
     noti_ex_padding_h padding,
     noti_ex_geometry_h geometry) {
-  LOGW(
-      "DEPRECATION WARNING: noti_ex_style_create() is "
-      "deprecated and will be removed from next release.");
   if (handle == nullptr) {
     LOGE("Invalid parameter");
     return NOTI_EX_ERROR_INVALID_PARAMETER;
@@ -1732,9 +1540,6 @@ extern "C" EXPORT_API int noti_ex_style_create(noti_ex_style_h *handle,
 }
 
 extern "C" EXPORT_API int noti_ex_style_destroy(noti_ex_style_h handle) {
-  LOGW(
-      "DEPRECATION WARNING: noti_ex_style_destroy() is "
-      "deprecated and will be removed from next release.");
   if (handle == nullptr) {
     LOGE("Invalid parameter");
     return NOTI_EX_ERROR_INVALID_PARAMETER;
@@ -1748,9 +1553,6 @@ extern "C" EXPORT_API int noti_ex_style_destroy(noti_ex_style_h handle) {
 
 extern "C" EXPORT_API int noti_ex_style_get_padding(noti_ex_style_h handle,
     noti_ex_padding_h *padding) {
-  LOGW(
-      "DEPRECATION WARNING: noti_ex_style_get_padding() is "
-      "deprecated and will be removed from next release.");
   if (handle == nullptr || padding == nullptr) {
     LOGE("Invalid parameter");
     return NOTI_EX_ERROR_INVALID_PARAMETER;
@@ -1780,9 +1582,6 @@ extern "C" EXPORT_API int noti_ex_style_get_padding(noti_ex_style_h handle,
 
 extern "C" EXPORT_API int noti_ex_style_set_padding(noti_ex_style_h handle,
     noti_ex_padding_h padding) {
-  LOGW(
-      "DEPRECATION WARNING: noti_ex_style_set_padding() is "
-      "deprecated and will be removed from next release.");
   if (handle == nullptr) {
     LOGE("Invalid parameter");
     return NOTI_EX_ERROR_INVALID_PARAMETER;
@@ -1802,9 +1601,6 @@ extern "C" EXPORT_API int noti_ex_style_set_padding(noti_ex_style_h handle,
 
 extern "C" EXPORT_API int noti_ex_style_get_color(noti_ex_style_h handle,
     noti_ex_color_h *color) {
-  LOGW(
-      "DEPRECATION WARNING: noti_ex_style_get_color() is "
-      "deprecated and will be removed from next release.");
   if (handle == nullptr || color == nullptr) {
     LOGE("Invalid parameter");
     return NOTI_EX_ERROR_INVALID_PARAMETER;
@@ -1831,9 +1627,6 @@ extern "C" EXPORT_API int noti_ex_style_get_color(noti_ex_style_h handle,
 
 extern "C" EXPORT_API int noti_ex_style_set_color(
     noti_ex_style_h handle, noti_ex_color_h color) {
-  LOGW(
-      "DEPRECATION WARNING: noti_ex_style_set_color() is "
-      "deprecated and will be removed from next release.");
   if (handle == nullptr) {
     LOGE("Invalid parameter");
     return NOTI_EX_ERROR_INVALID_PARAMETER;
@@ -1853,9 +1646,6 @@ extern "C" EXPORT_API int noti_ex_style_set_color(
 
 extern "C" EXPORT_API int noti_ex_style_get_geometry(noti_ex_style_h handle,
     noti_ex_geometry_h *geometry) {
-  LOGW(
-      "DEPRECATION WARNING: noti_ex_style_get_geometry() is "
-      "deprecated and will be removed from next release.");
   if (handle == nullptr || geometry == nullptr) {
     LOGE("Invalid parameter");
     return NOTI_EX_ERROR_INVALID_PARAMETER;
@@ -1884,9 +1674,6 @@ extern "C" EXPORT_API int noti_ex_style_get_geometry(noti_ex_style_h handle,
 
 extern "C" EXPORT_API int noti_ex_style_set_geometry(
     noti_ex_style_h handle, noti_ex_geometry_h geometry) {
-  LOGW(
-      "DEPRECATION WARNING: noti_ex_style_set_geometry() is "
-      "deprecated and will be removed from next release.");
   if (handle == nullptr) {
     LOGE("Invalid parameter");
     return NOTI_EX_ERROR_INVALID_PARAMETER;
@@ -1906,9 +1693,6 @@ extern "C" EXPORT_API int noti_ex_style_set_geometry(
 
 extern "C" EXPORT_API int noti_ex_style_get_background_image(
     noti_ex_style_h handle, char** background_image) {
-  LOGW(
-      "DEPRECATION WARNING: noti_ex_style_get_background_image() is "
-      "deprecated and will be removed from next release.");
   if (handle == nullptr || background_image == nullptr) {
     LOGE("Invalid parameter");
     return NOTI_EX_ERROR_INVALID_PARAMETER;
@@ -1926,9 +1710,6 @@ extern "C" EXPORT_API int noti_ex_style_get_background_image(
 
 extern "C" EXPORT_API int noti_ex_style_set_background_image(
     noti_ex_style_h handle, char* background_image) {
-  LOGW(
-      "DEPRECATION WARNING: noti_ex_style_set_background_image() is "
-      "deprecated and will be removed from next release.");
   if (handle == nullptr) {
     LOGE("Invalid parameter");
     return NOTI_EX_ERROR_INVALID_PARAMETER;
@@ -1945,9 +1726,6 @@ extern "C" EXPORT_API int noti_ex_style_set_background_image(
 
 extern "C" EXPORT_API int noti_ex_style_get_background_color(
     noti_ex_style_h handle, noti_ex_color_h* color) {
-  LOGW(
-      "DEPRECATION WARNING: noti_ex_style_get_background_color() is "
-      "deprecated and will be removed from next release.");
   if (handle == nullptr || color == nullptr) {
     LOGE("Invalid parameter");
     return NOTI_EX_ERROR_INVALID_PARAMETER;
@@ -1974,9 +1752,6 @@ extern "C" EXPORT_API int noti_ex_style_get_background_color(
 
 extern "C" EXPORT_API int noti_ex_style_set_background_color(
     noti_ex_style_h handle, noti_ex_color_h color) {
-  LOGW(
-      "DEPRECATION WARNING: noti_ex_style_set_background_color() is "
-      "deprecated and will be removed from next release.");
   if (handle == nullptr) {
     LOGE("Invalid parameter");
     return NOTI_EX_ERROR_INVALID_PARAMETER;
@@ -1996,9 +1771,6 @@ extern "C" EXPORT_API int noti_ex_style_set_background_color(
 
 extern "C" EXPORT_API int noti_ex_led_info_create(noti_ex_led_info_h *handle,
     noti_ex_color_h color) {
-  LOGW(
-      "DEPRECATION WARNING: noti_ex_led_info_create() is "
-      "deprecated and will be removed from next release.");
   if (handle == nullptr || color == nullptr) {
     LOGE("Invalid parameter");
     return NOTI_EX_ERROR_INVALID_PARAMETER;
@@ -2018,9 +1790,6 @@ extern "C" EXPORT_API int noti_ex_led_info_create(noti_ex_led_info_h *handle,
 }
 
 extern "C" EXPORT_API int noti_ex_led_info_destroy(noti_ex_led_info_h handle) {
-  LOGW(
-      "DEPRECATION WARNING: noti_ex_led_info_destroy() is "
-      "deprecated and will be removed from next release.");
   if (handle == nullptr) {
     LOGE("Invalid parameter");
     return NOTI_EX_ERROR_INVALID_PARAMETER;
@@ -2034,9 +1803,6 @@ extern "C" EXPORT_API int noti_ex_led_info_destroy(noti_ex_led_info_h handle) {
 
 extern "C" EXPORT_API int noti_ex_led_info_set_on_period(
     noti_ex_led_info_h handle, int ms) {
-  LOGW(
-      "DEPRECATION WARNING: noti_ex_led_info_set_on_period() is "
-      "deprecated and will be removed from next release.");
   if (handle == nullptr) {
     LOGE("Invalid parameter");
     return NOTI_EX_ERROR_INVALID_PARAMETER;
@@ -2051,9 +1817,6 @@ extern "C" EXPORT_API int noti_ex_led_info_set_on_period(
 
 extern "C" EXPORT_API int noti_ex_led_info_get_on_period(
     noti_ex_led_info_h handle, int *ms) {
-  LOGW(
-      "DEPRECATION WARNING: noti_ex_led_info_get_on_period() is "
-      "deprecated and will be removed from next release.");
   if (handle == nullptr || ms == nullptr) {
     LOGE("Invalid parameter");
     return NOTI_EX_ERROR_INVALID_PARAMETER;
@@ -2068,9 +1831,6 @@ extern "C" EXPORT_API int noti_ex_led_info_get_on_period(
 
 extern "C" EXPORT_API int noti_ex_led_info_set_off_period(
     noti_ex_led_info_h handle, int ms) {
-  LOGW(
-      "DEPRECATION WARNING: noti_ex_led_info_set_off_period() is "
-      "deprecated and will be removed from next release.");
   if (handle == nullptr) {
     LOGE("Invalid parameter");
     return NOTI_EX_ERROR_INVALID_PARAMETER;
@@ -2085,9 +1845,6 @@ extern "C" EXPORT_API int noti_ex_led_info_set_off_period(
 
 extern "C" EXPORT_API int noti_ex_led_info_get_off_period(
     noti_ex_led_info_h handle, int *ms) {
-  LOGW(
-      "DEPRECATION WARNING: noti_ex_led_info_get_off_period() is "
-      "deprecated and will be removed from next release.");
   if (handle == nullptr) {
     LOGE("Invalid parameter");
     return NOTI_EX_ERROR_INVALID_PARAMETER;
@@ -2102,9 +1859,6 @@ extern "C" EXPORT_API int noti_ex_led_info_get_off_period(
 
 extern "C" EXPORT_API int noti_ex_led_info_get_color(
     noti_ex_led_info_h handle, noti_ex_color_h *color) {
-  LOGW(
-      "DEPRECATION WARNING: noti_ex_led_info_get_color() is "
-      "deprecated and will be removed from next release.");
   if (handle == nullptr) {
     LOGE("Invalid parameter");
     return NOTI_EX_ERROR_INVALID_PARAMETER;
@@ -2132,9 +1886,6 @@ extern "C" EXPORT_API int noti_ex_led_info_get_color(
 
 extern "C" EXPORT_API int noti_ex_led_info_set_color(
     noti_ex_led_info_h handle, noti_ex_color_h color) {
-  LOGW(
-      "DEPRECATION WARNING: noti_ex_led_info_set_color() is "
-      "deprecated and will be removed from next release.");
   if (handle == nullptr) {
     LOGE("Invalid parameter");
     return NOTI_EX_ERROR_INVALID_PARAMETER;
@@ -2153,9 +1904,6 @@ extern "C" EXPORT_API int noti_ex_led_info_set_color(
 }
 
 extern "C" EXPORT_API int noti_ex_action_destroy(noti_ex_action_h handle) {
-  LOGW(
-      "DEPRECATION WARNING: noti_ex_action_destroy() is "
-      "deprecated and will be removed from next release.");
   if (handle == nullptr) {
     LOGE("Invalid parameter");
     return NOTI_EX_ERROR_INVALID_PARAMETER;
@@ -2170,9 +1918,6 @@ extern "C" EXPORT_API int noti_ex_action_destroy(noti_ex_action_h handle) {
 
 extern "C" EXPORT_API int noti_ex_action_get_type(noti_ex_action_h handle,
     int *type) {
-  LOGW(
-      "DEPRECATION WARNING: noti_ex_action_get_type() is "
-      "deprecated and will be removed from next release.");
   if (handle == nullptr || type == nullptr) {
     LOGE("Invalid parameter");
     return NOTI_EX_ERROR_INVALID_PARAMETER;
@@ -2187,9 +1932,6 @@ extern "C" EXPORT_API int noti_ex_action_get_type(noti_ex_action_h handle,
 
 extern "C" EXPORT_API int noti_ex_action_is_local(noti_ex_action_h handle,
     bool *local) {
-  LOGW(
-      "DEPRECATION WARNING: noti_ex_action_is_local() is "
-      "deprecated and will be removed from next release.");
   if (handle == nullptr || local == nullptr) {
     LOGE("Invalid parameter");
     return NOTI_EX_ERROR_INVALID_PARAMETER;
@@ -2204,9 +1946,6 @@ extern "C" EXPORT_API int noti_ex_action_is_local(noti_ex_action_h handle,
 
 extern "C" EXPORT_API int noti_ex_action_execute(noti_ex_action_h handle,
     noti_ex_item_h item) {
-  LOGW(
-      "DEPRECATION WARNING: noti_ex_action_execute() is "
-      "deprecated and will be removed from next release.");
   if (handle == nullptr || item == nullptr) {
     LOGE("Invalid parameter");
     return NOTI_EX_ERROR_INVALID_PARAMETER;
@@ -2221,9 +1960,6 @@ extern "C" EXPORT_API int noti_ex_action_execute(noti_ex_action_h handle,
 
 extern "C" EXPORT_API int noti_ex_action_get_extra(noti_ex_action_h handle,
     char **extra) {
-  LOGW(
-      "DEPRECATION WARNING: noti_ex_action_get_extra() is "
-      "deprecated and will be removed from next release.");
   if (handle == nullptr || extra == nullptr) {
     LOGE("Invalid parameter");
     return NOTI_EX_ERROR_INVALID_PARAMETER;
@@ -2246,9 +1982,6 @@ extern "C" EXPORT_API int noti_ex_action_get_extra(noti_ex_action_h handle,
 
 extern "C" EXPORT_API int noti_ex_item_info_get_hide_time(
     noti_ex_item_info_h handle, int *hide_time) {
-  LOGW(
-      "DEPRECATION WARNING: noti_ex_item_info_get_hide_time() is "
-      "deprecated and will be removed from next release.");
   if (handle == nullptr || hide_time == nullptr) {
     LOGE("Invalid parameter");
     return NOTI_EX_ERROR_INVALID_PARAMETER;
@@ -2260,9 +1993,6 @@ extern "C" EXPORT_API int noti_ex_item_info_get_hide_time(
 
 extern "C" EXPORT_API int noti_ex_item_info_set_hide_time(
     noti_ex_item_info_h handle, int hide_time) {
-  LOGW(
-      "DEPRECATION WARNING: noti_ex_item_info_set_hide_time() is "
-      "deprecated and will be removed from next release.");
   if (handle == nullptr) {
     LOGE("Invalid parameter");
     return NOTI_EX_ERROR_INVALID_PARAMETER;
@@ -2274,9 +2004,6 @@ extern "C" EXPORT_API int noti_ex_item_info_set_hide_time(
 
 extern "C" EXPORT_API int noti_ex_item_info_get_delete_time(
     noti_ex_item_info_h handle, int *delete_time) {
-  LOGW(
-      "DEPRECATION WARNING: noti_ex_item_info_get_delete_time() is "
-      "deprecated and will be removed from next release.");
   if (handle == nullptr || delete_time == nullptr) {
     LOGE("Invalid parameter");
     return NOTI_EX_ERROR_INVALID_PARAMETER;
@@ -2288,9 +2015,6 @@ extern "C" EXPORT_API int noti_ex_item_info_get_delete_time(
 
 extern "C" EXPORT_API int noti_ex_item_info_set_delete_time(
     noti_ex_item_info_h handle, int delete_time) {
-  LOGW(
-      "DEPRECATION WARNING: noti_ex_item_info_set_delete_time() is "
-      "deprecated and will be removed from next release.");
   if (handle == nullptr) {
     LOGE("Invalid parameter");
     return NOTI_EX_ERROR_INVALID_PARAMETER;
@@ -2302,9 +2026,6 @@ extern "C" EXPORT_API int noti_ex_item_info_set_delete_time(
 
 extern "C" EXPORT_API int noti_ex_item_info_get_time(
     noti_ex_item_info_h handle, time_t *time) {
-  LOGW(
-      "DEPRECATION WARNING: noti_ex_item_info_get_time() is "
-      "deprecated and will be removed from next release.");
   if (handle == nullptr || time == nullptr) {
     LOGE("Invalid parameter");
     return NOTI_EX_ERROR_INVALID_PARAMETER;
@@ -2316,9 +2037,6 @@ extern "C" EXPORT_API int noti_ex_item_info_get_time(
 }
 
 extern "C" EXPORT_API int noti_ex_item_destroy(noti_ex_item_h handle) {
-  LOGW(
-      "DEPRECATION WARNING: noti_ex_item_destroy() is "
-      "deprecated and will be removed from next release.");
   if (handle == nullptr) {
     LOGE("Invalid parameter");
     return NOTI_EX_ERROR_INVALID_PARAMETER;
@@ -2331,9 +2049,6 @@ extern "C" EXPORT_API int noti_ex_item_destroy(noti_ex_item_h handle) {
 
 extern "C" EXPORT_API int noti_ex_item_find_by_id(noti_ex_item_h handle,
     const char *id, noti_ex_item_h *item) {
-  LOGW(
-      "DEPRECATION WARNING: noti_ex_item_find_by_id() is "
-      "deprecated and will be removed from next release.");
   if (handle == nullptr) {
     LOGE("Invalid parameter");
     return NOTI_EX_ERROR_INVALID_PARAMETER;
@@ -2353,9 +2068,6 @@ extern "C" EXPORT_API int noti_ex_item_find_by_id(noti_ex_item_h handle,
 
 extern "C" EXPORT_API int noti_ex_item_get_type(noti_ex_item_h handle,
     int *type) {
-  LOGW(
-      "DEPRECATION WARNING: noti_ex_item_get_type() is "
-      "deprecated and will be removed from next release.");
   if (handle == nullptr || type == nullptr) {
     LOGE("Invalid parameter");
     return NOTI_EX_ERROR_INVALID_PARAMETER;
@@ -2369,9 +2081,6 @@ extern "C" EXPORT_API int noti_ex_item_get_type(noti_ex_item_h handle,
 
 extern "C" EXPORT_API int noti_ex_item_get_id(noti_ex_item_h handle,
     char **id) {
-  LOGW(
-      "DEPRECATION WARNING: noti_ex_item_get_id() is "
-      "deprecated and will be removed from next release.");
   if (handle == nullptr || id == nullptr) {
     LOGE("Invalid parameter");
     return NOTI_EX_ERROR_INVALID_PARAMETER;
@@ -2384,9 +2093,6 @@ extern "C" EXPORT_API int noti_ex_item_get_id(noti_ex_item_h handle,
 
 extern "C" EXPORT_API int noti_ex_item_set_id(noti_ex_item_h handle,
     const char *id) {
-  LOGW(
-      "DEPRECATION WARNING: noti_ex_item_set_id() is "
-      "deprecated and will be removed from next release.");
   if (handle == nullptr || id == nullptr) {
     LOGE("Invalid parameter");
     return NOTI_EX_ERROR_INVALID_PARAMETER;
@@ -2398,9 +2104,6 @@ extern "C" EXPORT_API int noti_ex_item_set_id(noti_ex_item_h handle,
 
 extern "C" EXPORT_API int noti_ex_item_get_action(noti_ex_item_h handle,
     noti_ex_action_h *action) {
-  LOGW(
-      "DEPRECATION WARNING: noti_ex_item_get_action() is "
-      "deprecated and will be removed from next release.");
   if (handle == nullptr || action == nullptr) {
     LOGE("Invalid parameter");
     return NOTI_EX_ERROR_INVALID_PARAMETER;
@@ -2418,9 +2121,6 @@ extern "C" EXPORT_API int noti_ex_item_get_action(noti_ex_item_h handle,
 
 extern "C" EXPORT_API int noti_ex_item_set_action(noti_ex_item_h handle,
     noti_ex_action_h action) {
-  LOGW(
-      "DEPRECATION WARNING: noti_ex_item_set_action() is "
-      "deprecated and will be removed from next release.");
   if (handle == nullptr) {
     LOGE("Invalid parameter");
     return NOTI_EX_ERROR_INVALID_PARAMETER;
@@ -2440,9 +2140,6 @@ extern "C" EXPORT_API int noti_ex_item_set_action(noti_ex_item_h handle,
 
 extern "C" EXPORT_API int noti_ex_item_get_style(noti_ex_item_h handle,
     noti_ex_style_h *style) {
-  LOGW(
-      "DEPRECATION WARNING: noti_ex_item_get_style() is "
-      "deprecated and will be removed from next release.");
   if (handle == nullptr || style == nullptr) {
     LOGE("Invalid parameter");
     return NOTI_EX_ERROR_INVALID_PARAMETER;
@@ -2470,9 +2167,6 @@ extern "C" EXPORT_API int noti_ex_item_get_style(noti_ex_item_h handle,
 
 extern "C" EXPORT_API int noti_ex_item_set_style(noti_ex_item_h handle,
     noti_ex_style_h style) {
-  LOGW(
-      "DEPRECATION WARNING: noti_ex_item_set_style() is "
-      "deprecated and will be removed from next release.");
   if (handle == nullptr) {
     LOGE("Invalid parameter");
     return NOTI_EX_ERROR_INVALID_PARAMETER;
@@ -2491,9 +2185,6 @@ extern "C" EXPORT_API int noti_ex_item_set_style(noti_ex_item_h handle,
 
 extern "C" EXPORT_API int noti_ex_item_set_visible(noti_ex_item_h handle,
     bool visible) {
-  LOGW(
-      "DEPRECATION WARNING: noti_ex_item_set_visible() is "
-      "deprecated and will be removed from next release.");
   if (handle == nullptr) {
     LOGE("Invalid parameter");
     return NOTI_EX_ERROR_INVALID_PARAMETER;
@@ -2506,9 +2197,6 @@ extern "C" EXPORT_API int noti_ex_item_set_visible(noti_ex_item_h handle,
 
 extern "C" EXPORT_API int noti_ex_item_get_visible(noti_ex_item_h handle,
     bool *visible) {
-  LOGW(
-      "DEPRECATION WARNING: noti_ex_item_get_visible() is "
-      "deprecated and will be removed from next release.");
   if (handle == nullptr || visible == nullptr) {
     LOGE("Invalid parameter");
     return NOTI_EX_ERROR_INVALID_PARAMETER;
@@ -2521,9 +2209,6 @@ extern "C" EXPORT_API int noti_ex_item_get_visible(noti_ex_item_h handle,
 
 extern "C" EXPORT_API int noti_ex_item_set_enable(noti_ex_item_h handle,
     bool enable) {
-  LOGW(
-      "DEPRECATION WARNING: noti_ex_item_set_enable() is "
-      "deprecated and will be removed from next release.");
   if (handle == nullptr) {
     LOGE("Invalid parameter");
     return NOTI_EX_ERROR_INVALID_PARAMETER;
@@ -2536,9 +2221,6 @@ extern "C" EXPORT_API int noti_ex_item_set_enable(noti_ex_item_h handle,
 
 extern "C" EXPORT_API int noti_ex_item_get_enable(noti_ex_item_h handle,
     bool *enable) {
-  LOGW(
-      "DEPRECATION WARNING: noti_ex_item_get_enable() is "
-      "deprecated and will be removed from next release.");
   if (handle == nullptr || enable == nullptr) {
     LOGE("Invalid parameter");
     return NOTI_EX_ERROR_INVALID_PARAMETER;
@@ -2551,9 +2233,6 @@ extern "C" EXPORT_API int noti_ex_item_get_enable(noti_ex_item_h handle,
 
 extern "C" EXPORT_API int noti_ex_item_add_receiver(noti_ex_item_h handle,
     const char *receiver_group) {
-  LOGW(
-      "DEPRECATION WARNING: noti_ex_item_add_receiver() is "
-      "deprecated and will be removed from next release.");
   if (handle == nullptr || receiver_group == nullptr) {
     LOGE("Invalid parameter");
     return NOTI_EX_ERROR_INVALID_PARAMETER;
@@ -2566,9 +2245,6 @@ extern "C" EXPORT_API int noti_ex_item_add_receiver(noti_ex_item_h handle,
 
 extern "C" EXPORT_API int noti_ex_item_remove_receiver(noti_ex_item_h handle,
     const char *receiver_group) {
-  LOGW(
-      "DEPRECATION WARNING: noti_ex_item_remove_receiver() is "
-      "deprecated and will be removed from next release.");
   if (handle == nullptr || receiver_group == nullptr) {
     LOGE("Invalid parameter");
     return NOTI_EX_ERROR_INVALID_PARAMETER;
@@ -2581,9 +2257,6 @@ extern "C" EXPORT_API int noti_ex_item_remove_receiver(noti_ex_item_h handle,
 
 extern "C" EXPORT_API int noti_ex_item_get_receiver_list(noti_ex_item_h handle,
     char ***receiver_list, int *count) {
-  LOGW(
-      "DEPRECATION WARNING: noti_ex_item_get_receiver_list() is "
-      "deprecated and will be removed from next release.");
   if (handle == nullptr || receiver_list == nullptr || count == nullptr) {
     LOGE("Invalid parameter");
     return NOTI_EX_ERROR_INVALID_PARAMETER;
@@ -2621,9 +2294,6 @@ extern "C" EXPORT_API int noti_ex_item_get_receiver_list(noti_ex_item_h handle,
 
 extern "C" EXPORT_API int noti_ex_item_set_policy(noti_ex_item_h handle,
     int policy) {
-  LOGW(
-      "DEPRECATION WARNING: noti_ex_item_set_policy() is "
-      "deprecated and will be removed from next release.");
   if (handle == nullptr) {
     LOGE("Invalid parameter");
     return NOTI_EX_ERROR_INVALID_PARAMETER;
@@ -2636,9 +2306,6 @@ extern "C" EXPORT_API int noti_ex_item_set_policy(noti_ex_item_h handle,
 
 extern "C" EXPORT_API int noti_ex_item_get_policy(noti_ex_item_h handle,
     int *policy) {
-  LOGW(
-      "DEPRECATION WARNING: noti_ex_item_get_policy() is "
-      "deprecated and will be removed from next release.");
   if (handle == nullptr || policy == nullptr) {
     LOGE("Invalid parameter");
     return NOTI_EX_ERROR_INVALID_PARAMETER;
@@ -2651,9 +2318,6 @@ extern "C" EXPORT_API int noti_ex_item_get_policy(noti_ex_item_h handle,
 
 extern "C" EXPORT_API int noti_ex_item_get_channel(noti_ex_item_h handle,
     char **channel) {
-  LOGW(
-      "DEPRECATION WARNING: noti_ex_item_get_channel() is "
-      "deprecated and will be removed from next release.");
   if (handle == nullptr || channel == nullptr) {
     LOGE("Invalid parameter");
     return NOTI_EX_ERROR_INVALID_PARAMETER;
@@ -2670,9 +2334,6 @@ extern "C" EXPORT_API int noti_ex_item_get_channel(noti_ex_item_h handle,
 
 extern "C" EXPORT_API int noti_ex_item_set_channel(noti_ex_item_h handle,
     const char *channel) {
-  LOGW(
-      "DEPRECATION WARNING: noti_ex_item_set_channel() is "
-      "deprecated and will be removed from next release.");
   if (handle == nullptr) {
     LOGE("Invalid parameter");
     return NOTI_EX_ERROR_INVALID_PARAMETER;
@@ -2685,9 +2346,6 @@ extern "C" EXPORT_API int noti_ex_item_set_channel(noti_ex_item_h handle,
 
 extern "C" EXPORT_API int noti_ex_item_set_led_info(noti_ex_item_h handle,
     noti_ex_led_info_h led) {
-  LOGW(
-      "DEPRECATION WARNING: noti_ex_item_set_led_info() is "
-      "deprecated and will be removed from next release.");
   if (handle == nullptr) {
     LOGE("Invalid parameter");
     return NOTI_EX_ERROR_INVALID_PARAMETER;
@@ -2706,9 +2364,6 @@ extern "C" EXPORT_API int noti_ex_item_set_led_info(noti_ex_item_h handle,
 
 extern "C" EXPORT_API int noti_ex_item_get_led_info(noti_ex_item_h handle,
     noti_ex_led_info_h *led) {
-  LOGW(
-      "DEPRECATION WARNING: noti_ex_item_get_led_info() is "
-      "deprecated and will be removed from next release.");
   if (handle == nullptr) {
     LOGE("Invalid parameter");
     return NOTI_EX_ERROR_INVALID_PARAMETER;
@@ -2724,9 +2379,6 @@ extern "C" EXPORT_API int noti_ex_item_get_led_info(noti_ex_item_h handle,
 
 extern "C" EXPORT_API int noti_ex_item_set_sound_path(noti_ex_item_h handle,
     const char *path) {
-  LOGW(
-      "DEPRECATION WARNING: noti_ex_item_set_sound_path() is "
-      "deprecated and will be removed from next release.");
   if (handle == nullptr) {
     LOGE("Invalid parameter");
     return NOTI_EX_ERROR_INVALID_PARAMETER;
@@ -2742,9 +2394,6 @@ extern "C" EXPORT_API int noti_ex_item_set_sound_path(noti_ex_item_h handle,
 
 extern "C" EXPORT_API int noti_ex_item_set_vibration_path(noti_ex_item_h handle,
     const char *path) {
-  LOGW(
-      "DEPRECATION WARNING: noti_ex_item_set_vibration_path() is "
-      "deprecated and will be removed from next release.");
   if (handle == nullptr) {
     LOGE("Invalid parameter");
     return NOTI_EX_ERROR_INVALID_PARAMETER;
@@ -2760,9 +2409,6 @@ extern "C" EXPORT_API int noti_ex_item_set_vibration_path(noti_ex_item_h handle,
 
 extern "C" EXPORT_API int noti_ex_item_get_sound_path(noti_ex_item_h handle,
     char **path) {
-  LOGW(
-      "DEPRECATION WARNING: noti_ex_item_get_sound_path() is "
-      "deprecated and will be removed from next release.");
   if (handle == nullptr || path == nullptr) {
     LOGE("Invalid parameter");
     return NOTI_EX_ERROR_INVALID_PARAMETER;
@@ -2778,9 +2424,6 @@ extern "C" EXPORT_API int noti_ex_item_get_sound_path(noti_ex_item_h handle,
 
 extern "C" EXPORT_API int noti_ex_item_get_vibration_path(noti_ex_item_h handle,
     char **path) {
-  LOGW(
-      "DEPRECATION WARNING: noti_ex_item_get_vibration_path() is "
-      "deprecated and will be removed from next release.");
   if (handle == nullptr || path == nullptr) {
     LOGE("Invalid parameter");
     return NOTI_EX_ERROR_INVALID_PARAMETER;
@@ -2796,9 +2439,6 @@ extern "C" EXPORT_API int noti_ex_item_get_vibration_path(noti_ex_item_h handle,
 
 extern "C" EXPORT_API int noti_ex_item_get_info(noti_ex_item_h handle,
     noti_ex_item_info_h *info) {
-  LOGW(
-      "DEPRECATION WARNING: noti_ex_item_get_info() is "
-      "deprecated and will be removed from next release.");
   if (handle == nullptr || info == nullptr) {
     LOGE("Invalid parameter");
     return NOTI_EX_ERROR_INVALID_PARAMETER;
@@ -2814,9 +2454,6 @@ extern "C" EXPORT_API int noti_ex_item_get_info(noti_ex_item_h handle,
 
 extern "C" EXPORT_API int noti_ex_item_get_sender_app_id(noti_ex_item_h handle,
     char **id) {
-  LOGW(
-      "DEPRECATION WARNING: noti_ex_item_get_sender_app_id() is "
-      "deprecated and will be removed from next release.");
   if (handle == nullptr || id == nullptr) {
     LOGE("Invalid parameter");
     return NOTI_EX_ERROR_INVALID_PARAMETER;
@@ -2832,9 +2469,6 @@ extern "C" EXPORT_API int noti_ex_item_get_sender_app_id(noti_ex_item_h handle,
 
 extern "C" EXPORT_API int noti_ex_item_get_tag(noti_ex_item_h handle,
     char **tag) {
-  LOGW(
-      "DEPRECATION WARNING: noti_ex_item_get_tag() is "
-      "deprecated and will be removed from next release.");
   if (handle == nullptr || tag == nullptr) {
     LOGE("Invalid parameter");
     return NOTI_EX_ERROR_INVALID_PARAMETER;
@@ -2850,9 +2484,6 @@ extern "C" EXPORT_API int noti_ex_item_get_tag(noti_ex_item_h handle,
 
 extern "C" EXPORT_API int noti_ex_item_set_tag(noti_ex_item_h handle,
     const char *tag) {
-  LOGW(
-      "DEPRECATION WARNING: noti_ex_item_set_tag() is "
-      "deprecated and will be removed from next release.");
   if (handle == nullptr) {
     LOGE("Invalid parameter");
     return NOTI_EX_ERROR_INVALID_PARAMETER;
@@ -2868,9 +2499,6 @@ extern "C" EXPORT_API int noti_ex_item_set_tag(noti_ex_item_h handle,
 
 extern "C" EXPORT_API int noti_ex_item_get_ongoing_state(noti_ex_item_h handle,
     bool* ongoing) {
-  LOGW(
-      "DEPRECATION WARNING: noti_ex_item_get_ongoing_state() is "
-      "deprecated and will be removed from next release.");
   if (handle == nullptr || ongoing == nullptr) {
     LOGE("Invalid parameter");
     return NOTI_EX_ERROR_INVALID_PARAMETER;
@@ -2884,9 +2512,6 @@ extern "C" EXPORT_API int noti_ex_item_get_ongoing_state(noti_ex_item_h handle,
 
 extern "C" EXPORT_API int noti_ex_item_set_ongoing_state(noti_ex_item_h handle,
     bool ongoing) {
-  LOGW(
-      "DEPRECATION WARNING: noti_ex_item_set_ongoing_state() is "
-      "deprecated and will be removed from next release.");
   if (handle == nullptr) {
     LOGE("Invalid parameter");
     return NOTI_EX_ERROR_INVALID_PARAMETER;
@@ -2900,9 +2525,6 @@ extern "C" EXPORT_API int noti_ex_item_set_ongoing_state(noti_ex_item_h handle,
 
 extern "C" EXPORT_API int noti_ex_item_check_type_exist(noti_ex_item_h handle,
     int type, bool* exist) {
-  LOGW(
-      "DEPRECATION WARNING: noti_ex_item_check_type_exist() is "
-      "deprecated and will be removed from next release.");
   if (handle == nullptr || exist == nullptr) {
     LOGE("Invalid parameter");
     return NOTI_EX_ERROR_INVALID_PARAMETER;
@@ -2916,9 +2538,6 @@ extern "C" EXPORT_API int noti_ex_item_check_type_exist(noti_ex_item_h handle,
 
 extern "C" EXPORT_API int noti_ex_item_get_main_type(noti_ex_item_h handle,
     int* type) {
-  LOGW(
-      "DEPRECATION WARNING: noti_ex_item_get_main_type() is "
-      "deprecated and will be removed from next release.");
   if (handle == nullptr || type == nullptr) {
     LOGE("Invalid parameter");
     return NOTI_EX_ERROR_INVALID_PARAMETER;
@@ -2932,9 +2551,6 @@ extern "C" EXPORT_API int noti_ex_item_get_main_type(noti_ex_item_h handle,
 
 extern "C" EXPORT_API int noti_ex_item_set_main_type(noti_ex_item_h handle,
     const char* id, int type) {
-  LOGW(
-      "DEPRECATION WARNING: noti_ex_item_set_main_type() is "
-      "deprecated and will be removed from next release.");
   if (handle == nullptr || id == nullptr) {
     LOGE("Invalid parameter");
     return NOTI_EX_ERROR_INVALID_PARAMETER;
@@ -2950,9 +2566,6 @@ extern "C" EXPORT_API int noti_ex_item_set_main_type(noti_ex_item_h handle,
 
 extern "C" EXPORT_API int noti_ex_item_find_by_main_type(noti_ex_item_h handle,
     int type, noti_ex_item_h* item) {
-  LOGW(
-      "DEPRECATION WARNING: noti_ex_item_find_by_main_type() is "
-      "deprecated and will be removed from next release.");
   if (handle == nullptr || item == nullptr) {
     LOGE("Invalid parameter");
     return NOTI_EX_ERROR_INVALID_PARAMETER;
@@ -2978,9 +2591,6 @@ extern "C" EXPORT_API int noti_ex_item_find_by_main_type(noti_ex_item_h handle,
 
 extern "C" EXPORT_API int noti_ex_item_get_extension_data(noti_ex_item_h handle,
     const char *key, bundle **value) {
-  LOGW(
-      "DEPRECATION WARNING: noti_ex_item_get_extension_data() is "
-      "deprecated and will be removed from next release.");
   if (handle == nullptr || key == nullptr || value == nullptr) {
     LOGE("Invalid handle type");
     return NOTI_EX_ERROR_INVALID_PARAMETER;
@@ -2999,9 +2609,6 @@ extern "C" EXPORT_API int noti_ex_item_get_extension_data(noti_ex_item_h handle,
 
 extern "C" EXPORT_API int noti_ex_item_set_extension_data(noti_ex_item_h handle,
     const char *key, bundle *value) {
-  LOGW(
-      "DEPRECATION WARNING: noti_ex_item_set_extension_data() is "
-      "deprecated and will be removed from next release.");
   if (handle == nullptr || key == nullptr || value == nullptr) {
     LOGE("Invalid handle type");
     return NOTI_EX_ERROR_INVALID_PARAMETER;
@@ -3018,9 +2625,6 @@ extern "C" EXPORT_API int noti_ex_item_set_extension_data(noti_ex_item_h handle,
 extern "C" EXPORT_API int noti_ex_manager_create(noti_ex_manager_h *handle,
     const char *receiver_group, noti_ex_manager_events_s event_callbacks,
     void *data) {
-  LOGW(
-      "DEPRECATION WARNING: noti_ex_manager_create() is "
-      "deprecated and will be removed from next release.");
   if (handle == nullptr) {
     LOGE("Invalid parameter");
     return NOTI_EX_ERROR_INVALID_PARAMETER;
@@ -3047,9 +2651,6 @@ extern "C" EXPORT_API int noti_ex_manager_create(noti_ex_manager_h *handle,
 }
 
 extern "C" EXPORT_API int noti_ex_manager_destroy(noti_ex_manager_h handle) {
-  LOGW(
-      "DEPRECATION WARNING: noti_ex_manager_destroy() is "
-      "deprecated and will be removed from next release.");
   if (handle == nullptr) {
     LOGE("Invalid parameter");
     return NOTI_EX_ERROR_INVALID_PARAMETER;
@@ -3061,9 +2662,6 @@ extern "C" EXPORT_API int noti_ex_manager_destroy(noti_ex_manager_h handle) {
 
 extern "C" EXPORT_API int noti_ex_manager_get(noti_ex_manager_h handle,
     noti_ex_item_h **items, int *count) {
-  LOGW(
-      "DEPRECATION WARNING: noti_ex_manager_get() is "
-      "deprecated and will be removed from next release.");
   if (handle == nullptr || items == nullptr || count == nullptr) {
     LOGE("Invalid parameter");
     return NOTI_EX_ERROR_INVALID_PARAMETER;
@@ -3101,9 +2699,6 @@ extern "C" EXPORT_API int noti_ex_manager_get(noti_ex_manager_h handle,
 extern "C" EXPORT_API int noti_ex_manager_get_by_channel(
     noti_ex_manager_h handle, char* channel,
     noti_ex_item_h** items, int* count) {
-  LOGW(
-      "DEPRECATION WARNING: noti_ex_manager_get_by_channel() is "
-      "deprecated and will be removed from next release.");
   if (handle == nullptr || channel == nullptr ||
       items == nullptr || count == nullptr) {
     LOGE("Invalid parameter");
@@ -3142,9 +2737,6 @@ extern "C" EXPORT_API int noti_ex_manager_get_by_channel(
 
 extern "C" EXPORT_API int noti_ex_manager_update(noti_ex_manager_h handle,
     noti_ex_item_h noti, int *request_id) {
-  LOGW(
-      "DEPRECATION WARNING: noti_ex_manager_update() is "
-      "deprecated and will be removed from next release.");
   if (handle == nullptr || noti == nullptr || request_id == nullptr) {
     LOGE("Invalid parameter");
     return NOTI_EX_ERROR_INVALID_PARAMETER;
@@ -3167,9 +2759,6 @@ extern "C" EXPORT_API int noti_ex_manager_update(noti_ex_manager_h handle,
 
 extern "C" EXPORT_API int noti_ex_manager_delete(noti_ex_manager_h handle,
     noti_ex_item_h noti, int *request_id) {
-  LOGW(
-      "DEPRECATION WARNING: noti_ex_manager_delete() is "
-      "deprecated and will be removed from next release.");
   if (handle == nullptr || noti == nullptr || request_id == nullptr) {
     LOGE("Invalid parameter");
     return NOTI_EX_ERROR_INVALID_PARAMETER;
@@ -3193,9 +2782,6 @@ extern "C" EXPORT_API int noti_ex_manager_delete(noti_ex_manager_h handle,
 
 extern "C" EXPORT_API int noti_ex_manager_delete_all(noti_ex_manager_h handle,
     int *request_id) {
-  LOGW(
-      "DEPRECATION WARNING: noti_ex_manager_delete_all() is "
-      "deprecated and will be removed from next release.");
   if (handle == nullptr || request_id == nullptr) {
     LOGE("Invalid parameter");
     return NOTI_EX_ERROR_INVALID_PARAMETER;
@@ -3212,9 +2798,6 @@ extern "C" EXPORT_API int noti_ex_manager_delete_all(noti_ex_manager_h handle,
 
 extern "C" EXPORT_API int noti_ex_manager_delete_by_channel(
     noti_ex_manager_h handle, const char* channel, int* request_id) {
-  LOGW(
-      "DEPRECATION WARNING: noti_ex_manager_delete_by_channel() is "
-      "deprecated and will be removed from next release.");
   if (handle == nullptr || channel == nullptr || request_id == nullptr) {
     LOGE("Invalid parameter");
     return NOTI_EX_ERROR_INVALID_PARAMETER;
@@ -3232,9 +2815,6 @@ extern "C" EXPORT_API int noti_ex_manager_delete_by_channel(
 
 extern "C" EXPORT_API int noti_ex_manager_delete_by_appid(
     noti_ex_manager_h handle, const char* app_id, int* request_id) {
-  LOGW(
-      "DEPRECATION WARNING: noti_ex_manager_delete_by_appid() is "
-      "deprecated and will be removed from next release.");
   if (handle == nullptr || app_id == nullptr || request_id == nullptr) {
     LOGE("Invalid parameter");
     return NOTI_EX_ERROR_INVALID_PARAMETER;
@@ -3253,9 +2833,6 @@ extern "C" EXPORT_API int noti_ex_manager_delete_by_appid(
 
 extern "C" EXPORT_API int noti_ex_manager_hide(noti_ex_manager_h handle,
     noti_ex_item_h noti, int *request_id) {
-  LOGW(
-      "DEPRECATION WARNING: noti_ex_manager_hide() is "
-      "deprecated and will be removed from next release.");
   if (handle == nullptr || noti == nullptr || request_id == nullptr) {
     LOGE("Invalid parameter");
     return NOTI_EX_ERROR_INVALID_PARAMETER;
@@ -3278,9 +2855,6 @@ extern "C" EXPORT_API int noti_ex_manager_hide(noti_ex_manager_h handle,
 
 extern "C" EXPORT_API int noti_ex_manager_find_by_root_id(
     noti_ex_manager_h handle, const char *root_id, noti_ex_item_h *item) {
-  LOGW(
-      "DEPRECATION WARNING: noti_ex_manager_find_by_root_id() is "
-      "deprecated and will be removed from next release.");
   if (handle == nullptr || root_id == nullptr || item == nullptr) {
     LOGE("Invalid parameter");
     return NOTI_EX_ERROR_INVALID_PARAMETER;
@@ -3303,9 +2877,6 @@ extern "C" EXPORT_API int noti_ex_manager_find_by_root_id(
 
 extern "C" EXPORT_API int noti_ex_manager_send_error(noti_ex_manager_h handle,
     noti_ex_event_info_h info, noti_ex_error_e error) {
-  LOGW(
-      "DEPRECATION WARNING: noti_ex_manager_send_error() is "
-      "deprecated and will be removed from next release.");
   if (handle == nullptr || info == nullptr) {
     LOGE("Invalid parameter");
     return NOTI_EX_ERROR_INVALID_PARAMETER;
@@ -3324,9 +2895,6 @@ extern "C" EXPORT_API int noti_ex_manager_send_error(noti_ex_manager_h handle,
 
 extern "C" EXPORT_API int noti_ex_manager_get_notification_count(
     noti_ex_manager_h handle, int *count) {
-  LOGW(
-      "DEPRECATION WARNING: noti_ex_manager_get_notification_count() is "
-      "deprecated and will be removed from next release.");
   if (handle == nullptr || count == nullptr) {
     LOGE("Invalid parameter");
     return NOTI_EX_ERROR_INVALID_PARAMETER;
@@ -3343,9 +2911,6 @@ extern "C" EXPORT_API int noti_ex_manager_get_notification_count(
 
 extern "C" EXPORT_API int noti_ex_item_progress_create(noti_ex_item_h *handle,
     const char *id, float min, float current, float max) {
-  LOGW(
-      "DEPRECATION WARNING: noti_ex_item_progress_create() is "
-      "deprecated and will be removed from next release.");
   ProgressItem* p;
 
   if (handle == nullptr) {
@@ -3370,9 +2935,6 @@ extern "C" EXPORT_API int noti_ex_item_progress_create(noti_ex_item_h *handle,
 
 extern "C" EXPORT_API int noti_ex_item_progress_get_current(
     noti_ex_item_h handle, float *current) {
-  LOGW(
-      "DEPRECATION WARNING: noti_ex_item_progress_get_current() is "
-      "deprecated and will be removed from next release.");
   if (handle == nullptr || current == nullptr) {
     LOGE("Invalid parameter");
     return NOTI_EX_ERROR_INVALID_PARAMETER;
@@ -3391,9 +2953,6 @@ extern "C" EXPORT_API int noti_ex_item_progress_get_current(
 
 extern "C" EXPORT_API int noti_ex_item_progress_set_current(
     noti_ex_item_h handle, float current) {
-  LOGW(
-      "DEPRECATION WARNING: noti_ex_item_progress_set_current() is "
-      "deprecated and will be removed from next release.");
   if (handle == nullptr) {
     LOGE("Invalid parameter");
     return NOTI_EX_ERROR_INVALID_PARAMETER;
@@ -3412,9 +2971,6 @@ extern "C" EXPORT_API int noti_ex_item_progress_set_current(
 
 extern "C" EXPORT_API int noti_ex_item_progress_get_min(noti_ex_item_h handle,
     float *min) {
-  LOGW(
-      "DEPRECATION WARNING: noti_ex_item_progress_get_min() is "
-      "deprecated and will be removed from next release.");
   if (handle == nullptr || min == nullptr) {
     LOGE("Invalid parameter");
     return NOTI_EX_ERROR_INVALID_PARAMETER;
@@ -3433,9 +2989,6 @@ extern "C" EXPORT_API int noti_ex_item_progress_get_min(noti_ex_item_h handle,
 
 extern "C" EXPORT_API int noti_ex_item_progress_get_max(noti_ex_item_h handle,
     float *max) {
-  LOGW(
-      "DEPRECATION WARNING: noti_ex_item_progress_get_max() is "
-      "deprecated and will be removed from next release.");
   if (handle == nullptr || max == nullptr) {
     LOGE("Invalid parameter");
     return NOTI_EX_ERROR_INVALID_PARAMETER;
@@ -3454,9 +3007,6 @@ extern "C" EXPORT_API int noti_ex_item_progress_get_max(noti_ex_item_h handle,
 
 extern "C" EXPORT_API int noti_ex_item_progress_get_type(noti_ex_item_h handle,
     int* type) {
-  LOGW(
-      "DEPRECATION WARNING: noti_ex_item_progress_get_type() is "
-      "deprecated and will be removed from next release.");
   if (handle == nullptr || type == nullptr) {
     LOGE("Invalid parameter");
     return NOTI_EX_ERROR_INVALID_PARAMETER;
@@ -3475,9 +3025,6 @@ extern "C" EXPORT_API int noti_ex_item_progress_get_type(noti_ex_item_h handle,
 
 extern "C" EXPORT_API int noti_ex_item_progress_set_type(noti_ex_item_h handle,
     int type) {
-  LOGW(
-      "DEPRECATION WARNING: noti_ex_item_progress_set_type() is "
-      "deprecated and will be removed from next release.");
   if (handle == nullptr) {
     LOGE("Invalid parameter");
     return NOTI_EX_ERROR_INVALID_PARAMETER;
@@ -3496,9 +3043,6 @@ extern "C" EXPORT_API int noti_ex_item_progress_set_type(noti_ex_item_h handle,
 
 extern "C" EXPORT_API int noti_ex_reporter_create(noti_ex_reporter_h *handle,
     noti_ex_reporter_events_s event_callbacks, void *data) {
-  LOGW(
-      "DEPRECATION WARNING: noti_ex_reporter_create() is "
-      "deprecated and will be removed from next release.");
   if (handle == nullptr) {
     LOGE("Invalid parameter");
     return NOTI_EX_ERROR_INVALID_PARAMETER;
@@ -3520,9 +3064,6 @@ extern "C" EXPORT_API int noti_ex_reporter_create(noti_ex_reporter_h *handle,
 }
 
 extern "C" EXPORT_API int noti_ex_reporter_destroy(noti_ex_reporter_h handle) {
-  LOGW(
-      "DEPRECATION WARNING: noti_ex_reporter_destroy() is "
-      "deprecated and will be removed from next release.");
   if (handle == nullptr) {
     LOGE("Invalid parameter");
     return NOTI_EX_ERROR_INVALID_PARAMETER;
@@ -3534,9 +3075,6 @@ extern "C" EXPORT_API int noti_ex_reporter_destroy(noti_ex_reporter_h handle) {
 
 extern "C" EXPORT_API int noti_ex_reporter_send_error(noti_ex_reporter_h handle,
     noti_ex_event_info_h info, noti_ex_error_e error) {
-  LOGW(
-      "DEPRECATION WARNING: noti_ex_reporter_send_error() is "
-      "deprecated and will be removed from next release.");
   if (handle == nullptr || info == nullptr) {
     LOGE("Invalid parameter");
     return NOTI_EX_ERROR_INVALID_PARAMETER;
@@ -3555,9 +3093,6 @@ extern "C" EXPORT_API int noti_ex_reporter_send_error(noti_ex_reporter_h handle,
 
 extern "C" EXPORT_API int noti_ex_reporter_post(noti_ex_reporter_h handle,
     noti_ex_item_h noti, int *request_id) {
-  LOGW(
-      "DEPRECATION WARNING: noti_ex_reporter_post() is "
-      "deprecated and will be removed from next release.");
   int ret = NOTI_EX_ERROR_NONE;
 
   if (handle == nullptr || noti == nullptr || request_id == nullptr) {
@@ -3582,9 +3117,6 @@ extern "C" EXPORT_API int noti_ex_reporter_post(noti_ex_reporter_h handle,
 
 extern "C" EXPORT_API int noti_ex_reporter_post_list(noti_ex_reporter_h handle,
     noti_ex_item_h *noti_list, int count, int *request_id) {
-  LOGW(
-      "DEPRECATION WARNING: noti_ex_reporter_post_list() is "
-      "deprecated and will be removed from next release.");
   int ret = NOTI_EX_ERROR_NONE;
 
   if (handle == nullptr || noti_list == nullptr || request_id == nullptr) {
@@ -3608,9 +3140,6 @@ extern "C" EXPORT_API int noti_ex_reporter_post_list(noti_ex_reporter_h handle,
 
 extern "C" EXPORT_API int noti_ex_reporter_update(noti_ex_reporter_h handle,
     noti_ex_item_h noti, int *request_id) {
-  LOGW(
-      "DEPRECATION WARNING: noti_ex_reporter_update() is "
-      "deprecated and will be removed from next release.");
   int ret = NOTI_EX_ERROR_NONE;
 
   if (handle == nullptr || noti == nullptr || request_id == nullptr) {
@@ -3636,9 +3165,6 @@ extern "C" EXPORT_API int noti_ex_reporter_update(noti_ex_reporter_h handle,
 extern "C" EXPORT_API int noti_ex_reporter_update_list(
     noti_ex_reporter_h handle, noti_ex_item_h *noti_list, int count,
     int *request_id) {
-  LOGW(
-      "DEPRECATION WARNING: noti_ex_reporter_update_list() is "
-      "deprecated and will be removed from next release.");
   int ret = NOTI_EX_ERROR_NONE;
 
   if (handle == nullptr || noti_list == nullptr || request_id == nullptr) {
@@ -3662,9 +3188,6 @@ extern "C" EXPORT_API int noti_ex_reporter_update_list(
 
 extern "C" EXPORT_API int noti_ex_reporter_delete(noti_ex_reporter_h handle,
     noti_ex_item_h noti, int *request_id) {
-  LOGW(
-      "DEPRECATION WARNING: noti_ex_reporter_delete() is "
-      "deprecated and will be removed from next release.");
   int ret = NOTI_EX_ERROR_NONE;
 
   if (handle == nullptr || noti == nullptr || request_id == nullptr) {
@@ -3690,9 +3213,6 @@ extern "C" EXPORT_API int noti_ex_reporter_delete(noti_ex_reporter_h handle,
 extern "C" EXPORT_API int noti_ex_reporter_delete_list(
     noti_ex_reporter_h handle, noti_ex_item_h *noti_list, int count,
     int *request_id) {
-  LOGW(
-      "DEPRECATION WARNING: noti_ex_reporter_delete_list() is "
-      "deprecated and will be removed from next release.");
   int ret = NOTI_EX_ERROR_NONE;
 
   if (handle == nullptr || noti_list == nullptr || request_id == nullptr) {
@@ -3718,9 +3238,6 @@ extern "C" EXPORT_API int noti_ex_reporter_delete_list(
 
 extern "C" EXPORT_API int noti_ex_reporter_delete_all(
     noti_ex_reporter_h handle, int *request_id) {
-  LOGW(
-      "DEPRECATION WARNING: noti_ex_reporter_delete_all() is "
-      "deprecated and will be removed from next release.");
   int ret = NOTI_EX_ERROR_NONE;
 
   if (handle == nullptr || request_id == nullptr) {
@@ -3741,9 +3258,6 @@ extern "C" EXPORT_API int noti_ex_reporter_delete_all(
 
 extern "C" EXPORT_API int noti_ex_reporter_delete_by_channel(
     noti_ex_reporter_h handle, const char* channel, int* request_id) {
-  LOGW(
-      "DEPRECATION WARNING: noti_ex_reporter_delete_by_channel() is "
-      "deprecated and will be removed from next release.");
   int ret = NOTI_EX_ERROR_NONE;
 
   if (handle == nullptr || channel == nullptr || request_id == nullptr) {
@@ -3764,9 +3278,6 @@ extern "C" EXPORT_API int noti_ex_reporter_delete_by_channel(
 
 extern "C" EXPORT_API int noti_ex_reporter_find_by_root_id(
     noti_ex_reporter_h handle, const char *root_id, noti_ex_item_h *item) {
-  LOGW(
-      "DEPRECATION WARNING: noti_ex_reporter_find_by_root_id() is "
-      "deprecated and will be removed from next release.");
   if (handle == nullptr || root_id == nullptr || item == nullptr) {
     LOGE("Invalid parameter");
     return NOTI_EX_ERROR_INVALID_PARAMETER;
@@ -3789,9 +3300,6 @@ extern "C" EXPORT_API int noti_ex_reporter_find_by_root_id(
 
 extern "C" EXPORT_API int noti_ex_reporter_find_by_channel(noti_ex_reporter_h handle,
     const char *channel, noti_ex_item_h **noti_list, int *count) {
-  LOGW(
-      "DEPRECATION WARNING: noti_ex_reporter_find_by_channel() is "
-      "deprecated and will be removed from next release.");
   if (handle == nullptr || channel == nullptr || noti_list == nullptr
       || count == nullptr) {
     LOGE("Invalid parameter");
@@ -3835,9 +3343,6 @@ extern "C" EXPORT_API int noti_ex_reporter_find_by_channel(noti_ex_reporter_h ha
 
 extern "C" EXPORT_API int noti_ex_reporter_find_all(noti_ex_reporter_h handle,
     noti_ex_item_h **noti_list, int *count) {
-  LOGW(
-      "DEPRECATION WARNING: noti_ex_reporter_find_all() is "
-      "deprecated and will be removed from next release.");
   if (handle == nullptr || noti_list == nullptr || count == nullptr) {
     LOGE("Invalid parameter");
     return NOTI_EX_ERROR_INVALID_PARAMETER;
@@ -3880,9 +3385,6 @@ extern "C" EXPORT_API int noti_ex_reporter_find_all(noti_ex_reporter_h handle,
 
 extern "C" EXPORT_API int noti_ex_reporter_get_count_by_channel(
     noti_ex_reporter_h handle, const char *channel, int *count) {
-  LOGW(
-      "DEPRECATION WARNING: noti_ex_reporter_get_count_by_channel() is "
-      "deprecated and will be removed from next release.");
   if (handle == nullptr || channel == nullptr || count == nullptr) {
     LOGE("Invalid parameter");
     return NOTI_EX_ERROR_INVALID_PARAMETER;
@@ -3901,9 +3403,6 @@ extern "C" EXPORT_API int noti_ex_reporter_get_count_by_channel(
 
 extern "C" EXPORT_API int noti_ex_item_text_create(noti_ex_item_h *handle,
     const char *id, const char *text, const char *hyperlink) {
-  LOGW(
-      "DEPRECATION WARNING: noti_ex_item_text_create() is "
-      "deprecated and will be removed from next release.");
   if (handle == nullptr || text == nullptr) {
     LOGE("Invalid parameter");
     return NOTI_EX_ERROR_INVALID_PARAMETER;
@@ -3932,9 +3431,6 @@ extern "C" EXPORT_API int noti_ex_item_text_create(noti_ex_item_h *handle,
 
 extern "C" EXPORT_API int noti_ex_item_text_set_contents(noti_ex_item_h handle,
     const char *contents) {
-  LOGW(
-      "DEPRECATION WARNING: noti_ex_item_text_set_contents() is "
-      "deprecated and will be removed from next release.");
   if (handle == nullptr || contents == nullptr) {
     LOGE("Invalid parameter");
     return NOTI_EX_ERROR_INVALID_PARAMETER;
@@ -3953,9 +3449,6 @@ extern "C" EXPORT_API int noti_ex_item_text_set_contents(noti_ex_item_h handle,
 
 extern "C" EXPORT_API int noti_ex_item_text_get_contents(noti_ex_item_h handle,
     char **contents) {
-  LOGW(
-      "DEPRECATION WARNING: noti_ex_item_text_get_contents() is "
-      "deprecated and will be removed from next release.");
   if (handle == nullptr || contents == nullptr) {
     LOGE("Invalid parameter");
     return NOTI_EX_ERROR_INVALID_PARAMETER;
@@ -3986,9 +3479,6 @@ extern "C" EXPORT_API int noti_ex_item_text_get_contents(noti_ex_item_h handle,
 
 extern "C" EXPORT_API int noti_ex_item_text_get_hyperlink(
     noti_ex_item_h handle, char **hyper_link) {
-  LOGW(
-      "DEPRECATION WARNING: noti_ex_item_text_get_hyperlink() is "
-      "deprecated and will be removed from next release.");
   if (handle == nullptr || hyper_link == nullptr) {
     LOGE("Invalid parameter");
     return NOTI_EX_ERROR_INVALID_PARAMETER;
@@ -4015,9 +3505,6 @@ extern "C" EXPORT_API int noti_ex_item_text_get_hyperlink(
 
 extern "C" EXPORT_API int noti_ex_item_text_set_multi_language(
     noti_ex_item_h handle, noti_ex_multi_lang_h multi) {
-  LOGW(
-      "DEPRECATION WARNING: noti_ex_item_text_set_multi_language() is "
-      "deprecated and will be removed from next release.");
   if (handle == nullptr) {
     LOGE("Invalid parameter");
     return NOTI_EX_ERROR_INVALID_PARAMETER;
@@ -4045,9 +3532,6 @@ extern "C" EXPORT_API int noti_ex_item_text_set_multi_language(
 
 extern "C" EXPORT_API int noti_ex_item_time_create(noti_ex_item_h *handle,
     const char *id, time_t time) {
-  LOGW(
-      "DEPRECATION WARNING: noti_ex_item_time_create() is "
-      "deprecated and will be removed from next release.");
   TimeItem* p;
 
   if (handle == nullptr) {
@@ -4076,9 +3560,6 @@ extern "C" EXPORT_API int noti_ex_item_time_create(noti_ex_item_h *handle,
 
 extern "C" EXPORT_API int noti_ex_item_time_get_time(noti_ex_item_h handle,
     time_t *time) {
-  LOGW(
-      "DEPRECATION WARNING: noti_ex_item_time_get_time() is "
-      "deprecated and will be removed from next release.");
   if (handle == nullptr || time == nullptr) {
     LOGE("Invalid parameter");
     return NOTI_EX_ERROR_INVALID_PARAMETER;
@@ -4096,9 +3577,6 @@ extern "C" EXPORT_API int noti_ex_item_time_get_time(noti_ex_item_h handle,
 
 extern "C" EXPORT_API int noti_ex_item_time_set_time(noti_ex_item_h handle,
     time_t time) {
-  LOGW(
-      "DEPRECATION WARNING: noti_ex_item_time_set_time() is "
-      "deprecated and will be removed from next release.");
   if (handle == nullptr) {
     LOGE("Invalid parameter");
     return NOTI_EX_ERROR_INVALID_PARAMETER;
@@ -4116,9 +3594,6 @@ extern "C" EXPORT_API int noti_ex_item_time_set_time(noti_ex_item_h handle,
 
 extern "C" EXPORT_API int noti_ex_action_visibility_create(
     noti_ex_action_h *handle, const char *extra) {
-  LOGW(
-      "DEPRECATION WARNING: noti_ex_action_visibility_create() is "
-      "deprecated and will be removed from next release.");
   if (handle == nullptr) {
     LOGE("Invalid parameter");
     return NOTI_EX_ERROR_INVALID_PARAMETER;
@@ -4142,9 +3617,6 @@ extern "C" EXPORT_API int noti_ex_action_visibility_create(
 
 extern "C" EXPORT_API int noti_ex_action_visibility_set(noti_ex_action_h handle,
     const char *id, bool visible) {
-  LOGW(
-      "DEPRECATION WARNING: noti_ex_action_visibility_set() is "
-      "deprecated and will be removed from next release.");
   if (handle == nullptr || id == nullptr) {
     LOGE("Invalid parameter");
     return NOTI_EX_ERROR_INVALID_PARAMETER;
@@ -4160,9 +3632,6 @@ extern "C" EXPORT_API int noti_ex_action_visibility_set(noti_ex_action_h handle,
 
 extern "C" EXPORT_API int noti_ex_multi_lang_create(noti_ex_multi_lang_h* handle,
     const char* msgid, const char* format, ...) {
-  LOGW(
-      "DEPRECATION WARNING: noti_ex_multi_lang_create() is "
-      "deprecated and will be removed from next release.");
   if (handle == nullptr || msgid == nullptr || format == nullptr) {
     LOGE("Invalid parameter");
     return NOTI_EX_ERROR_INVALID_PARAMETER;
@@ -4209,9 +3678,6 @@ extern "C" EXPORT_API int noti_ex_multi_lang_create(noti_ex_multi_lang_h* handle
 }
 
 extern "C" EXPORT_API int noti_ex_multi_lang_destroy(noti_ex_multi_lang_h handle) {
-  LOGW(
-      "DEPRECATION WARNING: noti_ex_multi_lang_destroy() is "
-      "deprecated and will be removed from next release.");
   if (handle == nullptr) {
     LOGE("Invalid parameter");
     return NOTI_EX_ERROR_INVALID_PARAMETER;
@@ -4225,9 +3691,6 @@ extern "C" EXPORT_API int noti_ex_multi_lang_destroy(noti_ex_multi_lang_h handle
 
 extern "C" EXPORT_API int noti_ex_item_get_private_id(
     noti_ex_item_h handle, int64_t* private_id) {
-  LOGW(
-      "DEPRECATION WARNING: noti_ex_item_get_private_id() is "
-      "deprecated and will be removed from next release.");
   if (handle == nullptr || private_id == nullptr) {
     LOGE("Invalid parameter");
     return NOTI_EX_ERROR_INVALID_PARAMETER;
@@ -4241,9 +3704,6 @@ extern "C" EXPORT_API int noti_ex_item_get_private_id(
 }
 
 extern "C" EXPORT_API int noti_ex_item_free_string_list(char** list, int count) {
-  LOGW(
-      "DEPRECATION WARNING: noti_ex_item_free_string_list() is "
-      "deprecated and will be removed from next release.");
   if (list == nullptr) {
     LOGE("Invalid parameter");
     return NOTI_EX_ERROR_INVALID_PARAMETER;
@@ -4258,9 +3718,6 @@ extern "C" EXPORT_API int noti_ex_item_free_string_list(char** list, int count) 
 }
 
 extern "C" EXPORT_API int noti_ex_item_group_remove_children(noti_ex_item_h handle) {
-  LOGW(
-      "DEPRECATION WARNING: noti_ex_item_group_remove_children() is "
-      "deprecated and will be removed from next release.");
   if (handle == nullptr) {
     LOGE("Invalid parameter");
     return NOTI_EX_ERROR_INVALID_PARAMETER;
@@ -4278,9 +3735,6 @@ extern "C" EXPORT_API int noti_ex_item_group_remove_children(noti_ex_item_h hand
 
 extern "C" EXPORT_API int noti_ex_item_icon_create(noti_ex_item_h *handle,
     const char *id, const char *icon_path) {
-  LOGW(
-      "DEPRECATION WARNING: noti_ex_item_icon_create() is "
-      "deprecated and will be removed from next release.");
   if (handle == nullptr || icon_path == nullptr) {
     LOGE("Invalid parameter");
     return NOTI_EX_ERROR_INVALID_PARAMETER;
@@ -4303,9 +3757,6 @@ extern "C" EXPORT_API int noti_ex_item_icon_create(noti_ex_item_h *handle,
 }
 
 extern "C" EXPORT_API int noti_ex_item_icon_get_icon_path(noti_ex_item_h handle, char **icon_path) {
-  LOGW(
-      "DEPRECATION WARNING: noti_ex_item_icon_get_icon_path() is "
-      "deprecated and will be removed from next release.");
   if (handle == nullptr || icon_path == nullptr) {
     LOGE("Invalid parameter");
     return NOTI_EX_ERROR_INVALID_PARAMETER;

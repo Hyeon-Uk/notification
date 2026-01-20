@@ -30,7 +30,6 @@ extern "C" {
  */
 
 /**
- * @deprecated Deprecated since 11.0.
  * @brief Creates the notification_ex action handle to control visibility.
  * @details The notification_ex can define the action with #noti_ex_action_h.
  *          If it is necessary to control visibility of the notification_ex item,
@@ -60,10 +59,9 @@ extern "C" {
 }
  * @endcode
  */
-int noti_ex_action_visibility_create(noti_ex_action_h *handle, const char *extra) TIZEN_DEPRECATED_API;
+int noti_ex_action_visibility_create(noti_ex_action_h *handle, const char *extra);
 
 /**
- * @deprecated Deprecated since 11.0.
  * @brief Sets the visibility state for notification_ex item.
  * @since_tizen 5.5
  * @param[in] handle The notification_ex action handle
@@ -93,7 +91,7 @@ int noti_ex_action_visibility_create(noti_ex_action_h *handle, const char *extra
 }
  * @endcode
  */
-int noti_ex_action_visibility_set(noti_ex_action_h handle, const char *id, bool visible) TIZEN_DEPRECATED_API;
+int noti_ex_action_visibility_set(noti_ex_action_h handle, const char *id, bool visible);
 
 /**
  * @}

@@ -29,7 +29,6 @@ extern "C" {
  */
 
 /**
- * @deprecated Deprecated since 11.0.
  * @brief Enumeration for notification_ex chat message type.
  * @since_tizen 5.5
  */
@@ -40,7 +39,6 @@ typedef enum _noti_ex_item_chat_message_type {
 } noti_ex_item_chat_message_type_e;
 
 /**
- * @deprecated Deprecated since 11.0.
  * @brief Creates the notification_ex item handle for the chat message.
  * @details The notification_ex item is the predefined type of notifications.
  *          The notification can be created with one item or group of items.
@@ -94,10 +92,9 @@ typedef enum _noti_ex_item_chat_message_type {
  */
 int noti_ex_item_chat_message_create(noti_ex_item_h *handle, const char *id,
 		noti_ex_item_h name, noti_ex_item_h text, noti_ex_item_h image,
-		noti_ex_item_h time, noti_ex_item_chat_message_type_e message_type) TIZEN_DEPRECATED_API;
+		noti_ex_item_h time, noti_ex_item_chat_message_type_e message_type);
 
 /**
- * @deprecated Deprecated since 11.0.
  * @brief Gets the notification_ex item handle for the chat message name.
  * @details The name is a notification_ex item handle created with noti_ex_item_text_create().
  * @since_tizen 5.5
@@ -125,10 +122,9 @@ int noti_ex_item_chat_message_create(noti_ex_item_h *handle, const char *id,
 }
  * @endcode
  */
-int noti_ex_item_chat_message_get_name(noti_ex_item_h handle, noti_ex_item_h *name) TIZEN_DEPRECATED_API;
+int noti_ex_item_chat_message_get_name(noti_ex_item_h handle, noti_ex_item_h *name);
 
 /**
- * @deprecated Deprecated since 11.0.
  * @brief Gets the notification_ex item handle for the chat message text.
  * @details The text is a notification_ex item handle created with noti_ex_item_text_create().
  * @since_tizen 5.5
@@ -156,10 +152,9 @@ int noti_ex_item_chat_message_get_name(noti_ex_item_h handle, noti_ex_item_h *na
 }
  * @endcode
  */
-int noti_ex_item_chat_message_get_text(noti_ex_item_h handle, noti_ex_item_h *text) TIZEN_DEPRECATED_API;
+int noti_ex_item_chat_message_get_text(noti_ex_item_h handle, noti_ex_item_h *text);
 
 /**
- * @deprecated Deprecated since 11.0.
  * @brief Gets the notification_ex item handle for the chat message image.
  * @details The image is a notification_ex item handle created with noti_ex_item_image_create().
  * @since_tizen 5.5
@@ -187,10 +182,9 @@ int noti_ex_item_chat_message_get_text(noti_ex_item_h handle, noti_ex_item_h *te
 }
  * @endcode
  */
-int noti_ex_item_chat_message_get_image(noti_ex_item_h handle, noti_ex_item_h *image) TIZEN_DEPRECATED_API;
+int noti_ex_item_chat_message_get_image(noti_ex_item_h handle, noti_ex_item_h *image);
 
 /**
- * @deprecated Deprecated since 11.0.
  * @brief Gets the notification_ex item handle for the chat message time.
  * @details The time is notification_ex item handle created with noti_ex_item_time_create().
  * @since_tizen 5.5
@@ -218,10 +212,9 @@ int noti_ex_item_chat_message_get_image(noti_ex_item_h handle, noti_ex_item_h *i
 }
  * @endcode
  */
-int noti_ex_item_chat_message_get_time(noti_ex_item_h handle, noti_ex_item_h *time) TIZEN_DEPRECATED_API;
+int noti_ex_item_chat_message_get_time(noti_ex_item_h handle, noti_ex_item_h *time);
 
 /**
- * @deprecated Deprecated since 11.0.
  * @brief Gets the type of chat message.
  * @since_tizen 5.5
  * @param[in] handle The notification_ex item handle
@@ -244,7 +237,7 @@ int noti_ex_item_chat_message_get_time(noti_ex_item_h handle, noti_ex_item_h *ti
 }
  * @endcode
  */
-int noti_ex_item_chat_message_get_message_type(noti_ex_item_h handle, noti_ex_item_chat_message_type_e *message_type) TIZEN_DEPRECATED_API;
+int noti_ex_item_chat_message_get_message_type(noti_ex_item_h handle, noti_ex_item_chat_message_type_e *message_type);
 
 /**
  * @}

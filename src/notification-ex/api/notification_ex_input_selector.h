@@ -30,7 +30,6 @@ extern "C" {
  */
 
 /**
- * @deprecated Deprecated since 11.0.
  * @brief Creates the notification_ex item handle with input selector.
  * @details The notification_ex item is the predefined type of notifications.
  *          The notification can be created with one item or group of items.
@@ -58,10 +57,9 @@ extern "C" {
 }
  * @endcode
  */
-int noti_ex_item_input_selector_create(noti_ex_item_h *handle, const char *id) TIZEN_DEPRECATED_API;
+int noti_ex_item_input_selector_create(noti_ex_item_h *handle, const char *id);
 
 /**
- * @deprecated Deprecated since 11.0.
  * @brief Gets the contents that can be selected by input selector.
  * @since_tizen 5.5
  * @remarks Each item in the @a list must be released using free(), then the @a list must be released using free().
@@ -90,10 +88,9 @@ int noti_ex_item_input_selector_create(noti_ex_item_h *handle, const char *id) T
 }
  * @endcode
  */
-int noti_ex_item_input_selector_get_contents(noti_ex_item_h handle, char ***list, int *count) TIZEN_DEPRECATED_API;
+int noti_ex_item_input_selector_get_contents(noti_ex_item_h handle, char ***list, int *count);
 
 /**
- * @deprecated Deprecated since 11.0.
  * @brief Sets the contents for input selector item.
  * @since_tizen 5.5
  * @param[in] handle The notification_ex item handle
@@ -117,10 +114,9 @@ int noti_ex_item_input_selector_get_contents(noti_ex_item_h handle, char ***list
 }
  * @endcode
  */
-int noti_ex_item_input_selector_set_contents(noti_ex_item_h handle, const char **contents, int count) TIZEN_DEPRECATED_API;
+int noti_ex_item_input_selector_set_contents(noti_ex_item_h handle, const char **contents, int count);
 
 /**
- * @deprecated Deprecated since 11.0.
  * @brief Sets the multi-language contents for input selector item.
  * @since_tizen 5.5
  * @remarks After setting the multi-language handle successfully, \n
@@ -151,7 +147,7 @@ int noti_ex_item_input_selector_set_contents(noti_ex_item_h handle, const char *
  * @endcode
  */
 int noti_ex_item_input_selector_set_multi_language_contents(
-		noti_ex_item_h handle, noti_ex_multi_lang_h *multi_language_list, int count) TIZEN_DEPRECATED_API;
+		noti_ex_item_h handle, noti_ex_multi_lang_h *multi_language_list, int count);
 
 /**
  * @}
