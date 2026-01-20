@@ -29,6 +29,7 @@ extern "C" {
  */
 
 /**
+ * @deprecated Deprecated since 11.0.
  * @brief Creates the group of notification_ex items.
  * @details The notification_ex item is the predefined type of notifications.
  *          The notification can be created with one item or group of items.
@@ -56,9 +57,10 @@ extern "C" {
 }
  * @endcode
  */
-int noti_ex_item_group_create(noti_ex_item_h *handle, const char *id);
+int noti_ex_item_group_create(noti_ex_item_h *handle, const char *id) TIZEN_DEPRECATED_API;
 
 /**
+ * @deprecated Deprecated since 11.0.
  * @brief Sets the direction of children in the group item.
  * @details If vertical state is true, the children of group item are placed vertically.
  *          If vertical state is false, the children of group item are placed horizontally.
@@ -82,9 +84,10 @@ int noti_ex_item_group_create(noti_ex_item_h *handle, const char *id);
 }
  * @endcode
  */
-int noti_ex_item_group_set_direction(noti_ex_item_h handle, bool vertical);
+int noti_ex_item_group_set_direction(noti_ex_item_h handle, bool vertical) TIZEN_DEPRECATED_API;
 
 /**
+ * @deprecated Deprecated since 11.0.
  * @brief Gets the vertical state of group item.
  * @since_tizen 5.5
  * @param[in] handle The notification_ex item handle
@@ -107,9 +110,10 @@ int noti_ex_item_group_set_direction(noti_ex_item_h handle, bool vertical);
 }
  * @endcode
  */
-int noti_ex_item_group_is_vertical(noti_ex_item_h handle, bool *vertical);
+int noti_ex_item_group_is_vertical(noti_ex_item_h handle, bool *vertical) TIZEN_DEPRECATED_API;
 
 /**
+ * @deprecated Deprecated since 11.0.
  * @brief Gets the label of application.
  * @since_tizen 5.5
  * @remarks @a label must be released using free().
@@ -132,9 +136,10 @@ int noti_ex_item_group_is_vertical(noti_ex_item_h handle, bool *vertical);
 }
  * @endcode
  */
-int noti_ex_item_group_get_app_label(noti_ex_item_h handle, char **label);
+int noti_ex_item_group_get_app_label(noti_ex_item_h handle, char **label) TIZEN_DEPRECATED_API;
 
 /**
+ * @deprecated Deprecated since 11.0.
  * @brief Adds the child to the group item.
  * @since_tizen 5.5
  * @remarks @a child must not be released after calling this function
@@ -162,9 +167,10 @@ int noti_ex_item_group_get_app_label(noti_ex_item_h handle, char **label);
 }
  * @endcode
  */
-int noti_ex_item_group_add_child(noti_ex_item_h handle, noti_ex_item_h child);
+int noti_ex_item_group_add_child(noti_ex_item_h handle, noti_ex_item_h child) TIZEN_DEPRECATED_API;
 
 /**
+ * @deprecated Deprecated since 11.0.
  * @brief Removes the child from the group item by notification_ex item id.
  * @since_tizen 5.5
  * @param[in] handle The notification_ex item handle
@@ -185,9 +191,10 @@ int noti_ex_item_group_add_child(noti_ex_item_h handle, noti_ex_item_h child);
 }
  * @endcode
  */
-int noti_ex_item_group_remove_child(noti_ex_item_h handle, const char *item_id);
+int noti_ex_item_group_remove_child(noti_ex_item_h handle, const char *item_id) TIZEN_DEPRECATED_API;
 
 /**
+ * @deprecated Deprecated since 11.0.
  * @brief Called to get the data of child item for each child of the group item.
  * @since_tizen 5.5
  * @remarks @a handle must not be released
@@ -200,9 +207,10 @@ int noti_ex_item_group_remove_child(noti_ex_item_h handle, const char *item_id);
  * @see #noti_ex_item_h
  * @see noti_ex_item_group_foreach_child()
  */
-typedef int (*noti_ex_item_group_foreach_child_cb)(noti_ex_item_h handle, void *user_data);
+typedef int (*noti_ex_item_group_foreach_child_cb)(noti_ex_item_h handle, void *user_data) TIZEN_DEPRECATED_API;
 
 /**
+ * @deprecated Deprecated since 11.0.
  * @brief Gets the data of children from the group item.
  * @details The noti_ex_item_group_foreach_child_cb() is called for each child of the group item.
  * @since_tizen 5.5
@@ -238,7 +246,7 @@ int _ex_item_group_foreach_child_cb(noti_ex_item_h handle, void *user_data) {
  * @endcode
  */
 int noti_ex_item_group_foreach_child(noti_ex_item_h handle,
-		noti_ex_item_group_foreach_child_cb callback, void *user_data);
+		noti_ex_item_group_foreach_child_cb callback, void *user_data) TIZEN_DEPRECATED_API;
 
 /**
  * @}

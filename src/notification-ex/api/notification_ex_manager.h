@@ -31,12 +31,14 @@ extern "C" {
  */
 
 /**
+ * @deprecated Deprecated since 11.0.
  * @brief The notification_ex manager handle.
  * @since_tizen 5.5
  */
 typedef void *noti_ex_manager_h;
 
 /**
+ * @deprecated Deprecated since 11.0.
  * @brief Called when a notification addition event is received.
  * @details If this callback is set to NULL in @a event_callbacks, addition events cannot be received.
  * @since_tizen 5.5
@@ -60,6 +62,7 @@ typedef void (*noti_ex_manager_events_add_cb)(noti_ex_manager_h handle,
 		int count, void *user_data);
 
 /**
+ * @deprecated Deprecated since 11.0.
  * @brief Called when a notification update event is received.
  * @details If this callback is set to NULL in @a event_callbacks, update events cannot be received.
  * @since_tizen 5.5
@@ -82,6 +85,7 @@ typedef void (*noti_ex_manager_events_update_cb)(noti_ex_manager_h handle,
 		void *user_data);
 
 /**
+ * @deprecated Deprecated since 11.0.
  * @brief Called when a notification deletion event is received.
  * @details If this callback is set to NULL in @a event_callbacks, deletion events cannot be received.
  * @since_tizen 5.5
@@ -104,6 +108,7 @@ typedef void (*noti_ex_manager_events_delete_cb)(noti_ex_manager_h handle,
 		void *user_data);
 
 /**
+ * @deprecated Deprecated since 11.0.
  * @brief Called when an error event is received.
  * @details The errors are passed from noti_ex_reporter_send_error().
  *          If this callback is set to NULL in @a event_callbacks, error events cannot be received.
@@ -120,6 +125,7 @@ typedef void (*noti_ex_manager_events_error_cb)(noti_ex_manager_h handle,
 		noti_ex_error_e error, int request_id, void *user_data);
 
 /**
+ * @deprecated Deprecated since 11.0.
  * @brief The structure type to contain the set of callback functions for handling the notification events.
  * @since_tizen 5.5
  *
@@ -136,6 +142,7 @@ typedef struct {
 } noti_ex_manager_events_s;
 
 /**
+ * @deprecated Deprecated since 11.0.
  * @partner
  * @brief Creates the notification_ex manager handle.
  * @details The manager handle is created with event callbacks and
@@ -199,9 +206,10 @@ void _manager_events_error_cb(noti_ex_manager_h handle,
  */
 int noti_ex_manager_create(noti_ex_manager_h *handle,
 		const char *receiver_group, noti_ex_manager_events_s event_callbacks,
-		void *user_data);
+		void *user_data) TIZEN_DEPRECATED_API;
 
 /**
+ * @deprecated Deprecated since 11.0.
  * @brief Destroys the notification_ex manager handle.
  * @since_tizen 5.5
  * @param[in] handle The notification manager handle
@@ -228,9 +236,10 @@ void _manager_events_error_cb(noti_ex_manager_h handle, noti_ex_error_e error,
 }
  * @endcode
  */
-int noti_ex_manager_destroy(noti_ex_manager_h handle);
+int noti_ex_manager_destroy(noti_ex_manager_h handle) TIZEN_DEPRECATED_API;
 
 /**
+ * @deprecated Deprecated since 11.0.
  * @partner
  * @brief Gets all notifications for the notification_ex manager.
  * @details Every notification that has been sent for the manager will be retrieved.
@@ -279,9 +288,10 @@ void _manager_events_error_cb(noti_ex_manager_h handle, noti_ex_error_e error,
  * @endcode
  */
 int noti_ex_manager_get(noti_ex_manager_h handle, noti_ex_item_h **items,
-		int *count);
+		int *count) TIZEN_DEPRECATED_API;
 
 /**
+ * @deprecated Deprecated since 11.0.
  * @partner
  * @brief Gets notifications with @a channel for the notification_ex manager.
  * @details Every notification that has been sent for the manager will be retrieved.
@@ -333,9 +343,10 @@ void _manager_events_error_cb(noti_ex_manager_h handle, noti_ex_error_e error,
  * @endcode
  */
 int noti_ex_manager_get_by_channel(noti_ex_manager_h handle, char *channel,
-		noti_ex_item_h **items, int *count);
+		noti_ex_item_h **items, int *count) TIZEN_DEPRECATED_API;
 
 /**
+ * @deprecated Deprecated since 11.0.
  * @partner
  * @brief Updates notification.
  * @since_tizen 5.5
@@ -381,9 +392,10 @@ void _manager_events_error_cb(noti_ex_manager_h handle, noti_ex_error_e error,
  * @endcode
  */
 int noti_ex_manager_update(noti_ex_manager_h handle, noti_ex_item_h item,
-		int *request_id);
+		int *request_id) TIZEN_DEPRECATED_API;
 
 /**
+ * @deprecated Deprecated since 11.0.
  * @partner
  * @brief Deletes notification.
  * @since_tizen 5.5
@@ -427,9 +439,10 @@ void _manager_events_error_cb(noti_ex_manager_h handle, noti_ex_error_e error,
  * @endcode
  */
 int noti_ex_manager_delete(noti_ex_manager_h handle, noti_ex_item_h noti,
-		int *request_id);
+		int *request_id) TIZEN_DEPRECATED_API;
 
 /**
+ * @deprecated Deprecated since 11.0.
  * @partner
  * @brief Deletes all notification.
  * @since_tizen 5.5
@@ -468,9 +481,10 @@ void _manager_events_error_cb(noti_ex_manager_h handle, noti_ex_error_e error,
  * @endcode
  */
 int noti_ex_manager_delete_all(noti_ex_manager_h handle,
-		int *request_id);
+		int *request_id) TIZEN_DEPRECATED_API;
 
 /**
+ * @deprecated Deprecated since 11.0.
  * @partner
  * @brief Hides notification.
  * @since_tizen 5.5
@@ -513,9 +527,10 @@ void _manager_events_error_cb(noti_ex_manager_h handle, noti_ex_error_e error,
  * @endcode
  */
 int noti_ex_manager_hide(noti_ex_manager_h handle, noti_ex_item_h item,
-		int *request_id);
+		int *request_id) TIZEN_DEPRECATED_API;
 
 /**
+ * @deprecated Deprecated since 11.0.
  * @partner
  * @brief Finds notification by root id.
  * @since_tizen 5.5
@@ -555,9 +570,10 @@ void _manager_events_error_cb(noti_ex_manager_h handle, noti_ex_error_e error,
  * @endcode
  */
 int noti_ex_manager_find_by_root_id(noti_ex_manager_h handle,
-		const char *root_id, noti_ex_item_h *item);
+		const char *root_id, noti_ex_item_h *item) TIZEN_DEPRECATED_API;
 
 /**
+ * @deprecated Deprecated since 11.0.
  * @partner
  * @brief Sends error to the reporter.
  * @since_tizen 5.5
@@ -610,9 +626,10 @@ void _manager_events_error_cb(noti_ex_manager_h handle, noti_ex_error_e error,
  * @endcode
  */
 int noti_ex_manager_send_error(noti_ex_manager_h handle,
-		noti_ex_event_info_h info, noti_ex_error_e error);
+		noti_ex_event_info_h info, noti_ex_error_e error) TIZEN_DEPRECATED_API;
 
 /**
+ * @deprecated Deprecated since 11.0.
  * @partner
  * @brief Gets the count of notifications for the manager.
  * @since_tizen 5.5
@@ -650,7 +667,7 @@ void _manager_events_error_cb(noti_ex_manager_h handle, noti_ex_error_e error,
 }
  * @endcode
  */
-int noti_ex_manager_get_notification_count(noti_ex_manager_h handle, int *count);
+int noti_ex_manager_get_notification_count(noti_ex_manager_h handle, int *count) TIZEN_DEPRECATED_API;
 
 /**
  * @}

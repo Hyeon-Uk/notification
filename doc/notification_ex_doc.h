@@ -16,7 +16,7 @@
 
 /**
  * @ingroup CAPI_APPLICATION_FRAMEWORK
- * @defgroup NOTIFICATION_EX_MODULE Notification EX
+ * @defgroup NOTIFICATION_EX_MODULE Notification EX (Deprecated)
  * @brief Notification EX APIs.
  * @section NOTIFICATION_EX_MODULE_HEADER Required Header
  *   \#include <notification_ex.h>

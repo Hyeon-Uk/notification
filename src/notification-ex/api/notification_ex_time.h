@@ -29,6 +29,7 @@ extern "C" {
  */
 
 /**
+ * @deprecated Deprecated since 11.0.
  * @brief Creates the notification_ex item handle with time.
  * @details The notification_ex item is the predefined type of notifications.
  *          The notification can be created with one item or group of items.
@@ -59,9 +60,10 @@ extern "C" {
 }
  * @endcode
  */
-int noti_ex_item_time_create(noti_ex_item_h *handle, const char *id, time_t time);
+int noti_ex_item_time_create(noti_ex_item_h *handle, const char *id, time_t time) TIZEN_DEPRECATED_API;
 
 /**
+ * @deprecated Deprecated since 11.0.
  * @brief Gets the time information of time item.
  * @since_tizen 5.5
  * @remarks @a handle must be released using noti_ex_item_destroy().
@@ -84,7 +86,7 @@ int noti_ex_item_time_create(noti_ex_item_h *handle, const char *id, time_t time
 }
  * @endcode
  */
-int noti_ex_item_time_get_time(noti_ex_item_h handle, time_t *time);
+int noti_ex_item_time_get_time(noti_ex_item_h handle, time_t *time) TIZEN_DEPRECATED_API;
 
 /**
  * @}

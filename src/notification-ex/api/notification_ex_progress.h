@@ -29,6 +29,7 @@ extern "C" {
  */
 
 /**
+ * @deprecated Deprecated since 11.0.
  * @brief Enumeration for notification_ex progress item types.
  * @since_tizen 5.5
  */
@@ -40,6 +41,7 @@ typedef enum _noti_ex_item_progress_type {
 } noti_ex_item_progress_type_e;
 
 /**
+ * @deprecated Deprecated since 11.0.
  * @brief Creates the notification_ex item handle with progress.
  * @details The notification_ex item is the predefined type of notifications.
  *          The notification can be created with one item or group of items.
@@ -70,9 +72,10 @@ typedef enum _noti_ex_item_progress_type {
 }
  * @endcode
  */
-int noti_ex_item_progress_create(noti_ex_item_h *handle, const char *id, float min, float current, float max);
+int noti_ex_item_progress_create(noti_ex_item_h *handle, const char *id, float min, float current, float max) TIZEN_DEPRECATED_API;
 
 /**
+ * @deprecated Deprecated since 11.0.
  * @brief Gets the current value of progress.
  * @since_tizen 5.5
  * @param[in] handle The notification_ex item handle
@@ -94,9 +97,10 @@ int noti_ex_item_progress_create(noti_ex_item_h *handle, const char *id, float m
 }
  * @endcode
  */
-int noti_ex_item_progress_get_current(noti_ex_item_h handle, float *current);
+int noti_ex_item_progress_get_current(noti_ex_item_h handle, float *current) TIZEN_DEPRECATED_API;
 
 /**
+ * @deprecated Deprecated since 11.0.
  * @brief Sets the current value of progress.
  * @since_tizen 5.5
  * @param[in] handle The notification_ex item handle
@@ -117,9 +121,10 @@ int noti_ex_item_progress_get_current(noti_ex_item_h handle, float *current);
 }
  * @endcode
  */
-int noti_ex_item_progress_set_current(noti_ex_item_h handle, float current);
+int noti_ex_item_progress_set_current(noti_ex_item_h handle, float current) TIZEN_DEPRECATED_API;
 
 /**
+ * @deprecated Deprecated since 11.0.
  * @brief Gets the minimum value of progress.
  * @since_tizen 5.5
  * @param[in] handle The notification_ex item handle
@@ -141,9 +146,10 @@ int noti_ex_item_progress_set_current(noti_ex_item_h handle, float current);
 }
  * @endcode
  */
-int noti_ex_item_progress_get_min(noti_ex_item_h handle, float *min);
+int noti_ex_item_progress_get_min(noti_ex_item_h handle, float *min) TIZEN_DEPRECATED_API;
 
 /**
+ * @deprecated Deprecated since 11.0.
  * @brief Gets the maximum value of progress.
  * @since_tizen 5.5
  * @param[in] handle The notification_ex item handle
@@ -165,9 +171,10 @@ int noti_ex_item_progress_get_min(noti_ex_item_h handle, float *min);
 }
  * @endcode
  */
-int noti_ex_item_progress_get_max(noti_ex_item_h handle, float *max);
+int noti_ex_item_progress_get_max(noti_ex_item_h handle, float *max) TIZEN_DEPRECATED_API;
 
 /**
+ * @deprecated Deprecated since 11.0.
  * @brief Gets the type of progress.
  * The type is equal to one of the values of #noti_ex_item_progress_type_e.
  * @since_tizen 5.5
@@ -192,9 +199,10 @@ int noti_ex_item_progress_get_max(noti_ex_item_h handle, float *max);
 }
  * @endcode
  */
-int noti_ex_item_progress_get_type(noti_ex_item_h handle, int *type);
+int noti_ex_item_progress_get_type(noti_ex_item_h handle, int *type) TIZEN_DEPRECATED_API;
 
 /**
+ * @deprecated Deprecated since 11.0.
  * @brief Sets the type of progress.
  * @details The type is equal to one of the values of #noti_ex_item_progress_type_e.
  * @since_tizen 5.5
@@ -221,7 +229,7 @@ int noti_ex_item_progress_get_type(noti_ex_item_h handle, int *type);
 }
  * @endcode
  */
-int noti_ex_item_progress_set_type(noti_ex_item_h handle, int type);
+int noti_ex_item_progress_set_type(noti_ex_item_h handle, int type) TIZEN_DEPRECATED_API;
 
 /**
  * @}

@@ -29,6 +29,7 @@ extern "C" {
  */
 
 /**
+ * @deprecated Deprecated since 11.0.
  * @brief Creates the notification_ex item handle with an image.
  * @details The notification_ex item is the predefined type of notifications.
  *          The notification can be created with one item or group of items.
@@ -62,9 +63,10 @@ extern "C" {
 }
  * @endcode
  */
-int noti_ex_item_image_create(noti_ex_item_h *handle, const char *id, const char *image_path);
+int noti_ex_item_image_create(noti_ex_item_h *handle, const char *id, const char *image_path) TIZEN_DEPRECATED_API;
 
 /**
+ * @deprecated Deprecated since 11.0.
  * @brief Gets the path of image.
  * @since_tizen 5.5
  * @remarks @a image_path must be released using free().
@@ -87,7 +89,7 @@ int noti_ex_item_image_create(noti_ex_item_h *handle, const char *id, const char
 }
  * @endcode
  */
-int noti_ex_item_image_get_image_path(noti_ex_item_h handle, char **image_path);
+int noti_ex_item_image_get_image_path(noti_ex_item_h handle, char **image_path) TIZEN_DEPRECATED_API;
 
 /**
  * @}
