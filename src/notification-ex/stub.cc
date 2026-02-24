@@ -4198,7 +4198,8 @@ extern "C" EXPORT_API int noti_ex_multi_lang_create(noti_ex_multi_lang_h* handle
   }
   va_end(args);
 
-  MultiLanguage* p = new MultiLanguage(string(msgid), format, arr);
+  MultiLanguage* p =
+      new (std::nothrow) MultiLanguage(string(msgid), format, arr);
   if (p == nullptr) {
     LOGE("Out-of-memory");
     return NOTI_EX_ERROR_OUT_OF_MEMORY;
