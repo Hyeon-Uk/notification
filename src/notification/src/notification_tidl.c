@@ -29,6 +29,8 @@
 
 #include <notification_tidl.h>
 
+#include "notification_context.h"
+
 /*
  * for TIDL
  */
@@ -39,8 +41,34 @@ static rpc_port_proxy_noti_service_h service_handle;
 static rpc_port_proxy_noti_service_event_received_h event_handle;
 static rpc_port_proxy_noti_service_changed_h changed_handle;
 
-static bool _connected = false;
 static GRecMutex __rec_mutex;
+
+/* N1-T4: _connected state migrated onto the default notification context.
+ * Helpers here route read/write through the context slot and fall back to a
+ * local static if the context is temporarily unavailable (e.g. during very
+ * early constructor order) so behaviour matches pre-Phase 1 exactly. */
+static bool __fallback_connected = false;
+
+static bool *__connected_slot(void)
+{
+	notification_context_h ctx = _notification_get_default_context();
+	if (ctx == NULL)
+		return &__fallback_connected;
+	return _notification_context_connected_slot(ctx);
+}
+
+static inline void __set_connected(bool v)
+{
+	bool *slot = __connected_slot();
+	if (slot != NULL)
+		*slot = v;
+}
+
+static inline bool __is_connected(void)
+{
+	bool *slot = __connected_slot();
+	return (slot != NULL) ? *slot : false;
+}
 
 typedef struct _channel_foreach_cb_info {
 	notification_channel_foreach_cb cb;
@@ -70,19 +98,19 @@ static void __notification_mutex_unlock(void)
 static void _rpc_port_proxy_noti_service_connected_cb (rpc_port_proxy_noti_service_h h, void *user_data)
 {
 	WARN("_rpc_port_proxy_noti_service_connected_cb");
-	_connected = true;
+	__set_connected(true);
 }
 
 static void _rpc_port_proxy_noti_service_disconnected_cb (rpc_port_proxy_noti_service_h h, void *user_data)
 {
 	WARN("_rpc_port_proxy_noti_service_disconnected_cb");
-	_connected = false;
+	__set_connected(false);
 }
 
 static void _rpc_port_proxy_noti_service_rejected_cb (rpc_port_proxy_noti_service_h h, void *user_data)
 {
 	WARN("_rpc_port_proxy_noti_service_rejected_cb");
-	_connected = false;
+	__set_connected(false);
 }
 
 static void _send_event(rpc_port_proxy_notification_h notihandle, int event_type)
@@ -470,7 +498,7 @@ static int _tidl_init()
 		WARN("service already created");
 	}
 
-	if (!_connected) {
+	if (!__is_connected()) {
 		ret = rpc_port_proxy_noti_service_connect_sync(service_handle);
 		if (ret != RPC_PORT_ERROR_NONE) {
 			WARN("service connect fail");

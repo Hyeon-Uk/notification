@@ -51,5 +51,6 @@ INSTALL(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/
   PATTERN "*_debug.h" EXCLUDE
   PATTERN "*_tidl.h" EXCLUDE
   PATTERN "*_tidl_proxy.h" EXCLUDE
+  PATTERN "*_context.h" EXCLUDE
   PATTERN "*.h"
 )

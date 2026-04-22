@@ -28,6 +28,8 @@
 #include <notification_debug.h>
 #include <notification_viewer.h>
 
+#include "notification_context.h"
+
 #define DEFAULT_VIEWER_CONF_FILE "/usr/share/notification/notification.ini"
 
 #define NOTIFICATION_VIEWER_CTOR __attribute__((constructor))
@@ -35,7 +37,18 @@
 
 #define DELAY_LIMIT 50
 
-static char *_default_viewer;
+/* N1-T4: The default-viewer string now lives on the lazily-constructed
+ * default notification context. This helper returns a writable pointer
+ * to the slot (or NULL if the default context could not be allocated,
+ * which matches the pre-Phase 1 early-exit behavior). */
+static char **__default_viewer_slot(void)
+{
+	notification_context_h ctx = _notification_get_default_context();
+	if (ctx == NULL)
+		return NULL;
+	return _notification_context_default_viewer_slot(ctx);
+}
+
 static GList *_delayed_noti_list;
 static bool _is_timer_added = false;
 static GRecMutex __rec_mutex;
@@ -50,12 +63,19 @@ NOTIFICATION_VIEWER_CTOR static void __notification_init(void)
 
 NOTIFICATION_VIEWER_DTOR static void __notification_fini(void)
 {
+	char **slot;
+
 	g_rec_mutex_clear(&__rec_mutex);
 
-	/* L10: free the lazily-populated default viewer string. */
-	if (_default_viewer != NULL) {
-		free(_default_viewer);
-		_default_viewer = NULL;
+	/* L10: free the lazily-populated default viewer string. After N1-T4
+	 * the string lives on the default context, but we must not touch the
+	 * context in an unload destructor — the once-init gate may have run
+	 * on another thread that no longer exists. Only free if the slot is
+	 * reachable AND populated. */
+	slot = __default_viewer_slot();
+	if (slot != NULL && *slot != NULL) {
+		free(*slot);
+		*slot = NULL;
 	}
 }
 
@@ -74,8 +94,15 @@ EXPORT_API int notification_init_default_viewer()
 {
 	const char *viewer;
 	dictionary *dict;
+	char **slot;
 
-	if (_default_viewer != NULL)
+	slot = __default_viewer_slot();
+	if (slot == NULL) {
+		ERR("default notification context unavailable");
+		return -1;
+	}
+
+	if (*slot != NULL)
 		return 0;
 
 	if (access(DEFAULT_VIEWER_CONF_FILE, F_OK) != 0) {
@@ -94,8 +121,8 @@ EXPORT_API int notification_init_default_viewer()
 	 * therefore leaking the previously-duplicated string if
 	 * notification_init_default_viewer() is invoked twice. The
 	 * NOTIFICATION_VIEWER_DTOR frees on unload. */
-	if (viewer != NULL && _default_viewer == NULL)
-		_default_viewer = strdup(viewer);
+	if (viewer != NULL && *slot == NULL)
+		*slot = strdup(viewer);
 
 	iniparser_freedict(dict);
 
@@ -264,8 +291,10 @@ static int __launch_default_viewer(int priv_id,
 	int ret;
 	char buf[32] = {0,};
 	app_control_h app_control = NULL;
+	char **slot = __default_viewer_slot();
+	const char *default_viewer = (slot != NULL) ? *slot : NULL;
 
-	if (_default_viewer == NULL)
+	if (default_viewer == NULL)
 		return NOTIFICATION_ERROR_NONE;
 
 	ret = app_control_create(&app_control);
@@ -274,7 +303,7 @@ static int __launch_default_viewer(int priv_id,
 		return NOTIFICATION_ERROR_OUT_OF_MEMORY;
 	}
 
-	ret = app_control_set_app_id(app_control, _default_viewer);
+	ret = app_control_set_app_id(app_control, default_viewer);
 	if (ret != APP_CONTROL_ERROR_NONE) {
 		ERR("Failed to set appid to app_control. error(%d)", ret);
 		ret = NOTIFICATION_ERROR_OUT_OF_MEMORY;

@@ -42,6 +42,8 @@
 
 #include <notification_tidl.h>
 
+#include "notification_context.h"
+
 #define REGULAR_UID_MIN 5000
 
 #define NOTIFICATION_CTOR __attribute__((constructor))
@@ -69,7 +71,24 @@ struct _notification_event_cb_info {
 };
 
 static GHashTable *_noti_cb_hash = NULL;
-static GList *__noti_event_cb_list = NULL;
+
+/* N1-T4: __noti_event_cb_list moved onto the default notification context.
+ * The helper returns a writable pointer to the list head so the many legacy
+ * in-place mutations (g_list_append / g_list_remove / g_list_first) keep
+ * their original semantics. If the default context cannot be acquired the
+ * helper falls back to a local static head so library functions do not
+ * regress to NULL-deref. */
+static GList *__fallback_event_cb_list = NULL;
+
+static GList **__event_cb_list_slot(void)
+{
+	notification_context_h ctx = _notification_get_default_context();
+	if (ctx == NULL)
+		return &__fallback_event_cb_list;
+	return _notification_context_event_cb_list_slot(ctx);
+}
+
+#define __noti_event_cb_list (*__event_cb_list_slot())
 
 static GRecMutex __rec_mutex;
 
