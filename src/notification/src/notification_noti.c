@@ -36,6 +36,7 @@
 #include <notification_setting_internal.h>
 #include <notification_setting_service.h>
 #include "notification_db_query.h"
+#include "notification_bundle_util.h"
 
 #define NOTI_BURST_DELETE_UNIT 10
 #define ERR_BUFFER_SIZE		1024
@@ -55,6 +56,42 @@ static void __free_encoded_data(char *encoded_data)
 {
 	if (encoded_data)
 		bundle_free_encoded_rawdata((bundle_raw **)&encoded_data);
+}
+
+/*
+ * N1-T5: Single-path bundle encode used by _create_insertion_query and
+ * _create_update_query.
+ *
+ * Modes:
+ *   require_nonempty = 1 : skip bundles whose count == 0. This matches the
+ *     legacy _create_insertion_query behaviour (10 sites + 13-iter event
+ *     loop used a "b != NULL && bundle_get_count(b) > 0" guard).
+ *   require_nonempty = 0 : encode any non-NULL bundle. This matches the
+ *     legacy _create_update_query behaviour (11 sites + 13-iter event
+ *     loop which only gated on non-NULL).
+ *
+ * Ownership matches bundle_encode(): caller frees `*out_buf` via
+ * __free_encoded_data on all exit paths. `len_inout` carries the encoded
+ * length, mirroring the legacy shared b_encode_len cursor.
+ */
+static inline void __encode_cached(bundle *b, char **out_buf, int *len_inout,
+		int require_nonempty)
+{
+	int tmp_len = 0;
+	char *p;
+
+	if (b == NULL)
+		return;
+	if (require_nonempty && bundle_get_count(b) <= 0)
+		return;
+
+	p = noti_bundle_cached_encode(b, &tmp_len);
+	if (p == NULL)
+		return;
+
+	*out_buf = p;
+	if (len_inout != NULL)
+		*len_inout = tmp_len;
 }
 
 static void __free_deleted_list(notification_deleted_list_info_s *info, int count)
@@ -270,13 +307,9 @@ static int _create_insertion_query(sqlite3 *db, notification_h noti, sqlite3_stm
 	if (noti == NULL || stmt == NULL)
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 
-	if (noti->b_image_path && bundle_get_count(noti->b_image_path) > 0)
-		bundle_encode(noti->b_image_path, (bundle_raw **)&b_image_path,
-				&b_encode_len);
-
-	if (noti->b_priv_image_path && bundle_get_count(noti->b_priv_image_path) > 0)
-		bundle_encode(noti->b_priv_image_path,
-				(bundle_raw **)&b_priv_image_path, &b_encode_len);
+	__encode_cached(noti->b_image_path, &b_image_path, &b_encode_len, 1);
+	__encode_cached(noti->b_priv_image_path, &b_priv_image_path,
+			&b_encode_len, 1);
 
 	/* Get title key */
 	if (noti->b_key != NULL && bundle_get_count(noti->b_key) > 0) {
@@ -297,45 +330,23 @@ static int _create_insertion_query(sqlite3 *db, notification_h noti, sqlite3_stm
 	if (title_key == NULL)
 		title_key = noti->caller_app_id;
 
-	if (noti->b_text && bundle_get_count(noti->b_text) > 0)
-		bundle_encode(noti->b_text, (bundle_raw **)&b_text, &b_encode_len);
+	__encode_cached(noti->b_text, &b_text, &b_encode_len, 1);
+	__encode_cached(noti->b_key, &b_key, &b_encode_len, 1);
+	__encode_cached(noti->b_format_args, &b_format_args, &b_encode_len, 1);
+	__encode_cached(noti->args, &args, &b_encode_len, 1);
+	__encode_cached(noti->group_args, &group_args, &b_encode_len, 1);
+	__encode_cached(noti->b_execute_option, &b_execute_option,
+			&b_encode_len, 1);
+	__encode_cached(noti->b_service_responding, &b_service_responding,
+			&b_encode_len, 1);
+	__encode_cached(noti->b_service_single_launch,
+			&b_service_single_launch, &b_encode_len, 1);
+	__encode_cached(noti->b_service_multi_launch,
+			&b_service_multi_launch, &b_encode_len, 1);
 
-	if (noti->b_key && bundle_get_count(noti->b_key) > 0)
-		bundle_encode(noti->b_key, (bundle_raw **)&b_key, &b_encode_len);
-
-	if (noti->b_format_args && bundle_get_count(noti->b_format_args) > 0)
-		bundle_encode(noti->b_format_args,
-			(bundle_raw **)&b_format_args, &b_encode_len);
-
-	if (noti->args && bundle_get_count(noti->args) > 0)
-		bundle_encode(noti->args, (bundle_raw **)&args, &b_encode_len);
-
-	if (noti->group_args && bundle_get_count(noti->group_args) > 0)
-		bundle_encode(noti->group_args, (bundle_raw **)&group_args,
-			&b_encode_len);
-
-	if (noti->b_execute_option && bundle_get_count(noti->b_execute_option) > 0)
-		bundle_encode(noti->b_execute_option,
-			(bundle_raw **)&b_execute_option, &b_encode_len);
-
-	if (noti->b_service_responding && bundle_get_count(noti->b_service_responding) > 0)
-		bundle_encode(noti->b_service_responding,
-			(bundle_raw **)&b_service_responding, &b_encode_len);
-
-	if (noti->b_service_single_launch && bundle_get_count(noti->b_service_single_launch) > 0)
-		bundle_encode(noti->b_service_single_launch,
-			(bundle_raw **)&b_service_single_launch, &b_encode_len);
-
-	if (noti->b_service_multi_launch && bundle_get_count(noti->b_service_multi_launch) > 0)
-		bundle_encode(noti->b_service_multi_launch,
-			(bundle_raw **)&b_service_multi_launch, &b_encode_len);
-
-
-	for (i = 0; i <= NOTIFICATION_EVENT_TYPE_MAX; i++) {
-		if (noti->b_event_handler[i])
-			bundle_encode(noti->b_event_handler[i],
-				(bundle_raw **)&b_event_handler[i], &b_encode_len);
-	}
+	for (i = 0; i <= NOTIFICATION_EVENT_TYPE_MAX; i++)
+		__encode_cached(noti->b_event_handler[i],
+				&b_event_handler[i], &b_encode_len, 0);
 
 	/* Check only simmode property is enable */
 	if (noti->flags_for_property & NOTIFICATION_PROP_DISPLAY_ONLY_SIMMODE)
@@ -457,54 +468,26 @@ static int _create_update_query(sqlite3 *db, notification_h noti, sqlite3_stmt *
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 
 	/* Decode bundle to update DB */
-	if (noti->b_image_path)
-		bundle_encode(noti->b_image_path,
-			(bundle_raw **)&b_image_path, &b_encode_len);
+	__encode_cached(noti->b_image_path, &b_image_path, &b_encode_len, 0);
+	__encode_cached(noti->b_priv_image_path, &b_priv_image_path,
+			&b_encode_len, 0);
+	__encode_cached(noti->b_text, &b_text, &b_encode_len, 0);
+	__encode_cached(noti->b_key, &b_key, &b_encode_len, 0);
+	__encode_cached(noti->b_format_args, &b_format_args, &b_encode_len, 0);
+	__encode_cached(noti->args, &args, &b_encode_len, 0);
+	__encode_cached(noti->group_args, &group_args, &b_encode_len, 0);
+	__encode_cached(noti->b_execute_option, &b_execute_option,
+			&b_encode_len, 0);
+	__encode_cached(noti->b_service_responding, &b_service_responding,
+			&b_encode_len, 0);
+	__encode_cached(noti->b_service_single_launch,
+			&b_service_single_launch, &b_encode_len, 0);
+	__encode_cached(noti->b_service_multi_launch,
+			&b_service_multi_launch, &b_encode_len, 0);
 
-	if (noti->b_priv_image_path)
-		bundle_encode(noti->b_priv_image_path,
-			(bundle_raw **)&b_priv_image_path, &b_encode_len);
-
-	if (noti->b_text)
-		bundle_encode(noti->b_text,
-			(bundle_raw **)&b_text, &b_encode_len);
-
-	if (noti->b_key)
-		bundle_encode(noti->b_key,
-			(bundle_raw **)&b_key, &b_encode_len);
-
-	if (noti->b_format_args)
-		bundle_encode(noti->b_format_args,
-			(bundle_raw **)&b_format_args, &b_encode_len);
-
-	if (noti->args)
-		bundle_encode(noti->args, (bundle_raw **)&args, &b_encode_len);
-
-	if (noti->group_args)
-		bundle_encode(noti->group_args, (bundle_raw **)&group_args,
-			&b_encode_len);
-
-	if (noti->b_execute_option)
-		bundle_encode(noti->b_execute_option,
-			(bundle_raw **)&b_execute_option, &b_encode_len);
-
-	if (noti->b_service_responding)
-		bundle_encode(noti->b_service_responding,
-			(bundle_raw **)&b_service_responding, &b_encode_len);
-
-	if (noti->b_service_single_launch)
-		bundle_encode(noti->b_service_single_launch,
-			(bundle_raw **)&b_service_single_launch, &b_encode_len);
-
-	if (noti->b_service_multi_launch)
-		bundle_encode(noti->b_service_multi_launch,
-			(bundle_raw **)&b_service_multi_launch, &b_encode_len);
-
-	for (i = 0; i <= NOTIFICATION_EVENT_TYPE_MAX; i++) {
-		if (noti->b_event_handler[i])
-			bundle_encode(noti->b_event_handler[i],
-					(bundle_raw **)&b_event_handler[i], &b_encode_len);
-	}
+	for (i = 0; i <= NOTIFICATION_EVENT_TYPE_MAX; i++)
+		__encode_cached(noti->b_event_handler[i],
+				&b_event_handler[i], &b_encode_len, 0);
 
 	/* Check only simmode property is enable */
 	if (noti->flags_for_property & NOTIFICATION_PROP_DISPLAY_ONLY_SIMMODE)

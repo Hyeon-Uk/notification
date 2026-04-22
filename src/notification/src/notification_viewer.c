@@ -51,6 +51,12 @@ NOTIFICATION_VIEWER_CTOR static void __notification_init(void)
 NOTIFICATION_VIEWER_DTOR static void __notification_fini(void)
 {
 	g_rec_mutex_clear(&__rec_mutex);
+
+	/* L10: free the lazily-populated default viewer string. */
+	if (_default_viewer != NULL) {
+		free(_default_viewer);
+		_default_viewer = NULL;
+	}
 }
 
 static void __notification_mutex_lock(void)
@@ -84,7 +90,11 @@ EXPORT_API int notification_init_default_viewer()
 	}
 
 	viewer = iniparser_getstring(dict, "Notification:DefaultViewer", NULL);
-	if (viewer != NULL)
+	/* L10: guard against overwriting an already-populated value, and
+	 * therefore leaking the previously-duplicated string if
+	 * notification_init_default_viewer() is invoked twice. The
+	 * NOTIFICATION_VIEWER_DTOR frees on unload. */
+	if (viewer != NULL && _default_viewer == NULL)
 		_default_viewer = strdup(viewer);
 
 	iniparser_freedict(dict);

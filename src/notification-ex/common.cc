@@ -41,18 +41,18 @@ static const GDBusErrorEntry dbus_error_entries[] = {
 };
 
 GQuark noti_ex_error_quark(void) {
+  /*
+   * L9: NOTIFICATION_EX_ERROR_QUARK is a string literal with static
+   * storage duration. g_dbus_error_register_error_domain takes the
+   * domain name by value (it does not retain the pointer beyond
+   * quark registration), so passing the literal directly is correct
+   * and avoids the one-time strdup leak the previous implementation
+   * left behind on first call.
+   */
   static volatile gsize quark_volatile = 0;
-  static const char *domain_name = NULL;
 
-  GQuark quark = g_quark_try_string(NOTIFICATION_EX_ERROR_QUARK);
-  if (quark == 0) {
-    if (domain_name == NULL)
-      domain_name = strdup(NOTIFICATION_EX_ERROR_QUARK);
-  } else {
-    domain_name = NOTIFICATION_EX_ERROR_QUARK;
-  }
-
-  g_dbus_error_register_error_domain(domain_name, &quark_volatile,
+  g_dbus_error_register_error_domain(NOTIFICATION_EX_ERROR_QUARK,
+        &quark_volatile,
         dbus_error_entries, G_N_ELEMENTS(dbus_error_entries));
   return (GQuark)quark_volatile;
 }
