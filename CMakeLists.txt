@@ -64,3 +64,10 @@ OPTION(ENABLE_BENCH "Build notification micro-benchmarks (requires google/benchm
 IF(ENABLE_BENCH)
   ADD_SUBDIRECTORY(tests/bench)
 ENDIF()
+
+# Phase 0 N0-T6: integration test skeleton. Daemon / DB dependent; default
+# OFF so offline unit test build stays clean. Enable with -DENABLE_INTEGRATION=ON.
+OPTION(ENABLE_INTEGRATION "Build notification integration tests" OFF)
+IF(ENABLE_INTEGRATION)
+  ADD_SUBDIRECTORY(tests/integration)
+ENDIF()
