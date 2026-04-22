@@ -16,6 +16,18 @@ TARGET_INCLUDE_DIRECTORIES(${TARGET_NOTIFICATION_UNITTESTS} PUBLIC
   ${CMAKE_CURRENT_SOURCE_DIR}/../mock
 )
 
+# N0-T1: Enable allocation counter wrap hooks for PerfAware / LeakCheck
+# fixtures. Only applied to the test binary; production libs are untouched.
+TARGET_COMPILE_DEFINITIONS(${TARGET_NOTIFICATION_UNITTESTS} PRIVATE
+  NOTI_TEST_WRAP_ALLOC=1
+)
+TARGET_LINK_OPTIONS(${TARGET_NOTIFICATION_UNITTESTS} PRIVATE
+  "-Wl,--wrap=malloc"
+  "-Wl,--wrap=free"
+  "-Wl,--wrap=realloc"
+  "-Wl,--wrap=calloc"
+)
+
 APPLY_PKG_CONFIG(${TARGET_NOTIFICATION_UNITTESTS} PUBLIC
   AUL_DEPS
   CAPI_APPFW_APP_CONTROL_DEPS
