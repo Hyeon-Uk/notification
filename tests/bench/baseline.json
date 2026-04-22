@@ -1,0 +1,86 @@
+{
+  "context": {
+    "date": "2026-04-22T00:00:00+00:00",
+    "host_name": "placeholder",
+    "executable": "notification-bench-baseline",
+    "num_cpus": 0,
+    "mhz_per_cpu": 0,
+    "cpu_scaling_enabled": false,
+    "caches": [],
+    "load_avg": [0.0, 0.0, 0.0],
+    "library_build_type": "release",
+    "note": "Placeholder baseline generated when google/benchmark is not available. Replace with a real measurement on a Tizen target by running tests/bench/run_bench.sh and merging the per-bench JSONs. See tests/bench/BASELINE.md for instructions."
+  },
+  "benchmarks": [
+    {
+      "name": "BM_NotificationPost",
+      "family_index": 0,
+      "run_name": "BM_NotificationPost",
+      "run_type": "iteration",
+      "repetitions": 0,
+      "repetition_index": 0,
+      "threads": 1,
+      "iterations": 0,
+      "real_time": 0.0,
+      "cpu_time": 0.0,
+      "time_unit": "us",
+      "items_per_second": 0.0
+    },
+    {
+      "name": "BM_SetTextMany",
+      "family_index": 0,
+      "run_name": "BM_SetTextMany",
+      "run_type": "iteration",
+      "repetitions": 0,
+      "repetition_index": 0,
+      "threads": 1,
+      "iterations": 0,
+      "real_time": 0.0,
+      "cpu_time": 0.0,
+      "time_unit": "us",
+      "items_per_second": 0.0
+    },
+    {
+      "name": "BM_DbInsertNoPreparedCache",
+      "family_index": 0,
+      "run_name": "BM_DbInsertNoPreparedCache",
+      "run_type": "iteration",
+      "repetitions": 0,
+      "repetition_index": 0,
+      "threads": 1,
+      "iterations": 0,
+      "real_time": 0.0,
+      "cpu_time": 0.0,
+      "time_unit": "us",
+      "items_per_second": 0.0
+    },
+    {
+      "name": "BM_ReporterCreateDestroy",
+      "family_index": 0,
+      "run_name": "BM_ReporterCreateDestroy",
+      "run_type": "iteration",
+      "repetitions": 0,
+      "repetition_index": 0,
+      "threads": 1,
+      "iterations": 0,
+      "real_time": 0.0,
+      "cpu_time": 0.0,
+      "time_unit": "us",
+      "items_per_second": 0.0
+    },
+    {
+      "name": "BM_DbusPingRTT",
+      "family_index": 0,
+      "run_name": "BM_DbusPingRTT",
+      "run_type": "iteration",
+      "repetitions": 0,
+      "repetition_index": 0,
+      "threads": 1,
+      "iterations": 0,
+      "real_time": 0.0,
+      "cpu_time": 0.0,
+      "time_unit": "us",
+      "items_per_second": 0.0
+    }
+  ]
+}
