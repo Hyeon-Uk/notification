@@ -51,6 +51,28 @@ void BM_ManagerCreateDestroy(benchmark::State& state) {
 }
 BENCHMARK(BM_ManagerCreateDestroy)->Unit(benchmark::kMicrosecond);
 
+/*
+ * BM_ReporterColdFirstCall
+ * ------------------------
+ * N1-T1 goal measurement: captures the first-call latency from a cold
+ * process state. We use KeepRunningBatch(1) so Google Benchmark only runs
+ * one iteration per timing sample, which matches the cold-start semantics
+ * (the benchmark driver still repeats the outer sample for statistics,
+ * but each sample is a single create+destroy pair). After N1-T1 lands,
+ * this should be -40% versus the Phase 0 baseline because the constructor
+ * no longer pays the g_bus_get_sync + g_bus_own_name cost.
+ */
+void BM_ReporterColdFirstCall(benchmark::State& state) {
+  while (state.KeepRunningBatch(1)) {
+    noti_ex_reporter_h r = nullptr;
+    int rc = noti_ex_reporter_create(&r, nullptr, nullptr, nullptr, nullptr);
+    benchmark::DoNotOptimize(rc);
+    if (r) noti_ex_reporter_destroy(r);
+  }
+  state.SetItemsProcessed(state.iterations());
+}
+BENCHMARK(BM_ReporterColdFirstCall)->Unit(benchmark::kMicrosecond);
+
 }  // namespace
 
 BENCHMARK_MAIN();

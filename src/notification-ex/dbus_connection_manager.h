@@ -19,6 +19,8 @@
 
 #include <gio/gio.h>
 
+#include <atomic>
+#include <mutex>
 #include <string>
 
 #ifndef EXPORT_API
@@ -27,7 +29,34 @@
 
 namespace notification {
 
+/* Forward declaration so DBusConnectionManager can befriend the test-reset
+ * helper. Defined in dbus_connection_manager.cc as file-static; not in any
+ * public API surface. */
+namespace dbus_test_hooks {
+void ResetSingletonForTest();
+}  // namespace dbus_test_hooks
+
 /* LCOV_EXCL_START */
+/*
+ * DBusConnectionManager
+ * ---------------------
+ * Singleton that owns the process-wide system-bus connection used by the
+ * notification-ex transport (dbus_sender / dbus_event_listener).
+ *
+ * N1-T1 lazy-connect contract:
+ *   - GetInst()                   : cheap, never touches D-Bus.
+ *   - GetInterfaceName()          : pure, never touches D-Bus.
+ *   - GetBusName(appid)           : pure, never touches D-Bus.
+ *   - GetDataProviderMasterName() : pure, never touches D-Bus.
+ *   - IsDataProviderMaster(appid) : pure, never touches D-Bus.
+ *   - GetConnection()             : connects on first call (std::call_once).
+ *
+ * ABI:
+ *   - Public method signatures are unchanged from the pre-N1-T1 layout.
+ *   - Test seams are file-static (see dbus_connection_manager.cc) and are
+ *     NOT exposed via public symbols, so downstream consumers link against
+ *     the same surface.
+ */
 class EXPORT_API DBusConnectionManager {
  public:
   static DBusConnectionManager& GetInst();
@@ -41,9 +70,24 @@ class EXPORT_API DBusConnectionManager {
   bool IsDataProviderMaster() const;
   DBusConnectionManager();
   ~DBusConnectionManager();
-  int Init();
+
+  /*
+   * EnsureConnected() performs the synchronous bus acquisition + own-name
+   * on first invocation. Thread-safe via std::call_once; subsequent callers
+   * observe connection_ through the acquire/release ordering provided by
+   * call_once.
+   */
+  int EnsureConnected();
+
   GDBusConnection* connection_ = nullptr;
   bool is_DPM_ = false;
+  std::once_flag connect_once_;
+  std::atomic<int> last_connect_result_{0};
+
+  /* Test-only reset: re-seats connect_once_ and clears the cached state.
+   * Production code must never call this. ABI: friend declarations do not
+   * contribute symbols. */
+  friend void dbus_test_hooks::ResetSingletonForTest();
 };
 /* LCOV_EXCL_STOP */
 

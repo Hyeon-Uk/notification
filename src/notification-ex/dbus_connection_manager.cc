@@ -17,6 +17,8 @@
 #include <dlog.h>
 #include <glib.h>
 
+#include <atomic>
+
 #include "notification-ex/exception.h"
 #include "notification-ex/dbus_connection_manager.h"
 #include "notification-ex/ex_util.h"
@@ -35,17 +37,70 @@ using namespace std;
 namespace notification {
 
 /* LCOV_EXCL_START */
+
+/*
+ * Test-only override hooks.
+ *
+ * Unit tests can install a replacement connection (typically a sentinel
+ * non-null pointer that the mocked D-Bus layer recognises) so that the
+ * production lazy-init path can be exercised without talking to a real
+ * system bus. The overrides are file-static: they add zero public symbols
+ * and preserve ABI. Production code never touches these (they stay null
+ * unless a test explicitly sets them).
+ *
+ * Not thread-safe; tests must install/clear before spawning threads.
+ */
+namespace {
+std::atomic<GDBusConnection*> s_override_connection_{nullptr};
+std::atomic<int> s_override_connect_count_{0};
+std::atomic<bool> s_force_connect_failure_{false};
+}  // namespace
+
+namespace dbus_test_hooks {
+/* Install a sentinel connection pointer returned from GetConnection() without
+ * calling g_bus_get_sync(). Pass nullptr to clear. */
+void SetOverrideConnection(GDBusConnection* conn) {
+  s_override_connection_.store(conn, std::memory_order_release);
+}
+/* Counter incremented each time the override path is taken (i.e. the lazy
+ * EnsureConnected succeeds without touching real g_bus_get_sync). */
+int  GetOverrideConnectCount() {
+  return s_override_connect_count_.load(std::memory_order_acquire);
+}
+void ResetOverrideConnectCount() {
+  s_override_connect_count_.store(0, std::memory_order_release);
+}
+/* Force EnsureConnected() to return an error even when an override is set.
+ * Lets tests exercise the failure path deterministically. */
+void SetForceConnectFailure(bool v) {
+  s_force_connect_failure_.store(v, std::memory_order_release);
+}
+/*
+ * Reset the singleton's lazy state so the next GetConnection() acts as the
+ * first caller again. std::once_flag has no public reset, so we destroy
+ * and reconstruct it in place (placement-new). Caller must ensure no
+ * other thread touches the singleton during this call.
+ */
+void ResetSingletonForTest() {
+  auto& w = notification::DBusConnectionManager::GetInst();
+  w.connection_ = nullptr;
+  w.is_DPM_ = false;
+  w.last_connect_result_.store(0, std::memory_order_release);
+  w.connect_once_.~once_flag();
+  new (&w.connect_once_) std::once_flag();
+}
+}  // namespace dbus_test_hooks
+
 DBusConnectionManager::DBusConnectionManager() = default;
 DBusConnectionManager::~DBusConnectionManager() = default;
 
 DBusConnectionManager& DBusConnectionManager::GetInst() {
+  /*
+   * N1-T1: GetInst() is now a pure accessor. It constructs the singleton
+   * on first call but does NOT talk to D-Bus. The connection is acquired
+   * lazily inside GetConnection() via EnsureConnected().
+   */
   static DBusConnectionManager w_inst;
-  int ret;
-  if (w_inst.connection_ == nullptr) {
-    ret = w_inst.Init();
-    if (ret != ERROR_NONE)
-      THROW(ret);
-  }
   return w_inst;
 }
 
@@ -68,6 +123,14 @@ string DBusConnectionManager::GetInterfaceName() const {
 }
 
 GDBusConnection* DBusConnectionManager::GetConnection() {
+  /*
+   * Lazy path: trigger EnsureConnected once. After call_once returns, either
+   * connection_ is non-null (success) or last_connect_result_ is non-zero
+   * (failure: throw to preserve legacy caller contract).
+   */
+  int ret = EnsureConnected();
+  if (ret != ERROR_NONE)
+    THROW(ret);
   return connection_;
 }
 
@@ -89,35 +152,62 @@ std::string DBusConnectionManager::GetBusName(string appid) const {
   return bus_name;
 }
 
-int DBusConnectionManager::Init() {
-  GError* error = nullptr;
-  connection_ = g_bus_get_sync(G_BUS_TYPE_SYSTEM, NULL, &error);
-  if (connection_ == NULL) {
-    if (error != NULL) {
-      LOGE("Failed to get dbus [%s]", error->message);
-      g_error_free(error);
+int DBusConnectionManager::EnsureConnected() {
+  std::call_once(connect_once_, [this]() {
+    /* Test override path: use sentinel connection, skip real bus I/O. */
+    GDBusConnection* override_conn =
+        s_override_connection_.load(std::memory_order_acquire);
+    if (override_conn != nullptr) {
+      if (s_force_connect_failure_.load(std::memory_order_acquire)) {
+        last_connect_result_.store(ERROR_IO_ERROR,
+            std::memory_order_release);
+        return;
+      }
+      connection_ = override_conn;
+      string appid = util::GetAppId();
+      if (IsDataProviderMaster(appid))
+        is_DPM_ = true;
+      s_override_connect_count_.fetch_add(1, std::memory_order_acq_rel);
+      last_connect_result_.store(ERROR_NONE, std::memory_order_release);
+      return;
     }
-    return ERROR_IO_ERROR;
-  }
 
-  string appid = util::GetAppId();
-  if (appid.empty())
-    return ERROR_IO_ERROR;
+    GError* error = nullptr;
+    connection_ = g_bus_get_sync(G_BUS_TYPE_SYSTEM, NULL, &error);
+    if (connection_ == NULL) {
+      if (error != NULL) {
+        LOGE("Failed to get dbus [%s]", error->message);
+        g_error_free(error);
+      }
+      last_connect_result_.store(ERROR_IO_ERROR, std::memory_order_release);
+      return;
+    }
 
-  if (IsDataProviderMaster(appid))
-    is_DPM_ = true;
+    string appid = util::GetAppId();
+    if (appid.empty()) {
+      last_connect_result_.store(ERROR_IO_ERROR, std::memory_order_release);
+      return;
+    }
 
-  string encoded_name = GetBusName(appid);
-  LOGI("own name %s", encoded_name.c_str());
-  int owner_id = g_bus_own_name_on_connection(connection_, encoded_name.c_str(),
-                                          G_BUS_NAME_OWNER_FLAGS_NONE,
-                                          NULL, NULL, NULL, NULL);
-  if (!owner_id) {
-    g_object_unref(connection_);
-    LOGE("g_bus_own_name_on_connection, error");
-    return ERROR_IO_ERROR;
-  }
-  return ERROR_NONE;
+    if (IsDataProviderMaster(appid))
+      is_DPM_ = true;
+
+    string encoded_name = GetBusName(appid);
+    LOGI("own name %s", encoded_name.c_str());
+    int owner_id = g_bus_own_name_on_connection(connection_,
+                                            encoded_name.c_str(),
+                                            G_BUS_NAME_OWNER_FLAGS_NONE,
+                                            NULL, NULL, NULL, NULL);
+    if (!owner_id) {
+      g_object_unref(connection_);
+      connection_ = nullptr;
+      LOGE("g_bus_own_name_on_connection, error");
+      last_connect_result_.store(ERROR_IO_ERROR, std::memory_order_release);
+      return;
+    }
+    last_connect_result_.store(ERROR_NONE, std::memory_order_release);
+  });
+  return last_connect_result_.load(std::memory_order_acquire);
 }
 /* LCOV_EXCL_STOP */
 
