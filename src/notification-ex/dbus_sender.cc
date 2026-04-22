@@ -62,7 +62,9 @@ DBusSender::~DBusSender() {
 
 void DBusSender::Impl::EmitSignal(string bus_name, string signal_name,
     GVariant* data) {
-  GError* err = nullptr;
+  /* N1-T7: use g_autoptr(GError) so early THROW does not leak the
+   * error struct. g_clear_error / g_error_free manual sites removed. */
+  g_autoptr(GError) err = nullptr;
   GDBusConnection* conn = DBusConnectionManager::GetInst().GetConnection();
   gboolean result = g_dbus_connection_emit_signal(conn,
       bus_name.empty() ? NULL : bus_name.c_str(),
@@ -73,10 +75,8 @@ void DBusSender::Impl::EmitSignal(string bus_name, string signal_name,
     int err_code = ERROR_IO_ERROR;
     LOGE("g_dbus_connection_emit_signal() is failed. error(%s)",
         err ? err->message : "Unknown");
-    if (err) {
+    if (err)
       err_code = util::ConvertDBusError(err->code);
-      g_clear_error(&err);
-    }
     THROW(err_code);
   }
 
@@ -85,10 +85,8 @@ void DBusSender::Impl::EmitSignal(string bus_name, string signal_name,
     int err_code = ERROR_IO_ERROR;
     LOGE("g_dbus_connection_flush_sync() is failed. error(%s)",
         err ? err->message : "Unknown");
-    if (err) {
+    if (err)
       err_code = util::ConvertDBusError(err->code);
-      g_clear_error(&err);
-    }
     THROW(err_code);
   }
   LOGI("Successfully emit signal to %s, %s, %s",
@@ -116,22 +114,31 @@ void DBusSender::Notify(GVariantBuilder* builder,
 
 void DBusSender::Notify(const IEventInfo& info, list<Bundle> serialized,
     string dest_appid) {
-
-  std::unique_ptr<GVariantBuilder,
-      decltype(g_variant_builder_unref)*> builder_ptr(
-          g_variant_builder_new(G_VARIANT_TYPE("a(s)")),
-              g_variant_builder_unref);
+  /*
+   * N1-T7: Replaced unique_ptr<GVariantBuilder, ...> with the thread-local
+   * scratch builder owned by ex_util::ScratchBuilder. First Notify() on a
+   * given thread pays one g_variant_builder_new(); every subsequent call
+   * re-inits the same heap object (g_variant_builder_clear + _init) with
+   * zero additional allocation.
+   *
+   * The inner Notify(builder, info, dest) forwards the builder to
+   * g_variant_new("a(s)", ...) which floating-refs consume it. After the
+   * inner call returns, the scratch builder is in the post-`_end` state
+   * (drained, ready for re-init). We therefore re-acquire a fresh builder
+   * for the next batch via ScratchBuilder() rather than reset/new.
+   */
+  GVariantBuilder* builder = util::ScratchBuilder(G_VARIANT_TYPE("a(s)"));
   int idx = 0;
   for (auto& i : serialized) {
     if (idx != 0 && idx % 10 == 0) {
-      Notify(builder_ptr.get(), info, dest_appid);
-      builder_ptr.reset(g_variant_builder_new(G_VARIANT_TYPE("a(s)")));
+      Notify(builder, info, dest_appid);
+      builder = util::ScratchBuilder(G_VARIANT_TYPE("a(s)"));
     }
-    g_variant_builder_add(builder_ptr.get(), "(s)",
+    g_variant_builder_add(builder, "(s)",
         reinterpret_cast<char*>(i.ToRaw().first.get()));
     idx++;
   }
-  Notify(builder_ptr.get(), info, dest_appid);
+  Notify(builder, info, dest_appid);
 }
 
 int DBusSender::Impl::MethodCall(string appid, string method_name,
@@ -142,16 +149,21 @@ int DBusSender::Impl::MethodCall(string appid, string method_name,
   std::string interface_name = DBusConnectionManager::GetInst()
       .GetInterfaceName();
 
-  std::unique_ptr<GDBusMessage, decltype(g_object_unref)*> msg_ptr(
-            g_dbus_message_new_method_call(dpm_name.c_str(), path_.c_str(),
-                interface_name.c_str(), method_name.c_str()),
-            g_object_unref);
-  if (!msg_ptr || !msg_ptr.get()) {
+  /* N1-T7: replace unique_ptr<GDBusMessage, g_object_unref*> + manual
+   * g_error_free() sites with g_autoptr. This closes L11 (msg leak if
+   * THROW fires between alloc and reply) and L12 (reply/err leak on
+   * double-error path) by making unref/free scope-bound. */
+  g_autoptr(GDBusMessage) msg = g_dbus_message_new_method_call(
+      dpm_name.c_str(), path_.c_str(),
+      interface_name.c_str(), method_name.c_str());
+  if (!msg) {
     LOGE("Can't allocate new method call");
     THROW(ERROR_OUT_OF_MEMORY);
   }
 
-  g_dbus_message_set_body(msg_ptr.get(),
+  /* g_variant_new() returns a floating ref; g_dbus_message_set_body sinks
+   * it. No explicit ref_sink / unref needed here. */
+  g_dbus_message_set_body(msg,
       g_variant_new("(ss)",
         appid.c_str(),
         reinterpret_cast<char*>(serialized.ToRaw().first.get())));
@@ -159,28 +171,25 @@ int DBusSender::Impl::MethodCall(string appid, string method_name,
   LOGI("send message !! (%s) (%s) (%s)",
       path_.c_str(), method_name.c_str(), appid.c_str());
 
-  GError* err = nullptr;
-  std::unique_ptr<GDBusMessage, decltype(g_object_unref)*> reply_ptr(
+  g_autoptr(GError) err = nullptr;
+  g_autoptr(GDBusMessage) reply =
       g_dbus_connection_send_message_with_reply_sync(
-          DBusConnectionManager::GetInst().GetConnection(), msg_ptr.get(),
-          G_DBUS_SEND_MESSAGE_FLAGS_NONE, -1, NULL, NULL, &err),
-      g_object_unref);
+          DBusConnectionManager::GetInst().GetConnection(), msg,
+          G_DBUS_SEND_MESSAGE_FLAGS_NONE, -1, NULL, NULL, &err);
   if (err != NULL) {
     LOGE("MethodCall, err[%s]", err->message);
     int err_code = util::ConvertDBusError(err->code);
-    g_error_free(err);
     THROW(err_code);
   }
 
-  if (g_dbus_message_to_gerror(reply_ptr.get(), &err)) {
+  if (g_dbus_message_to_gerror(reply, &err)) {
     LOGE("RequestReturnValue got error %s", err->message);
     int err_code = util::ConvertDBusError(err->code);
-    g_error_free(err);
     THROW(err_code);
   }
 
   int num;
-  GVariant *reply_body = g_dbus_message_get_body(reply_ptr.get());
+  GVariant* reply_body = g_dbus_message_get_body(reply);
   g_variant_get(reply_body, "(i)", &num);
   return num;
 }
@@ -196,23 +205,23 @@ std::list<Bundle> DBusSender::Impl::GetListMethodCall(
   }
   SocketHandler send_sock(fds[SEND_SOCK_IDX]);
   SocketHandler recv_sock(fds[RECV_SOCK_IDX]);
-  std::unique_ptr<GUnixFDList, decltype(g_object_unref)*> fd_list_ptr(
-          GetFdList(send_sock.Get()), g_object_unref);
 
-  std::unique_ptr<GDBusMessage, decltype(g_object_unref)*> msg_ptr(
-      g_dbus_message_new_method_call(
-          DBusConnectionManager::GetInst().GetDataProviderMasterName().c_str(),
-          path_.c_str(),
-          DBusConnectionManager::GetInst().GetInterfaceName().c_str(),
-          method_name.c_str()),
-      g_object_unref);
-  if (!msg_ptr || !msg_ptr.get()) {
+  /* N1-T7: autoptr everywhere. GUnixFDList is a GObject → g_object_unref
+   * via g_autoptr(GUnixFDList). */
+  g_autoptr(GUnixFDList) fd_list = GetFdList(send_sock.Get());
+
+  g_autoptr(GDBusMessage) msg = g_dbus_message_new_method_call(
+      DBusConnectionManager::GetInst().GetDataProviderMasterName().c_str(),
+      path_.c_str(),
+      DBusConnectionManager::GetInst().GetInterfaceName().c_str(),
+      method_name.c_str());
+  if (!msg) {
     LOGE("Can't allocate new method call");
     THROW(ERROR_OUT_OF_MEMORY);
   }
 
-  g_dbus_message_set_unix_fd_list(msg_ptr.get(), fd_list_ptr.get());
-  g_dbus_message_set_body(msg_ptr.get(),
+  g_dbus_message_set_unix_fd_list(msg, fd_list);
+  g_dbus_message_set_body(msg,
       g_variant_new("(ss)",
         appid.c_str(),
         reinterpret_cast<char*>(serialized.ToRaw().first.get())));
@@ -220,46 +229,46 @@ std::list<Bundle> DBusSender::Impl::GetListMethodCall(
   LOGI("send message !! (%s) (%s) (%s)",
       path_.c_str(), method_name.c_str(), appid.c_str());
 
-  GError* err = nullptr;
-  std::unique_ptr<GDBusMessage, decltype(g_object_unref)*> reply_ptr(
+  g_autoptr(GError) err = nullptr;
+  g_autoptr(GDBusMessage) reply =
       g_dbus_connection_send_message_with_reply_sync(
-          DBusConnectionManager::GetInst().GetConnection(), msg_ptr.get(),
-          G_DBUS_SEND_MESSAGE_FLAGS_NONE, -1, NULL, NULL, &err),
-      g_object_unref);
+          DBusConnectionManager::GetInst().GetConnection(), msg,
+          G_DBUS_SEND_MESSAGE_FLAGS_NONE, -1, NULL, NULL, &err);
   if (err != NULL) {
     LOGE("MethodCall, err[%s]", err->message);
     int err_code = util::ConvertDBusError(err->code);
-    g_error_free(err);
     THROW(err_code);
-  } else {
-    GError* err = nullptr;
-    if (g_dbus_message_to_gerror(reply_ptr.get(), &err)) {
-      LOGE("Request got error %s", err->message);
-      int err_code = util::ConvertDBusError(err->code);
-      g_error_free(err);
-      THROW(err_code);
-    }
-    GVariant *reply_body = g_dbus_message_get_body(reply_ptr.get());
-    int cnt;
-    g_variant_get(reply_body, "(i)", &cnt);
-    ret_list = util::ReadBundleList(recv_sock.Get(), cnt);
-    if (ret_list.size() == 0)
-      THROW(ERROR_NOT_EXIST_ID);
-
-    if (static_cast<int>(ret_list.size()) != cnt)
-      THROW(ERROR_IO_ERROR);
   }
+
+  /* Reuse `err` autoptr for the reply-to-gerror check. g_autoptr cleanup
+   * runs once on function exit and is NULL-safe, so the re-use is valid. */
+  if (g_dbus_message_to_gerror(reply, &err)) {
+    LOGE("Request got error %s", err->message);
+    int err_code = util::ConvertDBusError(err->code);
+    THROW(err_code);
+  }
+  GVariant* reply_body = g_dbus_message_get_body(reply);
+  int cnt;
+  g_variant_get(reply_body, "(i)", &cnt);
+  ret_list = util::ReadBundleList(recv_sock.Get(), cnt);
+  if (ret_list.size() == 0)
+    THROW(ERROR_NOT_EXIST_ID);
+
+  if (static_cast<int>(ret_list.size()) != cnt)
+    THROW(ERROR_IO_ERROR);
   return ret_list;
 }
 
 GUnixFDList* DBusSender::Impl::GetFdList(int fd) {
-  GError* g_err = nullptr;
+  /* N1-T7: g_autoptr(GError) closes L11/L12-hardening on this helper.
+   * The returned fd_list is transferred to the caller (full ownership) so
+   * we must NOT autoptr-wrap it here. */
+  g_autoptr(GError) g_err = nullptr;
   GUnixFDList* fd_list = g_unix_fd_list_new();
   g_unix_fd_list_append(fd_list, fd, &g_err);
   if (g_err != nullptr) {
     LOGE("g_unix_fd_list_append [%s]", g_err->message);
     g_object_unref(fd_list);
-    g_error_free(g_err);
     return nullptr;
   }
   return fd_list;
@@ -276,28 +285,27 @@ void DBusSender::Impl::MethodCall(string appid, const IEventInfo& info,
 
   SocketHandler send_sock(fds[SEND_SOCK_IDX]);
   SocketHandler recv_sock(fds[RECV_SOCK_IDX]);
-  GUnixFDList* fd_list = GetFdList(recv_sock.Get());
-  auto fd_list_ptr = std::unique_ptr<GUnixFDList, decltype(g_object_unref)*>(
-          fd_list, g_object_unref);
+  /* N1-T7: g_autoptr(GUnixFDList) replaces unique_ptr<..., g_object_unref*>
+   * wrapper; ownership transfer to set_unix_fd_list is by-ref (no steal),
+   * so autoptr cleanup at scope exit is correct. */
+  g_autoptr(GUnixFDList) fd_list = GetFdList(recv_sock.Get());
 
   std::string dpm_name = DBusConnectionManager::GetInst()
       .GetDataProviderMasterName();
   std::string interface_name = DBusConnectionManager::GetInst()
       .GetInterfaceName();
-  std::unique_ptr<GDBusMessage, decltype(g_object_unref)*> msg_ptr(
-      g_dbus_message_new_method_call(
-          dpm_name.c_str(),
-          path_.c_str(),
-          interface_name.c_str(),
-          EventInfo::GetString(info.GetEventType()).c_str()),
-      g_object_unref);
-  if (!msg_ptr || !msg_ptr.get()) {
+  g_autoptr(GDBusMessage) msg = g_dbus_message_new_method_call(
+      dpm_name.c_str(),
+      path_.c_str(),
+      interface_name.c_str(),
+      EventInfo::GetString(info.GetEventType()).c_str());
+  if (!msg) {
     LOGE("Can't allocate new method call");
     THROW(ERROR_OUT_OF_MEMORY);
   }
 
-  g_dbus_message_set_unix_fd_list(msg_ptr.get(), fd_list);
-  g_dbus_message_set_body(msg_ptr.get(),
+  g_dbus_message_set_unix_fd_list(msg, fd_list);
+  g_dbus_message_set_body(msg,
       g_variant_new("(ssi)",
           appid.c_str(),
           reinterpret_cast<char*>(info.Serialize().ToRaw().first.get()),
@@ -307,23 +315,20 @@ void DBusSender::Impl::MethodCall(string appid, const IEventInfo& info,
       path_.c_str(),
       EventInfo::GetString(info.GetEventType()).c_str(), appid.c_str());
 
-  GError* err = nullptr;
-  std::unique_ptr<GDBusMessage, decltype(g_object_unref)*> reply_ptr(
+  g_autoptr(GError) err = nullptr;
+  g_autoptr(GDBusMessage) reply =
       g_dbus_connection_send_message_with_reply_sync(
-          DBusConnectionManager::GetInst().GetConnection(), msg_ptr.get(),
-          G_DBUS_SEND_MESSAGE_FLAGS_NONE, -1, NULL, NULL, &err),
-      g_object_unref);
+          DBusConnectionManager::GetInst().GetConnection(), msg,
+          G_DBUS_SEND_MESSAGE_FLAGS_NONE, -1, NULL, NULL, &err);
   if (err != nullptr) {
     LOGE("MethodCall, err[%s]", err->message);
     int err_code = util::ConvertDBusError(err->code);
-    g_error_free(err);
     THROW(err_code);
   }
 
-  if (g_dbus_message_to_gerror(reply_ptr.get(), &err)) {
+  if (g_dbus_message_to_gerror(reply, &err)) {
     LOGE("SendMessage got error %s", err->message);
     int err_code = util::ConvertDBusError(err->code);
-    g_error_free(err);
     THROW(err_code);
   }
 

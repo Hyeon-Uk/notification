@@ -72,29 +72,28 @@ uid_t DBusEventListener::Impl::GetSenderUid(GDBusConnection* connection,
   auto cp = cache.find(sender_name);
   if (cp != cache.end())
     return cp->second;
-  std::unique_ptr<GDBusMessage, decltype(g_object_unref)*> msg_ptr(
-            g_dbus_message_new_method_call(DBUS_NAME, DBUS_OBJECT_PATH,
-                DBUS_INTERFACE_NAME, "GetConnectionUnixUser"),
-            g_object_unref);
+  /* N1-T7: g_autoptr(GDBusMessage) + g_autoptr(GError) replace the
+   * unique_ptr + manual g_error_free pattern. Both are NULL-safe on
+   * cleanup; the throwing branch no longer needs to manually free err. */
+  g_autoptr(GDBusMessage) msg = g_dbus_message_new_method_call(
+      DBUS_NAME, DBUS_OBJECT_PATH,
+      DBUS_INTERFACE_NAME, "GetConnectionUnixUser");
 
-  g_dbus_message_set_body(msg_ptr.get(), g_variant_new("(s)", sender_name));
-  GError* err = nullptr;
-  GDBusMessage* reply = g_dbus_connection_send_message_with_reply_sync(
-      connection, msg_ptr.get(), G_DBUS_SEND_MESSAGE_FLAGS_NONE, -1, nullptr,
+  g_dbus_message_set_body(msg, g_variant_new("(s)", sender_name));
+  g_autoptr(GError) err = nullptr;
+  g_autoptr(GDBusMessage) reply = g_dbus_connection_send_message_with_reply_sync(
+      connection, msg, G_DBUS_SEND_MESSAGE_FLAGS_NONE, -1, nullptr,
       nullptr, &err);
 
   if (!reply) {
-    if (err != nullptr) {
+    if (err != nullptr)
       LOGE("Failed to get uid [%s]", err->message);
-      g_error_free(err);
-    }
     THROW(ERROR_IO_ERROR);
   }
 
   GVariant* body = g_dbus_message_get_body(reply);
   uid_t uid = 0;
   g_variant_get(body, "(u)", &uid);
-  g_object_unref(reply);
 
   if (cache.size() >= MAX_CACHE_COUNT)
     cache.clear();
@@ -110,34 +109,31 @@ pid_t DBusEventListener::Impl::GetSenderPid(GDBusConnection* connection,
   if (cp != cache.end())
     return cp->second;
 
-  std::unique_ptr<GDBusMessage, decltype(g_object_unref)*> msg_ptr(
-            g_dbus_message_new_method_call(DBUS_NAME, DBUS_OBJECT_PATH,
-                DBUS_INTERFACE_NAME, "GetConnectionUnixProcessID"),
-            g_object_unref);
+  /* N1-T7: g_autoptr(GDBusMessage) + g_autoptr(GError). */
+  g_autoptr(GDBusMessage) msg = g_dbus_message_new_method_call(
+      DBUS_NAME, DBUS_OBJECT_PATH,
+      DBUS_INTERFACE_NAME, "GetConnectionUnixProcessID");
 
-  if (!msg_ptr || !msg_ptr.get()) {
+  if (!msg) {
     LOGE("Failed to alloc new method call");
     THROW(ERROR_OUT_OF_MEMORY);
   }
 
-  g_dbus_message_set_body(msg_ptr.get(), g_variant_new("(s)", sender_name));
-  GError* err = nullptr;
-  GDBusMessage* reply = g_dbus_connection_send_message_with_reply_sync(
-      connection, msg_ptr.get(), G_DBUS_SEND_MESSAGE_FLAGS_NONE, -1,
+  g_dbus_message_set_body(msg, g_variant_new("(s)", sender_name));
+  g_autoptr(GError) err = nullptr;
+  g_autoptr(GDBusMessage) reply = g_dbus_connection_send_message_with_reply_sync(
+      connection, msg, G_DBUS_SEND_MESSAGE_FLAGS_NONE, -1,
       nullptr, nullptr, &err);
 
   if (!reply) {
-    if (err != nullptr) {
+    if (err != nullptr)
       LOGE("Failed to get uid [%s]", err->message);
-      g_error_free(err);
-    }
     THROW(ERROR_IO_ERROR);
   }
 
   GVariant* body = g_dbus_message_get_body(reply);
   pid_t pid = 0;
   g_variant_get(body, "(u)", &pid);
-  g_object_unref(reply);
 
   if (cache.size() >= MAX_CACHE_COUNT)
     cache.clear();
@@ -210,11 +206,11 @@ int DBusEventListener::Impl::GetRecvSocket(GDBusMethodInvocation* invocation) {
     return -1;
   }
 
-  GError* g_err = nullptr;
+  /* N1-T7: g_autoptr(GError) — scope-bound free. */
+  g_autoptr(GError) g_err = nullptr;
   int ret_fd = g_unix_fd_list_get(fd_list, 0, &g_err);
   if (ret_fd == -1 || g_err) {
-    LOGE("g_unix_fd_list_get [%s]", g_err->message);
-    g_error_free(g_err);
+    LOGE("g_unix_fd_list_get [%s]", g_err ? g_err->message : "Unknown");
     return -1;
   }
 
@@ -435,15 +431,16 @@ int DBusEventListener::Impl::RegisterGDBusInterface() {
     "        </method>"
     "  </interface>"
     "  </node>";
-  GError *error = NULL;
-  GDBusNodeInfo *introspection_data =
+  /* N1-T7: g_autoptr(GError) + g_autoptr(GDBusNodeInfo) replace the
+   * manual g_error_free / g_dbus_node_info_unref pairs. Both cleanups
+   * run at scope exit regardless of which branch we take. */
+  g_autoptr(GError) error = nullptr;
+  g_autoptr(GDBusNodeInfo) introspection_data =
       g_dbus_node_info_new_for_xml(introspection_xml, &error);
   if (!introspection_data) {
     LOGE("g_dbus_node_info_new_for_xml is failed.");
-    if (error != NULL) {
+    if (error != NULL)
       LOGE("g_dbus_node_info_new_for_xml err [%s]", error->message);
-      g_error_free(error);
-    }
     return ERROR_IO_ERROR;
   }
 
@@ -451,7 +448,6 @@ int DBusEventListener::Impl::RegisterGDBusInterface() {
       DBusConnectionManager::GetInst().GetConnection(),
       path_.c_str(), introspection_data->interfaces[0],
       &interface_vtable, this, NULL, NULL);
-  g_dbus_node_info_unref(introspection_data);
   if (registration_id_ == 0) {
     LOGE("register object fail");
     return ERROR_IO_ERROR;

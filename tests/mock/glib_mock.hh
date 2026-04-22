@@ -62,4 +62,25 @@ class GlibMock : public virtual ModuleMock {
       GDBusMessage*(const gchar*, const gchar*, const gchar*, const gchar*));
 };
 
+/*
+ * N1-T7: autoptr + builder-reuse counters.
+ *
+ * These are free-function counters (not gmock MOCK_METHODs) intentionally:
+ * we need to count every call to g_object_unref / g_variant_builder_unref /
+ * g_variant_builder_new coming out of the production code WITHOUT replacing
+ * their real behavior (otherwise every other unit test that relies on real
+ * glib object lifetimes would break).
+ *
+ * The extern "C" wrappers in glib_mock.cc bump these counters before
+ * delegating to RTLD_NEXT. Unit tests call ResetN1T7Counters() in SetUp
+ * and read Get*Count() afterwards to prove the scope-exit cleanup fired.
+ */
+namespace glib_mock_n1t7 {
+  void ResetCounters();
+  int GetObjectUnrefCount();
+  int GetErrorFreeCount();
+  int GetVariantBuilderNewCount();
+  int GetVariantBuilderUnrefCount();
+}  // namespace glib_mock_n1t7
+
 #endif  // UNIT_TESTS_MOCK_GLIB_MOCK_H_

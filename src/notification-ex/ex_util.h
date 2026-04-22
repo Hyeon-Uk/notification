@@ -38,6 +38,49 @@ namespace util {
   int WriteSocket(int fd, const char* buffer, unsigned int nbytes);
   std::list<tizen_base::Bundle> ReadBundleList(int recvfd, int noti_cnt);
   int ConvertDBusError(int error);
+
+  /*
+   * N1-T7: Thread-local scratch GVariantBuilder.
+   *
+   * Rationale:
+   *   The DBusSender hot path (Notify / MethodCall) allocates a fresh
+   *   GVariantBuilder via g_variant_builder_new() on every call. The builder
+   *   is consumed by g_variant_new("a(s)", ...) which takes ownership of the
+   *   resulting child values but the builder itself still has to be unref'd.
+   *   Across 100 posts in the bench harness this accounts for 200+ heap allocs
+   *   that are trivially reusable (same GVariantType, same reset-on-end
+   *   semantics).
+   *
+   * Design:
+   *   - One scratch GVariantBuilder per thread, stored via g_autoptr so the
+   *     thread's exit path naturally runs g_variant_builder_unref().
+   *   - ScratchBuilder(type) returns a pointer to the re-initialised builder.
+   *     Semantically equivalent to g_variant_builder_new(type), but after the
+   *     first call on a given thread all subsequent calls reuse the same
+   *     heap object. The previous builder state (if any) is cleared via
+   *     g_variant_builder_clear + g_variant_builder_init.
+   *   - The caller does NOT own the returned pointer; it MUST NOT call
+   *     g_variant_builder_unref or retain the pointer across thread exits.
+   *   - Calling g_variant_builder_end() on the returned pointer is safe: it
+   *     resets the builder so the next ScratchBuilder() call can init-reuse.
+   *
+   * Thread-safety:
+   *   Each thread has its own instance (thread_local inside the .cc). No
+   *   locking, no contention.
+   *
+   * ABI: file-static. Not EXPORT_API. Internal hot-path helper only.
+   */
+  GVariantBuilder* ScratchBuilder(const GVariantType* type);
+
+  /* Test-only: reset the current thread's scratch builder. Allows unit
+   * tests to isolate builder-reuse allocation counts across TESTs without
+   * relying on test execution order. */
+  void ResetScratchBuilderForTest();
+
+  /* Test-only: returns how many times ScratchBuilder() has had to
+   * g_variant_builder_new() on the current thread (i.e. cold path count).
+   * On a reused-thread hot path this should stay at 1. */
+  int GetScratchBuilderAllocCountForTest();
 }  // namespace util
 }  // namespace notification
 

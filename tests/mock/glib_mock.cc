@@ -16,10 +16,93 @@
 
 #include "glib_mock.hh"
 
+#include <atomic>
 #include <dlfcn.h>
 
 #include "mock_hook.hh"
 #include "test_fixture.hh"
+
+/*
+ * N1-T7 counter storage + helpers.
+ *
+ * Thread-safe via std::atomic (autoptr cleanup at thread exit on the TLS
+ * scratch slot may race with a test thread reading the counters).
+ */
+namespace glib_mock_n1t7 {
+
+namespace {
+std::atomic<int> s_object_unref_count{0};
+std::atomic<int> s_error_free_count{0};
+std::atomic<int> s_variant_builder_new_count{0};
+std::atomic<int> s_variant_builder_unref_count{0};
+}  // namespace
+
+void ResetCounters() {
+  s_object_unref_count.store(0, std::memory_order_release);
+  s_error_free_count.store(0, std::memory_order_release);
+  s_variant_builder_new_count.store(0, std::memory_order_release);
+  s_variant_builder_unref_count.store(0, std::memory_order_release);
+}
+
+int GetObjectUnrefCount() {
+  return s_object_unref_count.load(std::memory_order_acquire);
+}
+
+int GetErrorFreeCount() {
+  return s_error_free_count.load(std::memory_order_acquire);
+}
+
+int GetVariantBuilderNewCount() {
+  return s_variant_builder_new_count.load(std::memory_order_acquire);
+}
+
+int GetVariantBuilderUnrefCount() {
+  return s_variant_builder_unref_count.load(std::memory_order_acquire);
+}
+
+}  // namespace glib_mock_n1t7
+
+/*
+ * N1-T7: counting wrappers around symbols that g_autoptr / the scratch
+ * builder exercise. Each wrapper bumps the counter and then delegates to
+ * RTLD_NEXT so the real glib behavior is preserved (critical - gmock
+ * strict-mock semantics would otherwise break every test that uses real
+ * glib objects).
+ *
+ * These wrappers are only installed when libnotification-unittests is
+ * linked (they live in the unittest binary, not in libnotification-ex).
+ */
+extern "C" void g_object_unref(gpointer arg1) {
+  glib_mock_n1t7::s_object_unref_count.fetch_add(1, std::memory_order_acq_rel);
+  using fp = void (*)(gpointer);
+  static fp real = reinterpret_cast<fp>(dlsym(RTLD_NEXT, "g_object_unref"));
+  if (real && arg1) real(arg1);
+}
+
+extern "C" void g_error_free(GError* arg1) {
+  glib_mock_n1t7::s_error_free_count.fetch_add(1, std::memory_order_acq_rel);
+  using fp = void (*)(GError*);
+  static fp real = reinterpret_cast<fp>(dlsym(RTLD_NEXT, "g_error_free"));
+  if (real && arg1) real(arg1);
+}
+
+extern "C" GVariantBuilder* g_variant_builder_new(const GVariantType* type) {
+  glib_mock_n1t7::s_variant_builder_new_count.fetch_add(1,
+      std::memory_order_acq_rel);
+  using fp = GVariantBuilder* (*)(const GVariantType*);
+  static fp real =
+      reinterpret_cast<fp>(dlsym(RTLD_NEXT, "g_variant_builder_new"));
+  return real ? real(type) : nullptr;
+}
+
+extern "C" void g_variant_builder_unref(GVariantBuilder* b) {
+  glib_mock_n1t7::s_variant_builder_unref_count.fetch_add(1,
+      std::memory_order_acq_rel);
+  using fp = void (*)(GVariantBuilder*);
+  static fp real =
+      reinterpret_cast<fp>(dlsym(RTLD_NEXT, "g_variant_builder_unref"));
+  if (real && b) real(b);
+}
 
 extern "C" GFile* g_file_new_for_path(const char* arg1) {
   return MOCK_HOOK_P1(GlibMock, g_file_new_for_path, arg1);

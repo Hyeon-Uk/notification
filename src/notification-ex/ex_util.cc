@@ -300,6 +300,83 @@ int ConvertDBusError(int error) {
 
   return ERROR_IO_ERROR;
 }
+
+/*
+ * N1-T7: Thread-local scratch GVariantBuilder implementation.
+ *
+ * Implementation note on g_autoptr + thread_local:
+ *   The combination is safe IFF the cleanup attribute only runs at thread
+ *   exit, not at each function return. In C (the original glib idiom)
+ *   g_autoptr is a compiler attribute bound to the variable's enclosing
+ *   scope - which for thread_local means thread lifetime. In C++ the TLS
+ *   storage class gives us the same semantics through the __thread / TLS
+ *   destructor. We express this by storing a raw GVariantBuilder* (not a
+ *   g_autoptr) inside a thread_local RAII wrapper whose dtor runs at
+ *   thread exit. This avoids the "auto-unref on every function return"
+ *   trap called out in the design doc (N1-T7 risks).
+ *
+ *   The wrapper also tracks the cold-path alloc count for unit tests so
+ *   they can prove the second Notify() on the same thread re-uses the
+ *   scratch builder with zero g_variant_builder_new() calls.
+ */
+namespace {
+
+struct ScratchBuilderSlot {
+  GVariantBuilder* builder = nullptr;
+  int alloc_count = 0;
+  bool initialised = false;  // true once g_variant_builder_init ran at least once
+
+  ~ScratchBuilderSlot() {
+    if (builder) {
+      // The scratch builder was *either* mid-use (in which case the caller
+      // leaked it - unit test bug) *or* was fully-drained via
+      // g_variant_builder_end() which already cleared it. Unref is always
+      // safe on a heap builder.
+      g_variant_builder_unref(builder);
+      builder = nullptr;
+    }
+  }
+};
+
+static thread_local ScratchBuilderSlot tls_slot;
+
+}  // namespace
+
+GVariantBuilder* ScratchBuilder(const GVariantType* type) {
+  if (tls_slot.builder == nullptr) {
+    /* Cold path: one-time per-thread heap alloc. g_variant_builder_new
+     * returns a builder already initialised for `type`. */
+    tls_slot.builder = g_variant_builder_new(type);
+    tls_slot.alloc_count++;
+    tls_slot.initialised = true;
+    return tls_slot.builder;
+  }
+
+  /* Hot path: re-init the existing heap builder.
+   *
+   * After g_variant_new("a(s)", builder) the builder was drained by GLib's
+   * internal g_variant_builder_end() and is therefore in an "uninitialised"
+   * state ready for g_variant_builder_init(). g_variant_builder_clear() is
+   * still safe (idempotent on a drained builder, no-op) and guards against
+   * reuse paths that might abort mid-build (defensive on exception paths).
+   */
+  g_variant_builder_clear(tls_slot.builder);
+  g_variant_builder_init(tls_slot.builder, type);
+  return tls_slot.builder;
+}
+
+void ResetScratchBuilderForTest() {
+  if (tls_slot.builder) {
+    g_variant_builder_unref(tls_slot.builder);
+    tls_slot.builder = nullptr;
+  }
+  tls_slot.alloc_count = 0;
+  tls_slot.initialised = false;
+}
+
+int GetScratchBuilderAllocCountForTest() {
+  return tls_slot.alloc_count;
+}
 /* LCOV_EXCL_STOP */
 
 }  // namespace util
