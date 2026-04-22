@@ -57,3 +57,10 @@ PKG_CHECK_MODULES(VCONF_DEPS REQUIRED vconf)
 ADD_SUBDIRECTORY(scripts)
 ADD_SUBDIRECTORY(src)
 ADD_SUBDIRECTORY(tests)
+
+# Phase 0 N0-T2: optional benchmark harness. google/benchmark may not ship
+# in every rootfs; we default OFF and skip gracefully when it is absent.
+OPTION(ENABLE_BENCH "Build notification micro-benchmarks (requires google/benchmark)" OFF)
+IF(ENABLE_BENCH)
+  ADD_SUBDIRECTORY(tests/bench)
+ENDIF()

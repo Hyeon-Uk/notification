@@ -28,6 +28,9 @@ BuildRequires: pkgconfig(gmock)
 BuildRequires: pkgconfig(uuid)
 BuildRequires: pkgconfig(rpc-port)
 BuildRequires: pkgconfig(tizen-core)
+# Phase 0 N0-T2: bench harness uses google/benchmark when -DENABLE_BENCH=ON.
+# Kept optional so the base build still succeeds on rootfs without it.
+BuildRequires: pkgconfig(benchmark)
 
 %if 0%{?gcov:1}
 BuildRequires:  lcov
