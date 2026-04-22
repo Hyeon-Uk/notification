@@ -31,6 +31,7 @@
 #include "notification-ex/checkbox_item.h"
 #include "notification-ex/chat_message_item.h"
 #include "notification-ex/time_item.h"
+#include "notification-ex/null_item.h"
 
 #ifdef LOG_TAG
 #undef LOG_TAG
@@ -42,7 +43,13 @@ using namespace std;
 namespace notification {
 namespace item {
 
-unique_ptr<AbstractItem> DefaultItemFactory::CreateItem(int type) {
+/*
+ * N1-T2: Free-function implementation. This is the canonical default
+ * dispatch table. Both DefaultItemFactory::CreateItem and the
+ * FactoryManager shim ultimately route here when no override is set,
+ * so no DefaultItemFactory instance is constructed on the hot path.
+ */
+unique_ptr<AbstractItem> CreateItem(int type) {
   switch (type) {
     case AbstractItem::NullObject :
       THROW(ERROR_INVALID_PARAMETER);
@@ -74,6 +81,17 @@ unique_ptr<AbstractItem> DefaultItemFactory::CreateItem(int type) {
   }
 
   return nullptr;
+}
+
+AbstractItem& GetNullItem() {
+  static NullItem item;
+  return item;
+}
+
+unique_ptr<AbstractItem> DefaultItemFactory::CreateItem(int type) {
+  /* Delegate to the free function so behavior stays identical whether the
+   * caller goes through FactoryManager or the free-function entry. */
+  return ::notification::item::CreateItem(type);
 }
 
 }  // namespace item

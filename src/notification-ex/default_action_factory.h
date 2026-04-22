@@ -45,6 +45,10 @@ class EXPORT_API DefaultActionFactory : public IActionFactory {
   std::unique_ptr<AbstractAction> CreateAction(int type) override;
 };
 
+/* N1-T2: Free-function entry point for default action creation. See
+ * default_item_factory.h for rationale. */
+std::unique_ptr<AbstractAction> CreateAction(int type);
+
 }  // namespace item
 }  // namespace notification
 

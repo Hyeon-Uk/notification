@@ -18,7 +18,7 @@
 
 #include "notification-ex/chat_message_item.h"
 #include "notification-ex/chat_message_item_implementation.h"
-#include "notification-ex/factory_manager.h"
+#include "notification-ex/default_item_factory.h"
 #include "notification-ex/exception.h"
 
 #ifdef LOG_TAG
@@ -84,30 +84,34 @@ Bundle ChatMessageItem::Serialize() const {
 void ChatMessageItem::Deserialize(Bundle b) {
   AbstractItem::Deserialize(b);
 
+  /* N1-T2: use free-function CreateItem for internal known types
+   * (Text/Image/Time) to avoid routing through the FactoryManager
+   * shim. User overrides are not expected to apply to these built-in
+   * child types. */
   if (!b.GetString(CHATMESSAGE_NAME_KEY).empty()) {
     std::shared_ptr<AbstractItem> name =
-        FactoryManager::GetInst().CreateItem(AbstractItem::Text);
+        ::notification::item::CreateItem(AbstractItem::Text);
     name.get()->Deserialize(Bundle(b.GetString(CHATMESSAGE_NAME_KEY)));
     impl_->name_ = std::static_pointer_cast<TextItem>(name);
   }
 
   if (!b.GetString(CHATMESSAGE_TEXT_KEY).empty()) {
     std::shared_ptr<AbstractItem> text =
-        FactoryManager::GetInst().CreateItem(AbstractItem::Text);
+        ::notification::item::CreateItem(AbstractItem::Text);
     text.get()->Deserialize(Bundle(b.GetString(CHATMESSAGE_TEXT_KEY)));
     impl_->text_ = std::static_pointer_cast<TextItem>(text);
   }
 
   if (!b.GetString(CHATMESSAGE_IMAGE_KEY).empty()) {
     std::shared_ptr<AbstractItem> image =
-        FactoryManager::GetInst().CreateItem(AbstractItem::Image);
+        ::notification::item::CreateItem(AbstractItem::Image);
     image.get()->Deserialize(Bundle(b.GetString(CHATMESSAGE_IMAGE_KEY)));
     impl_->image_ = std::static_pointer_cast<ImageItem>(image);
   }
 
   if (!b.GetString(CHATMESSAGE_TIME_KEY).empty()) {
     std::shared_ptr<AbstractItem> time =
-        FactoryManager::GetInst().CreateItem(AbstractItem::Time);
+        ::notification::item::CreateItem(AbstractItem::Time);
     time.get()->Deserialize(Bundle(b.GetString(CHATMESSAGE_TIME_KEY)));
     impl_->time_ = std::static_pointer_cast<TimeItem>(time);
   }
@@ -131,7 +135,7 @@ AbstractItem& ChatMessageItem::FindByID(std::string id) {
   if (impl_->time_->GetId() == id)
     return *(impl_->time_);
 
-  return FactoryManager::GetInst().GetNullItem();
+  return ::notification::item::GetNullItem();
 }
 
 /* LCOV_EXCL_START */
@@ -151,7 +155,7 @@ AbstractItem& ChatMessageItem::FindByMainType(MainType type) {
   if (impl_->time_->GetMainType() == type)
     return *(impl_->time_);
 
-  return FactoryManager::GetInst().GetNullItem();
+  return ::notification::item::GetNullItem();
 }
 
 bool ChatMessageItem::IsItemTypeExist(int type) {
@@ -176,25 +180,25 @@ std::list<std::string> ChatMessageItem::GetSharedPath() const {
 
 TextItem& ChatMessageItem::GetNameItem() const {
   if (impl_->name_ == nullptr)
-    return static_cast<TextItem&>(FactoryManager::GetInst().GetNullItem());
+    return static_cast<TextItem&>(::notification::item::GetNullItem());
   return *(impl_->name_);
 }
 
 TextItem& ChatMessageItem::GetTextItem() const {
   if (impl_->text_ == nullptr)
-    return static_cast<TextItem&>(FactoryManager::GetInst().GetNullItem());
+    return static_cast<TextItem&>(::notification::item::GetNullItem());
   return *(impl_->text_);
 }
 
 ImageItem& ChatMessageItem::GetImageItem() const {
   if (impl_->image_ == nullptr)
-    return static_cast<ImageItem&>(FactoryManager::GetInst().GetNullItem());
+    return static_cast<ImageItem&>(::notification::item::GetNullItem());
   return *(impl_->image_);
 }
 
 TimeItem& ChatMessageItem::GetTimeItem() const {
   if (impl_->time_ == nullptr)
-    return static_cast<TimeItem&>(FactoryManager::GetInst().GetNullItem());
+    return static_cast<TimeItem&>(::notification::item::GetNullItem());
   return *(impl_->time_);
 }
 

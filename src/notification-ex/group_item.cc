@@ -23,6 +23,7 @@
 #include "notification-ex/group_item.h"
 #include "notification-ex/group_item_implementation.h"
 #include "notification-ex/factory_manager.h"
+#include "notification-ex/default_item_factory.h"
 #include "notification-ex/ex_util.h"
 #include "notification-ex/exception.h"
 
@@ -124,7 +125,7 @@ AbstractItem& GroupItem::FindByID(std::string id) {
     if (re.GetId() == id)
       return re;
   }
-  return FactoryManager::GetInst().GetNullItem();
+  return ::notification::item::GetNullItem();
 }
 
 AbstractItem& GroupItem::FindByMainType(MainType type) {
@@ -136,7 +137,7 @@ AbstractItem& GroupItem::FindByMainType(MainType type) {
     if (re.GetType() != NullObject)
       return re;
   }
-  return FactoryManager::GetInst().GetNullItem();
+  return ::notification::item::GetNullItem();
 }
 
 bool GroupItem::IsItemTypeExist(int type) {

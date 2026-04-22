@@ -33,7 +33,13 @@ using namespace std;
 namespace notification {
 namespace item {
 
-unique_ptr<AbstractAction> DefaultActionFactory::CreateAction(int type) {
+/*
+ * N1-T2: Free-function implementation. Canonical default dispatch for
+ * action creation. FactoryManager shim and DefaultActionFactory both
+ * forward here so no DefaultActionFactory instance is built on the hot
+ * path.
+ */
+unique_ptr<AbstractAction> CreateAction(int type) {
   switch (type) {
     case AbstractAction::NullObject :
       THROW(ERROR_INVALID_PARAMETER);
@@ -51,6 +57,10 @@ unique_ptr<AbstractAction> DefaultActionFactory::CreateAction(int type) {
   }
 
   return nullptr;
+}
+
+unique_ptr<AbstractAction> DefaultActionFactory::CreateAction(int type) {
+  return ::notification::item::CreateAction(type);
 }
 
 }  // namespace item

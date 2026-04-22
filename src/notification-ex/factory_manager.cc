@@ -32,6 +32,9 @@ namespace notification {
 namespace item {
 
 FactoryManager& FactoryManager::GetInst() {
+  /* Plain function-local static. The object is trivial - two empty
+   * unique_ptrs - so this does not count as a real factory
+   * construction. */
   static FactoryManager manager;
   return manager;
 }
@@ -45,22 +48,24 @@ void FactoryManager::RegisterFactory(std::unique_ptr<IActionFactory> factory) {
 }
 
 std::unique_ptr<AbstractItem> FactoryManager::CreateItem(int type) {
-  if (item_factory_.get() == nullptr)
-    item_factory_.reset(new DefaultItemFactory());
-
-  return item_factory_->CreateItem(type);
+  /* If an override is registered, honor it. Otherwise forward to the
+   * free function directly so that no DefaultItemFactory is
+   * constructed on the default path. */
+  if (item_factory_.get() != nullptr)
+    return item_factory_->CreateItem(type);
+  return ::notification::item::CreateItem(type);
 }
 
 std::unique_ptr<AbstractAction> FactoryManager::CreateAction(int type) {
-  if (action_factory_.get() == nullptr)
-    action_factory_.reset(new DefaultActionFactory());
-
-  return action_factory_->CreateAction(type);
+  if (action_factory_.get() != nullptr)
+    return action_factory_->CreateAction(type);
+  return ::notification::item::CreateAction(type);
 }
 
 AbstractItem& FactoryManager::GetNullItem() {
-  static NullItem item;
-  return item;
+  /* Shared singleton NullItem lives in default_item_factory.cc;
+   * delegate so both paths return the same address. */
+  return ::notification::item::GetNullItem();
 }
 
 }  // namespace item

@@ -31,7 +31,7 @@
 #include "notification-ex/multi_language.h"
 #include "notification-ex/ex_util.h"
 #include "notification-ex/action_inflator.h"
-#include "notification-ex/factory_manager.h"
+#include "notification-ex/default_item_factory.h"
 #include "notification-ex/shared_file.h"
 
 #ifdef LOG_TAG
@@ -651,14 +651,14 @@ AbstractItem& AbstractItem::FindByID(std::string id) {
   if (GetId() == id)
     return *this;
 
-  return FactoryManager::GetInst().GetNullItem();
+  return ::notification::item::GetNullItem();
 }
 
 AbstractItem& AbstractItem::FindByMainType(AbstractItem::MainType type) {
   if (impl_->main_type_ == type)
     return *this;
 
-  return FactoryManager::GetInst().GetNullItem();
+  return ::notification::item::GetNullItem();
 }
 
 std::shared_ptr<MultiLanguage> AbstractItem::GetMultiLanguage() const {

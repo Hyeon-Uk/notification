@@ -31,6 +31,18 @@ namespace item {
  * @brief The class for FactoryManager.
  * @details The class to manage creation of action and item.
  * @since_tizen 5.5
+ *
+ * N1-T2 (2026-04): This class is now a deprecation shim. All internal
+ * callers route through free functions (CreateItem / CreateAction /
+ * GetNullItem) defined in default_item_factory.h and
+ * default_action_factory.h. The shim is retained for ABI compatibility
+ * so external callers (e.g. DPM, plugins) that still invoke
+ * FactoryManager::GetInst().RegisterFactory(...) continue to work.
+ *
+ * When no override is registered via RegisterFactory, CreateItem /
+ * CreateAction forward to the free functions without constructing a
+ * DefaultItemFactory / DefaultActionFactory - ensuring the zero-instance
+ * goal on the default hot path.
  */
 class EXPORT_API FactoryManager {
  public:

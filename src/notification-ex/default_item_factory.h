@@ -45,6 +45,14 @@ class EXPORT_API DefaultItemFactory : public IItemFactory {
   std::unique_ptr<AbstractItem> CreateItem(int type) override;
 };
 
+/* N1-T2: Free-function entry points for default item creation.
+ * These replace the FactoryManager singleton path for internal callers so
+ * that no FactoryManager / DefaultItemFactory instance is materialized on
+ * the hot path. FactoryManager shim still delegates here when no user
+ * override is registered (see factory_manager.cc). */
+std::unique_ptr<AbstractItem> CreateItem(int type);
+AbstractItem& GetNullItem();
+
 }  // namespace item
 }  // namespace notification
 
