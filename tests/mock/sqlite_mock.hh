@@ -27,6 +27,7 @@ class SqliteMock : public virtual ModuleMock {
   virtual ~SqliteMock() {}
 
   MOCK_METHOD1(sqlite3_close, int(sqlite3*));
+  MOCK_METHOD1(sqlite3_close_v2, int(sqlite3*));
   MOCK_METHOD1(sqlite3_changes, int(sqlite3*));
   MOCK_METHOD4(sqlite3_open_v2, int(const char*, sqlite3**, int, const char*));
   MOCK_METHOD5(sqlite3_exec, int(sqlite3*, const char*,

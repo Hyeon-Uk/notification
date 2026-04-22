@@ -31,6 +31,10 @@ extern "C" int sqlite3_close(sqlite3* arg0) {
   return MOCK_HOOK_P1(SqliteMock, sqlite3_close, arg0);
 }
 
+extern "C" int sqlite3_close_v2(sqlite3* arg0) {
+  return MOCK_HOOK_P1(SqliteMock, sqlite3_close_v2, arg0);
+}
+
 extern "C" int sqlite3_changes(sqlite3* arg0) {
   return MOCK_HOOK_P1(SqliteMock, sqlite3_changes, arg0);
 }

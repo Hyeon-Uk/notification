@@ -25,9 +25,13 @@
 #include <string.h>
 #include <list>
 #include <map>
+#include <memory>
+#include <mutex>
+#include <utility>
 
 #include "notification-ex/common.h"
 #include "notification-ex/db_manager.h"
+#include "notification-ex/idb_manager.h"
 #include "notification-ex/item_inflator.h"
 #include "notification-ex/iitem_info_internal.h"
 #include "notification-ex/ex_util.h"
@@ -69,35 +73,156 @@ using namespace tizen_base;
 using namespace notification::item;
 
 namespace notification {
+namespace {
 
-DBManager::DBManager() = default;
-DBManager::~DBManager() = default;
+/*
+ * N1-T3: DbConnectionHolder
+ * --------------------------
+ * Single long-lived sqlite3* per process, wrapped in a shared_ptr whose
+ * custom deleter is sqlite3_close_v2. All access is serialized via a
+ * recursive_mutex (recursive so nested DBManager calls inside
+ * InsertNotification / UpdateNotification / DeleteNotification which
+ * already hold the connection can re-enter ExecuteQuery / GetSequence /
+ * GetNotificationList without deadlocking).
+ *
+ * Acquire() returns an AcquiredDb RAII handle that owns the lock for the
+ * duration of the hot call and exposes sqlite3* via Get().
+ *
+ * Invalidate() is used by RecoverCorruptedDB: it drops the cached
+ * shared_ptr so the next Acquire() re-opens a fresh connection after the
+ * database file has been unlinked / recreated.
+ */
+class DbConnectionHolder {
+ public:
+  class AcquiredDb {
+   public:
+    AcquiredDb() = default;
+    AcquiredDb(std::unique_lock<std::recursive_mutex> lock,
+               std::shared_ptr<sqlite3> conn)
+        : lock_(std::move(lock)), conn_(std::move(conn)) {}
 
-/* LCOV_EXCL_START */
-sqlite3* DBManager::OpenDB() {
-  int ret;
-  sqlite3* db;
+    AcquiredDb(const AcquiredDb&) = delete;
+    AcquiredDb& operator=(const AcquiredDb&) = delete;
+    AcquiredDb(AcquiredDb&&) noexcept = default;
+    AcquiredDb& operator=(AcquiredDb&&) noexcept = default;
 
-  ret = sqlite3_open_v2(DBPATH, &db, SQLITE_OPEN_READWRITE, nullptr);
-  if (ret != SQLITE_OK) {
-    LOGE("open db(%s) error: %d", DBPATH, ret);
-    return nullptr;
+    sqlite3* Get() const { return conn_.get(); }
+    explicit operator bool() const { return conn_ != nullptr; }
+
+   private:
+    std::unique_lock<std::recursive_mutex> lock_;
+    std::shared_ptr<sqlite3> conn_;
+  };
+
+  static DbConnectionHolder& Instance() {
+    static DbConnectionHolder holder;
+    return holder;
   }
 
-  return db;
+  AcquiredDb Acquire() {
+    std::unique_lock<std::recursive_mutex> lock(mutex_);
+    if (!cached_)
+      cached_ = OpenInternal();
+
+    if (!cached_) {
+      /* Surface a null AcquiredDb so callers can short-circuit. Keep the
+       * lock released by letting the unique_lock destruct via returning
+       * an empty AcquiredDb. */
+      lock.unlock();
+      return AcquiredDb();
+    }
+
+    return AcquiredDb(std::move(lock), cached_);
+  }
+
+  /* Drop the cached connection. Any in-flight AcquiredDb holds its own
+   * shared_ptr so the underlying sqlite3 stays alive until the holder's
+   * last reference releases it. */
+  void Invalidate() {
+    std::lock_guard<std::recursive_mutex> lock(mutex_);
+    cached_.reset();
+  }
+
+ private:
+  DbConnectionHolder() = default;
+  ~DbConnectionHolder() = default;
+  DbConnectionHolder(const DbConnectionHolder&) = delete;
+  DbConnectionHolder& operator=(const DbConnectionHolder&) = delete;
+
+  static std::shared_ptr<sqlite3> OpenInternal() {
+    sqlite3* raw = nullptr;
+    int ret = sqlite3_open_v2(DBPATH, &raw, SQLITE_OPEN_READWRITE, nullptr);
+    if (ret != SQLITE_OK) {
+      LOGE("open db(%s) error: %d", DBPATH, ret);
+      if (raw)
+        sqlite3_close_v2(raw);
+      return nullptr;
+    }
+    return std::shared_ptr<sqlite3>(raw, [](sqlite3* p) {
+      if (p) {
+        int r = sqlite3_close_v2(p);
+        if (r != SQLITE_OK)
+          LOGE("close db error: %d", r);
+      }
+    });
+  }
+
+  std::recursive_mutex mutex_;
+  std::shared_ptr<sqlite3> cached_;
+};
+
+class DBManagerImpl : public IDBManager {
+ public:
+  DBManagerImpl() = default;
+  ~DBManagerImpl() override = default;
+
+  int InitializeDB() override;
+  void InitializeData() override;
+  int InsertNotification(
+      std::list<std::shared_ptr<item::AbstractItem>> addedList) override;
+  std::map<std::string, std::string> GetHideMap() override;
+  int UpdateHideList(std::shared_ptr<item::AbstractItem> updatedItem,
+                     const std::string& hide_list) override;
+  int UpdateNotification(
+      std::list<std::shared_ptr<item::AbstractItem>> updatedList) override;
+  int GetCount(int64_t priv_id, const std::string& root_id,
+               const std::string& app_id, const std::string& channel,
+               uid_t uid, int* count) override;
+  int GetCount(const std::string& app_id, const std::string& channel,
+               uid_t uid, int* count) override;
+  int DeleteNotification(
+      std::list<std::shared_ptr<item::AbstractItem>> deletedList) override;
+  std::list<std::shared_ptr<item::AbstractItem>> GetNotificationList(
+      uid_t uid, std::string channel = "") override;
+  std::list<std::shared_ptr<item::AbstractItem>> GetNotificationList(
+      std::string app_id, uid_t uid, std::string channel = "") override;
+  std::list<std::shared_ptr<item::AbstractItem>> GetNotificationList(
+      std::string app_id, std::string root_id, uid_t uid) override;
+  std::list<std::shared_ptr<item::AbstractItem>> GetNotificationList(
+      std::string app_id, int64_t private_id, uid_t uid) override;
+
+ private:
+  static int CheckDBIntegrity(void* user_data, int argc, char** argv,
+                              char** notUsed);
+  int RecoverCorruptedDB();
+  int ExecuteQuery(const char* query, int* num_changes);
+  int ExecuteQuery(sqlite3* db, const char* query, int* num_changes);
+  int GetSequence(sqlite3* db, int64_t* seq);
+  std::string GetPkgId(const std::string& app_id, uid_t uid);
+  void CheckLimit(std::shared_ptr<item::AbstractItem> addedItem, sqlite3* db);
+  int UpdateReceiverList(std::shared_ptr<item::AbstractItem> updatedItem,
+                         sqlite3* db);
+  std::list<std::shared_ptr<item::AbstractItem>> ExecuteGetList(char* query);
+};
+
+DBManagerImpl& DefaultImpl() {
+  static DBManagerImpl impl;
+  return impl;
 }
 
-void DBManager::CloseDB(sqlite3* db) {
-  int ret = SQLITE_OK;
-
-  if (db)
-    ret = sqlite3_close_v2(db);
-
-  if (ret != SQLITE_OK)
-    LOGE("close db error");
-}
-
-int DBManager::ExecuteQuery(sqlite3* db, const char* query, int* num_changes) {
+/* LCOV_EXCL_START */
+int DBManagerImpl::ExecuteQuery(sqlite3* db, const char* query,
+                                int* num_changes) {
   int ret = ERROR_NONE;
   sqlite3_stmt *stmt;
 
@@ -124,23 +249,18 @@ int DBManager::ExecuteQuery(sqlite3* db, const char* query, int* num_changes) {
   return ret;
 }
 
-int DBManager::ExecuteQuery(const char* query, int* num_changes) {
-  int ret;
-
+int DBManagerImpl::ExecuteQuery(const char* query, int* num_changes) {
   if (query == nullptr)
     return ERROR_INVALID_PARAMETER;
 
-  sqlite3* db = OpenDB();
-  if (db == nullptr)
+  auto acquired = DbConnectionHolder::Instance().Acquire();
+  if (!acquired)
     return ERROR_FROM_DB;
 
-  ret = ExecuteQuery(db, query, num_changes);
-  CloseDB(db);
-
-  return ret;
+  return ExecuteQuery(acquired.Get(), query, num_changes);
 }
 
-int DBManager::GetSequence(sqlite3* db, int64_t* seq) {
+int DBManagerImpl::GetSequence(sqlite3* db, int64_t* seq) {
   int ret = ERROR_NONE;
   sqlite3_stmt *stmt;
 
@@ -172,8 +292,8 @@ int DBManager::GetSequence(sqlite3* db, int64_t* seq) {
   return ret;
 }
 
-int DBManager::CheckDBIntegrity(void* user_data, int argc,
-                                       char** argv, char** notUsed) {
+int DBManagerImpl::CheckDBIntegrity(void* user_data, int argc,
+                                    char** argv, char** notUsed) {
   bool* is_db_corrupted = static_cast<bool*>(user_data);
 
   if (std::string(argv[0]).compare("ok")) {
@@ -186,13 +306,18 @@ int DBManager::CheckDBIntegrity(void* user_data, int argc,
   return 0;
 }
 
-int DBManager::RecoverCorruptedDB(sqlite3* db) {
+/*
+ * Recover the corrupted DB file. Called from InitializeDB when the
+ * integrity check fails. Invalidates the cached connection before
+ * unlinking so later Acquire() opens a fresh file.
+ */
+int DBManagerImpl::RecoverCorruptedDB() {
   int ret = ERROR_NONE;
   char* errmsg = nullptr;
+  sqlite3* db = nullptr;
 
   LOGI("DB is corrupted, start to recover corrupted db");
-  if (db)
-    sqlite3_close(db);
+  DbConnectionHolder::Instance().Invalidate();
   unlink(DBPATH);
 
   ret = sqlite3_open_v2(DBPATH, &db,
@@ -200,48 +325,56 @@ int DBManager::RecoverCorruptedDB(sqlite3* db) {
   if (ret != SQLITE_OK) {
     LOGE("Failed to open db[%d]", ret);
     unlink(DBPATH);
-    ret = ERROR_FROM_DB;
-    goto out;
+    if (db)
+      sqlite3_close_v2(db);
+    return ERROR_FROM_DB;
   }
 
   ret = sqlite3_exec(db, CREATE_NOTIFICATION_TABLE, nullptr, nullptr, &errmsg);
   if (ret != SQLITE_OK) {
     LOGE("Failed to exec query[%d][%s]", ret, errmsg);
     ret = ERROR_FROM_DB;
+  } else {
+    ret = ERROR_NONE;
   }
 
-out:
   if (errmsg)
     sqlite3_free(errmsg);
+  if (db)
+    sqlite3_close_v2(db);
 
   return ret;
 }
 
-int DBManager::InitializeDB() {
+int DBManagerImpl::InitializeDB() {
   int ret = ERROR_NONE;
   int sql_ret;
-  sqlite3* db;
+  sqlite3* db = nullptr;
   char *errmsg = nullptr;
   bool is_db_corrupted = false;
 
+  /* InitializeDB always uses its own dedicated connection because it
+   * needs SQLITE_OPEN_CREATE to create the DB file if missing. Do NOT
+   * reuse the long-lived cached connection here - that one is opened in
+   * read/write mode against an existing file. */
   sql_ret = sqlite3_open_v2(DBPATH, &db,
                  SQLITE_OPEN_CREATE | SQLITE_OPEN_READWRITE, nullptr);
   if (sql_ret != SQLITE_OK) {
-    LOGE("Failed to open db[%d]", ret);
+    LOGE("Failed to open db[%d]", sql_ret);
     ret = ERROR_FROM_DB;
     goto out;
   }
 
   sql_ret = sqlite3_exec(db, CREATE_NOTIFICATION_TABLE, nullptr, nullptr, &errmsg);
   if (sql_ret != SQLITE_OK) {
-    LOGE("Failed to exec sqlite[%d][%s]", ret, errmsg);
+    LOGE("Failed to exec sqlite[%d][%s]", sql_ret, errmsg);
     ret = ERROR_FROM_DB;
     goto out;
   }
 
   sql_ret = sqlite3_exec(db, "PRAGMA foreign_keys = ON", NULL, NULL, NULL);
   if (sql_ret != SQLITE_OK) {
-    LOGE("Failed to exec sqlite[%d][%s]", ret, errmsg);
+    LOGE("Failed to exec sqlite[%d][%s]", sql_ret, errmsg);
     ret = ERROR_FROM_DB;
     goto out;
   }
@@ -254,17 +387,25 @@ int DBManager::InitializeDB() {
   }
 
 out:
-  if (sql_ret == SQLITE_CORRUPT || sql_ret == SQLITE_NOTADB || is_db_corrupted)
-    ret = RecoverCorruptedDB(db);
   if (errmsg)
     sqlite3_free(errmsg);
   if (db)
-    sqlite3_close(db);
+    sqlite3_close_v2(db);
+
+  if (sql_ret == SQLITE_CORRUPT || sql_ret == SQLITE_NOTADB ||
+      is_db_corrupted) {
+    ret = RecoverCorruptedDB();
+  }
+
+  /* The subsequent Acquire() in the hot path will open the long-lived
+   * read/write connection. Invalidate any prior cache so stale handles
+   * are dropped. */
+  DbConnectionHolder::Instance().Invalidate();
 
   return ret;
 }
 
-void DBManager::InitializeData() {
+void DBManagerImpl::InitializeData() {
   char* query;
 
   query = sqlite3_mprintf("DELETE FROM noti_ex_list WHERE policy & %d",
@@ -278,7 +419,8 @@ void DBManager::InitializeData() {
   sqlite3_free(query);
 }
 
-void DBManager::CheckLimit(shared_ptr<item::AbstractItem> addedItem, sqlite3* db) {
+void DBManagerImpl::CheckLimit(shared_ptr<item::AbstractItem> addedItem,
+                               sqlite3* db) {
   int ret, count;
   char* query;
   sqlite3_stmt* stmt = nullptr;
@@ -357,8 +499,8 @@ out:
     sqlite3_free(query);
 }
 
-int DBManager::UpdateReceiverList
-    (shared_ptr<item::AbstractItem> updatedItem,  sqlite3* db) {
+int DBManagerImpl::UpdateReceiverList(shared_ptr<item::AbstractItem> updatedItem,
+                                      sqlite3* db) {
   int ret;
   char* query;
   uid_t uid =
@@ -402,18 +544,19 @@ int DBManager::UpdateReceiverList
   return ERROR_NONE;
 }
 
-int DBManager::InsertNotification(list<shared_ptr<item::AbstractItem>> addedList) {
+int DBManagerImpl::InsertNotification(
+    list<shared_ptr<item::AbstractItem>> addedList) {
   int ret = ERROR_NONE;
   char* query;
   int64_t priv_id = 0;
-  sqlite3* db = OpenDB();
 
-  if (db == nullptr)
+  auto acquired = DbConnectionHolder::Instance().Acquire();
+  if (!acquired)
     return ERROR_FROM_DB;
+  sqlite3* db = acquired.Get();
 
   if (sqlite3_exec(db, "BEGIN TRANSACTION", nullptr, nullptr, nullptr)) {
     LOGE("begin transaction error : %s", sqlite3_errmsg(db));
-    CloseDB(db);
     return ERROR_FROM_DB;
   }
 
@@ -475,15 +618,13 @@ int DBManager::InsertNotification(list<shared_ptr<item::AbstractItem>> addedList
     LOGE("rollback transaction error : %s", sqlite3_errmsg(db));
   }
 
-  CloseDB(db);
   return ret;
 }
 
-map<string, string> DBManager::GetHideMap() {
+map<string, string> DBManagerImpl::GetHideMap() {
   map<string, string> hide_map;
   char* query;
   sqlite3_stmt* stmt;
-  sqlite3* db;
   int ret;
   string key;
 
@@ -494,16 +635,16 @@ map<string, string> DBManager::GetHideMap() {
     return hide_map;
   }
 
-  db = OpenDB();
-  if (db == nullptr) {
+  auto acquired = DbConnectionHolder::Instance().Acquire();
+  if (!acquired) {
     sqlite3_free(query);
     return hide_map;
   }
+  sqlite3* db = acquired.Get();
 
   ret = sqlite3_prepare_v2(db, query, strlen(query), &stmt, nullptr);
   if (ret != SQLITE_OK) {
     LOGE("Failed to sqlite3_prepare [%d][%s]", ret,	sqlite3_errmsg(db));
-    CloseDB(db);
     sqlite3_free(query);
     return hide_map;
   }
@@ -517,20 +658,19 @@ map<string, string> DBManager::GetHideMap() {
   }
 
   sqlite3_finalize(stmt);
-  CloseDB(db);
   return hide_map;
 }
 
-int DBManager::GetCount(const string& app_id, const string& channel, uid_t uid, int* count) {
+int DBManagerImpl::GetCount(const string& app_id, const string& channel,
+                            uid_t uid, int* count) {
   return GetCount(0, string(), app_id, channel, uid, count);
 }
 
-int DBManager::GetCount(int64_t priv_id, const string& root_id,
+int DBManagerImpl::GetCount(int64_t priv_id, const string& root_id,
     const string& app_id, const string& channel, uid_t uid, int* count) {
   int ret;
   char* query;
   sqlite3_stmt *stmt;
-  sqlite3* db;
   string query_str;
 
   if (priv_id != 0) {
@@ -554,17 +694,17 @@ int DBManager::GetCount(int64_t priv_id, const string& root_id,
     return ERROR_OUT_OF_MEMORY;
   }
 
-  db = OpenDB();
-  if (db == nullptr) {
+  auto acquired = DbConnectionHolder::Instance().Acquire();
+  if (!acquired) {
     sqlite3_free(query);
     return ERROR_FROM_DB;
   }
+  sqlite3* db = acquired.Get();
 
   ret = sqlite3_prepare_v2(db, query, strlen(query), &stmt, nullptr);
   if (ret != SQLITE_OK) {
     LOGE("Failed to sqlite3_prepare [%d][%s]", ret,	sqlite3_errmsg(db));
     sqlite3_free(query);
-    CloseDB(db);
     return ERROR_FROM_DB;
   }
   sqlite3_free(query);
@@ -576,11 +716,10 @@ int DBManager::GetCount(int64_t priv_id, const string& root_id,
     *count = 0;
 
   sqlite3_finalize(stmt);
-  CloseDB(db);
   return ERROR_NONE;
 }
 
-int DBManager::UpdateHideList(shared_ptr<item::AbstractItem> updatedItem,
+int DBManagerImpl::UpdateHideList(shared_ptr<item::AbstractItem> updatedItem,
     const string& hide_list) {
   int ret;
   char* query;
@@ -601,17 +740,19 @@ int DBManager::UpdateHideList(shared_ptr<item::AbstractItem> updatedItem,
   return ret;
 }
 
-int DBManager::UpdateNotification(list<shared_ptr<item::AbstractItem>> updatedList) {
+int DBManagerImpl::UpdateNotification(
+    list<shared_ptr<item::AbstractItem>> updatedList) {
   int ret = ERROR_NONE;
   char* query;
   int64_t priv_id;
-  sqlite3* db = OpenDB();
-  if (db == nullptr)
+
+  auto acquired = DbConnectionHolder::Instance().Acquire();
+  if (!acquired)
     return ERROR_FROM_DB;
+  sqlite3* db = acquired.Get();
 
   if (sqlite3_exec(db, "BEGIN TRANSACTION", nullptr, nullptr, nullptr)) {
     LOGE("begin transaction error : %s", sqlite3_errmsg(db));
-    CloseDB(db);
     return ERROR_FROM_DB;
   }
 
@@ -664,13 +805,11 @@ int DBManager::UpdateNotification(list<shared_ptr<item::AbstractItem>> updatedLi
       LOGE("rollback transaction error : %s", sqlite3_errmsg(db));
   }
 
-  CloseDB(db);
   return ret;
 }
 
-list<shared_ptr<item::AbstractItem>> DBManager::ExecuteGetList(char* query) {
+list<shared_ptr<item::AbstractItem>> DBManagerImpl::ExecuteGetList(char* query) {
   sqlite3_stmt *stmt;
-  sqlite3* db;
   int ret;
   list<shared_ptr<item::AbstractItem>> item_list;
 
@@ -679,14 +818,14 @@ list<shared_ptr<item::AbstractItem>> DBManager::ExecuteGetList(char* query) {
     return item_list;
   }
 
-  db = OpenDB();
-  if (db == nullptr)
+  auto acquired = DbConnectionHolder::Instance().Acquire();
+  if (!acquired)
     return item_list;
+  sqlite3* db = acquired.Get();
 
   ret = sqlite3_prepare_v2(db, query, strlen(query), &stmt, nullptr);
   if (ret != SQLITE_OK) {
     LOGE("Failed to sqlite3_prepare [%d][%s]", ret, sqlite3_errmsg(db));
-    CloseDB(db);
     return item_list;
   }
 
@@ -699,11 +838,10 @@ list<shared_ptr<item::AbstractItem>> DBManager::ExecuteGetList(char* query) {
   }
 
   sqlite3_finalize(stmt);
-  CloseDB(db);
   return item_list;
 }
 
-list<shared_ptr<item::AbstractItem>> DBManager::GetNotificationList(
+list<shared_ptr<item::AbstractItem>> DBManagerImpl::GetNotificationList(
     string app_id, uid_t uid, string channel) {
   char* query;
   list<shared_ptr<item::AbstractItem>> item_list;
@@ -728,7 +866,7 @@ list<shared_ptr<item::AbstractItem>> DBManager::GetNotificationList(
   return item_list;
 }
 
-list<shared_ptr<item::AbstractItem>> DBManager::GetNotificationList(
+list<shared_ptr<item::AbstractItem>> DBManagerImpl::GetNotificationList(
     string app_id, string root_id, uid_t uid) {
   char* query;
   list<shared_ptr<item::AbstractItem>> item_list;
@@ -748,7 +886,7 @@ list<shared_ptr<item::AbstractItem>> DBManager::GetNotificationList(
   return item_list;
 }
 
-list<shared_ptr<item::AbstractItem>> DBManager::GetNotificationList(
+list<shared_ptr<item::AbstractItem>> DBManagerImpl::GetNotificationList(
     string app_id, int64_t priv_id, uid_t uid) {
   char* query;
   list<shared_ptr<item::AbstractItem>> item_list;
@@ -768,7 +906,7 @@ list<shared_ptr<item::AbstractItem>> DBManager::GetNotificationList(
   return item_list;
 }
 
-list<shared_ptr<item::AbstractItem>> DBManager::GetNotificationList(
+list<shared_ptr<item::AbstractItem>> DBManagerImpl::GetNotificationList(
     uid_t uid, string channel) {
   int ret, sim_mode;
   char* query;
@@ -808,17 +946,18 @@ list<shared_ptr<item::AbstractItem>> DBManager::GetNotificationList(
   return item_list;
 }
 
-int DBManager::DeleteNotification(
+int DBManagerImpl::DeleteNotification(
     list<shared_ptr<item::AbstractItem>> deletedList) {
   int ret = ERROR_NONE;
   char* query;
-  sqlite3* db = OpenDB();
-  if (db == nullptr)
+
+  auto acquired = DbConnectionHolder::Instance().Acquire();
+  if (!acquired)
     return ERROR_FROM_DB;
+  sqlite3* db = acquired.Get();
 
   if (sqlite3_exec(db, "BEGIN TRANSACTION", nullptr, nullptr, nullptr)) {
     LOGE("begin transaction error : %s", sqlite3_errmsg(db));
-    CloseDB(db);
     return ERROR_FROM_DB;
   }
 
@@ -847,11 +986,10 @@ int DBManager::DeleteNotification(
     LOGE("rollback transaction error : %s", sqlite3_errmsg(db));
   }
 
-  CloseDB(db);
   return ret;
 }
 
-string DBManager::GetPkgId(const string& app_id, uid_t uid) {
+string DBManagerImpl::GetPkgId(const string& app_id, uid_t uid) {
   pkgmgrinfo_pkginfo_h handle;
   char *buf = nullptr;
   string pkgid;
@@ -866,5 +1004,243 @@ string DBManager::GetPkgId(const string& app_id, uid_t uid) {
   return pkgid;
 }
 /* LCOV_EXCL_STOP */
+
+}  // namespace
+
+/* LCOV_EXCL_START */
+DBManager::DBManager() = default;
+DBManager::~DBManager() = default;
+
+/*
+ * ABI shim: the legacy DBManager static methods now delegate to the
+ * long-lived DBManagerImpl default instance. No signatures change.
+ */
+
+sqlite3* DBManager::OpenDB() {
+  /* Retained for ABI; the pool is used internally instead. */
+  sqlite3* db = nullptr;
+  int ret = sqlite3_open_v2(DBPATH, &db, SQLITE_OPEN_READWRITE, nullptr);
+  if (ret != SQLITE_OK) {
+    LOGE("open db(%s) error: %d", DBPATH, ret);
+    if (db)
+      sqlite3_close_v2(db);
+    return nullptr;
+  }
+  return db;
+}
+
+void DBManager::CloseDB(sqlite3* db) {
+  /* Retained for ABI. */
+  if (db) {
+    int ret = sqlite3_close_v2(db);
+    if (ret != SQLITE_OK)
+      LOGE("close db error");
+  }
+}
+
+int DBManager::CheckDBIntegrity(void* user_data, int argc,
+                                char** argv, char** notUsed) {
+  bool* is_db_corrupted = static_cast<bool*>(user_data);
+
+  if (std::string(argv[0]).compare("ok")) {
+    LOGE("db integrity result : %s", argv[0]);
+    *is_db_corrupted = true;
+    return -1;
+  }
+
+  LOGI("db integrity result : %s", argv[0]);
+  return 0;
+}
+
+int DBManager::RecoverCorruptedDB(sqlite3* db) {
+  /* Retained for ABI. Invalidate the pool and delegate to the impl. */
+  if (db)
+    sqlite3_close_v2(db);
+  DbConnectionHolder::Instance().Invalidate();
+
+  /* Re-run the repair flow via InitializeDB on the impl. */
+  int ret = ERROR_NONE;
+  char* errmsg = nullptr;
+  sqlite3* fresh = nullptr;
+
+  unlink(DBPATH);
+
+  ret = sqlite3_open_v2(DBPATH, &fresh,
+                        SQLITE_OPEN_CREATE | SQLITE_OPEN_READWRITE, nullptr);
+  if (ret != SQLITE_OK) {
+    LOGE("Failed to open db[%d]", ret);
+    unlink(DBPATH);
+    if (fresh)
+      sqlite3_close_v2(fresh);
+    return ERROR_FROM_DB;
+  }
+
+  ret = sqlite3_exec(fresh, CREATE_NOTIFICATION_TABLE, nullptr, nullptr,
+                     &errmsg);
+  if (ret != SQLITE_OK) {
+    LOGE("Failed to exec query[%d][%s]", ret, errmsg);
+    ret = ERROR_FROM_DB;
+  } else {
+    ret = ERROR_NONE;
+  }
+
+  if (errmsg)
+    sqlite3_free(errmsg);
+  if (fresh)
+    sqlite3_close_v2(fresh);
+
+  return ret;
+}
+
+int DBManager::ExecuteQuery(const char* query, int* num_changes) {
+  if (query == nullptr)
+    return ERROR_INVALID_PARAMETER;
+
+  auto acquired = DbConnectionHolder::Instance().Acquire();
+  if (!acquired)
+    return ERROR_FROM_DB;
+
+  return ExecuteQuery(acquired.Get(), query, num_changes);
+}
+
+int DBManager::ExecuteQuery(sqlite3* db, const char* query, int* num_changes) {
+  int ret = ERROR_NONE;
+  sqlite3_stmt *stmt;
+
+  if (db == nullptr || query == nullptr)
+    return ERROR_INVALID_PARAMETER;
+
+  ret = sqlite3_prepare_v2(db, query, strlen(query), &stmt, nullptr);
+  if (ret != SQLITE_OK) {
+    LOGE("Sqlite3 err[%d][%s]", ret, sqlite3_errmsg(db));
+    return ERROR_FROM_DB;
+  }
+
+  ret = sqlite3_step(stmt);
+  if (ret == SQLITE_OK || ret == SQLITE_DONE) {
+    if (num_changes != nullptr)
+      *num_changes = sqlite3_changes(db);
+    ret = ERROR_NONE;
+  } else {
+    LOGE("Sqlite err[%d][%s]", ret, sqlite3_errmsg(db));
+    ret = ERROR_FROM_DB;
+  }
+
+  sqlite3_finalize(stmt);
+  return ret;
+}
+
+int DBManager::GetSequence(sqlite3* db, int64_t* seq) {
+  int ret = ERROR_NONE;
+  sqlite3_stmt *stmt;
+
+  if (db == nullptr || seq == nullptr)
+    return ERROR_INVALID_PARAMETER;
+
+  std::string query = "SELECT IFNULL(MIN(priv_id), 0), IFNULL(MAX(priv_id), 0)"
+      " FROM noti_ex_list";
+  ret = sqlite3_prepare_v2(db, query.c_str(), query.size(), &stmt, nullptr);
+  if (ret != SQLITE_OK) {
+    LOGE("Sqlite3 err[%d][%s]", ret, sqlite3_errmsg(db));
+    return ERROR_FROM_DB;
+  }
+
+  ret = sqlite3_step(stmt);
+  if (ret == SQLITE_ROW) {
+    int64_t min_p = sqlite3_column_int64(stmt, 0);
+    if (min_p > 1)
+      *seq = min_p - 1;
+    else
+      *seq = sqlite3_column_int64(stmt, 1) + 1;
+    ret = ERROR_NONE;
+  } else {
+    LOGE("Sqlite err [%d][%s]", ret, sqlite3_errmsg(db));
+    ret = ERROR_FROM_DB;
+  }
+
+  sqlite3_finalize(stmt);
+  return ret;
+}
+
+/*
+ * The private helper statics declared in db_manager.h
+ * (GetPkgId / CheckLimit / UpdateReceiverList / ExecuteGetList) are no
+ * longer referenced: the public DBManager methods now delegate to
+ * DBManagerImpl which owns its own copies of those helpers. Leaving them
+ * as header-only declarations is legal - the linker never resolves
+ * unused private statics - and lets us keep db_manager.h binary-compatible.
+ */
+
+int DBManager::InitializeDB() {
+  return DefaultImpl().InitializeDB();
+}
+
+void DBManager::InitializeData() {
+  DefaultImpl().InitializeData();
+}
+
+int DBManager::InsertNotification(
+    std::list<std::shared_ptr<item::AbstractItem>> addedList) {
+  return DefaultImpl().InsertNotification(std::move(addedList));
+}
+
+std::map<std::string, std::string> DBManager::GetHideMap() {
+  return DefaultImpl().GetHideMap();
+}
+
+int DBManager::UpdateHideList(std::shared_ptr<item::AbstractItem> updatedItem,
+                              const std::string& hide_list) {
+  return DefaultImpl().UpdateHideList(updatedItem, hide_list);
+}
+
+int DBManager::UpdateNotification(
+    std::list<std::shared_ptr<item::AbstractItem>> updatedList) {
+  return DefaultImpl().UpdateNotification(std::move(updatedList));
+}
+
+int DBManager::GetCount(int64_t priv_id, const std::string& root_id,
+    const std::string& app_id, const std::string& channel, uid_t uid,
+    int* count) {
+  return DefaultImpl().GetCount(priv_id, root_id, app_id, channel, uid, count);
+}
+
+int DBManager::GetCount(const std::string& app_id, const std::string& channel,
+                        uid_t uid, int* count) {
+  return DefaultImpl().GetCount(app_id, channel, uid, count);
+}
+
+int DBManager::DeleteNotification(
+    std::list<std::shared_ptr<item::AbstractItem>> deletedList) {
+  return DefaultImpl().DeleteNotification(std::move(deletedList));
+}
+
+std::list<std::shared_ptr<item::AbstractItem>> DBManager::GetNotificationList(
+    uid_t uid, std::string channel) {
+  return DefaultImpl().GetNotificationList(uid, std::move(channel));
+}
+
+std::list<std::shared_ptr<item::AbstractItem>> DBManager::GetNotificationList(
+    std::string app_id, uid_t uid, std::string channel) {
+  return DefaultImpl().GetNotificationList(std::move(app_id), uid,
+                                           std::move(channel));
+}
+
+std::list<std::shared_ptr<item::AbstractItem>> DBManager::GetNotificationList(
+    std::string app_id, std::string root_id, uid_t uid) {
+  return DefaultImpl().GetNotificationList(std::move(app_id),
+                                           std::move(root_id), uid);
+}
+
+std::list<std::shared_ptr<item::AbstractItem>> DBManager::GetNotificationList(
+    std::string app_id, int64_t private_id, uid_t uid) {
+  return DefaultImpl().GetNotificationList(std::move(app_id), private_id, uid);
+}
+/* LCOV_EXCL_STOP */
+
+namespace detail {
+void ResetDefaultConnectionForTest() {
+  DbConnectionHolder::Instance().Invalidate();
+}
+}  // namespace detail
 
 }  // namespace notification
