@@ -89,3 +89,11 @@ extern "C" int sqlite3_column_int(sqlite3_stmt* stmt, int iCol) {
 extern "C" double sqlite3_column_double(sqlite3_stmt* stmt, int iCol) {
   return MOCK_HOOK_P2(SqliteMock, sqlite3_column_double, stmt, iCol);
 }
+
+extern "C" int sqlite3_reset(sqlite3_stmt* arg0) {
+  return MOCK_HOOK_P1(SqliteMock, sqlite3_reset, arg0);
+}
+
+extern "C" int sqlite3_clear_bindings(sqlite3_stmt* arg0) {
+  return MOCK_HOOK_P1(SqliteMock, sqlite3_clear_bindings, arg0);
+}

@@ -228,37 +228,58 @@ EXPORT_API bundle *notification_db_column_bundle(sqlite3_stmt *stmt, int col)
 }
 
 /* db upgrade sequece*/
+/*
+ * N1-T6 L8 hardening:
+ *   - result is initialised to 0 so a partial execution (step returning
+ *     anything other than SQLITE_ROW, or stmt being NULL after a prepare
+ *     that silently left *stmt untouched) can never read uninitialised
+ *     memory.
+ *   - stmt is always NULL-checked and finalized on every exit path via a
+ *     single out: label; the previous code could return -1 before stmt
+ *     reached finalize if a future edit introduced an early branch.
+ *   - Invalid PRAGMA results now propagate as "version mismatch" (-1)
+ *     rather than silently treating unknown readings as success.
+ */
 static int __check_db_version(sqlite3 *db) {
 	int ret;
-	int result;
+	int result = 0;
+	int rc = -1;
 	sqlite3_stmt *stmt = NULL;
 
 	WARN("@@ __check_db_version");
 
-	ret = sqlite3_prepare_v2(db, "PRAGMA user_version", -1, &stmt, NULL);
-	if (ret != SQLITE_OK) {
-		ERR("@@ Failed to sqlite3_prepare_v2[%d][%s]",
-		ret, sqlite3_errmsg(db));
+	if (!db) {
+		ERR("@@ NULL db handle");
 		return -1;
+	}
+
+	ret = sqlite3_prepare_v2(db, "PRAGMA user_version", -1, &stmt, NULL);
+	if (ret != SQLITE_OK || stmt == NULL) {
+		ERR("@@ Failed to sqlite3_prepare_v2[%d][%s]",
+			ret, sqlite3_errmsg(db));
+		goto out;
 	}
 
 	ret = sqlite3_step(stmt);
-	if (ret == SQLITE_ROW)
+	if (ret == SQLITE_ROW) {
 		result = sqlite3_column_int(stmt, 0);
-	else
+	} else {
+		ERR("@@ unexpected step result[%d][%s]",
+			ret, sqlite3_errmsg(db));
 		result = 0;
+	}
 
 	WARN("@@ db version : %d", result);
 
+	if (result == DB_VERSION)
+		rc = 0;
+	else
+		WARN("@@ db is not latest version");
+
+out:
 	if (stmt)
 		sqlite3_finalize(stmt);
-
-	if (result != DB_VERSION) {
-		WARN("@@ db is not latest version");
-		return -1;
-	}
-
-	return 0;
+	return rc;
 }
 
 static int __upgrade_noti_table(sqlite3 *db) {

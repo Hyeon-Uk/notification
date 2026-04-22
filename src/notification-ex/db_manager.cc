@@ -35,6 +35,8 @@
 #include "notification-ex/item_inflator.h"
 #include "notification-ex/iitem_info_internal.h"
 #include "notification-ex/ex_util.h"
+#include "notification-ex/sqlite_stmt.h"
+#include "notification-ex/stmt_cache.h"
 
 #ifdef LOG_TAG
 #undef LOG_TAG
@@ -135,11 +137,21 @@ class DbConnectionHolder {
     return AcquiredDb(std::move(lock), cached_);
   }
 
+  /* Statement cache associated with the currently-cached connection.
+   * Lifetime is tied to the holder: when Invalidate() drops the
+   * connection, it also Clear()s the cache so no cached sqlite3_stmt*
+   * outlives the sqlite3* it belongs to. Callers should only use this
+   * while holding an AcquiredDb so the connection cannot be invalidated
+   * underneath them (the same recursive_mutex serialises both paths). */
+  StmtCache& Cache() { return stmt_cache_; }
+
   /* Drop the cached connection. Any in-flight AcquiredDb holds its own
    * shared_ptr so the underlying sqlite3 stays alive until the holder's
-   * last reference releases it. */
+   * last reference releases it. The stmt cache is cleared first so its
+   * finalized statements are all issued against the outgoing handle. */
   void Invalidate() {
     std::lock_guard<std::recursive_mutex> lock(mutex_);
+    stmt_cache_.Clear();
     cached_.reset();
   }
 
@@ -169,6 +181,7 @@ class DbConnectionHolder {
 
   std::recursive_mutex mutex_;
   std::shared_ptr<sqlite3> cached_;
+  StmtCache stmt_cache_{StmtCache::kDefaultCapacity};
 };
 
 class DBManagerImpl : public IDBManager {
@@ -223,30 +236,30 @@ DBManagerImpl& DefaultImpl() {
 /* LCOV_EXCL_START */
 int DBManagerImpl::ExecuteQuery(sqlite3* db, const char* query,
                                 int* num_changes) {
-  int ret = ERROR_NONE;
-  sqlite3_stmt *stmt;
-
+  /*
+   * Used for sqlite3_mprintf-style one-shot DML (INSERT/UPDATE/DELETE
+   * with literal values already baked into the SQL text). Caching these
+   * would be counter-productive (each call has a unique key) but we do
+   * want SqliteStmt RAII so L6-class leaks on every error branch are
+   * impossible.
+   */
   if (db == nullptr || query == nullptr)
     return ERROR_INVALID_PARAMETER;
 
-  ret = sqlite3_prepare_v2(db, query, strlen(query), &stmt, nullptr);
-  if (ret != SQLITE_OK) {
-    LOGE("Sqlite3 err[%d][%s]", ret, sqlite3_errmsg(db));
+  try {
+    SqliteStmt stmt(db, query);
+    int ret = sqlite3_step(stmt.Get());
+    if (ret == SQLITE_OK || ret == SQLITE_DONE) {
+      if (num_changes != nullptr)
+        *num_changes = sqlite3_changes(db);
+      return ERROR_NONE;
+    }
+    LOGE("Sqlite err[%d][%s]", ret, sqlite3_errmsg(db));
+    return ERROR_FROM_DB;
+  } catch (const std::exception& e) {
+    LOGE("ExecuteQuery prepare failed: %s", e.what());
     return ERROR_FROM_DB;
   }
-
-  ret = sqlite3_step(stmt);
-  if (ret == SQLITE_OK || ret == SQLITE_DONE) {
-    if (num_changes != nullptr)
-    *num_changes = sqlite3_changes(db);
-    ret = ERROR_NONE;
-  } else {
-    LOGE("Sqlite err[%d][%s]", ret, sqlite3_errmsg(db));
-    ret = ERROR_FROM_DB;
-  }
-
-  sqlite3_finalize(stmt);
-  return ret;
 }
 
 int DBManagerImpl::ExecuteQuery(const char* query, int* num_changes) {
@@ -262,18 +275,20 @@ int DBManagerImpl::ExecuteQuery(const char* query, int* num_changes) {
 
 int DBManagerImpl::GetSequence(sqlite3* db, int64_t* seq) {
   int ret = ERROR_NONE;
-  sqlite3_stmt *stmt;
 
   if (db == nullptr || seq == nullptr)
     return ERROR_INVALID_PARAMETER;
 
-  string query = "SELECT IFNULL(MIN(priv_id), 0), IFNULL(MAX(priv_id), 0)"
+  /* Fixed SQL → ideal for the prepared statement cache. */
+  static const char* const kSql =
+      "SELECT IFNULL(MIN(priv_id), 0), IFNULL(MAX(priv_id), 0)"
       " FROM noti_ex_list";
-  ret = sqlite3_prepare_v2(db, query.c_str(), query.size(), &stmt, nullptr);
-  if (ret != SQLITE_OK) {
-    LOGE("Sqlite3 err[%d][%s]", ret, sqlite3_errmsg(db));
+  auto acquired = DbConnectionHolder::Instance().Cache().Acquire(db, kSql);
+  if (!acquired) {
+    LOGE("Sqlite3 err: prepare cache miss [%s]", sqlite3_errmsg(db));
     return ERROR_FROM_DB;
   }
+  sqlite3_stmt* stmt = acquired.Get();
 
   ret = sqlite3_step(stmt);
   if (ret == SQLITE_ROW) {
@@ -288,7 +303,6 @@ int DBManagerImpl::GetSequence(sqlite3* db, int64_t* seq) {
     ret = ERROR_FROM_DB;
   }
 
-  sqlite3_finalize(stmt);
   return ret;
 }
 
@@ -623,32 +637,23 @@ int DBManagerImpl::InsertNotification(
 
 map<string, string> DBManagerImpl::GetHideMap() {
   map<string, string> hide_map;
-  char* query;
-  sqlite3_stmt* stmt;
-  int ret;
   string key;
 
-  query = sqlite3_mprintf("SELECT root_id, app_id, uid, hide_list FROM noti_ex_list"
-                            " WHERE hide_list IS NOT NULL");
-  if (!query) {
-    LOGE("OOM - sql query");
-    return hide_map;
-  }
-
   auto acquired = DbConnectionHolder::Instance().Acquire();
-  if (!acquired) {
-    sqlite3_free(query);
+  if (!acquired)
     return hide_map;
-  }
   sqlite3* db = acquired.Get();
 
-  ret = sqlite3_prepare_v2(db, query, strlen(query), &stmt, nullptr);
-  if (ret != SQLITE_OK) {
-    LOGE("Failed to sqlite3_prepare [%d][%s]", ret,	sqlite3_errmsg(db));
-    sqlite3_free(query);
+  /* Fixed SQL → cache. */
+  static const char* const kSql =
+      "SELECT root_id, app_id, uid, hide_list FROM noti_ex_list"
+      " WHERE hide_list IS NOT NULL";
+  auto stmt_hdl = DbConnectionHolder::Instance().Cache().Acquire(db, kSql);
+  if (!stmt_hdl) {
+    LOGE("Failed to prepare GetHideMap query: %s", sqlite3_errmsg(db));
     return hide_map;
   }
-  sqlite3_free(query);
+  sqlite3_stmt* stmt = stmt_hdl.Get();
 
   while (sqlite3_step(stmt) == SQLITE_ROW) {
     key = string(reinterpret_cast<const char*>(sqlite3_column_text(stmt, 0))) \
@@ -657,7 +662,6 @@ map<string, string> DBManagerImpl::GetHideMap() {
     hide_map[key] = string(reinterpret_cast<const char*>(sqlite3_column_text(stmt, 3)));
   }
 
-  sqlite3_finalize(stmt);
   return hide_map;
 }
 
@@ -669,53 +673,67 @@ int DBManagerImpl::GetCount(const string& app_id, const string& channel,
 int DBManagerImpl::GetCount(int64_t priv_id, const string& root_id,
     const string& app_id, const string& channel, uid_t uid, int* count) {
   int ret;
-  char* query;
-  sqlite3_stmt *stmt;
-  string query_str;
 
-  if (priv_id != 0) {
-    query = sqlite3_mprintf("SELECT count(*) FROM noti_ex_list"
-                            " WHERE priv_id = %" PRId64 "", priv_id);
-  } else if (root_id.empty()) {
-    if (!channel.empty())
-      query = sqlite3_mprintf("SELECT count(*) FROM noti_ex_list"
-                              " WHERE app_id = %Q AND uid = %d AND channel = %Q",
-                              app_id.c_str(), uid, channel.c_str());
-    else
-      query = sqlite3_mprintf("SELECT count(*) FROM noti_ex_list"
-                              " WHERE app_id = %Q AND uid = %d", app_id.c_str(), uid);
-  } else {
-    query = sqlite3_mprintf("SELECT count(*) FROM noti_ex_list"
-                            " WHERE root_id = %Q AND app_id = %Q AND uid = %d",
-                            root_id.c_str(), app_id.c_str(), uid);
-  }
-  if (!query) {
-    LOGE("OOM - sql query");
-    return ERROR_OUT_OF_MEMORY;
-  }
+  /*
+   * N1-T6: switch to parameterised SQL so one cached plan services each
+   * distinct WHERE-clause shape. The four shapes are keyed by literal
+   * strings below, so the cache hit rate equals the call rate for each
+   * shape.
+   *
+   * Safety: all user-controlled inputs (app_id, channel, root_id) are
+   * bound via sqlite3_bind_text, immune to the sqlite3_mprintf quoting
+   * gymnastics the old code relied on.
+   */
+  static const char* const kByPrivId =
+      "SELECT count(*) FROM noti_ex_list WHERE priv_id = ?";
+  static const char* const kByAppChannel =
+      "SELECT count(*) FROM noti_ex_list"
+      " WHERE app_id = ? AND uid = ? AND channel = ?";
+  static const char* const kByApp =
+      "SELECT count(*) FROM noti_ex_list WHERE app_id = ? AND uid = ?";
+  static const char* const kByRootApp =
+      "SELECT count(*) FROM noti_ex_list"
+      " WHERE root_id = ? AND app_id = ? AND uid = ?";
 
   auto acquired = DbConnectionHolder::Instance().Acquire();
-  if (!acquired) {
-    sqlite3_free(query);
+  if (!acquired)
     return ERROR_FROM_DB;
-  }
   sqlite3* db = acquired.Get();
 
-  ret = sqlite3_prepare_v2(db, query, strlen(query), &stmt, nullptr);
-  if (ret != SQLITE_OK) {
-    LOGE("Failed to sqlite3_prepare [%d][%s]", ret,	sqlite3_errmsg(db));
-    sqlite3_free(query);
-    return ERROR_FROM_DB;
-  }
-  sqlite3_free(query);
+  StmtCache& cache = DbConnectionHolder::Instance().Cache();
+  StmtCache::AcquiredStmt stmt_hdl;
 
-  ret = sqlite3_step(stmt);
+  if (priv_id != 0) {
+    stmt_hdl = cache.Acquire(db, kByPrivId);
+    if (!stmt_hdl) return ERROR_FROM_DB;
+    sqlite3_bind_int64(stmt_hdl.Get(), 1, priv_id);
+  } else if (root_id.empty()) {
+    if (!channel.empty()) {
+      stmt_hdl = cache.Acquire(db, kByAppChannel);
+      if (!stmt_hdl) return ERROR_FROM_DB;
+      sqlite3_bind_text(stmt_hdl.Get(), 1, app_id.c_str(), -1, SQLITE_TRANSIENT);
+      sqlite3_bind_int(stmt_hdl.Get(), 2, static_cast<int>(uid));
+      sqlite3_bind_text(stmt_hdl.Get(), 3, channel.c_str(), -1, SQLITE_TRANSIENT);
+    } else {
+      stmt_hdl = cache.Acquire(db, kByApp);
+      if (!stmt_hdl) return ERROR_FROM_DB;
+      sqlite3_bind_text(stmt_hdl.Get(), 1, app_id.c_str(), -1, SQLITE_TRANSIENT);
+      sqlite3_bind_int(stmt_hdl.Get(), 2, static_cast<int>(uid));
+    }
+  } else {
+    stmt_hdl = cache.Acquire(db, kByRootApp);
+    if (!stmt_hdl) return ERROR_FROM_DB;
+    sqlite3_bind_text(stmt_hdl.Get(), 1, root_id.c_str(), -1, SQLITE_TRANSIENT);
+    sqlite3_bind_text(stmt_hdl.Get(), 2, app_id.c_str(), -1, SQLITE_TRANSIENT);
+    sqlite3_bind_int(stmt_hdl.Get(), 3, static_cast<int>(uid));
+  }
+
+  ret = sqlite3_step(stmt_hdl.Get());
   if (ret == SQLITE_ROW)
-    *count = sqlite3_column_int(stmt, 0);
+    *count = sqlite3_column_int(stmt_hdl.Get(), 0);
   else
     *count = 0;
 
-  sqlite3_finalize(stmt);
   return ERROR_NONE;
 }
 
@@ -809,6 +827,12 @@ int DBManagerImpl::UpdateNotification(
 }
 
 list<shared_ptr<item::AbstractItem>> DBManagerImpl::ExecuteGetList(char* query) {
+  /*
+   * Legacy path retained for the GetNotificationList(uid_t, channel)
+   * overload that still composes a variable SQL string at runtime
+   * (sim-mode policy is branch-dependent). Keeps direct prepare/finalize
+   * since the SQL text is not cacheable.
+   */
   sqlite3_stmt *stmt;
   int ret;
   list<shared_ptr<item::AbstractItem>> item_list;
@@ -843,66 +867,96 @@ list<shared_ptr<item::AbstractItem>> DBManagerImpl::ExecuteGetList(char* query) 
 
 list<shared_ptr<item::AbstractItem>> DBManagerImpl::GetNotificationList(
     string app_id, uid_t uid, string channel) {
-  char* query;
   list<shared_ptr<item::AbstractItem>> item_list;
 
-  if (!channel.empty()) {
-    query = sqlite3_mprintf("SELECT data FROM noti_ex_list WHERE uid = %d "
-      "AND app_id = %Q AND channel = %Q ORDER BY insert_time DESC", uid,
-      app_id.c_str(), channel.c_str());
-  } else {
-    query = sqlite3_mprintf("SELECT data FROM noti_ex_list WHERE uid = %d "
-      "AND app_id = %Q ORDER BY insert_time DESC", uid, app_id.c_str());
-  }
+  static const char* const kByAppChannel =
+      "SELECT data FROM noti_ex_list WHERE uid = ?"
+      " AND app_id = ? AND channel = ? ORDER BY insert_time DESC";
+  static const char* const kByApp =
+      "SELECT data FROM noti_ex_list WHERE uid = ?"
+      " AND app_id = ? ORDER BY insert_time DESC";
 
-  if (!query) {
-    LOGE("OOM - sql query");
+  auto acquired = DbConnectionHolder::Instance().Acquire();
+  if (!acquired)
     return item_list;
+  sqlite3* db = acquired.Get();
+
+  StmtCache& cache = DbConnectionHolder::Instance().Cache();
+  StmtCache::AcquiredStmt stmt_hdl;
+  if (!channel.empty()) {
+    stmt_hdl = cache.Acquire(db, kByAppChannel);
+    if (!stmt_hdl) return item_list;
+    sqlite3_bind_int(stmt_hdl.Get(), 1, static_cast<int>(uid));
+    sqlite3_bind_text(stmt_hdl.Get(), 2, app_id.c_str(), -1, SQLITE_TRANSIENT);
+    sqlite3_bind_text(stmt_hdl.Get(), 3, channel.c_str(), -1, SQLITE_TRANSIENT);
+  } else {
+    stmt_hdl = cache.Acquire(db, kByApp);
+    if (!stmt_hdl) return item_list;
+    sqlite3_bind_int(stmt_hdl.Get(), 1, static_cast<int>(uid));
+    sqlite3_bind_text(stmt_hdl.Get(), 2, app_id.c_str(), -1, SQLITE_TRANSIENT);
   }
 
-  item_list = ExecuteGetList(query);
-  sqlite3_free(query);
-
+  while (sqlite3_step(stmt_hdl.Get()) == SQLITE_ROW) {
+    Bundle serialized(reinterpret_cast<const char*>(
+        sqlite3_column_text(stmt_hdl.Get(), 0)));
+    item_list.emplace_back(item::ItemInflator::Create(serialized));
+  }
   return item_list;
 }
 
 list<shared_ptr<item::AbstractItem>> DBManagerImpl::GetNotificationList(
     string app_id, string root_id, uid_t uid) {
-  char* query;
   list<shared_ptr<item::AbstractItem>> item_list;
 
-  query = sqlite3_mprintf("SELECT data FROM noti_ex_list"
-                           " WHERE uid = %d AND app_id = %Q AND root_id = %Q",
-                           uid, app_id.c_str(), root_id.c_str());
+  static const char* const kSql =
+      "SELECT data FROM noti_ex_list"
+      " WHERE uid = ? AND app_id = ? AND root_id = ?";
 
-  if (!query) {
-    LOGE("OOM - sql query");
+  auto acquired = DbConnectionHolder::Instance().Acquire();
+  if (!acquired)
     return item_list;
+  sqlite3* db = acquired.Get();
+
+  auto stmt_hdl = DbConnectionHolder::Instance().Cache().Acquire(db, kSql);
+  if (!stmt_hdl) return item_list;
+
+  sqlite3_bind_int(stmt_hdl.Get(), 1, static_cast<int>(uid));
+  sqlite3_bind_text(stmt_hdl.Get(), 2, app_id.c_str(), -1, SQLITE_TRANSIENT);
+  sqlite3_bind_text(stmt_hdl.Get(), 3, root_id.c_str(), -1, SQLITE_TRANSIENT);
+
+  while (sqlite3_step(stmt_hdl.Get()) == SQLITE_ROW) {
+    Bundle serialized(reinterpret_cast<const char*>(
+        sqlite3_column_text(stmt_hdl.Get(), 0)));
+    item_list.emplace_back(item::ItemInflator::Create(serialized));
   }
-
-  item_list = ExecuteGetList(query);
-  sqlite3_free(query);
-
   return item_list;
 }
 
 list<shared_ptr<item::AbstractItem>> DBManagerImpl::GetNotificationList(
     string app_id, int64_t priv_id, uid_t uid) {
-  char* query;
   list<shared_ptr<item::AbstractItem>> item_list;
 
-  query = sqlite3_mprintf("SELECT data FROM noti_ex_list"
-      " WHERE uid = %d AND app_id = %Q AND priv_id = %" PRId64 "",
-      uid, app_id.c_str(), priv_id);
+  static const char* const kSql =
+      "SELECT data FROM noti_ex_list"
+      " WHERE uid = ? AND app_id = ? AND priv_id = ?";
 
-  if (!query) {
-    LOGE("OOM - sql query");
+  auto acquired = DbConnectionHolder::Instance().Acquire();
+  if (!acquired)
     return item_list;
+  sqlite3* db = acquired.Get();
+
+  auto stmt_hdl = DbConnectionHolder::Instance().Cache().Acquire(db, kSql);
+  if (!stmt_hdl) return item_list;
+
+  sqlite3_bind_int(stmt_hdl.Get(), 1, static_cast<int>(uid));
+  sqlite3_bind_text(stmt_hdl.Get(), 2, app_id.c_str(), -1, SQLITE_TRANSIENT);
+  sqlite3_bind_int64(stmt_hdl.Get(), 3, priv_id);
+
+  while (sqlite3_step(stmt_hdl.Get()) == SQLITE_ROW) {
+    Bundle serialized(reinterpret_cast<const char*>(
+        sqlite3_column_text(stmt_hdl.Get(), 0)));
+    item_list.emplace_back(item::ItemInflator::Create(serialized));
   }
-
-  item_list = ExecuteGetList(query);
-  sqlite3_free(query);
-
   return item_list;
 }
 
@@ -1104,62 +1158,52 @@ int DBManager::ExecuteQuery(const char* query, int* num_changes) {
 }
 
 int DBManager::ExecuteQuery(sqlite3* db, const char* query, int* num_changes) {
-  int ret = ERROR_NONE;
-  sqlite3_stmt *stmt;
-
+  /* Legacy ABI shim. SqliteStmt RAII guarantees finalize on every branch. */
   if (db == nullptr || query == nullptr)
     return ERROR_INVALID_PARAMETER;
 
-  ret = sqlite3_prepare_v2(db, query, strlen(query), &stmt, nullptr);
-  if (ret != SQLITE_OK) {
-    LOGE("Sqlite3 err[%d][%s]", ret, sqlite3_errmsg(db));
+  try {
+    SqliteStmt stmt(db, query);
+    int ret = sqlite3_step(stmt.Get());
+    if (ret == SQLITE_OK || ret == SQLITE_DONE) {
+      if (num_changes != nullptr)
+        *num_changes = sqlite3_changes(db);
+      return ERROR_NONE;
+    }
+    LOGE("Sqlite err[%d][%s]", ret, sqlite3_errmsg(db));
+    return ERROR_FROM_DB;
+  } catch (const std::exception& e) {
+    LOGE("ExecuteQuery prepare failed: %s", e.what());
     return ERROR_FROM_DB;
   }
-
-  ret = sqlite3_step(stmt);
-  if (ret == SQLITE_OK || ret == SQLITE_DONE) {
-    if (num_changes != nullptr)
-      *num_changes = sqlite3_changes(db);
-    ret = ERROR_NONE;
-  } else {
-    LOGE("Sqlite err[%d][%s]", ret, sqlite3_errmsg(db));
-    ret = ERROR_FROM_DB;
-  }
-
-  sqlite3_finalize(stmt);
-  return ret;
 }
 
 int DBManager::GetSequence(sqlite3* db, int64_t* seq) {
-  int ret = ERROR_NONE;
-  sqlite3_stmt *stmt;
-
+  /* Legacy ABI shim. Uses SqliteStmt RAII so the "early return leaves
+   * prepared stmt live" hazard (L6/L7) cannot fire here either. */
   if (db == nullptr || seq == nullptr)
     return ERROR_INVALID_PARAMETER;
 
-  std::string query = "SELECT IFNULL(MIN(priv_id), 0), IFNULL(MAX(priv_id), 0)"
+  const char* const kSql =
+      "SELECT IFNULL(MIN(priv_id), 0), IFNULL(MAX(priv_id), 0)"
       " FROM noti_ex_list";
-  ret = sqlite3_prepare_v2(db, query.c_str(), query.size(), &stmt, nullptr);
-  if (ret != SQLITE_OK) {
-    LOGE("Sqlite3 err[%d][%s]", ret, sqlite3_errmsg(db));
+  try {
+    SqliteStmt stmt(db, kSql);
+    int ret = sqlite3_step(stmt.Get());
+    if (ret == SQLITE_ROW) {
+      int64_t min_p = sqlite3_column_int64(stmt.Get(), 0);
+      if (min_p > 1)
+        *seq = min_p - 1;
+      else
+        *seq = sqlite3_column_int64(stmt.Get(), 1) + 1;
+      return ERROR_NONE;
+    }
+    LOGE("Sqlite err [%d][%s]", ret, sqlite3_errmsg(db));
+    return ERROR_FROM_DB;
+  } catch (const std::exception& e) {
+    LOGE("GetSequence prepare/step failed: %s", e.what());
     return ERROR_FROM_DB;
   }
-
-  ret = sqlite3_step(stmt);
-  if (ret == SQLITE_ROW) {
-    int64_t min_p = sqlite3_column_int64(stmt, 0);
-    if (min_p > 1)
-      *seq = min_p - 1;
-    else
-      *seq = sqlite3_column_int64(stmt, 1) + 1;
-    ret = ERROR_NONE;
-  } else {
-    LOGE("Sqlite err [%d][%s]", ret, sqlite3_errmsg(db));
-    ret = ERROR_FROM_DB;
-  }
-
-  sqlite3_finalize(stmt);
-  return ret;
 }
 
 /*

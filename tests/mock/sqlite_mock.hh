@@ -38,12 +38,16 @@ class SqliteMock : public virtual ModuleMock {
   MOCK_METHOD2(sqlite3_column_text, const unsigned char*(sqlite3_stmt*, int));
   MOCK_METHOD6(sqlite3_get_table, int(sqlite3*, const char*, char***, int* , int*, char**));
   MOCK_METHOD3(sqlite3_bind_int, int(sqlite3_stmt*, int, int));
+  MOCK_METHOD3(sqlite3_bind_int64, int(sqlite3_stmt*, int, sqlite3_int64));
   MOCK_METHOD3(sqlite3_bind_double, int(sqlite3_stmt*, int, double));
   MOCK_METHOD5(sqlite3_bind_text, int(sqlite3_stmt*, int, const char*, int, void(*)(void*)));
   MOCK_METHOD1(sqlite3_finalize, int(sqlite3_stmt*));
   MOCK_METHOD1(sqlite3_free, void(void*));
   MOCK_METHOD2(sqlite3_column_int, int(sqlite3_stmt*, int));
   MOCK_METHOD2(sqlite3_column_double, double(sqlite3_stmt*, int));
+  /* N1-T6: stmt cache uses reset + clear_bindings to reuse prepared plans. */
+  MOCK_METHOD1(sqlite3_reset, int(sqlite3_stmt*));
+  MOCK_METHOD1(sqlite3_clear_bindings, int(sqlite3_stmt*));
 };
 
 #endif  // UNIT_TESTS_MOCK_SQLITE_MOCK_H_
