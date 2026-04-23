@@ -1,4 +1,0 @@
-interface:
-  display_name: "SmartThings Curl"
-  short_description: "Set up, inspect, and control SmartThings devices with curl and jq"
-  default_prompt: "Use $smartthings-curl to manage skill-local SmartThings credentials, discover devices, inspect capabilities, and send supported SmartThings commands with curl and jq."
