@@ -385,7 +385,12 @@ int DBusEventListener::Impl::RegisterGDBusInterface() {
     nullptr,
     nullptr
   };
-  static gchar introspection_xml[] =
+  // N2-T8 ML1: `static constexpr char[]` places the D-Bus introspection
+  // blob in .rodata (was .data via `static gchar`). Saves writable-segment
+  // footprint and lets the loader share the page cross-process. Downstream
+  // glib call takes a `const gchar *`, so losing the non-const type is a
+  // no-op at the API boundary.
+  static constexpr char introspection_xml[] =
     "  <node>"
     "  <interface name='org.tizen.notification_ex'>"
     "        <method name='Post'>"
