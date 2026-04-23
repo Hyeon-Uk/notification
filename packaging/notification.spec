@@ -1,4 +1,10 @@
 %bcond_with wayland
+# N2-T8 F4: debug-info is split into -debuginfo / -debugsource subpackages
+# automatically by Tizen's RPM macro stack (%%cmake injects %%debug_package;
+# %%_enable_debug_packages defaults to 1). No explicit %%debug_package line
+# is needed here. Runtime .so's are stripped of .debug_* sections; separate
+# RPMs carry debug info for offline use. Do not set
+# %%global _enable_debug_packages 0 without re-measuring the gate.
 Name:       notification
 Summary:    Notification library
 Version:    0.12.1
