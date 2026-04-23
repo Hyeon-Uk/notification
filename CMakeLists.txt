@@ -12,7 +12,7 @@ SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fvisibility=hidden")
 # N2-T5: per-function / per-data sections for link-time gc-sections pruning.
 SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -ffunction-sections -fdata-sections")
 SET(CMAKE_C_FLAGS_DEBUG "-O0 -g")
-SET(CMAKE_C_FLAGS_RELEASE "-O2")
+SET(CMAKE_C_FLAGS_RELEASE "-O2 -DNDEBUG")
 
 SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${EXTRA_C_FLAGS} -std=c++23")
 # N2-T5: C++ needs explicit -fvisibility=hidden (EXTRA_C_FLAGS may not carry it);
@@ -20,7 +20,19 @@ SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${EXTRA_C_FLAGS} -std=c++23")
 SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fvisibility=hidden -fvisibility-inlines-hidden")
 SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -ffunction-sections -fdata-sections")
 SET(CMAKE_CXX_FLAGS_DEBUG "-O0 -g")
-SET(CMAKE_CXX_FLAGS_RELEASE "-O2")
+SET(CMAKE_CXX_FLAGS_RELEASE "-O2 -DNDEBUG")
+
+# N2-T7 B2: GBS/rpm %cmake does not pass -DCMAKE_BUILD_TYPE; CFLAGS comes in
+# via `%optflags` (-O2 -g) and the per-type CMAKE_*_FLAGS_RELEASE lines above
+# are ignored. Define NDEBUG here so stub_macros.h's NOTI_EX_DEPRECATED()
+# and any future assert()/debug-only code paths compile to no-ops in the
+# shipped library. Skip when ASAN is on (asserts help there) or when the
+# caller already set NDEBUG / explicitly chose Debug.
+IF(NOT ASAN_ENABLED
+    AND NOT CMAKE_BUILD_TYPE STREQUAL "Debug"
+    AND NOT "${CMAKE_C_FLAGS};${CMAKE_CXX_FLAGS}" MATCHES "-DNDEBUG")
+  ADD_DEFINITIONS(-DNDEBUG)
+ENDIF()
 
 # N2-T5: let the linker drop unreferenced sections and DT_NEEDED entries.
 SET(CMAKE_SHARED_LINKER_FLAGS
