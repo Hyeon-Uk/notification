@@ -44,6 +44,7 @@
 #include "notification-ex/iitem_info_internal.h"
 #include "notification-ex/icon_item.h"
 #include "notification-ex/stub_macros.h"
+#include "notification-ex/error_mapping.h"
 
 #ifdef LOG_TAG
 #undef LOG_TAG
@@ -2911,8 +2912,8 @@ extern "C" EXPORT_API int noti_ex_manager_delete(noti_ex_manager_h handle,
       *request_id = stub->Delete(item->GetPtr());
     }
   } catch (Exception& ex) {
-    LOGE("%s %d", ex.what(), ex.GetErrorCode());
-    return ex.GetErrorCode();
+    // N2-T8 DD2: centralized C-API error mapping + uniform logging.
+    return ErrorMappingLogAndReturn(ex, "noti_ex_manager_delete");
   }
   return NOTI_EX_ERROR_NONE;
 }
@@ -2928,8 +2929,8 @@ extern "C" EXPORT_API int noti_ex_manager_delete_all(noti_ex_manager_h handle,
     ManagerStub* stub = static_cast<ManagerStub*>(handle);
     *request_id = stub->DeleteAll();
   } catch (Exception& ex) {
-    LOGE("%s %d", ex.what(), ex.GetErrorCode());
-    return ex.GetErrorCode();
+    // N2-T8 DD2: centralized C-API error mapping + uniform logging.
+    return ErrorMappingLogAndReturn(ex, "noti_ex_manager_delete_all");
   }
   return NOTI_EX_ERROR_NONE;
 }
@@ -2964,8 +2965,8 @@ extern "C" EXPORT_API int noti_ex_manager_delete_by_appid(
     ManagerStub* stub = static_cast<ManagerStub*>(handle);
     *request_id = stub->DeleteByAppId(app_id);
   } catch (Exception& ex) {
-    LOGE("%s %d", ex.what(), ex.GetErrorCode());
-    return ex.GetErrorCode();
+    // N2-T8 DD2: centralized C-API error mapping + uniform logging.
+    return ErrorMappingLogAndReturn(ex, "noti_ex_manager_delete_by_appid");
   }
 
   return NOTI_EX_ERROR_NONE;
@@ -2988,8 +2989,8 @@ extern "C" EXPORT_API int noti_ex_manager_hide(noti_ex_manager_h handle,
       *request_id = stub->Hide(item->GetPtr());
     }
   } catch (Exception& ex) {
-    LOGE("%s %d", ex.what(), ex.GetErrorCode());
-    return ex.GetErrorCode();
+    // N2-T8 DD2: centralized C-API error mapping + uniform logging.
+    return ErrorMappingLogAndReturn(ex, "noti_ex_manager_hide");
   }
   return NOTI_EX_ERROR_NONE;
 }
@@ -3030,8 +3031,8 @@ extern "C" EXPORT_API int noti_ex_manager_send_error(noti_ex_manager_h handle,
     stub->SendError(static_cast<const IEventInfo&>(*c_info),
         static_cast<NotificationError>(error));
   } catch (Exception& ex) {
-    LOGE("%s %d", ex.what(), ex.GetErrorCode());
-    return ex.GetErrorCode();
+    // N2-T8 DD2: centralized C-API error mapping + uniform logging.
+    return ErrorMappingLogAndReturn(ex, "noti_ex_manager_send_error");
   }
   return NOTI_EX_ERROR_NONE;
 }
@@ -3047,8 +3048,8 @@ extern "C" EXPORT_API int noti_ex_manager_get_notification_count(
     ManagerStub* stub = static_cast<ManagerStub*>(handle);
     *count = stub->GetCount();
   } catch (Exception& ex) {
-    LOGE("%s %d", ex.what(), ex.GetErrorCode());
-    return ex.GetErrorCode();
+    // N2-T8 DD2: centralized C-API error mapping + uniform logging.
+    return ErrorMappingLogAndReturn(ex, "noti_ex_manager_get_notification_count");
   }
   return NOTI_EX_ERROR_NONE;
 }
