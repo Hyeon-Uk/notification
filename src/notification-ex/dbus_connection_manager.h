@@ -30,10 +30,15 @@
 namespace notification {
 
 /* Forward declaration so DBusConnectionManager can befriend the test-reset
- * helper. Defined in dbus_connection_manager.cc as file-static; not in any
- * public API surface. */
+ * helper. Defined in dbus_connection_manager.cc.
+ * N2-T5: exported explicitly so the unittest binary picks up these symbols
+ * once the project-wide -fvisibility=hidden hides every C++ default. */
 namespace dbus_test_hooks {
-void ResetSingletonForTest();
+EXPORT_API void ResetSingletonForTest();
+EXPORT_API void SetOverrideConnection(struct _GDBusConnection* conn);
+EXPORT_API int  GetOverrideConnectCount();
+EXPORT_API void ResetOverrideConnectCount();
+EXPORT_API void SetForceConnectFailure(bool v);
 }  // namespace dbus_test_hooks
 
 /* LCOV_EXCL_START */

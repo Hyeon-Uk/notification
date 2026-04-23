@@ -20,6 +20,10 @@
 #include <tizen.h>
 #include <gio/gio.h>
 
+#ifndef EXPORT_API
+#define EXPORT_API __attribute__((visibility("default")))
+#endif
+
 #define REGULAR_UID_MIN 5000
 
 namespace notification {
@@ -37,7 +41,9 @@ enum NotificationError {
   ERROR_SERVICE_NOT_READY = TIZEN_ERROR_NOTIFICATION | 0x05, /**< No response from notification service */
 };
 
-GQuark noti_ex_error_quark(void);
+// N2-T5: public error-domain quark consumed by C++ callers; keep exported
+// once the library defaults to -fvisibility=hidden.
+EXPORT_API GQuark noti_ex_error_quark(void);
 
 }  // namespace notification
 

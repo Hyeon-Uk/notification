@@ -46,8 +46,9 @@ class EXPORT_API DefaultActionFactory : public IActionFactory {
 };
 
 /* N1-T2: Free-function entry point for default action creation. See
- * default_item_factory.h for rationale. */
-std::unique_ptr<AbstractAction> CreateAction(int type);
+ * default_item_factory.h for rationale.
+ * N2-T5: EXPORT_API for unittest link under visibility=hidden. */
+EXPORT_API std::unique_ptr<AbstractAction> CreateAction(int type);
 
 }  // namespace item
 }  // namespace notification

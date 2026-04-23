@@ -25,19 +25,26 @@
 #include <string>
 #include <list>
 
+#ifndef EXPORT_API
+#define EXPORT_API __attribute__((visibility("default")))
+#endif
+
 namespace notification {
 namespace util {
-  std::string GetAppId();
-  std::string GetAppId(pid_t pid);
-  int GetRequestId();
-  std::string GetPkgId();
-  std::string GetDomainName();
-  std::string GetLocaleDirectory();
-  unsigned int GetSocketBufferSize(int fd, int optname);
-  unsigned int ReadSocket(int fd, char* buffer, unsigned int nbytes);
-  int WriteSocket(int fd, const char* buffer, unsigned int nbytes);
-  std::list<tizen_base::Bundle> ReadBundleList(int recvfd, int noti_cnt);
-  int ConvertDBusError(int error);
+  // N2-T5: util:: helpers are referenced from within the .so and from the
+  // unittest executable, so they must stay at default visibility once the
+  // project-wide -fvisibility=hidden kicks in on C++ TUs.
+  EXPORT_API std::string GetAppId();
+  EXPORT_API std::string GetAppId(pid_t pid);
+  EXPORT_API int GetRequestId();
+  EXPORT_API std::string GetPkgId();
+  EXPORT_API std::string GetDomainName();
+  EXPORT_API std::string GetLocaleDirectory();
+  EXPORT_API unsigned int GetSocketBufferSize(int fd, int optname);
+  EXPORT_API unsigned int ReadSocket(int fd, char* buffer, unsigned int nbytes);
+  EXPORT_API int WriteSocket(int fd, const char* buffer, unsigned int nbytes);
+  EXPORT_API std::list<tizen_base::Bundle> ReadBundleList(int recvfd, int noti_cnt);
+  EXPORT_API int ConvertDBusError(int error);
 
   /*
    * N1-T7: Thread-local scratch GVariantBuilder.
@@ -70,17 +77,17 @@ namespace util {
    *
    * ABI: file-static. Not EXPORT_API. Internal hot-path helper only.
    */
-  GVariantBuilder* ScratchBuilder(const GVariantType* type);
+  EXPORT_API GVariantBuilder* ScratchBuilder(const GVariantType* type);
 
   /* Test-only: reset the current thread's scratch builder. Allows unit
    * tests to isolate builder-reuse allocation counts across TESTs without
    * relying on test execution order. */
-  void ResetScratchBuilderForTest();
+  EXPORT_API void ResetScratchBuilderForTest();
 
   /* Test-only: returns how many times ScratchBuilder() has had to
    * g_variant_builder_new() on the current thread (i.e. cold path count).
    * On a reused-thread hot path this should stay at 1. */
-  int GetScratchBuilderAllocCountForTest();
+  EXPORT_API int GetScratchBuilderAllocCountForTest();
 }  // namespace util
 }  // namespace notification
 

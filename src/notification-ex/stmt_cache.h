@@ -27,6 +27,10 @@
 
 #include "notification-ex/sqlite_stmt.h"
 
+#ifndef EXPORT_API
+#define EXPORT_API __attribute__((visibility("default")))
+#endif
+
 /*
  * N1-T6: Prepared statement cache (LRU, per sqlite3*).
  *
@@ -56,11 +60,15 @@
 
 namespace notification {
 
-class StmtCache {
+// N2-T5: StmtCache is consumed from the unittest binary (see
+// test_stmt_cache.cc) as well as from inside the .so. Expose its non-inline
+// members so the test TU can link once project-wide -fvisibility=hidden is
+// active on C++ code.
+class EXPORT_API StmtCache {
  public:
   static constexpr std::size_t kDefaultCapacity = 16;
 
-  class AcquiredStmt {
+  class EXPORT_API AcquiredStmt {
    public:
     AcquiredStmt() noexcept = default;
     AcquiredStmt(StmtCache* owner, std::string key, sqlite3_stmt* stmt) noexcept

@@ -1282,7 +1282,8 @@ std::list<std::shared_ptr<item::AbstractItem>> DBManager::GetNotificationList(
 /* LCOV_EXCL_STOP */
 
 namespace detail {
-void ResetDefaultConnectionForTest() {
+/* N2-T5: test seam — keep default visibility so test TU resolves it. */
+EXPORT_API void ResetDefaultConnectionForTest() {
   DbConnectionHolder::Instance().Invalidate();
 }
 }  // namespace detail

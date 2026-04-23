@@ -57,22 +57,25 @@ std::atomic<bool> s_force_connect_failure_{false};
 }  // namespace
 
 namespace dbus_test_hooks {
+/* N2-T5: dbus_test_hooks is consumed from the unittest binary. With the
+ * library-wide -fvisibility=hidden on C++ code, each of these entry points
+ * must carry EXPORT_API explicitly; otherwise the test TU cannot link. */
 /* Install a sentinel connection pointer returned from GetConnection() without
  * calling g_bus_get_sync(). Pass nullptr to clear. */
-void SetOverrideConnection(GDBusConnection* conn) {
+EXPORT_API void SetOverrideConnection(GDBusConnection* conn) {
   s_override_connection_.store(conn, std::memory_order_release);
 }
 /* Counter incremented each time the override path is taken (i.e. the lazy
  * EnsureConnected succeeds without touching real g_bus_get_sync). */
-int  GetOverrideConnectCount() {
+EXPORT_API int  GetOverrideConnectCount() {
   return s_override_connect_count_.load(std::memory_order_acquire);
 }
-void ResetOverrideConnectCount() {
+EXPORT_API void ResetOverrideConnectCount() {
   s_override_connect_count_.store(0, std::memory_order_release);
 }
 /* Force EnsureConnected() to return an error even when an override is set.
  * Lets tests exercise the failure path deterministically. */
-void SetForceConnectFailure(bool v) {
+EXPORT_API void SetForceConnectFailure(bool v) {
   s_force_connect_failure_.store(v, std::memory_order_release);
 }
 /*
@@ -81,7 +84,7 @@ void SetForceConnectFailure(bool v) {
  * and reconstruct it in place (placement-new). Caller must ensure no
  * other thread touches the singleton during this call.
  */
-void ResetSingletonForTest() {
+EXPORT_API void ResetSingletonForTest() {
   auto& w = notification::DBusConnectionManager::GetInst();
   w.connection_ = nullptr;
   w.is_DPM_ = false;

@@ -26,6 +26,10 @@
 
 #include "notification-ex/abstract_item.h"
 
+#ifndef EXPORT_API
+#define EXPORT_API __attribute__((visibility("default")))
+#endif
+
 /*
  * N1-T3: internal abstraction used to allow a connection-pool backed
  * implementation to sit behind the legacy static DBManager facade.
@@ -81,8 +85,10 @@ namespace detail {
  * by the default DBManagerImpl so each unit test can measure
  * sqlite3_open_v2 invocation counts from a clean baseline. Production
  * code must not rely on this symbol.
+ *
+ * N2-T5: EXPORT_API so the unittest binary resolves it under visibility=hidden.
  */
-void ResetDefaultConnectionForTest();
+EXPORT_API void ResetDefaultConnectionForTest();
 
 }  // namespace detail
 

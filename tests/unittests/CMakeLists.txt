@@ -21,11 +21,33 @@ TARGET_INCLUDE_DIRECTORIES(${TARGET_NOTIFICATION_UNITTESTS} PUBLIC
 TARGET_COMPILE_DEFINITIONS(${TARGET_NOTIFICATION_UNITTESTS} PRIVATE
   NOTI_TEST_WRAP_ALLOC=1
 )
+
+# N2-T5: the test binary hosts mock TUs (tests/mock/*_mock.cc) that provide
+# extern "C" definitions of libsqlite3 / libaul / libtzplatform-config /
+# libglib-2.0 entry points. These act as symbol interposers for the .so
+# at runtime. With the project-wide -fvisibility=hidden the mock symbols
+# would be emitted with STV_HIDDEN visibility and the dynamic linker
+# would NOT interpose them. Opt the test binary out with
+# -fvisibility=default so every extern "C" mock stays globally visible.
+TARGET_COMPILE_OPTIONS(${TARGET_NOTIFICATION_UNITTESTS} PRIVATE
+  "-fvisibility=default"
+  "-fvisibility-inlines-hidden")  # keep inline thunks hidden; mocks are not inline
 TARGET_LINK_OPTIONS(${TARGET_NOTIFICATION_UNITTESTS} PRIVATE
   "-Wl,--wrap=malloc"
   "-Wl,--wrap=free"
   "-Wl,--wrap=realloc"
   "-Wl,--wrap=calloc"
+  # N2-T5: the project-wide CMAKE_EXE_LINKER_FLAGS enable --gc-sections so
+  # the production binaries (notification_init, notification-test-app)
+  # strip dead code. The unittest binary, however, relies on mock TUs that
+  # provide C-linkage overrides (sqlite3_*, aul_*, glib_*) which are only
+  # referenced from inside libnotification.so at runtime — the linker
+  # cannot see those cross-TU uses and would drop the mock bodies. Make
+  # the test binary opt-OUT of --gc-sections to preserve the mocks.
+  "-Wl,--no-gc-sections"
+  # Keep all test-binary symbols dynamic so `dlsym(RTLD_DEFAULT, ...)`
+  # style probes in mock_hook / alloc_counter also resolve.
+  "-Wl,--export-dynamic"
 )
 
 APPLY_PKG_CONFIG(${TARGET_NOTIFICATION_UNITTESTS} PUBLIC

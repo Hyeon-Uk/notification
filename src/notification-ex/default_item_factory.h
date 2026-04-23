@@ -49,9 +49,12 @@ class EXPORT_API DefaultItemFactory : public IItemFactory {
  * These replace the FactoryManager singleton path for internal callers so
  * that no FactoryManager / DefaultItemFactory instance is materialized on
  * the hot path. FactoryManager shim still delegates here when no user
- * override is registered (see factory_manager.cc). */
-std::unique_ptr<AbstractItem> CreateItem(int type);
-AbstractItem& GetNullItem();
+ * override is registered (see factory_manager.cc).
+ *
+ * N2-T5: EXPORT_API needed so the unittest binary can link these without
+ * being swallowed by the project-wide -fvisibility=hidden on C++ TUs. */
+EXPORT_API std::unique_ptr<AbstractItem> CreateItem(int type);
+EXPORT_API AbstractItem& GetNullItem();
 
 }  // namespace item
 }  // namespace notification

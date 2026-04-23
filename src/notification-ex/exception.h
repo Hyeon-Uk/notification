@@ -30,12 +30,19 @@
 
 #define LOG_TAG "NOTIFICATION_EX"
 
+#ifndef EXPORT_API
+#define EXPORT_API __attribute__((visibility("default")))
+#endif
+
 #define THROW(error_code) throw Exception(error_code, __FILE__, __LINE__)
 
 namespace notification {
 
 /* LCOV_EXCL_START */
-class Exception : public std::exception {
+// N2-T5: keep Exception's vtable/typeinfo at default visibility so
+// `throw Exception(...)` / `catch (Exception&)` crossing shared-library
+// boundaries keeps a single RTTI identity under -fvisibility=hidden.
+class EXPORT_API Exception : public std::exception {
  public:
   explicit Exception(int error_code, std::string file = __FILE__,
       int line = __LINE__ ) {
