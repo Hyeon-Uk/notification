@@ -40,6 +40,23 @@ SET(CMAKE_SHARED_LINKER_FLAGS
 SET(CMAKE_EXE_LINKER_FLAGS
   "${CMAKE_EXE_LINKER_FLAGS} -Wl,--gc-sections -Wl,--as-needed")
 
+# N2-T8 F2: Link-Time Optimization (LTO). Lets the linker run a second
+# optimization pass across every translation unit, which deletes code that
+# individual compile units could not prove unused, shrinks inline cascades,
+# and merges constants. Combined with N2-T5's -fvisibility=hidden + gc-sections
+# the gains compound: hidden symbols let LTO freely inline across .cc files
+# inside each .so. ASAN is incompatible with many host toolchains' LTO drivers
+# (the instrumented objects disagree with the LTO plugin about __asan_* refs),
+# so we gate it off the ASAN flag. Adds ~30-60s to the gbs build.
+INCLUDE(CheckIPOSupported)
+CHECK_IPO_SUPPORTED(RESULT ipo_supported OUTPUT ipo_error)
+IF(ipo_supported AND NOT ASAN_ENABLED)
+  MESSAGE(STATUS "N2-T8 F2: LTO (CMAKE_INTERPROCEDURAL_OPTIMIZATION) enabled")
+  SET(CMAKE_INTERPROCEDURAL_OPTIMIZATION TRUE)
+ELSE()
+  MESSAGE(STATUS "N2-T8 F2: LTO disabled (ipo_supported=${ipo_supported} asan=${ASAN_ENABLED})")
+ENDIF()
+
 SET(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH}
   "${CMAKE_CURRENT_SOURCE_DIR}/cmake/Modules/")
 

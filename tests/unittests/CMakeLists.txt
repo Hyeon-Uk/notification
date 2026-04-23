@@ -69,4 +69,16 @@ APPLY_PKG_CONFIG(${TARGET_NOTIFICATION_UNITTESTS} PUBLIC
 TARGET_LINK_LIBRARIES(${TARGET_NOTIFICATION_UNITTESTS} PRIVATE
   ${TARGET_NOTIFICATION} ${TARGET_NOTIFICATION_EX} "-ldl")
 
+# N2-T8 F2: the mock TUs (tests/mock/*_mock.cc) interpose libc / libaul /
+# libsqlite3 / libglib entry points so tests can observe calls made from
+# inside libnotification.so at runtime. LTO on the unittest executable
+# lets the linker's IPA pass see through the interposer boundary, inline
+# `aul_app_get_pkgid_bypid` into call sites as constant-return stubs, and
+# thus silently skips the MOCK_HOOK bookkeeping the EXPECT_CALL assertions
+# depend on (result: "never called - unsatisfied" on every mock). We opt
+# the test binary out of LTO while keeping the production shared libs
+# fully optimized. No effect on binary-size gate (test exe is not shipped).
+SET_TARGET_PROPERTIES(${TARGET_NOTIFICATION_UNITTESTS} PROPERTIES
+  INTERPROCEDURAL_OPTIMIZATION FALSE)
+
 INSTALL(TARGETS ${TARGET_NOTIFICATION_UNITTESTS} DESTINATION bin)
