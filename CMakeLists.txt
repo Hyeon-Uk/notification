@@ -66,6 +66,29 @@ PKG_CHECK_MODULES(TIZEN_CORE_DEPS REQUIRED tizen-core)
 PKG_CHECK_MODULES(UUID_DEPS REQUIRED uuid)
 PKG_CHECK_MODULES(VCONF_DEPS REQUIRED vconf)
 
+# N2-T6: shared_file_common — de-duplicated C helper used by both
+# libnotification.so and libnotification-ex.so. Declared here (before the
+# src/ subdirectory) so the OBJECT library is visible to every subdir.
+# CMake 3.12+ supports linking OBJECT libraries into SHARED ones via
+# TARGET_LINK_LIBRARIES, which propagates both the object files and their
+# transitive include/compile properties.
+ADD_LIBRARY(shared_file_common OBJECT
+  src/notification/src/shared_file_common.c)
+TARGET_INCLUDE_DIRECTORIES(shared_file_common PUBLIC
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/notification/src
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/notification/include)
+APPLY_PKG_CONFIG(shared_file_common PUBLIC
+  AUL_DEPS
+  DLOG_DEPS
+  GIO_DEPS
+  GLIB_DEPS
+  LIBTZPLATFORM_CONFIG_DEPS
+)
+# Match the parent project's visibility/PIC settings so the object can
+# be embedded in a shared library without -fPIC warnings.
+SET_TARGET_PROPERTIES(shared_file_common PROPERTIES
+  POSITION_INDEPENDENT_CODE ON)
+
 ADD_SUBDIRECTORY(scripts)
 ADD_SUBDIRECTORY(src)
 ADD_SUBDIRECTORY(tests)

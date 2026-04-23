@@ -4,7 +4,17 @@ SET(LIBDIR ${LIB_INSTALL_DIR})
 SET(INCLUDEDIR "${PREFIX}/include/${TARGET_NOTIFICATION}")
 
 AUX_SOURCE_DIRECTORY(${CMAKE_CURRENT_SOURCE_DIR}/src NOTIFICATION_SRCS)
-ADD_LIBRARY(${TARGET_NOTIFICATION} SHARED ${NOTIFICATION_SRCS})
+
+# N2-T6: shared_file_common.c is compiled once via the root-level
+# ADD_LIBRARY(shared_file_common OBJECT ...) and injected into both .so's
+# through $<TARGET_OBJECTS:...>. Remove it from the per-library AUX list
+# so we do not compile or emit it twice inside libnotification.so.
+LIST(REMOVE_ITEM NOTIFICATION_SRCS
+  "${CMAKE_CURRENT_SOURCE_DIR}/src/shared_file_common.c")
+
+ADD_LIBRARY(${TARGET_NOTIFICATION} SHARED
+  ${NOTIFICATION_SRCS}
+  $<TARGET_OBJECTS:shared_file_common>)
 
 SET_TARGET_PROPERTIES(${TARGET_NOTIFICATION} PROPERTIES SOVERSION ${MAJORVER})
 SET_TARGET_PROPERTIES(${TARGET_NOTIFICATION} PROPERTIES VERSION ${FULLVER})

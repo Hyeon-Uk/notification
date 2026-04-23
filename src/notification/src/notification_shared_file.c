@@ -42,6 +42,7 @@
 #include "notification_shared_file.h"
 #include <notification_private.h>
 #include "notification_internal.h"
+#include "shared_file_common.h"
 
 #define NOTI_PRIV_DATA_DIR "data/.notification"
 #define MAX_TIMEOUT 5000
@@ -87,64 +88,20 @@ typedef struct target_app_info {
 	char *tidl_sender_name;
 } target_app_info_s;
 
+/* N2-T6: __last_index_of / __make_sharing_dir collapsed onto
+ * shared_file_common_last_index_of / shared_file_common_make_dir.
+ * Thin file-static wrappers keep the existing call sites untouched and
+ * preserve the legacy WARN logs local callers depend on. */
+#define __last_index_of(path, search) \
+	shared_file_common_last_index_of((path), (search))
+
 /* LCOV_EXCL_START */
-static const char *__last_index_of(const char *path, const char *search);
 static bool __make_sharing_dir(const char *dir)
 {
-	GFile *noti_dir = NULL;
-	GError *g_err = NULL;
-
-	if (access(dir, R_OK) == 0) {
-		WARN("__make_sharing_dir exist : %s", dir);
-		return true;
-	}
-
-	noti_dir = g_file_new_for_path(dir);
-	if (noti_dir == NULL)
-		return false;
-
-	if (g_file_make_directory(noti_dir, NULL, &g_err) == false) {
-		if (g_err) {
-			ERR("Failed to make sharing dir[%s]", g_err->message);
-			g_error_free(g_err);
-		}
-		g_object_unref(noti_dir);
-		return false;
-	}
-
-	WARN("__make_sharing_dir done : %s", dir);
-
-	g_object_unref(noti_dir);
-	return true;
-}
-/* LCOV_EXCL_STOP */
-
-/* LCOV_EXCL_START */
-static const char *__last_index_of(const char *path, const char *search)
-{
-	int i;
-	int search_len;
-	const char *index;
-
-	if (path == NULL || search == NULL)
-		return NULL;
-
-	search_len = strlen(search);
-	index = path + strlen(path) - search_len;
-
-	while (index >= path) {
-		for (i = 0; i < search_len; i++) {
-			if (index[i] != search[i])
-				break;
-		}
-
-		if (i == search_len)
-			return index;
-
-		index--;
-	}
-
-	return NULL;
+	bool ok = shared_file_common_make_dir(dir);
+	if (ok)
+		WARN("__make_sharing_dir done : %s", dir);
+	return ok;
 }
 /* LCOV_EXCL_STOP */
 
@@ -193,80 +150,26 @@ static bool __is_shared_file(const char *file_path, const char *pkg_id)
 }
 /* LCOV_EXCL_STOP */
 
-/* LCOV_EXCL_START */
-static bool __is_RO_file(const char *file_path)
-{
-	struct statvfs stat_info;
-	bool ret = false;
-
-	if (statvfs(file_path, &stat_info) == 0) {
-		if (stat_info.f_flag & ST_RDONLY)
-			ret = true;
-		else
-			ret = false;
-	} else {
-		ERR("failed to get stat : %s", file_path);
-		ret = false;
-	}
-
-	return ret;
-}
-/* LCOV_EXCL_STOP */
+/* N2-T6: __is_RO_file delegates to shared_file_common_is_private_path,
+ * which performs the same statvfs(ST_RDONLY) probe (with an added R_OK
+ * access check for the symmetric C++ callsite). The extra access() call
+ * is harmless here: the caller only hits __is_RO_file with paths that
+ * already passed access(R_OK) inside notification_check_file_path_is_private. */
+#define __is_RO_file(file_path) \
+	shared_file_common_is_private_path((file_path))
 
 /* file copy from /res to /data */
 /* LCOV_EXCL_START */
+/*
+ * N2-T6: copy body moved to shared_file_common_copy_file. This entry
+ * point stays an EXPORT_API passthrough so external callers (notification
+ * setting, test-app) keep the same ABI.
+ */
 int notification_copy_private_file(const char *src_path,
 					const char *dst_path)
 {
-	int ret = NOTIFICATION_ERROR_NONE;
-	GFile *src = NULL;
-	GFile *dst = NULL;
-	GError *g_err = NULL;
-	struct utimbuf ut = {0,};
-
-	dst = g_file_new_for_path(dst_path);
-	if (dst == NULL) {
-		ERR("dst path is wrong [%s]", dst_path);
-		ret = NOTIFICATION_ERROR_IO_ERROR;
-		goto out;
-	}
-
-	if (g_file_query_exists(dst, NULL) == true) {
-		ret = NOTIFICATION_ERROR_ALREADY_EXIST_ID;
-		INFO("dst path existed [%s]", dst_path);
-		goto out;
-	}
-
-	src = g_file_new_for_path(src_path);
-	if (src == NULL) {
-		ERR("src path is wrong [%s]", src_path);
-		ret = NOTIFICATION_ERROR_IO_ERROR;
-		goto out;
-	}
-
-	if (!g_file_copy(src, dst, G_FILE_COPY_NOFOLLOW_SYMLINKS, NULL, NULL,
-			NULL, &g_err)) {
-		if (g_err) {
-			ERR("Copying file from [%s] to [%s] is failed [%s]",
-				src_path, dst_path, g_err->message);
-			g_error_free(g_err);
-		}
-		ret = NOTIFICATION_ERROR_IO_ERROR;
-		goto out;
-	}
-
-	ut.modtime = time(NULL);
-	if (g_utime(dst_path, &ut) != 0)
-		DBG("Failed to set g_utime %d ", errno);
-
-out:
-	if (src)
-		g_object_unref(src);
-	if (dst)
-		g_object_unref(dst);
-
+	int ret = shared_file_common_copy_file(src_path, dst_path);
 	WARN("copy private file done : %d", ret);
-
 	return ret;
 }
 /* LCOV_EXCL_STOP */

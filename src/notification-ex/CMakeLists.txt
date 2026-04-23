@@ -6,7 +6,15 @@ SET(VERSION_MAJOR 1)
 SET(VERSION "${VERSION_MAJOR}.0.0")
 
 AUX_SOURCE_DIRECTORY(${CMAKE_CURRENT_SOURCE_DIR} NOTIFICATION_EX_SRCS)
-ADD_LIBRARY(${TARGET_NOTIFICATION_EX} SHARED ${NOTIFICATION_EX_SRCS})
+
+# N2-T6: share the shared_file_common object with libnotification.so so
+# five duplicated helpers (last_index_of / make_dir / is_private_path /
+# copy_file / get_data_path) are emitted exactly once across both
+# libraries. The include dir for shared_file_common.h lives under
+# src/notification/src, which we also make visible here.
+ADD_LIBRARY(${TARGET_NOTIFICATION_EX} SHARED
+  ${NOTIFICATION_EX_SRCS}
+  $<TARGET_OBJECTS:shared_file_common>)
 
 SET_TARGET_PROPERTIES(${TARGET_NOTIFICATION_EX} PROPERTIES
   SOVERSION ${VERSION_MAJOR})
@@ -17,6 +25,12 @@ TARGET_INCLUDE_DIRECTORIES(${TARGET_NOTIFICATION_EX} PUBLIC
   ${CMAKE_CURRENT_SOURCE_DIR}
   ${CMAKE_CURRENT_SOURCE_DIR}/../
   ${CMAKE_CURRENT_SOURCE_DIR}/api
+)
+# N2-T6: private (non-installed) include path so shared_file.cc can reach
+# shared_file_common.h without exposing it to consumers of the public API.
+TARGET_INCLUDE_DIRECTORIES(${TARGET_NOTIFICATION_EX} PRIVATE
+  ${CMAKE_CURRENT_SOURCE_DIR}/../notification/src
+  ${CMAKE_CURRENT_SOURCE_DIR}/../notification/include
 )
 
 APPLY_PKG_CONFIG(${TARGET_NOTIFICATION_EX} PUBLIC

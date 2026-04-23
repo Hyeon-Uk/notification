@@ -38,6 +38,16 @@
 #include "notification-ex/shared_file.h"
 #include "notification-ex/group_item.h"
 
+/*
+ * N2-T6: shared_file_common.h is a plain C header declared under
+ * src/notification/src/. It ships with "extern C" guards so including it
+ * here is safe; the implementation lives in a CMake OBJECT library that
+ * both libnotification.so and libnotification-ex.so pull in.
+ */
+extern "C" {
+#include "shared_file_common.h"
+}
+
 #ifdef LOG_TAG
 #undef LOG_TAG
 #endif
@@ -57,52 +67,16 @@ SharedFile::SharingData::~SharingData() = default;
 SharedFile::SharingTarget::SharingTarget() = default;
 SharedFile::SharingTarget::~SharingTarget() = default;
 
+// N2-T6: delegate to the C object library so both .so's emit a single
+// copy of these helpers. Public SharedFile:: names stay unchanged so
+// existing callers (and the header) keep their ABI.
 const char* SharedFile::GetLastIndex(const char* path, const char* search) {
-  int i;
-  int search_len;
-  const char* index;
-
-  if (path == nullptr || search == nullptr)
-    return nullptr;
-
-  search_len = strlen(search);
-  index = path + strlen(path) - search_len;
-
-  while (index >= path) {
-    for (i = 0; i < search_len; i++) {
-      if (index[i] != search[i])
-        break;
-    }
-
-    if (i == search_len)
-      return index;
-
-    index--;
-  }
-
-  return nullptr;
+  return shared_file_common_last_index_of(path, search);
 }
 
 /* LCOV_EXCL_START */
 bool SharedFile::MakeDir(const char* path) {
-  if (access(path, R_OK) == 0)
-    return true;
-
-  auto noti_dir = unique_ptr<GFile, decltype(&g_object_unref)>(
-                        g_file_new_for_path(path), g_object_unref);
-  if (noti_dir == nullptr)
-    return false;
-
-  GError* g_err = nullptr;
-  if (!g_file_make_directory(noti_dir.get(), nullptr, &g_err)) {
-    if (g_err) {
-      LOGE("Failed to make sharing dir[%s]", g_err->message);
-      g_error_free(g_err);
-    }
-    return false;
-  }
-
-  return true;
+  return shared_file_common_make_dir(path);
 }
 
 string SharedFile::GetDir(string path) {
@@ -130,48 +104,10 @@ string SharedFile::GetDir(string path) {
 }
 
 int SharedFile::CopyFile(const char* source, const char* dest) {
-  GError* g_err = nullptr;
-  struct utimbuf ut = {0, };
-
-  if (source == nullptr || dest == nullptr) {
-    LOGE("Invalid parameter");
-    return ERROR_INVALID_PARAMETER;
-  }
-
-  auto dst = unique_ptr<GFile, decltype(&g_object_unref)>(
-                g_file_new_for_path(dest), g_object_unref);
-  if (dst == nullptr) {
-    LOGE("dest path is wrong [%s]", dest);
-    return ERROR_IO_ERROR;
-  }
-
-  if (g_file_query_exists(dst.get(), nullptr)) {
-    LOGD("dst path already existed [%s]", dest);
-    return  ERROR_ALREADY_EXIST_ID;
-  }
-
-  auto src = unique_ptr<GFile, decltype(&g_object_unref)>(
-                g_file_new_for_path(source), g_object_unref);
-  if (src == nullptr) {
-    LOGE("src path is wrong [%s]", source);
-    return ERROR_IO_ERROR;
-  }
-
-  if (!g_file_copy(src.get(), dst.get(), G_FILE_COPY_NOFOLLOW_SYMLINKS, nullptr,
-                nullptr, nullptr, &g_err)) {
-    if (g_err) {
-      LOGE("Copying file from [%s] to [%s] is failed [%s]", source, dest,
-          g_err->message);
-      g_error_free(g_err);
-    }
-    return ERROR_IO_ERROR;
-  }
-
-  ut.modtime = time(nullptr);
-  if (g_utime(dest, &ut) != 0)
-    LOGD("Failed to set g_utime %d ", errno);
-
-  return ERROR_NONE;
+  // N2-T6: shared_file_common_copy_file returns the notification error enum
+  // values, which are numerically identical to the ex ERROR_* constants,
+  // so we can forward them as-is.
+  return shared_file_common_copy_file(source, dest);
 }
 
 vector<char*> SharedFile::ConvertListToArray(const list<string>& data) {
@@ -187,48 +123,27 @@ vector<char*> SharedFile::ConvertListToArray(const list<string>& data) {
 }
 
 bool SharedFile::IsPrivatePath(string path) const {
-  bool ret = false;
-  struct statvfs stat_info;
-
   if (path.empty()) {
     LOGE("Invalid parameter");
     return false;
   }
-
-  if (access(path.c_str(), R_OK) != 0) {
-    LOGE("failed to access file : %s", path.c_str());
-    return false;
-  }
-
-  if (statvfs(path.c_str(), &stat_info) == 0) {
-    if (stat_info.f_flag & ST_RDONLY)
-      ret = true;
-    else
-      ret = false;
-  } else {
-    LOGE("failed to get stat : %s", path.c_str());
-    ret = false;
-  }
-
-  return ret;
+  return shared_file_common_is_private_path(path.c_str());
 }
 
 string SharedFile::GetDataPath(string app_id, string path) const {
-  string user_app;
-  string dir;
-
   if (app_id.empty() || path.empty()) {
     LOGE("Invalid parameter");
     return "";
   }
-
-  tzplatform_set_user(aul_getuid());
-  user_app = tzplatform_getenv(TZ_USER_APP);
-  tzplatform_reset_user();
-
-  dir = user_app + "/" + app_id + "/" + NOTI_PRIV_DATA_DIR + "/";
-  dir += string(GetLastIndex(path.c_str(), "/") + 1);
-
+  // N2-T6: the C helper allocates the joined path; we adopt it into
+  // std::string and free() the original buffer. Passing NOTI_PRIV_DATA_DIR
+  // keeps the ex-specific subdir semantics ("data/.notification_ex").
+  char* raw = shared_file_common_get_data_path(
+      app_id.c_str(), path.c_str(), NOTI_PRIV_DATA_DIR);
+  if (raw == nullptr)
+    return "";
+  string dir(raw);
+  free(raw);
   return dir;
 }
 
