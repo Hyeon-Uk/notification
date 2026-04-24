@@ -2377,10 +2377,19 @@ EXPORT_API int notification_noti_check_limit(notification_h noti, uid_t uid, GLi
 			/* LCOV_EXCL_STOP */
 		}
 
-		while (sqlite3_step(stmt) == SQLITE_ROW && count > 0) {
-			priv_id = sqlite3_column_int(stmt, 0);
-			*list = g_list_append(*list, GINT_TO_POINTER(priv_id));
-			count--;
+		/* N3-T4 A1: local prepend + reverse, then concat into *list.
+		 * O(n) vs former O(n^2) tail walk; preserves insert order and
+		 * does not disturb any pre-existing entries in *list. */
+		{
+			GList *new_entries = NULL;
+			while (sqlite3_step(stmt) == SQLITE_ROW && count > 0) {
+				priv_id = sqlite3_column_int(stmt, 0);
+				new_entries = g_list_prepend(new_entries,
+						GINT_TO_POINTER(priv_id));
+				count--;
+			}
+			new_entries = g_list_reverse(new_entries);
+			*list = g_list_concat(*list, new_entries);
 		}
 	}
 
@@ -2620,17 +2629,23 @@ EXPORT_API int notification_noti_get_channel_list(const char *app_id,
 		goto out;
 	}
 
-	while (sqlite3_step(stmt) == SQLITE_ROW) {
-		channel_name = notification_db_column_text(stmt, 0);
-		blockable = sqlite3_column_int(stmt, 1);
-		is_blocked = sqlite3_column_int(stmt, 2);
+	/* N3-T4 A1: local prepend + reverse avoids per-row O(n) tail walk. */
+	{
+		GList *channels = NULL;
+		while (sqlite3_step(stmt) == SQLITE_ROW) {
+			channel_name = notification_db_column_text(stmt, 0);
+			blockable = sqlite3_column_int(stmt, 1);
+			is_blocked = sqlite3_column_int(stmt, 2);
 
-		notification_channel_create_with_info(app_id, channel_name,
-				blockable, is_blocked, &channel);
+			notification_channel_create_with_info(app_id, channel_name,
+					blockable, is_blocked, &channel);
 
-		if (channel)
-			*channel_list = g_list_append(*channel_list, channel);
-		WARN("noti get channel list : %s", channel_name);
+			if (channel)
+				channels = g_list_prepend(channels, channel);
+			WARN("noti get channel list : %s", channel_name);
+		}
+		channels = g_list_reverse(channels);
+		*channel_list = g_list_concat(*channel_list, channels);
 	}
 
 out:

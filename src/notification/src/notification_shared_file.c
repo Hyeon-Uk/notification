@@ -333,7 +333,9 @@ static void __make_file_info(char *src_path, char *dst_path,
 				ERR("Failed to get stat info");
 			file_info->modification_time = stat_buf.st_mtime;
 
-			*new_file_list = g_list_append(*new_file_list, file_info);
+			/* N3-T4 A1: prepend; caller __get_new_file_list
+			 * reverses once all helper calls are done. */
+			*new_file_list = g_list_prepend(*new_file_list, file_info);
 		} else {
 			WARN("__make_file_info tmp not null");
 
@@ -346,7 +348,7 @@ static void __make_file_info(char *src_path, char *dst_path,
 				dup_file_info = __dup_file_info(file_info);
 				__OOM_CHECK(dup_file_info, DUMMY_PARAM, DUMMY_PARAM);
 
-				*new_file_list =  g_list_append(*new_file_list,
+				*new_file_list = g_list_prepend(*new_file_list,
 						dup_file_info);
 				*is_overlapping = true;
 			}
@@ -397,8 +399,11 @@ static GList *__get_new_file_list(notification_h noti,
 		noti->vibration_path = dup_str;
 	}
 
-	if (noti->b_priv_image_path == NULL)
+	if (noti->b_priv_image_path == NULL) {
+		/* N3-T4 A1: restore insertion order after prepend chain. */
+		new_file_list = g_list_reverse(new_file_list);
 		return new_file_list;
+	}
 
 	for (; i <= NOTIFICATION_IMAGE_TYPE_MAX; i++) {
 		src_path = NULL;
@@ -415,6 +420,8 @@ static GList *__get_new_file_list(notification_h noti,
 			WARN("__get_new_file_list changed path %d : %s", i, dst_path);
 		}
 	}
+	/* N3-T4 A1: restore insertion order after prepend chain. */
+	new_file_list = g_list_reverse(new_file_list);
 	WARN("__get_new_file_list done");
 
 	return new_file_list;
@@ -794,6 +801,10 @@ int __set_sharing_for_new_target(sharing_req_data_s *req_data,
 	GList *iter, *tmp;
 	target_app_info_s *target_info;
 	char *app_info = NULL;
+	/* N3-T4 A1: accumulate successful entries in a local prepend list
+	 * and splice once after the loop so per-iteration tail walk of
+	 * req_data->target_app_table is avoided. */
+	GList *new_targets = NULL;
 
 	WARN("__set_sharing_for_new_target : %d",
 			g_list_length(target_app_list));
@@ -805,6 +816,11 @@ int __set_sharing_for_new_target(sharing_req_data_s *req_data,
 					target_info->app_id, __comp_str);
 		if (tmp != NULL) {
 			ERR("tmp not null continue");
+			continue;
+		}
+		/* Also skip if we already queued it in this invocation. */
+		if (g_list_find_custom(new_targets, target_info->app_id,
+					__comp_str) != NULL) {
 			continue;
 		}
 
@@ -866,11 +882,22 @@ int __set_sharing_for_new_target(sharing_req_data_s *req_data,
 		}
 		WARN("set private sharing end");
 
-		req_data->target_app_table = g_list_append(
-				req_data->target_app_table, app_info);
+		new_targets = g_list_prepend(new_targets, app_info);
 	}
 
+	/* Splice successful adds in original traversal order. */
+	new_targets = g_list_reverse(new_targets);
+	req_data->target_app_table =
+			g_list_concat(req_data->target_app_table, new_targets);
+	new_targets = NULL;
+
 out:
+	if (new_targets != NULL) {
+		/* Error path: we allocated strdup'd entries but did not
+		 * publish them. free each strdup before discarding. */
+		g_list_free_full(new_targets, free);
+	}
+
 	if (ret != NOTIFICATION_ERROR_NONE && app_info)
 		free(app_info);
 
@@ -1064,19 +1091,33 @@ EXPORT_API int notification_set_private_sharing(notification_h noti,
 		}
 	}
 
-	for (iter = new_file_list; iter != NULL; iter = g_list_next(iter)) {
-		tmp = NULL;
-		file_info = iter->data;
-		if (is_overlapping) {
-			tmp = g_list_find_custom(req_data->shared_file_list,
-				file_info, __comp_file_info);
-		}
+	/* N3-T4 A1: accumulate dup'd file_info in a local prepend list,
+	 * reverse once, and splice into shared_file_list in O(m) instead
+	 * of per-iteration O(n) tail walk. */
+	{
+		GList *new_shared = NULL;
 
-		if (tmp == NULL) {
-			dup_file_info = __dup_file_info(file_info);
-			req_data->shared_file_list = g_list_append(
-				req_data->shared_file_list, dup_file_info);
+		for (iter = new_file_list; iter != NULL;
+				iter = g_list_next(iter)) {
+			tmp = NULL;
+			file_info = iter->data;
+			if (is_overlapping) {
+				tmp = g_list_find_custom(
+						req_data->shared_file_list,
+						file_info, __comp_file_info);
+			}
+
+			if (tmp == NULL) {
+				dup_file_info = __dup_file_info(file_info);
+				if (dup_file_info != NULL) {
+					new_shared = g_list_prepend(new_shared,
+							dup_file_info);
+				}
+			}
 		}
+		new_shared = g_list_reverse(new_shared);
+		req_data->shared_file_list = g_list_concat(
+				req_data->shared_file_list, new_shared);
 	}
 
 	if (__set_sharing_for_new_target(req_data, uid_info->target_app_list)

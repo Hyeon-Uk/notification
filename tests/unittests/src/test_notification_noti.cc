@@ -376,17 +376,27 @@ TEST_F(NotificationNotiTest, notification_noti_test13) {
   EXPECT_CALL(GetMock<SqliteMock>(), sqlite3_prepare_v2(_, _, _, _, _))
       .WillRepeatedly(Invoke(__fake_sqlite3_prepare_v2));
 
+  /* N3-T4 A1 update: the production loop no longer exits via the
+   * g_list_append mock (now uses real g_list_prepend + g_list_reverse
+   * + g_list_concat on a local accumulator). Constrain sqlite3_step to
+   * one ROW then DONE so the new loop terminates naturally. */
   EXPECT_CALL(GetMock<SqliteMock>(), sqlite3_step(_))
-      .WillRepeatedly(Return(SQLITE_ROW));
+      .WillOnce(Return(SQLITE_ROW))
+      .WillRepeatedly(Return(SQLITE_DONE));
 
   EXPECT_CALL(GetMock<SqliteMock>(), sqlite3_column_int(_, _))
       .WillRepeatedly(Return(101));
 
-  EXPECT_CALL(GetMock<GlibMock>(), g_list_append(_, _))
-      .WillOnce(Return(nullptr));
-
+  /* N3-T4 A1: list must be initialized to NULL since the function now
+   * concats its local batch into *list via real g_list_concat (which
+   * walks *list to its tail). Any garbage pointer here would dereference
+   * invalid memory — the former mock-returns-nullptr path masked this. */
   int ret;
-  GList* list;
+  GList* list = NULL;
   ret = notification_noti_check_limit(noti, 5001, &list);
   ASSERT_EQ(ret, NOTIFICATION_ERROR_NONE);
+  /* The real g_list_prepend allocated one node (one ROW fixture). Free
+   * it so --wrap=free in the unittest binary does not flag a leak. */
+  if (list != NULL)
+    g_list_free(list);
 }

@@ -1467,6 +1467,7 @@ static GList *__copy_private_file(notification_h noti)
 	int ret;
 
 	if (noti->b_priv_image_path && noti->b_image_path) {
+		/* N3-T4 A1: prepend + reverse after loop. */
 		dst_b = noti->b_priv_image_path;
 		src_b = noti->b_image_path;
 		for (i = NOTIFICATION_IMAGE_TYPE_ICON; i <= NOTIFICATION_IMAGE_TYPE_MAX; i++) {
@@ -1485,8 +1486,9 @@ static GList *__copy_private_file(notification_h noti)
 
 			ret = notification_copy_private_file(src_path, dst_path);
 			if (ret == NOTIFICATION_ERROR_NONE)
-				file_list = g_list_append(file_list, strdup(dst_path));
+				file_list = g_list_prepend(file_list, strdup(dst_path));
 		}
+		file_list = g_list_reverse(file_list);
 	}
 	if (noti->sound_path && noti->priv_sound_path) {
 		ret = notification_copy_private_file(noti->sound_path,
