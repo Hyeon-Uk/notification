@@ -16,8 +16,10 @@
 
 #include <aul.h>
 #include <dlog.h>
+#include <glib.h>
 #include <unistd.h>
 
+#include <cstring>
 #include <memory>
 
 #include "notification-ex/event_info_internal.h"
@@ -36,6 +38,18 @@
 #define NOTIFICATION_EX_EVENT_UID_KEY "__NOTIFICATION_EX_EVENT_UID_KEY__"
 #define NOTIFICATION_EX_EVENT_REQUEST_ID_KEY "__NOTIFICATION_EX_EVENT_REQUEST_ID_KEY__"
 #define NOTIFICATION_EX_EVENT_ERROR_KEY "__NOTIFICATION_EX_EVENT_ERROR_KEY__"
+
+/*
+ * N3-T2 C2: short keys on the direct a{sv} path. These stay distinct from
+ * the long-form __NOTIFICATION_EX_EVENT_*_KEY__ bundle keys used by the
+ * legacy Serialize() path because the two wire encodings are independent
+ * — a receiver detects which path was used by looking at the D-Bus type
+ * signature (`a(s)` for bundle-wrapped payload vs `a{sv}` for direct).
+ */
+#define NOTI_EX_GV_TYPE_KEY        "type"
+#define NOTI_EX_GV_UID_KEY         "uid"
+#define NOTI_EX_GV_REQUEST_ID_KEY  "request_id"
+#define NOTI_EX_GV_ERROR_KEY       "error"
 
 using namespace std;
 using namespace tizen_base;
@@ -172,6 +186,76 @@ NotificationError EventInfo::GetError() const {
 
 void EventInfo::SetError(NotificationError error) {
   impl_->error_ = error;
+}
+
+/*
+ * N3-T2 C2 (direct-to-GVariant, single-field scope):
+ *
+ * Build an `a{sv}` dict holding the four small scalar fields the
+ * IEventInfo section of the wire format pins at the head of every
+ * event payload (see design doc N3-T2). The remaining fields continue
+ * to flow through the legacy bundle+GVariant path in this phase; the
+ * caller chooses between Serialize() and ToGVariant() based on which
+ * message slot is under optimization.
+ *
+ * The returned GVariant carries the usual floating ref (as produced
+ * by g_variant_builder_end). Callers either pass it to another
+ * g_variant_new("(v...)", …) / g_dbus_message_set_body which sinks
+ * it, or wrap with g_variant_ref_sink / g_variant_unref to destroy.
+ */
+GVariant* EventInfo::ToGVariant() const {
+  GVariantBuilder b;
+  g_variant_builder_init(&b, G_VARIANT_TYPE("a{sv}"));
+  g_variant_builder_add(&b, "{sv}", NOTI_EX_GV_TYPE_KEY,
+      g_variant_new_int32(static_cast<int32_t>(impl_->type_)));
+  g_variant_builder_add(&b, "{sv}", NOTI_EX_GV_UID_KEY,
+      g_variant_new_int32(static_cast<int32_t>(impl_->uid_)));
+  g_variant_builder_add(&b, "{sv}", NOTI_EX_GV_REQUEST_ID_KEY,
+      g_variant_new_int32(static_cast<int32_t>(impl_->request_id_)));
+  g_variant_builder_add(&b, "{sv}", NOTI_EX_GV_ERROR_KEY,
+      g_variant_new_int32(static_cast<int32_t>(impl_->error_)));
+  return g_variant_builder_end(&b);
+}
+
+bool EventInfo::FromGVariant(GVariant* v) {
+  if (v == nullptr)
+    return false;
+  if (!g_variant_is_of_type(v, G_VARIANT_TYPE("a{sv}"))) {
+    LOGE("FromGVariant: unexpected variant type");
+    return false;
+  }
+
+  GVariantIter iter;
+  g_variant_iter_init(&iter, v);
+  const gchar* key = nullptr;
+  GVariant* val = nullptr;
+  bool any_field_seen = false;
+
+  /* `&key` is a "&s" lookup — pointer into the dict bytes, no copy,
+   * no free. `val` comes back with a full-ref and MUST be g_variant_unref'd. */
+  while (g_variant_iter_next(&iter, "{&sv}", &key, &val)) {
+    if (std::strcmp(key, NOTI_EX_GV_TYPE_KEY) == 0
+        && g_variant_is_of_type(val, G_VARIANT_TYPE_INT32)) {
+      impl_->type_ = g_variant_get_int32(val);
+      any_field_seen = true;
+    } else if (std::strcmp(key, NOTI_EX_GV_UID_KEY) == 0
+        && g_variant_is_of_type(val, G_VARIANT_TYPE_INT32)) {
+      impl_->uid_ = static_cast<uid_t>(g_variant_get_int32(val));
+      any_field_seen = true;
+    } else if (std::strcmp(key, NOTI_EX_GV_REQUEST_ID_KEY) == 0
+        && g_variant_is_of_type(val, G_VARIANT_TYPE_INT32)) {
+      impl_->request_id_ = g_variant_get_int32(val);
+      any_field_seen = true;
+    } else if (std::strcmp(key, NOTI_EX_GV_ERROR_KEY) == 0
+        && g_variant_is_of_type(val, G_VARIANT_TYPE_INT32)) {
+      impl_->error_ = static_cast<NotificationError>(g_variant_get_int32(val));
+      any_field_seen = true;
+    }
+    /* Unknown keys tolerated for forward-compat (Phase 4 may add more). */
+    g_variant_unref(val);
+    val = nullptr;
+  }
+  return any_field_seen;
 }
 
 }  // namespace notification

@@ -18,6 +18,7 @@
 #define NOTIFICATION_EX_EVENT_INFO_INTERNAL_H_
 
 #include <bundle_cpp.h>
+#include <glib.h>
 
 #include <string>
 #include <list>
@@ -53,6 +54,46 @@ class EXPORT_API EventInfo : public IEventInfoInternal {
   int GetRequestId() const override;
   tizen_base::Bundle Serialize() const override;
   static std::string GetString(int type);
+
+  /*
+   * N3-T2 C2 (single-field direct GVariant path):
+   *
+   * Phase 3 scope is intentionally narrow — we bypass the
+   * `Serialize() -> Bundle -> bundle_encode() -> g_variant_new("ss…")`
+   * double-encoding pipeline only for the four short fields that the
+   * wire-level IEventInfo section actually pins at the top of every
+   * D-Bus payload:
+   *
+   *   - "type"       : int32   (EventType enum, also chosen for
+   *                             signal name)
+   *   - "uid"        : int32   (uid_t widened)
+   *   - "request_id" : int32
+   *   - "error"      : int32   (NotificationError enum)
+   *
+   * `ToGVariant()` returns a floating-ref GVariant of type `a{sv}` with
+   * exactly these four entries. `FromGVariant()` consumes an `a{sv}`
+   * and repopulates the four fields; unknown keys are ignored so
+   * future additions are forward-compatible. The remaining fields
+   * (owner / channel / item_id / validated_uid / validated_owner) and
+   * the AbstractItem payload continue to flow through the existing
+   * bundle path for Phase 3; Phase 4 will extend this direct path to
+   * the rest of the wire format.
+   *
+   * Returned GVariant has a floating ref (per g_variant_builder_end
+   * contract). The caller transfers it to
+   * g_variant_new / g_dbus_message_set_body which sinks the ref, or
+   * must g_variant_ref_sink + g_variant_unref to destroy it.
+   */
+  GVariant* ToGVariant() const;
+  /*
+   * Populates `*this` from the four keys produced by ToGVariant.
+   * Unknown keys in `v` are ignored. If `v` is NULL or not of type
+   * `a{sv}`, this function is a no-op (and returns false).
+   * Existing fields stay at their current values when a key is absent
+   * from `v` (missing-key tolerance - used by the Phase 3 migration
+   * window where callers may send partial direct-path payloads).
+   */
+  bool FromGVariant(GVariant* v);
 
  private:
   class Impl;
