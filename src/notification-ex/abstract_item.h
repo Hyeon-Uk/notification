@@ -851,6 +851,9 @@ class EXPORT_API AbstractItem {
    * @brief Sets the notification item id.
    * @since_tizen 5.5
    * @param[in] id notification item id
+   *
+   * N3-T4 A2: pass-by-value + std::move in the impl lets rvalue callers
+   * skip one string copy on the internal move path.
    */
   void SetId(std::string id);
 

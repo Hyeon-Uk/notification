@@ -424,8 +424,15 @@ void AbstractItem::Deserialize(Bundle b) {
   impl_->extension_data_ = Bundle(b.GetString(ABSTRACT_ITEM_EXTENSION_DATA_KEY));
 }
 
+// N3-T4 A2: by-value parameter + std::move into member.
+// - rvalue caller: 1 move into param, 1 move into member (0 copies).
+// - lvalue caller: 1 copy into param, 1 move into member (unchanged).
+// - const char*  : 1 construction into param, 1 move into member.
+// The cheapest path for each call kind without adding a separate
+// overload (which would create `const char*` ambiguity at call sites
+// that historically did SetXxx("") or SetXxx(c_str)).
 void AbstractItem::SetId(std::string id) {
-  impl_->id_ = id;
+  impl_->id_ = std::move(id);
 }
 
 string AbstractItem::GetId() const {
@@ -547,16 +554,16 @@ string AbstractItem::GetChannel() const {
 }
 
 void AbstractItem::SetChannel(string channel) {
-  impl_->channel_ = channel;
+  impl_->channel_ = std::move(channel);
 }
 
 void AbstractItem::SetSoundPath(std::string path) {
-  impl_->sound_path_ = path;
+  impl_->sound_path_ = std::move(path);
   UpdateSoundPrivatePath();
 }
 
 void AbstractItem::SetVibrationPath(std::string path) {
-  impl_->vibration_path_ = path;
+  impl_->vibration_path_ = std::move(path);
   UpdateVibrationPrivatePath();
 }
 
@@ -573,7 +580,7 @@ std::string AbstractItem::GetSenderAppId() const {
 }
 
 void AbstractItem::SetSenderAppId(std::string sender_appid) {
-  impl_->sender_appid_ = sender_appid;
+  impl_->sender_appid_ = std::move(sender_appid);
 }
 
 std::string AbstractItem::GetTag() const {
@@ -581,7 +588,7 @@ std::string AbstractItem::GetTag() const {
 }
 
 void AbstractItem::SetTag(std::string tag) {
-  impl_->tag_ = tag;
+  impl_->tag_ = std::move(tag);
 }
 
 void AbstractItem::SetOnGoingState(bool ongoing) {
