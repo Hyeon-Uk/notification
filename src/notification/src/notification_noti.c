@@ -576,64 +576,15 @@ out:
 	return ret;
 }
 
-static int _get_notification(char *query_where, notification_h noti)
-{
-	int ret;
-	char *query = NULL;
-	sqlite3 *db = NULL;
-	sqlite3_stmt *stmt = NULL;
-
-	if (query_where == NULL || noti == NULL)
-		return NOTIFICATION_ERROR_INVALID_PARAMETER;
-
-	db = notification_db_open();
-	if (!db)
-		return get_last_result();
-
-	query = sqlite3_mprintf("SELECT %s FROM %s",
-				NOTI_LIST_DB_ATTRIBUTES_SELECT, query_where);
-	if (query == NULL) {
-		/* LCOV_EXCL_START */
-		ret = NOTIFICATION_ERROR_OUT_OF_MEMORY;
-		goto err;
-		/* LCOV_EXCL_STOP */
-	}
-
-	ret = sqlite3_prepare_v2(db, query, -1, &stmt, NULL);
-	if (ret != SQLITE_OK) {
-		/* LCOV_EXCL_START */
-		ERR("sqlite3_prepare_v2 failed [%d][%s]", ret,
-				sqlite3_errmsg(db));
-		ret = NOTIFICATION_ERROR_FROM_DB;
-		goto err;
-		/* LCOV_EXCL_STOP */
-	}
-
-	ret = sqlite3_step(stmt);
-	if (ret == SQLITE_ROW) {
-		__notification_noti_populate_from_stmt(stmt, noti);
-		ret = NOTIFICATION_ERROR_NONE;
-	} else {
-		if (ret == SQLITE_DONE)
-			DBG("No valid record found");
-		else
-			ERR("sqlite3_step failed [%d][%s]", ret,
-					sqlite3_errmsg(db));
-		ret = NOTIFICATION_ERROR_FROM_DB;
-	}
-
-err:
-	if (query)
-		sqlite3_free(query);
-
-	if (stmt)
-		sqlite3_finalize(stmt);
-
-	if (db != NULL)
-		notification_db_close(&db);
-
-	return ret;
-}
+/*
+ * N3-T3 C4: `_get_notification(query_where, noti)` is removed. Its 3
+ * call sites (notification_noti_get_by_priv_id / _get_by_tag /
+ * _get_package_template) now prepare and bind their own fixed SQL
+ * directly — the helper's single advantage was composing "SELECT ... FROM "
+ * + caller-supplied suffix via sqlite3_mprintf, and both sides of that
+ * composition are now compile-time literals. Leaving the helper in as
+ * dead code trips -Werror=unused-function on GCC.
+ */
 
 static int _get_notification_list(char *query_where, notification_list_h *list, int *list_count, int count)
 {
@@ -1035,7 +986,6 @@ EXPORT_API int notification_noti_insert(notification_h noti)
 	int ret = 0;
 	sqlite3 *db = NULL;
 	sqlite3_stmt *stmt = NULL;
-	char *query = NULL;
 
 	ERR("@@ notification_noti_insert");
 
@@ -1069,24 +1019,30 @@ EXPORT_API int notification_noti_insert(notification_h noti)
 	if (!db)
 		return get_last_result();
 
-	query = sqlite3_mprintf("INSERT INTO noti_list (%s) VALUES (%s)",
-			NOTI_LIST_DB_ATTRIBUTES_INSERT, NOTI_LIST_INSERT_VALUES);
-	if (query == NULL) {
-		/* LCOV_EXCL_START */
-		ERR("sqlite3_mprintf Failed");
-		ret = NOTIFICATION_ERROR_OUT_OF_MEMORY;
-		goto err;
-		/* LCOV_EXCL_STOP */
-	}
+	/*
+	 * N3-T3 C4: the INSERT SQL text depends only on two compile-time
+	 * macros (NOTI_LIST_DB_ATTRIBUTES_INSERT / NOTI_LIST_INSERT_VALUES),
+	 * so string-concatenate them into a static query and drop the
+	 * sqlite3_mprintf heap allocation (-1 alloc per post path).
+	 */
+	{
+		static const char kInsertQuery[] =
+			"INSERT INTO noti_list ("
+			NOTI_LIST_DB_ATTRIBUTES_INSERT
+			") VALUES ("
+			NOTI_LIST_INSERT_VALUES
+			")";
 
-	ret = sqlite3_prepare_v2(db, query, -1, &stmt, NULL);
-	if (ret != SQLITE_OK) {
-		/* LCOV_EXCL_START */
-		ERR("sqlite3_prepare_v2 Failed [%d][%s]", ret,
-				 sqlite3_errmsg(db));
-		ret = NOTIFICATION_ERROR_FROM_DB;
-		goto err;
-		/* LCOV_EXCL_STOP */
+		ret = sqlite3_prepare_v2(db, kInsertQuery,
+				sizeof(kInsertQuery) - 1, &stmt, NULL);
+		if (ret != SQLITE_OK) {
+			/* LCOV_EXCL_START */
+			ERR("sqlite3_prepare_v2 Failed [%d][%s]", ret,
+					 sqlite3_errmsg(db));
+			ret = NOTIFICATION_ERROR_FROM_DB;
+			goto err;
+			/* LCOV_EXCL_STOP */
+		}
 	}
 
 	ret = _create_insertion_query(db, noti, stmt, NULL);
@@ -1105,9 +1061,6 @@ err:
 	if (stmt)
 		sqlite3_finalize(stmt);
 
-	if (query)
-		sqlite3_free(query);
-
 	if (db)
 		notification_db_close(&db);
 
@@ -1116,59 +1069,119 @@ err:
 	return ret;
 }
 
+/*
+ * N3-T3 C4: SELECT_BY_PRIV_ID with parameter binding.
+ *
+ * Replaces the legacy `sqlite3_mprintf("noti_list WHERE priv_id = %d")`
+ * + `_get_notification(query_where, noti)` path. The new query is a
+ * fixed SQL literal so the sqlite3 parser plan is shareable across
+ * callers (future prepared-stmt caching is trivial), and `priv_id` is
+ * bound via `sqlite3_bind_int` — immune to the %d-embedding class of
+ * SQL-injection bugs the design doc calls out.
+ */
 /* LCOV_EXCL_START */
 EXPORT_API int notification_noti_get_by_priv_id(notification_h noti, int priv_id)
 {
 	int ret = NOTIFICATION_ERROR_NONE;
-	char *query_where = NULL;
+	sqlite3 *db = NULL;
+	sqlite3_stmt *stmt = NULL;
+	static const char kQuery[] =
+		"SELECT " NOTI_LIST_DB_ATTRIBUTES_SELECT
+		" FROM noti_list WHERE priv_id = ?";
 
 	if (priv_id < 0 || noti == NULL) {
 		ERR("Invalid parameter");
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 	}
 
-	query_where = sqlite3_mprintf("noti_list WHERE priv_id = %d", priv_id);
-	if (query_where == NULL) {
-		/* LCOV_EXCL_START */
-		ret = NOTIFICATION_ERROR_OUT_OF_MEMORY;
+	db = notification_db_open();
+	if (!db)
+		return get_last_result();
+
+	ret = sqlite3_prepare_v2(db, kQuery, sizeof(kQuery) - 1, &stmt, NULL);
+	if (ret != SQLITE_OK) {
+		ERR("sqlite3_prepare_v2 failed [%d][%s]", ret, sqlite3_errmsg(db));
+		ret = NOTIFICATION_ERROR_FROM_DB;
 		goto err;
-		/* LCOV_EXCL_STOP */
 	}
 
-	ret = _get_notification(query_where, noti);
+	__BIND_INT(db, stmt, 1, priv_id, ret, err);
+
+	ret = sqlite3_step(stmt);
+	if (ret == SQLITE_ROW) {
+		__notification_noti_populate_from_stmt(stmt, noti);
+		ret = NOTIFICATION_ERROR_NONE;
+	} else {
+		if (ret == SQLITE_DONE)
+			DBG("No valid record found");
+		else
+			ERR("sqlite3_step failed [%d][%s]", ret, sqlite3_errmsg(db));
+		ret = NOTIFICATION_ERROR_FROM_DB;
+	}
 
 err:
-	if (query_where)
-		sqlite3_free(query_where);
+	if (stmt)
+		sqlite3_finalize(stmt);
+	if (db)
+		notification_db_close(&db);
 
 	return ret;
 }
 /* LCOV_EXCL_STOP */
 
+/*
+ * N3-T3 C4: SELECT_BY_TAG with parameter binding. Same reshape as
+ * SELECT_BY_PRIV_ID: fixed SQL literal, app_id + tag bound via
+ * sqlite3_bind_text so neither field can cause %Q quoting drift or
+ * injection.
+ */
 EXPORT_API int notification_noti_get_by_tag(notification_h noti, char *app_id, char *tag, uid_t uid)
 {
 	int ret = NOTIFICATION_ERROR_NONE;
-	char *query_where;
+	sqlite3 *db = NULL;
+	sqlite3_stmt *stmt = NULL;
+	static const char kQuery[] =
+		"SELECT " NOTI_LIST_DB_ATTRIBUTES_SELECT
+		" FROM noti_list"
+		" WHERE caller_app_id = ? AND tag = ? AND uid = ?";
 
 	if (tag == NULL || noti == NULL) {
 		ERR("Invalid paramter");
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 	}
 
-	query_where = sqlite3_mprintf("noti_list WHERE caller_app_id = %Q "
-			"AND tag = %Q AND uid = %d", app_id, tag, uid);
-	if (query_where == NULL) {
-		/* LCOV_EXCL_START */
-		ret = NOTIFICATION_ERROR_OUT_OF_MEMORY;
+	db = notification_db_open();
+	if (!db)
+		return get_last_result();
+
+	ret = sqlite3_prepare_v2(db, kQuery, sizeof(kQuery) - 1, &stmt, NULL);
+	if (ret != SQLITE_OK) {
+		ERR("sqlite3_prepare_v2 failed [%d][%s]", ret, sqlite3_errmsg(db));
+		ret = NOTIFICATION_ERROR_FROM_DB;
 		goto err;
-		/* LCOV_EXCL_STOP */
 	}
 
-	ret = _get_notification(query_where, noti);
+	__BIND_TEXT(db, stmt, 1, NOTIFICATION_CHECK_STR(app_id), ret, err);
+	__BIND_TEXT(db, stmt, 2, tag, ret, err);
+	__BIND_INT(db, stmt, 3, (int)uid, ret, err);
+
+	ret = sqlite3_step(stmt);
+	if (ret == SQLITE_ROW) {
+		__notification_noti_populate_from_stmt(stmt, noti);
+		ret = NOTIFICATION_ERROR_NONE;
+	} else {
+		if (ret == SQLITE_DONE)
+			DBG("No valid record found");
+		else
+			ERR("sqlite3_step failed [%d][%s]", ret, sqlite3_errmsg(db));
+		ret = NOTIFICATION_ERROR_FROM_DB;
+	}
 
 err:
-	if (query_where)
-		sqlite3_free(query_where);
+	if (stmt)
+		sqlite3_finalize(stmt);
+	if (db)
+		notification_db_close(&db);
 
 	return ret;
 }
@@ -1178,7 +1191,18 @@ EXPORT_API int notification_noti_update(notification_h noti)
 	int ret = NOTIFICATION_ERROR_NONE;
 	sqlite3 *db;
 	sqlite3_stmt *stmt = NULL;
-	char *query = NULL;
+	/*
+	 * N3-T3 C4: fully-static UPDATE SQL. The legacy path composed the
+	 * query via sqlite3_mprintf("UPDATE noti_list SET %s WHERE priv_id
+	 * = %d", NOTI_LIST_DB_ATTRIBUTES_UPDATE, noti->priv_id) — %s is a
+	 * compile-time literal macro, so string-concatenating it yields the
+	 * same SQL text without a heap allocation. priv_id is now bound via
+	 * ? at the tail, so the plan is cache-shareable across callers.
+	 */
+	static const char kUpdateQuery[] =
+		"UPDATE noti_list SET "
+		NOTI_LIST_DB_ATTRIBUTES_UPDATE
+		" WHERE priv_id = ?";
 
 	if (noti == NULL) {
 		ERR("Invalid parameter");
@@ -1211,16 +1235,8 @@ EXPORT_API int notification_noti_update(notification_h noti)
 		goto err;
 	}
 
-	query = sqlite3_mprintf("UPDATE noti_list SET %s WHERE priv_id = %d ",
-				NOTI_LIST_DB_ATTRIBUTES_UPDATE, noti->priv_id);
-	if (query == NULL) {
-		/* LCOV_EXCL_START */
-		ret = NOTIFICATION_ERROR_OUT_OF_MEMORY;
-		goto err;
-		/* LCOV_EXCL_STOP */
-	}
-
-	ret = sqlite3_prepare_v2(db, query, -1, &stmt, NULL);
+	ret = sqlite3_prepare_v2(db, kUpdateQuery,
+			sizeof(kUpdateQuery) - 1, &stmt, NULL);
 	if (ret != SQLITE_OK) {
 		/* LCOV_EXCL_START */
 		ERR("sqlite3_prepare_v2 Failed [%d][%s]", ret,
@@ -1234,6 +1250,12 @@ EXPORT_API int notification_noti_update(notification_h noti)
 	if (ret != NOTIFICATION_ERROR_NONE)
 		goto err;
 
+	/* Bind priv_id to the trailing parameter slot. Its index is
+	 * sqlite3_bind_parameter_count(stmt), which is stable across libsqlite
+	 * versions and does not rely on counting ? marks in the macro. */
+	__BIND_INT(db, stmt, sqlite3_bind_parameter_count(stmt), noti->priv_id,
+			ret, err);
+
 	ret = sqlite3_step(stmt);
 	if (ret == SQLITE_OK || ret == SQLITE_DONE)
 		ret = NOTIFICATION_ERROR_NONE;
@@ -1243,9 +1265,6 @@ EXPORT_API int notification_noti_update(notification_h noti)
 err:
 	if (stmt)
 		sqlite3_finalize(stmt);
-
-	if (query)
-		sqlite3_free(query);
 
 	if (db)
 		notification_db_close(&db);
@@ -1387,11 +1406,21 @@ err:
 }
 
 /* LCOV_EXCL_START */
+/*
+ * N3-T3 C4: DELETE_BY_PRIV_ID with parameter binding. app_id is bound
+ * via sqlite3_bind_text (SQLITE_TRANSIENT — SQLite takes its own copy so
+ * the caller's lifetime doesn't matter), priv_id via sqlite3_bind_int.
+ * The query text is fixed (`... WHERE caller_app_id = ? AND priv_id = ?`)
+ * so the prepared plan is cacheable by the outer db layer.
+ */
 EXPORT_API int notification_noti_delete_by_priv_id(const char *app_id, int priv_id)
 {
 	sqlite3 *db = NULL;
-	char *query = NULL;
+	sqlite3_stmt *stmt = NULL;
 	int ret = NOTIFICATION_ERROR_NONE;
+	static const char kQuery[] =
+		"DELETE FROM noti_list"
+		" WHERE caller_app_id = ? AND priv_id = ?";
 
 	if (app_id == NULL)
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
@@ -1400,18 +1429,25 @@ EXPORT_API int notification_noti_delete_by_priv_id(const char *app_id, int priv_
 	if (!db)
 		return get_last_result();
 
-	query = sqlite3_mprintf("DELETE FROM noti_list WHERE caller_app_id = %Q "
-				"AND priv_id = %d", app_id, priv_id);
-	if (query == NULL) {
-		ret = NOTIFICATION_ERROR_OUT_OF_MEMORY;
+	ret = sqlite3_prepare_v2(db, kQuery, sizeof(kQuery) - 1, &stmt, NULL);
+	if (ret != SQLITE_OK) {
+		ERR("sqlite3_prepare_v2 failed [%d][%s]", ret, sqlite3_errmsg(db));
+		ret = NOTIFICATION_ERROR_FROM_DB;
 		goto err;
 	}
 
-	ret = notification_db_exec(db, query, NULL);
+	__BIND_TEXT(db, stmt, 1, app_id, ret, err);
+	__BIND_INT(db, stmt, 2, priv_id, ret, err);
+
+	ret = sqlite3_step(stmt);
+	if (ret == SQLITE_OK || ret == SQLITE_DONE)
+		ret = NOTIFICATION_ERROR_NONE;
+	else
+		ret = NOTIFICATION_ERROR_FROM_DB;
 
 err:
-	if (query)
-		sqlite3_free(query);
+	if (stmt)
+		sqlite3_finalize(stmt);
 
 	if (db)
 		notification_db_close(&db);
@@ -1420,34 +1456,51 @@ err:
 }
 /* LCOV_EXCL_STOP */
 
+/*
+ * N3-T3 C4: DELETE_BY_PRIV_ID_AND_UID with parameter binding. Same
+ * reshape as DELETE_BY_PRIV_ID with the extra uid predicate bound
+ * positionally. num_changes surfaces sqlite3_changes() after step —
+ * identical semantics to the legacy notification_db_exec() path.
+ */
 EXPORT_API int notification_noti_delete_by_priv_id_get_changes(const char *app_id,
 							int priv_id,
 							int *num_changes,
 							uid_t uid)
 {
 	sqlite3 *db = NULL;
-	char *query = NULL;
+	sqlite3_stmt *stmt = NULL;
 	int ret = NOTIFICATION_ERROR_NONE;
+	static const char kQuery[] =
+		"DELETE FROM noti_list"
+		" WHERE caller_app_id = ? AND priv_id = ? AND uid = ?";
 
 	db = notification_db_open();
 	if (!db)
 		return get_last_result();
 
-	query = sqlite3_mprintf("DELETE FROM noti_list WHERE caller_app_id = %Q "
-				"AND priv_id = %d AND uid = %d",
-				app_id, priv_id, uid);
-	if (query == NULL) {
-		/* LCOV_EXCL_START */
-		ret = NOTIFICATION_ERROR_OUT_OF_MEMORY;
+	ret = sqlite3_prepare_v2(db, kQuery, sizeof(kQuery) - 1, &stmt, NULL);
+	if (ret != SQLITE_OK) {
+		ERR("sqlite3_prepare_v2 failed [%d][%s]", ret, sqlite3_errmsg(db));
+		ret = NOTIFICATION_ERROR_FROM_DB;
 		goto err;
-		/* LCOV_EXCL_STOP */
 	}
 
-	ret = notification_db_exec(db, query, num_changes);
+	__BIND_TEXT(db, stmt, 1, NOTIFICATION_CHECK_STR(app_id), ret, err);
+	__BIND_INT(db, stmt, 2, priv_id, ret, err);
+	__BIND_INT(db, stmt, 3, (int)uid, ret, err);
+
+	ret = sqlite3_step(stmt);
+	if (ret == SQLITE_OK || ret == SQLITE_DONE) {
+		if (num_changes != NULL)
+			*num_changes = sqlite3_changes(db);
+		ret = NOTIFICATION_ERROR_NONE;
+	} else {
+		ret = NOTIFICATION_ERROR_FROM_DB;
+	}
 
 err:
-	if (query)
-		sqlite3_free(query);
+	if (stmt)
+		sqlite3_finalize(stmt);
 
 	if (db)
 		notification_db_close(&db);
@@ -2069,7 +2122,6 @@ EXPORT_API int notification_noti_add_template(notification_h noti, char *templat
 {
 	sqlite3 *db = NULL;
 	sqlite3_stmt *stmt = NULL;
-	char *query = NULL;
 	int idx = 1;
 	int ret = NOTIFICATION_ERROR_NONE;
 
@@ -2086,31 +2138,38 @@ EXPORT_API int notification_noti_add_template(notification_h noti, char *templat
 	if (!db)
 		return get_last_result();
 
-	query = sqlite3_mprintf("INSERT OR REPLACE INTO noti_template "
-				"(%s, template_name) VALUES (%s, %Q)",
-				NOTI_LIST_DB_ATTRIBUTES_INSERT,
-				NOTI_LIST_INSERT_VALUES,
-				template_name);
-	if (query == NULL) {
-		/* LCOV_EXCL_START */
-		ret = NOTIFICATION_ERROR_OUT_OF_MEMORY;
-		goto err;
-		/* LCOV_EXCL_STOP */
-	}
+	/*
+	 * N3-T3 C4: fully-static INSERT template text. Same reshape as
+	 * notification_noti_insert — the SQL text is just two compile-time
+	 * macros concatenated with a trailing "?, ?" for template_name.
+	 * template_name is bound via ?; _create_insertion_query fills the
+	 * leading slots and hands back the next free idx via `idx` outparam.
+	 */
+	{
+		static const char kTemplateInsert[] =
+			"INSERT OR REPLACE INTO noti_template ("
+			NOTI_LIST_DB_ATTRIBUTES_INSERT ", template_name"
+			") VALUES ("
+			NOTI_LIST_INSERT_VALUES ", ?"
+			")";
 
-	ret = sqlite3_prepare_v2(db, query, -1, &stmt, NULL);
-	if (ret != SQLITE_OK) {
-		/* LCOV_EXCL_START */
-		ERR("Failed to sqlite3_prepare_v2[%d][%s]",
-				ret, sqlite3_errmsg(db));
-		ret = NOTIFICATION_ERROR_FROM_DB;
-		goto err;
-		/* LCOV_EXCL_STOP */
+		ret = sqlite3_prepare_v2(db, kTemplateInsert,
+				sizeof(kTemplateInsert) - 1, &stmt, NULL);
+		if (ret != SQLITE_OK) {
+			/* LCOV_EXCL_START */
+			ERR("Failed to sqlite3_prepare_v2[%d][%s]",
+					ret, sqlite3_errmsg(db));
+			ret = NOTIFICATION_ERROR_FROM_DB;
+			goto err;
+			/* LCOV_EXCL_STOP */
+		}
 	}
 
 	ret = _create_insertion_query(db, noti, stmt, &idx);
 	if (ret != NOTIFICATION_ERROR_NONE)
 		goto err;
+
+	__BIND_TEXT(db, stmt, idx, template_name, ret, err);
 
 	ret = sqlite3_step(stmt);
 	if (ret == SQLITE_OK || ret == SQLITE_DONE)
@@ -2122,9 +2181,6 @@ err:
 	if (stmt)
 		sqlite3_finalize(stmt);
 
-	if (query)
-		sqlite3_free(query);
-
 	if (db)
 		notification_db_close(&db);
 
@@ -2134,24 +2190,54 @@ err:
 EXPORT_API int notification_noti_get_package_template(notification_h noti, char *app_id, char *template_name)
 {
 	int ret = NOTIFICATION_ERROR_NONE;
-	char *query_where = NULL;
+	sqlite3 *db = NULL;
+	sqlite3_stmt *stmt = NULL;
+	/*
+	 * N3-T3 C4: SELECT_BY_PKG (noti_template) with parameter binding.
+	 * app_id + template_name bound via sqlite3_bind_text — %Q quoting
+	 * no longer involved in the code path.
+	 */
+	static const char kQuery[] =
+		"SELECT " NOTI_LIST_DB_ATTRIBUTES_SELECT
+		" FROM noti_template"
+		" WHERE caller_app_id = ? AND template_name = ?";
 
 	if (noti == NULL || app_id == NULL || template_name == NULL) {
 		ERR("NOTIFICATION_ERROR_INVALID_PARAMETER");
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 	}
 
-	query_where = sqlite3_mprintf("noti_template WHERE caller_app_id = %Q "
-			"AND template_name = %Q", app_id, template_name);
-	if (query_where == NULL)
-		return NOTIFICATION_ERROR_OUT_OF_MEMORY;
+	db = notification_db_open();
+	if (!db)
+		return get_last_result();
 
-	ret = _get_notification(query_where, noti);
-	if (ret != NOTIFICATION_ERROR_NONE)
-		ERR("Failed to get notification [%d]", ret);
+	ret = sqlite3_prepare_v2(db, kQuery, sizeof(kQuery) - 1, &stmt, NULL);
+	if (ret != SQLITE_OK) {
+		ERR("sqlite3_prepare_v2 failed [%d][%s]", ret, sqlite3_errmsg(db));
+		ret = NOTIFICATION_ERROR_FROM_DB;
+		goto err;
+	}
 
-	if (query_where)
-		sqlite3_free(query_where);
+	__BIND_TEXT(db, stmt, 1, app_id, ret, err);
+	__BIND_TEXT(db, stmt, 2, template_name, ret, err);
+
+	ret = sqlite3_step(stmt);
+	if (ret == SQLITE_ROW) {
+		__notification_noti_populate_from_stmt(stmt, noti);
+		ret = NOTIFICATION_ERROR_NONE;
+	} else {
+		if (ret == SQLITE_DONE)
+			DBG("No valid record found");
+		else
+			ERR("sqlite3_step failed [%d][%s]", ret, sqlite3_errmsg(db));
+		ret = NOTIFICATION_ERROR_FROM_DB;
+	}
+
+err:
+	if (stmt)
+		sqlite3_finalize(stmt);
+	if (db)
+		notification_db_close(&db);
 
 	return ret;
 }
@@ -2159,8 +2245,16 @@ EXPORT_API int notification_noti_get_package_template(notification_h noti, char 
 EXPORT_API int notification_noti_delete_template(const char *pkg_id)
 {
 	sqlite3 *db = NULL;
-	char *query = NULL;
+	sqlite3_stmt *stmt = NULL;
 	int ret = NOTIFICATION_ERROR_NONE;
+	/*
+	 * N3-T3 C4: DELETE_BY_PKG (noti_template) with parameter binding.
+	 * pkg_id bound via sqlite3_bind_text so the helper macro
+	 * NOTIFICATION_CHECK_STR (empty-string fallback for NULL) is
+	 * applied once without going through sqlite3_mprintf.
+	 */
+	static const char kQuery[] =
+		"DELETE FROM noti_template WHERE pkg_id = ?";
 
 	if (pkg_id == NULL)
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
@@ -2169,20 +2263,24 @@ EXPORT_API int notification_noti_delete_template(const char *pkg_id)
 	if (!db)
 		return get_last_result();
 
-	query = sqlite3_mprintf("DELETE FROM noti_template WHERE pkg_id = %Q",
-				NOTIFICATION_CHECK_STR(pkg_id));
-	if (query == NULL) {
-		/* LCOV_EXCL_START */
-		ret = NOTIFICATION_ERROR_OUT_OF_MEMORY;
+	ret = sqlite3_prepare_v2(db, kQuery, sizeof(kQuery) - 1, &stmt, NULL);
+	if (ret != SQLITE_OK) {
+		ERR("sqlite3_prepare_v2 failed [%d][%s]", ret, sqlite3_errmsg(db));
+		ret = NOTIFICATION_ERROR_FROM_DB;
 		goto err;
-		/* LCOV_EXCL_STOP */
 	}
 
-	ret = notification_db_exec(db, query, NULL);
+	__BIND_TEXT(db, stmt, 1, NOTIFICATION_CHECK_STR(pkg_id), ret, err);
+
+	ret = sqlite3_step(stmt);
+	if (ret == SQLITE_OK || ret == SQLITE_DONE)
+		ret = NOTIFICATION_ERROR_NONE;
+	else
+		ret = NOTIFICATION_ERROR_FROM_DB;
 
 err:
-	if (query)
-		sqlite3_free(query);
+	if (stmt)
+		sqlite3_finalize(stmt);
 
 	if (db)
 		notification_db_close(&db);

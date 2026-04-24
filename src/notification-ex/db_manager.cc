@@ -568,8 +568,21 @@ int DBManagerImpl::UpdateReceiverList(shared_ptr<item::AbstractItem> updatedItem
 int DBManagerImpl::InsertNotification(
     list<shared_ptr<item::AbstractItem>> addedList) {
   int ret = ERROR_NONE;
-  char* query;
   int64_t priv_id = 0;
+
+  /*
+   * N3-T3 C4: fixed SQL + parameter binding. The legacy path called
+   * sqlite3_mprintf("...%Q...%d...%Q...") per notification inside the
+   * insert loop — every call heap-allocated the query text, reparsed a
+   * fresh plan, and re-quoted every string. The bind-based form reuses
+   * the cached plan and sqlite3_bind_text / _bind_int are immune to the
+   * class of SQL-injection bugs %Q quoting has to paper over.
+   */
+  static const char* const kSql =
+      "INSERT OR REPLACE INTO noti_ex_list"
+      " (root_id, app_id, uid, channel, priv_id, pkg_id, policy,"
+      "  data, insert_time)"
+      " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
   auto acquired = DbConnectionHolder::Instance().Acquire();
   if (!acquired)
@@ -599,29 +612,35 @@ int DBManagerImpl::InsertNotification(
 
     static_pointer_cast<IItemInfoInternal>(i->GetInfo())->SetPrivateId(priv_id);
     Bundle b = i->Serialize();
+    std::string pkg_id = GetPkgId(i->GetSenderAppId(), uid);
+    auto raw = b.ToRaw();
+    const char* data_text = reinterpret_cast<const char*>(raw.first.get());
+    int insert_time =
+        static_pointer_cast<IItemInfo>(i->GetInfo())->GetTime();
 
-    query = sqlite3_mprintf("INSERT OR REPLACE INTO noti_ex_list"
-          " (root_id, app_id, uid, channel, priv_id, pkg_id, policy, data, insert_time)"
-          " VALUES (%Q, %Q, %d, %Q, %" PRId64 ", %Q, %d, %Q, %d)",
-          i->GetId().c_str(),
-          i->GetSenderAppId().c_str(),
-          uid,
-          i->GetChannel().c_str(),
-          priv_id,
-          GetPkgId(i->GetSenderAppId(), uid).c_str(),
-          static_cast<int>(i->GetPolicy()),
-          reinterpret_cast<char*>(b.ToRaw().first.get()),
-          static_pointer_cast<IItemInfo>(i->GetInfo())->GetTime());
-    if (!query) {
-      LOGE("OOM - sql query");
-      ret = ERROR_OUT_OF_MEMORY;
+    auto stmt_hdl = DbConnectionHolder::Instance().Cache().Acquire(db, kSql);
+    if (!stmt_hdl) {
+      LOGE("Failed to prepare InsertNotification: %s", sqlite3_errmsg(db));
+      ret = ERROR_FROM_DB;
       break;
     }
+    sqlite3_stmt* stmt = stmt_hdl.Get();
+    sqlite3_bind_text(stmt, 1, i->GetId().c_str(), -1, SQLITE_TRANSIENT);
+    sqlite3_bind_text(stmt, 2, i->GetSenderAppId().c_str(), -1, SQLITE_TRANSIENT);
+    sqlite3_bind_int(stmt, 3, static_cast<int>(uid));
+    sqlite3_bind_text(stmt, 4, i->GetChannel().c_str(), -1, SQLITE_TRANSIENT);
+    sqlite3_bind_int64(stmt, 5, priv_id);
+    sqlite3_bind_text(stmt, 6, pkg_id.c_str(), -1, SQLITE_TRANSIENT);
+    sqlite3_bind_int(stmt, 7, static_cast<int>(i->GetPolicy()));
+    sqlite3_bind_text(stmt, 8, data_text, -1, SQLITE_TRANSIENT);
+    sqlite3_bind_int(stmt, 9, insert_time);
 
-    ret = ExecuteQuery(db, query, nullptr);
-    sqlite3_free(query);
-    if (ret != ERROR_NONE)
+    int step_ret = sqlite3_step(stmt);
+    if (step_ret != SQLITE_OK && step_ret != SQLITE_DONE) {
+      LOGE("Sqlite err[%d][%s]", step_ret, sqlite3_errmsg(db));
+      ret = ERROR_FROM_DB;
       break;
+    }
 
     ret = UpdateReceiverList(i, db);
     if (ret != ERROR_NONE)
@@ -746,30 +765,57 @@ int DBManagerImpl::GetCount(int64_t priv_id, const string& root_id,
 
 int DBManagerImpl::UpdateHideList(shared_ptr<item::AbstractItem> updatedItem,
     const string& hide_list) {
-  int ret;
-  char* query;
+  /*
+   * N3-T3 C4: parameterised UPDATE hide_list. Fixed SQL, cached plan,
+   * bound positional parameters.
+   */
+  static const char* const kSql =
+      "UPDATE noti_ex_list SET hide_list = ?"
+      " WHERE root_id = ? AND app_id = ? AND uid = ?";
 
-  query = sqlite3_mprintf("UPDATE noti_ex_list SET hide_list = %Q"
-            " WHERE root_id = %Q AND app_id = %Q AND uid = %d",
-            hide_list.c_str(), updatedItem->GetId().c_str(),
-            updatedItem->GetSenderAppId().c_str(),
-            static_pointer_cast<IItemInfoInternal>(updatedItem->GetInfo())->GetUid());
-  if (!query) {
-    LOGE("OOM - sql query");
-    return ERROR_OUT_OF_MEMORY;
+  auto acquired = DbConnectionHolder::Instance().Acquire();
+  if (!acquired)
+    return ERROR_FROM_DB;
+  sqlite3* db = acquired.Get();
+
+  auto stmt_hdl = DbConnectionHolder::Instance().Cache().Acquire(db, kSql);
+  if (!stmt_hdl) {
+    LOGE("Failed to prepare UpdateHideList: %s", sqlite3_errmsg(db));
+    return ERROR_FROM_DB;
   }
 
-  ret = ExecuteQuery(query, nullptr);
-  sqlite3_free(query);
+  sqlite3_stmt* stmt = stmt_hdl.Get();
+  uid_t uid =
+      static_pointer_cast<IItemInfoInternal>(updatedItem->GetInfo())->GetUid();
+  sqlite3_bind_text(stmt, 1, hide_list.c_str(), -1, SQLITE_TRANSIENT);
+  sqlite3_bind_text(stmt, 2, updatedItem->GetId().c_str(), -1,
+                    SQLITE_TRANSIENT);
+  sqlite3_bind_text(stmt, 3, updatedItem->GetSenderAppId().c_str(), -1,
+                    SQLITE_TRANSIENT);
+  sqlite3_bind_int(stmt, 4, static_cast<int>(uid));
 
-  return ret;
+  int step_ret = sqlite3_step(stmt);
+  if (step_ret != SQLITE_OK && step_ret != SQLITE_DONE) {
+    LOGE("Sqlite err[%d][%s]", step_ret, sqlite3_errmsg(db));
+    return ERROR_FROM_DB;
+  }
+  return ERROR_NONE;
 }
 
 int DBManagerImpl::UpdateNotification(
     list<shared_ptr<item::AbstractItem>> updatedList) {
   int ret = ERROR_NONE;
-  char* query;
   int64_t priv_id;
+
+  /*
+   * N3-T3 C4: parameterised UPDATE. Same reshape as InsertNotification —
+   * drop the per-iteration sqlite3_mprintf, let the stmt cache hand out
+   * a reused prepared plan, bind the values via sqlite3_bind_*.
+   */
+  static const char* const kSql =
+      "UPDATE noti_ex_list SET"
+      " pkg_id = ?, channel = ?, policy = ?, data = ?, insert_time = ?"
+      " WHERE priv_id = ?";
 
   auto acquired = DbConnectionHolder::Instance().Acquire();
   if (!acquired)
@@ -795,25 +841,32 @@ int DBManagerImpl::UpdateNotification(
     priv_id = static_pointer_cast<IItemInfoInternal>(item_list.front()->GetInfo())->GetPrivateId();
     static_pointer_cast<IItemInfoInternal>(i->GetInfo())->SetPrivateId(priv_id);
     Bundle b = i->Serialize();
-    query = sqlite3_mprintf("UPDATE noti_ex_list SET"
-        " pkg_id = %Q, channel = %Q, policy = %d, data = %Q, insert_time = %d"
-        " WHERE priv_id = %" PRId64 "",
-        GetPkgId(i->GetSenderAppId(), uid).c_str(),
-        i->GetChannel().c_str(),
-        static_cast<int>(i->GetPolicy()),
-        reinterpret_cast<char*>(b.ToRaw().first.get()),
-        static_pointer_cast<IItemInfo>(i->GetInfo())->GetTime(),
-        priv_id);
-    if (!query) {
-      LOGE("OOM - sql query");
-      ret = ERROR_OUT_OF_MEMORY;
+    std::string pkg_id = GetPkgId(i->GetSenderAppId(), uid);
+    auto raw = b.ToRaw();
+    const char* data_text = reinterpret_cast<const char*>(raw.first.get());
+    int insert_time =
+        static_pointer_cast<IItemInfo>(i->GetInfo())->GetTime();
+
+    auto stmt_hdl = DbConnectionHolder::Instance().Cache().Acquire(db, kSql);
+    if (!stmt_hdl) {
+      LOGE("Failed to prepare UpdateNotification: %s", sqlite3_errmsg(db));
+      ret = ERROR_FROM_DB;
       break;
     }
+    sqlite3_stmt* stmt = stmt_hdl.Get();
+    sqlite3_bind_text(stmt, 1, pkg_id.c_str(), -1, SQLITE_TRANSIENT);
+    sqlite3_bind_text(stmt, 2, i->GetChannel().c_str(), -1, SQLITE_TRANSIENT);
+    sqlite3_bind_int(stmt, 3, static_cast<int>(i->GetPolicy()));
+    sqlite3_bind_text(stmt, 4, data_text, -1, SQLITE_TRANSIENT);
+    sqlite3_bind_int(stmt, 5, insert_time);
+    sqlite3_bind_int64(stmt, 6, priv_id);
 
-    ret = ExecuteQuery(db, query, nullptr);
-    sqlite3_free(query);
-    if (ret != ERROR_NONE)
+    int step_ret = sqlite3_step(stmt);
+    if (step_ret != SQLITE_OK && step_ret != SQLITE_DONE) {
+      LOGE("Sqlite err[%d][%s]", step_ret, sqlite3_errmsg(db));
+      ret = ERROR_FROM_DB;
       break;
+    }
 
     ret = UpdateReceiverList(i, db);
     if (ret != ERROR_NONE)
@@ -1010,7 +1063,13 @@ list<shared_ptr<item::AbstractItem>> DBManagerImpl::GetNotificationList(
 int DBManagerImpl::DeleteNotification(
     list<shared_ptr<item::AbstractItem>> deletedList) {
   int ret = ERROR_NONE;
-  char* query;
+
+  /*
+   * N3-T3 C4: parameterised DELETE by priv_id. Heap alloc removed; one
+   * cached plan serves every deletion in the batch.
+   */
+  static const char* const kSql =
+      "DELETE FROM noti_ex_list WHERE priv_id = ?";
 
   auto acquired = DbConnectionHolder::Instance().Acquire();
   if (!acquired)
@@ -1023,18 +1082,21 @@ int DBManagerImpl::DeleteNotification(
   }
 
   for (auto& i : deletedList) {
-    query = sqlite3_mprintf("DELETE FROM noti_ex_list WHERE priv_id = %" PRId64 "",
-      static_pointer_cast<IItemInfoInternal>(i->GetInfo())->GetPrivateId());
-    if (!query) {
-      LOGE("OOM - sql query");
-      ret = ERROR_OUT_OF_MEMORY;
+    auto stmt_hdl = DbConnectionHolder::Instance().Cache().Acquire(db, kSql);
+    if (!stmt_hdl) {
+      LOGE("Failed to prepare DeleteNotification: %s", sqlite3_errmsg(db));
+      ret = ERROR_FROM_DB;
       break;
     }
+    sqlite3_bind_int64(stmt_hdl.Get(), 1,
+        static_pointer_cast<IItemInfoInternal>(i->GetInfo())->GetPrivateId());
 
-    ret = ExecuteQuery(db, query, nullptr);
-    sqlite3_free(query);
-    if (ret != ERROR_NONE)
+    int step_ret = sqlite3_step(stmt_hdl.Get());
+    if (step_ret != SQLITE_OK && step_ret != SQLITE_DONE) {
+      LOGE("Sqlite err[%d][%s]", step_ret, sqlite3_errmsg(db));
+      ret = ERROR_FROM_DB;
       break;
+    }
   }
 
   if (ret == ERROR_NONE) {

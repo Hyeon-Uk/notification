@@ -182,8 +182,20 @@ TEST_F(NotificationNotiTest, notification_noti_test3) {
   EXPECT_CALL(GetMock<SqliteMock>(), sqlite3_finalize(_))
       .WillOnce(Return(SQLITE_OK));
 
-  EXPECT_CALL(GetMock<SqliteMock>(), sqlite3_free(_))
-      .WillOnce(Return());
+  /*
+   * N3-T3 C4: the DELETE_BY_PRIV_ID path now binds priv_id/uid via
+   * sqlite3_bind_int and app_id via sqlite3_bind_text instead of
+   * sqlite3_mprintf-ing them into the SQL text. The legacy test
+   * expected exactly one sqlite3_free() call (on the mprintf result);
+   * the new path never allocates, so remove that expectation and
+   * relax sqlite3_bind_* to match-any (NiceMock default return is 0 =
+   * SQLITE_OK, which keeps the production code's __BIND_* success
+   * path satisfied).
+   */
+  EXPECT_CALL(GetMock<SqliteMock>(), sqlite3_bind_int(_, _, _))
+      .WillRepeatedly(Return(SQLITE_OK));
+  EXPECT_CALL(GetMock<SqliteMock>(), sqlite3_bind_text(_, _, _, _, _))
+      .WillRepeatedly(Return(SQLITE_OK));
 
   int ret;
 
