@@ -113,6 +113,32 @@ NOTIFICATION_DTOR static void __notification_fini(void)
 	g_rec_mutex_clear(&__rec_mutex);
 }
 
+/*
+ * N3-T3 C3: per-process cached uid. See notification_private.h for the
+ * contract and threading rationale. (uid_t)-1 is the "unset" sentinel and
+ * is distinct from every legal uid SDL-policy allows (0..UINT32_MAX-1).
+ */
+static uid_t g_cached_uid = (uid_t)-1;
+
+uid_t notification_cached_uid(void)
+{
+	uid_t local = g_cached_uid;
+	if (local == (uid_t)-1) {
+		local = aul_getuid();
+		/* Write is atomic on all 32-bit uid_t ABIs notification
+		 * supports; a racing thread that lost the check above will
+		 * re-run aul_getuid() once and observe the same value, which
+		 * is safe (idempotent, no observable state change). */
+		g_cached_uid = local;
+	}
+	return local;
+}
+
+void notification_cached_uid_reset_for_test(void)
+{
+	g_cached_uid = (uid_t)-1;
+}
+
 static void __notification_mutex_lock(void)
 {
 	g_rec_mutex_lock(&__rec_mutex);
@@ -346,7 +372,7 @@ EXPORT_API int notification_resister_changed_cb_for_uid(
 EXPORT_API int notification_resister_changed_cb(
 		notification_changed_cb callback, void *user_data)
 {
-	return notification_resister_changed_cb_for_uid(callback, user_data, aul_getuid());
+	return notification_resister_changed_cb_for_uid(callback, user_data, notification_cached_uid());
 }
 
 static gint _noti_changed_compare(gconstpointer a, gconstpointer b)
@@ -408,7 +434,7 @@ EXPORT_API int notification_unresister_changed_cb_for_uid(
 EXPORT_API int notification_unresister_changed_cb(
 		notification_changed_cb callback)
 {
-	return notification_unresister_changed_cb_for_uid(callback, aul_getuid());
+	return notification_unresister_changed_cb_for_uid(callback, notification_cached_uid());
 }
 
 EXPORT_API int notification_update_progress(notification_h noti,
@@ -754,7 +780,7 @@ int notification_get_grouping_list_for_uid(notification_type_e type, int count,
 EXPORT_API int notification_get_grouping_list(notification_type_e type, int count,
 		notification_list_h *list)
 {
-	return notification_get_grouping_list_for_uid(type, count, list, aul_getuid());
+	return notification_get_grouping_list_for_uid(type, count, list, notification_cached_uid());
 }
 /* LCOV_EXCL_STOP */
 
@@ -771,7 +797,7 @@ EXPORT_API int notification_delete_group_by_group_id(const char *app_id,
 	else
 		caller_app_id = strdup(app_id);
 
-	ret = notification_tidl_request_delete_multiple(type, caller_app_id, aul_getuid());
+	ret = notification_tidl_request_delete_multiple(type, caller_app_id, notification_cached_uid());
 
 	if (caller_app_id)
 		free(caller_app_id);
@@ -807,7 +833,7 @@ EXPORT_API int notification_delete_group_by_priv_id(const char *app_id,
 		notification_type_e type,
 		int priv_id)
 {
-	return notification_delete_group_by_priv_id_for_uid(app_id, type, priv_id, aul_getuid());
+	return notification_delete_group_by_priv_id_for_uid(app_id, type, priv_id, notification_cached_uid());
 }
 
 int notification_get_count_for_uid(notification_type_e type,
@@ -848,7 +874,7 @@ EXPORT_API int notification_get_count(notification_type_e type,
 		int group_id,
 		int priv_id, int *count)
 {
-	return notification_get_count_for_uid(type, app_id, group_id, priv_id, count, aul_getuid());
+	return notification_get_count_for_uid(type, app_id, group_id, priv_id, count, notification_cached_uid());
 }
 
 int notification_clear_for_uid(notification_type_e type, uid_t uid)
@@ -867,7 +893,7 @@ int notification_clear_for_uid(notification_type_e type, uid_t uid)
 /* LCOV_EXCL_START */
 EXPORT_API int notification_clear(notification_type_e type)
 {
-	return notification_clear_for_uid(type, aul_getuid());
+	return notification_clear_for_uid(type, notification_cached_uid());
 }
 
 EXPORT_API int notification_op_get_data(notification_op *noti_op, notification_op_data_type_e type,
@@ -955,7 +981,7 @@ int notification_delete_all_by_type_for_uid(const char *app_id,
 EXPORT_API int notification_delete_all_by_type(const char *app_id,
 		notification_type_e type)
 {
-	return notification_delete_all_by_type_for_uid(app_id, type, aul_getuid());
+	return notification_delete_all_by_type_for_uid(app_id, type, notification_cached_uid());
 }
 
 int notification_delete_by_priv_id_for_uid(const char *app_id,
@@ -988,7 +1014,7 @@ EXPORT_API int notification_delete_by_priv_id(const char *app_id,
 		notification_type_e type,
 		int priv_id)
 {
-	return notification_delete_by_priv_id_for_uid(app_id, type, priv_id, aul_getuid());
+	return notification_delete_by_priv_id_for_uid(app_id, type, priv_id, notification_cached_uid());
 }
 
 EXPORT_API int notification_set_execute_option(notification_h noti,
@@ -1129,7 +1155,7 @@ notification_h notification_load_for_uid(char *app_id,
 EXPORT_API notification_h notification_load(char *app_id,
 		int priv_id)
 {
-	return notification_load_for_uid(app_id, priv_id, aul_getuid());
+	return notification_load_for_uid(app_id, priv_id, notification_cached_uid());
 }
 /* LCOV_EXCL_STOP */
 
@@ -1258,7 +1284,7 @@ EXPORT_API int notification_insert_for_uid(notification_h noti,
 EXPORT_API int notification_insert(notification_h noti,
 		int *priv_id)
 {
-	return notification_insert_for_uid(noti, priv_id, aul_getuid());
+	return notification_insert_for_uid(noti, priv_id, notification_cached_uid());
 }
 
 EXPORT_API int notification_update_async_for_uid(notification_h noti,
@@ -1281,7 +1307,7 @@ EXPORT_API int notification_update_async_for_uid(notification_h noti,
 EXPORT_API int notification_update_async(notification_h noti,
 		void (*result_cb)(int priv_id, int result, void *data), void *user_data)
 {
-	return notification_update_async_for_uid(noti, result_cb, user_data, aul_getuid());
+	return notification_update_async_for_uid(noti, result_cb, user_data, notification_cached_uid());
 }
 /* LCOV_EXCL_STOP */
 
@@ -1332,7 +1358,7 @@ EXPORT_API int notification_register_detailed_changed_cb_for_uid(
 EXPORT_API int notification_register_detailed_changed_cb(
 		notification_detailed_changed_cb callback, void *user_data)
 {
-	return notification_register_detailed_changed_cb_for_uid(callback, user_data, aul_getuid());
+	return notification_register_detailed_changed_cb_for_uid(callback, user_data, notification_cached_uid());
 }
 
 static gint _noti_detailed_changed_compare(gconstpointer a, gconstpointer b)
@@ -1397,7 +1423,7 @@ EXPORT_API int notification_unregister_detailed_changed_cb(
 		notification_detailed_changed_cb callback, void *user_data)
 {
 	return notification_unregister_detailed_changed_cb_for_uid(
-			callback, user_data, aul_getuid());
+			callback, user_data, notification_cached_uid());
 }
 /* LCOV_EXCL_STOP */
 
@@ -1847,7 +1873,7 @@ out:
 /* LCOV_EXCL_START */
 EXPORT_API int notification_post_with_event_cb(notification_h noti, event_handler_cb cb, void *userdata)
 {
-	return notification_post_with_event_cb_for_uid(noti, cb, userdata, aul_getuid());
+	return notification_post_with_event_cb_for_uid(noti, cb, userdata, notification_cached_uid());
 }
 
 EXPORT_API int notification_send_event(notification_h noti, int event_type)
@@ -2160,7 +2186,7 @@ EXPORT_API int notification_get_all_count_for_uid(notification_type_e type, int 
 
 EXPORT_API int notification_get_all_count(notification_type_e type, int *count)
 {
-	return notification_get_all_count_for_uid(type, count, aul_getuid());
+	return notification_get_all_count_for_uid(type, count, notification_cached_uid());
 }
 
 EXPORT_API int notification_set_app_label(notification_h noti, char *label)
@@ -2273,7 +2299,7 @@ int notification_delete_by_display_applist_for_uid(int display_applist, uid_t ui
 
 EXPORT_API int notification_delete_by_display_applist(int display_applist)
 {
-	return notification_delete_by_display_applist_for_uid(display_applist, aul_getuid());
+	return notification_delete_by_display_applist_for_uid(display_applist, notification_cached_uid());
 }
 
 EXPORT_API int notification_set_check_box(notification_h noti,
@@ -2344,7 +2370,7 @@ EXPORT_API int notification_register_do_not_disturb_app(disturb_cb callback, voi
 	if (callback == NULL)
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 
-	ret = notification_tidl_request_register_dnd_app(aul_getuid(), getpid());
+	ret = notification_tidl_request_register_dnd_app(notification_cached_uid(), getpid());
 	if (ret != NOTIFICATION_ERROR_NONE) {
 		ERR("failed to register dnd app");
 		return ret;
@@ -2370,7 +2396,7 @@ EXPORT_API int notification_unregister_do_not_disturb_app(void)
 
 	WARN("unregister dnd app");
 
-	ret = notification_tidl_request_unregister_dnd_app(aul_getuid(), getpid());
+	ret = notification_tidl_request_unregister_dnd_app(notification_cached_uid(), getpid());
 	if (ret != NOTIFICATION_ERROR_NONE) {
 		ERR("failed to unregister dnd app");
 		return ret;
@@ -2583,7 +2609,7 @@ EXPORT_API int notification_channel_add(notification_channel_h channel)
 
 	ret = notification_tidl_request_insert_channel(noti_channel->app_id,
 			noti_channel->channel_name, noti_channel->blockable,
-			noti_channel->is_blocked, aul_getuid());
+			noti_channel->is_blocked, notification_cached_uid());
 	if (ret != NOTIFICATION_ERROR_NONE) {
 		ERR("failed to insert channel");
 		return ret;
@@ -2608,7 +2634,7 @@ EXPORT_API int notification_channel_remove(notification_channel_h channel)
 	}
 
 	ret = notification_tidl_request_delete_channel(noti_channel->app_id,
-			noti_channel->channel_name, aul_getuid());
+			noti_channel->channel_name, notification_cached_uid());
 	if (ret != NOTIFICATION_ERROR_NONE) {
 		ERR("failed to remove channel");
 		return ret;
@@ -2634,7 +2660,7 @@ EXPORT_API int notification_channel_update(notification_channel_h channel)
 
 	ret = notification_tidl_request_update_channel(noti_channel->app_id,
 			noti_channel->channel_name, noti_channel->blockable,
-			noti_channel->is_blocked, aul_getuid());
+			noti_channel->is_blocked, notification_cached_uid());
 	if (ret != NOTIFICATION_ERROR_NONE) {
 		ERR("failed to update channel");
 		return ret;
@@ -2672,7 +2698,7 @@ EXPORT_API int notification_channel_get_by_name(const char *channel_name,
 	}
 
 	ret = notification_tidl_request_get_channel(app_id, channel_name,
-			&blockable, &is_blocked, aul_getuid());
+			&blockable, &is_blocked, notification_cached_uid());
 	if (ret != NOTIFICATION_ERROR_NONE) {
 		ERR("failed to update channel");
 		free(noti_channel);
@@ -2832,7 +2858,7 @@ EXPORT_API int notification_channel_foreach(const char *app_id,
 
 	ret = notification_tidl_request_channel_get_list(
 			(app_id != NULL) ? app_id : _app_id,
-			cb, user_data, aul_getuid());
+			cb, user_data, notification_cached_uid());
 	if (ret != NOTIFICATION_ERROR_NONE) {
 		ERR("failed to get is blocked");
 		goto out;

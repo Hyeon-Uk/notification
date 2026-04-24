@@ -88,6 +88,26 @@ namespace util {
    * g_variant_builder_new() on the current thread (i.e. cold path count).
    * On a reused-thread hot path this should stay at 1. */
   EXPORT_API int GetScratchBuilderAllocCountForTest();
+
+  /*
+   * N3-T3 C3: per-process cached aul_getuid() for notification-ex.
+   *
+   * Same rationale as the C-side notification_cached_uid() (see
+   * notification_private.h): aul_getuid() is called from AbstractItem and
+   * IEventInfo constructors on every item / event instantiation, yet the
+   * answer is a fixed per-process value. Cache it once in a file-static
+   * (protected by std::call_once) and hand out the cached uid_t on every
+   * subsequent call.
+   *
+   * The cache MUST be reset between unit TEST_F runs so the per-test
+   * EXPECT_CALL(aul_getuid).Times(1) assertion is scoped correctly —
+   * ResetCachedUidForTest() provides that hook.
+   */
+  EXPORT_API uid_t GetCachedUid();
+
+  /* Test-only: drop the cached uid so the next GetCachedUid() re-invokes
+   * aul_getuid(). */
+  EXPORT_API void ResetCachedUidForTest();
 }  // namespace util
 }  // namespace notification
 

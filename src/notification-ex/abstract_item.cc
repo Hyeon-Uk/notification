@@ -150,7 +150,7 @@ Bundle AbstractItem::Serialize() const {
   char buf[80] = {0, };
 
   if (impl_->uid_ == 0)
-    impl_->uid_ = aul_getuid();
+    impl_->uid_ = util::GetCachedUid();
 
   if (!impl_->channel_.empty())
     b.Add(ABSTRACT_ITEM_CHANNEL_KEY, impl_->channel_);

@@ -21,6 +21,7 @@
 #include <package_info.h>
 #include <package_manager.h>
 
+#include <atomic>
 #include <string>
 #include <memory>
 #include <map>
@@ -376,6 +377,36 @@ void ResetScratchBuilderForTest() {
 
 int GetScratchBuilderAllocCountForTest() {
   return tls_slot.alloc_count;
+}
+
+/*
+ * N3-T3 C3: per-process uid cache for notification-ex.
+ *
+ * Holds the value alongside an explicit "initialised" flag rather than a
+ * sentinel (uid_t)-1 so unit tests that ResetCachedUidForTest() back to
+ * 0 do not spuriously keep skipping the aul_getuid() call on the next
+ * iteration. std::atomic<bool> plus a simple uid_t suffices: the cache
+ * is idempotent, a racing reader either sees a stale `false` (and harmlessly
+ * re-calls aul_getuid()) or sees `true` and the already-written uid.
+ */
+namespace {
+static std::atomic<bool> g_cached_uid_set{false};
+static uid_t g_cached_uid_value = 0;
+}  // namespace
+
+uid_t GetCachedUid() {
+  if (g_cached_uid_set.load(std::memory_order_acquire))
+    return g_cached_uid_value;
+
+  uid_t local = aul_getuid();
+  g_cached_uid_value = local;
+  g_cached_uid_set.store(true, std::memory_order_release);
+  return local;
+}
+
+void ResetCachedUidForTest() {
+  g_cached_uid_set.store(false, std::memory_order_release);
+  g_cached_uid_value = 0;
 }
 /* LCOV_EXCL_STOP */
 

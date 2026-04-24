@@ -201,6 +201,44 @@ void notification_call_disturb_cb(void);
 int notification_channel_create_with_info(const char *app_id, const char *channel_name,
 		int blockable, int is_blocked, notification_channel_h *channel);
 
+/*
+ * N3-T3 C3: per-process aul_getuid() cache.
+ *
+ * aul_getuid() is called ~40 times across the client-side APIs (every
+ * public function that delegates to the *_for_uid variant re-asks libaul
+ * for the same effective uid). The answer never changes during the life
+ * of the process, yet the call traverses a libaul state-machine and
+ * occasionally touches an internal fd, so the aggregate cost is real.
+ *
+ * notification_cached_uid() memoises the first result in a file-static
+ * inside notification_internal.c. Threading: uid_t writes are atomic on
+ * all ABIs notification ships for (x86_64 / aarch64 / armv7l — all 4-byte
+ * aligned 32-bit values), the idempotent re-read of the real aul_getuid()
+ * from a racing thread returns the same value, so no lock is required.
+ *
+ * Scope note: this helper MUST NOT be used from notification_setting_service.c
+ * (the daemon) — setting-service callbacks run on behalf of arbitrary
+ * caller uids and must keep the multi-user-aware direct aul_getuid()
+ * path. Use it only from the client-side TUs (notification.c,
+ * notification_internal.c, notification_list.c, notification_setting.c,
+ * notification_tidl.c, shared_file_common.c).
+ *
+ * Visibility: EXPORT_API because the unittest binary (linked with
+ * -fvisibility=default and gc-sections off, but still subject to the
+ * production .so's -fvisibility=hidden default) calls these helpers
+ * from test_cached_uid.cc. Adding EXPORT_API keeps them in the dynamic
+ * symbol table. The header itself is excluded from install (see
+ * src/notification/CMakeLists.txt PATTERN "*_private.h" EXCLUDE), so
+ * these are still internal symbols from the public ABI perspective.
+ */
+EXPORT_API uid_t notification_cached_uid(void);
+
+/* Test-only: drop the cached uid so a subsequent call re-invokes
+ * aul_getuid(). Declared here (behind the private header) so the
+ * unittest binary can reset between TEST_F cases without exposing the
+ * hook through the public API. */
+EXPORT_API void notification_cached_uid_reset_for_test(void);
+
 #ifdef __cplusplus
 }
 #endif

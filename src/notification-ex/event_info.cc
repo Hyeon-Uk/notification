@@ -52,7 +52,7 @@ EventInfo::Impl::Impl(EventInfo* parent, int type, std::string owner,
     std::string channel, std::string item_id)
     : type_(type), owner_(owner), channel_(channel), item_id_(item_id),
     parent_(parent) {
-  uid_ = aul_getuid();
+  uid_ = util::GetCachedUid();
   request_id_ = util::GetRequestId();
   error_ = ERROR_NONE;
   validated_uid_ = 0;

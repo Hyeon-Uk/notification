@@ -622,7 +622,7 @@ int notification_tidl_monitor_init(void)
 		}
 		WARN("set changed callback");
 
-		ret = rpc_port_proxy_noti_service_invoke_register_changed(service_handle, changed_handle, aul_getuid());
+		ret = rpc_port_proxy_noti_service_invoke_register_changed(service_handle, changed_handle, notification_cached_uid());
 		if (ret != RPC_PORT_ERROR_NONE) {
 			WARN("change callback register fail");
 			rpc_port_proxy_noti_service_changed_destroy(changed_handle);
@@ -630,7 +630,7 @@ int notification_tidl_monitor_init(void)
 			return ret;
 		}
 
-		ret = rpc_port_proxy_noti_service_invoke_register_service(service_handle, aul_getuid());
+		ret = rpc_port_proxy_noti_service_invoke_register_service(service_handle, notification_cached_uid());
 		if (ret != RPC_PORT_ERROR_NONE) {
 			WARN("register register fail");
 			return ret;
