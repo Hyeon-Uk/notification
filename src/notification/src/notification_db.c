@@ -29,6 +29,38 @@
 
 static bool is_db_corrupted = false;
 
+/*
+ * N3-T7 Q2: ensure composite covering indexes exist.
+ *
+ * Invoked from every path that produces or opens a noti_list table
+ * (notification_db_init, __recover_corrupted_db, __check_db_version).
+ * Uses CREATE INDEX IF NOT EXISTS so the statements are idempotent and
+ * cheap on already-migrated databases (SQLite probes sqlite_master once
+ * per DDL statement). Failures are logged but do not abort — the
+ * indexes are a performance optimisation, not a correctness contract.
+ */
+static int __ensure_noti_list_indexes(sqlite3 *db)
+{
+	int sql_ret;
+	char *errmsg = NULL;
+
+	if (db == NULL)
+		return NOTIFICATION_ERROR_INVALID_PARAMETER;
+
+	sql_ret = sqlite3_exec(db, CREATE_NOTIFICATION_INDEXES,
+			NULL, NULL, &errmsg);
+	if (sql_ret != SQLITE_OK) {
+		WARN("@@ Failed to create noti_list indexes[%d][%s]",
+				sql_ret, errmsg ? errmsg : "(null)");
+		if (errmsg)
+			sqlite3_free(errmsg);
+		return NOTIFICATION_ERROR_FROM_DB;
+	}
+	if (errmsg)
+		sqlite3_free(errmsg);
+	return NOTIFICATION_ERROR_NONE;
+}
+
 /* LCOV_EXCL_START */
 static int __check_integrity_cb(void *pid, int argc, char **argv, char **notUsed)
 {
@@ -71,7 +103,11 @@ static int __recover_corrupted_db(sqlite3 *db)
 	if (sql_ret != SQLITE_OK) {
 		ERR("Failed to exec query[%d][%s]", sql_ret, errmsg);
 		ret = NOTIFICATION_ERROR_FROM_DB;
+		goto out;
 	}
+
+	/* N3-T7 Q2: attach composite indexes to the freshly recovered table. */
+	(void)__ensure_noti_list_indexes(db);
 
 out:
 	if (errmsg)
@@ -103,6 +139,13 @@ EXPORT_API int notification_db_init(void)
 		ret = NOTIFICATION_ERROR_FROM_DB;
 		goto out;
 	}
+
+	/*
+	 * N3-T7 Q2: create composite covering indexes on noti_list. Must run
+	 * AFTER CREATE_NOTIFICATION_TABLE because the indexes reference
+	 * noti_list columns. Failure is non-fatal (performance-only).
+	 */
+	(void)__ensure_noti_list_indexes(db);
 
 	sql_ret = sqlite3_exec(db, "PRAGMA integrity_check",
 			       __check_integrity_cb, NULL, &errmsg);
@@ -275,6 +318,16 @@ static int __check_db_version(sqlite3 *db) {
 		rc = 0;
 	else
 		WARN("@@ db is not latest version");
+
+	/*
+	 * N3-T7 Q2: replay composite-index DDL on every version check so
+	 * pre-existing installs (where the schema migration branches below
+	 * do not run) also pick up idx_noti_caller_uid_time /
+	 * idx_noti_pkg_uid_time / idx_noti_uid_time. CREATE INDEX IF NOT
+	 * EXISTS is idempotent; the operation is cheap once the indexes are
+	 * already present (single sqlite_master probe, no tree work).
+	 */
+	(void)__ensure_noti_list_indexes(db);
 
 out:
 	if (stmt)

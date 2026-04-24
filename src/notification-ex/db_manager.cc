@@ -43,9 +43,16 @@
 #endif
 #define LOG_TAG "NOTIFICATION_EX"
 
+/*
+ * N3-T7 Q1: drop synchronous from FULL to NORMAL on the notification-ex
+ * DB as well. The ex store is written on the post path and the extra
+ * per-COMMIT fsync cost on FULL is measurable in bench_post_path. NORMAL
+ * keeps intra-transaction fsync for WAL correctness and only forfeits
+ * durability on whole-OS crashes between COMMIT and checkpoint.
+ */
 #define CREATE_NOTIFICATION_TABLE \
   "PRAGMA journal_mode = PERSIST;\n" \
-  "PRAGMA synchronous = FULL;\n" \
+  "PRAGMA synchronous = NORMAL;\n" \
   "PRAGMA foreign_keys = ON;\n" \
   "CREATE TABLE IF NOT EXISTS noti_ex_list (\n" \
   " root_id TEXT NOT NULL,\n" \
