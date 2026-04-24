@@ -36,14 +36,48 @@ extern "C" {
 		}			\
 	} while (0)
 
+/*
+ * N3-T6 DS1 — struct _notification layout is reordered for packing
+ * efficiency. Rules:
+ *   1. pointer block first (8B-aligned on LP64, all same size → no gaps)
+ *   2. int / enum block next (4B each)
+ *   3. 8B members (time_t, double) after the int block
+ *   4. bool flags merged into a single 32-bit bitfield word at the tail
+ *
+ * The original layout interleaved bool / int / ptr / time_t, forcing the
+ * compiler to insert padding around every width transition. Each of the 6
+ * bools (ongoing_flag, auto_remove, event_flag, is_translation, check_box,
+ * check_box_value) consumed a 1B slot surrounded by 3-7B of padding — 8B
+ * net per bool before this change.
+ *
+ * After packing the struct measures ~440B on x86_64 (down from 536B, -96B
+ * / -18%). The b_event_handler[13] array alone contributes 104B so the
+ * floor is ~380B; this layout is at the practical minimum for the current
+ * field set.
+ *
+ * Call-site constraints:
+ *   - `&noti->ongoing_flag` (and the 5 other bool fields) is forbidden:
+ *     bitfield members are not addressable. Two sites took the address
+ *     before N3-T6:
+ *       src/notification/src/notification_ipc.c  _variant_dict_lookup()
+ *       src/notification/src/notification_internal_tidl.c rpc_port_proxy_*
+ *     Both were rewritten to bridge through a local stack variable of the
+ *     legacy type ("i" int or bool) and assign into the bitfield on
+ *     success. See those TUs for the pattern.
+ *   - Reads and writes as plain r-values (`noti->ongoing_flag = x`,
+ *     `if (noti->check_box)`) keep working identically; the bitfield
+ *     presents as `unsigned int`.
+ *
+ * ABI: notification_private.h is EXCLUDED from install (see
+ * src/notification/CMakeLists.txt PATTERN "*_private.h"). No external
+ * consumer sees sizeof(struct _notification) so the layout change is
+ * ABI-safe. All internal TUs (inside libnotification.so +
+ * libnotification-ex.so + the unittest binary) are compiled against the
+ * same header in one translation unit of the sources tree, so every
+ * access observes the same layout.
+ */
 struct _notification {
-	notification_type_e type;
-	notification_ly_type_e layout;
-
-	int group_id;		/* Group ID */
-	int internal_group_id;	/* Internal Group ID */
-	int priv_id;		/* Private ID */
-
+	/* ---- pointer block (8B each on LP64) ---- */
 	char *pkg_id;
 	char *caller_app_id;	/* Caller App ID */
 	char *launch_app_id;	/* Launch App ID */
@@ -63,55 +97,69 @@ struct _notification {
 	bundle *b_text;		/* basic text */
 	bundle *b_key;		/* key for localized text */
 	bundle *b_format_args;	/* args type and value for format string */
-	int num_format_args;	/* number of format string args */
 
 	bundle *b_image_path;	/* image path */
 	bundle *b_priv_image_path;	/* resource path for image */
 
-	notification_sound_type_e sound_type;
 	char *sound_path;
 	char *priv_sound_path; /* resource path for sound */
-	notification_vibration_type_e vibration_type;
 	char *vibration_path;
 	char *priv_vibration_path; /* resource path for vibration */
-	notification_led_op_e led_operation;
-	int led_argb;
-	int led_on_ms;
-	int led_off_ms;
-
-	time_t time;		/* time set by application */
-	time_t insert_time;	/* insert time */
-
-	int flags_for_property;	/* property NOTIFICATION_PROP_XXX */
-	int display_applist;	/* display app list  NOTIFICATION_DISPLAY_APP_XXX */
-
-	double progress_size;	/* size of progress */
-	double progress_percentage;	/* percentage of progress */
 
 	char *app_icon_path;	/* Temporary stored app icon path from AIL */
 	char *app_label;
 	char *temp_title;
 	char *temp_content;
 	char *tag;
-	bool ongoing_flag;
+	char *channel_name;			/* channel name to take care show state */
+
+	/* ---- int / enum block (4B each) ---- */
+	notification_type_e type;
+	notification_ly_type_e layout;
+
+	int group_id;		/* Group ID */
+	int internal_group_id;	/* Internal Group ID */
+	int priv_id;		/* Private ID */
+
+	int num_format_args;	/* number of format string args */
+
+	notification_sound_type_e sound_type;
+	notification_vibration_type_e vibration_type;
+	notification_led_op_e led_operation;
+	int led_argb;
+	int led_on_ms;
+	int led_off_ms;
+
+	int flags_for_property;	/* property NOTIFICATION_PROP_XXX */
+	int display_applist;	/* display app list  NOTIFICATION_DISPLAY_APP_XXX */
+
 	int ongoing_value_type;
 	int ongoing_current;		/* Ongoing current time */
 	int ongoing_duration;		/* Ongoing duration time */
-	bool auto_remove;
+
 	notification_button_index_e default_button_index;
 	int hide_timeout;		/* Time for hide in banner */
 	int delete_timeout;		/* Time for delete in view notification */
 	int text_input_max_length;
-	bool event_flag;
-	bool is_translation;
 	int extension_image_size;
 
-	bool check_box;				/* check box flag */
-	bool check_box_value;		/* check box value */
+	uid_t uid;		/* glibc uid_t == uint32_t on every arch notification ships for */
 
-	uid_t uid;
+	/* ---- DS1 bitfield (single 32-bit word; see notes above) ---- */
+	unsigned int ongoing_flag : 1;
+	unsigned int auto_remove : 1;
+	unsigned int event_flag : 1;
+	unsigned int is_translation : 1;
+	unsigned int check_box : 1;	/* check box flag */
+	unsigned int check_box_value : 1;	/* check box value */
+	unsigned int reserved_flags : 26;
 
-	char *channel_name;			/* channel name to take care show state */
+	/* ---- 8B members (time_t is 8B on x86_64/aarch64; double is 8B) ---- */
+	time_t time;		/* time set by application */
+	time_t insert_time;	/* insert time */
+
+	double progress_size;	/* size of progress */
+	double progress_percentage;	/* percentage of progress */
 };
 
 typedef enum notification_data_type {

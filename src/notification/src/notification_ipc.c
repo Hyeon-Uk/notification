@@ -443,20 +443,43 @@ EXPORT_API int notification_ipc_make_noti_from_gvariant(notification_h noti,
 	_variant_dict_lookup(dict, NOTIFICATION_DATA_TYPE_TEMP_TITLE, "&s", &temp_title);
 	_variant_dict_lookup(dict, NOTIFICATION_DATA_TYPE_TEMP_CONTENT, "&s", &temp_content);
 	_variant_dict_lookup(dict, NOTIFICATION_DATA_TYPE_TAG, "&s", &tag);
-	_variant_dict_lookup(dict, NOTIFICATION_DATA_TYPE_ONGOING_FLAG, "i", &noti->ongoing_flag);
+	/*
+	 * N3-T6 DS1: ongoing_flag / auto_remove / event_flag / is_translation /
+	 * check_box / check_box_value are bitfield members of struct
+	 * _notification (see notification_private.h). Taking their address is
+	 * not legal C, and writing "i" (4B) into a 1B bool was a latent
+	 * out-of-bounds write anyway. Bridge through local ints so
+	 * _variant_dict_lookup() sees a stable 4B r-value slot and the bitfield
+	 * receives a clean 0/1 write-through.
+	 */
+	int _bf_ongoing_flag = noti->ongoing_flag;
+	int _bf_auto_remove = noti->auto_remove;
+	int _bf_event_flag = noti->event_flag;
+	int _bf_is_translation = noti->is_translation;
+	int _bf_check_box = noti->check_box;
+	int _bf_check_box_value = noti->check_box_value;
+
+	_variant_dict_lookup(dict, NOTIFICATION_DATA_TYPE_ONGOING_FLAG, "i", &_bf_ongoing_flag);
 	_variant_dict_lookup(dict, NOTIFICATION_DATA_TYPE_ONGOING_VALUE_TYPE, "i", &noti->ongoing_value_type);
 	_variant_dict_lookup(dict, NOTIFICATION_DATA_TYPE_ONGOING_CURRENT, "i", &noti->ongoing_current);
 	_variant_dict_lookup(dict, NOTIFICATION_DATA_TYPE_ONGOING_DURATION, "i", &noti->ongoing_duration);
-	_variant_dict_lookup(dict, NOTIFICATION_DATA_TYPE_AUTO_REMOVE, "i", &noti->auto_remove);
+	_variant_dict_lookup(dict, NOTIFICATION_DATA_TYPE_AUTO_REMOVE, "i", &_bf_auto_remove);
 	_variant_dict_lookup(dict, NOTIFICATION_DATA_TYPE_DEFAULT_BUTTON, "i", &noti->default_button_index);
 	_variant_dict_lookup(dict, NOTIFICATION_DATA_TYPE_HIDE_TIMEOUT, "i", &noti->hide_timeout);
 	_variant_dict_lookup(dict, NOTIFICATION_DATA_TYPE_DELETE_TIMEOUT, "i", &noti->delete_timeout);
 	_variant_dict_lookup(dict, NOTIFICATION_DATA_TYPE_TEXT_INPUT_MAX_LENGTH, "i", &noti->text_input_max_length);
-	_variant_dict_lookup(dict, NOTIFICATION_DATA_TYPE_EVENT_FLAG, "i", &noti->event_flag);
-	_variant_dict_lookup(dict, NOTIFICATION_DATA_TYPE_TRANSLATION, "i", &noti->is_translation);
+	_variant_dict_lookup(dict, NOTIFICATION_DATA_TYPE_EVENT_FLAG, "i", &_bf_event_flag);
+	_variant_dict_lookup(dict, NOTIFICATION_DATA_TYPE_TRANSLATION, "i", &_bf_is_translation);
 	_variant_dict_lookup(dict, NOTIFICATION_DATA_TYPE_EXTENSION_IMAGE_SIZE, "i", &noti->extension_image_size);
-	_variant_dict_lookup(dict, NOTIFICATION_DATA_TYPE_CHECK_BOX, "i", &noti->check_box);
-	_variant_dict_lookup(dict, NOTIFICATION_DATA_TYPE_CHECK_BOX_VALUE, "i", &noti->check_box_value);
+	_variant_dict_lookup(dict, NOTIFICATION_DATA_TYPE_CHECK_BOX, "i", &_bf_check_box);
+	_variant_dict_lookup(dict, NOTIFICATION_DATA_TYPE_CHECK_BOX_VALUE, "i", &_bf_check_box_value);
+
+	noti->ongoing_flag = _bf_ongoing_flag ? 1u : 0u;
+	noti->auto_remove = _bf_auto_remove ? 1u : 0u;
+	noti->event_flag = _bf_event_flag ? 1u : 0u;
+	noti->is_translation = _bf_is_translation ? 1u : 0u;
+	noti->check_box = _bf_check_box ? 1u : 0u;
+	noti->check_box_value = _bf_check_box_value ? 1u : 0u;
 	_variant_dict_lookup(dict, NOTIFICATION_DATA_TYPE_UID, "i", &noti->uid);
 	_variant_dict_lookup(dict, NOTIFICATION_DATA_TYPE_CHANNEL_NAME, "&s", &channel_name);
 

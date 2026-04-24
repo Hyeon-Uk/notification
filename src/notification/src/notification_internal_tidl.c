@@ -1040,7 +1040,16 @@ EXPORT_API int make_noti_from_notification(notification_h *noti, void *notihandl
 		free(tag);
 	}
 
-	ret = rpc_port_proxy_notification_get_ongoing_flag(handle, &_noti->ongoing_flag);
+	/*
+	 * N3-T6 DS1: the 6 bool flag fields are bitfield members and cannot
+	 * be addressed. The proxy signature is `int foo(h, bool *)` so we
+	 * bridge through a local bool.
+	 */
+	{
+		bool _bf = _noti->ongoing_flag;
+		ret = rpc_port_proxy_notification_get_ongoing_flag(handle, &_bf);
+		_noti->ongoing_flag = _bf ? 1u : 0u;
+	}
 	if (ret != RPC_PORT_ERROR_NONE)
 		WARN("rpc_port_proxy_notification_get_ongoing_flag : %d", ret);
 
@@ -1056,7 +1065,11 @@ EXPORT_API int make_noti_from_notification(notification_h *noti, void *notihandl
 	if (ret != RPC_PORT_ERROR_NONE)
 		WARN("rpc_port_proxy_notification_get_ongoing_duration : %d", ret);
 
-	ret = rpc_port_proxy_notification_get_auto_remove(handle, &_noti->auto_remove);
+	{
+		bool _bf = _noti->auto_remove;
+		ret = rpc_port_proxy_notification_get_auto_remove(handle, &_bf);
+		_noti->auto_remove = _bf ? 1u : 0u;
+	}
 	if (ret != RPC_PORT_ERROR_NONE)
 		WARN("rpc_port_proxy_notification_get_auto_remove : %d", ret);
 
@@ -1078,11 +1091,19 @@ EXPORT_API int make_noti_from_notification(notification_h *noti, void *notihandl
 	if (ret != RPC_PORT_ERROR_NONE)
 		WARN("rpc_port_proxy_notification_get_text_input_max_length : %d", ret);
 
-	ret = rpc_port_proxy_notification_get_event_flag(handle, &_noti->event_flag);
+	{
+		bool _bf = _noti->event_flag;
+		ret = rpc_port_proxy_notification_get_event_flag(handle, &_bf);
+		_noti->event_flag = _bf ? 1u : 0u;
+	}
 	if (ret != RPC_PORT_ERROR_NONE)
 		WARN("rpc_port_proxy_notification_get_event_flag : %d", ret);
 
-	ret = rpc_port_proxy_notification_get_is_translation(handle, &_noti->is_translation);
+	{
+		bool _bf = _noti->is_translation;
+		ret = rpc_port_proxy_notification_get_is_translation(handle, &_bf);
+		_noti->is_translation = _bf ? 1u : 0u;
+	}
 	if (ret != RPC_PORT_ERROR_NONE)
 		WARN("rpc_port_proxy_notification_get_is_translation : %d", ret);
 
@@ -1090,11 +1111,19 @@ EXPORT_API int make_noti_from_notification(notification_h *noti, void *notihandl
 	if (ret != RPC_PORT_ERROR_NONE)
 		WARN("rpc_port_proxy_notification_get_extension_image_size : %d", ret);
 
-	ret = rpc_port_proxy_notification_get_check_box(handle, &_noti->check_box);
+	{
+		bool _bf = _noti->check_box;
+		ret = rpc_port_proxy_notification_get_check_box(handle, &_bf);
+		_noti->check_box = _bf ? 1u : 0u;
+	}
 	if (ret != RPC_PORT_ERROR_NONE)
 		WARN("rpc_port_proxy_notification_get_check_box : %d", ret);
 
-	ret = rpc_port_proxy_notification_get_check_box_value(handle, &_noti->check_box_value);
+	{
+		bool _bf = _noti->check_box_value;
+		ret = rpc_port_proxy_notification_get_check_box_value(handle, &_bf);
+		_noti->check_box_value = _bf ? 1u : 0u;
+	}
 	if (ret != RPC_PORT_ERROR_NONE)
 		WARN("rpc_port_proxy_notification_get_check_box_value : %d", ret);
 
