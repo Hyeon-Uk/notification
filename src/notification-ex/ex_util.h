@@ -108,6 +108,48 @@ namespace util {
   /* Test-only: drop the cached uid so the next GetCachedUid() re-invokes
    * aul_getuid(). */
   EXPORT_API void ResetCachedUidForTest();
+
+  /*
+   * N3-T1 D6: thread-local scratch receive buffer for ReadBundleList().
+   *
+   * Problem this solves:
+   *   ReadBundleList() historically called calloc(SO_RCVBUF, 1) on EVERY
+   *   invocation and, when a message exceeded that size, calloc()d again.
+   *   In the notification-ex receive hot path each incoming batch of
+   *   bundles therefore triggered at least one heap alloc + free even
+   *   when the per-thread high-watermark was already satisfied.
+   *
+   * Design:
+   *   - A thread_local RecvScratch struct holds {char* buf; size_t cap}.
+   *     The dtor frees buf when the thread exits.
+   *   - EnsureRecvBuf(size) realloc()s only when size > cap (grow path).
+   *     On every subsequent call with size <= cap the cached buffer is
+   *     reused as-is (high-watermark retained).
+   *   - The buffer is intentionally NOT zeroed between calls; callers
+   *     that need a cleared buffer can memset() the exact prefix they
+   *     will use. ReadBundleList() zeros via memset(buf, 0, need) inside
+   *     the loop body.
+   *
+   * Thread-safety:
+   *   Each thread has its own RecvScratch. No locking, no contention.
+   *
+   * Lifetime note:
+   *   The returned pointer is valid only until the next EnsureRecvBuf()
+   *   call on the SAME thread (which may realloc and invalidate it).
+   *   Callers must not retain the pointer across thread boundaries.
+   */
+  EXPORT_API char* EnsureRecvBuf(size_t size);
+
+  /* Returns the current high-watermark capacity of the thread's scratch
+   * buffer. Returns 0 if EnsureRecvBuf() has never been called on this
+   * thread. Used by ReadBundleList() to avoid re-reading SO_RCVBUF on
+   * the hot path. */
+  EXPORT_API size_t RecvBufCapacity();
+
+  /* Test-only: release the thread-local scratch buffer. Lets a test
+   * exercise the cold/grow paths deterministically regardless of whether
+   * a previous TEST on the same thread warmed the cache. */
+  EXPORT_API void ResetRecvBufForTest();
 }  // namespace util
 }  // namespace notification
 

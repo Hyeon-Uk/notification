@@ -27,6 +27,7 @@
 #include "notification-ex/exception.h"
 #include "notification-ex/abstract_item.h"
 #include "notification-ex/abstract_item_implementation.h"
+#include "notification-ex/abstract_item_keys.h"
 #include "notification-ex/item_info_internal.h"
 #include "notification-ex/multi_language.h"
 #include "notification-ex/ex_util.h"
@@ -39,57 +40,73 @@
 #endif
 
 #define LOG_TAG "NOTIFICATION_EX"
-#define ABSTRACT_ITEM_TYPE_KEY "__ABSTRACT_ITEM_TYPE_KEY__"
-#define ABSTRACT_ITEM_ID_KEY "__ABSTRACT_ITEM_ID_KEY__"
-#define ABSTRACT_ITEM_UID_KEY "__ABSTRACT_ITEM_UID_KEY__"
-#define ABSTRACT_ITEM_PRIVATE_ID_KEY "__ABSTRACT_ITEM_PRIVATE_ID_KEY__"
-#define ABSTRACT_ITEM_TIME_KEY "__ABSTRACT_ITEM_TIME_KEY__"
-#define ABSTRACT_ITEM_SENDER_APPID_KEY "__ABSTRACT_ITEM_SENDER_APPID_KEY__"
-#define ABSTRACT_ITEM_TAG_KEY "__ABSTRACT_ITEM_TAG_KEY__"
-#define ABSTRACT_ITEM_CHANNEL_KEY "__ABSTRACT_ITEM_CHANNEL_KEY__"
-#define ABSTRACT_ITEM_VERSION_KEY "__ABSTRACT_ITEM_VERSION_KEY__"
-#define ABSTRACT_ITEM_HIDE_TIME_KEY "__ABSTRACT_ITEM_HIDE_TIME_KEY__"
-#define ABSTRACT_ITEM_DELETE_TIME_KEY "__ABSTRACT_ITEM_DELETE_TIME_KEY__"
-#define ABSTRACT_ITEM_CAN_RECEIVE_KEY "__ABSTRACT_ITEM_CAN_RECEIVE_KEY__"
-#define ABSTRACT_ITEM_SOUND_PATH_KEY "__ABSTRACT_ITEM_SOUND_PATH_KEY__"
-#define ABSTRACT_ITEM_VIBRATION_PATH_KEY "__ABSTRACT_ITEM_VIBRATION_PATH_KEY__"
-#define ABSTRACT_ITEM_POLICY_KEY "__ABSTRACT_ITEM_POLICY_KEY__"
-#define ABSTRACT_ITEM_RECEIVER_GROUP_KEY "__ABSTRACT_ITEM_RECEIVER_GROUP_KEY__"
-#define ABSTRACT_ITEM_VISIBLE_KEY "__ABSTRACT_ITEM_VISIBLE_KEY__"
-#define ABSTRACT_ITEM_ENABLE_KEY "__ABSTRACT_ITEM_ENABLE_KEY__"
-#define ABSTRACT_ITEM_STYLE_IS_EXIST_KEY "__ABSTRACT_ITEM_STYLE_IS_EXIST_KEY__"
-#define ABSTRACT_ITEM_STYLE_PADDING_TOP_KEY "__ABSTRACT_ITEM_STYLE_PADDING_TOP_KEY__"
-#define ABSTRACT_ITEM_STYLE_PADDING_LEFT_KEY "__ABSTRACT_ITEM_STYLE_PADDING_LEFT_KEY__"
-#define ABSTRACT_ITEM_STYLE_PADDING_RIGHT_KEY "__ABSTRACT_ITEM_STYLE_PADDING_RIGHT_KEY__"
-#define ABSTRACT_ITEM_STYLE_PADDING_BOTTOM_KEY "__ABSTRACT_ITEM_STYLE_PADDING_BOTTOM_KEY__"
-#define ABSTRACT_ITEM_STYLE_COLOR_A_KEY "__ABSTRACT_ITEM_STYLE_COLOR_A_KEY__"
-#define ABSTRACT_ITEM_STYLE_COLOR_R_KEY "__ABSTRACT_ITEM_STYLE_COLOR_R_KEY__"
-#define ABSTRACT_ITEM_STYLE_COLOR_G_KEY "__ABSTRACT_ITEM_STYLE_COLOR_G_KEY__"
-#define ABSTRACT_ITEM_STYLE_COLOR_B_KEY "__ABSTRACT_ITEM_STYLE_COLOR_B_KEY__"
-#define ABSTRACT_ITEM_STYLE_BG_COLOR_A_KEY "__ABSTRACT_ITEM_STYLE_BG_COLOR_A_KEY__"
-#define ABSTRACT_ITEM_STYLE_BG_COLOR_R_KEY "__ABSTRACT_ITEM_STYLE_BG_COLOR_R_KEY__"
-#define ABSTRACT_ITEM_STYLE_BG_COLOR_G_KEY "__ABSTRACT_ITEM_STYLE_BG_COLOR_G_KEY__"
-#define ABSTRACT_ITEM_STYLE_BG_COLOR_B_KEY "__ABSTRACT_ITEM_STYLE_BG_COLOR_B_KEY__"
-#define ABSTRACT_ITEM_STYLE_BG_IMAGE_PATH_KEY "__ABSTRACT_ITEM_STYLE_BG_IMAGE_PATH_KEY__"
-#define ABSTRACT_ITEM_STYLE_GEOMETRY_X_KEY "__ABSTRACT_ITEM_STYLE_GEOMETRY_X_KEY__"
-#define ABSTRACT_ITEM_STYLE_GEOMETRY_Y_KEY "__ABSTRACT_ITEM_STYLE_GEOMETRY_Y_KEY__"
-#define ABSTRACT_ITEM_STYLE_GEOMETRY_WIDTH_KEY "__ABSTRACT_ITEM_STYLE_GEOMETRY_WIDTH_KEY__"
-#define ABSTRACT_ITEM_STYLE_GEOMETRY_HEIGHT_KEY "__ABSTRACT_ITEM_STYLE_GEOMETRY_HEIGHT_KEY__"
-#define ABSTRACT_ITEM_LED_ON_PERIOD_KEY "__ABSTRACT_ITEM_LED_ON_PERIOD_KEY__"
-#define ABSTRACT_ITEM_LED_OFF_PERIOD_KEY "__ABSTRACT_ITEM_LED_OFF_PERIOD_KEY__"
-#define ABSTRACT_ITEM_LED_COLOR_A_KEY "__ABSTRACT_ITEM_LED_COLOR_A_KEY__"
-#define ABSTRACT_ITEM_LED_COLOR_R_KEY "__ABSTRACT_ITEM_LED_COLOR_R_KEY__"
-#define ABSTRACT_ITEM_LED_COLOR_G_KEY "__ABSTRACT_ITEM_LED_COLOR_G_KEY__"
-#define ABSTRACT_ITEM_LED_COLOR_B_KEY "__ABSTRACT_ITEM_LED_COLOR_B_KEY__"
-#define ABSTRACT_ITEM_LED_IS_EXIST_KEY "__ABSTRACT_ITEM_LED_IS_EXIST_KEY__"
-#define ABSTRACT_ITEM_ACTION_KEY "__ABSTRACT_ITEM_ACTION_KEY__"
-#define ABSTRACT_ITEM_HIDE_VIEWER_KEY "__ABSTRACT_ITEM_HIDE_VIEWER_KEY__"
-#define ABSTRACT_ITEM_TRUE "TRUE"
-#define ABSTRACT_ITEM_ONGOING_KEY "__ABSTRACT_ITEM_ONGOING_KEY__"
-#define ABSTRACT_ITEM_MAIN_TYPE_KEY "__ABSTRACT_ITEM_MAIN_TYPE_KEY__"
-#define ABSTRACT_ITEM_MULTI_LANG_ARR_KEY "__ABSTRACT_ITEM_MULTI_LANG_ARR_KEY__"
-#define ABSTRACT_ITEM_MULTI_LANG_KEY "__ABSTRACT_ITEM_MULTI_LANG_KEY__"
-#define ABSTRACT_ITEM_EXTENSION_DATA_KEY "__ABSTRACT_ITEM_EXTENSION_DATA_KEY__"
+
+/*
+ * N3-T1 D7: the 40+ `#define ABSTRACT_ITEM_*_KEY` macros that previously
+ * lived in this TU have been hoisted into abstract_item_keys.h as
+ * `inline constexpr std::string_view` entries under the
+ * notification::item::keys namespace. Thin aliases below preserve the
+ * macro-style spelling at existing call sites without a mass rename;
+ * each expands to a string_view literal with zero runtime cost.
+ *
+ * Bundle::Add takes const std::string& so a std::string temporary is
+ * still constructed at the call boundary — that's the Bundle API's
+ * price, not ours. The win is rodata dedup across Serialize /
+ * Deserialize plus removal of the preprocessor wall of text.
+ */
+namespace k = notification::item::keys;
+
+#define ABSTRACT_ITEM_TYPE_KEY                  std::string(k::kType)
+#define ABSTRACT_ITEM_ID_KEY                    std::string(k::kId)
+#define ABSTRACT_ITEM_UID_KEY                   std::string(k::kUid)
+#define ABSTRACT_ITEM_PRIVATE_ID_KEY            std::string(k::kPrivateId)
+#define ABSTRACT_ITEM_TIME_KEY                  std::string(k::kTime)
+#define ABSTRACT_ITEM_SENDER_APPID_KEY          std::string(k::kSenderAppId)
+#define ABSTRACT_ITEM_TAG_KEY                   std::string(k::kTag)
+#define ABSTRACT_ITEM_CHANNEL_KEY               std::string(k::kChannel)
+#define ABSTRACT_ITEM_VERSION_KEY               std::string(k::kVersion)
+#define ABSTRACT_ITEM_HIDE_TIME_KEY             std::string(k::kHideTime)
+#define ABSTRACT_ITEM_DELETE_TIME_KEY           std::string(k::kDeleteTime)
+#define ABSTRACT_ITEM_CAN_RECEIVE_KEY           std::string(k::kCanReceive)
+#define ABSTRACT_ITEM_SOUND_PATH_KEY            std::string(k::kSoundPath)
+#define ABSTRACT_ITEM_VIBRATION_PATH_KEY        std::string(k::kVibrationPath)
+#define ABSTRACT_ITEM_POLICY_KEY                std::string(k::kPolicy)
+#define ABSTRACT_ITEM_RECEIVER_GROUP_KEY        std::string(k::kReceiverGroup)
+#define ABSTRACT_ITEM_VISIBLE_KEY               std::string(k::kVisible)
+#define ABSTRACT_ITEM_ENABLE_KEY                std::string(k::kEnable)
+#define ABSTRACT_ITEM_STYLE_IS_EXIST_KEY        std::string(k::kStyleIsExist)
+#define ABSTRACT_ITEM_STYLE_PADDING_TOP_KEY     std::string(k::kStylePadTop)
+#define ABSTRACT_ITEM_STYLE_PADDING_LEFT_KEY    std::string(k::kStylePadLeft)
+#define ABSTRACT_ITEM_STYLE_PADDING_RIGHT_KEY   std::string(k::kStylePadRight)
+#define ABSTRACT_ITEM_STYLE_PADDING_BOTTOM_KEY  std::string(k::kStylePadBottom)
+#define ABSTRACT_ITEM_STYLE_COLOR_A_KEY         std::string(k::kStyleColorA)
+#define ABSTRACT_ITEM_STYLE_COLOR_R_KEY         std::string(k::kStyleColorR)
+#define ABSTRACT_ITEM_STYLE_COLOR_G_KEY         std::string(k::kStyleColorG)
+#define ABSTRACT_ITEM_STYLE_COLOR_B_KEY         std::string(k::kStyleColorB)
+#define ABSTRACT_ITEM_STYLE_BG_COLOR_A_KEY      std::string(k::kStyleBgColorA)
+#define ABSTRACT_ITEM_STYLE_BG_COLOR_R_KEY      std::string(k::kStyleBgColorR)
+#define ABSTRACT_ITEM_STYLE_BG_COLOR_G_KEY      std::string(k::kStyleBgColorG)
+#define ABSTRACT_ITEM_STYLE_BG_COLOR_B_KEY      std::string(k::kStyleBgColorB)
+#define ABSTRACT_ITEM_STYLE_BG_IMAGE_PATH_KEY   std::string(k::kStyleBgImage)
+#define ABSTRACT_ITEM_STYLE_GEOMETRY_X_KEY      std::string(k::kStyleGeomX)
+#define ABSTRACT_ITEM_STYLE_GEOMETRY_Y_KEY      std::string(k::kStyleGeomY)
+#define ABSTRACT_ITEM_STYLE_GEOMETRY_WIDTH_KEY  std::string(k::kStyleGeomW)
+#define ABSTRACT_ITEM_STYLE_GEOMETRY_HEIGHT_KEY std::string(k::kStyleGeomH)
+#define ABSTRACT_ITEM_LED_ON_PERIOD_KEY         std::string(k::kLedOnPeriod)
+#define ABSTRACT_ITEM_LED_OFF_PERIOD_KEY        std::string(k::kLedOffPeriod)
+#define ABSTRACT_ITEM_LED_COLOR_A_KEY           std::string(k::kLedColorA)
+#define ABSTRACT_ITEM_LED_COLOR_R_KEY           std::string(k::kLedColorR)
+#define ABSTRACT_ITEM_LED_COLOR_G_KEY           std::string(k::kLedColorG)
+#define ABSTRACT_ITEM_LED_COLOR_B_KEY           std::string(k::kLedColorB)
+#define ABSTRACT_ITEM_LED_IS_EXIST_KEY          std::string(k::kLedIsExist)
+#define ABSTRACT_ITEM_ACTION_KEY                std::string(k::kAction)
+#define ABSTRACT_ITEM_HIDE_VIEWER_KEY           std::string(k::kHideViewer)
+#define ABSTRACT_ITEM_ONGOING_KEY               std::string(k::kOngoing)
+#define ABSTRACT_ITEM_MAIN_TYPE_KEY             std::string(k::kMainType)
+#define ABSTRACT_ITEM_MULTI_LANG_ARR_KEY        std::string(k::kMultiLangArr)
+#define ABSTRACT_ITEM_MULTI_LANG_KEY            std::string(k::kMultiLang)
+#define ABSTRACT_ITEM_EXTENSION_DATA_KEY        std::string(k::kExtensionData)
+#define ABSTRACT_ITEM_TRUE                      std::string(k::kTrue)
 
 using namespace std;
 using namespace tizen_base;
@@ -145,12 +162,32 @@ AbstractItem::~AbstractItem() = default;
 AbstractItem::Impl::~Impl() = default;
 
 Bundle AbstractItem::Serialize() const {
+  /*
+   * N3-T1 D7: per-item Bundle cache.
+   *
+   * On a clean (dirty_ == false) item, return a copy of the cached
+   * Bundle so the subclass's override (ButtonItem::Serialize et al) can
+   * keep mutating it without trampling the base's cache. The copy is
+   * still substantially cheaper than re-running 30+ Bundle::Add() calls
+   * because each Add is a bundle_add_str + hash insert + key strdup;
+   * a Bundle copy is an O(n) memcpy of the underlying bundle's key/val
+   * table.
+   *
+   * dirty_ is flipped back to false at the tail so any setter that ran
+   * between two Serialize calls triggers a rebuild exactly once.
+   */
+  if (impl_->uid_ == 0) {
+    impl_->uid_ = util::GetCachedUid();
+    impl_->dirty_ = true;  // uid_ change contributes to Serialize output
+  }
+
+  if (!impl_->dirty_) {
+    return impl_->cached_serialization_;
+  }
+
   Bundle b;
   struct tm timeinfo;
   char buf[80] = {0, };
-
-  if (impl_->uid_ == 0)
-    impl_->uid_ = util::GetCachedUid();
 
   if (!impl_->channel_.empty())
     b.Add(ABSTRACT_ITEM_CHANNEL_KEY, impl_->channel_);
@@ -290,6 +327,13 @@ Bundle AbstractItem::Serialize() const {
   b.Add(ABSTRACT_ITEM_EXTENSION_DATA_KEY,
     reinterpret_cast<char*>(impl_->extension_data_.ToRaw().first.get()));
 
+  /* N3-T1 D7: install freshly-built Bundle into the cache and mark
+   * clean. Subclass overrides that copy `b` into their own Bundle will
+   * keep benefitting because the next top-level Serialize() on a still-
+   * clean item hits the cache path above and returns the cached base
+   * bundle directly. */
+  impl_->cached_serialization_ = b;
+  impl_->dirty_ = false;
   return b;
 }
 
@@ -422,6 +466,11 @@ void AbstractItem::Deserialize(Bundle b) {
   }
 
   impl_->extension_data_ = Bundle(b.GetString(ABSTRACT_ITEM_EXTENSION_DATA_KEY));
+
+  /* N3-T1 D7: every field the cache depends on has been overwritten —
+   * mark dirty so the next Serialize() rebuilds from the Deserialize
+   * state rather than returning a stale pre-Deserialize Bundle. */
+  impl_->MarkDirty();
 }
 
 // N3-T4 A2: by-value parameter + std::move into member.
@@ -433,6 +482,7 @@ void AbstractItem::Deserialize(Bundle b) {
 // that historically did SetXxx("") or SetXxx(c_str)).
 void AbstractItem::SetId(std::string id) {
   impl_->id_ = std::move(id);
+  impl_->MarkDirty();
 }
 
 string AbstractItem::GetId() const {
@@ -484,6 +534,7 @@ shared_ptr<AbstractAction> AbstractItem::GetAction() const {
 
 void AbstractItem::SetAction(std::shared_ptr<AbstractAction> action) {
   impl_->action_ = action;
+  impl_->MarkDirty();
 }
 
 shared_ptr<Style> AbstractItem::GetStyle() const {
@@ -492,10 +543,12 @@ shared_ptr<Style> AbstractItem::GetStyle() const {
 
 void AbstractItem::SetStyle(shared_ptr<Style> style) {
   impl_->style_ = style;
+  impl_->MarkDirty();
 }
 
 void AbstractItem::SetLEDInfo(std::shared_ptr<LEDInfo> led) {
   impl_->led_ = led;
+  impl_->MarkDirty();
 }
 
 std::shared_ptr<LEDInfo> AbstractItem::GetLEDInfo() const {
@@ -511,6 +564,7 @@ int AbstractItem::GetType(Bundle b) {
 
 void AbstractItem::SetVisible(bool visible) {
   impl_->visible_ = visible;
+  impl_->MarkDirty();
 }
 
 bool AbstractItem::GetVisible() const {
@@ -519,6 +573,7 @@ bool AbstractItem::GetVisible() const {
 
 void AbstractItem::SetEnable(bool enable) {
   impl_->enable_ = enable;
+  impl_->MarkDirty();
 }
 
 bool AbstractItem::GetEnable() const {
@@ -527,10 +582,12 @@ bool AbstractItem::GetEnable() const {
 
 void AbstractItem::AddReceiver(std::string receiver_group) {
   impl_->receiver_group_list_.push_back(receiver_group);
+  impl_->MarkDirty();
 }
 
 void AbstractItem::RemoveReceiver(std::string receiver_group) {
   impl_->receiver_group_list_.remove(receiver_group);
+  impl_->MarkDirty();
 }
 
 list<string> AbstractItem::GetReceiverList() {
@@ -539,6 +596,7 @@ list<string> AbstractItem::GetReceiverList() {
 
 void AbstractItem::SetPolicy(int policy) {
   impl_->policy_ = policy;
+  impl_->MarkDirty();
 }
 
 int AbstractItem::GetPolicy() const {
@@ -555,16 +613,19 @@ string AbstractItem::GetChannel() const {
 
 void AbstractItem::SetChannel(string channel) {
   impl_->channel_ = std::move(channel);
+  impl_->MarkDirty();
 }
 
 void AbstractItem::SetSoundPath(std::string path) {
   impl_->sound_path_ = std::move(path);
   UpdateSoundPrivatePath();
+  impl_->MarkDirty();
 }
 
 void AbstractItem::SetVibrationPath(std::string path) {
   impl_->vibration_path_ = std::move(path);
   UpdateVibrationPrivatePath();
+  impl_->MarkDirty();
 }
 
 std::string AbstractItem::GetSoundPath() const {
@@ -581,6 +642,7 @@ std::string AbstractItem::GetSenderAppId() const {
 
 void AbstractItem::SetSenderAppId(std::string sender_appid) {
   impl_->sender_appid_ = std::move(sender_appid);
+  impl_->MarkDirty();
 }
 
 std::string AbstractItem::GetTag() const {
@@ -589,10 +651,12 @@ std::string AbstractItem::GetTag() const {
 
 void AbstractItem::SetTag(std::string tag) {
   impl_->tag_ = std::move(tag);
+  impl_->MarkDirty();
 }
 
 void AbstractItem::SetOnGoingState(bool ongoing) {
   impl_->ongoing_ = ongoing;
+  impl_->MarkDirty();
 }
 
 bool AbstractItem::GetOnGoingState() const {
@@ -633,6 +697,7 @@ bool AbstractItem::SetMainType(std::string target_id, MainType type) {
   if (type == MainNone) {
     LOGW("Clear main type from %s", target_id.c_str());
     target.impl_->main_type_ = MainNone;
+    target.impl_->MarkDirty();
     return true;
   }
 
@@ -643,9 +708,12 @@ bool AbstractItem::SetMainType(std::string target_id, MainType type) {
   }
 
   AbstractItem& old = FindByMainType(type);
-  if (target.GetType() != NullObject)
+  if (target.GetType() != NullObject) {
     old.impl_->main_type_ = MainNone;
+    old.impl_->MarkDirty();
+  }
   target.impl_->main_type_ = type;
+  target.impl_->MarkDirty();
 
   return true;
 }
@@ -678,11 +746,13 @@ vector<shared_ptr<MultiLanguage>> AbstractItem::GetMultiLanguageArr() const {
 
 void AbstractItem::SetMultiLanguage(std::shared_ptr<MultiLanguage> multi) {
   impl_->multi_lang_ = multi;
+  impl_->MarkDirty();
 }
 
 void AbstractItem::SetMultiLanguage(
     vector<shared_ptr<MultiLanguage>> multi_arr) {
   impl_->multi_lang_arr_ = multi_arr;
+  impl_->MarkDirty();
 }
 
 void AbstractItem::UpdateSoundPrivatePath() {
@@ -728,6 +798,7 @@ void AbstractItem::SetExtensionData(std::string key, Bundle value) {
 
   impl_->extension_data_.Add(key,
     reinterpret_cast<char*>(value.ToRaw().first.get()));
+  impl_->MarkDirty();
 }
 
 }  // namespace item

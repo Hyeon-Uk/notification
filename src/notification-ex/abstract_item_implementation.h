@@ -32,6 +32,12 @@ class AbstractItem::Impl {
   class ItemInfo;
   virtual ~Impl();
 
+  /* N3-T1 D7: mark the per-item serialisation cache stale. Every setter
+   * that mutates a serialisable field calls this so the next
+   * Serialize() rebuilds instead of returning the cached Bundle. Also
+   * reachable by subclass setter code through the `impl_` pointer. */
+  void MarkDirty() { dirty_ = true; }
+
  private:
   Impl(AbstractItem* parent);
   Impl(AbstractItem* parent,
@@ -75,6 +81,30 @@ class AbstractItem::Impl {
   bool ongoing_ = false;
   MainType main_type_ = MainNone;
   tizen_base::Bundle extension_data_;
+
+  /*
+   * N3-T1 D7: per-item serialisation cache.
+   *
+   * On a cold (dirty) item, AbstractItem::Serialize() builds the Bundle
+   * from every field above and stores a copy in cached_serialization_;
+   * dirty_ flips to false. Subsequent Serialize() calls observe
+   * dirty_ == false and return a copy of cached_serialization_ instead
+   * of rebuilding — skipping 30+ Bundle::Add() calls and their implicit
+   * std::string temporaries.
+   *
+   * Every setter that mutates a field contributing to the serialised
+   * representation must call MarkDirty() (via Impl::dirty_ = true) so
+   * the next Serialize() re-computes. A conservative policy: mark dirty
+   * on every setter even when the field is cheap; the cache's only
+   * downside is one extra Bundle copy per Serialize after a setter.
+   *
+   * mutable allows Serialize() (const) to populate the cache. Thread-
+   * safety is NOT promised by this cache — callers that Serialize the
+   * same item from two threads in parallel already observed undefined
+   * behaviour before N3-T1 (shared mutable state in the Bundle class).
+   */
+  mutable tizen_base::Bundle cached_serialization_;
+  mutable bool dirty_ = true;
 };
 
 }  // namespace item

@@ -64,7 +64,15 @@ INSTALL(FILES ${CMAKE_CURRENT_SOURCE_DIR}/${TARGET_NOTIFICATION_EX}.pc
 INSTALL(TARGETS ${TARGET_NOTIFICATION_EX} DESTINATION ${LIB_INSTALL_DIR})
 INSTALL(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/
   DESTINATION include/${TARGET_NOTIFICATION_EX}
-  FILES_MATCHING PATTERN "*.h")
+  FILES_MATCHING PATTERN "*.h"
+  # N3-T1 D5/D7: internal-only headers — do NOT leak to package consumers.
+  # appid_lru.h is the fixed-slot LRU wrapper behind util::GetAppId; its
+  # API is a detail helper of ex_util.cc and not part of the installed
+  # notification-ex surface. abstract_item_keys.h is the rodata table of
+  # bundle key string_views shared between abstract_item.cc (writer) and
+  # a future deserializer — also internal.
+  PATTERN "appid_lru.h" EXCLUDE
+  PATTERN "abstract_item_keys.h" EXCLUDE)
 INSTALL(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/api
   DESTINATION include/${TARGET_NOTIFICATION_EX}
   FILES_MATCHING PATTERN "*.h")

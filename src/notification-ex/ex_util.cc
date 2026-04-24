@@ -16,17 +16,17 @@
 
 #include <dlog.h>
 #include <aul.h>
-#include <fcntl.h>
 #include <unistd.h>
 #include <package_info.h>
 #include <package_manager.h>
 
 #include <atomic>
 #include <string>
+#include <string_view>
 #include <memory>
-#include <map>
 
 #include "notification-ex/ex_util.h"
+#include "notification-ex/appid_lru.h"
 #include "notification-ex/socket_handler.h"
 #include "notification-ex/common.h"
 
@@ -41,7 +41,6 @@ using namespace std;
 /* LCOV_EXCL_START */
 namespace {
 constexpr int MAX_PACKAGE_STR_SIZE = 512;
-constexpr int MAX_CACHE_SIZE = 100;
 constexpr int MAX_RETRY_CNT = 10;
 }
 
@@ -58,66 +57,24 @@ string GetAppId() {
   return GetAppId(getpid());
 }
 
+/*
+ * N3-T1 D5: delegate to the fixed-slot LRU in appid_lru.cc.
+ *
+ * The previous implementation backed the per-pid cache with a file-local
+ * std::map<pid_t, std::string> and used a clear()-on-overflow policy that
+ * dropped every hot pid on the first cold pid past MAX_CACHE_SIZE. The
+ * new LRU evicts a single slot on miss, keeping ≤ 8 hot pids resident
+ * across any traffic pattern.
+ *
+ * We still return a std::string (by value) here so the public ABI of
+ * util::GetAppId(pid_t) is preserved — the LRU's internal string_view
+ * is materialised into a std::string at this boundary because callers
+ * hold the result across further cache operations which may reshuffle
+ * slots and invalidate the view.
+ */
 string GetAppId(pid_t pid) {
-  static map<pid_t, string> appid_cache;
-
-  string appid;
-  char appid_buf[MAX_PACKAGE_STR_SIZE] = {0, };
-
-  if (appid_cache.find(pid) != appid_cache.end()) {
-    LOGI("appid(%s)", appid_cache[pid].c_str());
-    return appid_cache[pid];
-  }
-
-  if (appid_cache.size() > MAX_CACHE_SIZE)
-    appid_cache.clear();
-
-  int ret = aul_app_get_appid_bypid(pid, appid_buf, sizeof(appid_buf));
-  if (ret == AUL_R_OK) {
-    appid = string(appid_buf);
-  } else {
-    int fd, i;
-    int last_slash_index = 0;
-    char proc_buf[MAX_PACKAGE_STR_SIZE] = { 0, };
-
-    snprintf(proc_buf, sizeof(proc_buf), "/proc/%d/cmdline", pid);
-
-    fd = open(proc_buf, O_RDONLY);
-    if (fd < 0) {
-      LOGE("Fail to get appid (%d)", errno);
-      return "";
-    }
-
-    ret = read(fd, appid_buf, sizeof(appid_buf) - 1);
-    if (ret <= 0) {
-      LOGE("Fail to get appid (%d)", errno);
-      close(fd);
-      return "";
-    }
-    close(fd);
-
-    for (i = 0 ; i < ret ; i++) {
-      if (appid_buf[i] == '/')
-        last_slash_index = i;
-    }
-
-    if (last_slash_index == (ret - 1)) {
-      LOGE("Fail to get appid (%s)", appid_buf);
-      return "";
-    }
-
-    if (last_slash_index == 0)
-      appid = string(appid_buf);
-    else
-      appid = string(&appid_buf[last_slash_index + 1]);
-  }
-
-  if (appid == "d::org.tizen.appfw.service.esd")
-    appid = "data-provider-master";
-
-  LOGI("appid(%s)", appid.c_str());
-  appid_cache[pid] = appid;
-  return appid;
+  std::string_view view = detail::LookupOrFillAppId(pid);
+  return string(view);
 }
 
 string GetPkgId() {
@@ -236,29 +193,38 @@ unsigned int ReadSocket(int fd, char* buffer, unsigned int nbytes) {
   return 0;
 }
 
+/*
+ * N3-T1 D6: switched from per-call calloc() to a thread_local scratch
+ * buffer (EnsureRecvBuf). The previous implementation called calloc()
+ * on every ReadBundleList() invocation plus a second calloc() on the
+ * grow path inside the loop. With the scratch buffer the first call on
+ * a thread heap-allocs once, subsequent calls reuse the buffer
+ * (high-watermark retained), and only a genuine grow past the current
+ * capacity triggers realloc().
+ */
 list<tizen_base::Bundle> ReadBundleList(int recvfd, int noti_cnt) {
   list<tizen_base::Bundle> ret_list;
   list<tizen_base::Bundle> empty_list;
-  unsigned int buf_size = 0;
   unsigned int data_size = 0;
 
-  buf_size = util::GetSocketBufferSize(recvfd, SO_RCVBUF);
-  std::unique_ptr<char, decltype(std::free)*> data_ptr(
-      static_cast<char*>(calloc(buf_size, sizeof(char))), std::free);
+  unsigned int initial = util::GetSocketBufferSize(recvfd, SO_RCVBUF);
+  char* data = util::EnsureRecvBuf(initial);
+  size_t buf_size = (data == nullptr) ? 0 : util::RecvBufCapacity();
+
   for (int i = 0; i < noti_cnt; i++) {
     int ret = util::ReadSocket(recvfd,
         reinterpret_cast<char*>(&data_size), sizeof(data_size));
     if (ret != 0)
       return empty_list;
     if (data_size > buf_size) {
-      buf_size = data_size;
-      data_ptr.reset(static_cast<char*>(calloc(buf_size, sizeof(char))));
+      data = util::EnsureRecvBuf(data_size);
+      buf_size = util::RecvBufCapacity();
     }
-    memset(data_ptr.get(), 0, buf_size);
-    ret = util::ReadSocket(recvfd, data_ptr.get(), data_size);
+    memset(data, 0, data_size);
+    ret = util::ReadSocket(recvfd, data, data_size);
     if (ret != 0)
       return empty_list;
-    ret_list.emplace_back(data_ptr.get());
+    ret_list.emplace_back(data);
   }
   return ret_list;
 }
@@ -377,6 +343,79 @@ void ResetScratchBuilderForTest() {
 
 int GetScratchBuilderAllocCountForTest() {
   return tls_slot.alloc_count;
+}
+
+/*
+ * N3-T1 D6: per-thread receive scratch buffer for ReadBundleList().
+ *
+ * Lifetime:
+ *   - RecvScratch::buf is realloc'd on grow; freed at thread exit by
+ *     the dtor. Idempotent on a never-used thread.
+ *   - Capacity is high-watermark: EnsureRecvBuf(4KB) followed by
+ *     EnsureRecvBuf(512) returns the existing 4KB buffer unchanged
+ *     (no shrink). This is the whole point of the optimisation — the
+ *     old code reallocated on every grow and discarded capacity when
+ *     SO_RCVBUF was re-read per call.
+ *
+ * Alignment:
+ *   realloc() returns memory aligned for any scalar type; that matches
+ *   what the pre-N3-T1 calloc() path delivered. Callers treating the
+ *   buffer as bytes (ReadBundleList) or as bundle_raw (Bundle ctor) are
+ *   both well-served.
+ */
+namespace {
+
+struct RecvScratch {
+  char*  buf = nullptr;
+  size_t cap = 0;
+  ~RecvScratch() {
+    if (buf != nullptr) {
+      free(buf);
+      buf = nullptr;
+      cap = 0;
+    }
+  }
+};
+
+static thread_local RecvScratch tls_recv;
+
+}  // namespace
+
+char* EnsureRecvBuf(size_t size) {
+  if (size == 0) {
+    /* Degenerate request — callers that hit this path (SO_RCVBUF == 0
+     * in some emulator builds) previously got a 0-byte calloc which
+     * returns NULL or an unwritable pointer. Keep that behaviour. */
+    return tls_recv.buf;
+  }
+  if (size <= tls_recv.cap) {
+    /* High-watermark hit — zero realloc, zero free. */
+    return tls_recv.buf;
+  }
+  /* Grow path: realloc keeps previous bytes (we don't rely on them but
+   * realloc is still the cheapest path compared to free + calloc). */
+  char* grown = static_cast<char*>(realloc(tls_recv.buf, size));
+  if (grown == nullptr) {
+    /* realloc failure leaves tls_recv.buf intact; return NULL so the
+     * caller can bail out without writing past the old capacity. */
+    LOGE("RecvScratch grow failed: size=%zu cap=%zu", size, tls_recv.cap);
+    return nullptr;
+  }
+  tls_recv.buf = grown;
+  tls_recv.cap = size;
+  return tls_recv.buf;
+}
+
+size_t RecvBufCapacity() {
+  return tls_recv.cap;
+}
+
+void ResetRecvBufForTest() {
+  if (tls_recv.buf != nullptr) {
+    free(tls_recv.buf);
+    tls_recv.buf = nullptr;
+    tls_recv.cap = 0;
+  }
 }
 
 /*
