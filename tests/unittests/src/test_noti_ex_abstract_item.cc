@@ -23,7 +23,6 @@
 #include "notification-ex/app_control_action.h"
 #include "notification-ex/item_info_internal.h"
 #include "notification-ex/iitem_factory.h"
-#include "notification-ex/factory_manager.h"
 #include "notification-ex/default_item_factory.h"
 #include "notification-ex/group_item.h"
 #include "notification-ex/button_item.h"
@@ -98,10 +97,14 @@ class AbstractItemTest : public TestFixture {
   AbstractItemTest() : TestFixture(std::make_unique<::Mocks>()) {}
 
   virtual void SetUp() {
-    FactoryManager::GetInst().RegisterFactory(std::unique_ptr<IItemFactory>(new MyFactory()));
+    /* N3-T2 D8: FactoryManager retired. Install the test factory via the
+     * free-function override seam. */
+    ::notification::item::SetItemFactoryOverride(
+        std::unique_ptr<IItemFactory>(new MyFactory()));
   }
   virtual void TearDown() {
-    FactoryManager::GetInst().RegisterFactory(std::unique_ptr<IItemFactory>(new DefaultItemFactory()));
+    /* Clear the override so subsequent tests see the default dispatch. */
+    ::notification::item::SetItemFactoryOverride(nullptr);
   }
 };
 

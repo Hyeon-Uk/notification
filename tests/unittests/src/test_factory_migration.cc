@@ -14,8 +14,13 @@
 
 /*
  * N1-T2: FactoryManager shim migration unit tests.
+ * N3-T2 D8: FactoryManager body retired; tests now pin the
+ *           free-function entry points (CreateItem / CreateAction /
+ *           GetNullItem / SetItemFactoryOverride) and verify that the
+ *           FactoryManager class symbol is absent from the loaded
+ *           library (NoSingletonSymbol).
  *
- * Covers the free-function entry points introduced in
+ * Covers the free-function entry points from
  * default_item_factory.{h,cc} and default_action_factory.{h,cc}:
  *
  *   1. CreateItem_AllTypesSucceed         - every AbstractItem::Type
@@ -26,19 +31,20 @@
  *                                           Custom returns nullptr per
  *                                           historical contract.
  *   3. GetNullItem_SingletonReturnsSame   - GetNullItem() returns the
- *                                           same address across calls and
- *                                           its address matches the one
- *                                           surfaced via the FactoryManager
- *                                           deprecation shim.
- *
- * These tests exercise the free-function path directly (no
- * FactoryManager singleton involvement), and one assertion also pins the
- * invariant that the FactoryManager shim delegates to the same
- * GetNullItem() singleton (ABI contract).
+ *                                           same address across calls.
+ *   4. NoSingletonSymbol                  - dlsym for the mangled
+ *                                           FactoryManager::GetInst()
+ *                                           and ::Register* / ::Create*
+ *                                           member names returns
+ *                                           nullptr in the loaded
+ *                                           notification-ex library
+ *                                           (GATE for D8 removal).
  */
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
+
+#include <dlfcn.h>
 
 #include <cstring>
 #include <memory>
@@ -52,7 +58,6 @@
 #include "notification-ex/abstract_item.h"
 #include "notification-ex/default_action_factory.h"
 #include "notification-ex/default_item_factory.h"
-#include "notification-ex/factory_manager.h"
 
 using namespace notification;
 using namespace notification::item;
@@ -131,11 +136,36 @@ TEST_F(FactoryMigrationTest, GetNullItem_SingletonReturnsSameAddress) {
   AbstractItem& b = ::notification::item::GetNullItem();
   ASSERT_EQ(&a, &b);
 
-  /* ABI pin: FactoryManager shim must delegate to the same singleton so
-   * callers that still use the shim observe identical identity. */
-  AbstractItem& via_shim = FactoryManager::GetInst().GetNullItem();
-  ASSERT_EQ(&a, &via_shim);
-
   /* Type sanity: the shared null must report NullObject. */
   ASSERT_EQ(a.GetType(), AbstractItem::NullObject);
+}
+
+/*
+ * N3-T2 D8 GATE: No FactoryManager class symbol must be resolvable from
+ * the loaded notification-ex library. The class body was removed; only
+ * the empty header remains for legacy include-compat.
+ *
+ * We probe the itanium-ABI mangled names for FactoryManager::GetInst(),
+ * ::RegisterFactory(unique_ptr<IItemFactory>), ::CreateItem(int),
+ * ::GetNullItem(), and the class's typeinfo - every one of these must
+ * return nullptr. We use RTLD_DEFAULT so the lookup spans the exe +
+ * every dlopen'd library, matching the `nm --dynamic libnotification-ex.so
+ * | grep FactoryManager` check from the plan.
+ */
+TEST_F(FactoryMigrationTest, NoSingletonSymbol) {
+  /* _ZN12notification4item14FactoryManager7GetInstEv
+   *   == notification::item::FactoryManager::GetInst() */
+  ASSERT_EQ(dlsym(RTLD_DEFAULT,
+      "_ZN12notification4item14FactoryManager7GetInstEv"), nullptr);
+  /* _ZN12notification4item14FactoryManager11GetNullItemEv
+   *   == notification::item::FactoryManager::GetNullItem() */
+  ASSERT_EQ(dlsym(RTLD_DEFAULT,
+      "_ZN12notification4item14FactoryManager11GetNullItemEv"), nullptr);
+  /* _ZN12notification4item14FactoryManager10CreateItemEi
+   *   == notification::item::FactoryManager::CreateItem(int) */
+  ASSERT_EQ(dlsym(RTLD_DEFAULT,
+      "_ZN12notification4item14FactoryManager10CreateItemEi"), nullptr);
+  /* Class typeinfo — also expected absent. */
+  ASSERT_EQ(dlsym(RTLD_DEFAULT,
+      "_ZTIN12notification4item14FactoryManagerE"), nullptr);
 }

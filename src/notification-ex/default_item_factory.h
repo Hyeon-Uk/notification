@@ -48,13 +48,35 @@ class EXPORT_API DefaultItemFactory : public IItemFactory {
 /* N1-T2: Free-function entry points for default item creation.
  * These replace the FactoryManager singleton path for internal callers so
  * that no FactoryManager / DefaultItemFactory instance is materialized on
- * the hot path. FactoryManager shim still delegates here when no user
- * override is registered (see factory_manager.cc).
+ * the hot path.
+ *
+ * N3-T2 D8: FactoryManager was retired. `CreateItem(int)` first consults
+ * an optional process-level override (set via
+ * `SetItemFactoryOverride`) and falls back to the built-in dispatch
+ * table when no override is registered. This preserves the behavior
+ * previously provided by `FactoryManager::RegisterFactory` without a
+ * class-scope singleton — callers that need a custom factory (plugins,
+ * unit tests, DPM) install the override directly.
  *
  * N2-T5: EXPORT_API needed so the unittest binary can link these without
  * being swallowed by the project-wide -fvisibility=hidden on C++ TUs. */
 EXPORT_API std::unique_ptr<AbstractItem> CreateItem(int type);
 EXPORT_API AbstractItem& GetNullItem();
+
+/**
+ * @brief Registers a process-level IItemFactory override.
+ * @since_tizen 8.0 (N3-T2 D8)
+ * @details When an override is set, `CreateItem(type)` delegates to
+ *          `override->CreateItem(type)`. Passing `nullptr` clears the
+ *          override and restores the default dispatch.
+ *
+ *          This is the migration path away from
+ *          `FactoryManager::GetInst().RegisterFactory(...)`. Ownership
+ *          transfers to the override slot. The override is a plain
+ *          internal std::unique_ptr guarded by a mutex; there is no
+ *          class singleton involved.
+ */
+EXPORT_API void SetItemFactoryOverride(std::unique_ptr<IItemFactory> factory);
 
 }  // namespace item
 }  // namespace notification

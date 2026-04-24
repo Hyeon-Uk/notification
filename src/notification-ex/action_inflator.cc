@@ -19,7 +19,7 @@
 
 #include <memory>
 
-#include "notification-ex/factory_manager.h"
+#include "notification-ex/default_action_factory.h"
 #include "notification-ex/action_inflator.h"
 
 #ifdef LOG_TAG
@@ -32,8 +32,10 @@ namespace notification {
 namespace item {
 
 std::shared_ptr<AbstractAction> ActionInflator::Create(tizen_base::Bundle b) {
+  /* N3-T2 D8: direct free-function dispatch. No FactoryManager singleton
+   * is involved on the hot path. */
   std::shared_ptr<AbstractAction> action =
-      FactoryManager::GetInst().CreateAction(AbstractAction::GetType(b));
+      ::notification::item::CreateAction(AbstractAction::GetType(b));
   action.get()->Deserialize(b);
   return action;
 }

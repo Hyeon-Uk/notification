@@ -18,7 +18,7 @@
 
 #include <memory>
 
-#include "notification-ex/factory_manager.h"
+#include "notification-ex/default_item_factory.h"
 #include "notification-ex/item_inflator.h"
 
 #ifdef LOG_TAG
@@ -32,8 +32,10 @@ namespace notification {
 namespace item {
 
 unique_ptr<AbstractItem> ItemInflator::Create(tizen_base::Bundle b) {
+  /* N3-T2 D8: direct free-function dispatch. No FactoryManager singleton
+   * is involved on the hot path. */
   unique_ptr<AbstractItem> item =
-      FactoryManager::GetInst().CreateItem(AbstractItem::GetType(b));
+      ::notification::item::CreateItem(AbstractItem::GetType(b));
   item.get()->Deserialize(b);
   return item;
 }

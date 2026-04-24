@@ -22,7 +22,6 @@
 
 #include "notification-ex/group_item.h"
 #include "notification-ex/group_item_implementation.h"
-#include "notification-ex/factory_manager.h"
 #include "notification-ex/default_item_factory.h"
 #include "notification-ex/ex_util.h"
 #include "notification-ex/exception.h"
@@ -109,8 +108,10 @@ void GroupItem::Deserialize(Bundle b) {
     string type_str = serialized.GetString(GROUP_CHILDREN_TYPE_KEY);
     AbstractItem::Type child_type =
         static_cast<AbstractItem::Type>(strtol(type_str.c_str(), NULL, 10));
+    /* N3-T2 D8: direct free-function dispatch (no FactoryManager
+     * singleton on this hot path). */
     shared_ptr<AbstractItem> child =
-        FactoryManager::GetInst().CreateItem(child_type);
+        ::notification::item::CreateItem(child_type);
     child.get()->Deserialize(serialized);
     AddChild(child);
   }

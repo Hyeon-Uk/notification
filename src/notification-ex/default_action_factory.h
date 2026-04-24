@@ -47,8 +47,23 @@ class EXPORT_API DefaultActionFactory : public IActionFactory {
 
 /* N1-T2: Free-function entry point for default action creation. See
  * default_item_factory.h for rationale.
+ *
+ * N3-T2 D8: `CreateAction(int)` first consults an optional process-
+ * level override (see `SetActionFactoryOverride`). The FactoryManager
+ * singleton has been retired.
+ *
  * N2-T5: EXPORT_API for unittest link under visibility=hidden. */
 EXPORT_API std::unique_ptr<AbstractAction> CreateAction(int type);
+
+/**
+ * @brief Registers a process-level IActionFactory override.
+ * @since_tizen 8.0 (N3-T2 D8)
+ * @details When an override is set, `CreateAction(type)` delegates to
+ *          `override->CreateAction(type)`. Passing `nullptr` clears
+ *          the override.
+ */
+EXPORT_API void SetActionFactoryOverride(
+    std::unique_ptr<IActionFactory> factory);
 
 }  // namespace item
 }  // namespace notification

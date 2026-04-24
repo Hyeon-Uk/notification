@@ -17,85 +17,38 @@
 #ifndef NOTIFICATION_EX_FACTORY_MANAGER_H_
 #define NOTIFICATION_EX_FACTORY_MANAGER_H_
 
-#include <string>
-#include <memory>
-#include <list>
-
-#include "notification-ex/iitem_factory.h"
-#include "notification-ex/iaction_factory.h"
+/*
+ * N3-T2 D8 (2026-04): FactoryManager body removed.
+ *
+ * Phase 1 (N1-T2) converted this class into a deprecation shim that
+ * forwarded to the free functions `::notification::item::CreateItem` /
+ * `CreateAction` / `GetNullItem` (see `default_item_factory.h` /
+ * `default_action_factory.h`). Phase 3 now retires the shim entirely:
+ *
+ *   1. The three internal call sites (`action_inflator.cc`,
+ *      `item_inflator.cc`, `group_item.cc`) call the free functions
+ *      directly.
+ *   2. No `FactoryManager` symbol is exported from libnotification-ex.so
+ *      (`nm --dynamic | grep FactoryManager` == 0).
+ *   3. The file is kept as an empty header so that legacy consumers
+ *      still listing `#include "notification-ex/factory_manager.h"` in
+ *      their build continue to compile during the Phase 4 cleanup
+ *      window. Any code that still referenced the class body has been
+ *      migrated to the free functions exposed by the two headers
+ *      above, plus the `SetItemFactoryOverride` /
+ *      `SetActionFactoryOverride` test seams.
+ *
+ * If a downstream caller needs to register a custom factory (the old
+ * `FactoryManager::GetInst().RegisterFactory(...)` use case), call
+ * `::notification::item::SetItemFactoryOverride(std::move(factory))`
+ * or `::notification::item::SetActionFactoryOverride(...)` declared in
+ * default_item_factory.h / default_action_factory.h.
+ */
 
 namespace notification {
 namespace item {
-
-/**
- * @brief The class for FactoryManager.
- * @details The class to manage creation of action and item.
- * @since_tizen 5.5
- *
- * N1-T2 (2026-04): This class is now a deprecation shim. All internal
- * callers route through free functions (CreateItem / CreateAction /
- * GetNullItem) defined in default_item_factory.h and
- * default_action_factory.h. The shim is retained for ABI compatibility
- * so external callers (e.g. DPM, plugins) that still invoke
- * FactoryManager::GetInst().RegisterFactory(...) continue to work.
- *
- * When no override is registered via RegisterFactory, CreateItem /
- * CreateAction forward to the free functions without constructing a
- * DefaultItemFactory / DefaultActionFactory - ensuring the zero-instance
- * goal on the default hot path.
- */
-class EXPORT_API FactoryManager {
- public:
-  /**
-   * @brief Gets the instance of FactoryManager
-   * @since_tizen 5.5
-   * @return The FactoryManager instance
-   */
-  static FactoryManager& GetInst();
-
-  /**
-   * @brief Resgisters the IItemFactory
-   * @since_tizen 5.5
-   * @param[in] factory The IItemFactory for noitfication item
-   */
-  void RegisterFactory(std::unique_ptr<IItemFactory> factory);
-
-  /**
-   * @brief Registers the IActionFactory
-   * @since_tizen 5.5
-   * @param[in] factory The IActionFactory for noitfication action
-   */
-  void RegisterFactory(std::unique_ptr<IActionFactory> factory);
-
-  /**
-   * @brief Creates the notification item from type.
-   * @since_tizen 5.5
-   * @return AbstractItem object
-   */
-  std::unique_ptr<AbstractItem> CreateItem(int type);
-
-  /**
-   * @brief Creates the notification action from type.
-   * @since_tizen 5.5
-   * @return AbstractAction object
-   */
-  std::unique_ptr<AbstractAction> CreateAction(int type);
-
-  /**
-   * @brief Gets NullItem
-   * @since_tizen 5.5
-   * @return NullItem object
-   */
-  AbstractItem& GetNullItem();
-
- private:
-  FactoryManager() {}
-
- private:
-  std::unique_ptr<IItemFactory> item_factory_;
-  std::unique_ptr<IActionFactory> action_factory_;
-};
-
+/* intentionally empty - symbols live in default_item_factory.h /
+ * default_action_factory.h */
 }  // namespace item
 }  // namespace notification
 

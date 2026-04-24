@@ -17,6 +17,7 @@
 #include <dlog.h>
 
 #include <memory>
+#include <mutex>
 
 #include "notification-ex/default_item_factory.h"
 #include "notification-ex/button_item.h"
@@ -43,13 +44,54 @@ using namespace std;
 namespace notification {
 namespace item {
 
+namespace {
+/* N3-T2 D8: process-level override slot. Replaces the
+ * FactoryManager::item_factory_ member without a class singleton. The
+ * mutex only serializes the register call against concurrent first
+ * access; steady-state CreateItem reads are cheap (single pointer load
+ * under a short lock; contention is not a real workload - plugins and
+ * tests install the override once at init and never mutate the slot
+ * again).
+ *
+ * Hidden visibility: the slot is strictly internal to this TU. The
+ * public API surface is the two free functions CreateItem /
+ * SetItemFactoryOverride declared in default_item_factory.h. */
+std::unique_ptr<IItemFactory>& ItemOverrideSlot() {
+  static std::unique_ptr<IItemFactory> slot;
+  return slot;
+}
+
+std::mutex& ItemOverrideMutex() {
+  static std::mutex m;
+  return m;
+}
+}  // namespace
+
 /*
  * N1-T2: Free-function implementation. This is the canonical default
- * dispatch table. Both DefaultItemFactory::CreateItem and the
- * FactoryManager shim ultimately route here when no override is set,
- * so no DefaultItemFactory instance is constructed on the hot path.
+ * dispatch table. DefaultItemFactory::CreateItem routes here, so no
+ * DefaultItemFactory instance is constructed on the hot path.
+ *
+ * N3-T2 D8: Optional process-level override slot (see
+ * SetItemFactoryOverride). When empty — the default — this function
+ * jumps straight into the switch below without any singleton access.
  */
 unique_ptr<AbstractItem> CreateItem(int type) {
+  /* Override check first. The lock is local and cheap, and the
+   * override is rarely set, so this path is a pointer-null test in
+   * practice. */
+  {
+    std::lock_guard<std::mutex> lk(ItemOverrideMutex());
+    if (ItemOverrideSlot()) {
+      auto created = ItemOverrideSlot()->CreateItem(type);
+      if (created)
+        return created;
+      /* Override returned nullptr (type not handled). Fall through to
+       * the built-in dispatch so mixed factories can compose. This
+       * matches the prior FactoryManager shim which, if the override
+       * missed, called the free function below. */
+    }
+  }
   switch (type) {
     case AbstractItem::NullObject :
       THROW(ERROR_INVALID_PARAMETER);
@@ -90,8 +132,15 @@ AbstractItem& GetNullItem() {
 
 unique_ptr<AbstractItem> DefaultItemFactory::CreateItem(int type) {
   /* Delegate to the free function so behavior stays identical whether the
-   * caller goes through FactoryManager or the free-function entry. */
+   * caller goes through the class entry (still held for external plugin
+   * API surface) or the free-function entry. */
   return ::notification::item::CreateItem(type);
+}
+
+/* N3-T2 D8: process-level override registration. Nullptr clears. */
+void SetItemFactoryOverride(std::unique_ptr<IItemFactory> factory) {
+  std::lock_guard<std::mutex> lk(ItemOverrideMutex());
+  ItemOverrideSlot() = std::move(factory);
 }
 
 }  // namespace item

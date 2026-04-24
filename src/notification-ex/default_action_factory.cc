@@ -17,6 +17,7 @@
 #include <dlog.h>
 
 #include <memory>
+#include <mutex>
 
 #include "notification-ex/app_control_action.h"
 #include "notification-ex/visibility_action.h"
@@ -33,13 +34,39 @@ using namespace std;
 namespace notification {
 namespace item {
 
+namespace {
+/* N3-T2 D8: process-level override slot (see SetActionFactoryOverride).
+ * Mirrors default_item_factory.cc. */
+std::unique_ptr<IActionFactory>& ActionOverrideSlot() {
+  static std::unique_ptr<IActionFactory> slot;
+  return slot;
+}
+
+std::mutex& ActionOverrideMutex() {
+  static std::mutex m;
+  return m;
+}
+}  // namespace
+
 /*
  * N1-T2: Free-function implementation. Canonical default dispatch for
- * action creation. FactoryManager shim and DefaultActionFactory both
- * forward here so no DefaultActionFactory instance is built on the hot
- * path.
+ * action creation. DefaultActionFactory forwards here so no
+ * DefaultActionFactory instance is built on the hot path.
+ *
+ * N3-T2 D8: optional process-level override (see
+ * SetActionFactoryOverride). When empty, this function runs its switch
+ * without any singleton access.
  */
 unique_ptr<AbstractAction> CreateAction(int type) {
+  {
+    std::lock_guard<std::mutex> lk(ActionOverrideMutex());
+    if (ActionOverrideSlot()) {
+      auto created = ActionOverrideSlot()->CreateAction(type);
+      if (created)
+        return created;
+      /* Fall through to built-in dispatch on miss. */
+    }
+  }
   switch (type) {
     case AbstractAction::NullObject :
       THROW(ERROR_INVALID_PARAMETER);
@@ -61,6 +88,12 @@ unique_ptr<AbstractAction> CreateAction(int type) {
 
 unique_ptr<AbstractAction> DefaultActionFactory::CreateAction(int type) {
   return ::notification::item::CreateAction(type);
+}
+
+/* N3-T2 D8: process-level override registration. Nullptr clears. */
+void SetActionFactoryOverride(std::unique_ptr<IActionFactory> factory) {
+  std::lock_guard<std::mutex> lk(ActionOverrideMutex());
+  ActionOverrideSlot() = std::move(factory);
 }
 
 }  // namespace item
