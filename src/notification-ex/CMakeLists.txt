@@ -70,9 +70,11 @@ INSTALL(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/
   # API is a detail helper of ex_util.cc and not part of the installed
   # notification-ex surface. abstract_item_keys.h is the rodata table of
   # bundle key string_views shared between abstract_item.cc (writer) and
-  # a future deserializer — also internal.
+  # a future deserializer — also internal. small_array.h is the inline
+  # SmallArray<T,N> scratch template used inside stub.cc (N3-T5 A4).
   PATTERN "appid_lru.h" EXCLUDE
-  PATTERN "abstract_item_keys.h" EXCLUDE)
+  PATTERN "abstract_item_keys.h" EXCLUDE
+  PATTERN "small_array.h" EXCLUDE)
 INSTALL(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/api
   DESTINATION include/${TARGET_NOTIFICATION_EX}
   FILES_MATCHING PATTERN "*.h")

@@ -18,9 +18,13 @@
 #include <glib.h>
 #include <unistd.h>
 
+#include <cstdint>
 #include <list>
+#include <memory>
+#include <new>
 #include <sstream>
 #include <iomanip>
+#include <utility>
 
 #include "api/notification_ex.h"
 #include "api/notification_ex_internal.h"
@@ -45,6 +49,7 @@
 #include "notification-ex/icon_item.h"
 #include "notification-ex/stub_macros.h"
 #include "notification-ex/error_mapping.h"
+#include "notification-ex/small_array.h"
 
 #ifdef LOG_TAG
 #undef LOG_TAG
@@ -64,32 +69,133 @@ using namespace notification;
 namespace {
 
 /* LCOV_EXCL_START */
+/*
+ * N3-T5 A3: Handle ownership tagged-union.
+ *
+ * Pre-refactor layout was { AbstractItem* ref_; shared_ptr<AbstractItem> ptr_; }
+ * which cost 8 + 16 = 24 B plus an atomic-refcounted control block
+ * every time a C-API caller wrapped a freshly-constructed item. The
+ * overwhelming majority of wrapped items have use_count == 1 and never
+ * benefit from shared ownership — the shared_ptr control block is pure
+ * tax on the hot path.
+ *
+ * The refactored Handle is a tagged union over three ownership modes:
+ *
+ *   BORROWED : non-owning raw pointer into a longer-lived item (e.g.
+ *              &chat_msg->GetNameItem()). GetPtr() returns an empty
+ *              shared_ptr because the caller does not own the target.
+ *   UNIQUE   : sole owner via std::unique_ptr. No control block, no
+ *              atomic refcount. This is the new default for items
+ *              created on the C-API surface (noti_ex_item_*_create).
+ *   SHARED   : shared_ptr-owned. Reached in two ways —
+ *                (a) an item received from a Manager/Reporter listener
+ *                    callback whose signature is (and must remain)
+ *                    list<shared_ptr<AbstractItem>>;
+ *                (b) a UNIQUE handle that was later asked for a
+ *                    shared_ptr via GetPtr() (upgrade path, one-shot).
+ *
+ * Handle is defined in an anonymous namespace in stub.cc and therefore
+ * has no ABI — the public Manager/Reporter methods still take
+ * shared_ptr<item::AbstractItem>, matching the installed headers.
+ */
 class Handle {
  public:
-  explicit Handle(item::AbstractItem* ref) : ref_(ref) { }
-  explicit Handle(std::shared_ptr<item::AbstractItem> ptr)
-      : ref_(nullptr), ptr_(std::move(ptr)) { }
-  virtual ~Handle() = default;
+  explicit Handle(item::AbstractItem* ref) : mode_(BORROWED) {
+    ref_ = ref;
+  }
+  explicit Handle(std::unique_ptr<item::AbstractItem> ptr) : mode_(UNIQUE) {
+    new (&owned_) std::unique_ptr<item::AbstractItem>(std::move(ptr));
+  }
+  explicit Handle(std::shared_ptr<item::AbstractItem> ptr) : mode_(SHARED) {
+    new (&shared_) std::shared_ptr<item::AbstractItem>(std::move(ptr));
+  }
+
+  Handle(const Handle&) = delete;
+  Handle& operator=(const Handle&) = delete;
+  Handle(Handle&&) = delete;
+  Handle& operator=(Handle&&) = delete;
+
+  virtual ~Handle() {
+    DestroyActive();
+  }
+
   item::AbstractItem* Get() const {
-    if (ptr_ == nullptr)
-      return ref_;
-    return ptr_.get();
+    switch (mode_) {
+      case BORROWED: return ref_;
+      case UNIQUE:   return owned_.get();
+      case SHARED:   return shared_.get();
+    }
+    return nullptr;  // unreachable
   }
 
   bool IsValidType(int type) const {
-    return (Get()->GetType() == type
-        || Get()->GetType() >= AbstractItem::Custom);
+    item::AbstractItem* p = Get();
+    if (p == nullptr)
+      return false;
+    return (p->GetType() == type
+        || p->GetType() >= AbstractItem::Custom);
   }
 
-  std::shared_ptr<item::AbstractItem> GetPtr() const {
-    if (ptr_ == nullptr)
-      return std::shared_ptr<item::AbstractItem>({});
-    return ptr_;
+  /*
+   * GetPtr() preserves the pre-refactor contract: return an empty
+   * shared_ptr for borrowed handles, and a shared_ptr that aliases the
+   * owned item otherwise. When called on a UNIQUE handle this is an
+   * irreversible one-shot upgrade to SHARED — ownership transfers into
+   * the new shared_ptr's control block and the Handle then tracks the
+   * shared_ptr just like an originally-shared handle. Subsequent
+   * GetPtr() calls on the same Handle return aliasing copies of that
+   * shared_ptr, matching the semantics callers depended on (e.g.
+   * list.push_back(h->GetPtr()) followed by another h->GetPtr() probe).
+   */
+  std::shared_ptr<item::AbstractItem> GetPtr() {
+    if (mode_ == UNIQUE)
+      UpgradeToShared();
+    if (mode_ == SHARED)
+      return shared_;
+    return std::shared_ptr<item::AbstractItem>();
   }
+
+  bool IsBorrowedForTest() const { return mode_ == BORROWED; }
+  bool IsUniqueForTest() const { return mode_ == UNIQUE; }
+  bool IsSharedForTest() const { return mode_ == SHARED; }
 
  private:
-  item::AbstractItem* ref_;
-  std::shared_ptr<item::AbstractItem> ptr_;
+  enum Mode : uint8_t {
+    BORROWED = 0,
+    UNIQUE = 1,
+    SHARED = 2,
+  };
+
+  void DestroyActive() {
+    switch (mode_) {
+      case BORROWED:
+        break;
+      case UNIQUE:
+        owned_.~unique_ptr<item::AbstractItem>();
+        break;
+      case SHARED:
+        shared_.~shared_ptr<item::AbstractItem>();
+        break;
+    }
+  }
+
+  void UpgradeToShared() {
+    /* Move out of the active unique_ptr member, tear it down, then
+     * construct the shared_ptr in-place. Using an owning shared_ptr
+     * ctor from unique_ptr&& would briefly have both members live in
+     * the union, which is UB, so we stage through a local. */
+    std::shared_ptr<item::AbstractItem> sp(std::move(owned_));
+    owned_.~unique_ptr<item::AbstractItem>();
+    mode_ = SHARED;
+    new (&shared_) std::shared_ptr<item::AbstractItem>(std::move(sp));
+  }
+
+  Mode mode_;
+  union {
+    item::AbstractItem* ref_;                     // BORROWED
+    std::unique_ptr<item::AbstractItem> owned_;   // UNIQUE
+    std::shared_ptr<item::AbstractItem> shared_;  // SHARED
+  };
 };
 
 class ManagerCallbackInfo {
@@ -218,9 +324,15 @@ class ReporterCallbackInfo {
       list<shared_ptr<AbstractItem>> notiList) {
     if (cb_.event == nullptr)
       return;
-    noti_ex_item_h* noti_list =
-        (noti_ex_item_h*)calloc(notiList.size(), sizeof(noti_ex_item_h));
-    if (noti_list == nullptr) {
+    /*
+     * N3-T5 A4: intermediate scratch array lifetime ends at free()
+     * below, so stack storage (SmallArray) is safe. The array contents
+     * are handed to cb_.event() which synchronously consumes them —
+     * nothing escapes this function.
+     */
+    notification::util::SmallArray<noti_ex_item_h, 16>
+        noti_list(notiList.size());
+    if (!noti_list.alloc_ok()) {
       LOGE("Out of memory");
       return;
     }
@@ -233,9 +345,10 @@ class ReporterCallbackInfo {
 
     IEventInfo* c_info = const_cast<IEventInfo*>(&info);
     cb_.event(static_cast<noti_ex_reporter_h>(reporter),
-        static_cast<noti_ex_event_info_h>(c_info), noti_list,
+        static_cast<noti_ex_event_info_h>(c_info), noti_list.data(),
         notiList.size(), user_data_);
-    free(noti_list);
+    /* SmallArray dtor frees the heap path automatically on function
+     * exit — no explicit free() needed. */
   }
 
   void InvokeError(Reporter* reporter, NotificationError error, int requestId) {
@@ -378,7 +491,7 @@ extern "C" EXPORT_API int noti_ex_item_button_create(noti_ex_item_h *handle,
     LOGE("Out-of-memory");
     return NOTI_EX_ERROR_OUT_OF_MEMORY;
   }
-  *handle = new Handle(shared_ptr<AbstractItem>(p));
+  *handle = new Handle(std::unique_ptr<AbstractItem>(p));
 
   return NOTI_EX_ERROR_NONE;
 }
@@ -557,7 +670,7 @@ extern "C" EXPORT_API int noti_ex_item_chat_message_create(
     return NOTI_EX_ERROR_OUT_OF_MEMORY;
   }
 
-  *handle = new Handle(shared_ptr<AbstractItem>(p));
+  *handle = new Handle(std::unique_ptr<AbstractItem>(p));
 
   return NOTI_EX_ERROR_NONE;
 }
@@ -687,7 +800,7 @@ extern "C" EXPORT_API int noti_ex_item_checkbox_create(noti_ex_item_h *handle,
     return NOTI_EX_ERROR_OUT_OF_MEMORY;
   }
 
-  *handle = new Handle(shared_ptr<AbstractItem>(p));
+  *handle = new Handle(std::unique_ptr<AbstractItem>(p));
 
   return NOTI_EX_ERROR_NONE;
 }
@@ -808,7 +921,7 @@ extern "C" EXPORT_API int noti_ex_item_entry_create(noti_ex_item_h *handle,
     return NOTI_EX_ERROR_OUT_OF_MEMORY;
   }
 
-  *handle = new Handle(shared_ptr<AbstractItem>(p));
+  *handle = new Handle(std::unique_ptr<AbstractItem>(p));
 
   return NOTI_EX_ERROR_NONE;
 }
@@ -997,7 +1110,7 @@ extern "C" EXPORT_API int noti_ex_item_group_create(noti_ex_item_h *handle,
     return NOTI_EX_ERROR_OUT_OF_MEMORY;
   }
 
-  *handle = new Handle(shared_ptr<AbstractItem>(p));
+  *handle = new Handle(std::unique_ptr<AbstractItem>(p));
 
   return NOTI_EX_ERROR_NONE;
 }
@@ -1147,7 +1260,7 @@ extern "C" EXPORT_API int noti_ex_item_image_create(noti_ex_item_h *handle,
     return NOTI_EX_ERROR_OUT_OF_MEMORY;
   }
 
-  *handle = new Handle(shared_ptr<AbstractItem>(p));
+  *handle = new Handle(std::unique_ptr<AbstractItem>(p));
 
   return NOTI_EX_ERROR_NONE;
 }
@@ -1198,7 +1311,7 @@ extern "C" EXPORT_API int noti_ex_item_input_selector_create(
     return NOTI_EX_ERROR_OUT_OF_MEMORY;
   }
 
-  *handle = new Handle(shared_ptr<AbstractItem>(p));
+  *handle = new Handle(std::unique_ptr<AbstractItem>(p));
 
   return NOTI_EX_ERROR_NONE;
 }
@@ -3074,7 +3187,7 @@ extern "C" EXPORT_API int noti_ex_item_progress_create(noti_ex_item_h *handle,
     return NOTI_EX_ERROR_OUT_OF_MEMORY;
   }
 
-  *handle = new Handle(shared_ptr<AbstractItem>(p));
+  *handle = new Handle(std::unique_ptr<AbstractItem>(p));
 
   return NOTI_EX_ERROR_NONE;
 }
@@ -3592,7 +3705,7 @@ extern "C" EXPORT_API int noti_ex_item_text_create(noti_ex_item_h *handle,
     return NOTI_EX_ERROR_OUT_OF_MEMORY;
   }
 
-  *handle = new Handle(shared_ptr<AbstractItem>(p));
+  *handle = new Handle(std::unique_ptr<AbstractItem>(p));
 
   return NOTI_EX_ERROR_NONE;
 }
@@ -3726,7 +3839,7 @@ extern "C" EXPORT_API int noti_ex_item_time_create(noti_ex_item_h *handle,
     return NOTI_EX_ERROR_OUT_OF_MEMORY;
   }
 
-  *handle = new Handle(shared_ptr<AbstractItem>(p));
+  *handle = new Handle(std::unique_ptr<AbstractItem>(p));
 
   return NOTI_EX_ERROR_NONE;
 }
@@ -3935,7 +4048,7 @@ extern "C" EXPORT_API int noti_ex_item_icon_create(noti_ex_item_h *handle,
     return NOTI_EX_ERROR_OUT_OF_MEMORY;
   }
 
-  *handle = new Handle(shared_ptr<AbstractItem>(p));
+  *handle = new Handle(std::unique_ptr<AbstractItem>(p));
 
   return NOTI_EX_ERROR_NONE;
 }
