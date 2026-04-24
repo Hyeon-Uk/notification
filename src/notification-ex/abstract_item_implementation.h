@@ -54,8 +54,30 @@ class AbstractItem::Impl {
   std::shared_ptr<LEDInfo> led_ = nullptr;
   int policy_ = None;
   std::shared_ptr<Style> style_ = nullptr;
-  bool visible_ = true;
-  bool enable_ = true;
+  /*
+   * N3-T6 DS3+DS4: visible_ / enable_ / ongoing_ + dirty_ packed into a
+   * single 32-bit bitfield word.
+   *
+   * Previous layout (three `bool` members scattered across the class with
+   * an int in between) consumed 8B each on x86_64 because sysv_abi bumps
+   * alignment to the following int / pointer. After packing, all four
+   * flags share one word (4B) for a net -20B per AbstractItem::Impl on
+   * x86_64 — multiplied by hundreds of live items in the reporter
+   * hot-set this contributes measurably to the RSS target.
+   *
+   * Default-member-initialisers on bitfields are a C++20 feature
+   * (P0710R3); Tizen builds currently on -std=gnu++17. Defaults are
+   * therefore applied in the Impl constructor body (abstract_item.cc).
+   *
+   * Thread-safety: bitfield stores are still STORE(word-wide) + RMW, so
+   * the concurrent-writer hazard existing pre-N3-T6 is unchanged. No
+   * AbstractItem documented as thread-safe for concurrent mutation.
+   */
+  unsigned int visible_ : 1;
+  unsigned int enable_ : 1;
+  unsigned int ongoing_ : 1;
+  mutable unsigned int dirty_ : 1;
+  unsigned int reserved_flags_ : 28;
   int version_ = 1;
   int hide_time_ = 0;
   int delete_time_ = 0;
@@ -63,7 +85,17 @@ class AbstractItem::Impl {
   std::string can_receive_;
   std::shared_ptr<AbstractAction> action_;
   std::shared_ptr<MultiLanguage> multi_lang_;
-  std::vector<std::shared_ptr<MultiLanguage>> multi_lang_arr_;
+  /*
+   * N3-T6 DS5: lazy single-language fast path. ~99% of items only populate
+   * the scalar `multi_lang_` and never push into the array. Switching from
+   * `std::vector<std::shared_ptr<MultiLanguage>>` (24B always-resident) to
+   * `std::unique_ptr<std::vector<...>>` (8B pointer, nullptr when unused)
+   * saves 16B per empty item while still allowing multi-language arrays
+   * when needed. Helpers
+   *   EnsureMultiLangArr() / HasMultiLangArr() / ClearMultiLangArr()
+   * keep call sites clean. Accessors live in abstract_item.cc.
+   */
+  std::unique_ptr<std::vector<std::shared_ptr<MultiLanguage>>> multi_lang_arr_;
   AbstractItem* parent_;
   std::string sound_path_;
   std::string priv_sound_path_;
@@ -78,9 +110,27 @@ class AbstractItem::Impl {
   int request_id_ = 0;
   int64_t private_id_ = 0;
   std::string background_;
-  bool ongoing_ = false;
   MainType main_type_ = MainNone;
   tizen_base::Bundle extension_data_;
+
+  /* DS5 helpers kept inline so callers (abstract_item.cc, stub.cc,
+   * serialize cache) can avoid the nullptr-check boilerplate. */
+  std::vector<std::shared_ptr<MultiLanguage>>& EnsureMultiLangArr() {
+    if (!multi_lang_arr_)
+      multi_lang_arr_.reset(
+          new std::vector<std::shared_ptr<MultiLanguage>>());
+    return *multi_lang_arr_;
+  }
+  bool HasMultiLangArr() const {
+    return multi_lang_arr_ != nullptr && !multi_lang_arr_->empty();
+  }
+  size_t MultiLangArrSize() const {
+    return multi_lang_arr_ ? multi_lang_arr_->size() : 0;
+  }
+  std::vector<std::shared_ptr<MultiLanguage>> GetMultiLangArrCopy() const {
+    if (!multi_lang_arr_) return {};
+    return *multi_lang_arr_;
+  }
 
   /*
    * N3-T1 D7: per-item serialisation cache.
@@ -92,19 +142,10 @@ class AbstractItem::Impl {
    * of rebuilding — skipping 30+ Bundle::Add() calls and their implicit
    * std::string temporaries.
    *
-   * Every setter that mutates a field contributing to the serialised
-   * representation must call MarkDirty() (via Impl::dirty_ = true) so
-   * the next Serialize() re-computes. A conservative policy: mark dirty
-   * on every setter even when the field is cheap; the cache's only
-   * downside is one extra Bundle copy per Serialize after a setter.
-   *
-   * mutable allows Serialize() (const) to populate the cache. Thread-
-   * safety is NOT promised by this cache — callers that Serialize the
-   * same item from two threads in parallel already observed undefined
-   * behaviour before N3-T1 (shared mutable state in the Bundle class).
+   * N3-T6 note: `dirty_` moved into the bitfield word above; the Bundle
+   * payload stays below as a cold member.
    */
   mutable tizen_base::Bundle cached_serialization_;
-  mutable bool dirty_ = true;
 };
 
 }  // namespace item

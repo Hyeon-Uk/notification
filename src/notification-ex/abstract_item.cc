@@ -137,9 +137,15 @@ AbstractItem::AbstractItem(std::string id,
     : impl_(new Impl(this, id, action)) {
 }
 
+/*
+ * N3-T6 DS3+DS4 / DS5: initialise the bitfield word and leave
+ * multi_lang_arr_ as nullptr so the single-language fast path skips the
+ * std::vector allocation entirely.
+ */
 AbstractItem::Impl::Impl(AbstractItem* parent, string id,
     std::shared_ptr<AbstractAction> action)
-    : id_(id), action_(action), parent_(parent),
+    : visible_(1), enable_(1), ongoing_(0), dirty_(1), reserved_flags_(0),
+    id_(id), action_(action), parent_(parent),
     info_(std::make_shared<ItemInfo>(this)) {
   if (id_.empty())
     id_ = GenerateItemId();
@@ -149,7 +155,8 @@ AbstractItem::Impl::Impl(AbstractItem* parent, string id,
 
 AbstractItem::Impl::Impl(AbstractItem* parent,
     std::shared_ptr<AbstractAction> action)
-    : action_(action), parent_(parent),
+    : visible_(1), enable_(1), ongoing_(0), dirty_(1), reserved_flags_(0),
+    action_(action), parent_(parent),
     info_(std::make_shared<ItemInfo>(this)) {
   LOGI("AbstractItem created");
 
@@ -305,9 +312,15 @@ Bundle AbstractItem::Serialize() const {
       reinterpret_cast<char*>(impl_->multi_lang_->Serialize().ToRaw().first.get()));
   }
 
-  if (impl_->multi_lang_arr_.size() > 0) {
+  /*
+   * N3-T6 DS5: multi_lang_arr_ is now a lazy unique_ptr<vector>. An item
+   * that only has a scalar multi_lang_ (the common case) hits the
+   * HasMultiLangArr()==false branch and skips the empty-vector probe
+   * plus the std::vector<string> allocation.
+   */
+  if (impl_->HasMultiLangArr()) {
     vector<string> arr;
-    for (auto& i : impl_->multi_lang_arr_) {
+    for (auto& i : *impl_->multi_lang_arr_) {
       arr.push_back(reinterpret_cast<char*>(i->Serialize().ToRaw().first.get()));
     }
     b.Add(ABSTRACT_ITEM_MULTI_LANG_ARR_KEY, arr);
@@ -365,9 +378,9 @@ void AbstractItem::Deserialize(Bundle b) {
   string policy_str = b.GetString(ABSTRACT_ITEM_POLICY_KEY);
 
   impl_->policy_ = static_cast<Policy>(stoi(policy_str));
-  impl_->visible_ = static_cast<bool>(stoi(b.GetString(ABSTRACT_ITEM_VISIBLE_KEY)));
-  impl_->enable_ = static_cast<bool>(stoi(b.GetString(ABSTRACT_ITEM_ENABLE_KEY)));
-  impl_->ongoing_ = static_cast<bool>(stoi(b.GetString(ABSTRACT_ITEM_ONGOING_KEY)));
+  impl_->visible_ = stoi(b.GetString(ABSTRACT_ITEM_VISIBLE_KEY)) ? 1u : 0u;
+  impl_->enable_ = stoi(b.GetString(ABSTRACT_ITEM_ENABLE_KEY)) ? 1u : 0u;
+  impl_->ongoing_ = stoi(b.GetString(ABSTRACT_ITEM_ONGOING_KEY)) ? 1u : 0u;
   impl_->main_type_ = static_cast<MainType>(stoi(b.GetString(ABSTRACT_ITEM_MAIN_TYPE_KEY)));
 
   vector<string> receiver_group = b.GetStringArray(ABSTRACT_ITEM_RECEIVER_GROUP_KEY);
@@ -452,9 +465,11 @@ void AbstractItem::Deserialize(Bundle b) {
 
   vector<string> multi_arr_str = b.GetStringArray(ABSTRACT_ITEM_MULTI_LANG_ARR_KEY);
   if (!multi_arr_str.empty()) {
+    /* N3-T6 DS5: lazily materialise the backing vector only when we
+     * observe a non-empty serialised array. */
+    auto& arr = impl_->EnsureMultiLangArr();
     for (string str : multi_arr_str) {
-      impl_->multi_lang_arr_.push_back(
-          shared_ptr<MultiLanguage>(new MultiLanguage(str)));
+      arr.push_back(shared_ptr<MultiLanguage>(new MultiLanguage(str)));
     }
   }
 
@@ -563,7 +578,7 @@ int AbstractItem::GetType(Bundle b) {
 }
 
 void AbstractItem::SetVisible(bool visible) {
-  impl_->visible_ = visible;
+  impl_->visible_ = visible ? 1u : 0u;
   impl_->MarkDirty();
 }
 
@@ -572,7 +587,7 @@ bool AbstractItem::GetVisible() const {
 }
 
 void AbstractItem::SetEnable(bool enable) {
-  impl_->enable_ = enable;
+  impl_->enable_ = enable ? 1u : 0u;
   impl_->MarkDirty();
 }
 
@@ -655,7 +670,7 @@ void AbstractItem::SetTag(std::string tag) {
 }
 
 void AbstractItem::SetOnGoingState(bool ongoing) {
-  impl_->ongoing_ = ongoing;
+  impl_->ongoing_ = ongoing ? 1u : 0u;
   impl_->MarkDirty();
 }
 
@@ -741,7 +756,10 @@ std::shared_ptr<MultiLanguage> AbstractItem::GetMultiLanguage() const {
 }
 
 vector<shared_ptr<MultiLanguage>> AbstractItem::GetMultiLanguageArr() const {
-  return impl_->multi_lang_arr_;
+  /* N3-T6 DS5: materialise a copy only when the lazy vector exists. The
+   * public signature returns by value so callers that hold onto the
+   * result are unaffected. */
+  return impl_->GetMultiLangArrCopy();
 }
 
 void AbstractItem::SetMultiLanguage(std::shared_ptr<MultiLanguage> multi) {
@@ -751,7 +769,16 @@ void AbstractItem::SetMultiLanguage(std::shared_ptr<MultiLanguage> multi) {
 
 void AbstractItem::SetMultiLanguage(
     vector<shared_ptr<MultiLanguage>> multi_arr) {
-  impl_->multi_lang_arr_ = multi_arr;
+  /* N3-T6 DS5: only allocate the backing vector when the caller supplies
+   * a non-empty payload. An empty SetMultiLanguage(vector{}) after a
+   * prior non-empty set must still drop the backing store so empty
+   * observations stay consistent. */
+  if (multi_arr.empty()) {
+    impl_->multi_lang_arr_.reset();
+  } else {
+    impl_->multi_lang_arr_.reset(
+        new vector<shared_ptr<MultiLanguage>>(std::move(multi_arr)));
+  }
   impl_->MarkDirty();
 }
 
