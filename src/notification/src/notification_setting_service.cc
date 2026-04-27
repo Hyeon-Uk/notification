@@ -14,11 +14,11 @@
  * limitations under the License.
  */
 
-#include <errno.h>
+#include <cerrno>
 #include <unistd.h>
-#include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
+#include <cstdio>
+#include <cstring>
+#include <cstdlib>
 
 #include <sqlite3.h>
 #include <tizen.h>
@@ -32,6 +32,30 @@
 #include <notification_setting_internal.h>
 #include <notification_setting_service.h>
 #include "notification_db_query.h"
+
+/*
+ * N8-A.2 (Stage 8): migrated from C to C++.  Every EXPORT_API entry
+ * (`noti_setting_service_get_setting_by_app_id`,
+ * `noti_setting_get_setting_array`,
+ * `noti_system_setting_load_system_setting`,
+ * `notification_setting_db_update[_system_setting][_do_not_disturb]`,
+ * `notification_system_setting_get_dnd_schedule_enabled_uid`,
+ * `notification_get_dnd_and_allow_to_notify`,
+ * `notification_system_setting_load_dnd_allow_exception`,
+ * `notification_system_setting_update_dnd_allow_exception`,
+ * `noti_system_setting_get_do_not_disturb`,
+ * `notification_setting_db_update_app_disabled`,
+ * `notification_setting_db_update_pkg_disabled`) is advertised with C
+ * linkage in notification_setting_service.h and friends, so the entire
+ * body lives in an extern "C" block here.  Static helpers
+ * (`_get_table_field_data_int`, `_get_table_field_data_string`) are
+ * inside the same block.  `<errno.h>`/`<stdio.h>`/`<string.h>`/
+ * `<stdlib.h>` swap to the C++ `<cerrno>`/`<cstdio>`/`<cstring>`/
+ * `<cstdlib>`; the C-style casts in the body already satisfy C++'s
+ * conversion rules.
+ */
+
+extern "C" {
 
 /* LCOV_EXCL_START */
 static int _get_table_field_data_int(char **table, int *buf, int index)
@@ -313,7 +337,7 @@ int noti_system_setting_load_system_setting(notification_system_setting_h *syste
 		result_system_setting->dnd_start_min = 0;
 		result_system_setting->dnd_end_hour = 0;
 		result_system_setting->dnd_end_min = 0;
-		result_system_setting->lock_screen_content_level = 0;
+		result_system_setting->lock_screen_content_level = SHOW_ALL_CONTENT;
 		result_system_setting->dnd_allow_exceptions = NULL;
 	} else {
 		col_index = column_count;
@@ -880,4 +904,6 @@ out:
 	return ret;
 }
 /* LCOV_EXCL_STOP */
+
+}  // extern "C"
 

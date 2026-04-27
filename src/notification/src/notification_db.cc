@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-#include <errno.h>
+#include <cerrno>
 #include <unistd.h>
-#include <stdio.h>
-#include <string.h>
+#include <cstdio>
+#include <cstring>
 
 #include <sqlite3.h>
 #include <tizen.h>
@@ -26,6 +26,27 @@
 #include <notification_debug.h>
 #include <notification_db.h>
 #include "notification_db_query.h"
+
+/*
+ * N8-A.2 (Stage 8): migrated from C to C++.  Public entry points
+ * (`notification_db_init`, `notification_db_open`, `notification_db_close`,
+ * `notification_db_exec`, `notification_db_column_text`,
+ * `notification_db_column_bundle`, `notification_upgrade_db`) are
+ * advertised with C linkage in notification_db.h, so the bodies sit
+ * inside an extern "C" block here.  Static helpers
+ * (`__ensure_noti_list_indexes`, `__check_integrity_cb`,
+ * `__recover_corrupted_db`, `__check_db_version`,
+ * `__upgrade_noti_table`, `__upgrade_noti_template_table`) live in the
+ * same block — they retain internal linkage by virtue of `static`, and
+ * sharing the language-linkage with the public entries is harmless.
+ *
+ * `<errno.h>` / `<stdio.h>` / `<string.h>` swap to the C++
+ * `<cerrno>` / `<cstdio>` / `<cstring>`.  The ABI-safe `(unsigned char *)`
+ * cast handed to `bundle_decode` and the `(char *)` cast handed to
+ * `strdup` already satisfy C++'s implicit-cast rules (C-style casts).
+ */
+
+extern "C" {
 
 static bool is_db_corrupted = false;
 
@@ -64,7 +85,7 @@ static int __ensure_noti_list_indexes(sqlite3 *db)
 /* LCOV_EXCL_START */
 static int __check_integrity_cb(void *pid, int argc, char **argv, char **notUsed)
 {
-	char *check_str = "ok";
+	const char *check_str = "ok";
 
 	if (strncmp(argv[0], check_str, strlen(check_str))) {
 		ERR("db integrity result : %s", argv[0]);
@@ -561,3 +582,5 @@ out:
 
 	return ret;
 }
+
+}  // extern "C"

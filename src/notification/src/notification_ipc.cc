@@ -14,10 +14,11 @@
  * limitations under the License.
  */
 #define _GNU_SOURCE
-#include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
-#include <errno.h>
+#include <cstdio>
+#include <cstring>
+#include <cstdlib>
+#include <cerrno>
+#include <cstdarg>
 #include <bundle_internal.h>
 
 #include <notification_ipc.h>
@@ -29,7 +30,25 @@
 #include <gio/gio.h>
 #include <gio/gunixfdlist.h>
 
+/*
+ * N8-A.2 (Stage 8): migrated from C to C++.  The two EXPORT_API entries
+ * (`notification_ipc_make_gvariant_from_noti`,
+ * `notification_ipc_make_noti_from_gvariant`) are advertised with C
+ * linkage in notification_ipc.h, so the bodies sit inside an extern "C"
+ * block here.  Static helpers (`_dup_string`,
+ * `_create_bundle_from_bundle_raw`, `_variant_to_int_dict`,
+ * `_variant_dict_lookup`) live in the same block.
+ *
+ * `<stdio.h>`/`<string.h>`/`<stdlib.h>`/`<errno.h>` swap to the C++
+ * `<cstdio>`/`<cstring>`/`<cstdlib>`/`<cerrno>`; `<cstdarg>` is required
+ * for the va_list dance in `_variant_dict_lookup`.  The implicit
+ * `void *` return from `g_hash_table_lookup` now uses an explicit
+ * `static_cast<GVariant *>` to satisfy C++'s stricter conversion rules.
+ */
+
 #define ERR_BUFFER_SIZE		1024
+
+extern "C" {
 
 /*!
  * utility functions creating notification packet
@@ -324,7 +343,8 @@ static gboolean _variant_dict_lookup(GHashTable *dict,
 	GVariant *value;
 	va_list ap;
 
-	value = g_hash_table_lookup(dict, (gpointer)&key);
+	value = static_cast<GVariant *>(
+			g_hash_table_lookup(dict, (gpointer)&key));
 
 	if (value == NULL || !g_variant_check_format_string(value, format_string, FALSE))
 		return FALSE;
@@ -536,3 +556,5 @@ EXPORT_API int notification_ipc_make_noti_from_gvariant(notification_h noti,
 	return NOTIFICATION_ERROR_NONE;
 }
 /* LCOV_EXCL_STOP */
+
+}  // extern "C"

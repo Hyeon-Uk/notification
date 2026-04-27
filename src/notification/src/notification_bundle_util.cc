@@ -17,19 +17,34 @@
 #define _GNU_SOURCE
 #include "notification_bundle_util.h"
 
-#include <stdlib.h>
-#include <string.h>
-#include <stdint.h>
+#include <cstdlib>
+#include <cstring>
+#include <cstdint>
 
 #include <glib.h>
 #include <bundle.h>
 #include <bundle_internal.h>
 
 /*
- * -----------------------------------------------------------------------
- * Encode helpers (no cache).
- * -----------------------------------------------------------------------
+ * N8-A.2 (Stage 8): migrated from C to C++.  Public helpers
+ * (noti_bundle_encode_safe / noti_bundle_encoded_clear / noti_bundle_hash /
+ * noti_bundle_cached_encode / noti_bundle_cache_clear / _size / _capacity)
+ * keep C linkage via the extern "C" guard in notification_bundle_util.h;
+ * the entire body below sits inside a single extern "C" block so the
+ * linker sees matching mangling.  File-static helpers (cache_*_locked,
+ * hash_bytes, cache_lazy_init, cache_init_idempotent) live inside the
+ * same block — `static` retains internal linkage regardless, and the
+ * extern "C" qualifier on a static function only changes language-linkage
+ * for the (unused) cross-TU case.
+ *
+ * <stdlib.h>/<string.h>/<stdint.h> swap to <cstdlib>/<cstring>/<cstdint>.
+ * Implicit `void *` returns from g_hash_table_lookup / g_queue_pop_* /
+ * g_new* receive explicit `static_cast<T *>` casts that C++ requires
+ * (the original C source already used C-style casts so the diff is
+ * minimal).
  */
+
+extern "C" {
 
 int noti_bundle_encode_safe(bundle *b, noti_bundle_encoded_t *out)
 {
@@ -380,3 +395,5 @@ size_t noti_bundle_cache_capacity(void)
 {
 	return NOTI_BUNDLE_CACHE_CAPACITY;
 }
+
+}  // extern "C"

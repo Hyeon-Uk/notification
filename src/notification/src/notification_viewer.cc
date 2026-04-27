@@ -15,8 +15,9 @@
  */
 
 #define _GNU_SOURCE
-#include <stdio.h>
-#include <stdlib.h>
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
 #include <glib.h>
 
 #include <app_control_internal.h>
@@ -30,12 +31,28 @@
 
 #include "notification_context.h"
 
+/*
+ * N8-A.2 (Stage 8): migrated from C to C++.  The two EXPORT_API entry
+ * points (`notification_launch_default_viewer`,
+ * `notification_launch_default_viewer_without_candidate_process`) and the
+ * `notification_init_default_viewer` setup helper are advertised with C
+ * linkage in notification_viewer.h.  Static helpers (constructor /
+ * destructor, mutex, delayed-noti queue, default-viewer slot, app-control
+ * launch helper) are wrapped together inside the same `extern "C"` block
+ * so the public symbols stay unmangled.  `<stdio.h>`/`<stdlib.h>` swap to
+ * the C++ `<cstdio>`/`<cstdlib>`; the implicit `void *` → typed-pointer
+ * assignment from `g_list_nth_data` is now an explicit cast as C++
+ * requires.
+ */
+
 #define DEFAULT_VIEWER_CONF_FILE "/usr/share/notification/notification.ini"
 
 #define NOTIFICATION_VIEWER_CTOR __attribute__((constructor))
 #define NOTIFICATION_VIEWER_DTOR __attribute__((destructor))
 
 #define DELAY_LIMIT 50
+
+extern "C" {
 
 /* N1-T4: The default-viewer string now lives on the lazily-constructed
  * default notification context. This helper returns a writable pointer
@@ -175,7 +192,8 @@ static bool __pop_delayed_noti_cb(void *user_data)
 		return false;
 	}
 
-	app_control = g_list_nth_data(_delayed_noti_list, 0);
+	app_control = static_cast<app_control_h>(
+			g_list_nth_data(_delayed_noti_list, 0));
 	ret = app_control_send_launch_request_async(app_control,
 			__app_control_result_cb, NULL, NULL);
 	if (ret != APP_CONTROL_ERROR_NONE) {
@@ -377,3 +395,5 @@ EXPORT_API int notification_launch_default_viewer_without_candidate_process(
 	return __launch_default_viewer(priv_id, status, uid, false);
 }
 /* LCOV_EXCL_STOP */
+
+}  // extern "C"

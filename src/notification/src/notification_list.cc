@@ -15,7 +15,7 @@
  */
 
 #include <aul.h>
-#include <stdlib.h>
+#include <cstdlib>
 
 #include <tizen.h>
 
@@ -26,6 +26,27 @@
 #include <notification_private.h>
 #include <notification_tidl.h>
 
+/*
+ * N8-A.2 (Stage 8): migrated from C to C++.  Every public symbol
+ * (`notification_list_get_head`, `_get_tail`, `_get_prev`, `_get_next`,
+ * `_get_data`, `_get_count`, `_append`, `_remove`, `_free_list`,
+ * `notification_get_list[_by_page][_for_uid]`,
+ * `notification_get_detail_list[_for_uid]`) is advertised with C linkage
+ * via notification_list.h's `extern "C"` guard, and the bodies are
+ * wrapped in an `extern "C"` block so the definitions match.
+ *
+ * `_notification_list_create` is not advertised in any header but is
+ * still emitted with external linkage (no `static` qualifier), so it is
+ * also kept inside the `extern "C"` block to preserve unmangled
+ * `_notification_list_create` symbol resolution at the libnotification.so
+ * level.
+ *
+ * `<stdlib.h>` swaps to `<cstdlib>`; the explicit
+ * `(notification_list_h)malloc(sizeof(...))` cast already satisfies
+ * C++'s stricter void* rules.
+ */
+
+extern "C" {
 
 struct _notification_list {
 	notification_list_h prev;
@@ -375,3 +396,4 @@ EXPORT_API int notification_free_list(notification_list_h list)
 	return NOTIFICATION_ERROR_NONE;
 }
 
+}  // extern "C"
