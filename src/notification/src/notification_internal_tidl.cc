@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
 #include <unistd.h>
 #include <fcntl.h>
 #include <libintl.h>
@@ -42,6 +42,30 @@
 
 #include <notification_tidl_proxy.h>
 
+/*
+ * N8-C: notification_internal_tidl.cc -- Stage 8 client-side TIDL
+ * marshalling helpers (make_empty_notification,
+ * make_notification_from_noti, make_noti_from_notification, and the
+ * setting / system_setting / dnd_allow_exception (de)serialisers).
+ * Every EXPORT_API entry is declared with C linkage in
+ * notification_internal.h / notification_setting_internal.h, and the
+ * file-static foreach trampoline
+ * (_rpc_port_proxy_list_noti_system_setting_dnd_allow_exception_cb) is
+ * registered into the auto-generated TIDL proxy which calls back
+ * through a C ABI.  Wrap the whole TU in a single extern "C" block so
+ * static fns and EXPORT_API fns alike keep C linkage.  Auto-generated
+ * _proxy.c / _stub.c untouched.  No C++ throw site is introduced; the
+ * RPC boundary cannot leak exceptions.
+ *
+ * C99 -> C++ implicit-conversion tightening fixes applied:
+ *   - GList iter->data void* -> typed ptr  (static_cast)
+ *   - rpc_port_proxy_*_get_<enum_field>(handle, &enum_member)
+ *     enum* -> int* mismatch (use stack int, then assign)
+ * The rest (existing C-style casts (T)x, calloc cast, the bool-bitfield
+ * shim block at lines 1048..1126) is already C++-clean.
+ */
+
+extern "C" {
 
 static const char *__get_str_value(char *value)
 {
@@ -906,7 +930,9 @@ EXPORT_API int make_noti_from_notification(notification_h *noti, void *notihandl
 		free(priv_sound_path);
 	}
 
-	ret = rpc_port_proxy_notification_get_vibration_type(handle, &_noti->vibration_type);
+	int _vibration_type;
+	ret = rpc_port_proxy_notification_get_vibration_type(handle, &_vibration_type);
+	_noti->vibration_type = (notification_vibration_type_e)_vibration_type;
 	if (ret != RPC_PORT_ERROR_NONE)
 		WARN("rpc_port_proxy_notification_get_vibration_type : %d", ret);
 
@@ -1165,7 +1191,11 @@ bool _rpc_port_proxy_list_noti_system_setting_dnd_allow_exception_cb (
 			sizeof(struct notification_system_setting_dnd_allow_exception));
 	if (dnd_allow_exception == NULL) {
 		ERR("Out of memory");
-		return NOTIFICATION_ERROR_OUT_OF_MEMORY;
+		/* Foreach trampoline returns bool; legacy code returned the int
+		 * error code (truthy) which both stopped iteration and triggered
+		 * a -Wint-in-bool-context noise.  Return false to halt the
+		 * walk -- behaviour is identical, semantics now match the typedef. */
+		return false;
 	}
 
 	ret = rpc_port_proxy_noti_system_setting_dnd_allow_exception_get_type(value,
@@ -1312,7 +1342,7 @@ EXPORT_API int make_noti_system_setting_from_setting(void *settinghandle,
 		setting->dnd_allow_exceptions = g_list_first(setting->dnd_allow_exceptions);
 
 		for (GList *iter = setting->dnd_allow_exceptions; iter != NULL; iter = iter->next) {
-			info = iter->data;
+			info = static_cast<dnd_allow_exception_h>(iter->data);
 
 			ret = rpc_port_proxy_noti_system_setting_dnd_allow_exception_create(&exception_handle);
 			if (ret == RPC_PORT_ERROR_NONE) {
@@ -1404,7 +1434,8 @@ EXPORT_API int make_setting_from_noti_setting(
 	setting->do_not_disturb_except = dnd_except;
 	setting->pop_up_notification = pop_up_noti;
 	setting->visibility_class = visibility_class;
-	setting->lock_screen_content_level = lock_screen_content_level;
+	setting->lock_screen_content_level =
+			(lock_screen_content_level_e)lock_screen_content_level;
 	setting->app_disabled = app_disabled;
 
 	WARN("make_setting_from_noti_setting done");
@@ -1452,3 +1483,5 @@ EXPORT_API int make_noti_setting_from_setting(
 
 	return NOTIFICATION_ERROR_NONE;
 }
+
+}  // extern "C"

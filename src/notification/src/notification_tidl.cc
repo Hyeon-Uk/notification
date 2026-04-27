@@ -14,6 +14,9 @@
  * limitations under the License.
  */
 
+#include <cstdlib>
+#include <cstring>
+
 #include <aul.h>
 #include <unistd.h>
 #include <sys/types.h>
@@ -32,8 +35,22 @@
 #include "notification_context.h"
 
 /*
- * for TIDL
+ * N8-C: notification_tidl.cc -- Stage 8 client-side TIDL proxy glue. Each
+ * notification_tidl_* entry in notification_tidl.h is declared with C
+ * linkage and is paired 1:1 with an rpc_port_proxy_* C call into the
+ * auto-generated _proxy.c, so the entire body must keep C linkage. We
+ * wrap the whole TU in a single extern "C" block; file-static helpers
+ * (RPC connect/disconnect/changed/event callbacks, _tidl_init,
+ * channel_foreach trampolines) sit inside the same block so static
+ * still gives them internal linkage. The auto-generated TIDL stub /
+ * proxy is unchanged. C++ exception escape across the RPC boundary is
+ * impossible with this TU because every call we make is to a C ABI and
+ * every callback we register is invoked from C ABI -- no C++ throw site
+ * exists in this TU.
  */
+
+extern "C" {
+
 #define NOTIFICATION_CTOR __attribute__((constructor))
 #define NOTIFICATION_DTOR __attribute__((destructor))
 
@@ -811,7 +828,7 @@ int notification_tidl_request_delete_multiple(notification_type_e type, char *ap
 	WARN("tidl init done");
 
 	if (app_id == NULL)
-		app_id = "";
+		app_id = const_cast<char *>("");
 
 	ret = rpc_port_proxy_noti_service_invoke_delete_multiple_noti(service_handle,
 			app_id, (int)type, (int)uid, &deleted_num);
@@ -1762,3 +1779,5 @@ int notification_tidl_del_deffered_task(
 	WARN("del deffered task");
 	return NOTIFICATION_ERROR_NONE;
 }
+
+}  // extern "C"

@@ -38,8 +38,12 @@ TARGET_INCLUDE_DIRECTORIES(${TARGET_NOTIFICATION_UNITTESTS} PUBLIC
 # layer). Same SKIP-on-absent contract as the N4-T1 path.
 TARGET_COMPILE_DEFINITIONS(${TARGET_NOTIFICATION_UNITTESTS} PRIVATE
   NOTI_TEST_WRAP_ALLOC=1
-  NOTIFICATION_TIDL_C_PATH="${CMAKE_SOURCE_DIR}/src/notification/src/notification_tidl.c"
-  NOTIFICATION_INTERNAL_TIDL_C_PATH="${CMAKE_SOURCE_DIR}/src/notification/src/notification_internal_tidl.c"
+  # N8-C: notification_tidl.c -> .cc / notification_internal_tidl.c -> .cc.
+  # The wrapper invariant tests scan the source file for stable signatures
+  # (mutex order, EXPORT_API surface, RPC marshalling shape). The scan is
+  # filename-agnostic — only the path needs to follow the migration.
+  NOTIFICATION_TIDL_C_PATH="${CMAKE_SOURCE_DIR}/src/notification/src/notification_tidl.cc"
+  NOTIFICATION_INTERNAL_TIDL_C_PATH="${CMAKE_SOURCE_DIR}/src/notification/src/notification_internal_tidl.cc"
 )
 
 # N2-T5: the test binary hosts mock TUs (tests/mock/*_mock.cc) that provide
