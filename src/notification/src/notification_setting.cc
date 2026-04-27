@@ -15,9 +15,9 @@
  */
 
 #include <aul.h>
-#include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
+#include <cstdio>
+#include <cstring>
+#include <cstdlib>
 #include <package_manager.h>
 #include <pkgmgr-info.h>
 #include <tizen_type.h>
@@ -33,6 +33,25 @@
 #include <notification_setting_internal.h>
 #include <notification_tidl.h>
 #include "notification_db_query.h"
+
+/*
+ * N8-B.1: notification_setting.cc -- client-side public notification-
+ * setting surface (per-app allow-to-notify toggle, lock-screen content
+ * level, DND change callbacks, system-setting/dnd-allow-exception
+ * helpers).  Every EXPORT_API entry below is declared with C linkage in
+ * notification_setting.h / notification_setting_internal.h, so the
+ * entire body lives inside one extern "C" block here.  File-static
+ * helpers stay inside the same block: extern "C" only changes
+ * language-linkage, not internal linkage, so static keeps them confined
+ * to this translation unit.
+ *
+ * <stdio.h>/<string.h>/<stdlib.h> swap to the C++ <cstdio>/<cstring>/
+ * <cstdlib> headers.  C++23 also rejects implicit void*->T* conversions
+ * (the GList ->data slot and g_list_nth_data() return value), so each
+ * such site picks up an explicit cast to its concrete pointer type.
+ */
+
+extern "C" {
 
 #define NOTIFICATION_PRIVILEGE "http://tizen.org/privilege/notification"
 
@@ -902,7 +921,7 @@ void notification_call_dnd_changed_cb_for_uid(int do_not_disturb, uid_t uid)
 	noti_dnd_cb_list = g_list_first(noti_dnd_cb_list);
 
 	for (; noti_dnd_cb_list != NULL; noti_dnd_cb_list = noti_dnd_cb_list->next) {
-		dnd_data = noti_dnd_cb_list->data;
+		dnd_data = static_cast<noti_dnd_cb_info_s *>(noti_dnd_cb_list->data);
 
 		if (dnd_data != NULL && dnd_data->callback != NULL)
 			dnd_data->callback(dnd_data->user_data, do_not_disturb);
@@ -983,7 +1002,8 @@ EXPORT_API int notification_unregister_system_setting_dnd_changed_cb_for_uid(dnd
 					(GCompareFunc)_noti_dnd_cb_compare);
 
 	if (noti_dnd_del_list) {
-		dnd_data = g_list_nth_data(noti_dnd_del_list, 0);
+		dnd_data = static_cast<noti_dnd_cb_info_s *>(
+				g_list_nth_data(noti_dnd_del_list, 0));
 		noti_dnd_cb_list = g_list_delete_link(noti_dnd_cb_list, noti_dnd_del_list);
 		free(dnd_data);
 	} else {
@@ -1122,3 +1142,5 @@ out:
 	return ret;
 }
 /* LCOV_EXCL_STOP */
+
+}  // extern "C"

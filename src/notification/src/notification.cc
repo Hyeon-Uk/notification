@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
 #include <unistd.h>
 #include <fcntl.h>
 #include <libintl.h>
@@ -40,6 +40,28 @@
 #include <notification_tidl.h>
 #include <notification_internal.h>
 #include <notification_shared_file.h>
+
+/*
+ * N8-B.1: notification.cc -- Stage 8 client-side public notification
+ * surface (notification_h getters/setters: image, time, text, sound,
+ * vibration, LED, layout, type, args, image-size, etc).  Every
+ * EXPORT_API entry below is declared with C linkage in notification.h
+ * / notification_internal.h, so the entire body lives inside one
+ * extern "C" block here.  File-static helpers stay inside the same
+ * block; static keeps internal linkage.
+ *
+ * <stdio.h>/<stdlib.h>/<string.h> swap to the C++ <cstdio>/<cstdlib>/
+ * <cstring> headers.  C++23 also rejects implicit int -> enum
+ * conversions: `notification_variable_type_e ret_var_type = 0;` plus
+ * the four `ret_var_type = static_cast<notification_variable_type_e>(atoi(ret_val));` sites pick up an explicit
+ * static_cast<notification_variable_type_e>() (the read value is the
+ * over-the-wire enum tag stamped by notification_set_text(), so the
+ * cast is always defined).  No header-side ABI fix is needed; all
+ * notification_*.h headers already carry the standard
+ * #ifdef __cplusplus / extern "C" guard.
+ */
+
+extern "C" {
 
 static void (*posted_toast_message_cb)(void *data);
 
@@ -331,7 +353,7 @@ EXPORT_API int notification_set_text(notification_h noti,
 
 	va_start(var_args, args_type);
 
-	var_type = args_type;
+	var_type = static_cast<notification_variable_type_e>(args_type);
 	num_args = 0;
 
 	while (var_type != NOTIFICATION_VARIABLE_TYPE_NONE) {
@@ -394,8 +416,9 @@ EXPORT_API int notification_set_text(notification_h noti,
 			break;
 
 		case NOTIFICATION_VARIABLE_TYPE_COUNT:
-			var_value_count =
-			    va_arg(var_args, notification_count_pos_type_e);
+			/* enum -> int promotion: read int and cast. */
+			var_value_count = static_cast<notification_count_pos_type_e>(
+			    va_arg(var_args, int));
 
 			/* Value */
 			snprintf(buf_key, sizeof(buf_key), "%dvalue%d", type,
@@ -417,7 +440,9 @@ EXPORT_API int notification_set_text(notification_h noti,
 		}
 
 		num_args++;
-		var_type = va_arg(var_args, notification_variable_type_e);
+		/* enums are promoted to int by default-argument-promotion; reading
+		 * the enum type back through va_arg is UB. Read int + cast. */
+		var_type = static_cast<notification_variable_type_e>(va_arg(var_args, int));
 	}
 	va_end(var_args);
 
@@ -456,7 +481,7 @@ EXPORT_API int notification_get_text(notification_h noti,
 	int ret_variable_int = 0;
 	double ret_variable_double = 0.0;
 	notification_text_type_e text_type = NOTIFICATION_TEXT_TYPE_NONE;
-	notification_variable_type_e ret_var_type = 0;
+	notification_variable_type_e ret_var_type = NOTIFICATION_VARIABLE_TYPE_INT;
 
 	if (noti == NULL || text == NULL)
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
@@ -532,7 +557,7 @@ EXPORT_API int notification_get_text(notification_h noti,
 
 	bundle_get_str(b, buf_key, &ret_val);
 	if (ret_val != NULL)
-		ret_var_type = atoi(ret_val);
+		ret_var_type = static_cast<notification_variable_type_e>(atoi(ret_val));
 
 	if (ret_var_type == NOTIFICATION_VARIABLE_TYPE_COUNT) {
 		/* Get var Value */
@@ -582,7 +607,7 @@ EXPORT_API int notification_get_text(notification_h noti,
 
 				bundle_get_str(b, buf_key, &ret_val);
 				if (ret_val != NULL)
-					ret_var_type = atoi(ret_val);
+					ret_var_type = static_cast<notification_variable_type_e>(atoi(ret_val));
 
 				if (ret_var_type ==
 					NOTIFICATION_VARIABLE_TYPE_COUNT) {
@@ -660,7 +685,7 @@ EXPORT_API int notification_get_text(notification_h noti,
 
 					bundle_get_str(b, buf_key, &ret_val);
 					if (ret_val != NULL)
-						ret_var_type = atoi(ret_val);
+						ret_var_type = static_cast<notification_variable_type_e>(atoi(ret_val));
 
 					if (ret_var_type ==
 						NOTIFICATION_VARIABLE_TYPE_COUNT) {
@@ -736,7 +761,7 @@ EXPORT_API int notification_get_text(notification_h noti,
 
 		bundle_get_str(b, buf_key, &ret_val);
 		if (ret_val != NULL)
-			ret_var_type = atoi(ret_val);
+			ret_var_type = static_cast<notification_variable_type_e>(atoi(ret_val));
 
 		if (ret_var_type == NOTIFICATION_VARIABLE_TYPE_COUNT) {
 			/* Get var Value */
@@ -1080,7 +1105,7 @@ EXPORT_API int notification_set_launch_option(notification_h noti,
 	int err = NOTIFICATION_ERROR_NONE;
 	int ret = 0;
 	bundle *b = NULL;
-	app_control_h app_control = option;
+	app_control_h app_control = static_cast<app_control_h>(option);
 
 	if (noti == NULL || app_control == NULL || type != NOTIFICATION_LAUNCH_OPTION_APP_CONTROL) {
 		err = NOTIFICATION_ERROR_INVALID_PARAMETER;
@@ -1408,7 +1433,7 @@ static int _notification_get_domain_name(const char *app_id, char **name)
 		return -1;
 
 	/* com.vendor.name -> name */
-	name_token = strrchr(app_id, '.');
+	name_token = const_cast<char *>(strrchr(app_id, '.'));
 	if (name_token == NULL)
 		return -1;
 
@@ -2066,3 +2091,5 @@ EXPORT_API int notification_get_extension_image_size(notification_h noti, int *h
 
 	return NOTIFICATION_ERROR_NONE;
 }
+
+}  // extern "C"

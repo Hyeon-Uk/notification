@@ -18,9 +18,9 @@
 #endif
 
 #include <aul.h>
-#include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
+#include <cstdio>
+#include <cstring>
+#include <cstdlib>
 #include <unistd.h>
 
 #include <gio/gio.h>
@@ -43,6 +43,23 @@
 #include <notification_private.h>
 #include "notification_internal.h"
 #include "shared_file_common.h"
+
+/*
+ * N8-B.1: notification_shared_file.cc -- file-sharing private-data
+ * publisher (target-app id bookkeeping, sharing-request lifecycle,
+ * security-manager wrappers, retry timer).  Every EXPORT_API entry on
+ * notification_shared_file.h carries C linkage, so the entire body
+ * lives inside one extern "C" block.  File-static helpers stay inside
+ * the same block; static keeps internal linkage.
+ *
+ * <stdio.h>/<string.h>/<stdlib.h> swap to the C++ <cstdio>/<cstring>/
+ * <cstdlib> headers.  C++23 also rejects implicit void*->T* conversions
+ * (the GList ->data slot threading uid_info_s / target_app_info_s /
+ * sharing_file_info_s / sharing_req_data_s pointers), so each such
+ * site picks up an explicit static_cast to its concrete pointer type.
+ */
+
+extern "C" {
 
 #define NOTI_PRIV_DATA_DIR "data/.notification"
 #define MAX_TIMEOUT 5000
@@ -544,12 +561,12 @@ EXPORT_API void notification_remove_private_sharing_target_id(
 	if (sharing_req_list == NULL)
 		return;
 
-	uid_info = sharing_req_list->data;
+	uid_info = static_cast<uid_info_s *>(sharing_req_list->data);
 	target_app = g_list_find_custom(uid_info->target_app_list, sender,
 						__comp_target_app);
 
 	if (target_app != NULL) {
-		target_info = target_app->data;
+		target_info = static_cast<target_app_info_s *>(target_app->data);
 		if (target_info) {
 			uid_info->target_app_list = g_list_remove(
 					uid_info->target_app_list, target_info);
@@ -584,7 +601,7 @@ EXPORT_API void notification_add_private_sharing_target_id(pid_t pid,
 
 		__uid_list = g_list_append(__uid_list, uid_info);
 	} else {
-		uid_info = sharing_req_list->data;
+		uid_info = static_cast<uid_info_s *>(sharing_req_list->data);
 	}
 
 	target_app = g_list_find_custom(uid_info->target_app_list, sender,
@@ -1038,7 +1055,7 @@ EXPORT_API int notification_set_private_sharing(notification_h noti,
 		uid_info->uid = uid;
 		__uid_list = g_list_append(__uid_list, uid_info);
 	} else {
-		uid_info = tmp->data;
+		uid_info = static_cast<uid_info_s *>(tmp->data);
 	}
 
 	req_list = g_list_find_custom(uid_info->sharing_req_list,
@@ -1100,7 +1117,7 @@ EXPORT_API int notification_set_private_sharing(notification_h noti,
 		for (iter = new_file_list; iter != NULL;
 				iter = g_list_next(iter)) {
 			tmp = NULL;
-			file_info = iter->data;
+			file_info = static_cast<sharing_file_info_s *>(iter->data);
 			if (is_overlapping) {
 				tmp = g_list_find_custom(
 						req_data->shared_file_list,
@@ -1262,7 +1279,7 @@ out:
 			__comp_uid_info_list);
 
 	if (tmp_list != NULL) {
-		uid_info = tmp_list->data;
+		uid_info = static_cast<uid_info_s *>(tmp_list->data);
 		uid_info->sharing_req_list = g_list_remove(
 				uid_info->sharing_req_list, req_data);
 	}
@@ -1293,7 +1310,7 @@ EXPORT_API void notification_remove_private_sharing(
 	if (tmp_list == NULL)
 		return;
 
-	uid_info = tmp_list->data;
+	uid_info = static_cast<uid_info_s *>(tmp_list->data);
 
 	req_list = g_list_find_custom(uid_info->sharing_req_list, src_app_id,
 			__comp_sharing_req_list);
@@ -1331,3 +1348,5 @@ EXPORT_API void notification_remove_private_sharing(
 	WARN("notification_remove_private_sharing done");
 }
 /* LCOV_EXCL_STOP */
+
+}  // extern "C"
