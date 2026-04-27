@@ -14,7 +14,17 @@
  * limitations under the License.
  */
 
-#include <string.h>
+/*
+ * N8-A.1 (Stage 8): migrated from C to C++.  The single public symbol
+ * (`notification_error_quark`) is declared in notification_internal.h
+ * inside an `extern "C"` guard, so the definition below is wrapped in
+ * an explicit `extern "C"` block to keep the C linkage advertised by
+ * the prototype.  The body uses only libc / GDBus C API and cannot
+ * throw; the conversion swaps `<string.h>` for `<cstring>` and adds
+ * the language-linkage block.
+ */
+
+#include <cstring>
 #include <gio/gio.h>
 #include "notification_error.h"
 
@@ -33,6 +43,8 @@ static const GDBusErrorEntry dbus_error_entries[] = {
 };
 
 #define NOTIFICATION_ERROR_QUARK "notification-error-quark"
+
+extern "C" {
 
 EXPORT_API GQuark notification_error_quark(void)
 {
@@ -58,3 +70,4 @@ EXPORT_API GQuark notification_error_quark(void)
 	return (GQuark)quark_volatile;
 }
 
+}  // extern "C"

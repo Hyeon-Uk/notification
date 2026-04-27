@@ -1,19 +1,20 @@
 AUX_SOURCE_DIRECTORY(${CMAKE_CURRENT_SOURCE_DIR}/src UNITTESTS_SRCS)
 AUX_SOURCE_DIRECTORY(${CMAKE_CURRENT_SOURCE_DIR}/../mock MOCK_SRCS)
 
-# N7.5-B: shared_file_common.c is compiled as an OBJECT library and linked
+# N7.5-B: shared_file_common is compiled as an OBJECT library and linked
 # into both libnotification.so and libnotification-ex.so. The helpers there
 # are NOT marked EXPORT_API (they are deliberately internal — only consumed
 # by the C and C++ wrappers in those two .so's). The test_shared_file_common_extra
 # TU calls them directly to lift line/branch coverage; rather than perturb the
-# production ABI surface we re-compile the same .c file into the test binary
-# itself. The OBJECT library is already PIC + visibility-default-locally, and
-# the helpers are pure functions so dual-linking does not produce duplicate
+# production ABI surface we re-compile the same source file into the test
+# binary itself. The OBJECT library is already PIC + visibility-default-locally,
+# and the helpers are pure functions so dual-linking does not produce duplicate
 # global state.
+# N8-A.1 (Stage 8): the file was migrated from C to C++; basename is .cc.
 ADD_EXECUTABLE(${TARGET_NOTIFICATION_UNITTESTS}
   ${UNITTESTS_SRCS}
   ${MOCK_SRCS}
-  ${CMAKE_CURRENT_SOURCE_DIR}/../../src/notification/src/shared_file_common.c
+  ${CMAKE_CURRENT_SOURCE_DIR}/../../src/notification/src/shared_file_common.cc
 )
 
 TARGET_INCLUDE_DIRECTORIES(${TARGET_NOTIFICATION_UNITTESTS} PUBLIC
@@ -51,8 +52,9 @@ TARGET_COMPILE_DEFINITIONS(${TARGET_NOTIFICATION_UNITTESTS} PRIVATE
 TARGET_COMPILE_OPTIONS(${TARGET_NOTIFICATION_UNITTESTS} PRIVATE
   "-fvisibility=default"
   # N7.5-B: -fvisibility-inlines-hidden is C++/ObjC++ only; gating with
-  # COMPILE_LANGUAGE keeps it off the .c TUs (e.g. shared_file_common.c that
-  # we now compile directly into the test exe for coverage).
+  # COMPILE_LANGUAGE keeps it off any .c TUs.  After N8-A.1
+  # shared_file_common.cc is C++, but other tests/mock/*.c TUs still
+  # exist, so the COMPILE_LANGUAGE gate stays.
   "$<$<COMPILE_LANGUAGE:CXX>:-fvisibility-inlines-hidden>")  # keep inline thunks hidden; mocks are not inline
 TARGET_LINK_OPTIONS(${TARGET_NOTIFICATION_UNITTESTS} PRIVATE
   "-Wl,--wrap=malloc"

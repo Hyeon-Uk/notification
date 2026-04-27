@@ -51,11 +51,23 @@
  *     default context.
  *   - Per-context access is guarded by ctx->mutex (recursive, matching the
  *     legacy GRecMutex pattern used in the migrated modules).
+ *
+ * N8-A.1 (Stage 8): migrated from C to C++.  Every helper advertised in
+ * notification_context.h carries C linkage via the header's `extern "C"`
+ * guard; the definitions below live inside a matching `extern "C"`
+ * block so the language linkage stays consistent.  File-static
+ * helpers (`__alloc_context` / `__free_context`) and the file-static
+ * gate (`__default_ctx_init` / `__default_ctx`) stay inside the block
+ * to avoid forward-decl/definition language-linkage drift.  The C
+ * `<stdbool.h>` is dropped (`bool` is a built-in C++ type);
+ * `<stdlib.h>` / `<string.h>` swap to `<cstdlib>` / `<cstring>`.
+ * `calloc`'s implicit `void*` cast becomes an explicit
+ * `static_cast<struct _notification_context *>` per the dpm D8-D
+ * pattern.
  */
 
-#include <stdbool.h>
-#include <stdlib.h>
-#include <string.h>
+#include <cstdlib>
+#include <cstring>
 
 #include <glib.h>
 
@@ -63,6 +75,8 @@
 #include <notification_debug.h>
 
 #include "notification_context.h"
+
+extern "C" {
 
 struct _notification_context {
 	/* Default-viewer app-id string, mirrored from notification_viewer.c's
@@ -104,8 +118,8 @@ static struct _notification_context *__default_ctx = NULL;
 static struct _notification_context *__alloc_context(bool is_default)
 {
 	struct _notification_context *ctx =
-			(struct _notification_context *)calloc(1,
-					sizeof(struct _notification_context));
+			static_cast<struct _notification_context *>(calloc(1,
+					sizeof(struct _notification_context)));
 	if (ctx == NULL)
 		return NULL;
 
@@ -211,3 +225,5 @@ bool *_notification_context_connected_slot(notification_context_h ctx)
 		return NULL;
 	return &ctx->connected;
 }
+
+}  // extern "C"

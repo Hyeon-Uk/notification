@@ -14,10 +14,35 @@
  * limitations under the License.
  */
 
+/*
+ * N8-A.1 (Stage 8): migrated from C to C++.
+ *
+ * Public symbols are advertised with C linkage by
+ * notification_status.h / notification_status_internal.h's `extern "C"`
+ * guards, so the definitions below are wrapped in an explicit
+ * `extern "C"` block to keep the linkage matched.  The DBus signal
+ * callback `__notification_status_message_dbus_callback` is a function
+ * pointer registered via g_dbus_connection_signal_subscribe; GLib
+ * declares the callback typedef inside its own `extern "C"` block,
+ * which means the pointer type expects C linkage.  Putting the
+ * definition inside `extern "C"` here makes the implementation match
+ * the registered prototype exactly.
+ *
+ * The file-static struct `_message_cb_data` and the storage `md` stay
+ * inside the `extern "C"` block too — they are accessed only from
+ * functions that are themselves C-linkage, so keeping them inside the
+ * block avoids language-linkage churn between forward decls and
+ * definitions.
+ *
+ * `<string.h>` swaps to `<cstring>`.  Everything else is unchanged
+ * behaviour-wise; the dbus wiring and the no-op contract for the
+ * `_post` / `_cb_set` / `_cb_unset` trio are preserved.
+ */
+
 #include <sys/types.h>
 #include <unistd.h>
-#include <stdio.h>
-#include <string.h>
+#include <cstdio>
+#include <cstring>
 #include <errno.h>
 #include <glib.h>
 #include <gio/gio.h>
@@ -34,6 +59,8 @@
 #define PATH_NAME    "/Org/Tizen/System/Notification/Status_message"
 #define INTERFACE_NAME "org.tizen.system.notification.status_message"
 #define MEMBER_NAME	"status_message"
+
+extern "C" {
 
 struct _message_cb_data {
 	notification_status_message_cb callback;
@@ -189,3 +216,5 @@ end:
 	return ret;
 }
 /* LCOV_EXCL_STOP */
+
+}  // extern "C"

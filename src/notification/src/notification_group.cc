@@ -14,13 +14,38 @@
  * limitations under the License.
  */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+/*
+ * N8-A.1 (Stage 8): migrated from C to C++.
+ *
+ * notification_group.h is missing an `extern "C"` guard (the deprecated
+ * notification_group_set_badge / notification_group_get_badge prototypes
+ * carry NOTIFICATION_DEPRECATED_API only, no language-linkage block), so
+ * the definitions below MUST live inside an explicit `extern "C"` block.
+ * Otherwise C++ name mangling would hand out
+ * `_Z29notification_group_set_badge...` while every legacy caller (and
+ * test_notification_group_internal.cc, which wraps the include in its
+ * own `extern "C"`) still expects the un-mangled symbol — yielding an
+ * undefined-reference at link time and an ABI break.
+ *
+ * The file-static helper `_notification_group_check_data_inserted`
+ * stays inside the `extern "C"` block too; keeping the same linkage as
+ * its callers avoids a forward-decl/definition language-linkage
+ * mismatch and makes the definition order independent of the public
+ * surface.
+ *
+ * `<stdio.h>` / `<stdlib.h>` / `<string.h>` are replaced by the C++
+ * `<cstdio>` / `<cstdlib>` / `<cstring>` headers.
+ */
+
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
 
 #include <notification_debug.h>
 #include <notification_group.h>
 #include <notification_db.h>
+
+extern "C" {
 
 /* LCOV_EXCL_START */
 static int _notification_group_check_data_inserted(const char *app_id,
@@ -190,3 +215,5 @@ int notification_group_get_badge(const char *app_id,
 	return NOTIFICATION_ERROR_NONE;
 }
 /* LCOV_EXCL_STOP */
+
+}  // extern "C"

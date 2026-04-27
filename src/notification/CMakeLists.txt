@@ -5,12 +5,14 @@ SET(INCLUDEDIR "${PREFIX}/include/${TARGET_NOTIFICATION}")
 
 AUX_SOURCE_DIRECTORY(${CMAKE_CURRENT_SOURCE_DIR}/src NOTIFICATION_SRCS)
 
-# N2-T6: shared_file_common.c is compiled once via the root-level
+# N2-T6: shared_file_common is compiled once via the root-level
 # ADD_LIBRARY(shared_file_common OBJECT ...) and injected into both .so's
 # through $<TARGET_OBJECTS:...>. Remove it from the per-library AUX list
 # so we do not compile or emit it twice inside libnotification.so.
+# N8-A.1 (Stage 8): the file was migrated from C to C++; the basename
+# changes from .c to .cc, so adjust the REMOVE_ITEM accordingly.
 LIST(REMOVE_ITEM NOTIFICATION_SRCS
-  "${CMAKE_CURRENT_SOURCE_DIR}/src/shared_file_common.c")
+  "${CMAKE_CURRENT_SOURCE_DIR}/src/shared_file_common.cc")
 
 ADD_LIBRARY(${TARGET_NOTIFICATION} SHARED
   ${NOTIFICATION_SRCS}

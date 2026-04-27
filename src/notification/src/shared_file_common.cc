@@ -34,6 +34,15 @@
  *     SharedFile::SharingData) stays inside each caller's .c/.cc file.
  *     Only the mechanical "walk a path / copy a file / check RO" logic
  *     collapses here.
+ *
+ * N8-A.1 (Stage 8): migrated from C to C++.  Every public helper is
+ * advertised with C linkage by shared_file_common.h's `extern "C"`
+ * guard, so the definitions are wrapped in a matching `extern "C"`
+ * block.  The C `<stdbool.h>` is dropped (`bool` is a built-in type
+ * in C++); `<stdlib.h>` / `<string.h>` swap to `<cstdlib>` /
+ * `<cstring>`.  The single implicit `void*` cast (`malloc()` for the
+ * data-path string buffer) becomes an explicit `static_cast<char *>`.
+ * No behavioural change.
  */
 
 #ifndef _GNU_SOURCE
@@ -41,10 +50,9 @@
 #endif
 
 #include <errno.h>
-#include <stdbool.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
 #include <unistd.h>
 #include <time.h>
 #include <utime.h>
@@ -70,6 +78,8 @@
 #undef LOG_TAG
 #endif
 #define LOG_TAG "NOTIFICATION_SHARED_FILE"
+
+extern "C" {
 
 /* LCOV_EXCL_START */
 const char *shared_file_common_last_index_of(const char *path,
@@ -250,7 +260,7 @@ char *shared_file_common_get_data_path(const char *app_id,
 	if (len > PATH_MAX)
 		return NULL;
 
-	result = (char *)malloc(len);
+	result = static_cast<char *>(malloc(len));
 	if (result == NULL)
 		return NULL;
 
@@ -258,3 +268,5 @@ char *shared_file_common_get_data_path(const char *app_id,
 	return result;
 }
 /* LCOV_EXCL_STOP */
+
+}  // extern "C"

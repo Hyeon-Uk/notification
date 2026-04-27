@@ -14,9 +14,23 @@
  * limitations under the License.
  */
 
-#include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
+/*
+ * N8-A.1 (Stage 8): migrated from C to C++.  Every public symbol
+ * (`notification_ongoing_update_cb_set`,
+ * `notification_ongoing_update_cb_unset`,
+ * `notification_ongoing_update_progress`,
+ * `notification_ongoing_update_size`,
+ * `notification_ongoing_update_content`) is advertised with C linkage
+ * via notification_ongoing.h's `extern "C"` guard, and the bodies are
+ * wrapped in an `extern "C"` block here so the definitions match.
+ * `<stdio.h>` / `<string.h>` / `<stdlib.h>` swap to the matching
+ * `<cstdio>` / `<cstring>` / `<cstdlib>` C++ headers; bodies remain
+ * pure no-op wrappers (legacy contract preserved per N7.5-A).
+ */
+
+#include <cstdio>
+#include <cstring>
+#include <cstdlib>
 
 #include <glib.h>
 #include <gio/gio.h>
@@ -26,6 +40,8 @@
 #include <notification_ongoing.h>
 #include <notification_private.h>
 
+
+extern "C" {
 
 EXPORT_API
 int notification_ongoing_update_cb_set(notification_ongoing_update_cb callback,
@@ -79,3 +95,5 @@ int notification_ongoing_update_content(const char *caller_app_id,
 
 	return NOTIFICATION_ERROR_NONE;
 }
+
+}  // extern "C"

@@ -102,7 +102,7 @@ PKG_CHECK_MODULES(VCONF_DEPS REQUIRED vconf)
 # TARGET_LINK_LIBRARIES, which propagates both the object files and their
 # transitive include/compile properties.
 ADD_LIBRARY(shared_file_common OBJECT
-  src/notification/src/shared_file_common.c)
+  src/notification/src/shared_file_common.cc)
 TARGET_INCLUDE_DIRECTORIES(shared_file_common PUBLIC
   ${CMAKE_CURRENT_SOURCE_DIR}/src/notification/src
   ${CMAKE_CURRENT_SOURCE_DIR}/src/notification/include)
