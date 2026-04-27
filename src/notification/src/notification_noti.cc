@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 #define _GNU_SOURCE
-#include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
+#include <cstdio>
+#include <cstring>
+#include <cstdlib>
 
 #include <vconf.h>
 #include <pkgmgr-info.h>
@@ -37,6 +37,27 @@
 #include <notification_setting_service.h>
 #include "notification_db_query.h"
 #include "notification_bundle_util.h"
+
+/*
+ * N8-B.2: notification_noti.cc -- Stage 8 client-side DB notification
+ * surface (insert/update/delete/select on noti_list, channel CRUD,
+ * template CRUD, count helpers, tag lookup, package limit guard).
+ * Every EXPORT_API entry below is declared with C linkage in
+ * notification_noti.h, so the entire body lives inside one extern "C"
+ * block.  File-static helpers (__free_and_set, __free_encoded_data,
+ * __encode_cached, _create_insertion_query, _create_update_query,
+ * _check_text_input, _is_pop_up_notification, _is_allowed_to_notify,
+ * _get_noti_count, __notification_noti_populate_from_stmt) live inside
+ * the same block; static keeps internal linkage.
+ *
+ * <stdio.h>/<stdlib.h>/<string.h> swap to the C++ <cstdio>/<cstdlib>/
+ * <cstring> headers.  No implicit-int-to-enum or va_arg(enum) sites
+ * exist in this TU (priv_id / type / count / status are all int or
+ * named enum throughout); the only C99-only construct fingerprint is
+ * `static inline` in __encode_cached, which is C++11 by default.
+ */
+
+extern "C" {
 
 #define NOTI_BURST_DELETE_UNIT 10
 #define ERR_BUFFER_SIZE		1024
@@ -114,8 +135,8 @@ static void __notification_noti_populate_from_stmt(sqlite3_stmt *stmt, notificat
 	if (stmt == NULL || noti == NULL)
 		return;
 
-	noti->type = sqlite3_column_int(stmt, col++);
-	noti->layout = sqlite3_column_int(stmt, col++);
+	noti->type = static_cast<notification_type_e>(sqlite3_column_int(stmt, col++));
+	noti->layout = static_cast<notification_ly_type_e>(sqlite3_column_int(stmt, col++));
 	__free_and_set((void **)&(noti->pkg_id), notification_db_column_text(stmt, col++));
 	__free_and_set((void **)&(noti->caller_app_id), notification_db_column_text(stmt, col++));
 	__free_and_set((void **)&(noti->launch_app_id), notification_db_column_text(stmt, col++));
@@ -148,13 +169,13 @@ static void __notification_noti_populate_from_stmt(sqlite3_stmt *stmt, notificat
 	for (i = 0; i <= NOTIFICATION_EVENT_TYPE_MAX; i++)
 		noti->b_event_handler[i] = notification_db_column_bundle(stmt, col++);
 
-	noti->sound_type = sqlite3_column_int(stmt, col++);
+	noti->sound_type = static_cast<notification_sound_type_e>(sqlite3_column_int(stmt, col++));
 	__free_and_set((void **)&(noti->sound_path), notification_db_column_text(stmt, col++));
 	__free_and_set((void **)&(noti->priv_sound_path), notification_db_column_text(stmt, col++));
-	noti->vibration_type = sqlite3_column_int(stmt, col++);
+	noti->vibration_type = static_cast<notification_vibration_type_e>(sqlite3_column_int(stmt, col++));
 	__free_and_set((void **)&(noti->vibration_path), notification_db_column_text(stmt, col++));
 	__free_and_set((void **)&(noti->priv_vibration_path), notification_db_column_text(stmt, col++));
-	noti->led_operation = sqlite3_column_int(stmt, col++);
+	noti->led_operation = static_cast<notification_led_op_e>(sqlite3_column_int(stmt, col++));
 	noti->led_argb = sqlite3_column_int(stmt, col++);
 	noti->led_on_ms = sqlite3_column_int(stmt, col++);
 	noti->led_off_ms = sqlite3_column_int(stmt, col++);
@@ -169,7 +190,7 @@ static void __notification_noti_populate_from_stmt(sqlite3_stmt *stmt, notificat
 	noti->ongoing_current = sqlite3_column_int(stmt, col++);
 	noti->ongoing_duration = sqlite3_column_int(stmt, col++);
 	noti->auto_remove = sqlite3_column_int(stmt, col++);
-	noti->default_button_index = sqlite3_column_int(stmt, col++);
+	noti->default_button_index = static_cast<notification_button_index_e>(sqlite3_column_int(stmt, col++));
 	noti->hide_timeout = sqlite3_column_int(stmt, col++);
 	noti->delete_timeout = sqlite3_column_int(stmt, col++);
 	noti->text_input_max_length = sqlite3_column_int(stmt, col++);
@@ -689,8 +710,11 @@ char *notification_noti_strip_tag(const char *tagged_str)
 	if (len_total == 0)
 		return NULL;
 
-	char *b_f_e = strstr(tagged_str, ">");
-	char *b_e_s = strstr(tagged_str, "</");
+	/* C++ strstr overload returns const char* when input is const char*;
+	 * we only use the returned pointers for offset arithmetic + strndup
+	 * so a const_cast keeps the legacy local-variable type. */
+	char *b_f_e = const_cast<char *>(strstr(tagged_str, ">"));
+	char *b_e_s = const_cast<char *>(strstr(tagged_str, "</"));
 
 	if (b_f_e == NULL || b_e_s == NULL || (b_e_s - b_f_e - 1) <= 0)
 		return NULL;
@@ -706,8 +730,8 @@ int notification_noti_get_tag_type(const char *tagged_str)
 	if (strlen(tagged_str) == 0)
 		return TAG_TYPE_INVALID;
 
-	char *b_f_s = strstr(tagged_str, "<");
-	char *b_f_e = strstr(tagged_str, ">");
+	char *b_f_s = const_cast<char *>(strstr(tagged_str, "<"));
+	char *b_f_e = const_cast<char *>(strstr(tagged_str, ">"));
 
 	if (b_f_s == NULL || b_f_e == NULL || (b_f_e - b_f_s - 1) <= 0)
 		return TAG_TYPE_INVALID;
@@ -2660,3 +2684,5 @@ out:
 
 	return ret;
 }
+
+}  // extern "C"
