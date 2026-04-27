@@ -60,7 +60,17 @@ static int _notification_group_check_data_inserted(const char *app_id,
 }
 /* LCOV_EXCL_STOP */
 
+/* N7.5-A: notification_group_{set,get}_badge are declared in the
+ * public installed header notification_group.h with the
+ * NOTIFICATION_DEPRECATED_API attribute, but that macro does not
+ * carry visibility=default — under Phase 2 D2-T4
+ * -fvisibility=hidden the symbols ended up STV_HIDDEN and any
+ * legacy caller (or unit test) attempting to link the advertised
+ * prototype hit "undefined reference". Mark the existing wrappers
+ * EXPORT_API to restore the advertised contract without changing
+ * behaviour. */
 /* LCOV_EXCL_START */
+EXPORT_API
 int notification_group_set_badge(const char *app_id,
 						  int group_id, int count)
 {
@@ -119,6 +129,7 @@ int notification_group_set_badge(const char *app_id,
 /* LCOV_EXCL_STOP */
 
 /* LCOV_EXCL_START */
+EXPORT_API
 int notification_group_get_badge(const char *app_id,
 						  int group_id, int *count)
 {

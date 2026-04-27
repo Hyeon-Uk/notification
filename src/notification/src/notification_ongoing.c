@@ -44,6 +44,16 @@ int notification_ongoing_update_cb_unset(void)
 	return NOTIFICATION_ERROR_NONE;
 }
 
+/* N7.5-A: these helpers are advertised by notification_ongoing.h
+ * (a public installed header) but the original definitions were
+ * missing the visibility=default attribute, so the symbols ended up
+ * hidden in libnotification.so under -fvisibility=hidden (Phase 2
+ * D2-T4). That broke any out-of-tree caller that linked against the
+ * advertised prototype and also blocked unit tests from exercising
+ * them. Marking the existing wrappers EXPORT_API restores the
+ * advertised contract without changing behaviour (still no-op
+ * returning NOTIFICATION_ERROR_NONE). */
+EXPORT_API
 int notification_ongoing_update_progress(const char *caller_app_id,
 					int priv_id, double progress)
 {
@@ -52,6 +62,7 @@ int notification_ongoing_update_progress(const char *caller_app_id,
 	return NOTIFICATION_ERROR_NONE;
 }
 
+EXPORT_API
 int notification_ongoing_update_size(const char *caller_app_id,
 					int priv_id, double size)
 {
@@ -60,6 +71,7 @@ int notification_ongoing_update_size(const char *caller_app_id,
 	return NOTIFICATION_ERROR_NONE;
 }
 
+EXPORT_API
 int notification_ongoing_update_content(const char *caller_app_id,
 					int priv_id, const char *content)
 {
