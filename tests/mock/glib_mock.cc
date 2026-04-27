@@ -17,6 +17,7 @@
 #include "glib_mock.hh"
 
 #include <atomic>
+#include <cerrno>
 #include <dlfcn.h>
 
 #include "mock_hook.hh"
@@ -117,10 +118,37 @@ extern "C" gboolean g_file_make_directory(GFile* arg1, GCancellable* arg2,
   return MOCK_HOOK_P3(GlibMock, g_file_make_directory, arg1, arg2, arg3);
 }
 
+/*
+ * N4-T3: optional per-test override for access(".notification.db").
+ *
+ * The default behaviour (return 0 — file present) is what every existing
+ * test relies on so notification_db_open / fast-path probes succeed
+ * without fixture work. The new fast-path in notification_db_init()
+ * branches on access(DBPATH); the FirstBoot_FullInit case in
+ * test_db_init_fast_path.cc needs to simulate "DB file missing".
+ *
+ * Tests opt in by calling SetNotificationDbAccessOverride(<errno>) to make
+ * the interposer return -1 with that errno; pass 0 to revert to the
+ * legacy "file present" behaviour. Always restore in TearDown.
+ */
+namespace {
+std::atomic<int> s_db_access_override{0};
+}  // namespace
+
+extern "C" void SetNotificationDbAccessOverride(int err) {
+  s_db_access_override.store(err, std::memory_order_release);
+}
+
 extern "C" int access(const char* arg1, int arg2) {
   if (strstr(arg1, ".notification.db") ||
-      strstr(arg1, "notification.ini"))
+      strstr(arg1, "notification.ini")) {
+    int ov = s_db_access_override.load(std::memory_order_acquire);
+    if (ov != 0) {
+      errno = ov;
+      return -1;
+    }
     return 0;
+  }
 
   int (*access_func)(const char*, int) =
       reinterpret_cast<int (*)(const char*, int)>(dlsym(RTLD_NEXT, "access"));
