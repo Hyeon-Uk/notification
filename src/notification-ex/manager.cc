@@ -53,6 +53,13 @@ Manager::Manager(unique_ptr<IEventSender> sender,
 Manager::~Manager() = default;
 
 Manager::Impl::~Impl() {
+  /* N4-T1: only run the matching Unregister + UnRegisterObserver pair
+   * when EnsureRegistered() actually fired. Otherwise a Manager that
+   * was constructed but never used would emit a stray RPC + listener
+   * unhook against a peer that has not seen the registration. */
+  if (!registered_.load(std::memory_order_acquire))
+    return;
+
   listener_->UnRegisterObserver(parent_);
   EventInfo info(EventInfo::Unregister, util::GetAppId(), "", "");
   sender_->RequestReturnValue(info);
@@ -63,17 +70,33 @@ Manager::Impl::Impl(Manager* parent,
   : sender_(std::move(sender)), listener_(std::move(listener)),
     receiver_group_(receiver_group),
     parent_(parent) {
-  LOGI("impl created");
-  listener_->RegisterObserver(parent_);
+  LOGI("impl created (lazy register)");
+  /* N4-T1: do NOT call listener_->RegisterObserver(parent_) nor the
+   * EventInfo::Register synchronous RPC here. Defer to the first
+   * user-facing entry point via EnsureRegistered(). */
+}
 
-  if (DBusConnectionManager::GetInst().IsDataProviderMaster(util::GetAppId()))
-    return;
+void Manager::Impl::EnsureRegistered() {
+  std::call_once(register_once_, [this]() {
+    listener_->RegisterObserver(parent_);
 
-  EventInfo info(EventInfo::Register, util::GetAppId(), receiver_group, "");
-  sender_->RequestReturnValue(info);
+    /* data-provider-master is the daemon side; it must NOT register itself
+     * as a Manager peer. Skip the Register RPC for that appid (mirrors the
+     * pre-N4-T1 ctor behaviour). The observer hookup above still runs so
+     * the daemon can dispatch incoming events. */
+    if (!DBusConnectionManager::GetInst().IsDataProviderMaster(
+            util::GetAppId())) {
+      EventInfo info(
+          EventInfo::Register, util::GetAppId(), receiver_group_, "");
+      sender_->RequestReturnValue(info);
+    }
+
+    registered_.store(true, std::memory_order_release);
+  });
 }
 
 void Manager::SendError(const IEventInfo& info, NotificationError error) {
+  impl_->EnsureRegistered();
   list<Bundle> serialized_list {};
   IEventInfo& i = const_cast<IEventInfo&>(info);
   static_cast<IEventInfoInternal&>(i).SetError(error);
@@ -82,6 +105,7 @@ void Manager::SendError(const IEventInfo& info, NotificationError error) {
 }
 
 int Manager::Update(shared_ptr<item::AbstractItem> noti) {
+  impl_->EnsureRegistered();
   Bundle serialized = noti->Serialize();
   EventInfo info(
       EventInfo::Update, util::GetAppId(), noti->GetChannel(), noti->GetId());
@@ -92,6 +116,7 @@ int Manager::Update(shared_ptr<item::AbstractItem> noti) {
 }
 
 int Manager::Delete(shared_ptr<item::AbstractItem> noti) {
+  impl_->EnsureRegistered();
   Bundle serialized = noti->Serialize();
   EventInfo info(
       EventInfo::Delete, util::GetAppId(), noti->GetChannel(), noti->GetId());
@@ -102,29 +127,34 @@ int Manager::Delete(shared_ptr<item::AbstractItem> noti) {
 }
 
 int Manager::DeleteAll() {
+  impl_->EnsureRegistered();
   EventInfo info(EventInfo::DeleteAll, util::GetAppId(), "");
   impl_->sender_->RequestReturnValue(info);
   return info.GetRequestId();
 }
 
 int Manager::DeleteByChannel(string channel) {
+  impl_->EnsureRegistered();
   EventInfo info(EventInfo::DeleteAll, util::GetAppId(), channel);
   impl_->sender_->RequestReturnValue(info);
   return info.GetRequestId();
 }
 
 int Manager::DeleteByAppId(string appId) {
+  impl_->EnsureRegistered();
   EventInfo info(EventInfo::DeleteAll, util::GetAppId(), "", appId);
   impl_->sender_->RequestReturnValue(info);
   return info.GetRequestId();
 }
 
 int Manager::GetCount() const {
+  impl_->EnsureRegistered();
   EventInfo info(EventInfo::Count, util::GetAppId(), "");
   return impl_->sender_->RequestReturnValue(info);
 }
 
 int Manager::Hide(shared_ptr<item::AbstractItem> noti) {
+  impl_->EnsureRegistered();
   (reinterpret_cast<IItemInfoInternal*>(noti->GetInfo().get()))
       ->AddHideViewer(util::GetAppId());
 
@@ -138,6 +168,7 @@ int Manager::Hide(shared_ptr<item::AbstractItem> noti) {
 }
 
 unique_ptr<item::AbstractItem> Manager::FindByRootID(string id) {
+  impl_->EnsureRegistered();
   EventInfo info(EventInfo::Get, util::GetAppId(), "", id);
   list<Bundle> result = impl_->sender_->Request(info);
   Bundle b = result.front();
@@ -146,6 +177,7 @@ unique_ptr<item::AbstractItem> Manager::FindByRootID(string id) {
 }
 
 list<unique_ptr<item::AbstractItem>> Manager::Get(string channel) {
+  impl_->EnsureRegistered();
   EventInfo info(EventInfo::Get, util::GetAppId(), channel);
   list<Bundle> result = impl_->sender_->Request(info);
   list<unique_ptr<item::AbstractItem>> gen_list;
@@ -159,6 +191,7 @@ list<unique_ptr<item::AbstractItem>> Manager::Get(string channel) {
 int Manager::SendEvent(const IEventInfo& info,
     shared_ptr<item::AbstractItem> noti) {
   LOGI("manager-sendevent");
+  impl_->EnsureRegistered();
   Bundle serialized = noti->Serialize();
   Bundle serialized_info = info.Serialize();
   list<Bundle> serialized_list {serialized};
@@ -169,6 +202,7 @@ int Manager::SendEvent(const IEventInfo& info,
 int Manager::SendEvent(const IEventInfo& info,
     list<shared_ptr<item::AbstractItem>> notiList) {
   LOGI("manager-sendevent - list");
+  impl_->EnsureRegistered();
   list<Bundle> serialized_list;
   for (auto& i : notiList) {
     Bundle b = i->Serialize();

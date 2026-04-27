@@ -6,15 +6,19 @@
 # S12 smoke_91_cold_start.sh
 # --------------------------
 # Verifies Reporter cold-start + first notification_post() completes within
-# the Phase 4 target of 50 ms. Uses systemd-analyze when available; falls
+# the Phase 4 target of 30 ms. Uses systemd-analyze when available; falls
 # back to /usr/bin/time -v measurement around the notification-test-app.
+#
+# N4-T1: target tightened from 50 ms to 30 ms once Reporter / Manager
+# stopped registering the D-Bus observer in the ctor (the dominant cost
+# of the prior 50 ms envelope).
 
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 REPO_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
 
-TARGET_MS=50
+TARGET_MS=30
 APP_NAME="notification-test-app"
 
 # Resolve the test app. On a Tizen target it is installed to /usr/bin;

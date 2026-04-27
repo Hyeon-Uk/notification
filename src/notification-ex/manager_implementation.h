@@ -17,9 +17,11 @@
 #ifndef NOTIFICATION_EX_MANAGER_IMPLEMENTATION_H_
 #define NOTIFICATION_EX_MANAGER_IMPLEMENTATION_H_
 
-#include <string>
-#include <memory>
+#include <atomic>
 #include <list>
+#include <memory>
+#include <mutex>
+#include <string>
 
 #include "notification-ex/manager.h"
 
@@ -33,12 +35,27 @@ class Manager::Impl {
   Impl(Manager* parent, std::unique_ptr<IEventSender> sender,
       std::unique_ptr<IEventListener> listener, std::string receiver_group);
 
+  /*
+   * N4-T1: lazy observer registration + lazy Register RPC. The original
+   * ctor invoked listener_->RegisterObserver(parent_) AND a synchronous
+   * sender_->RequestReturnValue(EventInfo::Register, ...) round-trip
+   * (~25-65 ms cold start total). EnsureRegistered() defers both to the
+   * first user-facing entry point. Guarded by std::call_once so
+   * concurrent callers observe a single Register / RPC pair.
+   *
+   * registered_ atomic flag is consulted by ~Impl so we only emit the
+   * matching UnRegister + Unregister-RPC when Register actually fired.
+   */
+  void EnsureRegistered();
+
  private:
   friend class Manager;
   std::unique_ptr<IEventSender> sender_;
   std::unique_ptr<IEventListener> listener_;
   std::string receiver_group_;
   Manager* parent_;
+  std::once_flag register_once_;
+  std::atomic<bool> registered_{false};
 };
 
 }  // namespace notification

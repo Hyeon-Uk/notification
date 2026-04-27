@@ -56,13 +56,21 @@ TEST(ColdStart, FirstPostMeasured) {
                rc, ms);
 
   /*
-   * TODO(phase4): Flip the following guard once Phase 4 lands.
+   * N4-T1: Phase 4 cold-start guard activated. The Reporter ctor
+   * (used internally by notification_post via the C facade) no
+   * longer registers the D-Bus observer at construction time, so
+   * the cold-start latency must drop below 30 ms.
    *
-   *   EXPECT_LT(ms, kColdStartTargetMs);
-   *
-   * For Phase 0 we only verify that the call path does not crash.
+   * On hosts where the daemon is unreachable, notification_post
+   * returns a non-success rc but still completes within the lazy
+   * envelope: the only path that *could* exceed 30 ms is one that
+   * waits on g_bus_get_sync timing out, which the test environment
+   * does not provoke. The guard is therefore unconditional.
    */
-  (void)kColdStartTargetMs;
+  EXPECT_LT(ms, kColdStartTargetMs)
+      << "Cold-start regression: first notification_post took " << ms
+      << " ms (rc=" << rc << "); Phase 4 target is < "
+      << kColdStartTargetMs << " ms.";
 
   notification_free(n);
 }

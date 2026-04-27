@@ -51,16 +51,33 @@ Reporter::Reporter(
 Reporter::~Reporter() = default;
 
 Reporter::Impl::~Impl() {
-  listener_->UnRegisterObserver(parent_);
+  /* N4-T1: only unregister if EnsureRegistered() ever actually fired.
+   * registered_ is set inside the call_once lambda with release order;
+   * acquire-load here pairs with that release. Without this guard, a
+   * Reporter destroyed without ever being used would still call
+   * UnRegisterObserver on an observer the listener never saw. */
+  if (registered_.load(std::memory_order_acquire))
+    listener_->UnRegisterObserver(parent_);
 }
 Reporter::Impl::Impl(Reporter* parent,
     unique_ptr<IEventSender> sender, unique_ptr<IEventListener> listener)
   : sender_(std::move(sender)), listener_(std::move(listener)), parent_(parent) {
-  LOGI("impl created");
-  listener_->RegisterObserver(parent_);
+  LOGI("impl created (lazy register)");
+  /* N4-T1: do NOT call listener_->RegisterObserver(parent_) here. The
+   * DBusEventListener implementation pulls in g_bus_get_sync +
+   * g_bus_own_name_on_connection (~20-50 ms cold start). Defer to the
+   * first user-facing entry point via EnsureRegistered(). */
+}
+
+void Reporter::Impl::EnsureRegistered() {
+  std::call_once(register_once_, [this]() {
+    listener_->RegisterObserver(parent_);
+    registered_.store(true, std::memory_order_release);
+  });
 }
 
 void Reporter::SendError(const IEventInfo& info, NotificationError error) {
+  impl_->EnsureRegistered();
   list<Bundle> serialized_list {};
   IEventInfo& i = const_cast<IEventInfo&>(info);
   static_cast<IEventInfoInternal&>(i).SetError(error);
@@ -70,6 +87,7 @@ void Reporter::SendError(const IEventInfo& info, NotificationError error) {
 
 int Reporter::Post(std::shared_ptr<item::AbstractItem> noti) {
   LOGI("Post noti");
+  impl_->EnsureRegistered();
   static_pointer_cast<IItemInfoInternal>(noti->GetInfo())->SetTime(time(NULL));
   Bundle serialized = noti->Serialize();
 
@@ -84,6 +102,7 @@ int Reporter::Post(std::shared_ptr<item::AbstractItem> noti) {
 
 int Reporter::Post(std::list<std::shared_ptr<AbstractItem>> notiList) {
   LOGI("Post noti list");
+  impl_->EnsureRegistered();
   EventInfo info(EventInfo::Post, util::GetAppId(), "");
   list<Bundle> serialized_list;
   for (auto& i : notiList) {
@@ -98,6 +117,7 @@ int Reporter::Post(std::list<std::shared_ptr<AbstractItem>> notiList) {
 }
 
 int Reporter::Update(std::shared_ptr<AbstractItem> noti) {
+  impl_->EnsureRegistered();
   static_pointer_cast<IItemInfoInternal>(noti->GetInfo())->SetTime(time(NULL));
   Bundle serialized = noti->Serialize();
 
@@ -112,6 +132,7 @@ int Reporter::Update(std::shared_ptr<AbstractItem> noti) {
 
 int Reporter::Update(
     std::list<std::shared_ptr<AbstractItem>> notiList) {
+  impl_->EnsureRegistered();
   EventInfo info(EventInfo::Update, util::GetAppId(), "");
   list<Bundle> serialized_list;
   for (auto& i : notiList) {
@@ -126,6 +147,7 @@ int Reporter::Update(
 }
 
 int Reporter::Delete(std::shared_ptr<AbstractItem> noti) {
+  impl_->EnsureRegistered();
   Bundle serialized = noti->Serialize();
   EventInfo info(
       EventInfo::Delete, util::GetAppId(), noti->GetChannel(), noti->GetId());
@@ -137,6 +159,7 @@ int Reporter::Delete(std::shared_ptr<AbstractItem> noti) {
 
 int Reporter::Delete(
     std::list<std::shared_ptr<AbstractItem>> notiList) {
+  impl_->EnsureRegistered();
   EventInfo info(EventInfo::Delete, util::GetAppId(), "");
   list<Bundle> serialized_list;
   for (auto& i : notiList) {
@@ -151,18 +174,21 @@ int Reporter::Delete(
 }
 
 int Reporter::DeleteAll() {
+  impl_->EnsureRegistered();
   EventInfo info(EventInfo::DeleteAll, util::GetAppId(), "");
   impl_->sender_->RequestReturnValue(info);
   return info.GetRequestId();
 }
 
 int Reporter::DeleteByChannel(string channel) {
+  impl_->EnsureRegistered();
   EventInfo info(EventInfo::DeleteAll, util::GetAppId(), channel);
   impl_->sender_->RequestReturnValue(info);
   return info.GetRequestId();
 }
 
 std::unique_ptr<AbstractItem> Reporter::FindByRootID(std::string id) {
+  impl_->EnsureRegistered();
   EventInfo info(EventInfo::Get, util::GetAppId(), "", id);
   list<Bundle> result = impl_->sender_->Request(info);
   Bundle b = result.front();
@@ -171,6 +197,7 @@ std::unique_ptr<AbstractItem> Reporter::FindByRootID(std::string id) {
 }
 
 list<unique_ptr<AbstractItem>> Reporter::FindByChannel(string channel) {
+  impl_->EnsureRegistered();
   EventInfo info(EventInfo::Get, util::GetAppId(), channel, "");
   list<Bundle> result = impl_->sender_->Request(info);
   list<unique_ptr<AbstractItem>> gen_item_list;
@@ -181,6 +208,7 @@ list<unique_ptr<AbstractItem>> Reporter::FindByChannel(string channel) {
 }
 
 list<unique_ptr<AbstractItem>> Reporter::FindAll() {
+  impl_->EnsureRegistered();
   EventInfo info(EventInfo::Get, util::GetAppId(), "", "");
   list<Bundle> result = impl_->sender_->Request(info);
   list<unique_ptr<AbstractItem>> gen_item_list;
@@ -191,12 +219,14 @@ list<unique_ptr<AbstractItem>> Reporter::FindAll() {
 }
 
 int Reporter::GetCount(string channel) const {
+  impl_->EnsureRegistered();
   EventInfo info(EventInfo::Count, util::GetAppId(), channel);
   return impl_->sender_->RequestReturnValue(info);
 }
 
 int Reporter::SendEvent(const IEventInfo& info,
     std::list<std::shared_ptr<item::AbstractItem>> notiList) {
+  impl_->EnsureRegistered();
   list<Bundle> serialized_list;
   for (auto& i : notiList) {
     Bundle b = i->Serialize();

@@ -18,8 +18,13 @@ TARGET_INCLUDE_DIRECTORIES(${TARGET_NOTIFICATION_UNITTESTS} PUBLIC
 
 # N0-T1: Enable allocation counter wrap hooks for PerfAware / LeakCheck
 # fixtures. Only applied to the test binary; production libs are untouched.
+# N4-T1: NOTIFICATION_TIDL_C_PATH lets test_tidl_lazy.cc read the .c file
+# from a stable absolute path regardless of cwd at test time. Without
+# this define the test SKIPs (does not fail) so out-of-tree consumers
+# remain green.
 TARGET_COMPILE_DEFINITIONS(${TARGET_NOTIFICATION_UNITTESTS} PRIVATE
   NOTI_TEST_WRAP_ALLOC=1
+  NOTIFICATION_TIDL_C_PATH="${CMAKE_SOURCE_DIR}/src/notification/src/notification_tidl.c"
 )
 
 # N2-T5: the test binary hosts mock TUs (tests/mock/*_mock.cc) that provide
