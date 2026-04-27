@@ -32,9 +32,13 @@ TARGET_INCLUDE_DIRECTORIES(${TARGET_NOTIFICATION_UNITTESTS} PUBLIC
 # from a stable absolute path regardless of cwd at test time. Without
 # this define the test SKIPs (does not fail) so out-of-tree consumers
 # remain green.
+# N7.5-E: NOTIFICATION_INTERNAL_TIDL_C_PATH wires up the matching path for
+# the new mirror tests on notification_internal_tidl.c (TIDL marshalling
+# layer). Same SKIP-on-absent contract as the N4-T1 path.
 TARGET_COMPILE_DEFINITIONS(${TARGET_NOTIFICATION_UNITTESTS} PRIVATE
   NOTI_TEST_WRAP_ALLOC=1
   NOTIFICATION_TIDL_C_PATH="${CMAKE_SOURCE_DIR}/src/notification/src/notification_tidl.c"
+  NOTIFICATION_INTERNAL_TIDL_C_PATH="${CMAKE_SOURCE_DIR}/src/notification/src/notification_internal_tidl.c"
 )
 
 # N2-T5: the test binary hosts mock TUs (tests/mock/*_mock.cc) that provide
