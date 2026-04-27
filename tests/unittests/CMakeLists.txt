@@ -50,9 +50,18 @@ TARGET_LINK_OPTIONS(${TARGET_NOTIFICATION_UNITTESTS} PRIVATE
   "-Wl,--export-dynamic"
 )
 
+# N4-T2: notification-ex moved to PUBLIC=(bundle,dlog,glib,gio) /
+# PRIVATE=(everything else) for its installed pkg-config + INTERFACE_*
+# properties. The test binary used to inherit sqlite3 / bundle / appfw-common /
+# pkgmgr-info / appfw-package-manager / uuid include dirs transitively from
+# libnotification-ex; now we must declare them explicitly here so the test
+# TUs that include <sqlite3.h>, <bundle.h>, etc. still compile.
 APPLY_PKG_CONFIG(${TARGET_NOTIFICATION_UNITTESTS} PUBLIC
   AUL_DEPS
+  BUNDLE_DEPS
+  CAPI_APPFW_APP_COMMON_DEPS
   CAPI_APPFW_APP_CONTROL_DEPS
+  CAPI_APPFW_PACKAGE_MANAGER_DEPS
   DLOG_DEPS
   GIO_DEPS
   GIO_UNIX_DEPS
@@ -62,7 +71,9 @@ APPLY_PKG_CONFIG(${TARGET_NOTIFICATION_UNITTESTS} PUBLIC
   PKGMGR_INFO_DEPS
   RPC_PORT_DEPS
   SECURITY_MANAGER_DEPS
+  SQLITE3_DEPS
   TIZEN_CORE_DEPS
+  UUID_DEPS
   VCONF_DEPS
 )
 

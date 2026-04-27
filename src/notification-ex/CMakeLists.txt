@@ -33,23 +33,40 @@ TARGET_INCLUDE_DIRECTORIES(${TARGET_NOTIFICATION_EX} PRIVATE
   ${CMAKE_CURRENT_SOURCE_DIR}/../notification/include
 )
 
+# N4-T2: PUBLIC vs PRIVATE pkg-config split.
+#
+# The libnotification-ex.so installed surface (notification-ex/api/*.h plus the
+# non-EXCLUDE'd headers under notification-ex/) transitively includes only a
+# small set of system headers — bundle.h, dlog.h, glib.h, gio/gio.h. Every
+# other pkg-config dependency is consumed *only* from .cc translation units
+# inside this library. Linking those as PRIVATE keeps the build correct (.cc's
+# still see the includes / link the libraries) but stops CMake from forwarding
+# the include dirs / -l flags to downstream consumers of TARGET_NOTIFICATION_EX
+# via INTERFACE_* properties. Combined with --as-needed (set globally in the
+# root CMakeLists), this prunes DT_NEEDED entries that were already linked but
+# not actually referenced from downstream binaries.
+#
+# Removed entirely: INIPARSER_DEPS, RPC_PORT_DEPS, TIZEN_CORE_DEPS — verified
+# via `grep -rn iniparser|tizen-core|rpc-port src/notification-ex/` returning
+# zero hits inside the notification-ex tree (libnotification still uses the
+# three on the C side, root PKG_CHECK_MODULES blocks remain for that target).
 APPLY_PKG_CONFIG(${TARGET_NOTIFICATION_EX} PUBLIC
-  AUL_DEPS
   BUNDLE_DEPS
+  DLOG_DEPS
+  GIO_DEPS
+  GLIB_DEPS
+)
+
+APPLY_PKG_CONFIG(${TARGET_NOTIFICATION_EX} PRIVATE
+  AUL_DEPS
   CAPI_APPFW_APP_COMMON_DEPS
   CAPI_APPFW_APP_CONTROL_DEPS
   CAPI_APPFW_PACKAGE_MANAGER_DEPS
-  DLOG_DEPS
-  GIO_DEPS
   GIO_UNIX_DEPS
-  GLIB_DEPS
-  INIPARSER_DEPS
   LIBTZPLATFORM_CONFIG_DEPS
   PKGMGR_INFO_DEPS
-  RPC_PORT_DEPS
   SECURITY_MANAGER_DEPS
   SQLITE3_DEPS
-  TIZEN_CORE_DEPS
   UUID_DEPS
   VCONF_DEPS
 )

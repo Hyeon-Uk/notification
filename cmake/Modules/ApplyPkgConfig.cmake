@@ -13,6 +13,15 @@
 #  - ${DEP_NAME}_CFLAGS
 #
 FUNCTION(APPLY_PKG_CONFIG TARGET PRIVACY)
+  # N4-T2: validate PRIVACY token early so a typo (e.g. "PRVATE") is reported
+  # at configure time instead of silently producing a partially configured
+  # target. CMake's own TARGET_* commands accept these three keywords.
+  IF(NOT (PRIVACY STREQUAL "PUBLIC"
+       OR PRIVACY STREQUAL "PRIVATE"
+       OR PRIVACY STREQUAL "INTERFACE"))
+    MESSAGE(FATAL_ERROR
+      "APPLY_PKG_CONFIG: PRIVACY must be PUBLIC|PRIVATE|INTERFACE, got '${PRIVACY}'")
+  ENDIF()
   MATH(EXPR DEST_INDEX "${ARGC}-1")
   FOREACH(I RANGE 2 ${DEST_INDEX})
     IF(NOT ${ARGV${I}}_FOUND)

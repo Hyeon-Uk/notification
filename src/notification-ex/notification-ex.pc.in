@@ -6,6 +6,12 @@ includedir=@INCLUDEDIR@
 Name: notification-ex
 Description: Support development of the notification
 Version: @VERSION@
+# N4-T2: Requires lists pkg-configs whose headers are reachable from the
+# *installed* notification-ex headers (bundle / dlog / glib / gio). Anything
+# only consumed inside libnotification-ex.so internals lives in
+# Requires.private so downstream consumers do not pick up unused -I/-l flags.
+Requires: bundle dlog glib-2.0 gio-2.0
+Requires.private: aul capi-appfw-app-common capi-appfw-app-control capi-appfw-package-manager gio-unix-2.0 libtzplatform-config pkgmgr-info security-manager sqlite3 uuid vconf
 Libs: -L${libdir} -lnotification-ex
 Cflags: -I${includedir} -I${includedir}/api
 cppflags: -I${includedir}
