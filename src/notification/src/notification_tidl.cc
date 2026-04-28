@@ -993,7 +993,11 @@ int notification_tidl_request_get_all_count(notification_type_e type, int *count
 int notification_tidl_request_load_system_setting(notification_system_setting_h *setting, uid_t uid)
 {
 	int ret;
-	notification_system_setting_h _setting;
+	/* Wild-pointer audit (mirror of dpm 0ec37bb): make_setting_from_noti_system_setting
+	 * has an OOM branch that returns without writing *setting; if we forwarded an
+	 * uninitialized stack slot the caller would later notification_system_setting_free()
+	 * a wild pointer.  Initialize to NULL and propagate the helper's return code. */
+	notification_system_setting_h _setting = NULL;
 	rpc_port_proxy_noti_system_setting_h system_setting;
 
 	WARN("load system setting");
@@ -1012,7 +1016,13 @@ int notification_tidl_request_load_system_setting(notification_system_setting_h 
 		return ret;
 	}
 
-	make_setting_from_noti_system_setting(&_setting, system_setting);
+	ret = make_setting_from_noti_system_setting(&_setting, system_setting);
+	if (ret != NOTIFICATION_ERROR_NONE) {
+		ERR("make_setting_from_noti_system_setting fail : %d", ret);
+		if (system_setting)
+			rpc_port_proxy_noti_system_setting_destroy(system_setting);
+		return ret;
+	}
 
 	*setting = _setting;
 
