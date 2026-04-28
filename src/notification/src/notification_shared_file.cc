@@ -554,6 +554,16 @@ EXPORT_API void notification_remove_private_sharing_target_id(
 	uid_info_s *uid_info;
 	GList *sharing_req_list, *target_app;
 
+	/* N8 NULL-safety pass2 (mirror a5932a8 bug 2 / DPM-NULLSAFE-3):
+	 * the original WARN("...: %s", sender) ran BEFORE any NULL check on
+	 * `sender`, so passing NULL here let the format-string walker read a
+	 * NULL pointer (UB / crash on stricter libcs). Reject NULL up front so
+	 * the trace and the subsequent g_list_find_custom() never see it. */
+	if (sender == NULL) {
+		ERR("Invalid parameter: sender == NULL");
+		return;
+	}
+
 	WARN("notification_remove_private_sharing_target_id : %s", sender);
 
 	sharing_req_list = g_list_find_custom(__uid_list, GINT_TO_POINTER(uid),
@@ -587,6 +597,16 @@ EXPORT_API void notification_add_private_sharing_target_id(pid_t pid,
 	target_app_info_s *target_info;
 	uid_info_s *uid_info;
 	GList *sharing_req_list, *target_app;
+
+	/* N8 NULL-safety pass2 (suspect called out in audit prompt; same
+	 * shape as a5932a8 bug 2 / DPM-NULLSAFE-3): WARN("...[%s]", sender)
+	 * derefs `sender` BEFORE any guard. The downstream g_list_find_custom
+	 * comparator __comp_target_app() does check `sender == NULL`, but the
+	 * WARN itself fires first. Reject NULL up front. */
+	if (sender == NULL) {
+		ERR("Invalid parameter: sender == NULL");
+		return;
+	}
 
 	WARN("notification_add_private_sharing_target_id : [%s]", sender);
 
@@ -695,6 +715,16 @@ EXPORT_API bool notification_validate_private_sharing(
 	char buf_key[32] = { 0, };
 	int i = NOTIFICATION_IMAGE_TYPE_ICON;
 
+	/* N8 NULL-safety pass2: original code dereferenced
+	 * updated_noti->b_image_path with no NULL guard on the handle itself.
+	 * Returning `true` matches the existing "no images to compare ->
+	 * valid" semantics covered by test_notification_shared_file_extra
+	 * (SharedFile_Validate_BothNull_BundleSafe). */
+	if (updated_noti == NULL) {
+		ERR("Invalid parameter: updated_noti == NULL");
+		return true;
+	}
+
 	if (updated_noti->b_image_path && updated_noti->b_priv_image_path) {
 		for (; i <= NOTIFICATION_IMAGE_TYPE_MAX; i++) {
 			updated_path = NULL;
@@ -743,6 +773,16 @@ EXPORT_API void notification_calibrate_private_sharing(
 	char *private_path = NULL;
 	char buf_key[32] = { 0, };
 	int i = NOTIFICATION_IMAGE_TYPE_ICON;
+
+	/* N8 NULL-safety pass2: original code dereferenced
+	 * updated_noti->b_image_path / source_noti->sound_path with no NULL
+	 * guard on either handle. Reject up front; the function returns void
+	 * so a no-op is the safe behaviour. */
+	if (updated_noti == NULL || source_noti == NULL) {
+		ERR("Invalid parameter: updated_noti=%p source_noti=%p",
+				updated_noti, source_noti);
+		return;
+	}
 
 	if (updated_noti->b_image_path && updated_noti->b_priv_image_path) {
 		for (; i <= NOTIFICATION_IMAGE_TYPE_MAX; i++) {

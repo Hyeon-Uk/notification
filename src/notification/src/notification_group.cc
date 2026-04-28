@@ -105,6 +105,12 @@ int notification_group_set_badge(const char *app_id,
 	int ret;
 	int result;
 
+	/* N8 NULL-safety pass2: snprintf(..., "%s", app_id, ...) below is
+	 * UB on glibc when app_id is NULL (in practice it crashes on
+	 * x86_64 with __strchrnul reading [%rdi]). Reject up front. */
+	if (app_id == NULL)
+		return NOTIFICATION_ERROR_INVALID_PARAMETER;
+
 	db = notification_db_open();
 	if (!db)
 		return get_last_result();
@@ -163,6 +169,15 @@ int notification_group_get_badge(const char *app_id,
 	char query[NOTIFICATION_QUERY_MAX] = { 0, };
 	int ret;
 	int col = 0;
+
+	/* N8 NULL-safety pass2: same shape as a5932a8 bug 1
+	 * (notification_noti_get_count). The function snprintf's app_id into
+	 * the SQL query and writes `*count = sqlite3_column_int(...)` after
+	 * the step. Both are unguarded — passing NULL crashes. Mirror the
+	 * a5932a8 contract: NULL out-arg / NULL handle ->
+	 * INVALID_PARAMETER, no DB I/O. */
+	if (app_id == NULL || count == NULL)
+		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 
 	db = notification_db_open();
 	if (!db)

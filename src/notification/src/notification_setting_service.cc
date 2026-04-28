@@ -508,6 +508,12 @@ int notification_system_setting_get_dnd_schedule_enabled_uid(uid_t **uids, int *
 	sqlite3 *db = NULL;
 	uid_t *result_uids;
 
+	/* N8 NULL-safety pass2: same shape as a5932a8 bug 1. The success
+	 * path writes `*uids = result_uids; *count = row_count` with no
+	 * guard on either out-arg. Reject up front. */
+	if (uids == NULL || count == NULL)
+		return NOTIFICATION_ERROR_INVALID_PARAMETER;
+
 	db = notification_db_open();
 	if (!db)
 		return get_last_result();
@@ -672,7 +678,11 @@ EXPORT_API int notification_system_setting_load_dnd_allow_exception(dnd_allow_ex
 	sqlite3 *db = NULL;
 	dnd_allow_exception_h dnd_allow_exception_data = NULL;
 
-	if (dnd_allow_exception == NULL) {
+	if (dnd_allow_exception == NULL || count == NULL) {
+		/* N8 NULL-safety pass2: the original guard only covered
+		 * `dnd_allow_exception`, but the success path also writes
+		 * `*count = row_count` (line ~720). Mirror the a5932a8 bug 1
+		 * fix and reject NULL count too. */
 		ERR("Invalid paramter"); /* LCOV_EXCL_LINE */
 		return  NOTIFICATION_ERROR_INVALID_PARAMETER;
 	}

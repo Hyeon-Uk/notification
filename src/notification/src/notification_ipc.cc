@@ -81,6 +81,17 @@ static inline bundle *_create_bundle_from_bundle_raw(bundle_raw *string)
 EXPORT_API GVariant *notification_ipc_make_gvariant_from_noti(notification_h noti, bool translate)
 {
 	WARN("make gvariant from noti");
+	/* N8 NULL-safety pass2: the body below dereferences noti->type as
+	 * the very first statement after this guard. The mirror function
+	 * notification_ipc_make_noti_from_gvariant() already rejects NULL
+	 * with INVALID_PARAMETER (see line ~397); that contract was never
+	 * applied here. Returning NULL matches the existing
+	 * "marshal-failure -> NULL" pattern downstream callers already
+	 * branch on (g_variant builders return NULL on OOM too). */
+	if (noti == NULL) {
+		ERR("Invalid parameter: noti == NULL");
+		return NULL;
+	}
 	int i = 0;
 	int b_encode_len = 0;
 	bundle_raw *args = NULL;
