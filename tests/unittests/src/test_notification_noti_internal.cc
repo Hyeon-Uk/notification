@@ -170,15 +170,11 @@ TEST_F(NotificationNotiInternalTest,
 }
 
 /*
- * notification_noti_get_count does NOT validate count==NULL; it goes
- * straight into vconf+sqlite. We rely on the happy-path sqlite mock
- * test below to exercise it. NULL-count would crash.
- */
-
-/*
- * notification_noti_check_tag(NULL) crashes — production dereferences
- * `noti->tag` in the WARN macro before any null guard. We keep the
- * test_notification_noti.cc happy-path tag-set + check coverage instead.
+ * NULL-input contracts for notification_noti_get_count(NULL count) and
+ * notification_noti_check_tag(NULL noti) are pinned in
+ * test_notification_noti_internal_nullsafe.cc (N7.5-D follow-up). Both
+ * production sites previously crashed; the follow-up commit fixed the
+ * deref-before-guard ordering and added an explicit NULL out-arg guard.
  */
 
 TEST_F(NotificationNotiInternalTest,

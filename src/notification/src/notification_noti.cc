@@ -1670,6 +1670,13 @@ EXPORT_API int notification_noti_get_count(notification_type_e type,
 	int internal_group_id = 0;
 	int status = VCONFKEY_TELEPHONY_SIM_UNKNOWN;
 
+	/* N7.5-D follow-up: NULL out-param guard. Prior code dereferenced
+	 * `*count = get_count;` after vconf+sqlite work, crashing on NULL.
+	 * Reject early so the contract matches the rest of the EXPORT_API
+	 * surface (NOTIFICATION_ERROR_INVALID_PARAMETER on NULL out-args). */
+	if (count == NULL)
+		return NOTIFICATION_ERROR_INVALID_PARAMETER;
+
 	/* Check current sim status */
 	ret = vconf_get_int(VCONFKEY_TELEPHONY_SIM_SLOT, &status);
 	if (ret < 0) {
@@ -2027,12 +2034,20 @@ EXPORT_API int notification_noti_check_tag(notification_h noti)
 	int ret = NOTIFICATION_ERROR_NONE;
 	int result = 0;
 
-	WARN("@@ check tag : %s", noti->tag);
+	/* N7.5-D follow-up: NULL handle guard + deref-before-guard fix.
+	 * Old order: WARN("@@ check tag : %s", noti->tag) BEFORE the
+	 *   `if (noti->tag == NULL)` check, which dereferences `noti->tag`
+	 *   without first checking that `noti` itself is non-NULL. Crashed
+	 *   any caller passing a NULL handle.
+	 * New order: validate `noti`, then read `noti->tag`, then log. */
+	if (noti == NULL)
+		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 
 	if (noti->tag == NULL || strlen(noti->tag) == 0) {
 		WARN("@@ return not exist");
 		return NOTIFICATION_ERROR_NOT_EXIST_ID;
 	}
+	WARN("@@ check tag : %s", noti->tag);
 	WARN("@@ continue check tag");
 
 	db = notification_db_open();
