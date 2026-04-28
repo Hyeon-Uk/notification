@@ -99,15 +99,35 @@ static int __check_integrity_cb(void *pid, int argc, char **argv, char **notUsed
 /* LCOV_EXCL_STOP */
 
 /* LCOV_EXCL_START */
-static int __recover_corrupted_db(sqlite3 *db)
+/*
+ * N8 memleak audit pass1: this used to take `sqlite3 *db` by value, close
+ * the input handle and re-open into the same local — leaking the new handle
+ * (caller's `db` was unchanged so neither the new nor old handle was reachable
+ * once this function returned) AND causing a double-close in the caller's
+ * cleanup epilogue (`if (db) sqlite3_close(db)` ran on the freed pointer,
+ * sqlite3 returns SQLITE_MISUSE and the implementation may free internal
+ * state again).
+ *
+ * Take it by `sqlite3 **db_io` so the caller's pointer is NULL'd after the
+ * close + reopen + close cycle. The function now closes the new handle
+ * itself and writes NULL back to *db_io, leaving the caller's epilogue a
+ * no-op.
+ */
+static int __recover_corrupted_db(sqlite3 **db_io)
 {
 	int ret = NOTIFICATION_ERROR_NONE;
 	int sql_ret;
+	sqlite3 *db = NULL;
 	char *errmsg = NULL;
 
+	if (db_io == NULL)
+		return NOTIFICATION_ERROR_INVALID_PARAMETER;
+
 	INFO("DB is corrupted, start to recover corrupted db");
-	if (db)
-		sqlite3_close(db);
+	if (*db_io) {
+		sqlite3_close(*db_io);
+		*db_io = NULL;
+	}
 	unlink(DBPATH);
 
 	sql_ret = sqlite3_open_v2(DBPATH, &db,
@@ -133,6 +153,8 @@ static int __recover_corrupted_db(sqlite3 *db)
 out:
 	if (errmsg)
 		sqlite3_free(errmsg);
+	if (db)
+		sqlite3_close(db);
 
 	return ret;
 }
@@ -207,7 +229,7 @@ EXPORT_API int notification_db_init(void)
 
 out:
 	if (sql_ret == SQLITE_CORRUPT || sql_ret == SQLITE_NOTADB || is_db_corrupted)
-		ret = __recover_corrupted_db(db);
+		ret = __recover_corrupted_db(&db); /* nulls out `db` */
 	if (errmsg)
 		sqlite3_free(errmsg);
 	if (db)

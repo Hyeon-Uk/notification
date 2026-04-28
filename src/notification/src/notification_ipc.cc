@@ -514,53 +514,70 @@ EXPORT_API int notification_ipc_make_noti_from_gvariant(notification_h noti,
 	_variant_dict_lookup(dict, NOTIFICATION_DATA_TYPE_UID, "i", &noti->uid);
 	_variant_dict_lookup(dict, NOTIFICATION_DATA_TYPE_CHANNEL_NAME, "&s", &channel_name);
 
-	if (noti->pkg_id)
-		free(noti->pkg_id);
-	noti->pkg_id = _dup_string(pkg_id);
+	/*
+	 * N8 memleak audit pass1: free-before-overwrite for every owned heap
+	 * field. Prior code only handled pkg_id / caller_app_id / domain / dir,
+	 * leaving the strdup'd launch_app_id / sound_path / priv_sound_path /
+	 * vibration_path / priv_vibration_path / app_icon_path / app_label /
+	 * temp_title / temp_content / tag / channel_name AND every owned
+	 * `bundle *` field (args / group_args / b_execute_option /
+	 * b_service_responding / b_service_single_launch /
+	 * b_service_multi_launch / b_event_handler[i] / b_text / b_key /
+	 * b_format_args / b_image_path / b_priv_image_path) silently leaking
+	 * whenever this function is called on an already-populated handle.
+	 *
+	 * The new helper macros centralize the leak fix in one place and keep
+	 * the symmetric init / re-init contract intact: a fresh `noti` with
+	 * NULL fields decodes identically; an already-populated `noti` has its
+	 * prior allocations released before they are clobbered.
+	 */
+#define _ASSIGN_OWNED_STR(field, src) do {            \
+		if ((noti)->field)                    \
+			free((noti)->field);          \
+		(noti)->field = _dup_string(src);     \
+	} while (0)
+#define _ASSIGN_OWNED_BUNDLE(field, raw) do {                              \
+		if ((noti)->field)                                         \
+			bundle_free((noti)->field);                        \
+		(noti)->field = _create_bundle_from_bundle_raw(raw);       \
+	} while (0)
 
-	if (noti->caller_app_id)
-		free(noti->caller_app_id);
-	noti->caller_app_id = _dup_string(caller_app_id);
+	_ASSIGN_OWNED_STR(pkg_id, pkg_id);
+	_ASSIGN_OWNED_STR(caller_app_id, caller_app_id);
+	_ASSIGN_OWNED_STR(launch_app_id, launch_app_id);
 
-	noti->launch_app_id = _dup_string(launch_app_id);
-
-	noti->args = _create_bundle_from_bundle_raw(args);
-	noti->group_args = _create_bundle_from_bundle_raw(group_args);
-	noti->b_execute_option = _create_bundle_from_bundle_raw(b_execute_option);
-	noti->b_service_responding = _create_bundle_from_bundle_raw(
-			b_service_responding);
-	noti->b_service_single_launch = _create_bundle_from_bundle_raw(
-			b_service_single_launch);
-	noti->b_service_multi_launch = _create_bundle_from_bundle_raw(
-			b_service_multi_launch);
+	_ASSIGN_OWNED_BUNDLE(args, args);
+	_ASSIGN_OWNED_BUNDLE(group_args, group_args);
+	_ASSIGN_OWNED_BUNDLE(b_execute_option, b_execute_option);
+	_ASSIGN_OWNED_BUNDLE(b_service_responding, b_service_responding);
+	_ASSIGN_OWNED_BUNDLE(b_service_single_launch, b_service_single_launch);
+	_ASSIGN_OWNED_BUNDLE(b_service_multi_launch, b_service_multi_launch);
 	for (i = 0; i <= NOTIFICATION_EVENT_TYPE_MAX; i++) {
-		noti->b_event_handler[i] = _create_bundle_from_bundle_raw(
-				b_event_handler[i]);
+		_ASSIGN_OWNED_BUNDLE(b_event_handler[i], b_event_handler[i]);
 	}
 
-	if (noti->domain)
-		free(noti->domain);
-	noti->domain = _dup_string(domain);
+	_ASSIGN_OWNED_STR(domain, domain);
+	_ASSIGN_OWNED_STR(dir, dir);
 
-	if (noti->dir)
-		free(noti->dir);
-	noti->dir = _dup_string(dir);
+	_ASSIGN_OWNED_BUNDLE(b_text, b_text);
+	_ASSIGN_OWNED_BUNDLE(b_key, b_key);
+	_ASSIGN_OWNED_BUNDLE(b_format_args, b_format_args);
+	_ASSIGN_OWNED_BUNDLE(b_image_path, b_image_path);
+	_ASSIGN_OWNED_BUNDLE(b_priv_image_path, b_priv_image_path);
 
-	noti->b_text = _create_bundle_from_bundle_raw(b_text);
-	noti->b_key = _create_bundle_from_bundle_raw(b_key);
-	noti->b_format_args = _create_bundle_from_bundle_raw(b_format_args);
-	noti->b_image_path = _create_bundle_from_bundle_raw(b_image_path);
-	noti->b_priv_image_path = _create_bundle_from_bundle_raw(b_priv_image_path);
-	noti->sound_path = _dup_string(sound_path);
-	noti->priv_sound_path = _dup_string(priv_sound_path);
-	noti->vibration_path = _dup_string(vibration_path);
-	noti->priv_vibration_path = _dup_string(priv_vibration_path);
-	noti->app_icon_path = _dup_string(app_icon_path);
-	noti->app_label = _dup_string(app_label);
-	noti->temp_title = _dup_string(temp_title);
-	noti->temp_content = _dup_string(temp_content);
-	noti->tag = _dup_string(tag);
-	noti->channel_name = _dup_string(channel_name);
+	_ASSIGN_OWNED_STR(sound_path, sound_path);
+	_ASSIGN_OWNED_STR(priv_sound_path, priv_sound_path);
+	_ASSIGN_OWNED_STR(vibration_path, vibration_path);
+	_ASSIGN_OWNED_STR(priv_vibration_path, priv_vibration_path);
+	_ASSIGN_OWNED_STR(app_icon_path, app_icon_path);
+	_ASSIGN_OWNED_STR(app_label, app_label);
+	_ASSIGN_OWNED_STR(temp_title, temp_title);
+	_ASSIGN_OWNED_STR(temp_content, temp_content);
+	_ASSIGN_OWNED_STR(tag, tag);
+	_ASSIGN_OWNED_STR(channel_name, channel_name);
+
+#undef _ASSIGN_OWNED_STR
+#undef _ASSIGN_OWNED_BUNDLE
 
 	g_hash_table_unref(dict);
 
