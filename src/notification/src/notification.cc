@@ -20,6 +20,7 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include <libintl.h>
+#include <glib.h>
 
 #include <app_control.h>
 #include <app_control_internal.h>
@@ -68,10 +69,60 @@ static void (*posted_toast_message_cb)(void *data);
 #define NOTI_TEXT_RESULT_LEN 4096
 #define REGULAR_UID_MIN 5000
 
+/*
+ * Race audit pass 2 (mirror of dpm 7f3b56d, sibling of 5115623):
+ * The notification client lib is loaded into 3rd-party app processes
+ * which can be multi-threaded.  These four file-statics cache the
+ * caller's pkg_id / locale dir / app label / vconf callback handle and
+ * are touched from two contexts:
+ *
+ *   - _notification_create() invoked from notification_create() and
+ *     notification_create_for_uid() — runs on whatever thread the app
+ *     happens to call the EXPORT_API surface from.
+ *   - _language_key_changed_cb() — runs on the GMainContext thread that
+ *     dispatches vconf change notifications, asynchronously w.r.t. the
+ *     caller.
+ *
+ * Pre-fix, two creating threads each saw `_pkg_id == NULL` simultaneously,
+ * each ran aul_app_get_pkgid_bypid + strdup, the second strdup leaked the
+ * first.  Concurrently, the vconf cb's `free(_label); _label = strdup(...)`
+ * raced with the create-side `_label == NULL` / `strdup(_label)` read,
+ * yielding a use-after-free on the read or a double-free on the write
+ * if two language-change events fired close together.
+ *
+ * Wrap every read AND every write of these four file-statics with a
+ * file-local recursive mutex, initialised by a CTOR exactly like the
+ * notification_internal.cc / notification_setting.cc convention.
+ */
 static char *_pkg_id = NULL;
 static char *_locale_directory = NULL;
 static char *_label = NULL;
 static int _cb_registered = -1;
+
+#define NOTIFICATION_CTOR __attribute__((constructor))
+#define NOTIFICATION_DTOR __attribute__((destructor))
+
+static GRecMutex __cache_rec_mutex;
+
+NOTIFICATION_CTOR static void __notification_cache_init(void)
+{
+	g_rec_mutex_init(&__cache_rec_mutex);
+}
+
+NOTIFICATION_DTOR static void __notification_cache_fini(void)
+{
+	g_rec_mutex_clear(&__cache_rec_mutex);
+}
+
+static void __notification_cache_lock(void)
+{
+	g_rec_mutex_lock(&__cache_rec_mutex);
+}
+
+static void __notification_cache_unlock(void)
+{
+	g_rec_mutex_unlock(&__cache_rec_mutex);
+}
 
 char *notification_get_app_id_by_pid(int pid)
 {
@@ -1471,8 +1522,15 @@ static void _language_key_changed_cb (keynode_t *node, void *user_data)
 		goto out;
 	}
 
+	/* Race audit pass 2: vconf delivers this callback on the
+	 * GMainContext dispatch thread, racing with _notification_create()
+	 * on the app thread which reads `_label`.  Without the lock the
+	 * free() can run while the create-side is mid-strdup(_label),
+	 * yielding a use-after-free of the freed string. */
+	__notification_cache_lock();
 	free(_label);
 	_label = strdup(label);
+	__notification_cache_unlock();
 
 out:
 	if (appinfo)
@@ -1494,6 +1552,7 @@ static notification_h _notification_create(notification_type_e type)
 	char locale_directory[PATH_MAX] = { 0, }; /* PATH_MAX 4096 */
 	char pkg_id[NOTI_PKG_ID_LEN + 1] = { 0, };
 	int err = 0;
+	bool cache_locked = false;
 
 	if (type <= NOTIFICATION_TYPE_NONE || type > NOTIFICATION_TYPE_MAX) {
 		ERR("Invalid notification type[%d]", type);
@@ -1542,6 +1601,13 @@ static notification_h _notification_create(notification_type_e type)
 		if (noti->pkg_id == NULL)
 			err = -1;
 	} else {
+		/* Race audit pass 2: every read AND every write of `_pkg_id`,
+		 * `_locale_directory`, `_label`, `_cb_registered` must happen
+		 * under __cache_rec_mutex.  The lock window covers the whole
+		 * cached-state block; the `goto out` exits below release it
+		 * via the `cache_locked` flag at out:. */
+		__notification_cache_lock();
+		cache_locked = true;
 		if (_pkg_id == NULL) {
 			err = aul_app_get_pkgid_bypid(getpid(), pkg_id, sizeof(pkg_id));
 			if (err != AUL_R_OK) {
@@ -1622,9 +1688,13 @@ static notification_h _notification_create(notification_type_e type)
 		} else {
 			noti->app_label = strdup(_label);
 		}
+		__notification_cache_unlock();
+		cache_locked = false;
 	}
 
 out:
+	if (cache_locked)
+		__notification_cache_unlock();
 	if (domain_name)
 		free(domain_name);
 

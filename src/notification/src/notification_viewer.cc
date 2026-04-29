@@ -357,7 +357,21 @@ static int __launch_default_viewer(int priv_id,
 		}
 	}
 
-	if (_delayed_noti_list != NULL) {
+	/* Race audit pass 2: `_delayed_noti_list` is mutated under
+	 * __rec_mutex by __push_delayed_noti / __pop_delayed_noti_cb.
+	 * The latter runs from a tizen-core timer source that may be
+	 * dispatched on a different thread context than the EXPORT_API
+	 * caller here.  Reading the list head outside the mutex was a
+	 * data race — observable as either a missed delayed-flush
+	 * (we see NULL while the timer is mid-append) or a torn
+	 * pointer load on weakly-ordered targets. Snapshot the
+	 * non-empty bit under the lock instead. */
+	bool delayed_pending;
+	__notification_mutex_lock();
+	delayed_pending = (_delayed_noti_list != NULL);
+	__notification_mutex_unlock();
+
+	if (delayed_pending) {
 		ret = __push_delayed_noti(app_control);
 		if (ret != NOTIFICATION_ERROR_NONE)
 			ERR("Failed to push delayed noti");

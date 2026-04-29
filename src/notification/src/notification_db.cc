@@ -172,6 +172,19 @@ EXPORT_API int notification_db_init(void)
 	char *errmsg = NULL;
 
 	/*
+	 * Race audit pass 2: `is_db_corrupted` is a file-static set by
+	 * the PRAGMA integrity_check callback __check_integrity_cb and
+	 * read by this function on the next line.  It was never reset
+	 * across invocations, so any later call to notification_db_init
+	 * (the test_notification_memleak_audit DbInit_IdempotentReinit
+	 * fixture invokes it 4x; production may re-run it on
+	 * notification-init re-exec) saw a stale `true` from the previous
+	 * call's corrupted-then-recovered DB and incorrectly re-entered
+	 * __recover_corrupted_db, deleting and re-creating an already-
+	 * healthy DBPATH.  Reset to the documented default at entry. */
+	is_db_corrupted = false;
+
+	/*
 	 * N4-T3: fast-path. If the DB file already exists and is up to date
 	 * (same DB_VERSION), skip the expensive CREATE TABLE IF NOT EXISTS
 	 * and PRAGMA integrity_check pass (~30-200 ms). This brings the

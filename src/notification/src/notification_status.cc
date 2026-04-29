@@ -71,6 +71,53 @@ struct _message_cb_data {
 
 static struct _message_cb_data md;
 
+/*
+ * Race audit pass 2: the file-static `md` struct is touched from two
+ * thread contexts in the 3rd-party app process this lib is loaded into:
+ *
+ *   - notification_status_monitor_message_cb_set / _unset run on the
+ *     app thread that calls the EXPORT_API entry points.
+ *   - __notification_status_message_dbus_callback runs on the
+ *     GMainContext that owns the system-bus GDBusConnection.
+ *
+ * Pre-fix: the callback path read `md.callback` then dereferenced it
+ * unlocked.  A concurrent _unset() between the NULL check and the
+ * indirect call freed the user's `data` and left a dangling cb
+ * pointer; the dispatch path then called through it (use-after-free).
+ * Symmetric race: _set() writing `md.callback` / `md.data` / `md.conn`
+ * tore values that the dispatch path observed half-updated.
+ *
+ * Wrap every read AND every write of `md` with a file-local recursive
+ * mutex.  The dispatch path snapshots `callback`/`data` under the lock
+ * and then invokes the user callback OUTSIDE the lock — invoking the
+ * user callback under our lock would invite deadlock if the user
+ * re-enters _set / _unset from inside their own callback.
+ */
+#define NOTIFICATION_STATUS_CTOR __attribute__((constructor))
+#define NOTIFICATION_STATUS_DTOR __attribute__((destructor))
+
+static GRecMutex __md_rec_mutex;
+
+NOTIFICATION_STATUS_CTOR static void __notification_status_init(void)
+{
+	g_rec_mutex_init(&__md_rec_mutex);
+}
+
+NOTIFICATION_STATUS_DTOR static void __notification_status_fini(void)
+{
+	g_rec_mutex_clear(&__md_rec_mutex);
+}
+
+static void __notification_status_lock(void)
+{
+	g_rec_mutex_lock(&__md_rec_mutex);
+}
+
+static void __notification_status_unlock(void)
+{
+	g_rec_mutex_unlock(&__md_rec_mutex);
+}
+
 /* LCOV_EXCL_START */
 static void __notification_status_message_dbus_callback(GDBusConnection *connection,
 					const gchar *sender_name,
@@ -81,6 +128,8 @@ static void __notification_status_message_dbus_callback(GDBusConnection *connect
 					gpointer user_data)
 {
 	char *message = NULL;
+	notification_status_message_cb cb;
+	void *cb_data;
 
 	g_variant_get(parameters, "(&s)", &message);
 	if (strlen(message) <= 0) {
@@ -88,12 +137,21 @@ static void __notification_status_message_dbus_callback(GDBusConnection *connect
 		return;
 	}
 
-	if (!md.callback) {
+	/* Snapshot under the lock so we don't tear callback+data in the
+	 * face of a concurrent _set / _unset. */
+	__notification_status_lock();
+	cb = md.callback;
+	cb_data = md.data;
+	__notification_status_unlock();
+
+	if (!cb) {
 		ERR("No callback");
 		return;
 	}
 
-	md.callback(message, md.data);
+	/* Invoke OUTSIDE the lock: the user is allowed to call _set /
+	 * _unset from their own callback. */
+	cb(message, cb_data);
 }
 /* LCOV_EXCL_STOP */
 
@@ -102,9 +160,12 @@ EXPORT_API
 int notification_status_monitor_message_cb_set(notification_status_message_cb callback, void *user_data)
 {
 	GError *error = NULL;
+	int ret = NOTIFICATION_ERROR_NONE;
 
 	if (!callback)
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
+
+	__notification_status_lock();
 
 	if (md.conn == NULL) {
 		md.conn = g_bus_get_sync(G_BUS_TYPE_SYSTEM, NULL, &error);
@@ -112,7 +173,8 @@ int notification_status_monitor_message_cb_set(notification_status_message_cb ca
 			ERR("Failed to connect to the D-BUS Daemon[%s]",
 						error->message);
 			g_error_free(error);
-			return NOTIFICATION_ERROR_FROM_DBUS;
+			ret = NOTIFICATION_ERROR_FROM_DBUS;
+			goto out;
 		}
 	}
 
@@ -130,14 +192,18 @@ int notification_status_monitor_message_cb_set(notification_status_message_cb ca
 		if (md.message_id == 0) {
 			ERR("Failed to subscribe signal");
 			g_object_unref(md.conn);
-			return NOTIFICATION_ERROR_FROM_DBUS;
+			md.conn = NULL;
+			ret = NOTIFICATION_ERROR_FROM_DBUS;
+			goto out;
 		}
 	}
 
 	md.callback = callback;
 	md.data = user_data;
 
-	return NOTIFICATION_ERROR_NONE;
+out:
+	__notification_status_unlock();
+	return ret;
 }
 /* LCOV_EXCL_STOP */
 
@@ -145,6 +211,8 @@ int notification_status_monitor_message_cb_set(notification_status_message_cb ca
 EXPORT_API
 int notification_status_monitor_message_cb_unset(void)
 {
+	__notification_status_lock();
+
 	if (md.message_id) {
 		g_dbus_connection_signal_unsubscribe(md.conn, md.message_id);
 		md.message_id = 0;
@@ -157,6 +225,8 @@ int notification_status_monitor_message_cb_unset(void)
 
 	md.callback = NULL;
 	md.data = NULL;
+
+	__notification_status_unlock();
 
 	return NOTIFICATION_ERROR_NONE;
 }

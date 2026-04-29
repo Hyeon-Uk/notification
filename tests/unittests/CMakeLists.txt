@@ -49,6 +49,13 @@ TARGET_COMPILE_DEFINITIONS(${TARGET_NOTIFICATION_UNITTESTS} PRIVATE
   # __notification_mutex_lock window. SKIP-on-absent contract.
   NOTIFICATION_INTERNAL_C_PATH="${CMAKE_SOURCE_DIR}/src/notification/src/notification_internal.cc"
   NOTIFICATION_SETTING_C_PATH="${CMAKE_SOURCE_DIR}/src/notification/src/notification_setting.cc"
+  # Race audit pass 2: notification.cc cache statics, notification_viewer.cc
+  # _delayed_noti_list head read, notification_status.cc `md` struct,
+  # notification_db.cc is_db_corrupted sticky-flag.  SKIP-on-absent contract.
+  NOTIFICATION_C_PATH="${CMAKE_SOURCE_DIR}/src/notification/src/notification.cc"
+  NOTIFICATION_VIEWER_C_PATH="${CMAKE_SOURCE_DIR}/src/notification/src/notification_viewer.cc"
+  NOTIFICATION_STATUS_C_PATH="${CMAKE_SOURCE_DIR}/src/notification/src/notification_status.cc"
+  NOTIFICATION_DB_C_PATH="${CMAKE_SOURCE_DIR}/src/notification/src/notification_db.cc"
 )
 
 # N2-T5: the test binary hosts mock TUs (tests/mock/*_mock.cc) that provide
