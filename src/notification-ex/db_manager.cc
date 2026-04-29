@@ -1023,7 +1023,6 @@ list<shared_ptr<item::AbstractItem>> DBManagerImpl::GetNotificationList(
 list<shared_ptr<item::AbstractItem>> DBManagerImpl::GetNotificationList(
     uid_t uid, string channel) {
   int ret, sim_mode;
-  char* query;
   list<shared_ptr<item::AbstractItem>> item_list;
 
   /* Check current sim status */
@@ -1033,29 +1032,74 @@ list<shared_ptr<item::AbstractItem>> DBManagerImpl::GetNotificationList(
     LOGI("vconf_get_int");
   }
 
-  string channel_query;
-  if (!channel.empty())
-    channel_query = " AND channel = '" + channel + "' ";
+  /*
+   * Pre-refactor this overload built `query_str` by string-concatenating
+   * the caller-supplied `channel` directly into the SQL ("AND channel =
+   * '" + channel + "'") and then handed the result to
+   * `sqlite3_mprintf(query_str.c_str(), uid)` — i.e. the dynamic string
+   * was used as the FORMAT argument.  That carried two real defects on
+   * the EXPORT_API surface (`DBManager::GetNotificationList(uid_t,
+   * string)` declared in idb_manager.h):
+   *
+   *   1. SQL injection — any single-quote in `channel` escapes the WHERE
+   *      clause (e.g. `' OR '1'='1' --`).
+   *   2. Format-string injection — any `%`-specifier in `channel`
+   *      (`%n`, `%s`, `%x`) survives into sqlite3_mprintf's printf-like
+   *      pass and reads / writes via `va_arg` past the single bound
+   *      argument.
+   *
+   * Sister overloads (uid+app_id+root_id, uid+app_id+priv_id) already
+   * use prepared statements with `?` bindings and the cached stmt
+   * slot from DbConnectionHolder::Cache(); fold this overload onto the
+   * same pattern.  Pick one of four static SQL templates by the
+   * (with_channel, with_simmode) flag pair so the SQL string passed to
+   * the cache key never contains caller data, then bind values as
+   * separate parameters.  Eliminates both injection classes in one
+   * shape, on top of cutting a per-call sqlite3_mprintf heap alloc.
+   */
+  const bool with_channel = !channel.empty();
+  const bool with_simmode = (sim_mode != VCONFKEY_TELEPHONY_SIM_INSERTED);
 
-  string simmode_query;
-  if (sim_mode != VCONFKEY_TELEPHONY_SIM_INSERTED) {
-    simmode_query = " AND (policy & " +
-        to_string(static_cast<int>(item::AbstractItem::Policy::SimMode)) +
-        ") == 0 ";
-  }
+  static const char* const kSqlPlain =
+      "SELECT data FROM noti_ex_list WHERE uid = ?";
+  static const char* const kSqlSim =
+      "SELECT data FROM noti_ex_list WHERE uid = ?"
+      " AND (policy & ?) == 0";
+  static const char* const kSqlChannel =
+      "SELECT data FROM noti_ex_list WHERE uid = ?"
+      " AND channel = ?";
+  static const char* const kSqlChannelSim =
+      "SELECT data FROM noti_ex_list WHERE uid = ?"
+      " AND channel = ? AND (policy & ?) == 0";
 
-  string query_str = "SELECT data FROM noti_ex_list WHERE uid = %d " +
-      channel_query +
-      simmode_query;
+  const char* sql;
+  if (with_channel && with_simmode)      sql = kSqlChannelSim;
+  else if (with_channel)                 sql = kSqlChannel;
+  else if (with_simmode)                 sql = kSqlSim;
+  else                                   sql = kSqlPlain;
 
-  query = sqlite3_mprintf(query_str.c_str(), uid);
-  if (!query) {
-    LOGE("OOM - sql query");
+  auto acquired = DbConnectionHolder::Instance().Acquire();
+  if (!acquired)
     return item_list;
-  }
+  sqlite3* db = acquired.Get();
 
-  item_list = ExecuteGetList(query);
-  sqlite3_free(query);
+  auto stmt_hdl = DbConnectionHolder::Instance().Cache().Acquire(db, sql);
+  if (!stmt_hdl) return item_list;
+
+  int idx = 1;
+  sqlite3_bind_int(stmt_hdl.Get(), idx++, static_cast<int>(uid));
+  if (with_channel)
+    sqlite3_bind_text(stmt_hdl.Get(), idx++, channel.c_str(), -1,
+                      SQLITE_TRANSIENT);
+  if (with_simmode)
+    sqlite3_bind_int(stmt_hdl.Get(), idx++,
+                     static_cast<int>(item::AbstractItem::Policy::SimMode));
+
+  while (sqlite3_step(stmt_hdl.Get()) == SQLITE_ROW) {
+    Bundle serialized(reinterpret_cast<const char*>(
+        sqlite3_column_text(stmt_hdl.Get(), 0)));
+    item_list.emplace_back(item::ItemInflator::Create(serialized));
+  }
 
   return item_list;
 }
