@@ -333,14 +333,38 @@ void DBusSender::Impl::MethodCall(string appid, const IEventInfo& info,
   }
 
   for (auto& i : serialized) {
-    unsigned int data_size = static_cast<unsigned int>(
-        strlen(reinterpret_cast<char*>(i.ToRaw().first.get())));
+    /*
+     * Pre-fix the size was computed via `strlen(ToRaw().first.get())`
+     * and `ToRaw()` was called twice — once for size and once for the
+     * payload write.  Two real defects:
+     *
+     *   1. tizen_base::Bundle::ToRaw() returns a binary blob plus its
+     *      explicit byte size (`.second`); the buffer is NOT
+     *      null-terminated as a contract — any bundle entry whose
+     *      value contains an embedded NUL (raw bytes, image payloads,
+     *      protobuf, or even ordinary keys with NUL-padded length
+     *      headers) was silently truncated by strlen, so the
+     *      receiver's WriteSocket-then-decode round-trip read a
+     *      malformed payload.
+     *
+     *   2. ToRaw() runs `bundle_encode_raw` per call — calling it
+     *      twice doubles the encode cost and cannot be assumed to
+     *      produce byte-identical output across the two calls
+     *      (the daemon's single-thread invariant happens to hold
+     *      today, but the contract is "encoded once, sent atomically").
+     *
+     * Fix snapshots the encoded pair into a local before the
+     * size+write pair so `.second` is the authoritative byte count
+     * and the buffer is held alive for the full payload write.
+     */
+    auto raw = i.ToRaw();
+    unsigned int data_size = static_cast<unsigned int>(raw.second);
     int ret = util::WriteSocket(send_sock.Get(),
         reinterpret_cast<char*>(&data_size), sizeof(data_size));
     if (ret != 0)
       break;
     ret = util::WriteSocket(send_sock.Get(),
-        reinterpret_cast<char*>(i.ToRaw().first.get()), data_size);
+        reinterpret_cast<char*>(raw.first.get()), data_size);
     if (ret != 0)
       break;
   }

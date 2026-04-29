@@ -315,8 +315,19 @@ void DBusEventListener::Impl::GetProcess(
   g_dbus_method_invocation_return_value(invocation,
       g_variant_new("(i)", result.size()));
   for (auto& i : result) {
-    unsigned int data_size = static_cast<unsigned int>(
-        strlen(reinterpret_cast<char*>(i.ToRaw().first.get())));
+    /*
+     * Same shape as dbus_sender.cc — pre-fix used
+     * `strlen(ToRaw().first.get())` to compute the byte count and
+     * called ToRaw() twice (size + payload).  Bundle::ToRaw()
+     * returns a binary blob plus its explicit byte size in
+     * `.second`; the buffer is NOT contractually null-terminated
+     * (entries holding raw bytes / images / NUL-padded length
+     * headers truncate under strlen).  Snapshot once into `raw`
+     * and use `raw.second` for the size + `raw.first.get()` for
+     * the payload, both inside the same lifetime.
+     */
+    auto raw = i.ToRaw();
+    unsigned int data_size = static_cast<unsigned int>(raw.second);
     int ret = util::WriteSocket(recv_sock.Get(),
         reinterpret_cast<char*>(&data_size), sizeof(data_size));
     if (ret != 0) {
@@ -325,7 +336,7 @@ void DBusEventListener::Impl::GetProcess(
     }
 
     ret = util::WriteSocket(recv_sock.Get(),
-        reinterpret_cast<char*>(i.ToRaw().first.get()), data_size);
+        reinterpret_cast<char*>(raw.first.get()), data_size);
     if (ret != 0) {
       LOGE("Fail to write (%d)", ret);
       break;
