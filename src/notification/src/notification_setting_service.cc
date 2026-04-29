@@ -57,6 +57,18 @@
 
 extern "C" {
 
+/*
+ * Upper bound on SQLite-derived row counts before they reach
+ * `malloc(sizeof(elem) * row_count)`.  Defends against (a) sqlite returning
+ * a negative `row_count` (impossible by contract, but unsigned conversion
+ * to size_t would expand `-1` to `SIZE_MAX` on the pointer math) and
+ * (b) a corrupted DB returning huge row counts that wrap the
+ * multiplication on 32-bit `size_t`.  Realistic Tizen devices never store
+ * more than a few thousand setting rows; 100k is several orders above any
+ * legitimate workload.
+ */
+static constexpr int kSettingDbMaxRowCount = 100000;
+
 /* LCOV_EXCL_START */
 static int _get_table_field_data_int(char **table, int *buf, int index)
 {
@@ -234,9 +246,15 @@ int noti_setting_get_setting_array(notification_setting_h *setting_array, int *c
 		goto out;
 	}
 
-	if (!row_count) {
+	if (row_count <= 0) {
 		DBG("No setting found"); /* LCOV_EXCL_LINE */
 		ret = NOTIFICATION_ERROR_NOT_EXIST_ID;
+		goto out;
+	}
+
+	if (row_count > kSettingDbMaxRowCount) {
+		ERR("row_count out of range [%d]", row_count);
+		ret = NOTIFICATION_ERROR_FROM_DB;
 		goto out;
 	}
 
@@ -533,13 +551,36 @@ int notification_system_setting_get_dnd_schedule_enabled_uid(uid_t **uids, int *
 		goto out;
 	}
 
-	if (row_count == 0) {
+	if (row_count <= 0) {
 		DBG("No enabled do_not_disturb user");
+		/*
+		 * Mirror dpm 18e691c: prior code returned NOTIFICATION_ERROR_NONE
+		 * with `*uids` and `*count` left uninitialized — callers that
+		 * read the out-args after the documented success return saw
+		 * stack garbage. Zero both before goto out so the empty-result
+		 * contract matches the populated path (`*uids = NULL`,
+		 * `*count = 0`).
+		 *
+		 * Negative row_count is also folded into this branch as a
+		 * defensive guard — sqlite3_get_table contractually returns a
+		 * non-negative count, but a corrupted libsqlite3 build or a
+		 * future upstream change must not pass `sizeof(uid_t) * (-N)`
+		 * to malloc, where the unsigned conversion expands to a huge
+		 * size_t and skips OOM rejection on systems with overcommit.
+		 */
+		*uids = NULL;
+		*count = 0;
 		ret = NOTIFICATION_ERROR_NONE;
 		goto out;
 	}
 
-	result_uids = (uid_t *)malloc(sizeof(int) * row_count);
+	if (row_count > kSettingDbMaxRowCount) {
+		ERR("row_count out of range [%d]", row_count);
+		ret = NOTIFICATION_ERROR_FROM_DB;
+		goto out;
+	}
+
+	result_uids = (uid_t *)malloc(sizeof(uid_t) * row_count);
 	if (result_uids == NULL) {
 		ERR("Failed to alloc memory");
 		ret = NOTIFICATION_ERROR_OUT_OF_MEMORY;
@@ -706,8 +747,20 @@ EXPORT_API int notification_system_setting_load_dnd_allow_exception(dnd_allow_ex
 		goto out;
 	}
 
-	if (!row_count) {
+	if (row_count <= 0) {
 		DBG("No setting found"); /* LCOV_EXCL_LINE */
+		/*
+		 * Mirror dpm 18e691c: prior code returned NOTIFICATION_ERROR_NONE
+		 * with `*dnd_allow_exception` and `*count` left uninitialized.
+		 * Zero both so the empty-result contract matches the populated
+		 * path (`*dnd_allow_exception = NULL`, `*count = 0`).
+		 */
+		*dnd_allow_exception = NULL;
+		*count = 0;
+		goto out;
+	} else if (row_count > kSettingDbMaxRowCount) {
+		ERR("row_count out of range [%d]", row_count);
+		ret = NOTIFICATION_ERROR_FROM_DB;
 		goto out;
 	} else {
 		dnd_allow_exception_data = (dnd_allow_exception_h)malloc(sizeof(struct notification_system_setting_dnd_allow_exception) * row_count);

@@ -2070,6 +2070,15 @@ EXPORT_API int notification_noti_check_tag(notification_h noti)
 		/* LCOV_EXCL_START */
 		ERR("Failed to sqlite3_prepare_v2[%d][%s]",
 				ret, sqlite3_errmsg(db));
+		/*
+		 * Mirror dpm 18e691c: prior code reused `ret` from
+		 * sqlite3_prepare_v2 (SQLITE_ERROR / SQLITE_BUSY / etc.) and
+		 * returned it directly to the EXPORT_API caller, leaking the
+		 * sqlite3 error domain through notification_*. Convert to
+		 * the documented domain so callers can compare against
+		 * NOTIFICATION_ERROR_FROM_DB.
+		 */
+		ret = NOTIFICATION_ERROR_FROM_DB;
 		goto err;
 		/* LCOV_EXCL_STOP */
 	}
@@ -2143,6 +2152,16 @@ EXPORT_API int notification_noti_check_count_for_template(notification_h noti, i
 		result = 0;
 
 	*count = result;
+	/*
+	 * Mirror dpm 18e691c: sqlite3_step returns SQLITE_ROW (=100),
+	 * SQLITE_DONE (=101), or SQLITE_ERROR (=1) — none of which are
+	 * NOTIFICATION_ERROR_NONE (=0). Prior code returned `ret` directly,
+	 * leaking the sqlite3 status into the EXPORT_API surface so callers
+	 * that compared the return against NOTIFICATION_ERROR_NONE saw a
+	 * spurious failure even when *count was populated correctly.
+	 * Convert to the documented domain explicitly.
+	 */
+	ret = NOTIFICATION_ERROR_NONE;
 
 err:
 	if (stmt)

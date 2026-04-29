@@ -184,6 +184,16 @@ static void _rpc_port_proxy_noti_service_event_received_cb (void *user_data,
 }
 
 /*
+ * Upper bound on array sizes received from RPC proxies before they reach
+ * `malloc(sizeof(elem) * count)`.  100k is several orders above any
+ * legitimate notification workload (UI surfaces ~50, daemon-wide ceiling
+ * ~1k); values above this are treated as malformed input from the wire
+ * and cut the `count * sizeof(T)` multiplication-overflow class at entry,
+ * before any allocation or initialisation loop runs.
+ */
+static constexpr int TIDL_MAX_ARRAY_COUNT = 100000;
+
+/*
  * functions to create operation list
  */
 static notification_op *_tidl_create_op(notification_op_type_e type,
@@ -192,7 +202,7 @@ static notification_op *_tidl_create_op(notification_op_type_e type,
 	int i;
 	notification_op *op_list;
 
-	if (num_op <= 0)
+	if (num_op <= 0 || num_op > TIDL_MAX_ARRAY_COUNT)
 		return NULL;
 
 	op_list = (notification_op *)malloc(sizeof(notification_op) * num_op);
@@ -1065,9 +1075,18 @@ int notification_tidl_request_get_setting_array(
 		return ret;
 	}
 
+	if (size <= 0 || size > TIDL_MAX_ARRAY_COUNT) {
+		WARN("invalid setting array size : %d", size);
+		if (handle_array)
+			rpc_port_proxy_array_noti_setting_destroy(handle_array);
+		return NOTIFICATION_ERROR_INVALID_PARAMETER;
+	}
+
 	result_setting_array = (struct notification_setting *)malloc(sizeof(struct notification_setting) * size);
 	if (result_setting_array == NULL) {
 		ERR("malloc failed");
+		if (handle_array)
+			rpc_port_proxy_array_noti_setting_destroy(handle_array);
 		return NOTIFICATION_ERROR_OUT_OF_MEMORY;
 	}
 
