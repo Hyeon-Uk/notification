@@ -56,6 +56,11 @@ TARGET_COMPILE_DEFINITIONS(${TARGET_NOTIFICATION_UNITTESTS} PRIVATE
   NOTIFICATION_VIEWER_C_PATH="${CMAKE_SOURCE_DIR}/src/notification/src/notification_viewer.cc"
   NOTIFICATION_STATUS_C_PATH="${CMAKE_SOURCE_DIR}/src/notification/src/notification_status.cc"
   NOTIFICATION_DB_C_PATH="${CMAKE_SOURCE_DIR}/src/notification/src/notification_db.cc"
+  # Stage 7: tidl source contract test reads noti_service.tidl directly so a
+  # source-level change (struct field add/remove, RPC method add/remove,
+  # privilege annotation drift) is caught before the prebuild.sh codegen
+  # step rather than after.  Same SKIP-on-absent contract as the N4-T1 path.
+  NOTIFICATION_TIDL_SOURCE_PATH="${CMAKE_SOURCE_DIR}/src/tidl/noti_service.tidl"
 )
 
 # N2-T5: the test binary hosts mock TUs (tests/mock/*_mock.cc) that provide
