@@ -44,6 +44,11 @@ TARGET_COMPILE_DEFINITIONS(${TARGET_NOTIFICATION_UNITTESTS} PRIVATE
   # filename-agnostic — only the path needs to follow the migration.
   NOTIFICATION_TIDL_C_PATH="${CMAKE_SOURCE_DIR}/src/notification/src/notification_tidl.cc"
   NOTIFICATION_INTERNAL_TIDL_C_PATH="${CMAKE_SOURCE_DIR}/src/notification/src/notification_internal_tidl.cc"
+  # Race audit (mirror of dpm 7f3b56d): probes that pin every
+  # _noti_cb_hash / _noti_dnd_cb_hash access site inside the file's
+  # __notification_mutex_lock window. SKIP-on-absent contract.
+  NOTIFICATION_INTERNAL_C_PATH="${CMAKE_SOURCE_DIR}/src/notification/src/notification_internal.cc"
+  NOTIFICATION_SETTING_C_PATH="${CMAKE_SOURCE_DIR}/src/notification/src/notification_setting.cc"
 )
 
 # N2-T5: the test binary hosts mock TUs (tests/mock/*_mock.cc) that provide

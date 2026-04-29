@@ -203,15 +203,27 @@ void notification_call_changed_cb_for_uid(notification_op *op_list, int op_num, 
 	GList *noti_cb_list;
 	notification_cb_info_s *noti_cb_info;
 
-	if (_noti_cb_hash == NULL)
-		return;
-
-	noti_cb_list = (GList *)g_hash_table_lookup(_noti_cb_hash, GUINT_TO_POINTER(uid));
-	if (noti_cb_list == NULL)
-		return;
-
 	if (op_list == NULL) {
 		ERR("Invalid parameter");
+		return;
+	}
+
+	/* Race audit (mirror of dpm 7f3b56d): _noti_cb_hash is a file-static
+	 * cache lazily populated from the (un)register EXPORT_API surface.
+	 * Dispatch runs on the rpc-port stub-delivery thread; concurrent
+	 * unresister on the app thread can free a list node mid-iteration
+	 * (use-after-free).  __rec_mutex is recursive so the cb body is
+	 * free to call back into the public API without self-deadlock. */
+	__notification_mutex_lock();
+
+	if (_noti_cb_hash == NULL) {
+		__notification_mutex_unlock();
+		return;
+	}
+
+	noti_cb_list = (GList *)g_hash_table_lookup(_noti_cb_hash, GUINT_TO_POINTER(uid));
+	if (noti_cb_list == NULL) {
+		__notification_mutex_unlock();
 		return;
 	}
 
@@ -229,6 +241,8 @@ void notification_call_changed_cb_for_uid(notification_op *op_list, int op_num, 
 					type, op_list, op_num);
 		}
 	}
+
+	__notification_mutex_unlock();
 }
 
 static gint __priv_id_compare(gconstpointer a, gconstpointer b)
@@ -356,9 +370,6 @@ EXPORT_API int notification_resister_changed_cb_for_uid(
 	if (callback == NULL)
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 
-	if (_noti_cb_hash == NULL)
-		_noti_cb_hash = g_hash_table_new(g_direct_hash, g_direct_equal);
-
 	noti_cb_info_new = (notification_cb_info_s *)malloc(sizeof(notification_cb_info_s));
 	if (noti_cb_info_new == NULL) {
 		ERR("Failed to alloc memory");
@@ -370,6 +381,15 @@ EXPORT_API int notification_resister_changed_cb_for_uid(
 	noti_cb_info_new->detailed_changed_cb = NULL;
 	noti_cb_info_new->data = user_data;
 
+	/* Race audit: protect lazy init AND lookup/insert under __rec_mutex.
+	 * Two registering threads racing the previous unprotected lazy-init
+	 * could each create a fresh GHashTable; the second g_hash_table_new
+	 * leaks the first table along with every list head it pointed at. */
+	__notification_mutex_lock();
+
+	if (_noti_cb_hash == NULL)
+		_noti_cb_hash = g_hash_table_new(g_direct_hash, g_direct_equal);
+
 	noti_cb_list = static_cast<GList *>(g_hash_table_lookup(_noti_cb_hash, GUINT_TO_POINTER(uid)));
 
 	if (noti_cb_list == NULL) {
@@ -379,6 +399,12 @@ EXPORT_API int notification_resister_changed_cb_for_uid(
 		noti_cb_list = g_list_append(noti_cb_list, noti_cb_info_new);
 	}
 
+	__notification_mutex_unlock();
+
+	/* notification_tidl_monitor_init takes its own internal mutex in
+	 * notification_tidl.cc; keep it OUT of our critical section to
+	 * avoid a documented lock-order obligation between the two
+	 * file-local __rec_mutexes. */
 	if (notification_tidl_monitor_init() != NOTIFICATION_ERROR_NONE) {
 		notification_unresister_changed_cb_for_uid(callback, uid);
 		return NOTIFICATION_ERROR_IO_ERROR;
@@ -415,16 +441,28 @@ EXPORT_API int notification_unresister_changed_cb_for_uid(
 	notification_cb_info_s *noti_cb_info;
 	GList *noti_cb_list;
 	GList *delete_cb_list;
+	bool monitor_fini_needed = false;
+	int ret = NOTIFICATION_ERROR_NONE;
 
 	if (callback == NULL)
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 
-	if (_noti_cb_hash == NULL)
-		return NOTIFICATION_ERROR_INVALID_PARAMETER;
+	/* Race audit: cover the entire lookup -> delete -> reinsert/steal
+	 * sequence with __rec_mutex.  Concurrent dispatch through
+	 * notification_call_changed_cb_for_uid would otherwise iterate the
+	 * same list head while we're freeing a node out from under it. */
+	__notification_mutex_lock();
+
+	if (_noti_cb_hash == NULL) {
+		ret = NOTIFICATION_ERROR_INVALID_PARAMETER;
+		goto out;
+	}
 
 	noti_cb_list = (GList *)g_hash_table_lookup(_noti_cb_hash, GUINT_TO_POINTER(uid));
-	if (noti_cb_list == NULL)
-		return NOTIFICATION_ERROR_INVALID_PARAMETER;
+	if (noti_cb_list == NULL) {
+		ret = NOTIFICATION_ERROR_INVALID_PARAMETER;
+		goto out;
+	}
 
 	noti_cb_list = g_list_first(noti_cb_list);
 	delete_cb_list = g_list_find_custom(noti_cb_list, (gconstpointer)callback,
@@ -443,13 +481,24 @@ EXPORT_API int notification_unresister_changed_cb_for_uid(
 		}
 
 	} else {
-		return NOTIFICATION_ERROR_INVALID_PARAMETER;
+		ret = NOTIFICATION_ERROR_INVALID_PARAMETER;
+		goto out;
 	}
 
 	if (g_hash_table_size(_noti_cb_hash) == 0)
+		monitor_fini_needed = true;
+
+out:
+	__notification_mutex_unlock();
+
+	/* See note in notification_resister_changed_cb_for_uid: the TIDL
+	 * monitor lifecycle helpers acquire notification_tidl.cc's own
+	 * __rec_mutex, so we drop ours first to avoid a lock-order
+	 * obligation between the two file-locals. */
+	if (monitor_fini_needed)
 		notification_tidl_monitor_fini();
 
-	return NOTIFICATION_ERROR_NONE;
+	return ret;
 }
 
 EXPORT_API int notification_unresister_changed_cb(
@@ -1344,9 +1393,6 @@ EXPORT_API int notification_register_detailed_changed_cb_for_uid(
 	if (callback == NULL)
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 
-	if (_noti_cb_hash == NULL)
-		_noti_cb_hash = g_hash_table_new(g_direct_hash, g_direct_equal);
-
 	noti_cb_info_new = (notification_cb_info_s *)malloc(sizeof(notification_cb_info_s));
 	if (noti_cb_info_new == NULL) {
 		ERR("Failed to alloc memory");
@@ -1358,6 +1404,13 @@ EXPORT_API int notification_register_detailed_changed_cb_for_uid(
 	noti_cb_info_new->detailed_changed_cb = callback;
 	noti_cb_info_new->data = user_data;
 
+	/* Race audit (mirror of notification_resister_changed_cb_for_uid):
+	 * cover lazy init + lookup + insert with __rec_mutex. */
+	__notification_mutex_lock();
+
+	if (_noti_cb_hash == NULL)
+		_noti_cb_hash = g_hash_table_new(g_direct_hash, g_direct_equal);
+
 	noti_cb_list = static_cast<GList *>(g_hash_table_lookup(_noti_cb_hash, GUINT_TO_POINTER(uid)));
 
 	if (noti_cb_list == NULL) {
@@ -1367,6 +1420,11 @@ EXPORT_API int notification_register_detailed_changed_cb_for_uid(
 		noti_cb_list = g_list_append(noti_cb_list, noti_cb_info_new);
 	}
 
+	__notification_mutex_unlock();
+
+	/* monitor_init takes notification_tidl.cc's __rec_mutex; keep it
+	 * outside our critical section (lock-order rationale matches the
+	 * non-detailed variant). */
 	if (notification_tidl_monitor_init() != NOTIFICATION_ERROR_NONE) {
 		notification_unregister_detailed_changed_cb_for_uid(callback, user_data, uid);
 		return NOTIFICATION_ERROR_IO_ERROR;
@@ -1403,17 +1461,27 @@ EXPORT_API int notification_unregister_detailed_changed_cb_for_uid(
 	notification_cb_info_s *noti_cb_info;
 	GList *noti_cb_list;
 	GList *delete_cb_list;
+	bool monitor_fini_needed = false;
+	int ret = NOTIFICATION_ERROR_NONE;
 
 	if (callback == NULL)
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 
-	if (_noti_cb_hash == NULL)
-		return NOTIFICATION_ERROR_INVALID_PARAMETER;
+	/* Race audit (mirror of notification_unresister_changed_cb_for_uid):
+	 * cover lookup -> delete -> reinsert/steal under __rec_mutex. */
+	__notification_mutex_lock();
+
+	if (_noti_cb_hash == NULL) {
+		ret = NOTIFICATION_ERROR_INVALID_PARAMETER;
+		goto out;
+	}
 
 	noti_cb_list = (GList *)g_hash_table_lookup(_noti_cb_hash, GUINT_TO_POINTER(uid));
 
-	if (noti_cb_list == NULL)
-		return NOTIFICATION_ERROR_INVALID_PARAMETER;
+	if (noti_cb_list == NULL) {
+		ret = NOTIFICATION_ERROR_INVALID_PARAMETER;
+		goto out;
+	}
 
 	noti_cb_list = g_list_first(noti_cb_list);
 	delete_cb_list = g_list_find_custom(noti_cb_list, (gconstpointer)callback,
@@ -1431,14 +1499,20 @@ EXPORT_API int notification_unregister_detailed_changed_cb_for_uid(
 		}
 
 	} else {
-		return NOTIFICATION_ERROR_INVALID_PARAMETER;
+		ret = NOTIFICATION_ERROR_INVALID_PARAMETER;
+		goto out;
 	}
 
 	if (g_hash_table_size(_noti_cb_hash) == 0)
+		monitor_fini_needed = true;
+
+out:
+	__notification_mutex_unlock();
+
+	if (monitor_fini_needed)
 		notification_tidl_monitor_fini();
 
-	return NOTIFICATION_ERROR_NONE;
-
+	return ret;
 }
 
 EXPORT_API int notification_unregister_detailed_changed_cb(

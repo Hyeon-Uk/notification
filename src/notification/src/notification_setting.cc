@@ -69,6 +69,44 @@ struct _noti_dnd_cb_info {
 
 static GHashTable *_noti_dnd_cb_hash = NULL;
 
+/*
+ * Race audit (mirror of dpm 7f3b56d): _noti_dnd_cb_hash above used to be
+ * mutated by the (un)register EXPORT_API surface and read by
+ * notification_call_dnd_changed_cb_for_uid (dispatch path) without any
+ * synchronisation.  3rd-party app processes loading this client lib are
+ * multi-threaded, so concurrent register/dispatch/unregister could
+ * (a) race the lazy g_hash_table_new and leak the loser's table, and
+ * (b) free a noti_dnd_cb_info_s out from under a concurrent dispatch
+ * iterator (use-after-free).
+ *
+ * Add a recursive file-local mutex so dispatch is free to call back into
+ * the public API without self-deadlock.
+ */
+#define NOTIFICATION_SETTING_CTOR __attribute__((constructor))
+#define NOTIFICATION_SETTING_DTOR __attribute__((destructor))
+
+static GRecMutex __rec_mutex;
+
+NOTIFICATION_SETTING_CTOR static void __notification_setting_init(void)
+{
+	g_rec_mutex_init(&__rec_mutex);
+}
+
+NOTIFICATION_SETTING_DTOR static void __notification_setting_fini(void)
+{
+	g_rec_mutex_clear(&__rec_mutex);
+}
+
+static void __notification_mutex_lock(void)
+{
+	g_rec_mutex_lock(&__rec_mutex);
+}
+
+static void __notification_mutex_unlock(void)
+{
+	g_rec_mutex_unlock(&__rec_mutex);
+}
+
 /* LCOV_EXCL_START */
 EXPORT_API int notification_setting_get_setting_array_for_uid(notification_setting_h *setting_array, int *count, uid_t uid)
 {
@@ -909,12 +947,20 @@ void notification_call_dnd_changed_cb_for_uid(int do_not_disturb, uid_t uid)
 	GList *noti_dnd_cb_list = NULL;
 	noti_dnd_cb_info_s *dnd_data = NULL;
 
-	if (_noti_dnd_cb_hash == NULL)
+	/* Race audit: hold __rec_mutex across the iterator so concurrent
+	 * unregister cannot free a node mid-loop.  Recursive so the cb
+	 * body can call back into the public API. */
+	__notification_mutex_lock();
+
+	if (_noti_dnd_cb_hash == NULL) {
+		__notification_mutex_unlock();
 		return;
+	}
 
 	noti_dnd_cb_list = (GList *)g_hash_table_lookup(_noti_dnd_cb_hash, GUINT_TO_POINTER(uid));
 	if (noti_dnd_cb_list == NULL) {
 		ERR("Invalid data");
+		__notification_mutex_unlock();
 		return;
 	}
 
@@ -926,6 +972,8 @@ void notification_call_dnd_changed_cb_for_uid(int do_not_disturb, uid_t uid)
 		if (dnd_data != NULL && dnd_data->callback != NULL)
 			dnd_data->callback(dnd_data->user_data, do_not_disturb);
 	}
+
+	__notification_mutex_unlock();
 }
 /* LCOV_EXCL_STOP */
 
@@ -935,17 +983,18 @@ EXPORT_API int notification_register_system_setting_dnd_changed_cb_for_uid(dnd_c
 	GList *noti_dnd_list = NULL;
 	GList *noti_dnd_found_list = NULL;
 	noti_dnd_cb_info_s *dnd_data = NULL;
+	int ret = NOTIFICATION_ERROR_NONE;
 
 	if (callback == NULL)
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 
+	/* monitor_init takes notification_tidl.cc's __rec_mutex; keep it
+	 * outside our critical section for the same lock-order rationale
+	 * documented in notification_internal.cc. */
 	if (notification_tidl_monitor_init() != NOTIFICATION_ERROR_NONE) {
 		ERR("Failed to init monitor");
 		return NOTIFICATION_ERROR_IO_ERROR;
 	}
-
-	if (_noti_dnd_cb_hash == NULL)
-		_noti_dnd_cb_hash = g_hash_table_new(g_direct_hash, g_direct_equal);
 
 	dnd_data = (noti_dnd_cb_info_s *)malloc(sizeof(noti_dnd_cb_info_s));
 	if (dnd_data == NULL)
@@ -953,6 +1002,12 @@ EXPORT_API int notification_register_system_setting_dnd_changed_cb_for_uid(dnd_c
 
 	dnd_data->callback = callback;
 	dnd_data->user_data = user_data;
+
+	/* Race audit: cover lazy init + lookup + insert under __rec_mutex. */
+	__notification_mutex_lock();
+
+	if (_noti_dnd_cb_hash == NULL)
+		_noti_dnd_cb_hash = g_hash_table_new(g_direct_hash, g_direct_equal);
 
 	noti_dnd_list = (GList *)g_hash_table_lookup(_noti_dnd_cb_hash, GUINT_TO_POINTER(uid));
 
@@ -965,13 +1020,16 @@ EXPORT_API int notification_register_system_setting_dnd_changed_cb_for_uid(dnd_c
 		if (noti_dnd_found_list) {
 			ERR("Already existing callback");
 			free(dnd_data);
-			return NOTIFICATION_ERROR_INVALID_PARAMETER;
+			ret = NOTIFICATION_ERROR_INVALID_PARAMETER;
+			goto out;
 		}
 
 		noti_dnd_list = g_list_append(noti_dnd_list, dnd_data);
 	}
 
-	return NOTIFICATION_ERROR_NONE;
+out:
+	__notification_mutex_unlock();
+	return ret;
 }
 /* LCOV_EXCL_STOP */
 
@@ -986,17 +1044,29 @@ EXPORT_API int notification_unregister_system_setting_dnd_changed_cb_for_uid(dnd
 	GList *noti_dnd_cb_list = NULL;
 	GList *noti_dnd_del_list = NULL;
 	noti_dnd_cb_info_s *dnd_data = NULL;
+	bool monitor_fini_needed = false;
+	int ret = NOTIFICATION_ERROR_NONE;
 
 	if (callback == NULL)
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 
-	if (_noti_dnd_cb_hash == NULL)
-		return NOTIFICATION_ERROR_INVALID_PARAMETER;
+	/* Race audit: cover lookup -> delete -> reinsert/steal under
+	 * __rec_mutex.  Concurrent dispatch through
+	 * notification_call_dnd_changed_cb_for_uid would otherwise iterate
+	 * the same list head while we free a node out from under it. */
+	__notification_mutex_lock();
+
+	if (_noti_dnd_cb_hash == NULL) {
+		ret = NOTIFICATION_ERROR_INVALID_PARAMETER;
+		goto out;
+	}
 
 	noti_dnd_cb_list = (GList *)g_hash_table_lookup(_noti_dnd_cb_hash, GUINT_TO_POINTER(uid));
 
-	if (noti_dnd_cb_list == NULL)
-		return NOTIFICATION_ERROR_INVALID_PARAMETER;
+	if (noti_dnd_cb_list == NULL) {
+		ret = NOTIFICATION_ERROR_INVALID_PARAMETER;
+		goto out;
+	}
 
 	noti_dnd_del_list = g_list_find_custom(noti_dnd_cb_list, (gconstpointer)callback,
 					(GCompareFunc)_noti_dnd_cb_compare);
@@ -1007,7 +1077,8 @@ EXPORT_API int notification_unregister_system_setting_dnd_changed_cb_for_uid(dnd
 		noti_dnd_cb_list = g_list_delete_link(noti_dnd_cb_list, noti_dnd_del_list);
 		free(dnd_data);
 	} else {
-		return NOTIFICATION_ERROR_INVALID_PARAMETER;
+		ret = NOTIFICATION_ERROR_INVALID_PARAMETER;
+		goto out;
 	}
 
 	if (noti_dnd_cb_list == NULL) {
@@ -1018,9 +1089,15 @@ EXPORT_API int notification_unregister_system_setting_dnd_changed_cb_for_uid(dnd
 	}
 
 	if (g_hash_table_size(_noti_dnd_cb_hash) == 0)
+		monitor_fini_needed = true;
+
+out:
+	__notification_mutex_unlock();
+
+	if (monitor_fini_needed)
 		notification_tidl_monitor_fini();
 
-	return NOTIFICATION_ERROR_NONE;
+	return ret;
 }
 /* LCOV_EXCL_STOP */
 
