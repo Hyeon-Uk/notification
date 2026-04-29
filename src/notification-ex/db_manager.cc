@@ -670,10 +670,27 @@ map<string, string> DBManagerImpl::GetHideMap() {
     return hide_map;
   sqlite3* db = acquired.Get();
 
-  /* Fixed SQL → cache. */
+  /*
+   * Fixed SQL → cache.
+   *
+   * The LIMIT keeps the in-memory map size bounded.  Pre-fix the
+   * loop populated the map with every row whose hide_list was
+   * non-NULL — no LIMIT, no row count cap.  With a corrupted DB or
+   * a long-lived app accumulating millions of hidden-flagged
+   * notifications, the std::map grew linearly (~150 bytes per
+   * entry on top of std::map node overhead) and could exhaust
+   * heap on a 32-bit ARM target.  100000 is several orders above
+   * any realistic device steady-state hide count (Tizen worst
+   * case ~1000 entries) but small enough that even pathological
+   * keys/values stay well below process RSS targets.  When the
+   * table has more than the cap, the SQL silently truncates —
+   * callers tolerate a partial map (the notification's hide_list
+   * is consulted opportunistically, not as a security gate; a
+   * missed entry shows the notification, not the wrong action).
+   */
   static const char* const kSql =
       "SELECT root_id, app_id, uid, hide_list FROM noti_ex_list"
-      " WHERE hide_list IS NOT NULL";
+      " WHERE hide_list IS NOT NULL LIMIT 100000";
   auto stmt_hdl = DbConnectionHolder::Instance().Cache().Acquire(db, kSql);
   if (!stmt_hdl) {
     LOGE("Failed to prepare GetHideMap query: %s", sqlite3_errmsg(db));
