@@ -219,10 +219,32 @@ class ManagerCallbackInfo {
       return;
     }
 
+    /*
+     * Pre-fix the loop allocated `new Handle(...)` per entry and
+     * tolerated nothing failing.  If the allocation threw on entry i>0
+     * the partial array of (i-1) Handle pointers plus the calloc'd
+     * buffer leaked, AND the exception escaped through the addedList
+     * dispatcher (this is called from a daemon-side observer with no
+     * try/catch above us, so the throw would propagate up the
+     * RPC-port stub callback into the C ABI of the dispatcher —
+     * std::terminate).  Bound the allocation in a try block, roll back
+     * any partial state on throw, and log + bail rather than escape.
+     */
     int idx = 0;
-    for (auto& i : addedList) {
-      added_item[idx++] =
-          static_cast<noti_ex_item_h>(new Handle(shared_ptr<AbstractItem>(i)));
+    try {
+      for (auto& i : addedList) {
+        added_item[idx] =
+            static_cast<noti_ex_item_h>(new Handle(shared_ptr<AbstractItem>(i)));
+        ++idx;
+      }
+    } catch (...) {
+      for (int j = 0; j < idx; ++j) {
+        if (added_item[j] != nullptr)
+          delete static_cast<Handle*>(added_item[j]);
+      }
+      free(added_item);
+      LOGE("Failed to allocate Handle for added item dispatch");
+      return;
     }
 
     IEventInfo* c_info = const_cast<IEventInfo*>(&info);
@@ -236,11 +258,23 @@ class ManagerCallbackInfo {
     if (cb_.updated == nullptr)
       return;
 
+    /*
+     * Pre-fix `new Handle(...)` was inline in the C-callback argument
+     * list.  bad_alloc would unwind through cb_.updated's C ABI —
+     * std::terminate.  Hoist the allocation, guard with try/catch.
+     */
     IEventInfo* c_info = const_cast<IEventInfo*>(&info);
     for (auto& i : updatedList) {
+      Handle* handle = nullptr;
+      try {
+        handle = new Handle(shared_ptr<AbstractItem>(i));
+      } catch (...) {
+        LOGE("Failed to allocate Handle for updated item dispatch");
+        continue;
+      }
       cb_.updated(static_cast<noti_ex_manager_h>(manager),
         static_cast<noti_ex_event_info_h>(c_info),
-        static_cast<noti_ex_item_h>(new Handle(shared_ptr<AbstractItem>(i))),
+        static_cast<noti_ex_item_h>(handle),
         user_data_);
     }
   }
@@ -250,11 +284,21 @@ class ManagerCallbackInfo {
     if (cb_.deleted == nullptr)
       return;
 
+    /* Same shape as InvokeUpdated above — hoist Handle allocation
+     * out of the C callback argument list and guard against bad_alloc
+     * unwinding across the C ABI. */
     IEventInfo* c_info = const_cast<IEventInfo*>(&info);
     for (auto& i : deletedList) {
+      Handle* handle = nullptr;
+      try {
+        handle = new Handle(shared_ptr<AbstractItem>(i));
+      } catch (...) {
+        LOGE("Failed to allocate Handle for deleted item dispatch");
+        continue;
+      }
       cb_.deleted(static_cast<noti_ex_manager_h>(manager),
         static_cast<noti_ex_event_info_h>(c_info),
-        static_cast<noti_ex_item_h>(new Handle(shared_ptr<AbstractItem>(i))),
+        static_cast<noti_ex_item_h>(handle),
         user_data_);
     }
   }
@@ -2915,10 +2959,21 @@ extern "C" EXPORT_API int noti_ex_manager_get(noti_ex_manager_h handle,
     return NOTI_EX_ERROR_INVALID_PARAMETER;
   }
 
+  /*
+   * Hoist `added_item` and `idx` to function scope so the catch block
+   * below can free the calloc'd buffer plus any partially-allocated
+   * Handle pointers if `new Handle(...)` throws mid-loop.  Pre-fix the
+   * declarations were inside the try block, so the catch could only
+   * map the error code and silently leak both the buffer and the
+   * partial Handles — same shape as the working cleanup at line 3615
+   * (noti_ex_reporter_find_by_channel) but missing here.
+   */
+  noti_ex_item_h* added_item = nullptr;
+  int idx = 0;
   try {
     ManagerStub* stub = static_cast<ManagerStub*>(handle);
     list<unique_ptr<item::AbstractItem>> item_list = stub->Get();
-    noti_ex_item_h* added_item =
+    added_item =
         static_cast<noti_ex_item_h*>(
           calloc(item_list.size(), sizeof(noti_ex_item_h)));
     if (added_item == nullptr) {
@@ -2926,13 +2981,23 @@ extern "C" EXPORT_API int noti_ex_manager_get(noti_ex_manager_h handle,
       return NOTI_EX_ERROR_OUT_OF_MEMORY;
     }
 
-    int idx = 0;
     for (auto& i : item_list) {
-      added_item[idx++] = static_cast<noti_ex_item_h>(new Handle(std::move(i)));
+      added_item[idx] = static_cast<noti_ex_item_h>(new Handle(std::move(i)));
+      ++idx;
     }
     *items = added_item;
     *count = item_list.size();
+    /* Ownership of added_item now transfers to the caller via *items;
+     * NULL the local so the catch path below cannot double-free. */
+    added_item = nullptr;
   } catch (Exception& ex) {
+    if (added_item != nullptr) {
+      for (int j = 0; j < idx; ++j) {
+        if (added_item[j] != nullptr)
+          delete static_cast<Handle*>(added_item[j]);
+      }
+      free(added_item);
+    }
     if (ex.GetErrorCode() == ERROR_NOT_EXIST_ID) {
       *items = nullptr;
       *count = 0;
@@ -2940,6 +3005,16 @@ extern "C" EXPORT_API int noti_ex_manager_get(noti_ex_manager_h handle,
     }
     LOGE("%s %d", ex.what(), ex.GetErrorCode());
     return ex.GetErrorCode();
+  } catch (...) {
+    if (added_item != nullptr) {
+      for (int j = 0; j < idx; ++j) {
+        if (added_item[j] != nullptr)
+          delete static_cast<Handle*>(added_item[j]);
+      }
+      free(added_item);
+    }
+    LOGE("unknown exception in noti_ex_manager_get");
+    return NOTI_EX_ERROR_OUT_OF_MEMORY;
   }
   return NOTI_EX_ERROR_NONE;
 }
@@ -2954,10 +3029,16 @@ extern "C" EXPORT_API int noti_ex_manager_get_by_channel(
     return NOTI_EX_ERROR_INVALID_PARAMETER;
   }
 
+  /* Same shape as noti_ex_manager_get above — hoist the calloc'd
+   * buffer and loop index so the catch path can free both the
+   * buffer and any partially-allocated Handle pointers when
+   * `new Handle(...)` throws. */
+  noti_ex_item_h* added_item = nullptr;
+  int idx = 0;
   try {
     ManagerStub* stub = static_cast<ManagerStub*>(handle);
     list<unique_ptr<item::AbstractItem>> item_list = stub->Get(channel);
-    noti_ex_item_h* added_item =
+    added_item =
         static_cast<noti_ex_item_h*>(
           calloc(item_list.size(), sizeof(noti_ex_item_h)));
     if (added_item == nullptr) {
@@ -2965,13 +3046,21 @@ extern "C" EXPORT_API int noti_ex_manager_get_by_channel(
       return NOTI_EX_ERROR_OUT_OF_MEMORY;
     }
 
-    int idx = 0;
     for (auto& i : item_list) {
-      added_item[idx++] = static_cast<noti_ex_item_h>(new Handle(std::move(i)));
+      added_item[idx] = static_cast<noti_ex_item_h>(new Handle(std::move(i)));
+      ++idx;
     }
     *items = added_item;
     *count = item_list.size();
+    added_item = nullptr;
   } catch (Exception& ex) {
+    if (added_item != nullptr) {
+      for (int j = 0; j < idx; ++j) {
+        if (added_item[j] != nullptr)
+          delete static_cast<Handle*>(added_item[j]);
+      }
+      free(added_item);
+    }
     if (ex.GetErrorCode() == ERROR_NOT_EXIST_ID) {
       *items = nullptr;
       *count = 0;
@@ -2979,6 +3068,16 @@ extern "C" EXPORT_API int noti_ex_manager_get_by_channel(
     }
     LOGE("%s %d", ex.what(), ex.GetErrorCode());
     return ex.GetErrorCode();
+  } catch (...) {
+    if (added_item != nullptr) {
+      for (int j = 0; j < idx; ++j) {
+        if (added_item[j] != nullptr)
+          delete static_cast<Handle*>(added_item[j]);
+      }
+      free(added_item);
+    }
+    LOGE("unknown exception in noti_ex_manager_get_by_channel");
+    return NOTI_EX_ERROR_OUT_OF_MEMORY;
   }
 
   return NOTI_EX_ERROR_NONE;
