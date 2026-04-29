@@ -17,6 +17,7 @@
 #include <dlog.h>
 #include <app_common.h>
 
+#include <algorithm>
 #include <memory>
 #include <vector>
 
@@ -194,12 +195,31 @@ void GroupItem::AddChild(shared_ptr<AbstractItem> child) {
 }
 
 void GroupItem::RemoveChild(string itemId) {
-  for (auto& i : impl_->children_list_) {
-    if (i.get()->GetId() == itemId) {
-      impl_->children_list_.remove(i);
-      break;
-    }
-  }
+  /*
+   * Pre-fix this used a range-based for over `children_list_` and
+   * called `children_list_.remove(i)` mid-iteration where `i` was the
+   * range-loop reference into the std::list element being removed.
+   * `std::list::remove(value)` walks the list and erases every node
+   * whose stored value equals `value`, invalidating the loop's
+   * underlying iterator (and the `i` reference) immediately.  Today
+   * the `break` after the call meant nothing dereferenced the
+   * dangling iterator, but the construct is undefined per [list.ops]
+   * and a future maintainer who removed the `break` (e.g. to delete
+   * every match instead of just the first) would land a real
+   * use-after-free on a heavily-shared shared_ptr<AbstractItem>.
+   *
+   * Use std::find_if to locate the first matching element by id,
+   * then erase(it) — invalidates only the local iterator which is
+   * then thrown away.  Same observable behaviour (remove first
+   * match), no UB.
+   */
+  auto& children = impl_->children_list_;
+  auto it = std::find_if(children.begin(), children.end(),
+      [&itemId](const std::shared_ptr<AbstractItem>& child) {
+        return child && child->GetId() == itemId;
+      });
+  if (it != children.end())
+    children.erase(it);
 }
 
 void GroupItem::RemoveChildren() {
