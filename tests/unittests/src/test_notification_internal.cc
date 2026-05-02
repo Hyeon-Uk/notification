@@ -223,6 +223,59 @@ TEST_F(NotificationInternalTest, channel_clone_round_trip_and_null_guards) {
 // notification_internal.c — set/get_channel_name using a channel
 // already populated with non-NULL app_id (covers the strdup +
 // free-old branches in set_channel_name).
+// notification_internal.c:2552-2627 — channel_add / _remove / _update
+// each guard against NULL channel and NULL internal app_id / channel_name.
+// They then call into _notification_tidl which we don't have a mock for
+// (Phase 1.5-A) — but the NULL-guard branches are reachable today.
+
+TEST_F(NotificationInternalTest, channel_add_rejects_null_args) {
+  EXPECT_EQ(notification_channel_add(nullptr),
+            NOTIFICATION_ERROR_INVALID_PARAMETER);
+
+  // A channel struct with NULL internal pointers also rejects.
+  // Construct manually since notification_channel_create always
+  // strdup's, so we can't get there via the public constructor.
+  struct notification_channel { char* app_id; char* channel_name;
+                                bool blockable; bool is_blocked; };
+  struct notification_channel ch_no_app{nullptr,
+                                        const_cast<char*>("name"),
+                                        false, false};
+  EXPECT_EQ(notification_channel_add(
+                reinterpret_cast<notification_channel_h>(&ch_no_app)),
+            NOTIFICATION_ERROR_INVALID_PARAMETER);
+
+  struct notification_channel ch_no_name{const_cast<char*>("app"),
+                                         nullptr, false, false};
+  EXPECT_EQ(notification_channel_add(
+                reinterpret_cast<notification_channel_h>(&ch_no_name)),
+            NOTIFICATION_ERROR_INVALID_PARAMETER);
+}
+
+TEST_F(NotificationInternalTest, channel_remove_rejects_null_args) {
+  EXPECT_EQ(notification_channel_remove(nullptr),
+            NOTIFICATION_ERROR_INVALID_PARAMETER);
+}
+
+TEST_F(NotificationInternalTest, channel_update_rejects_null_args) {
+  EXPECT_EQ(notification_channel_update(nullptr),
+            NOTIFICATION_ERROR_INVALID_PARAMETER);
+}
+
+TEST_F(NotificationInternalTest, channel_get_by_name_rejects_null_args) {
+  notification_channel_h ch = nullptr;
+  EXPECT_EQ(notification_channel_get_by_name(nullptr, &ch),
+            NOTIFICATION_ERROR_INVALID_PARAMETER);
+  EXPECT_EQ(notification_channel_get_by_name("name", nullptr),
+            NOTIFICATION_ERROR_INVALID_PARAMETER);
+}
+
+TEST_F(NotificationInternalTest, channel_foreach_rejects_null_callback) {
+  EXPECT_EQ(notification_channel_foreach(nullptr, nullptr, nullptr),
+            NOTIFICATION_ERROR_INVALID_PARAMETER);
+  // Non-NULL callback path requires _notification_tidl_get / proxy
+  // mocks — covered in Phase 1.5-A.
+}
+
 TEST_F(NotificationInternalTest, set_channel_name_overwrites_previous) {
   EXPECT_CALL(GetMock<AulMock>(), aul_app_get_appid_bypid(_, _, _))
       .WillRepeatedly(Invoke(__fake_aul_app_get_appid_bypid));
