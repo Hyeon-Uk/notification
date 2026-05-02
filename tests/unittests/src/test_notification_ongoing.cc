@@ -54,12 +54,16 @@ TEST_F(NotificationOngoingTest, notification_ongoing_test) {
   ret = notification_ongoing_update_cb_unset();
   ASSERT_EQ(ret, NOTIFICATION_ERROR_NONE);
 
-  // ret = notification_ongoing_update_progress("org.tizen.caller_appid", 1, 10.0);
-  // ASSERT_EQ(ret, NOTIFICATION_ERROR_NONE);
+  // notification_ongoing.c:47-69 — three update helpers
+  // (_progress / _size / _content) are file-private (no EXPORT_API)
+  // and cannot be linked from this test binary. They are
+  // currently stubs returning NONE; Phase 2 will revisit if they
+  // gain real behavior — see F-1.6-A.
+}
 
-  // ret = notification_ongoing_update_size("org.tizen.caller_appid", 1, 10.0);
-  // ASSERT_EQ(ret, NOTIFICATION_ERROR_NONE);
-
-  // ret = notification_ongoing_update_content("org.tizen.caller_appid", 1, "test_content");
-  // ASSERT_EQ(ret, NOTIFICATION_ERROR_NONE);
+TEST_F(NotificationOngoingTest, ongoing_update_cb_set_with_callback_returns_none) {
+  // Even passing a real callback doesn't change the stubbed return.
+  EXPECT_EQ(notification_ongoing_update_cb_set(
+                __notification_ongoing_update_cb, nullptr),
+            NOTIFICATION_ERROR_NONE);
 }
