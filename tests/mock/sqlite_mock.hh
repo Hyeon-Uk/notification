@@ -43,6 +43,9 @@ class SqliteMock : public virtual ModuleMock {
   MOCK_METHOD1(sqlite3_free, void(void*));
   MOCK_METHOD2(sqlite3_column_int, int(sqlite3_stmt*, int));
   MOCK_METHOD2(sqlite3_column_double, double(sqlite3_stmt*, int));
+  MOCK_METHOD9(sqlite3_table_column_metadata,
+      int(sqlite3*, const char*, const char*, const char*,
+          char const**, char const**, int*, int*, int*));
 };
 
 #endif  // UNIT_TESTS_MOCK_SQLITE_MOCK_H_

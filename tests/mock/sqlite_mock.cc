@@ -85,3 +85,12 @@ extern "C" int sqlite3_column_int(sqlite3_stmt* stmt, int iCol) {
 extern "C" double sqlite3_column_double(sqlite3_stmt* stmt, int iCol) {
   return MOCK_HOOK_P2(SqliteMock, sqlite3_column_double, stmt, iCol);
 }
+
+extern "C" int sqlite3_table_column_metadata(sqlite3* db,
+    const char* zDbName, const char* zTableName, const char* zColumnName,
+    char const** pzDataType, char const** pzCollSeq,
+    int* pNotNull, int* pPrimaryKey, int* pAutoinc) {
+  return TestFixture::GetMock<SqliteMock>().sqlite3_table_column_metadata(
+      db, zDbName, zTableName, zColumnName, pzDataType, pzCollSeq,
+      pNotNull, pPrimaryKey, pAutoinc);
+}
