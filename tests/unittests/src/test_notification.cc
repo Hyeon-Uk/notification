@@ -460,3 +460,47 @@ TEST_F(NotificationTest, clone_null_returns_invalid_parameter) {
   EXPECT_EQ(notification_clone(nullptr, nullptr),
             NOTIFICATION_ERROR_INVALID_PARAMETER);
 }
+
+TEST_F(NotificationTest, button_tag_extension_text_apis_reject_null_handle) {
+  // notification.c:1927-2070 — additional EXPORT_API surface that the
+  // happy-path test exercises but the NULL-handle branch was uncovered.
+  EXPECT_EQ(notification_add_button(nullptr, NOTIFICATION_BUTTON_1),
+            NOTIFICATION_ERROR_INVALID_PARAMETER);
+  EXPECT_EQ(notification_remove_button(nullptr, NOTIFICATION_BUTTON_1),
+            NOTIFICATION_ERROR_INVALID_PARAMETER);
+  EXPECT_EQ(notification_set_auto_remove(nullptr, true),
+            NOTIFICATION_ERROR_INVALID_PARAMETER);
+  bool b = false;
+  EXPECT_EQ(notification_get_auto_remove(nullptr, &b),
+            NOTIFICATION_ERROR_INVALID_PARAMETER);
+  EXPECT_EQ(notification_set_text_input(nullptr, 100),
+            NOTIFICATION_ERROR_INVALID_PARAMETER);
+  EXPECT_EQ(notification_set_extension_image_size(nullptr, 50),
+            NOTIFICATION_ERROR_INVALID_PARAMETER);
+  int h = 0;
+  EXPECT_EQ(notification_get_extension_image_size(nullptr, &h),
+            NOTIFICATION_ERROR_INVALID_PARAMETER);
+  EXPECT_EQ(notification_set_tag(nullptr, "x"),
+            NOTIFICATION_ERROR_INVALID_PARAMETER);
+  const char* tag = nullptr;
+  EXPECT_EQ(notification_get_tag(nullptr, &tag),
+            NOTIFICATION_ERROR_INVALID_PARAMETER);
+}
+
+TEST_F(NotificationTest, save_as_template_rejects_null_handle) {
+  EXPECT_EQ(notification_save_as_template(nullptr, "tmpl"),
+            NOTIFICATION_ERROR_INVALID_PARAMETER);
+}
+
+TEST_F(NotificationTest, create_from_template_null_returns_null) {
+  // notification.c:1982 — null template_name argument: documented
+  // failure path returns NULL handle (not an error code, the function
+  // returns notification_h not int).
+  notification_h n = notification_create_from_template(nullptr);
+  EXPECT_EQ(n, nullptr);
+}
+
+TEST_F(NotificationTest, load_by_tag_null_returns_null) {
+  notification_h n = notification_load_by_tag(nullptr);
+  EXPECT_EQ(n, nullptr);
+}
