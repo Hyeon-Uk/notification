@@ -74,3 +74,31 @@ TEST_F(NotificationSettingTest, notification_setting_test) {
   ret = notification_setting_free_notification(setting);
   ASSERT_EQ(ret, NOTIFICATION_ERROR_NONE);
 }
+
+TEST_F(NotificationSettingTest, get_visibility_class_rejects_null_args) {
+  int v = 0;
+  EXPECT_EQ(notification_setting_get_visibility_class(nullptr, &v),
+            NOTIFICATION_ERROR_INVALID_PARAMETER);
+
+  notification_setting_h setting = (notification_setting_h)
+      malloc(sizeof(struct notification_setting));
+  setting->visibility_class = 1;
+  EXPECT_EQ(notification_setting_get_visibility_class(setting, nullptr),
+            NOTIFICATION_ERROR_INVALID_PARAMETER);
+  free(setting);
+}
+
+TEST_F(NotificationSettingTest, set_visibility_class_rejects_null_setting) {
+  EXPECT_EQ(notification_setting_set_visibility_class(nullptr, 1),
+            NOTIFICATION_ERROR_INVALID_PARAMETER);
+}
+
+TEST_F(NotificationSettingTest, update_setting_for_uid_rejects_null_setting) {
+  EXPECT_EQ(notification_setting_update_setting_for_uid(nullptr, 1000),
+            NOTIFICATION_ERROR_INVALID_PARAMETER);
+}
+
+TEST_F(NotificationSettingTest, free_notification_null_returns_invalid) {
+  EXPECT_EQ(notification_setting_free_notification(nullptr),
+            NOTIFICATION_ERROR_INVALID_PARAMETER);
+}
