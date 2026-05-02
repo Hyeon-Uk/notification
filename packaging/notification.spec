@@ -229,6 +229,7 @@ GTest for notification
 
 %files -n notification-unittests
 %{_bindir}/notification-unittests
+%{_bindir}/notification-smoke
 %{_bindir}/tizen-unittests/%{name}/run-unittest.sh
 
 %if 0%{?gcov:1}
