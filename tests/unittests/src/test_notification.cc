@@ -24,6 +24,7 @@
 #include "mock/glib_mock.hh"
 
 #include "notification/include/notification.h"
+#include "notification/include/notification_text_domain.h"
 
 namespace {
 
@@ -338,4 +339,124 @@ TEST_F(NotificationTest, notification_test) {
 
   // ret = notification_delete_all(NOTIFICATION_TYPE_NOTI);
   // ASSERT_EQ(ret, NOTIFICATION_ERROR_NONE);
+}
+
+// Failure-path coverage: every public setter/getter rejects NULL handles.
+// Each EXPECT below maps to a dedicated INVALID_PARAMETER guard in
+// notification.c. Aggregating into a single TEST_F to avoid fixture
+// re-setup overhead; each assertion still names its target.
+
+TEST_F(NotificationTest, public_setters_reject_null_handle) {
+  EXPECT_EQ(notification_set_image(nullptr, NOTIFICATION_IMAGE_TYPE_ICON, "p"),
+            NOTIFICATION_ERROR_INVALID_PARAMETER);
+  EXPECT_EQ(notification_set_time(nullptr, 0),
+            NOTIFICATION_ERROR_INVALID_PARAMETER);
+  EXPECT_EQ(notification_set_text_domain(nullptr, "d", "p"),
+            NOTIFICATION_ERROR_INVALID_PARAMETER);
+  EXPECT_EQ(notification_set_sound(nullptr,
+                                   NOTIFICATION_SOUND_TYPE_DEFAULT, nullptr),
+            NOTIFICATION_ERROR_INVALID_PARAMETER);
+  EXPECT_EQ(notification_set_vibration(nullptr,
+                                       NOTIFICATION_VIBRATION_TYPE_DEFAULT,
+                                       nullptr),
+            NOTIFICATION_ERROR_INVALID_PARAMETER);
+  EXPECT_EQ(notification_set_led(nullptr,
+                                 NOTIFICATION_LED_OP_OFF, 0),
+            NOTIFICATION_ERROR_INVALID_PARAMETER);
+  EXPECT_EQ(notification_set_led_time_period(nullptr, 0, 0),
+            NOTIFICATION_ERROR_INVALID_PARAMETER);
+  EXPECT_EQ(notification_set_property(nullptr, 0),
+            NOTIFICATION_ERROR_INVALID_PARAMETER);
+  EXPECT_EQ(notification_set_display_applist(nullptr, 0),
+            NOTIFICATION_ERROR_INVALID_PARAMETER);
+  EXPECT_EQ(notification_set_size(nullptr, 0.0),
+            NOTIFICATION_ERROR_INVALID_PARAMETER);
+  EXPECT_EQ(notification_set_progress(nullptr, 0.0),
+            NOTIFICATION_ERROR_INVALID_PARAMETER);
+  EXPECT_EQ(notification_set_layout(nullptr, NOTIFICATION_LY_NONE),
+            NOTIFICATION_ERROR_INVALID_PARAMETER);
+}
+
+TEST_F(NotificationTest, public_getters_reject_null_handle) {
+  notification_image_type_e dummy_image_type;
+  char* dummy_path = nullptr;
+  time_t dummy_time;
+  int dummy_int;
+  bool dummy_bool;
+  double dummy_dbl;
+  notification_ly_type_e dummy_layout;
+  notification_type_e dummy_type;
+  app_control_h dummy_event_h = nullptr;
+  notification_sound_type_e dummy_sound_type;
+  const char* dummy_const = nullptr;
+  notification_vibration_type_e dummy_vib_type;
+  notification_led_op_e dummy_led;
+
+  EXPECT_EQ(notification_get_image(nullptr, NOTIFICATION_IMAGE_TYPE_ICON,
+                                   &dummy_path),
+            NOTIFICATION_ERROR_INVALID_PARAMETER);
+  EXPECT_EQ(notification_get_time(nullptr, &dummy_time),
+            NOTIFICATION_ERROR_INVALID_PARAMETER);
+  EXPECT_EQ(notification_get_insert_time(nullptr, &dummy_time),
+            NOTIFICATION_ERROR_INVALID_PARAMETER);
+  char* dummy_dir = nullptr;
+  EXPECT_EQ(notification_get_text_domain(nullptr, &dummy_path,
+                                         &dummy_dir),
+            NOTIFICATION_ERROR_INVALID_PARAMETER);
+  (void)dummy_dir;
+  EXPECT_EQ(notification_get_sound(nullptr, &dummy_sound_type,
+                                   &dummy_const),
+            NOTIFICATION_ERROR_INVALID_PARAMETER);
+  EXPECT_EQ(notification_get_vibration(nullptr, &dummy_vib_type,
+                                       &dummy_const),
+            NOTIFICATION_ERROR_INVALID_PARAMETER);
+  EXPECT_EQ(notification_get_led(nullptr, &dummy_led, &dummy_int),
+            NOTIFICATION_ERROR_INVALID_PARAMETER);
+  EXPECT_EQ(notification_get_led_time_period(nullptr, &dummy_int,
+                                             &dummy_int),
+            NOTIFICATION_ERROR_INVALID_PARAMETER);
+  EXPECT_EQ(notification_get_event_handler(nullptr,
+                                           NOTIFICATION_EVENT_TYPE_CLICK_ON_ICON,
+                                           &dummy_event_h),
+            NOTIFICATION_ERROR_INVALID_PARAMETER);
+  EXPECT_EQ(notification_get_property(nullptr, &dummy_int),
+            NOTIFICATION_ERROR_INVALID_PARAMETER);
+  EXPECT_EQ(notification_get_display_applist(nullptr, &dummy_int),
+            NOTIFICATION_ERROR_INVALID_PARAMETER);
+  EXPECT_EQ(notification_get_size(nullptr, &dummy_dbl),
+            NOTIFICATION_ERROR_INVALID_PARAMETER);
+  EXPECT_EQ(notification_get_progress(nullptr, &dummy_dbl),
+            NOTIFICATION_ERROR_INVALID_PARAMETER);
+  EXPECT_EQ(notification_get_pkgname(nullptr, &dummy_path),
+            NOTIFICATION_ERROR_INVALID_PARAMETER);
+  EXPECT_EQ(notification_get_layout(nullptr, &dummy_layout),
+            NOTIFICATION_ERROR_INVALID_PARAMETER);
+  EXPECT_EQ(notification_get_type(nullptr, &dummy_type),
+            NOTIFICATION_ERROR_INVALID_PARAMETER);
+
+  // Silence unused-variable warnings for dummies that no path used.
+  (void)dummy_image_type;
+  (void)dummy_bool;
+}
+
+TEST_F(NotificationTest, post_update_delete_reject_null_handle) {
+  EXPECT_EQ(notification_post(nullptr),
+            NOTIFICATION_ERROR_INVALID_PARAMETER);
+  EXPECT_EQ(notification_update(nullptr),
+            NOTIFICATION_ERROR_INVALID_PARAMETER);
+  EXPECT_EQ(notification_delete(nullptr),
+            NOTIFICATION_ERROR_INVALID_PARAMETER);
+}
+
+TEST_F(NotificationTest, free_null_returns_invalid_parameter) {
+  EXPECT_EQ(notification_free(nullptr),
+            NOTIFICATION_ERROR_INVALID_PARAMETER);
+}
+
+TEST_F(NotificationTest, clone_null_returns_invalid_parameter) {
+  notification_h dummy = nullptr;
+  EXPECT_EQ(notification_clone(nullptr, &dummy),
+            NOTIFICATION_ERROR_INVALID_PARAMETER);
+  EXPECT_EQ(notification_clone(nullptr, nullptr),
+            NOTIFICATION_ERROR_INVALID_PARAMETER);
 }
