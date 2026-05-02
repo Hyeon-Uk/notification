@@ -172,3 +172,74 @@ TEST_F(NotificationInternalTest, channel_get_name_rejects_null_args) {
 
   notification_channel_free(ch);
 }
+
+// notification_internal.c:2763 — channel_clone deep-copies app_id,
+// channel_name, blockable, is_blocked. Source rejects NULL channel,
+// NULL clone-out, AND a channel with internal NULL app_id /
+// channel_name (defensive guard).
+TEST_F(NotificationInternalTest, channel_clone_round_trip_and_null_guards) {
+  EXPECT_CALL(GetMock<AulMock>(), aul_app_get_appid_bypid(_, _, _))
+      .WillRepeatedly(Invoke(__fake_aul_app_get_appid_bypid));
+
+  notification_channel_h orig = nullptr;
+  ASSERT_EQ(notification_channel_create("ch-orig", &orig),
+            NOTIFICATION_ERROR_NONE);
+  ASSERT_EQ(notification_channel_set_blockable(orig, true),
+            NOTIFICATION_ERROR_NONE);
+  ASSERT_EQ(notification_channel_set_block(orig, true),
+            NOTIFICATION_ERROR_NONE);
+
+  notification_channel_h clone = nullptr;
+  ASSERT_EQ(notification_channel_clone(orig, &clone),
+            NOTIFICATION_ERROR_NONE);
+  ASSERT_NE(clone, nullptr);
+  EXPECT_NE(clone, orig);
+
+  // Each scalar/string copied independently.
+  const char* clone_name = nullptr;
+  ASSERT_EQ(notification_channel_get_name(clone, &clone_name),
+            NOTIFICATION_ERROR_NONE);
+  EXPECT_STREQ(clone_name, "ch-orig");
+  bool b = false;
+  ASSERT_EQ(notification_channel_get_blockable(clone, &b),
+            NOTIFICATION_ERROR_NONE);
+  EXPECT_TRUE(b);
+  bool blk = false;
+  ASSERT_EQ(notification_channel_get_block(clone, &blk),
+            NOTIFICATION_ERROR_NONE);
+  EXPECT_TRUE(blk);
+
+  // INVALID_PARAMETER paths.
+  notification_channel_h dummy = nullptr;
+  EXPECT_EQ(notification_channel_clone(nullptr, &dummy),
+            NOTIFICATION_ERROR_INVALID_PARAMETER);
+  EXPECT_EQ(notification_channel_clone(orig, nullptr),
+            NOTIFICATION_ERROR_INVALID_PARAMETER);
+
+  notification_channel_free(clone);
+  notification_channel_free(orig);
+}
+
+// notification_internal.c — set/get_channel_name using a channel
+// already populated with non-NULL app_id (covers the strdup +
+// free-old branches in set_channel_name).
+TEST_F(NotificationInternalTest, set_channel_name_overwrites_previous) {
+  EXPECT_CALL(GetMock<AulMock>(), aul_app_get_appid_bypid(_, _, _))
+      .WillRepeatedly(Invoke(__fake_aul_app_get_appid_bypid));
+
+  notification_h noti = notification_create(NOTIFICATION_TYPE_NOTI);
+  ASSERT_NE(noti, nullptr);
+
+  ASSERT_EQ(notification_set_channel_name(noti, "first"),
+            NOTIFICATION_ERROR_NONE);
+  // Second call must free the prior strdup and replace.
+  ASSERT_EQ(notification_set_channel_name(noti, "second"),
+            NOTIFICATION_ERROR_NONE);
+
+  const char* got = nullptr;
+  ASSERT_EQ(notification_get_channel_name(noti, &got),
+            NOTIFICATION_ERROR_NONE);
+  EXPECT_STREQ(got, "second");
+
+  notification_free(noti);
+}
