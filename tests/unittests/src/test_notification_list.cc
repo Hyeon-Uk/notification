@@ -203,3 +203,64 @@ TEST_F(NotificationListTest, notification_list_test2) {
   ret = notification_get_detail_list(nullptr, 1, 1, 1, &get_list_detail);
   ASSERT_EQ(ret, NOTIFICATION_ERROR_INVALID_PARAMETER);
 }
+
+TEST_F(NotificationListTest, free_list_null_returns_invalid_parameter) {
+  // Source notification_list.c:362 — explicit NULL guard returns
+  // INVALID_PARAMETER. Locks current behavior.
+  EXPECT_EQ(notification_free_list(nullptr),
+            NOTIFICATION_ERROR_INVALID_PARAMETER);
+}
+
+TEST_F(NotificationListTest, append_null_data_returns_null) {
+  EXPECT_CALL(GetMock<AulMock>(), aul_app_get_appid_bypid(_, _, _))
+      .WillRepeatedly(Invoke(__fake_aul_app_get_appid_bypid));
+
+  notification_h n = notification_create(NOTIFICATION_TYPE_NOTI);
+  ASSERT_NE(n, nullptr);
+
+  notification_list_h list = notification_list_append(nullptr, n);
+  ASSERT_NE(list, nullptr);
+
+  // notification_list.c:170 — NULL data fails the param guard and
+  // returns NULL with set_last_result(INVALID_PARAMETER).
+  notification_list_h after = notification_list_append(list, nullptr);
+  EXPECT_EQ(after, nullptr);
+
+  notification_free_list(list);
+}
+
+TEST_F(NotificationListTest,
+       remove_null_data_returns_null_when_no_match) {
+  EXPECT_CALL(GetMock<AulMock>(), aul_app_get_appid_bypid(_, _, _))
+      .WillRepeatedly(Invoke(__fake_aul_app_get_appid_bypid));
+
+  notification_h n = notification_create(NOTIFICATION_TYPE_NOTI);
+  ASSERT_NE(n, nullptr);
+
+  notification_list_h list = notification_list_append(nullptr, n);
+  ASSERT_NE(list, nullptr);
+
+  // notification_list.c:209-247 — when no node matches, prev/next
+  // stay NULL and the function returns NULL. This DOES leak `list`
+  // (Phase-2 RAII candidate); see F-1.3-A.
+  notification_list_h after = notification_list_remove(list, nullptr);
+  EXPECT_EQ(after, nullptr);
+
+  notification_free_list(list);
+}
+
+TEST_F(NotificationListTest, get_list_for_uid_null_output_returns_invalid) {
+  notification_list_h dummy = nullptr;
+  EXPECT_EQ(notification_get_list_for_uid(NOTIFICATION_TYPE_NOTI, 5,
+                                          nullptr, 1000),
+            NOTIFICATION_ERROR_INVALID_PARAMETER);
+  // Use 'dummy' to silence unused-variable warning.
+  (void)dummy;
+}
+
+TEST_F(NotificationListTest,
+       get_detail_list_for_uid_null_output_returns_invalid) {
+  EXPECT_EQ(notification_get_detail_list_for_uid("pkg", 1, 1, 1,
+                                                 nullptr, 1000),
+            NOTIFICATION_ERROR_INVALID_PARAMETER);
+}
