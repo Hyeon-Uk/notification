@@ -1,0 +1,174 @@
+/*
+ * Copyright (c) 2026 Samsung Electronics Co., Ltd.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+#include <gtest/gtest.h>
+#include <gmock/gmock.h>
+
+#include "mock/test_fixture.hh"
+#include "mock/aul_mock.hh"
+#include "mock/glib_mock.hh"
+#include "mock/package_manager_mock.hh"
+#include "mock/tzplatform_config_mock.hh"
+
+#include "notification/include/notification.h"
+#include "notification/include/notification_internal.h"
+
+namespace {
+
+int __fake_aul_app_get_appid_bypid(int pid, char* appid, int len) {
+  snprintf(appid, len, "%s", "org.tizen.testappid");
+  return AUL_R_OK;
+}
+
+class Mocks :
+    virtual public ::testing::NiceMock<AulMock>,
+    virtual public ::testing::NiceMock<GlibMock>,
+    virtual public ::testing::NiceMock<PackageManagerMock>,
+    virtual public ::testing::NiceMock<TzplatformConfigMock> {};
+}  // namespace
+
+using ::testing::_;
+using ::testing::Invoke;
+
+class NotificationInternalTest : public TestFixture {
+ public:
+  NotificationInternalTest() : TestFixture(std::make_unique<::Mocks>()) {}
+};
+
+// notification_internal.c:2442 — channel-name setter / getter
+// INVALID_PARAMETER paths.
+TEST_F(NotificationInternalTest, set_channel_name_rejects_null_args) {
+  EXPECT_EQ(notification_set_channel_name(nullptr, "ch"),
+            NOTIFICATION_ERROR_INVALID_PARAMETER);
+
+  EXPECT_CALL(GetMock<AulMock>(), aul_app_get_appid_bypid(_, _, _))
+      .WillRepeatedly(Invoke(__fake_aul_app_get_appid_bypid));
+  notification_h noti = notification_create(NOTIFICATION_TYPE_NOTI);
+  ASSERT_NE(noti, nullptr);
+
+  EXPECT_EQ(notification_set_channel_name(noti, nullptr),
+            NOTIFICATION_ERROR_INVALID_PARAMETER);
+
+  // Happy path: round-trip through getter.
+  ASSERT_EQ(notification_set_channel_name(noti, "test-channel"),
+            NOTIFICATION_ERROR_NONE);
+  const char* got = nullptr;
+  ASSERT_EQ(notification_get_channel_name(noti, &got),
+            NOTIFICATION_ERROR_NONE);
+  EXPECT_STREQ(got, "test-channel");
+
+  notification_free(noti);
+}
+
+TEST_F(NotificationInternalTest, get_channel_name_rejects_null_args) {
+  const char* got = nullptr;
+  EXPECT_EQ(notification_get_channel_name(nullptr, &got),
+            NOTIFICATION_ERROR_INVALID_PARAMETER);
+
+  EXPECT_CALL(GetMock<AulMock>(), aul_app_get_appid_bypid(_, _, _))
+      .WillRepeatedly(Invoke(__fake_aul_app_get_appid_bypid));
+  notification_h noti = notification_create(NOTIFICATION_TYPE_NOTI);
+  ASSERT_NE(noti, nullptr);
+
+  EXPECT_EQ(notification_get_channel_name(noti, nullptr),
+            NOTIFICATION_ERROR_INVALID_PARAMETER);
+
+  notification_free(noti);
+}
+
+// notification_internal.c:2504 — channel create / free.
+TEST_F(NotificationInternalTest, channel_create_rejects_null_args) {
+  EXPECT_CALL(GetMock<AulMock>(), aul_app_get_appid_bypid(_, _, _))
+      .WillRepeatedly(Invoke(__fake_aul_app_get_appid_bypid));
+
+  notification_channel_h ch = nullptr;
+  EXPECT_EQ(notification_channel_create(nullptr, &ch),
+            NOTIFICATION_ERROR_INVALID_PARAMETER);
+  EXPECT_EQ(notification_channel_create("name", nullptr),
+            NOTIFICATION_ERROR_INVALID_PARAMETER);
+
+  ASSERT_EQ(notification_channel_create("test-ch", &ch),
+            NOTIFICATION_ERROR_NONE);
+  ASSERT_NE(ch, nullptr);
+
+  // notification_channel_get_name round-trip.
+  const char* name = nullptr;
+  ASSERT_EQ(notification_channel_get_name(ch, &name),
+            NOTIFICATION_ERROR_NONE);
+  EXPECT_STREQ(name, "test-ch");
+
+  notification_channel_free(ch);
+}
+
+TEST_F(NotificationInternalTest, channel_free_null_is_safe_noop) {
+  // notification_internal.c:2532 — free(NULL) early-returns; must not
+  // crash.
+  notification_channel_free(nullptr);
+  SUCCEED();
+}
+
+// notification_internal.c:2670+ — channel block/blockable getters/setters.
+TEST_F(NotificationInternalTest, channel_blockable_round_trip) {
+  EXPECT_CALL(GetMock<AulMock>(), aul_app_get_appid_bypid(_, _, _))
+      .WillRepeatedly(Invoke(__fake_aul_app_get_appid_bypid));
+
+  notification_channel_h ch = nullptr;
+  ASSERT_EQ(notification_channel_create("ch", &ch),
+            NOTIFICATION_ERROR_NONE);
+
+  ASSERT_EQ(notification_channel_set_blockable(ch, true),
+            NOTIFICATION_ERROR_NONE);
+  bool b = false;
+  ASSERT_EQ(notification_channel_get_blockable(ch, &b),
+            NOTIFICATION_ERROR_NONE);
+  EXPECT_TRUE(b);
+
+  ASSERT_EQ(notification_channel_set_block(ch, true),
+            NOTIFICATION_ERROR_NONE);
+  bool blk = false;
+  ASSERT_EQ(notification_channel_get_block(ch, &blk),
+            NOTIFICATION_ERROR_NONE);
+  EXPECT_TRUE(blk);
+
+  // INVALID_PARAMETER paths.
+  EXPECT_EQ(notification_channel_set_blockable(nullptr, true),
+            NOTIFICATION_ERROR_INVALID_PARAMETER);
+  EXPECT_EQ(notification_channel_get_blockable(nullptr, &b),
+            NOTIFICATION_ERROR_INVALID_PARAMETER);
+  EXPECT_EQ(notification_channel_set_block(nullptr, true),
+            NOTIFICATION_ERROR_INVALID_PARAMETER);
+  EXPECT_EQ(notification_channel_get_block(nullptr, &blk),
+            NOTIFICATION_ERROR_INVALID_PARAMETER);
+
+  notification_channel_free(ch);
+}
+
+TEST_F(NotificationInternalTest, channel_get_name_rejects_null_args) {
+  EXPECT_CALL(GetMock<AulMock>(), aul_app_get_appid_bypid(_, _, _))
+      .WillRepeatedly(Invoke(__fake_aul_app_get_appid_bypid));
+
+  const char* name = nullptr;
+  EXPECT_EQ(notification_channel_get_name(nullptr, &name),
+            NOTIFICATION_ERROR_INVALID_PARAMETER);
+
+  notification_channel_h ch = nullptr;
+  ASSERT_EQ(notification_channel_create("ch", &ch),
+            NOTIFICATION_ERROR_NONE);
+  EXPECT_EQ(notification_channel_get_name(ch, nullptr),
+            NOTIFICATION_ERROR_INVALID_PARAMETER);
+
+  notification_channel_free(ch);
+}
