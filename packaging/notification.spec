@@ -90,8 +90,8 @@ MAJORVER=`echo %{version} | awk 'BEGIN {FS="."}{print $1}'`
 export LD_LIBRARY_PATH="../../src/notification:../../src/notification-ex"
 ctest -V
 %if 0%{?gcov:1}
-lcov -c --ignore-errors mismatch,graph,unused --no-external -q -d . -o notification.info
-genhtml notification.info -o notification.out
+lcov -c --ignore-errors mismatch,graph,unused,inconsistent --no-external -q -d . -o notification.info
+genhtml --ignore-errors inconsistent notification.info -o notification.out
 zip -r notification.zip notification.out
 install -m 0644 notification.zip %{buildroot}%{_datadir}/gcov/obj/notification.zip
 %endif
