@@ -194,3 +194,63 @@ TEST_F(NotificationDBTest, upgrade_db_begin_transaction_fail_returns_from_db) {
   int ret = notification_upgrade_db();
   EXPECT_EQ(ret, NOTIFICATION_ERROR_FROM_DB);
 }
+
+// notification_db.c:374 — happy path of notification_upgrade_db when
+// the on-disk schema is already at DB_VERSION. Walks open ->
+// BEGIN TRANSACTION -> __check_db_version (returns DB_VERSION ->
+// "is latest version" branch) -> END TRANSACTION -> close.
+TEST_F(NotificationDBTest, upgrade_db_already_latest_returns_none) {
+  EXPECT_CALL(GetMock<SqliteMock>(), sqlite3_open_v2(_, _, _, _))
+      .WillOnce(Invoke(__fake_sqlite3_open_v2));
+  // sqlite3_exec is called for: BEGIN TRANSACTION, then END TRANSACTION.
+  EXPECT_CALL(GetMock<SqliteMock>(), sqlite3_exec(_, _, _, _, _))
+      .WillRepeatedly(Return(SQLITE_OK));
+  // __check_db_version: prepare PRAGMA user_version, step ->
+  // SQLITE_ROW, column_int returns DB_VERSION (3 per notification_db_query.h).
+  EXPECT_CALL(GetMock<SqliteMock>(), sqlite3_prepare_v2(_, _, _, _, _))
+      .WillOnce(Return(SQLITE_OK));
+  EXPECT_CALL(GetMock<SqliteMock>(), sqlite3_step(_))
+      .WillOnce(Return(SQLITE_ROW));
+  EXPECT_CALL(GetMock<SqliteMock>(), sqlite3_column_int(_, 0))
+      .WillOnce(Return(3));  // DB_VERSION
+  EXPECT_CALL(GetMock<SqliteMock>(), sqlite3_finalize(_))
+      .WillRepeatedly(Return(SQLITE_OK));
+  EXPECT_CALL(GetMock<SqliteMock>(), sqlite3_close(_))
+      .WillOnce(Return(SQLITE_OK));
+
+  int ret = notification_upgrade_db();
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
+}
+
+// notification_db.c:264 (__upgrade_noti_table) version_num=2 path:
+// schema lacks the "check_box" column. Forces:
+//   __check_db_version -> not latest
+//   __upgrade_noti_table: column_metadata("check_box") fails ->
+//                         version_num=2 -> CREATE_UPGRADE_DB OK ->
+//                         UPGRADE_DB_TO_2 OK
+//   __upgrade_noti_template_table: same shape
+//   PRAGMA user_version = DB_VERSION
+TEST_F(NotificationDBTest, upgrade_db_old_schema_runs_to_v2_and_succeeds) {
+  EXPECT_CALL(GetMock<SqliteMock>(), sqlite3_open_v2(_, _, _, _))
+      .WillOnce(Invoke(__fake_sqlite3_open_v2));
+  EXPECT_CALL(GetMock<SqliteMock>(), sqlite3_exec(_, _, _, _, _))
+      .WillRepeatedly(Return(SQLITE_OK));
+  EXPECT_CALL(GetMock<SqliteMock>(), sqlite3_prepare_v2(_, _, _, _, _))
+      .WillRepeatedly(Return(SQLITE_OK));
+  // PRAGMA user_version returns 0 (not latest) the first time.
+  EXPECT_CALL(GetMock<SqliteMock>(), sqlite3_step(_))
+      .WillOnce(Return(SQLITE_DONE));
+  EXPECT_CALL(GetMock<SqliteMock>(), sqlite3_column_int(_, 0))
+      .WillRepeatedly(Return(0));
+  EXPECT_CALL(GetMock<SqliteMock>(), sqlite3_finalize(_))
+      .WillRepeatedly(Return(SQLITE_OK));
+  // Both tables: check_box column missing -> version_num=2 path.
+  EXPECT_CALL(GetMock<SqliteMock>(),
+              sqlite3_table_column_metadata(_, _, _, _, _, _, _, _, _))
+      .WillRepeatedly(Return(SQLITE_ERROR));
+  EXPECT_CALL(GetMock<SqliteMock>(), sqlite3_close(_))
+      .WillOnce(Return(SQLITE_OK));
+
+  int ret = notification_upgrade_db();
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
+}
