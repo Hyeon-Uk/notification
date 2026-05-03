@@ -42,6 +42,10 @@
 
 #include <notification_tidl.h>
 
+#include "raii/notification_handles.hh"
+#include "raii/bundle_handles.hh"
+#include "raii/glib_handles.hh"
+
 extern "C" {
 
 #define REGULAR_UID_MIN 5000
@@ -1483,11 +1487,6 @@ static void __remove_private_file(gpointer data, gpointer user_data)
 /* LCOV_EXCL_START */
 EXPORT_API int notification_post_for_uid(notification_h noti, uid_t uid)
 {
-	int ret = 0;
-	int id = 0;
-	GList *file_list;
-	bool event_flag;
-
 	if (noti == NULL)
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 
@@ -1501,28 +1500,33 @@ EXPORT_API int notification_post_for_uid(notification_h noti, uid_t uid)
 
 	INFO("notification post [%d]", (int)uid);
 
-	file_list = __copy_private_file(noti);
-	ret = notification_tidl_request_insert(noti, &id);
-	if (ret == NOTIFICATION_ERROR_NONE) {
-		noti->priv_id = id;
-		INFO("Posted notification id[%d]", id);
-
-		ret = notification_get_event_flag(noti, &event_flag);
-		if (ret != NOTIFICATION_ERROR_NONE)
-			goto out;
-
-		if (event_flag == true) {
-			ret = notification_tidl_event_monitor_init();
-			if (ret != NOTIFICATION_ERROR_NONE)
-				goto out;
-		}
-	} else {
-		g_list_foreach(file_list, __remove_private_file, NULL);
+	/* file_list is a g_list_append'd chain of dup'd path strings;
+	 * release with g_list_free_full(list, free) on every exit. */
+	auto file_list_deleter = +[](GList *l) {
+		if (l) g_list_free_full(l, free);
+	};
+	std::unique_ptr<GList, decltype(file_list_deleter)> file_list(
+			__copy_private_file(noti), file_list_deleter);
+	int id = 0;
+	int ret = notification_tidl_request_insert(noti, &id);
+	if (ret != NOTIFICATION_ERROR_NONE) {
+		g_list_foreach(file_list.get(), __remove_private_file, NULL);
+		return ret;
 	}
 
-out:
-	if (file_list)
-		g_list_free_full(file_list, free);
+	noti->priv_id = id;
+	INFO("Posted notification id[%d]", id);
+
+	bool event_flag;
+	ret = notification_get_event_flag(noti, &event_flag);
+	if (ret != NOTIFICATION_ERROR_NONE)
+		return ret;
+
+	if (event_flag == true) {
+		ret = notification_tidl_event_monitor_init();
+		if (ret != NOTIFICATION_ERROR_NONE)
+			return ret;
+	}
 
 	return ret;
 }
@@ -1761,12 +1765,6 @@ EXPORT_API int notification_get_text_input_max_length(notification_h noti, int *
 EXPORT_API int notification_post_with_event_cb_for_uid(notification_h noti, event_handler_cb cb,
 							void *userdata, uid_t uid)
 {
-	int ret;
-	int priv_id;
-	notification_event_cb_info_s *info = NULL;
-	GList *find_list;
-	GList *file_list;
-
 	if (noti == NULL || cb == NULL)
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 
@@ -1777,11 +1775,17 @@ EXPORT_API int notification_post_with_event_cb_for_uid(notification_h noti, even
 	noti->event_flag = true;
 	noti->uid = uid;
 
-	file_list = __copy_private_file(noti);
-	ret = notification_tidl_request_insert(noti, &priv_id);
+	auto file_list_deleter = +[](GList *l) {
+		if (l) g_list_free_full(l, free);
+	};
+	std::unique_ptr<GList, decltype(file_list_deleter)> file_list(
+			__copy_private_file(noti), file_list_deleter);
+
+	int priv_id;
+	int ret = notification_tidl_request_insert(noti, &priv_id);
 	if (ret != NOTIFICATION_ERROR_NONE) {
 		ERR("Failed to post notification id[%d]", priv_id);
-		g_list_foreach(file_list, __remove_private_file, NULL);
+		g_list_foreach(file_list.get(), __remove_private_file, NULL);
 		goto out;
 	}
 
@@ -1795,35 +1799,39 @@ EXPORT_API int notification_post_with_event_cb_for_uid(notification_h noti, even
 
 	__notification_mutex_lock();
 
-	__noti_event_cb_list = g_list_first(__noti_event_cb_list);
-	find_list = g_list_find_custom(__noti_event_cb_list, GINT_TO_POINTER(priv_id),
-				       (GCompareFunc)__priv_id_compare);
+	{
+		__noti_event_cb_list = g_list_first(__noti_event_cb_list);
+		GList *find_list = g_list_find_custom(__noti_event_cb_list,
+				GINT_TO_POINTER(priv_id),
+				(GCompareFunc)__priv_id_compare);
 
-	if (find_list) {
-		info = g_list_nth_data(find_list, 0);
-		info->cb = cb;
-		info->userdata = userdata;
-		WARN("event cb is existed id[%d]", priv_id);
-	} else {
-		info = (notification_event_cb_info_s *)malloc(sizeof(notification_event_cb_info_s));
-		if (info == NULL) {
-			ERR("Failed to alloc memory");
-			ret = NOTIFICATION_ERROR_OUT_OF_MEMORY;
-			goto out;
+		notification_event_cb_info_s *info = NULL;
+		if (find_list) {
+			info = (notification_event_cb_info_s *)g_list_nth_data(find_list, 0);
+			info->cb = cb;
+			info->userdata = userdata;
+			WARN("event cb is existed id[%d]", priv_id);
+		} else {
+			info = (notification_event_cb_info_s *)malloc(sizeof(notification_event_cb_info_s));
+			if (info == NULL) {
+				ERR("Failed to alloc memory");
+				ret = NOTIFICATION_ERROR_OUT_OF_MEMORY;
+				goto out;
+			}
+			info->priv_id = priv_id;
+			info->cb = cb;
+			info->userdata = userdata;
+			__noti_event_cb_list = g_list_append(__noti_event_cb_list, info);
+			WARN("new event cb appended id[%d]", priv_id);
 		}
-		info->priv_id = priv_id;
-		info->cb = cb;
-		info->userdata = userdata;
-		__noti_event_cb_list = g_list_append(__noti_event_cb_list, info);
-		WARN("new event cb appended id[%d]", priv_id);
 	}
 
 out:
-	if (file_list)
-		g_list_free_full(file_list, free);
-
+	/* Pre-existing semantics preserved: __notification_mutex_unlock
+	 * is called even on error paths that bypass the matching lock
+	 * (the .c version did the same).  file_list freed via
+	 * unique_ptr destructor when the function returns. */
 	__notification_mutex_unlock();
-
 	return ret;
 }
 /* LCOV_EXCL_STOP */
@@ -1996,13 +2004,8 @@ EXPORT_API int notification_set_extension_event_handler(notification_h noti,
 					notification_event_type_extension_e event,
 					app_control_h event_handler)
 {
-	int err;
-	int ret = NOTIFICATION_ERROR_NONE;
-	int len;
-	bundle *app_control_bundle = NULL;
-	bundle_raw *b_raw = NULL;
-	char key[KEY_LEN];
-	char *del = NULL;
+	using notification::raii::BundlePtr;
+	using notification::raii::BundleEncodedPtr;
 
 	if (noti == NULL || event_handler == NULL) {
 		ERR("Invalid parameter");
@@ -2018,41 +2021,37 @@ EXPORT_API int notification_set_extension_event_handler(notification_h noti,
 	if (noti->args == NULL)
 		noti->args = bundle_create();
 
+	char key[KEY_LEN];
 	snprintf(key, sizeof(key), "%s%d", EXTENSION_EVENT_KEY, event);
+	char *del = NULL;
 	bundle_get_str(noti->args, key, &del);
-	if (del != NULL) {
+	if (del != NULL)
 		bundle_del(noti->args, key);
-		del = NULL;
-	}
 
-	err = app_control_export_as_bundle(event_handler, &app_control_bundle);
+	bundle *raw_app_control_bundle = NULL;
+	int err = app_control_export_as_bundle(event_handler, &raw_app_control_bundle);
+	BundlePtr app_control_bundle(raw_app_control_bundle);
 	if (err != APP_CONTROL_ERROR_NONE) {
 		ERR("Failed to export app_control to bundle [%d]", err);
-		ret = NOTIFICATION_ERROR_IO_ERROR;
-		goto out;
+		return NOTIFICATION_ERROR_IO_ERROR;
 	}
 
-	err = bundle_encode(app_control_bundle, &b_raw, &len);
+	bundle_raw *raw_b = NULL;
+	int len = 0;
+	err = bundle_encode(app_control_bundle.get(), &raw_b, &len);
+	BundleEncodedPtr b_raw(reinterpret_cast<char *>(raw_b));
 	if (err != BUNDLE_ERROR_NONE) {
 		ERR("Failed to encode bundle [%d]", err);
-		ret = NOTIFICATION_ERROR_IO_ERROR;
-		goto out;
+		return NOTIFICATION_ERROR_IO_ERROR;
 	}
 
-	err = bundle_add_str(noti->args, key, (const char *)b_raw);
+	err = bundle_add_str(noti->args, key, b_raw.get());
 	if (err != BUNDLE_ERROR_NONE) {
 		ERR("Failed to add str to bundle [%d]", err);
-		ret = NOTIFICATION_ERROR_IO_ERROR;
-		goto out;
+		return NOTIFICATION_ERROR_IO_ERROR;
 	}
 
-out:
-	if (b_raw)
-		bundle_free_encoded_rawdata(&b_raw);
-	if (app_control_bundle)
-		bundle_free(app_control_bundle);
-
-	return ret;
+	return NOTIFICATION_ERROR_NONE;
 }
 /* LCOV_EXCL_STOP */
 
@@ -2061,12 +2060,8 @@ EXPORT_API int notification_get_extension_event_handler(notification_h noti,
 					notification_event_type_extension_e event,
 					app_control_h *event_handler)
 {
-	int err;
-	int ret = NOTIFICATION_ERROR_NONE;
-	char *ret_str = NULL;
-	char key[KEY_LEN];
-	bundle *app_control_bundle = NULL;
-	app_control_h ret_app_control = NULL;
+	using notification::raii::BundlePtr;
+	using notification::raii::AppControlPtr;
 
 	if (noti == NULL || event_handler == NULL) {
 		ERR("Invalid parameter");
@@ -2079,42 +2074,40 @@ EXPORT_API int notification_get_extension_event_handler(notification_h noti,
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 	}
 
+	char key[KEY_LEN];
 	snprintf(key, sizeof(key), "%s%d", EXTENSION_EVENT_KEY, event);
 
+	char *ret_str = NULL;
 	bundle_get_str(noti->args, key, &ret_str);
 	if (ret_str == NULL) {
 		ERR("No handler, Invalid event[%d]", event);
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 	}
 
-	app_control_bundle = _create_bundle_from_bundle_raw((bundle_raw *)ret_str);
-	if (app_control_bundle == NULL) {
+	BundlePtr app_control_bundle(
+		_create_bundle_from_bundle_raw((bundle_raw *)ret_str));
+	if (!app_control_bundle) {
 		ERR("Failed to create bundle");
 		return NOTIFICATION_ERROR_IO_ERROR;
 	}
 
-	err = app_control_create(&ret_app_control);
+	app_control_h raw_app_control = NULL;
+	int err = app_control_create(&raw_app_control);
+	AppControlPtr ret_app_control(raw_app_control);
 	if (err != APP_CONTROL_ERROR_NONE) {
 		ERR("Failed to create app control [%d]", err);
-		ret = NOTIFICATION_ERROR_IO_ERROR;
-		goto out;
+		return NOTIFICATION_ERROR_IO_ERROR;
 	}
 
-	err = app_control_import_from_bundle(ret_app_control, app_control_bundle);
+	err = app_control_import_from_bundle(ret_app_control.get(),
+			app_control_bundle.get());
 	if (err != APP_CONTROL_ERROR_NONE) {
 		ERR("Failed to import app control from bundle [%d]", err);
-		app_control_destroy(ret_app_control);
-		ret = NOTIFICATION_ERROR_IO_ERROR;
-		goto out;
+		return NOTIFICATION_ERROR_IO_ERROR;
 	}
 
-	*event_handler = ret_app_control;
-
-out:
-	if (app_control_bundle)
-		bundle_free(app_control_bundle);
-
-	return ret;
+	*event_handler = ret_app_control.release();
+	return NOTIFICATION_ERROR_NONE;
 }
 /* LCOV_EXCL_STOP */
 
@@ -2632,49 +2625,43 @@ EXPORT_API int notification_channel_update(notification_channel_h channel)
 EXPORT_API int notification_channel_get_by_name(const char *channel_name,
 		notification_channel_h *channel)
 {
-	int ret;
-	char *app_id;
-	bool blockable;
-	bool is_blocked;
-	notification_channel_s *noti_channel = NULL;
-
 	WARN("notification_channel_get_by_name");
 
-	app_id = notification_get_app_id_by_pid(getpid());
-	if (channel_name == NULL || channel == NULL || app_id == NULL) {
+	std::unique_ptr<char, decltype(&std::free)> app_id(
+			notification_get_app_id_by_pid(getpid()), std::free);
+	if (channel_name == NULL || channel == NULL || !app_id) {
 		ERR("Invalid parameter");
-		ret = NOTIFICATION_ERROR_INVALID_PARAMETER;
-		goto out;
+		WARN("notification_channel_get_by_name done : %d",
+				NOTIFICATION_ERROR_INVALID_PARAMETER);
+		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 	}
 
-	noti_channel = (notification_channel_s *)calloc(1,
+	notification_channel_s *noti_channel = (notification_channel_s *)calloc(1,
 			sizeof(notification_channel_s));
 	if (noti_channel == NULL) {
 		ERR("Out of memory");
-		ret = NOTIFICATION_ERROR_OUT_OF_MEMORY;
-		goto out;
+		WARN("notification_channel_get_by_name done : %d",
+				NOTIFICATION_ERROR_OUT_OF_MEMORY);
+		return NOTIFICATION_ERROR_OUT_OF_MEMORY;
 	}
 
-	ret = notification_tidl_request_get_channel(app_id, channel_name,
+	bool blockable;
+	bool is_blocked;
+	int ret = notification_tidl_request_get_channel(app_id.get(), channel_name,
 			&blockable, &is_blocked, aul_getuid());
 	if (ret != NOTIFICATION_ERROR_NONE) {
 		ERR("failed to update channel");
 		free(noti_channel);
-		goto out;
+		WARN("notification_channel_get_by_name done : %d", ret);
+		return ret;
 	}
-	noti_channel->app_id = strdup(app_id);
+	noti_channel->app_id = strdup(app_id.get());
 	noti_channel->channel_name = strdup(channel_name);
 	noti_channel->blockable = blockable;
 	noti_channel->is_blocked = is_blocked;
 
 	*channel = noti_channel;
-
-out:
-	if (app_id)
-		free(app_id);
-
 	WARN("notification_channel_get_by_name done : %d", ret);
-
 	return ret;
 }
 
@@ -2796,38 +2783,32 @@ EXPORT_API int notification_channel_clone(notification_channel_h channel,
 EXPORT_API int notification_channel_foreach(const char *app_id,
 		notification_channel_foreach_cb cb, void *user_data)
 {
-	int ret;
-	char *_app_id = NULL;
-
 	if (cb == NULL) {
 		ERR("Invalid parameter");
-		ret = NOTIFICATION_ERROR_INVALID_PARAMETER;
-		goto out;
+		WARN("notification_channel_foreach done : %d",
+				NOTIFICATION_ERROR_INVALID_PARAMETER);
+		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 	}
+
+	std::unique_ptr<char, decltype(&std::free)> _app_id(nullptr, std::free);
 	if (app_id == NULL) {
-		_app_id = notification_get_app_id_by_pid(getpid());
-		if (_app_id == NULL) {
+		_app_id.reset(notification_get_app_id_by_pid(getpid()));
+		if (!_app_id) {
 			ERR("failed to get app id");
-			ret = NOTIFICATION_ERROR_IO_ERROR;
-			goto out;
+			WARN("notification_channel_foreach done : %d",
+					NOTIFICATION_ERROR_IO_ERROR);
+			return NOTIFICATION_ERROR_IO_ERROR;
 		}
 	}
-	WARN("notification_channel_foreach : %s", (app_id != NULL) ? app_id : _app_id);
+	const char *use_app_id = (app_id != NULL) ? app_id : _app_id.get();
+	WARN("notification_channel_foreach : %s", use_app_id);
 
-	ret = notification_tidl_request_channel_get_list(
-			(app_id != NULL) ? app_id : _app_id,
-			cb, user_data, aul_getuid());
-	if (ret != NOTIFICATION_ERROR_NONE) {
+	int ret = notification_tidl_request_channel_get_list(
+			use_app_id, cb, user_data, aul_getuid());
+	if (ret != NOTIFICATION_ERROR_NONE)
 		ERR("failed to get is blocked");
-		goto out;
-	}
-
-out:
-	if (_app_id)
-		free(_app_id);
 
 	WARN("notification_channel_foreach done : %d", ret);
-
 	return ret;
 }
 

@@ -43,6 +43,16 @@ struct BundleEncodedDeleter {
 };
 using BundleEncodedPtr = std::unique_ptr<char, BundleEncodedDeleter>;
 
+/* Phase 3 RAII for `bundle *` returned by bundle_create / bundle_dup /
+ * app_control_export_as_bundle / _create_bundle_from_bundle_raw,
+ * released by `bundle_free`. */
+struct BundleDeleter {
+  void operator()(bundle *b) const noexcept {
+    if (b != nullptr) bundle_free(b);
+  }
+};
+using BundlePtr = std::unique_ptr<bundle, BundleDeleter>;
+
 }  // namespace notification::raii
 
 #endif  // NOTIFICATION_RAII_BUNDLE_HANDLES_HH_
