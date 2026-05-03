@@ -36,6 +36,50 @@ APPLY_PKG_CONFIG(${TARGET_NOTIFICATION} PUBLIC
   VCONF_DEPS
 )
 
+# Test-only static archive: same source set as ${TARGET_NOTIFICATION}
+# but compiled with -fvisibility=default so non-EXPORT_API helpers
+# become reachable from internal-API unit-test translation units.
+# Not installed; consumed only by tests/internal/.
+#
+# Source set is identical to libnotification.so (visibility is the
+# only delta).  The tidlc-generated notification_tidl_proxy.c stays
+# in to keep the rpc_port_proxy_noti_service_* / _notification_*
+# symbols defined; tests/internal excludes rpc_port_mock.cc from its
+# mock glob so the test executable does not see duplicate
+# definitions of those symbols.
+ADD_LIBRARY(${TARGET_NOTIFICATION_INTERNAL_STATIC} STATIC
+  ${NOTIFICATION_SRCS})
+
+TARGET_COMPILE_OPTIONS(${TARGET_NOTIFICATION_INTERNAL_STATIC} PRIVATE
+  -fvisibility=default -fPIC)
+
+TARGET_INCLUDE_DIRECTORIES(${TARGET_NOTIFICATION_INTERNAL_STATIC} PUBLIC
+  ${CMAKE_CURRENT_SOURCE_DIR}
+  ${CMAKE_CURRENT_SOURCE_DIR}/../
+  ${CMAKE_CURRENT_SOURCE_DIR}/src
+  ${CMAKE_CURRENT_SOURCE_DIR}/include
+)
+
+APPLY_PKG_CONFIG(${TARGET_NOTIFICATION_INTERNAL_STATIC} PUBLIC
+  AUL_DEPS
+  BUNDLE_DEPS
+  CAPI_APPFW_APP_COMMON_DEPS
+  CAPI_APPFW_APP_CONTROL_DEPS
+  CAPI_APPFW_PACKAGE_MANAGER_DEPS
+  DLOG_DEPS
+  GIO_DEPS
+  GIO_UNIX_DEPS
+  GLIB_DEPS
+  INIPARSER_DEPS
+  LIBTZPLATFORM_CONFIG_DEPS
+  PKGMGR_INFO_DEPS
+  RPC_PORT_DEPS
+  SECURITY_MANAGER_DEPS
+  SQLITE3_DEPS
+  TIZEN_CORE_DEPS
+  VCONF_DEPS
+)
+
 CONFIGURE_FILE(${TARGET_NOTIFICATION}.pc.in
   ${TARGET_NOTIFICATION}.pc @ONLY)
 INSTALL(TARGETS ${TARGET_NOTIFICATION}
