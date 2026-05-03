@@ -18,6 +18,7 @@
 #define NOTIFICATION_RAII_NOTIFICATION_HANDLES_HH_
 
 #include <memory>
+#include <app_control.h>
 #include <notification_setting.h>
 #include <notification_setting_internal.h>
 
@@ -51,6 +52,17 @@ struct NotificationSystemSettingDeleter {
 using NotificationSystemSettingPtr = std::unique_ptr<
     std::remove_pointer_t<notification_system_setting_h>,
     NotificationSystemSettingDeleter>;
+
+/* app_control_h — `app_control_destroy` (returns int but we discard).
+ * Used by notification_viewer.cc, notification_noti.cc,
+ * notification_internal.cc, notification.cc. */
+struct AppControlDeleter {
+  void operator()(app_control_h h) const noexcept {
+    if (h != nullptr) app_control_destroy(h);
+  }
+};
+using AppControlPtr = std::unique_ptr<
+    std::remove_pointer_t<app_control_h>, AppControlDeleter>;
 
 }  // namespace notification::raii
 

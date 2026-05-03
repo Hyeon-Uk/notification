@@ -41,6 +41,7 @@
 #include "raii/sqlite3_stmt.hh"
 #include "raii/sqlite3_free.hh"
 #include "raii/notification_handles.hh"
+#include "raii/bundle_handles.hh"
 
 extern "C" {
 
@@ -252,44 +253,25 @@ err:
 	return result;
 }
 
+static notification::raii::BundleEncodedPtr __encode_bundle(bundle *src);
+static notification::raii::BundleEncodedPtr __encode_bundle_if_nonempty(bundle *src);
+
 static int _create_insertion_query(sqlite3 *db, notification_h noti, sqlite3_stmt *stmt, int *index)
 {
-	char buf_key[32] = { 0, };
-	char *title_key = NULL;
-	char *b_text = NULL;
-	char *b_key = NULL;
-	char *b_format_args = NULL;
-	char *args = NULL;
-	char *group_args = NULL;
-	char *b_image_path = NULL;
-	char *b_priv_image_path = NULL;
-	char *b_execute_option = NULL;
-	char *b_service_responding = NULL;
-	char *b_service_single_launch = NULL;
-	char *b_service_multi_launch = NULL;
-	char *b_event_handler[NOTIFICATION_EVENT_TYPE_MAX+1] = { NULL, };
-	int flag_simmode = 0;
-	int idx = 1;
-	int i = 0;
-	int b_encode_len = 0;
-	int ret = NOTIFICATION_ERROR_NONE;
+	using notification::raii::BundleEncodedPtr;
 
 	if (noti == NULL || stmt == NULL)
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 
-	if (noti->b_image_path && bundle_get_count(noti->b_image_path) > 0)
-		bundle_encode(noti->b_image_path, (bundle_raw **)&b_image_path,
-				&b_encode_len);
-
-	if (noti->b_priv_image_path && bundle_get_count(noti->b_priv_image_path) > 0)
-		bundle_encode(noti->b_priv_image_path,
-				(bundle_raw **)&b_priv_image_path, &b_encode_len);
+	BundleEncodedPtr b_image_path        = __encode_bundle_if_nonempty(noti->b_image_path);
+	BundleEncodedPtr b_priv_image_path   = __encode_bundle_if_nonempty(noti->b_priv_image_path);
 
 	/* Get title key */
+	char buf_key[32] = { 0, };
+	char *title_key = NULL;
 	if (noti->b_key != NULL && bundle_get_count(noti->b_key) > 0) {
 		snprintf(buf_key, sizeof(buf_key), "%d",
 					NOTIFICATION_TEXT_TYPE_TITLE);
-
 		bundle_get_str(noti->b_key, buf_key, &title_key);
 	}
 
@@ -297,96 +279,74 @@ static int _create_insertion_query(sqlite3 *db, notification_h noti, sqlite3_stm
 		&& (noti->b_text != NULL && bundle_get_count(noti->b_text) > 0)) {
 		snprintf(buf_key, sizeof(buf_key), "%d",
 					NOTIFICATION_TEXT_TYPE_TITLE);
-
 		bundle_get_str(noti->b_text, buf_key, &title_key);
 	}
 
 	if (title_key == NULL)
 		title_key = noti->caller_app_id;
 
-	if (noti->b_text && bundle_get_count(noti->b_text) > 0)
-		bundle_encode(noti->b_text, (bundle_raw **)&b_text, &b_encode_len);
+	BundleEncodedPtr b_text                  = __encode_bundle_if_nonempty(noti->b_text);
+	BundleEncodedPtr b_key                   = __encode_bundle_if_nonempty(noti->b_key);
+	BundleEncodedPtr b_format_args           = __encode_bundle_if_nonempty(noti->b_format_args);
+	BundleEncodedPtr args                    = __encode_bundle_if_nonempty(noti->args);
+	BundleEncodedPtr group_args              = __encode_bundle_if_nonempty(noti->group_args);
+	BundleEncodedPtr b_execute_option        = __encode_bundle_if_nonempty(noti->b_execute_option);
+	BundleEncodedPtr b_service_responding    = __encode_bundle_if_nonempty(noti->b_service_responding);
+	BundleEncodedPtr b_service_single_launch = __encode_bundle_if_nonempty(noti->b_service_single_launch);
+	BundleEncodedPtr b_service_multi_launch  = __encode_bundle_if_nonempty(noti->b_service_multi_launch);
 
-	if (noti->b_key && bundle_get_count(noti->b_key) > 0)
-		bundle_encode(noti->b_key, (bundle_raw **)&b_key, &b_encode_len);
-
-	if (noti->b_format_args && bundle_get_count(noti->b_format_args) > 0)
-		bundle_encode(noti->b_format_args,
-			(bundle_raw **)&b_format_args, &b_encode_len);
-
-	if (noti->args && bundle_get_count(noti->args) > 0)
-		bundle_encode(noti->args, (bundle_raw **)&args, &b_encode_len);
-
-	if (noti->group_args && bundle_get_count(noti->group_args) > 0)
-		bundle_encode(noti->group_args, (bundle_raw **)&group_args,
-			&b_encode_len);
-
-	if (noti->b_execute_option && bundle_get_count(noti->b_execute_option) > 0)
-		bundle_encode(noti->b_execute_option,
-			(bundle_raw **)&b_execute_option, &b_encode_len);
-
-	if (noti->b_service_responding && bundle_get_count(noti->b_service_responding) > 0)
-		bundle_encode(noti->b_service_responding,
-			(bundle_raw **)&b_service_responding, &b_encode_len);
-
-	if (noti->b_service_single_launch && bundle_get_count(noti->b_service_single_launch) > 0)
-		bundle_encode(noti->b_service_single_launch,
-			(bundle_raw **)&b_service_single_launch, &b_encode_len);
-
-	if (noti->b_service_multi_launch && bundle_get_count(noti->b_service_multi_launch) > 0)
-		bundle_encode(noti->b_service_multi_launch,
-			(bundle_raw **)&b_service_multi_launch, &b_encode_len);
-
-
-	for (i = 0; i <= NOTIFICATION_EVENT_TYPE_MAX; i++) {
-		if (noti->b_event_handler[i])
-			bundle_encode(noti->b_event_handler[i],
-				(bundle_raw **)&b_event_handler[i], &b_encode_len);
-	}
+	/* event_handler array uses the no-count guard, matching the
+	 * .c version which only checked `if (noti->b_event_handler[i])`. */
+	BundleEncodedPtr b_event_handler[NOTIFICATION_EVENT_TYPE_MAX+1];
+	for (int i = 0; i <= NOTIFICATION_EVENT_TYPE_MAX; i++)
+		b_event_handler[i] = __encode_bundle(noti->b_event_handler[i]);
 
 	/* Check only simmode property is enable */
+	int flag_simmode = 0;
 	if (noti->flags_for_property & NOTIFICATION_PROP_DISPLAY_ONLY_SIMMODE)
 		flag_simmode = 1;
 
+	int idx = 1;
+	int ret = NOTIFICATION_ERROR_NONE;
 	__BIND_INT(db, stmt, idx++, noti->type, ret, out);
 	__BIND_INT(db, stmt, idx++, noti->layout, ret, out);
 	__BIND_TEXT(db, stmt, idx++, NOTIFICATION_CHECK_STR(noti->pkg_id), ret, out);
 	__BIND_TEXT(db, stmt, idx++, NOTIFICATION_CHECK_STR(noti->caller_app_id), ret, out);
 	__BIND_TEXT(db, stmt, idx++, NOTIFICATION_CHECK_STR(noti->launch_app_id), ret, out);
 	__BIND_TEXT(db, stmt, idx++, NOTIFICATION_CHECK_STR(noti->app_label), ret, out);
-	__BIND_TEXT(db, stmt, idx++, NOTIFICATION_CHECK_STR(b_image_path), ret, out);
-	__BIND_TEXT(db, stmt, idx++, NOTIFICATION_CHECK_STR(b_priv_image_path), ret, out);
+	__BIND_TEXT(db, stmt, idx++, NOTIFICATION_CHECK_STR(b_image_path.get()), ret, out);
+	__BIND_TEXT(db, stmt, idx++, NOTIFICATION_CHECK_STR(b_priv_image_path.get()), ret, out);
 	__BIND_INT(db, stmt, idx++, noti->group_id, ret, out);
 	__BIND_INT(db, stmt, idx++, noti->internal_group_id, ret, out);
 	__BIND_TEXT_STATIC(db, stmt, idx++, NOTIFICATION_CHECK_STR(title_key), ret, out);
-	__BIND_TEXT(db, stmt, idx++, NOTIFICATION_CHECK_STR(b_text), ret, out);
-	__BIND_TEXT(db, stmt, idx++, NOTIFICATION_CHECK_STR(b_key), ret, out);
+	__BIND_TEXT(db, stmt, idx++, NOTIFICATION_CHECK_STR(b_text.get()), ret, out);
+	__BIND_TEXT(db, stmt, idx++, NOTIFICATION_CHECK_STR(b_key.get()), ret, out);
 	__BIND_TEXT_STATIC(db, stmt, idx++, NOTIFICATION_CHECK_STR(noti->tag), ret, out);
-	__BIND_TEXT(db, stmt, idx++, NOTIFICATION_CHECK_STR(b_format_args), ret, out);
+	__BIND_TEXT(db, stmt, idx++, NOTIFICATION_CHECK_STR(b_format_args.get()), ret, out);
 	__BIND_INT(db, stmt, idx++, noti->num_format_args, ret, out);
 	__BIND_TEXT(db, stmt, idx++, NOTIFICATION_CHECK_STR(noti->domain), ret, out);
 	__BIND_TEXT(db, stmt, idx++, NOTIFICATION_CHECK_STR(noti->dir), ret, out);
 	__BIND_INT(db, stmt, idx++, (int)noti->time, ret, out);
 	__BIND_INT(db, stmt, idx++, (int)noti->insert_time, ret, out);
-	__BIND_TEXT(db, stmt, idx++, NOTIFICATION_CHECK_STR(args), ret, out);
-	__BIND_TEXT(db, stmt, idx++, NOTIFICATION_CHECK_STR(group_args), ret, out);
-	__BIND_TEXT(db, stmt, idx++, NOTIFICATION_CHECK_STR(b_execute_option), ret, out);
-	__BIND_TEXT(db, stmt, idx++, NOTIFICATION_CHECK_STR(b_service_responding), ret, out);
-	__BIND_TEXT(db, stmt, idx++, NOTIFICATION_CHECK_STR(b_service_single_launch), ret, out);
-	__BIND_TEXT(db, stmt, idx++, NOTIFICATION_CHECK_STR(b_service_multi_launch), ret, out);
-	__BIND_TEXT(db, stmt, idx++, NOTIFICATION_CHECK_STR(b_event_handler[NOTIFICATION_EVENT_TYPE_CLICK_ON_BUTTON_1]), ret, out);
-	__BIND_TEXT(db, stmt, idx++, NOTIFICATION_CHECK_STR(b_event_handler[NOTIFICATION_EVENT_TYPE_CLICK_ON_BUTTON_2]), ret, out);
-	__BIND_TEXT(db, stmt, idx++, NOTIFICATION_CHECK_STR(b_event_handler[NOTIFICATION_EVENT_TYPE_CLICK_ON_BUTTON_3]), ret, out);
-	__BIND_TEXT(db, stmt, idx++, NOTIFICATION_CHECK_STR(b_event_handler[NOTIFICATION_EVENT_TYPE_CLICK_ON_BUTTON_4]), ret, out);
-	__BIND_TEXT(db, stmt, idx++, NOTIFICATION_CHECK_STR(b_event_handler[NOTIFICATION_EVENT_TYPE_CLICK_ON_BUTTON_5]), ret, out);
-	__BIND_TEXT(db, stmt, idx++, NOTIFICATION_CHECK_STR(b_event_handler[NOTIFICATION_EVENT_TYPE_CLICK_ON_BUTTON_6]), ret, out);
-	__BIND_TEXT(db, stmt, idx++, NOTIFICATION_CHECK_STR(b_event_handler[NOTIFICATION_EVENT_TYPE_CLICK_ON_ICON]), ret, out);
-	__BIND_TEXT(db, stmt, idx++, NOTIFICATION_CHECK_STR(b_event_handler[NOTIFICATION_EVENT_TYPE_CLICK_ON_THUMBNAIL]), ret, out);
-	__BIND_TEXT(db, stmt, idx++, NOTIFICATION_CHECK_STR(b_event_handler[NOTIFICATION_EVENT_TYPE_CLICK_ON_TEXT_INPUT_BUTTON]), ret, out);
-	__BIND_TEXT(db, stmt, idx++, NOTIFICATION_CHECK_STR(b_event_handler[NOTIFICATION_EVENT_TYPE_CLICK_ON_BUTTON_7]), ret, out);
-	__BIND_TEXT(db, stmt, idx++, NOTIFICATION_CHECK_STR(b_event_handler[NOTIFICATION_EVENT_TYPE_CLICK_ON_BUTTON_8]), ret, out);
-	__BIND_TEXT(db, stmt, idx++, NOTIFICATION_CHECK_STR(b_event_handler[NOTIFICATION_EVENT_TYPE_CLICK_ON_BUTTON_9]), ret, out);
-	__BIND_TEXT(db, stmt, idx++, NOTIFICATION_CHECK_STR(b_event_handler[NOTIFICATION_EVENT_TYPE_CLICK_ON_BUTTON_10]), ret, out);
+	__BIND_TEXT(db, stmt, idx++, NOTIFICATION_CHECK_STR(args.get()), ret, out);
+	__BIND_TEXT(db, stmt, idx++, NOTIFICATION_CHECK_STR(group_args.get()), ret, out);
+	__BIND_TEXT(db, stmt, idx++, NOTIFICATION_CHECK_STR(b_execute_option.get()), ret, out);
+	__BIND_TEXT(db, stmt, idx++, NOTIFICATION_CHECK_STR(b_service_responding.get()), ret, out);
+	__BIND_TEXT(db, stmt, idx++, NOTIFICATION_CHECK_STR(b_service_single_launch.get()), ret, out);
+	__BIND_TEXT(db, stmt, idx++, NOTIFICATION_CHECK_STR(b_service_multi_launch.get()), ret, out);
+	__BIND_TEXT(db, stmt, idx++, NOTIFICATION_CHECK_STR(b_event_handler[NOTIFICATION_EVENT_TYPE_CLICK_ON_BUTTON_1].get()), ret, out);
+	__BIND_TEXT(db, stmt, idx++, NOTIFICATION_CHECK_STR(b_event_handler[NOTIFICATION_EVENT_TYPE_CLICK_ON_BUTTON_2].get()), ret, out);
+	__BIND_TEXT(db, stmt, idx++, NOTIFICATION_CHECK_STR(b_event_handler[NOTIFICATION_EVENT_TYPE_CLICK_ON_BUTTON_3].get()), ret, out);
+	__BIND_TEXT(db, stmt, idx++, NOTIFICATION_CHECK_STR(b_event_handler[NOTIFICATION_EVENT_TYPE_CLICK_ON_BUTTON_4].get()), ret, out);
+	__BIND_TEXT(db, stmt, idx++, NOTIFICATION_CHECK_STR(b_event_handler[NOTIFICATION_EVENT_TYPE_CLICK_ON_BUTTON_5].get()), ret, out);
+	__BIND_TEXT(db, stmt, idx++, NOTIFICATION_CHECK_STR(b_event_handler[NOTIFICATION_EVENT_TYPE_CLICK_ON_BUTTON_6].get()), ret, out);
+	__BIND_TEXT(db, stmt, idx++, NOTIFICATION_CHECK_STR(b_event_handler[NOTIFICATION_EVENT_TYPE_CLICK_ON_ICON].get()), ret, out);
+	__BIND_TEXT(db, stmt, idx++, NOTIFICATION_CHECK_STR(b_event_handler[NOTIFICATION_EVENT_TYPE_CLICK_ON_THUMBNAIL].get()), ret, out);
+	__BIND_TEXT(db, stmt, idx++, NOTIFICATION_CHECK_STR(b_event_handler[NOTIFICATION_EVENT_TYPE_CLICK_ON_TEXT_INPUT_BUTTON].get()), ret, out);
+	__BIND_TEXT(db, stmt, idx++, NOTIFICATION_CHECK_STR(b_event_handler[NOTIFICATION_EVENT_TYPE_CLICK_ON_BUTTON_7].get()), ret, out);
+	__BIND_TEXT(db, stmt, idx++, NOTIFICATION_CHECK_STR(b_event_handler[NOTIFICATION_EVENT_TYPE_CLICK_ON_BUTTON_8].get()), ret, out);
+	__BIND_TEXT(db, stmt, idx++, NOTIFICATION_CHECK_STR(b_event_handler[NOTIFICATION_EVENT_TYPE_CLICK_ON_BUTTON_9].get()), ret, out);
+	__BIND_TEXT(db, stmt, idx++, NOTIFICATION_CHECK_STR(b_event_handler[NOTIFICATION_EVENT_TYPE_CLICK_ON_BUTTON_10].get()), ret, out);
 	__BIND_INT(db, stmt, idx++, noti->sound_type, ret, out);
 	__BIND_TEXT(db, stmt, idx++, NOTIFICATION_CHECK_STR(noti->sound_path), ret, out);
 	__BIND_TEXT(db, stmt, idx++, NOTIFICATION_CHECK_STR(noti->priv_sound_path), ret, out);
@@ -419,138 +379,106 @@ static int _create_insertion_query(sqlite3 *db, notification_h noti, sqlite3_stm
 	__BIND_TEXT(db, stmt, idx++, NOTIFICATION_CHECK_STR(noti->channel_name), ret, out);
 
 out:
-	__free_encoded_data(b_image_path);
-	__free_encoded_data(b_priv_image_path);
-	__free_encoded_data(b_text);
-	__free_encoded_data(b_key);
-	__free_encoded_data(b_format_args);
-	__free_encoded_data(args);
-	__free_encoded_data(group_args);
-	__free_encoded_data(b_execute_option);
-	__free_encoded_data(b_service_responding);
-	__free_encoded_data(b_service_single_launch);
-	__free_encoded_data(b_service_multi_launch);
-
-	for (i = 0; i <= NOTIFICATION_EVENT_TYPE_MAX; i++)
-		__free_encoded_data(b_event_handler[i]);
-
+	/* BundleEncodedPtr destructors release every encoded payload. */
 	if (index != NULL && ret == NOTIFICATION_ERROR_NONE)
 		*index = idx;
-
 	return ret;
+}
+
+/* Local helpers: bundle_encode a `bundle *` into a BundleEncodedPtr.
+ * Two flavors mirror the .c-style guards in the original code:
+ *   __encode_bundle               -- `if (src) bundle_encode(src, ...);`
+ *                                    used by _create_update_query.
+ *   __encode_bundle_if_nonempty   -- `if (src && bundle_get_count(src) > 0)
+ *                                       bundle_encode(src, ...);`
+ *                                    used by _create_insertion_query. */
+static notification::raii::BundleEncodedPtr __encode_bundle(bundle *src)
+{
+	using notification::raii::BundleEncodedPtr;
+	if (src == nullptr)
+		return BundleEncodedPtr();
+	bundle_raw *raw = nullptr;
+	int len = 0;
+	bundle_encode(src, &raw, &len);
+	return BundleEncodedPtr(reinterpret_cast<char *>(raw));
+}
+
+static notification::raii::BundleEncodedPtr __encode_bundle_if_nonempty(bundle *src)
+{
+	using notification::raii::BundleEncodedPtr;
+	if (src == nullptr || bundle_get_count(src) <= 0)
+		return BundleEncodedPtr();
+	bundle_raw *raw = nullptr;
+	int len = 0;
+	bundle_encode(src, &raw, &len);
+	return BundleEncodedPtr(reinterpret_cast<char *>(raw));
 }
 
 static int _create_update_query(sqlite3 *db, notification_h noti, sqlite3_stmt *stmt)
 {
-	char *b_image_path = NULL;
-	char *b_priv_image_path = NULL;
-	char *b_text = NULL;
-	char *b_key = NULL;
-	char *b_format_args = NULL;
-	char *args = NULL;
-	char *group_args = NULL;
-	char *b_execute_option = NULL;
-	char *b_service_responding = NULL;
-	char *b_service_single_launch = NULL;
-	char *b_service_multi_launch = NULL;
-	char *b_event_handler[NOTIFICATION_EVENT_TYPE_MAX+1] = { NULL, };
-	int flag_simmode = 0;
-	int idx = 1;
-	int i = 0;
-	int b_encode_len = 0;
-	int ret = NOTIFICATION_ERROR_NONE;
+	using notification::raii::BundleEncodedPtr;
 
 	if (noti == NULL || stmt == NULL)
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 
-	/* Decode bundle to update DB */
-	if (noti->b_image_path)
-		bundle_encode(noti->b_image_path,
-			(bundle_raw **)&b_image_path, &b_encode_len);
+	/* Decode bundles for DB binding (released by destructors). */
+	BundleEncodedPtr b_image_path = __encode_bundle(noti->b_image_path);
+	BundleEncodedPtr b_priv_image_path = __encode_bundle(noti->b_priv_image_path);
+	BundleEncodedPtr b_text = __encode_bundle(noti->b_text);
+	BundleEncodedPtr b_key = __encode_bundle(noti->b_key);
+	BundleEncodedPtr b_format_args = __encode_bundle(noti->b_format_args);
+	BundleEncodedPtr args = __encode_bundle(noti->args);
+	BundleEncodedPtr group_args = __encode_bundle(noti->group_args);
+	BundleEncodedPtr b_execute_option = __encode_bundle(noti->b_execute_option);
+	BundleEncodedPtr b_service_responding = __encode_bundle(noti->b_service_responding);
+	BundleEncodedPtr b_service_single_launch = __encode_bundle(noti->b_service_single_launch);
+	BundleEncodedPtr b_service_multi_launch = __encode_bundle(noti->b_service_multi_launch);
 
-	if (noti->b_priv_image_path)
-		bundle_encode(noti->b_priv_image_path,
-			(bundle_raw **)&b_priv_image_path, &b_encode_len);
-
-	if (noti->b_text)
-		bundle_encode(noti->b_text,
-			(bundle_raw **)&b_text, &b_encode_len);
-
-	if (noti->b_key)
-		bundle_encode(noti->b_key,
-			(bundle_raw **)&b_key, &b_encode_len);
-
-	if (noti->b_format_args)
-		bundle_encode(noti->b_format_args,
-			(bundle_raw **)&b_format_args, &b_encode_len);
-
-	if (noti->args)
-		bundle_encode(noti->args, (bundle_raw **)&args, &b_encode_len);
-
-	if (noti->group_args)
-		bundle_encode(noti->group_args, (bundle_raw **)&group_args,
-			&b_encode_len);
-
-	if (noti->b_execute_option)
-		bundle_encode(noti->b_execute_option,
-			(bundle_raw **)&b_execute_option, &b_encode_len);
-
-	if (noti->b_service_responding)
-		bundle_encode(noti->b_service_responding,
-			(bundle_raw **)&b_service_responding, &b_encode_len);
-
-	if (noti->b_service_single_launch)
-		bundle_encode(noti->b_service_single_launch,
-			(bundle_raw **)&b_service_single_launch, &b_encode_len);
-
-	if (noti->b_service_multi_launch)
-		bundle_encode(noti->b_service_multi_launch,
-			(bundle_raw **)&b_service_multi_launch, &b_encode_len);
-
-	for (i = 0; i <= NOTIFICATION_EVENT_TYPE_MAX; i++) {
-		if (noti->b_event_handler[i])
-			bundle_encode(noti->b_event_handler[i],
-					(bundle_raw **)&b_event_handler[i], &b_encode_len);
-	}
+	BundleEncodedPtr b_event_handler[NOTIFICATION_EVENT_TYPE_MAX+1];
+	for (int i = 0; i <= NOTIFICATION_EVENT_TYPE_MAX; i++)
+		b_event_handler[i] = __encode_bundle(noti->b_event_handler[i]);
 
 	/* Check only simmode property is enable */
+	int flag_simmode = 0;
 	if (noti->flags_for_property & NOTIFICATION_PROP_DISPLAY_ONLY_SIMMODE)
 		flag_simmode = 1;
 
+	int idx = 1;
+	int ret = NOTIFICATION_ERROR_NONE;
 	__BIND_INT(db, stmt, idx++, noti->type, ret, out);
 	__BIND_INT(db, stmt, idx++, noti->layout, ret, out);
 	__BIND_TEXT(db, stmt, idx++, NOTIFICATION_CHECK_STR(noti->launch_app_id), ret, out);
 	__BIND_TEXT(db, stmt, idx++, NOTIFICATION_CHECK_STR(noti->app_label), ret, out);
-	__BIND_TEXT(db, stmt, idx++, NOTIFICATION_CHECK_STR(b_image_path), ret, out);
-	__BIND_TEXT(db, stmt, idx++, NOTIFICATION_CHECK_STR(b_priv_image_path), ret, out);
-	__BIND_TEXT(db, stmt, idx++, NOTIFICATION_CHECK_STR(b_text), ret, out);
-	__BIND_TEXT(db, stmt, idx++, NOTIFICATION_CHECK_STR(b_key), ret, out);
+	__BIND_TEXT(db, stmt, idx++, NOTIFICATION_CHECK_STR(b_image_path.get()), ret, out);
+	__BIND_TEXT(db, stmt, idx++, NOTIFICATION_CHECK_STR(b_priv_image_path.get()), ret, out);
+	__BIND_TEXT(db, stmt, idx++, NOTIFICATION_CHECK_STR(b_text.get()), ret, out);
+	__BIND_TEXT(db, stmt, idx++, NOTIFICATION_CHECK_STR(b_key.get()), ret, out);
 	__BIND_TEXT_STATIC(db, stmt, idx++, NOTIFICATION_CHECK_STR(noti->tag), ret, out);
-	__BIND_TEXT(db, stmt, idx++, NOTIFICATION_CHECK_STR(b_format_args), ret, out);
+	__BIND_TEXT(db, stmt, idx++, NOTIFICATION_CHECK_STR(b_format_args.get()), ret, out);
 	__BIND_INT(db, stmt, idx++, noti->num_format_args, ret, out);
 	__BIND_TEXT(db, stmt, idx++, NOTIFICATION_CHECK_STR(noti->domain), ret, out);
 	__BIND_TEXT(db, stmt, idx++, NOTIFICATION_CHECK_STR(noti->dir), ret, out);
 	__BIND_INT(db, stmt, idx++, (int)noti->time, ret, out);
 	__BIND_INT(db, stmt, idx++, (int)noti->insert_time, ret, out);
-	__BIND_TEXT(db, stmt, idx++, NOTIFICATION_CHECK_STR(args), ret, out);
-	__BIND_TEXT(db, stmt, idx++, NOTIFICATION_CHECK_STR(group_args), ret, out);
-	__BIND_TEXT(db, stmt, idx++, NOTIFICATION_CHECK_STR(b_execute_option), ret, out);
-	__BIND_TEXT(db, stmt, idx++, NOTIFICATION_CHECK_STR(b_service_responding), ret, out);
-	__BIND_TEXT(db, stmt, idx++, NOTIFICATION_CHECK_STR(b_service_single_launch), ret, out);
-	__BIND_TEXT(db, stmt, idx++, NOTIFICATION_CHECK_STR(b_service_multi_launch), ret, out);
-	__BIND_TEXT(db, stmt, idx++, NOTIFICATION_CHECK_STR(b_event_handler[NOTIFICATION_EVENT_TYPE_CLICK_ON_BUTTON_1]), ret, out);
-	__BIND_TEXT(db, stmt, idx++, NOTIFICATION_CHECK_STR(b_event_handler[NOTIFICATION_EVENT_TYPE_CLICK_ON_BUTTON_2]), ret, out);
-	__BIND_TEXT(db, stmt, idx++, NOTIFICATION_CHECK_STR(b_event_handler[NOTIFICATION_EVENT_TYPE_CLICK_ON_BUTTON_3]), ret, out);
-	__BIND_TEXT(db, stmt, idx++, NOTIFICATION_CHECK_STR(b_event_handler[NOTIFICATION_EVENT_TYPE_CLICK_ON_BUTTON_4]), ret, out);
-	__BIND_TEXT(db, stmt, idx++, NOTIFICATION_CHECK_STR(b_event_handler[NOTIFICATION_EVENT_TYPE_CLICK_ON_BUTTON_5]), ret, out);
-	__BIND_TEXT(db, stmt, idx++, NOTIFICATION_CHECK_STR(b_event_handler[NOTIFICATION_EVENT_TYPE_CLICK_ON_BUTTON_6]), ret, out);
-	__BIND_TEXT(db, stmt, idx++, NOTIFICATION_CHECK_STR(b_event_handler[NOTIFICATION_EVENT_TYPE_CLICK_ON_ICON]), ret, out);
-	__BIND_TEXT(db, stmt, idx++, NOTIFICATION_CHECK_STR(b_event_handler[NOTIFICATION_EVENT_TYPE_CLICK_ON_THUMBNAIL]), ret, out);
-	__BIND_TEXT(db, stmt, idx++, NOTIFICATION_CHECK_STR(b_event_handler[NOTIFICATION_EVENT_TYPE_CLICK_ON_TEXT_INPUT_BUTTON]), ret, out);
-	__BIND_TEXT(db, stmt, idx++, NOTIFICATION_CHECK_STR(b_event_handler[NOTIFICATION_EVENT_TYPE_CLICK_ON_BUTTON_7]), ret, out);
-	__BIND_TEXT(db, stmt, idx++, NOTIFICATION_CHECK_STR(b_event_handler[NOTIFICATION_EVENT_TYPE_CLICK_ON_BUTTON_8]), ret, out);
-	__BIND_TEXT(db, stmt, idx++, NOTIFICATION_CHECK_STR(b_event_handler[NOTIFICATION_EVENT_TYPE_CLICK_ON_BUTTON_9]), ret, out);
-	__BIND_TEXT(db, stmt, idx++, NOTIFICATION_CHECK_STR(b_event_handler[NOTIFICATION_EVENT_TYPE_CLICK_ON_BUTTON_10]), ret, out);
+	__BIND_TEXT(db, stmt, idx++, NOTIFICATION_CHECK_STR(args.get()), ret, out);
+	__BIND_TEXT(db, stmt, idx++, NOTIFICATION_CHECK_STR(group_args.get()), ret, out);
+	__BIND_TEXT(db, stmt, idx++, NOTIFICATION_CHECK_STR(b_execute_option.get()), ret, out);
+	__BIND_TEXT(db, stmt, idx++, NOTIFICATION_CHECK_STR(b_service_responding.get()), ret, out);
+	__BIND_TEXT(db, stmt, idx++, NOTIFICATION_CHECK_STR(b_service_single_launch.get()), ret, out);
+	__BIND_TEXT(db, stmt, idx++, NOTIFICATION_CHECK_STR(b_service_multi_launch.get()), ret, out);
+	__BIND_TEXT(db, stmt, idx++, NOTIFICATION_CHECK_STR(b_event_handler[NOTIFICATION_EVENT_TYPE_CLICK_ON_BUTTON_1].get()), ret, out);
+	__BIND_TEXT(db, stmt, idx++, NOTIFICATION_CHECK_STR(b_event_handler[NOTIFICATION_EVENT_TYPE_CLICK_ON_BUTTON_2].get()), ret, out);
+	__BIND_TEXT(db, stmt, idx++, NOTIFICATION_CHECK_STR(b_event_handler[NOTIFICATION_EVENT_TYPE_CLICK_ON_BUTTON_3].get()), ret, out);
+	__BIND_TEXT(db, stmt, idx++, NOTIFICATION_CHECK_STR(b_event_handler[NOTIFICATION_EVENT_TYPE_CLICK_ON_BUTTON_4].get()), ret, out);
+	__BIND_TEXT(db, stmt, idx++, NOTIFICATION_CHECK_STR(b_event_handler[NOTIFICATION_EVENT_TYPE_CLICK_ON_BUTTON_5].get()), ret, out);
+	__BIND_TEXT(db, stmt, idx++, NOTIFICATION_CHECK_STR(b_event_handler[NOTIFICATION_EVENT_TYPE_CLICK_ON_BUTTON_6].get()), ret, out);
+	__BIND_TEXT(db, stmt, idx++, NOTIFICATION_CHECK_STR(b_event_handler[NOTIFICATION_EVENT_TYPE_CLICK_ON_ICON].get()), ret, out);
+	__BIND_TEXT(db, stmt, idx++, NOTIFICATION_CHECK_STR(b_event_handler[NOTIFICATION_EVENT_TYPE_CLICK_ON_THUMBNAIL].get()), ret, out);
+	__BIND_TEXT(db, stmt, idx++, NOTIFICATION_CHECK_STR(b_event_handler[NOTIFICATION_EVENT_TYPE_CLICK_ON_TEXT_INPUT_BUTTON].get()), ret, out);
+	__BIND_TEXT(db, stmt, idx++, NOTIFICATION_CHECK_STR(b_event_handler[NOTIFICATION_EVENT_TYPE_CLICK_ON_BUTTON_7].get()), ret, out);
+	__BIND_TEXT(db, stmt, idx++, NOTIFICATION_CHECK_STR(b_event_handler[NOTIFICATION_EVENT_TYPE_CLICK_ON_BUTTON_8].get()), ret, out);
+	__BIND_TEXT(db, stmt, idx++, NOTIFICATION_CHECK_STR(b_event_handler[NOTIFICATION_EVENT_TYPE_CLICK_ON_BUTTON_9].get()), ret, out);
+	__BIND_TEXT(db, stmt, idx++, NOTIFICATION_CHECK_STR(b_event_handler[NOTIFICATION_EVENT_TYPE_CLICK_ON_BUTTON_10].get()), ret, out);
 	__BIND_INT(db, stmt, idx++, noti->sound_type, ret, out);
 	__BIND_TEXT(db, stmt, idx++, NOTIFICATION_CHECK_STR(noti->sound_path), ret, out);
 	__BIND_TEXT(db, stmt, idx++, NOTIFICATION_CHECK_STR(noti->priv_sound_path), ret, out);
@@ -582,21 +510,7 @@ static int _create_update_query(sqlite3 *db, notification_h noti, sqlite3_stmt *
 	__BIND_TEXT(db, stmt, idx++, NOTIFICATION_CHECK_STR(noti->channel_name), ret, out);
 
 out:
-	__free_encoded_data(b_image_path);
-	__free_encoded_data(b_priv_image_path);
-	__free_encoded_data(b_text);
-	__free_encoded_data(b_key);
-	__free_encoded_data(b_format_args);
-	__free_encoded_data(args);
-	__free_encoded_data(group_args);
-	__free_encoded_data(b_execute_option);
-	__free_encoded_data(b_service_responding);
-	__free_encoded_data(b_service_single_launch);
-	__free_encoded_data(b_service_multi_launch);
-
-	for (i = 0; i <= NOTIFICATION_EVENT_TYPE_MAX; i++)
-		__free_encoded_data(b_event_handler[i]);
-
+	/* BundleEncodedPtr destructors release every encoded payload. */
 	return ret;
 }
 
@@ -797,13 +711,10 @@ int notification_noti_get_tag_type(const char *tagged_str)
 /* LCOV_EXCL_START */
 static int __get_setting_from_app_control(notification_h noti, notification_setting_h *setting)
 {
-	notification_setting_h setting_new = NULL;
-	app_control_h app_control = NULL;
-	bundle *b = NULL;
-	char *app_id = NULL;
-	int ret;
+	using notification::raii::AppControlPtr;
 
-	ret = notification_get_execute_option(noti,
+	bundle *b = NULL;
+	int ret = notification_get_execute_option(noti,
 					NOTIFICATION_EXECUTE_TYPE_SINGLE_LAUNCH,
 					NULL,
 					&b);
@@ -812,40 +723,38 @@ static int __get_setting_from_app_control(notification_h noti, notification_sett
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 	}
 
-	ret = app_control_create(&app_control);
+	app_control_h raw_app_control = NULL;
+	ret = app_control_create(&raw_app_control);
+	AppControlPtr app_control(raw_app_control);
 	if (ret != APP_CONTROL_ERROR_NONE) {
 		ERR("Failed to create app_control [%x]", ret);
-		goto out;
+		return ret;
 	}
 
-	ret = app_control_import_from_bundle(app_control, b);
+	ret = app_control_import_from_bundle(app_control.get(), b);
 	if (ret != APP_CONTROL_ERROR_NONE) {
 		ERR("Failed to import from bundle to app_control [%x]", ret);
-		goto out;
+		return ret;
 	}
 
-	ret = app_control_get_app_id(app_control, &app_id);
-	if (ret != APP_CONTROL_ERROR_NONE || app_id == NULL) {
+	char *raw_app_id = NULL;
+	ret = app_control_get_app_id(app_control.get(), &raw_app_id);
+	std::unique_ptr<char, decltype(&std::free)> app_id(raw_app_id, std::free);
+	if (ret != APP_CONTROL_ERROR_NONE || !app_id) {
 		ERR("Failed to get app id from app_control [%x]", ret);
-		goto out;
+		return ret;
 	}
 
-	ret = noti_setting_service_get_setting_by_app_id(app_id, &setting_new, noti->uid);
+	notification_setting_h setting_new = NULL;
+	ret = noti_setting_service_get_setting_by_app_id(app_id.get(),
+			&setting_new, noti->uid);
 	if (ret != APP_CONTROL_ERROR_NONE || setting == NULL) {
 		ERR("Failed to get setting by app id[%s][%x]",
-				app_id, ret);
-		goto out;
+				app_id.get(), ret);
+		return ret;
 	}
 
 	*setting = setting_new;
-
-out:
-	if (app_id)
-		free(app_id);
-
-	if (app_control)
-		app_control_destroy(app_control);
-
 	return ret;
 }
 /* LCOV_EXCL_STOP */
