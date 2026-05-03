@@ -458,7 +458,7 @@ EXPORT_API int notification_get_text(notification_h noti,
 	int ret_variable_int = 0;
 	double ret_variable_double = 0.0;
 	notification_text_type_e text_type = NOTIFICATION_TEXT_TYPE_NONE;
-	notification_variable_type_e ret_var_type = 0;
+	notification_variable_type_e ret_var_type = NOTIFICATION_VARIABLE_TYPE_INT;
 
 	if (noti == NULL || text == NULL)
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
@@ -534,7 +534,7 @@ EXPORT_API int notification_get_text(notification_h noti,
 
 	bundle_get_str(b, buf_key, &ret_val);
 	if (ret_val != NULL)
-		ret_var_type = atoi(ret_val);
+		ret_var_type = (notification_variable_type_e)atoi(ret_val);
 
 	if (ret_var_type == NOTIFICATION_VARIABLE_TYPE_COUNT) {
 		/* Get var Value */
@@ -584,7 +584,7 @@ EXPORT_API int notification_get_text(notification_h noti,
 
 				bundle_get_str(b, buf_key, &ret_val);
 				if (ret_val != NULL)
-					ret_var_type = atoi(ret_val);
+					ret_var_type = (notification_variable_type_e)atoi(ret_val);
 
 				if (ret_var_type ==
 					NOTIFICATION_VARIABLE_TYPE_COUNT) {
@@ -662,7 +662,7 @@ EXPORT_API int notification_get_text(notification_h noti,
 
 					bundle_get_str(b, buf_key, &ret_val);
 					if (ret_val != NULL)
-						ret_var_type = atoi(ret_val);
+						ret_var_type = (notification_variable_type_e)atoi(ret_val);
 
 					if (ret_var_type ==
 						NOTIFICATION_VARIABLE_TYPE_COUNT) {
@@ -738,7 +738,7 @@ EXPORT_API int notification_get_text(notification_h noti,
 
 		bundle_get_str(b, buf_key, &ret_val);
 		if (ret_val != NULL)
-			ret_var_type = atoi(ret_val);
+			ret_var_type = (notification_variable_type_e)atoi(ret_val);
 
 		if (ret_var_type == NOTIFICATION_VARIABLE_TYPE_COUNT) {
 			/* Get var Value */
@@ -1082,7 +1082,7 @@ EXPORT_API int notification_set_launch_option(notification_h noti,
 	int err = NOTIFICATION_ERROR_NONE;
 	int ret = 0;
 	bundle *b = NULL;
-	app_control_h app_control = option;
+	app_control_h app_control = (app_control_h)option;
 
 	if (noti == NULL || app_control == NULL || type != NOTIFICATION_LAUNCH_OPTION_APP_CONTROL) {
 		err = NOTIFICATION_ERROR_INVALID_PARAMETER;
@@ -1410,7 +1410,7 @@ static int _notification_get_domain_name(const char *app_id, char **name)
 		return -1;
 
 	/* com.vendor.name -> name */
-	name_token = strrchr(app_id, '.');
+	name_token = (char *)strrchr(app_id, '.');
 	if (name_token == NULL)
 		return -1;
 
