@@ -991,11 +991,16 @@ static bool _is_uid_in_system_setting_table(sqlite3 *db, uid_t uid)
 				NOTIFICATION_SYSTEM_SETTING_DB_TABLE, uid));
 	if (!query) {
 		ERR("Failed to alloc query");
-		/* Pre-existing quirk: returns truthy on OOM because the
-		 * .c version did `return NOTIFICATION_ERROR_OUT_OF_MEMORY`
-		 * from a bool function (any nonzero -> true). Preserved
-		 * verbatim. */
-		return true;
+		/* F-3.0-B fix: the .c version returned
+		 * NOTIFICATION_ERROR_OUT_OF_MEMORY (a nonzero enum) from
+		 * this bool-returning function, which converted to `true`
+		 * and caused the sole caller
+		 * (notification_system_setting_init_system_setting_table)
+		 * to short-circuit with "already initialized" — incorrect
+		 * on OOM, where we want the caller to attempt init and
+		 * surface the OOM downstream.  Returning false now lets
+		 * the caller take the conservative init path. */
+		return false;
 	}
 
 	sqlite3_stmt *raw_stmt = NULL;
