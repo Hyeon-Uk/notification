@@ -19,6 +19,10 @@
 
 #include <notification.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 NOTIFICATION_DEPRECATED_API int notification_group_set_title(
 		const char *app_id, int group_id, const char *title,
 		const char *loc_title,
@@ -44,6 +48,10 @@ NOTIFICATION_DEPRECATED_API int notification_group_set_badge(
 
 NOTIFICATION_DEPRECATED_API int notification_group_get_badge(
 		const char *app_id, int group_id, int *count);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* __NOTIFICATION_GROUP_H__ */
 

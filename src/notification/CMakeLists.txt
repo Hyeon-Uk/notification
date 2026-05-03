@@ -9,6 +9,15 @@ ADD_LIBRARY(${TARGET_NOTIFICATION} SHARED ${NOTIFICATION_SRCS})
 SET_TARGET_PROPERTIES(${TARGET_NOTIFICATION} PROPERTIES SOVERSION ${MAJORVER})
 SET_TARGET_PROPERTIES(${TARGET_NOTIFICATION} PROPERTIES VERSION ${FULLVER})
 
+# Phase 2 .c -> .cc migration:  CMAKE_C_FLAGS sets -fvisibility=hidden
+# globally for all .c TUs, but CMAKE_CXX_FLAGS does NOT (applying it
+# globally breaks mock-extern-"C"-wrapper resolution in tests).  Apply
+# the visibility flag here per-target on the SHARED library only, so
+# .cc files compiled into libnotification.so still get the same hidden
+# default they had as .c files.  EXPORT_API-marked symbols stay
+# exported via __attribute__((visibility("default"))).
+TARGET_COMPILE_OPTIONS(${TARGET_NOTIFICATION} PRIVATE -fvisibility=hidden)
+
 TARGET_INCLUDE_DIRECTORIES(${TARGET_NOTIFICATION} PUBLIC
   ${CMAKE_CURRENT_SOURCE_DIR}
   ${CMAKE_CURRENT_SOURCE_DIR}/../

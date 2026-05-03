@@ -26,6 +26,7 @@
 #include <notification_ongoing.h>
 #include <notification_private.h>
 
+extern "C" {
 
 EXPORT_API
 int notification_ongoing_update_cb_set(notification_ongoing_update_cb callback,
@@ -67,3 +68,5 @@ int notification_ongoing_update_content(const char *caller_app_id,
 
 	return NOTIFICATION_ERROR_NONE;
 }
+
+}  // extern "C"
