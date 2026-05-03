@@ -31,6 +31,8 @@
 #include <notification_status.h>
 #include <notification_status_internal.h>
 
+extern "C" {
+
 #define PATH_NAME    "/Org/Tizen/System/Notification/Status_message"
 #define INTERFACE_NAME "org.tizen.system.notification.status_message"
 #define MEMBER_NAME	"status_message"
@@ -189,3 +191,5 @@ end:
 	return ret;
 }
 /* LCOV_EXCL_STOP */
+
+}  // extern "C"
