@@ -42,6 +42,19 @@ struct Sqlite3FreeDeleter {
 
 using Sqlite3CharPtr = std::unique_ptr<char, Sqlite3FreeDeleter>;
 
+/*
+ * sqlite3_free_table is a separate API for the char** result of
+ * sqlite3_get_table -- it walks the array and frees each row.
+ * std::unique_ptr<char *, ...> would require ::pointer = char**;
+ * the cleanest expression is a custom struct with its own Deleter.
+ */
+struct Sqlite3FreeTableDeleter {
+  void operator()(char **table) const noexcept {
+    if (table != nullptr) sqlite3_free_table(table);
+  }
+};
+using Sqlite3TablePtr = std::unique_ptr<char *, Sqlite3FreeTableDeleter>;
+
 }  // namespace notification::raii
 
 #endif  // NOTIFICATION_RAII_SQLITE3_FREE_HH_

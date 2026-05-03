@@ -33,6 +33,10 @@
 #include <notification_setting_service.h>
 #include "notification_db_query.h"
 
+#include "raii/sqlite3_db.hh"
+#include "raii/sqlite3_stmt.hh"
+#include "raii/sqlite3_free.hh"
+
 extern "C" {
 
 /* LCOV_EXCL_START */
@@ -91,169 +95,136 @@ out:
 EXPORT_API
 int noti_setting_service_get_setting_by_app_id(const char *app_id, notification_setting_h *setting, uid_t uid)
 {
-	sqlite3 *db = NULL;
-	char *query = NULL;
-	char **query_result = NULL;
-	int ret = NOTIFICATION_ERROR_NONE;
-	int sql_ret;
-	int row_count = 0;
-	int column_count = 0;
-	int i = 0;
-	int col_index = 0;
-	notification_setting_h result_setting_array = NULL;
+	using notification::raii::Sqlite3DbPtr;
+	using notification::raii::Sqlite3CharPtr;
+	using notification::raii::Sqlite3TablePtr;
 
 	if (app_id == NULL || setting == NULL) {
 		ERR("Invalid parameter"); /* LCOV_EXCL_LINE */
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 	}
 
-	db = notification_db_open();
+	Sqlite3DbPtr db(notification_db_open());
 	if (!db)
 		return get_last_result();
 
-	query = sqlite3_mprintf("SELECT %s FROM %s WHERE app_id = %Q AND uid = %d",
-			NOTIFICATION_SETTING_DB_ATTRIBUTES, NOTIFICATION_SETTING_DB_TABLE,
-			app_id, uid);
-	if (query == NULL) {
+	Sqlite3CharPtr query(sqlite3_mprintf(
+			"SELECT %s FROM %s WHERE app_id = %Q AND uid = %d",
+			NOTIFICATION_SETTING_DB_ATTRIBUTES,
+			NOTIFICATION_SETTING_DB_TABLE, app_id, uid));
+	if (!query) {
 		ERR("Failed to alloc query");
-		ret = NOTIFICATION_ERROR_OUT_OF_MEMORY;
-		goto out;
+		return NOTIFICATION_ERROR_OUT_OF_MEMORY;
 	}
 
-	sql_ret = sqlite3_get_table(db, query, &query_result, &row_count, &column_count, NULL);
+	int row_count = 0;
+	int column_count = 0;
+	char **raw_query_result = NULL;
+	int sql_ret = sqlite3_get_table(db.get(), query.get(),
+			&raw_query_result, &row_count, &column_count, NULL);
+	Sqlite3TablePtr query_result(raw_query_result);
 	if (sql_ret != SQLITE_OK && sql_ret != -1) {
-		ERR("sqlite3_get_table failed [%d][%s]", sql_ret,
-				query);
-		ret = NOTIFICATION_ERROR_FROM_DB;
-		goto out;
+		ERR("sqlite3_get_table failed [%d][%s]", sql_ret, query.get());
+		return NOTIFICATION_ERROR_FROM_DB;
 	}
 
 	if (!row_count) {
 		DBG("No setting found for [%s]", app_id);
-		ret = NOTIFICATION_ERROR_NOT_EXIST_ID;
-		goto out;
+		return NOTIFICATION_ERROR_NOT_EXIST_ID;
 	}
 
 	DBG("row_count[%d] column_count[%d]", row_count, column_count);
 
-	row_count = 1;
-
-	result_setting_array = (struct notification_setting *)malloc(sizeof(struct notification_setting) * row_count);
+	notification_setting_h result_setting_array =
+			(struct notification_setting *)malloc(sizeof(struct notification_setting));
 	if (result_setting_array == NULL) {
 		ERR("Failed to alloc memory");
-		ret = NOTIFICATION_ERROR_OUT_OF_MEMORY;
-		goto out;
+		return NOTIFICATION_ERROR_OUT_OF_MEMORY;
 	}
 
-	col_index = column_count;
-
-	_get_table_field_data_string(query_result, &(result_setting_array[i].package_name), 1, col_index++);
-	_get_table_field_data_string(query_result, &(result_setting_array[i].app_id), 1, col_index++);
-	_get_table_field_data_int(query_result, (int *)&(result_setting_array[i].allow_to_notify), col_index++);
-	_get_table_field_data_int(query_result, (int *)&(result_setting_array[i].do_not_disturb_except), col_index++);
-	_get_table_field_data_int(query_result, &(result_setting_array[i].visibility_class), col_index++);
-	_get_table_field_data_int(query_result, (int *)&(result_setting_array[i].pop_up_notification), col_index++);
-	_get_table_field_data_int(query_result, (int *)&(result_setting_array[i].lock_screen_content_level), col_index++);
-	_get_table_field_data_int(query_result, (int *)&(result_setting_array[i].app_disabled), col_index++);
+	int col_index = column_count;
+	int i = 0;
+	_get_table_field_data_string(query_result.get(), &(result_setting_array[i].package_name), 1, col_index++);
+	_get_table_field_data_string(query_result.get(), &(result_setting_array[i].app_id), 1, col_index++);
+	_get_table_field_data_int(query_result.get(), (int *)&(result_setting_array[i].allow_to_notify), col_index++);
+	_get_table_field_data_int(query_result.get(), (int *)&(result_setting_array[i].do_not_disturb_except), col_index++);
+	_get_table_field_data_int(query_result.get(), &(result_setting_array[i].visibility_class), col_index++);
+	_get_table_field_data_int(query_result.get(), (int *)&(result_setting_array[i].pop_up_notification), col_index++);
+	_get_table_field_data_int(query_result.get(), (int *)&(result_setting_array[i].lock_screen_content_level), col_index++);
+	_get_table_field_data_int(query_result.get(), (int *)&(result_setting_array[i].app_disabled), col_index++);
 
 	*setting = result_setting_array;
-
-out:
-	if (query_result)
-		sqlite3_free_table(query_result);
-
-	if (query)
-		sqlite3_free(query);
-
-	if (db)
-		notification_db_close(&db);
-
-	return ret;
+	return NOTIFICATION_ERROR_NONE;
 }
 
 EXPORT_API
 int noti_setting_get_setting_array(notification_setting_h *setting_array, int *count, uid_t uid)
 {
-	sqlite3 *db = NULL;
-	char *query = NULL;
-	char **query_result = NULL;
-	int ret = NOTIFICATION_ERROR_NONE;
-	int sql_ret;
-	int row_count = 0;
-	int column_count = 0;
-	int i = 0;
-	int col_index = 0;
-	notification_setting_h result_setting_array = NULL;
+	using notification::raii::Sqlite3DbPtr;
+	using notification::raii::Sqlite3CharPtr;
+	using notification::raii::Sqlite3TablePtr;
 
 	if (setting_array == NULL || count == NULL) {
 		ERR("NOTIFICATION_ERROR_INVALID_PARAMETER"); /* LCOV_EXCL_LINE */
-		return  NOTIFICATION_ERROR_INVALID_PARAMETER;
+		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 	}
 
-	db = notification_db_open();
+	Sqlite3DbPtr db(notification_db_open());
 	if (!db)
 		return get_last_result();
 
-	query = sqlite3_mprintf("SELECT %s FROM %s WHERE uid = %d "
-				"AND app_disabled = %d ORDER BY package_name, "
-				"app_id ", NOTIFICATION_SETTING_DB_ATTRIBUTES,
-				NOTIFICATION_SETTING_DB_TABLE, uid, 0);
-	if (query == NULL) {
+	Sqlite3CharPtr query(sqlite3_mprintf(
+			"SELECT %s FROM %s WHERE uid = %d "
+			"AND app_disabled = %d ORDER BY package_name, "
+			"app_id ", NOTIFICATION_SETTING_DB_ATTRIBUTES,
+			NOTIFICATION_SETTING_DB_TABLE, uid, 0));
+	if (!query) {
 		ERR("Failed to alloc query"); /* LCOV_EXCL_LINE */
-		ret = NOTIFICATION_ERROR_OUT_OF_MEMORY;
-		goto out;
+		return NOTIFICATION_ERROR_OUT_OF_MEMORY;
 	}
 
-	sql_ret = sqlite3_get_table(db, query, &query_result, &row_count, &column_count, NULL);
+	int row_count = 0;
+	int column_count = 0;
+	char **raw_query_result = NULL;
+	int sql_ret = sqlite3_get_table(db.get(), query.get(),
+			&raw_query_result, &row_count, &column_count, NULL);
+	Sqlite3TablePtr query_result(raw_query_result);
 	if (sql_ret != SQLITE_OK && sql_ret != -1) {
 		ERR("Failed to get db table [%d][%s]",
-			sql_ret, query); /* LCOV_EXCL_LINE */
-		ret = NOTIFICATION_ERROR_FROM_DB;
-		goto out;
+			sql_ret, query.get()); /* LCOV_EXCL_LINE */
+		return NOTIFICATION_ERROR_FROM_DB;
 	}
 
 	if (!row_count) {
 		DBG("No setting found"); /* LCOV_EXCL_LINE */
-		ret = NOTIFICATION_ERROR_NOT_EXIST_ID;
-		goto out;
+		return NOTIFICATION_ERROR_NOT_EXIST_ID;
 	}
 
 	DBG("row_count[%d] column_count[%d]", row_count, column_count);
 
-	result_setting_array = (struct notification_setting *)malloc(sizeof(struct notification_setting) * row_count);
+	notification_setting_h result_setting_array =
+			(struct notification_setting *)malloc(
+				sizeof(struct notification_setting) * row_count);
 	if (result_setting_array == NULL) {
 		ERR("Failed to alloc memory"); /* LCOV_EXCL_LINE */
-		ret = NOTIFICATION_ERROR_OUT_OF_MEMORY;
-		goto out;
+		return NOTIFICATION_ERROR_OUT_OF_MEMORY;
 	}
 
-	col_index = column_count;
-
-	for (i = 0; i < row_count; i++) {
-		_get_table_field_data_string(query_result, &(result_setting_array[i].package_name), 1, col_index++);
-		_get_table_field_data_string(query_result, &(result_setting_array[i].app_id), 1, col_index++);
-		_get_table_field_data_int(query_result, (int *)&(result_setting_array[i].allow_to_notify), col_index++);
-		_get_table_field_data_int(query_result, (int *)&(result_setting_array[i].do_not_disturb_except), col_index++);
-		_get_table_field_data_int(query_result, (int *)&(result_setting_array[i].visibility_class), col_index++);
-		_get_table_field_data_int(query_result, (int *)&(result_setting_array[i].pop_up_notification), col_index++);
-		_get_table_field_data_int(query_result, (int *)&(result_setting_array[i].lock_screen_content_level), col_index++);
-		_get_table_field_data_int(query_result, (int *)&(result_setting_array[i].app_disabled), col_index++);
+	int col_index = column_count;
+	for (int i = 0; i < row_count; i++) {
+		_get_table_field_data_string(query_result.get(), &(result_setting_array[i].package_name), 1, col_index++);
+		_get_table_field_data_string(query_result.get(), &(result_setting_array[i].app_id), 1, col_index++);
+		_get_table_field_data_int(query_result.get(), (int *)&(result_setting_array[i].allow_to_notify), col_index++);
+		_get_table_field_data_int(query_result.get(), (int *)&(result_setting_array[i].do_not_disturb_except), col_index++);
+		_get_table_field_data_int(query_result.get(), (int *)&(result_setting_array[i].visibility_class), col_index++);
+		_get_table_field_data_int(query_result.get(), (int *)&(result_setting_array[i].pop_up_notification), col_index++);
+		_get_table_field_data_int(query_result.get(), (int *)&(result_setting_array[i].lock_screen_content_level), col_index++);
+		_get_table_field_data_int(query_result.get(), (int *)&(result_setting_array[i].app_disabled), col_index++);
 	}
 
 	*setting_array = result_setting_array;
 	*count = row_count;
-
-out:
-	if (query_result)
-		sqlite3_free_table(query_result);
-
-	if (query)
-		sqlite3_free(query);
-
-	if (db)
-		notification_db_close(&db);
-
-	return ret;
+	return NOTIFICATION_ERROR_NONE;
 }
 
 
