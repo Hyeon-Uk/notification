@@ -20,6 +20,7 @@
 #include <gio/gio.h>
 #include <glib.h>
 #include <gmock/gmock.h>
+#include <sys/stat.h>
 
 #include "module_mock.hh"
 
@@ -37,6 +38,7 @@ class GlibMock : public virtual ModuleMock {
 
   MOCK_METHOD2(access, int (const char*, int));
   MOCK_METHOD3(read, size_t(int , void*, size_t));
+  MOCK_METHOD2(stat, int (const char*, struct stat*));
 
   MOCK_METHOD3(g_bus_get_sync, GDBusConnection*(GBusType, GCancellable*, GError**));
 

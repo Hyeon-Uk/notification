@@ -35,8 +35,12 @@ class SecurityManagerMock : public virtual ModuleMock {
   MOCK_METHOD1(security_manager_private_sharing_drop, int (const private_sharing_req*));
   MOCK_METHOD2(security_manager_private_sharing_req_set_target_appid,
       int (private_sharing_req*, const char*));
+  MOCK_METHOD2(security_manager_private_sharing_req_set_owner_appid,
+      int (private_sharing_req*, const char*));
   MOCK_METHOD3(security_manager_private_sharing_req_add_paths,
       int (private_sharing_req*, const char**, size_t));
+  MOCK_METHOD1(security_manager_private_sharing_req_free,
+      void (private_sharing_req*));
 
 };
 

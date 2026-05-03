@@ -50,6 +50,25 @@ extern "C" ssize_t read(int fd, void *buf, size_t count) {
   return MOCK_HOOK_P3(GlibMock, read, fd, buf, count);
 }
 
+extern "C" int stat(const char* path, struct stat* buf) {
+  // Phase 1.5-D.  Passthrough-by-default: stat is hot, gtest itself
+  // calls it, and routing every call through MOCK_HOOK_PN would
+  // require every TestFixture to register a GlibMock or fail.
+  // Tests that need to control stat opt in by registering a
+  // GlibMock and calling EXPECT_CALL(mock, stat(...)) -- this
+  // wrapper's try/catch dispatches through the mock when one is
+  // present and falls back to libc otherwise.
+  try {
+    return MOCK_HOOK_P2(GlibMock, stat, path, buf);
+  } catch (const std::invalid_argument&) {
+    static int (*real_stat)(const char*, struct stat*) =
+        reinterpret_cast<int (*)(const char*, struct stat*)>(
+            dlsym(RTLD_NEXT, "stat"));
+    if (real_stat) return real_stat(path, buf);
+    return -1;
+  }
+}
+
 extern "C" GDBusConnection* g_bus_get_sync(GBusType type,
     GCancellable* cancellable, GError** error) {
   return MOCK_HOOK_P3(GlibMock, g_bus_get_sync, type, cancellable, error);

@@ -42,3 +42,15 @@ extern "C" int security_manager_private_sharing_req_add_paths(private_sharing_re
   return MOCK_HOOK_P3(SecurityManagerMock,
       security_manager_private_sharing_req_add_paths, arg1, arg2, arg3);
 }
+
+extern "C" int security_manager_private_sharing_req_set_owner_appid(
+    private_sharing_req* arg1, const char* arg2) {
+  return MOCK_HOOK_P2(SecurityManagerMock,
+      security_manager_private_sharing_req_set_owner_appid, arg1, arg2);
+}
+
+extern "C" void security_manager_private_sharing_req_free(
+    private_sharing_req* arg1) {
+  MOCK_HOOK_P1(SecurityManagerMock,
+      security_manager_private_sharing_req_free, arg1);
+}
