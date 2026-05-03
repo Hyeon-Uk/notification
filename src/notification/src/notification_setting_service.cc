@@ -323,42 +323,31 @@ int notification_setting_db_update(const char *package_name, const char *app_id,
 				int visibility_class, int pop_up_notification,
 				int lock_screen_content_level, uid_t uid)
 {
-	sqlite3 *db = NULL;
-	char *query = NULL;
-	int ret = NOTIFICATION_ERROR_NONE;
+	using notification::raii::Sqlite3DbPtr;
+	using notification::raii::Sqlite3CharPtr;
 
 	if (package_name == NULL || app_id == NULL) {
 		ERR("Invalid paramter"); /* LCOV_EXCL_LINE */
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 	}
 
-	db = notification_db_open();
+	Sqlite3DbPtr db(notification_db_open());
 	if (!db)
 		return get_last_result();
 
-	query = sqlite3_mprintf("UPDATE %s SET allow_to_notify = %d, "
+	Sqlite3CharPtr query(sqlite3_mprintf(
+			"UPDATE %s SET allow_to_notify = %d, "
 			"do_not_disturb_except = %d, visibility_class = %d, "
 			"pop_up_notification = %d, lock_screen_content_level = %d "
 			"WHERE app_id = %Q AND package_name = %Q AND uid = %d ",
 			NOTIFICATION_SETTING_DB_TABLE, allow_to_notify,
 			do_not_disturb_except, visibility_class,
 			pop_up_notification, lock_screen_content_level, app_id,
-			package_name, uid);
-	if (query == NULL) {
-		ret = NOTIFICATION_ERROR_OUT_OF_MEMORY;
-		goto out;
-	}
+			package_name, uid));
+	if (!query)
+		return NOTIFICATION_ERROR_OUT_OF_MEMORY;
 
-	ret = notification_db_exec(db, query, NULL);
-
-out:
-	if (query)
-		sqlite3_free(query);
-
-	if (db)
-		notification_db_close(&db);
-
-	return ret;
+	return notification_db_exec(db.get(), query.get(), NULL);
 }
 
 EXPORT_API
@@ -368,43 +357,34 @@ int notification_setting_db_update_system_setting(int do_not_disturb, int visibi
 		int dnd_end_hour, int dnd_end_min,
 		int lock_screen_content_level, uid_t uid)
 {
-	sqlite3 *db = NULL;
-	char *query = NULL;
-	int ret = NOTIFICATION_ERROR_NONE;
-	int num_changes = 0;
+	using notification::raii::Sqlite3DbPtr;
+	using notification::raii::Sqlite3CharPtr;
 
-	db = notification_db_open();
+	Sqlite3DbPtr db(notification_db_open());
 	if (!db)
 		return get_last_result();
 
-	query = sqlite3_mprintf("INSERT OR REPLACE INTO %s (uid, %s) "
+	Sqlite3CharPtr query(sqlite3_mprintf(
+			"INSERT OR REPLACE INTO %s (uid, %s) "
 			"VALUES(%d, %d, %d, %d, %d, %d, %d, %d, %d, %d) ",
 			NOTIFICATION_SYSTEM_SETTING_DB_TABLE,
 			NOTIFICATION_SYSTEM_SETTING_DB_ATTRIBUTES,
 			uid, do_not_disturb, visibility_class,
 			dnd_schedule_enabled, dnd_schedule_day, dnd_start_hour,
 			dnd_start_min, dnd_end_hour, dnd_end_min,
-			lock_screen_content_level);
-	if (query == NULL) {
-		ret = NOTIFICATION_ERROR_OUT_OF_MEMORY;
-		goto out;
-	}
+			lock_screen_content_level));
+	if (!query)
+		return NOTIFICATION_ERROR_OUT_OF_MEMORY;
 
-	ret = notification_db_exec(db, query, &num_changes);
+	int num_changes = 0;
+	int ret = notification_db_exec(db.get(), query.get(), &num_changes);
 	if (ret != NOTIFICATION_ERROR_NONE)
-		goto out;
+		return ret;
 
 	if (num_changes == 0)
 		WARN("No changes on DB");
 
-out:
-	if (query)
-		sqlite3_free(query);
-
-	if (db)
-		notification_db_close(&db);
-
-	return ret;
+	return NOTIFICATION_ERROR_NONE;
 }
 /* LCOV_EXCL_STOP */
 
@@ -412,34 +392,24 @@ out:
 EXPORT_API
 int notification_setting_db_update_do_not_disturb(int do_not_disturb, uid_t uid)
 {
-	sqlite3 *db = NULL;
-	char *query = NULL;
-	int ret = NOTIFICATION_ERROR_NONE;
+	using notification::raii::Sqlite3DbPtr;
+	using notification::raii::Sqlite3CharPtr;
 
-	db = notification_db_open();
+	Sqlite3DbPtr db(notification_db_open());
 	if (!db)
 		return get_last_result();
 
-	query = sqlite3_mprintf("UPDATE %s SET do_not_disturb = %d "
-				"WHERE uid = %d",
-				NOTIFICATION_SYSTEM_SETTING_DB_TABLE,
-				do_not_disturb, uid);
-	if (query == NULL) {
+	Sqlite3CharPtr query(sqlite3_mprintf(
+			"UPDATE %s SET do_not_disturb = %d "
+			"WHERE uid = %d",
+			NOTIFICATION_SYSTEM_SETTING_DB_TABLE,
+			do_not_disturb, uid));
+	if (!query) {
 		ERR("Failed to alloc query");
-		ret = NOTIFICATION_ERROR_OUT_OF_MEMORY;
-		goto out;
+		return NOTIFICATION_ERROR_OUT_OF_MEMORY;
 	}
 
-	ret = notification_db_exec(db, query, NULL);
-
-out:
-	if (query)
-		sqlite3_free(query);
-
-	if (db)
-		notification_db_close(&db);
-
-	return ret;
+	return notification_db_exec(db.get(), query.get(), NULL);
 }
 /* LCOV_EXCL_STOP */
 
