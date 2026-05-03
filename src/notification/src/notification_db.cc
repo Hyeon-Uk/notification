@@ -27,6 +27,10 @@
 #include <notification_db.h>
 #include "notification_db_query.h"
 
+#include "raii/sqlite3_db.hh"
+#include "raii/sqlite3_stmt.hh"
+#include "raii/sqlite3_free.hh"
+
 extern "C" {
 
 static bool is_db_corrupted = false;
@@ -86,40 +90,51 @@ out:
 /* LCOV_EXCL_START */
 EXPORT_API int notification_db_init(void)
 {
-	int ret = NOTIFICATION_ERROR_NONE;
-	int sql_ret;
-	sqlite3 *db = NULL;
-	char *errmsg = NULL;
+	using notification::raii::Sqlite3DbPtr;
+	using notification::raii::Sqlite3CharPtr;
 
-	sql_ret = sqlite3_open_v2(DBPATH, &db,
+	sqlite3 *raw_db = NULL;
+	int sql_ret = sqlite3_open_v2(DBPATH, &raw_db,
 			SQLITE_OPEN_CREATE | SQLITE_OPEN_READWRITE, NULL);
+	Sqlite3DbPtr db(raw_db);
 	if (sql_ret != SQLITE_OK) {
 		ERR("Failed to open db[%d]", sql_ret);
-		ret = NOTIFICATION_ERROR_FROM_DB;
-		goto out;
+		return NOTIFICATION_ERROR_FROM_DB;
 	}
 
-	sql_ret = sqlite3_exec(db, CREATE_NOTIFICATION_TABLE, NULL, NULL, &errmsg);
+	int ret = NOTIFICATION_ERROR_NONE;
+	char *raw_errmsg = NULL;
+
+	sql_ret = sqlite3_exec(db.get(), CREATE_NOTIFICATION_TABLE,
+			       NULL, NULL, &raw_errmsg);
+	Sqlite3CharPtr errmsg(raw_errmsg);
 	if (sql_ret != SQLITE_OK) {
-		ERR("Failed to exec sqlite[%d][%s]", sql_ret, errmsg);
-		ret = NOTIFICATION_ERROR_FROM_DB;
-		goto out;
+		ERR("Failed to exec sqlite[%d][%s]", sql_ret, errmsg.get());
+		return NOTIFICATION_ERROR_FROM_DB;
 	}
 
-	sql_ret = sqlite3_exec(db, "PRAGMA integrity_check",
-			       __check_integrity_cb, NULL, &errmsg);
+	raw_errmsg = NULL;
+	sql_ret = sqlite3_exec(db.get(), "PRAGMA integrity_check",
+			       __check_integrity_cb, NULL, &raw_errmsg);
+	errmsg.reset(raw_errmsg);
 	if (sql_ret != SQLITE_OK || is_db_corrupted) {
-		ERR("Failed to exec query[%d][%s]", sql_ret, errmsg);
+		ERR("Failed to exec query[%d][%s]", sql_ret, errmsg.get());
 		ret = NOTIFICATION_ERROR_FROM_DB;
 	}
 
-out:
+	/*
+	 * F-3.0-A (pre-existing): __recover_corrupted_db internally
+	 * sqlite3_close(db) before its own sqlite3_open_v2 against a
+	 * local-by-value copy of the pointer.  Caller's handle is then
+	 * dangling, and the destructor below will sqlite3_close it
+	 * again (UB).  Behavior preserved verbatim from the C version
+	 * (line 117-122 of the .c file before migration); to be fixed
+	 * in a follow-up commit by introducing a typed
+	 * __recover_corrupted_db that takes Sqlite3DbPtr& and rebinds
+	 * the unique_ptr.
+	 */
 	if (sql_ret == SQLITE_CORRUPT || sql_ret == SQLITE_NOTADB || is_db_corrupted)
-		ret = __recover_corrupted_db(db);
-	if (errmsg)
-		sqlite3_free(errmsg);
-	if (db)
-		sqlite3_close(db);
+		ret = __recover_corrupted_db(db.get());
 
 	return ret;
 }
@@ -175,36 +190,30 @@ EXPORT_API int notification_db_close(sqlite3 **db)
 
 EXPORT_API int notification_db_exec(sqlite3 *db, const char *query, int *num_changes)
 {
-	int ret = NOTIFICATION_ERROR_NONE;
-	sqlite3_stmt *stmt = NULL;
-
 	if (db == NULL || query == NULL)
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 
-	ret = sqlite3_prepare_v2(db, query, strlen(query), &stmt, NULL);
+	sqlite3_stmt *raw_stmt = NULL;
+	int ret = sqlite3_prepare_v2(db, query, strlen(query), &raw_stmt, NULL);
 	if (ret != SQLITE_OK) {
 		/* LCOV_EXCL_START */
 		ERR("Sqlite3 err[%d][%s]", ret, sqlite3_errmsg(db));
 		return NOTIFICATION_ERROR_FROM_DB;
 		/* LCOV_EXCL_STOP */
 	}
+	notification::raii::Sqlite3StmtPtr stmt(raw_stmt);
 
-	ret = sqlite3_step(stmt);
+	ret = sqlite3_step(stmt.get());
 	if (ret == SQLITE_OK || ret == SQLITE_DONE) {
 		if (num_changes != NULL)
 			*num_changes = sqlite3_changes(db);
-
-		ret = NOTIFICATION_ERROR_NONE;
-	} else {
-		/* LCOV_EXCL_START */
-		ERR("Sqlite err[%d][%s]", ret, sqlite3_errmsg(db));
-		ret = NOTIFICATION_ERROR_FROM_DB;
-		/* LCOV_EXCL_STOP */
+		return NOTIFICATION_ERROR_NONE;
 	}
 
-	sqlite3_finalize(stmt);
-
-	return ret;
+	/* LCOV_EXCL_START */
+	ERR("Sqlite err[%d][%s]", ret, sqlite3_errmsg(db));
+	return NOTIFICATION_ERROR_FROM_DB;
+	/* LCOV_EXCL_STOP */
 }
 
 EXPORT_API char *notification_db_column_text(sqlite3_stmt *stmt, int col)
