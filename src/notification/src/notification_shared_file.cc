@@ -43,6 +43,8 @@
 #include <notification_private.h>
 #include "notification_internal.h"
 
+#include "raii/glib_handles.hh"
+
 extern "C" {
 
 #define NOTI_PRIV_DATA_DIR "data/.notification"
@@ -220,55 +222,57 @@ static bool __is_RO_file(const char *file_path)
 int notification_copy_private_file(const char *src_path,
 					const char *dst_path)
 {
-	int ret = NOTIFICATION_ERROR_NONE;
-	GFile *src = NULL;
-	GFile *dst = NULL;
-	GError *g_err = NULL;
-	struct utimbuf ut = {0,};
+	using notification::raii::GObjectPtr;
+	using notification::raii::GErrorPtr;
 
-	dst = g_file_new_for_path(dst_path);
-	if (dst == NULL) {
+	int ret = NOTIFICATION_ERROR_NONE;
+	GObjectPtr<GFile> dst;
+	GObjectPtr<GFile> src;
+
+	dst.reset(g_file_new_for_path(dst_path));
+	if (!dst) {
 		ERR("dst path is wrong [%s]", dst_path);
 		ret = NOTIFICATION_ERROR_IO_ERROR;
 		goto out;
 	}
 
-	if (g_file_query_exists(dst, NULL) == true) {
+	if (g_file_query_exists(dst.get(), NULL) == true) {
 		ret = NOTIFICATION_ERROR_ALREADY_EXIST_ID;
 		INFO("dst path existed [%s]", dst_path);
 		goto out;
 	}
 
-	src = g_file_new_for_path(src_path);
-	if (src == NULL) {
+	src.reset(g_file_new_for_path(src_path));
+	if (!src) {
 		ERR("src path is wrong [%s]", src_path);
 		ret = NOTIFICATION_ERROR_IO_ERROR;
 		goto out;
 	}
 
-	if (!g_file_copy(src, dst, G_FILE_COPY_NOFOLLOW_SYMLINKS, NULL, NULL,
-			NULL, &g_err)) {
-		if (g_err) {
-			ERR("Copying file from [%s] to [%s] is failed [%s]",
-				src_path, dst_path, g_err->message);
-			g_error_free(g_err);
+	{
+		GError *raw_err = NULL;
+		if (!g_file_copy(src.get(), dst.get(),
+				G_FILE_COPY_NOFOLLOW_SYMLINKS, NULL, NULL,
+				NULL, &raw_err)) {
+			GErrorPtr g_err(raw_err);
+			if (g_err) {
+				ERR("Copying file from [%s] to [%s] is failed [%s]",
+					src_path, dst_path, g_err->message);
+			}
+			ret = NOTIFICATION_ERROR_IO_ERROR;
+			goto out;
 		}
-		ret = NOTIFICATION_ERROR_IO_ERROR;
-		goto out;
 	}
 
-	ut.modtime = time(NULL);
-	if (g_utime(dst_path, &ut) != 0)
-		DBG("Failed to set g_utime %d ", errno);
+	{
+		struct utimbuf ut = {0,};
+		ut.modtime = time(NULL);
+		if (g_utime(dst_path, &ut) != 0)
+			DBG("Failed to set g_utime %d ", errno);
+	}
 
 out:
-	if (src)
-		g_object_unref(src);
-	if (dst)
-		g_object_unref(dst);
-
 	WARN("copy private file done : %d", ret);
-
 	return ret;
 }
 /* LCOV_EXCL_STOP */
