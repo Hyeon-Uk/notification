@@ -231,48 +231,47 @@ int noti_setting_get_setting_array(notification_setting_h *setting_array, int *c
 EXPORT_API
 int noti_system_setting_load_system_setting(notification_system_setting_h *system_setting, uid_t uid)
 {
-	sqlite3 *db = NULL;
-	char *query = NULL;
-	char **query_result = NULL;
-	int ret = NOTIFICATION_ERROR_NONE;
-	int sql_ret;
-	int row_count = 0;
-	int column_count = 0;
-	int col_index = 0;
-	notification_system_setting_h result_system_setting = NULL;
+	using notification::raii::Sqlite3DbPtr;
+	using notification::raii::Sqlite3CharPtr;
+	using notification::raii::Sqlite3TablePtr;
 
 	if (system_setting == NULL) {
 		ERR("Invalid parameter"); /* LCOV_EXCL_LINE */
-		return  NOTIFICATION_ERROR_INVALID_PARAMETER;
+		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 	}
 
-	db = notification_db_open();
+	Sqlite3DbPtr db(notification_db_open());
 	if (!db)
 		return get_last_result();
 
-	query = sqlite3_mprintf("SELECT %s FROM %s WHERE uid = %d",
+	Sqlite3CharPtr query(sqlite3_mprintf(
+			"SELECT %s FROM %s WHERE uid = %d",
 			NOTIFICATION_SYSTEM_SETTING_DB_ATTRIBUTES,
-			NOTIFICATION_SYSTEM_SETTING_DB_TABLE, uid);
-	if (query == NULL) {
+			NOTIFICATION_SYSTEM_SETTING_DB_TABLE, uid));
+	if (!query) {
 		ERR("Failed to alloc query");
-		ret = NOTIFICATION_ERROR_OUT_OF_MEMORY;
-		goto out;
+		return NOTIFICATION_ERROR_OUT_OF_MEMORY;
 	}
 
-	sql_ret = sqlite3_get_table(db, query, &query_result, &row_count, &column_count, NULL);
+	int row_count = 0;
+	int column_count = 0;
+	char **raw_query_result = NULL;
+	int sql_ret = sqlite3_get_table(db.get(), query.get(),
+			&raw_query_result, &row_count, &column_count, NULL);
+	Sqlite3TablePtr query_result(raw_query_result);
 	if (sql_ret != SQLITE_OK && sql_ret != -1) {
-		ERR("Failed to get db table [%d][%s]", sql_ret, query);
-		ret = NOTIFICATION_ERROR_FROM_DB;
-		goto out;
+		ERR("Failed to get db table [%d][%s]", sql_ret, query.get());
+		return NOTIFICATION_ERROR_FROM_DB;
 	}
 
 	DBG("row_count [%d] column_count [%d]", row_count, column_count);
 
-	result_system_setting = (struct notification_system_setting *)malloc(sizeof(struct notification_system_setting));
+	notification_system_setting_h result_system_setting =
+			(struct notification_system_setting *)malloc(
+				sizeof(struct notification_system_setting));
 	if (result_system_setting == NULL) {
 		ERR("Failed to alloc memory");
-		ret = NOTIFICATION_ERROR_OUT_OF_MEMORY;
-		goto out;
+		return NOTIFICATION_ERROR_OUT_OF_MEMORY;
 	}
 
 	/* no system setting record. allow everyting */
@@ -289,32 +288,21 @@ int noti_system_setting_load_system_setting(notification_system_setting_h *syste
 		result_system_setting->lock_screen_content_level = (lock_screen_content_level_e)0;
 		result_system_setting->dnd_allow_exceptions = NULL;
 	} else {
-		col_index = column_count;
-		_get_table_field_data_int(query_result, (int *)&(result_system_setting->do_not_disturb), col_index++);
-		_get_table_field_data_int(query_result, &(result_system_setting->visibility_class), col_index++);
-		_get_table_field_data_int(query_result, (int *)&(result_system_setting->dnd_schedule_enabled), col_index++);
-		_get_table_field_data_int(query_result, &(result_system_setting->dnd_schedule_day), col_index++);
-		_get_table_field_data_int(query_result, &(result_system_setting->dnd_start_hour), col_index++);
-		_get_table_field_data_int(query_result, &(result_system_setting->dnd_start_min), col_index++);
-		_get_table_field_data_int(query_result, &(result_system_setting->dnd_end_hour), col_index++);
-		_get_table_field_data_int(query_result, &(result_system_setting->dnd_end_min), col_index++);
-		_get_table_field_data_int(query_result, (int *)&(result_system_setting->lock_screen_content_level), col_index++);
+		int col_index = column_count;
+		_get_table_field_data_int(query_result.get(), (int *)&(result_system_setting->do_not_disturb), col_index++);
+		_get_table_field_data_int(query_result.get(), &(result_system_setting->visibility_class), col_index++);
+		_get_table_field_data_int(query_result.get(), (int *)&(result_system_setting->dnd_schedule_enabled), col_index++);
+		_get_table_field_data_int(query_result.get(), &(result_system_setting->dnd_schedule_day), col_index++);
+		_get_table_field_data_int(query_result.get(), &(result_system_setting->dnd_start_hour), col_index++);
+		_get_table_field_data_int(query_result.get(), &(result_system_setting->dnd_start_min), col_index++);
+		_get_table_field_data_int(query_result.get(), &(result_system_setting->dnd_end_hour), col_index++);
+		_get_table_field_data_int(query_result.get(), &(result_system_setting->dnd_end_min), col_index++);
+		_get_table_field_data_int(query_result.get(), (int *)&(result_system_setting->lock_screen_content_level), col_index++);
 		result_system_setting->dnd_allow_exceptions = NULL;
 	}
 
 	*system_setting = result_system_setting;
-
-out:
-	if (query_result)
-		sqlite3_free_table(query_result);
-
-	if (query)
-		sqlite3_free(query);
-
-	if (db)
-		notification_db_close(&db);
-
-	return ret;
+	return NOTIFICATION_ERROR_NONE;
 }
 
 EXPORT_API
@@ -417,66 +405,50 @@ int notification_setting_db_update_do_not_disturb(int do_not_disturb, uid_t uid)
 EXPORT_API
 int notification_system_setting_get_dnd_schedule_enabled_uid(uid_t **uids, int *count)
 {
-	int ret = NOTIFICATION_ERROR_NONE;
-	int i;
-	int row_count = 0;
-	int column_count = 0;
-	int column_index = 0;
-	char *query = NULL;
-	char **query_result = NULL;
-	sqlite3 *db = NULL;
-	uid_t *result_uids;
+	using notification::raii::Sqlite3DbPtr;
+	using notification::raii::Sqlite3CharPtr;
+	using notification::raii::Sqlite3TablePtr;
 
-	db = notification_db_open();
+	Sqlite3DbPtr db(notification_db_open());
 	if (!db)
 		return get_last_result();
 
-	query = sqlite3_mprintf("SELECT uid FROM %s "
-				"WHERE dnd_schedule_enabled = 1",
-				NOTIFICATION_SYSTEM_SETTING_DB_TABLE);
-	if (query == NULL) {
-		ret = NOTIFICATION_ERROR_OUT_OF_MEMORY;
-		goto out;
-	}
+	Sqlite3CharPtr query(sqlite3_mprintf(
+			"SELECT uid FROM %s "
+			"WHERE dnd_schedule_enabled = 1",
+			NOTIFICATION_SYSTEM_SETTING_DB_TABLE));
+	if (!query)
+		return NOTIFICATION_ERROR_OUT_OF_MEMORY;
 
-	ret = sqlite3_get_table(db, query, &query_result, &row_count, &column_count, NULL);
-	if (ret != SQLITE_OK && ret != -1) {
-		ERR("Failed to get DB table [%d][%s]", ret, query);
-		ret = NOTIFICATION_ERROR_FROM_DB;
-		goto out;
+	int row_count = 0;
+	int column_count = 0;
+	char **raw_query_result = NULL;
+	int sql_ret = sqlite3_get_table(db.get(), query.get(),
+			&raw_query_result, &row_count, &column_count, NULL);
+	Sqlite3TablePtr query_result(raw_query_result);
+	if (sql_ret != SQLITE_OK && sql_ret != -1) {
+		ERR("Failed to get DB table [%d][%s]", sql_ret, query.get());
+		return NOTIFICATION_ERROR_FROM_DB;
 	}
 
 	if (row_count == 0) {
 		DBG("No enabled do_not_disturb user");
-		ret = NOTIFICATION_ERROR_NONE;
-		goto out;
+		return NOTIFICATION_ERROR_NONE;
 	}
 
-	result_uids = (uid_t *)malloc(sizeof(int) * row_count);
+	uid_t *result_uids = (uid_t *)malloc(sizeof(int) * row_count);
 	if (result_uids == NULL) {
 		ERR("Failed to alloc memory");
-		ret = NOTIFICATION_ERROR_OUT_OF_MEMORY;
-		goto out;
+		return NOTIFICATION_ERROR_OUT_OF_MEMORY;
 	}
 
-	column_index = column_count;
-	for (i = 0; i < row_count; i++)
-		_get_table_field_data_int(query_result, (int *)&(result_uids[i]), column_index++);
+	int column_index = column_count;
+	for (int i = 0; i < row_count; i++)
+		_get_table_field_data_int(query_result.get(), (int *)&(result_uids[i]), column_index++);
 
 	*uids = result_uids;
 	*count = row_count;
-
-out:
-	if (query)
-		sqlite3_free(query);
-
-	if (query_result)
-		sqlite3_free_table(query_result);
-
-	if (db)
-		notification_db_close(&db);
-
-	return ret;
+	return NOTIFICATION_ERROR_NONE;
 }
 /* LCOV_EXCL_STOP */
 
@@ -488,94 +460,73 @@ int notification_get_dnd_and_allow_to_notify(const char *app_id,
 					int *allow_to_notify,
 					uid_t uid)
 {
-	int ret = NOTIFICATION_ERROR_NONE;
-	int sql_ret;
-	int row_count;
-	int col_count;
-	int col_index;
-	sqlite3 *db;
-	char *query_setting = NULL;
-	char **query_setting_result = NULL;
-	char *query_system_setting = NULL;
-	char **query_system_setting_result = NULL;
+	using notification::raii::Sqlite3DbPtr;
+	using notification::raii::Sqlite3CharPtr;
+	using notification::raii::Sqlite3TablePtr;
 
 	if (app_id == NULL)
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 
-	db = notification_db_open();
+	Sqlite3DbPtr db(notification_db_open());
 	if (!db)
 		return get_last_result();
 
-	query_setting = sqlite3_mprintf("SELECT allow_to_notify, "
-				"do_not_disturb_except FROM %s WHERE app_id = %Q "
-				"AND (uid = %d OR uid = %d) ORDER BY uid DESC",
-				NOTIFICATION_SETTING_DB_TABLE, app_id,
-				uid, tzplatform_getuid(TZ_SYS_GLOBALAPP_USER));
-	if (query_setting == NULL) {
+	Sqlite3CharPtr query_setting(sqlite3_mprintf(
+			"SELECT allow_to_notify, "
+			"do_not_disturb_except FROM %s WHERE app_id = %Q "
+			"AND (uid = %d OR uid = %d) ORDER BY uid DESC",
+			NOTIFICATION_SETTING_DB_TABLE, app_id,
+			uid, tzplatform_getuid(TZ_SYS_GLOBALAPP_USER)));
+	if (!query_setting) {
 		ERR("Failed to alloc memory");
-		ret = NOTIFICATION_ERROR_OUT_OF_MEMORY;
-		goto out;
+		return NOTIFICATION_ERROR_OUT_OF_MEMORY;
 	}
 
-	query_system_setting = sqlite3_mprintf("SELECT do_not_disturb FROM %s "
-					"WHERE uid = %d",
-					NOTIFICATION_SYSTEM_SETTING_DB_TABLE, uid);
-	if (query_system_setting == NULL) {
+	Sqlite3CharPtr query_system_setting(sqlite3_mprintf(
+			"SELECT do_not_disturb FROM %s WHERE uid = %d",
+			NOTIFICATION_SYSTEM_SETTING_DB_TABLE, uid));
+	if (!query_system_setting) {
 		ERR("Failed to alloc memory");
-		ret = NOTIFICATION_ERROR_OUT_OF_MEMORY;
-		goto out;
+		return NOTIFICATION_ERROR_OUT_OF_MEMORY;
 	}
 
-	sql_ret = sqlite3_get_table(db, query_setting, &query_setting_result, &row_count, &col_count, NULL);
+	int row_count;
+	int col_count;
+	char **raw_query_setting_result = NULL;
+	int sql_ret = sqlite3_get_table(db.get(), query_setting.get(),
+			&raw_query_setting_result, &row_count, &col_count, NULL);
+	Sqlite3TablePtr query_setting_result(raw_query_setting_result);
 	if (sql_ret != SQLITE_OK && sql_ret != -1) {
-		ERR("Failed to get DB table [%d][%s]", sql_ret, query_setting);
-		ret = NOTIFICATION_ERROR_FROM_DB;
-		goto out;
+		ERR("Failed to get DB table [%d][%s]", sql_ret, query_setting.get());
+		return NOTIFICATION_ERROR_FROM_DB;
 	}
 
 	if (row_count == 0) {
 		ERR("Invalid uid [%d] or app id [%s]", uid, app_id);
-		ret = NOTIFICATION_ERROR_INVALID_PARAMETER;
-		goto out;
+		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 	}
 
-	col_index = col_count;
-	_get_table_field_data_int(query_setting_result, (int *)allow_to_notify, col_index++);
-	_get_table_field_data_int(query_setting_result, (int *)do_not_disturb_except, col_index++);
+	int col_index = col_count;
+	_get_table_field_data_int(query_setting_result.get(), (int *)allow_to_notify, col_index++);
+	_get_table_field_data_int(query_setting_result.get(), (int *)do_not_disturb_except, col_index++);
 
-	sql_ret = sqlite3_get_table(db, query_system_setting, &query_system_setting_result, &row_count, &col_count, NULL);
+	char **raw_query_system_setting_result = NULL;
+	sql_ret = sqlite3_get_table(db.get(), query_system_setting.get(),
+			&raw_query_system_setting_result, &row_count, &col_count, NULL);
+	Sqlite3TablePtr query_system_setting_result(raw_query_system_setting_result);
 	if (sql_ret != SQLITE_OK && sql_ret != -1) {
-		ERR("Failed to get DB table [%d][%s]", sql_ret, query_setting);
-		ret = NOTIFICATION_ERROR_FROM_DB;
-		goto out;
+		ERR("Failed to get DB table [%d][%s]", sql_ret, query_setting.get());
+		return NOTIFICATION_ERROR_FROM_DB;
 	}
 
 	if (row_count == 0) {
 		ERR("Invalid uid [%d]", uid);
-		ret = NOTIFICATION_ERROR_INVALID_PARAMETER;
-		goto out;
+		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 	}
 
 	col_index = col_count;
-	_get_table_field_data_int(query_system_setting_result, (int *)do_not_disturb, col_index++);
-
-out:
-	if (query_setting_result)
-		sqlite3_free_table(query_setting_result);
-
-	if (query_system_setting_result)
-		sqlite3_free_table(query_system_setting_result);
-
-	if (query_setting)
-		sqlite3_free(query_setting);
-
-	if (query_system_setting)
-		sqlite3_free(query_system_setting);
-
-	if (db)
-		notification_db_close(&db);
-
-	return ret;
+	_get_table_field_data_int(query_system_setting_result.get(), (int *)do_not_disturb, col_index++);
+	return NOTIFICATION_ERROR_NONE;
 }
 
 EXPORT_API int notification_system_setting_load_dnd_allow_exception(dnd_allow_exception_h *dnd_allow_exception, int *count, uid_t uid)
