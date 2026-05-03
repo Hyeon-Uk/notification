@@ -28,6 +28,8 @@
 #include <notification_debug.h>
 #include <notification_viewer.h>
 
+#include "raii/notification_handles.hh"
+
 extern "C" {
 
 #define DEFAULT_VIEWER_CONF_FILE "/usr/share/notification/notification.ini"
@@ -253,49 +255,47 @@ static void __app_control_result_cb(app_control_h app_control,
 static int __launch_default_viewer(int priv_id,
 		notification_op_type_e status, uid_t uid, bool candidate)
 {
-	int ret;
-	char buf[32] = {0,};
-	app_control_h app_control = NULL;
+	using notification::raii::AppControlPtr;
 
 	if (_default_viewer == NULL)
 		return NOTIFICATION_ERROR_NONE;
 
-	ret = app_control_create(&app_control);
+	app_control_h raw_app_control = NULL;
+	int ret = app_control_create(&raw_app_control);
+	AppControlPtr app_control(raw_app_control);
 	if (ret != APP_CONTROL_ERROR_NONE) {
 		ERR("Failed to create app control. error(%d)", ret);
 		return NOTIFICATION_ERROR_OUT_OF_MEMORY;
 	}
 
-	ret = app_control_set_app_id(app_control, _default_viewer);
+	ret = app_control_set_app_id(app_control.get(), _default_viewer);
 	if (ret != APP_CONTROL_ERROR_NONE) {
 		ERR("Failed to set appid to app_control. error(%d)", ret);
-		ret = NOTIFICATION_ERROR_OUT_OF_MEMORY;
-		goto out;
+		return NOTIFICATION_ERROR_OUT_OF_MEMORY;
 	}
 
+	char buf[32] = {0,};
 	snprintf(buf, sizeof(buf), "%d", priv_id);
-	ret = app_control_add_extra_data(app_control, "NOTIFICATION_PRIVATE_ID",
-			buf);
+	ret = app_control_add_extra_data(app_control.get(),
+			"NOTIFICATION_PRIVATE_ID", buf);
 	if (ret != APP_CONTROL_ERROR_NONE) {
 		ERR("Failed to add extra data. error(%d)", ret);
-		ret = NOTIFICATION_ERROR_OUT_OF_MEMORY;
-		goto out;
+		return NOTIFICATION_ERROR_OUT_OF_MEMORY;
 	}
 
 	memset(buf, 0, sizeof(buf));
 	snprintf(buf, sizeof(buf), "%d", status);
-	ret = app_control_add_extra_data(app_control, "NOTIFICATION_OP_TYPE",
-			buf);
+	ret = app_control_add_extra_data(app_control.get(),
+			"NOTIFICATION_OP_TYPE", buf);
 	if (ret != APP_CONTROL_ERROR_NONE) {
 		ERR("Failed to add operation type. error(%d)", ret);
-		ret = NOTIFICATION_ERROR_OUT_OF_MEMORY;
-		goto out;
+		return NOTIFICATION_ERROR_OUT_OF_MEMORY;
 	}
 
 	/* for candidate */
 	if (candidate) {
 		WARN("set candidate for viewer");
-		ret = app_control_add_extra_data(app_control,
+		ret = app_control_add_extra_data(app_control.get(),
 				"__K_EX_USE_CANDIDATE_PROCESS", "true");
 		if (ret != APP_CONTROL_ERROR_NONE) {
 			ERR("Failed to set candidate key(%d)", ret);
@@ -303,27 +303,23 @@ static int __launch_default_viewer(int priv_id,
 	}
 
 	if (_delayed_noti_list != NULL) {
-		ret = __push_delayed_noti(app_control);
+		ret = __push_delayed_noti(app_control.get());
 		if (ret != NOTIFICATION_ERROR_NONE)
 			ERR("Failed to push delayed noti");
 		else
 			__pop_delayed_noti_cb(NULL);
 	} else {
-		ret = app_control_send_launch_request_async(app_control,
+		ret = app_control_send_launch_request_async(app_control.get(),
 				__app_control_result_cb, NULL, NULL);
 		if (ret != APP_CONTROL_ERROR_NONE) {
 			ERR("Failed to send launch request. error(%d)", ret);
-			ret = __push_delayed_noti(app_control);
+			ret = __push_delayed_noti(app_control.get());
 			if (ret != NOTIFICATION_ERROR_NONE)
 				ERR("Failed to push delayed noti");
 		} else {
 			INFO("Successful");
 		}
 	}
-
-out:
-	if (app_control)
-		app_control_destroy(app_control);
 
 	return ret;
 }

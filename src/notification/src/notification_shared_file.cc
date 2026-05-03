@@ -45,6 +45,24 @@
 
 #include "raii/glib_handles.hh"
 
+#include <memory>
+#include <type_traits>
+
+namespace {
+
+/* TU-local RAII for `private_sharing_req *` from security-manager,
+ * released via security_manager_private_sharing_req_free.  Only
+ * shared_file.cc consumes this API. */
+struct PrivateSharingReqDeleter {
+	void operator()(private_sharing_req *h) const noexcept {
+		if (h != nullptr) security_manager_private_sharing_req_free(h);
+	}
+};
+using PrivateSharingReqPtr = std::unique_ptr<
+	private_sharing_req, PrivateSharingReqDeleter>;
+
+}  // namespace
+
 extern "C" {
 
 #define NOTI_PRIV_DATA_DIR "data/.notification"
@@ -890,101 +908,96 @@ EXPORT_API void notification_calibrate_private_sharing(
 int __set_sharing_for_new_target(sharing_req_data_s *req_data,
 					GList *target_app_list)
 {
-	char **path_array = NULL;
-	int ret = NOTIFICATION_ERROR_NONE;
-	int len;
-	private_sharing_req *handle = NULL;
-	GList *iter, *tmp;
-	target_app_info_s *target_info;
-	char *app_info = NULL;
-
 	WARN("__set_sharing_for_new_target : %d",
 			g_list_length(target_app_list));
 
-	iter = target_app_list;
-	for (; iter != NULL; iter = g_list_next(iter)) {
-		target_info = (target_app_info_s *)iter->data;
-		tmp = g_list_find_custom(req_data->target_app_table,
+	int ret = NOTIFICATION_ERROR_NONE;
+	int len = 0;
+	PrivateSharingReqPtr handle;
+	std::unique_ptr<char *, decltype(&std::free)> path_array(nullptr,
+			std::free);
+	std::unique_ptr<char, decltype(&std::free)> app_info(nullptr,
+			std::free);
+
+	for (GList *iter = target_app_list; iter != NULL;
+			iter = g_list_next(iter)) {
+		target_app_info_s *target_info = (target_app_info_s *)iter->data;
+		GList *tmp = g_list_find_custom(req_data->target_app_table,
 					target_info->app_id, __comp_str);
 		if (tmp != NULL) {
 			ERR("tmp not null continue");
 			continue;
 		}
 
-		app_info = strdup(target_info->app_id);
-		if (app_info == NULL) {
+		app_info.reset(strdup(target_info->app_id));
+		if (!app_info) {
 			ERR("out of memory");
 			ret = NOTIFICATION_ERROR_OUT_OF_MEMORY;
-			goto out;
+			break;
 		}
 
-		if (handle == NULL) {
-			ret = security_manager_private_sharing_req_new(&handle);
+		if (!handle) {
+			private_sharing_req *raw_handle = NULL;
+			ret = security_manager_private_sharing_req_new(&raw_handle);
+			handle.reset(raw_handle);
 			if (ret != SECURITY_MANAGER_SUCCESS) {
 				ret = NOTIFICATION_ERROR_IO_ERROR;
 				ERR("Failed to create PS handle");
-				goto out;
+				break;
 			}
 
 			ret = security_manager_private_sharing_req_set_owner_appid(
-						handle, req_data->app_id);
+						handle.get(), req_data->app_id);
 			if (ret != SECURITY_MANAGER_SUCCESS) {
 				ret = NOTIFICATION_ERROR_IO_ERROR;
 				ERR("Failed to set owner appid(%s) %d",
 						req_data->app_id, ret);
-				goto out;
+				break;
 			}
-			path_array = __convert_list_to_array(
-					req_data->shared_file_list, &len);
-			if (path_array == NULL) {
+			path_array.reset(__convert_list_to_array(
+					req_data->shared_file_list, &len));
+			if (!path_array) {
 				ret = NOTIFICATION_ERROR_OUT_OF_MEMORY;
 				ERR("path array is null");
-				goto out;
+				break;
 			}
 
 			ret = security_manager_private_sharing_req_add_paths(
-					handle, (const char **)path_array, len);
+					handle.get(),
+					(const char **)path_array.get(), len);
 			if (ret != SECURITY_MANAGER_SUCCESS) {
 				ret = NOTIFICATION_ERROR_IO_ERROR;
 				ERR("Failed to add paths %d", ret);
-				goto out;
+				break;
 			}
 		}
 
 		ret = security_manager_private_sharing_req_set_target_appid(
-					handle, target_info->app_id);
+					handle.get(), target_info->app_id);
 		if (ret != SECURITY_MANAGER_SUCCESS) {
 			ret = NOTIFICATION_ERROR_IO_ERROR;
 			ERR("Failed to set target appid(%s)",
 				(const char *)iter->data);
-			goto out;
+			break;
 		}
 
 		WARN("set private sharing start [%s]", target_info->app_id);
-		ret = security_manager_private_sharing_apply(handle);
+		ret = security_manager_private_sharing_apply(handle.get());
 		if (ret != SECURITY_MANAGER_SUCCESS) {
 			ret = NOTIFICATION_ERROR_IO_ERROR;
 			ERR("Failed to apply PS %d", ret);
-			goto out;
+			break;
 		}
 		WARN("set private sharing end");
 
+		/* Hand `app_info` ownership over to req_data->target_app_table;
+		 * subsequent iterations will rebind app_info in-place.  This
+		 * matches the .c version's `free(app_info)` only on error. */
 		req_data->target_app_table = g_list_append(
-				req_data->target_app_table, app_info);
+				req_data->target_app_table, app_info.release());
 	}
 
-out:
-	if (ret != NOTIFICATION_ERROR_NONE && app_info)
-		free(app_info);
-
-	if (handle != NULL)
-		security_manager_private_sharing_req_free(handle);
-
-	if (path_array != NULL)
-		free(path_array);
-
 	WARN("__set_sharing_for_new_target done : %d", ret);
-
 	return ret;
 }
 /* LCOV_EXCL_STOP */
@@ -993,97 +1006,89 @@ out:
 int __set_sharing_for_new_file(sharing_req_data_s *req_data,
 				GList *new_file_list, bool is_overlapping)
 {
-	char **path_array = NULL;
-	int ret = NOTIFICATION_ERROR_NONE;
-	int len;
-	private_sharing_req *handle = NULL;
-	GList *iter;
-
 	WARN("__set_sharing_for_new_file %d", (int)is_overlapping);
 
-	path_array = __convert_list_to_array(new_file_list, &len);
-	if (path_array == NULL) {
+	int len = 0;
+	std::unique_ptr<char *, decltype(&std::free)> path_array(
+			__convert_list_to_array(new_file_list, &len),
+			std::free);
+	if (!path_array) {
 		ERR("path array is null");
-		ret = NOTIFICATION_ERROR_OUT_OF_MEMORY;
-		goto out;
+		WARN("__set_sharing_for_new_file done");
+		return NOTIFICATION_ERROR_OUT_OF_MEMORY;
 	}
 
-	ret = security_manager_private_sharing_req_new(&handle);
+	private_sharing_req *raw_handle = NULL;
+	int ret = security_manager_private_sharing_req_new(&raw_handle);
+	PrivateSharingReqPtr handle(raw_handle);
 	if (ret != SECURITY_MANAGER_SUCCESS) {
 		ERR("Failed to create private sharing request handle[%d]", ret);
-		ret = NOTIFICATION_ERROR_IO_ERROR;
-		goto out;
+		WARN("__set_sharing_for_new_file done");
+		return NOTIFICATION_ERROR_IO_ERROR;
 	}
 
-	ret = security_manager_private_sharing_req_set_owner_appid(handle,
+	ret = security_manager_private_sharing_req_set_owner_appid(handle.get(),
 					req_data->app_id);
 	if (ret != SECURITY_MANAGER_SUCCESS) {
 		ERR("Failed to set owner appid[%s][%d]", req_data->app_id, ret);
-		ret = NOTIFICATION_ERROR_IO_ERROR;
-		goto out;
+		WARN("__set_sharing_for_new_file done");
+		return NOTIFICATION_ERROR_IO_ERROR;
 	}
 
-	ret = security_manager_private_sharing_req_add_paths(handle,
-						(const char **)path_array, len);
+	ret = security_manager_private_sharing_req_add_paths(handle.get(),
+						(const char **)path_array.get(),
+						len);
 	if (ret != SECURITY_MANAGER_SUCCESS) {
 		ERR("Failed to add paths [%d]", ret);
-		ret = NOTIFICATION_ERROR_IO_ERROR;
-		goto out;
+		WARN("__set_sharing_for_new_file done");
+		return NOTIFICATION_ERROR_IO_ERROR;
 	}
 
 	if (is_overlapping == true) {
-		iter = req_data->target_app_table;
-		for (; iter != NULL; iter = g_list_next(iter)) {
+		for (GList *iter = req_data->target_app_table; iter != NULL;
+				iter = g_list_next(iter)) {
 			ret = security_manager_private_sharing_req_set_target_appid(
-							handle, (const char *)iter->data);
+					handle.get(), (const char *)iter->data);
 			if (ret != SECURITY_MANAGER_SUCCESS) {
 				ERR("Failed to set target appid [%s]",
 					(const char *)iter->data);
-				ret = NOTIFICATION_ERROR_IO_ERROR;
-				goto out;
+				WARN("__set_sharing_for_new_file done");
+				return NOTIFICATION_ERROR_IO_ERROR;
 			}
 
 			WARN("drop sharing [%s]", (const char *)iter->data);
-			ret = security_manager_private_sharing_drop(handle);
+			ret = security_manager_private_sharing_drop(handle.get());
 			if (ret != SECURITY_MANAGER_SUCCESS) {
 				ERR("Failed to drop [%d]", ret);
-				ret = NOTIFICATION_ERROR_IO_ERROR;
-				goto out;
+				WARN("__set_sharing_for_new_file done");
+				return NOTIFICATION_ERROR_IO_ERROR;
 			}
 		}
 	}
 	WARN("taget app table : %d", g_list_length(req_data->target_app_table));
 
-	iter = req_data->target_app_table;
-	for (; iter != NULL; iter = g_list_next(iter)) {
-		ret = security_manager_private_sharing_req_set_target_appid(handle,
-							(const char *)iter->data);
+	for (GList *iter = req_data->target_app_table; iter != NULL;
+			iter = g_list_next(iter)) {
+		ret = security_manager_private_sharing_req_set_target_appid(
+				handle.get(), (const char *)iter->data);
 		if (ret != SECURITY_MANAGER_SUCCESS) {
 			ERR("Failed to set target appid [%s]",
 				(const char *)iter->data);
-			ret = NOTIFICATION_ERROR_IO_ERROR;
-			goto out;
+			WARN("__set_sharing_for_new_file done");
+			return NOTIFICATION_ERROR_IO_ERROR;
 		}
 
 		WARN("set private sharing start [%s]", (const char *)iter->data);
-		ret = security_manager_private_sharing_apply(handle);
+		ret = security_manager_private_sharing_apply(handle.get());
 		if (ret != SECURITY_MANAGER_SUCCESS) {
 			ERR("Failed to apply PS [%d]", ret);
-			ret = NOTIFICATION_ERROR_IO_ERROR;
-			goto out;
+			WARN("__set_sharing_for_new_file done");
+			return NOTIFICATION_ERROR_IO_ERROR;
 		}
 		WARN("set private sharing end");
 	}
 
-out:
-	if (handle != NULL)
-		security_manager_private_sharing_req_free(handle);
-
-	if (path_array != NULL)
-		free(path_array);
-
 	WARN("__set_sharing_for_new_file done");
-
 	return ret;
 }
 /* LCOV_EXCL_STOP */
@@ -1098,7 +1103,6 @@ EXPORT_API int notification_set_private_sharing(notification_h noti,
 	sharing_file_info_s *file_info, *dup_file_info;
 	uid_info_s *uid_info;
 	GList *req_list, *iter, *tmp;
-	GList *new_file_list = NULL;
 
 	if (noti == NULL || noti->caller_app_id == NULL)
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
@@ -1156,14 +1160,24 @@ EXPORT_API int notification_set_private_sharing(notification_h noti,
 		req_data->priv_id_list = g_list_append(req_data->priv_id_list,
 						GINT_TO_POINTER(noti->priv_id));
 
-	new_file_list = __get_new_file_list(noti, req_data->shared_file_list,
-							&is_overlapping);
+	auto file_info_deleter = +[](GList *l) {
+		if (l) g_list_free_full(l, __free_file_info);
+	};
+	std::unique_ptr<GList, decltype(file_info_deleter)> new_file_list_owner(
+			__get_new_file_list(noti, req_data->shared_file_list,
+				&is_overlapping),
+			file_info_deleter);
+	GList *new_file_list = new_file_list_owner.get();
+
 	if (new_file_list != NULL) {
 		if (__set_sharing_for_new_file(req_data, new_file_list,
 				is_overlapping) != NOTIFICATION_ERROR_NONE) {
 			ERR("__set_sharing_for_new_file out");
-			ret = NOTIFICATION_ERROR_IO_ERROR;
-			goto out;
+			req_data->priv_id_list = g_list_remove(
+					req_data->priv_id_list,
+					GINT_TO_POINTER(noti->priv_id));
+			WARN("notification_set_private_sharing done");
+			return NOTIFICATION_ERROR_IO_ERROR;
 		}
 	}
 
@@ -1185,43 +1199,25 @@ EXPORT_API int notification_set_private_sharing(notification_h noti,
 	if (__set_sharing_for_new_target(req_data, uid_info->target_app_list)
 						!= NOTIFICATION_ERROR_NONE) {
 		WARN("__set_sharing_for_new_target out");
-		ret = NOTIFICATION_ERROR_IO_ERROR;
-		goto out;
+		req_data->priv_id_list = g_list_remove(req_data->priv_id_list,
+						GINT_TO_POINTER(noti->priv_id));
+		WARN("notification_set_private_sharing done");
+		return NOTIFICATION_ERROR_IO_ERROR;
 	}
 	INFO("PS success priv id[%d] shared file count[%d] target app count[%d]",
 				noti->priv_id,
 				g_list_length(req_data->shared_file_list),
 				g_list_length(req_data->target_app_table));
 
-out:
-	if (new_file_list != NULL)
-		g_list_free_full(new_file_list, __free_file_info);
-
-	if (ret != NOTIFICATION_ERROR_NONE)
-		req_data->priv_id_list = g_list_remove(req_data->priv_id_list,
-						GINT_TO_POINTER(noti->priv_id));
-
 	WARN("notification_set_private_sharing done");
-
 	return ret;
 }
 
 static bool __timeout_handler(void *data)
 {
-	char **path_array = NULL;
-	char *dst_path;
-	char *target_appid;
-	sharing_req_data_s *req_data;
-	private_sharing_req *handle = NULL;
-	GList *iter;
-	GList *tmp_list;
-	uid_info_s *uid_info;
-	int ret = SECURITY_MANAGER_SUCCESS;
-	int len;
-
 	WARN("__timeout_handler");
 
-	req_data = (sharing_req_data_s *)data;
+	sharing_req_data_s *req_data = (sharing_req_data_s *)data;
 	if (g_list_length(req_data->priv_id_list) > 0) {
 		req_data->timer = NULL;
 		return false;
@@ -1232,58 +1228,68 @@ static bool __timeout_handler(void *data)
 	/* If there is no shared file, the private sharing is not dropped. */
 	if (req_data->dir != NULL) {
 		__make_sharing_dir(req_data->dir);
-		iter = req_data->shared_file_list;
-		for (; iter != NULL; iter = g_list_next(iter)) {
+		for (GList *iter = req_data->shared_file_list; iter != NULL;
+				iter = g_list_next(iter)) {
 			notification_copy_private_file(
 				((sharing_file_info_s *)(iter->data))->src_path,
 				((sharing_file_info_s *)(iter->data))->dst_path);
 		}
 	}
 
+	int ret = SECURITY_MANAGER_SUCCESS;
+	PrivateSharingReqPtr handle;
+	std::unique_ptr<char *, decltype(&std::free)> path_array(nullptr,
+			std::free);
+
 	if (g_list_length(req_data->target_app_table) > 0) {
-		ret = security_manager_private_sharing_req_new(&handle);
+		private_sharing_req *raw_handle = NULL;
+		ret = security_manager_private_sharing_req_new(&raw_handle);
+		handle.reset(raw_handle);
 		if (ret != SECURITY_MANAGER_SUCCESS) {
 			ERR("Failed to create PS request handle");
 			goto out;
 		}
 
 		ret = security_manager_private_sharing_req_set_owner_appid(
-				handle, req_data->app_id);
+				handle.get(), req_data->app_id);
 		if (ret != SECURITY_MANAGER_SUCCESS) {
 			ERR("Failed to set owner appid(%s) %d",
 					req_data->app_id, ret);
 			goto out;
 		}
 
-		path_array = __convert_list_to_array(req_data->shared_file_list, &len);
-		if (path_array == NULL) {
+		int len = 0;
+		path_array.reset(__convert_list_to_array(
+				req_data->shared_file_list, &len));
+		if (!path_array) {
 			ERR("path_array is null %d",
 				g_list_length(req_data->shared_file_list));
 			ret = SECURITY_MANAGER_ERROR_MEMORY;
 			goto out;
 		}
 
-		ret = security_manager_private_sharing_req_add_paths(handle,
-						(const char **)path_array, len);
+		ret = security_manager_private_sharing_req_add_paths(handle.get(),
+						(const char **)path_array.get(),
+						len);
 		if (ret != SECURITY_MANAGER_SUCCESS) {
 			ERR("Failed to add paths %d", ret);
 			goto out;
 		}
 
-		iter = req_data->target_app_table;
-		while(iter != NULL) {
-			target_appid = (char *)iter->data;
+		GList *iter = req_data->target_app_table;
+		while (iter != NULL) {
+			char *target_appid = (char *)iter->data;
 			iter = g_list_next(iter);
 
 			ret = security_manager_private_sharing_req_set_target_appid(
-						handle, target_appid);
+						handle.get(), target_appid);
 			if (ret != SECURITY_MANAGER_SUCCESS) {
 				ERR("Failed to set target appid(%s)", target_appid);
 				goto out;
 			}
 
 			WARN("drop sharing [%s]", target_appid);
-			ret = security_manager_private_sharing_drop(handle);
+			ret = security_manager_private_sharing_drop(handle.get());
 			if (ret != SECURITY_MANAGER_SUCCESS) {
 				ERR("Failed to drop %d", ret);
 				goto out;
@@ -1296,21 +1302,16 @@ static bool __timeout_handler(void *data)
 	}
 
 out:
-	if (handle != NULL)
-		security_manager_private_sharing_req_free(handle);
-
-	if (path_array)
-		free(path_array);
-
+	/* handle and path_array auto-released via unique_ptr destructors. */
 	if (ret != SECURITY_MANAGER_SUCCESS && req_data->drop_retry_count < MAX_RETRY_CNT) {
 		ERR("drop_retry_count %d", req_data->drop_retry_count);
 		return true;
 	}
 
 	if (req_data->dir != NULL) {
-		iter = req_data->shared_file_list;
-		for (; iter != NULL; iter = g_list_next(iter)) {
-			dst_path = ((sharing_file_info_s *)(iter->data))->dst_path;
+		for (GList *iter = req_data->shared_file_list; iter != NULL;
+				iter = g_list_next(iter)) {
+			char *dst_path = ((sharing_file_info_s *)(iter->data))->dst_path;
 			if (strncmp(req_data->dir, dst_path, strlen(req_data->dir)) != 0)
 				continue;
 
@@ -1320,11 +1321,11 @@ out:
 		g_rmdir(req_data->dir);
 	}
 
-	tmp_list = g_list_find_custom(__uid_list, GINT_TO_POINTER(req_data->uid),
-			__comp_uid_info_list);
+	GList *tmp_list = g_list_find_custom(__uid_list,
+			GINT_TO_POINTER(req_data->uid), __comp_uid_info_list);
 
 	if (tmp_list != NULL) {
-		uid_info = (uid_info_s *)tmp_list->data;
+		uid_info_s *uid_info = (uid_info_s *)tmp_list->data;
 		uid_info->sharing_req_list = g_list_remove(
 				uid_info->sharing_req_list, req_data);
 	}
