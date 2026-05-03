@@ -41,6 +41,8 @@
 #include <notification_internal.h>
 #include <notification_shared_file.h>
 
+extern "C" {
+
 static void (*posted_toast_message_cb)(void *data);
 
 #define NOTI_TEXT_RESULT_LEN 4096
@@ -331,7 +333,7 @@ EXPORT_API int notification_set_text(notification_h noti,
 
 	va_start(var_args, args_type);
 
-	var_type = args_type;
+	var_type = (notification_variable_type_e)args_type;
 	num_args = 0;
 
 	while (var_type != NOTIFICATION_VARIABLE_TYPE_NONE) {
@@ -395,7 +397,7 @@ EXPORT_API int notification_set_text(notification_h noti,
 
 		case NOTIFICATION_VARIABLE_TYPE_COUNT:
 			var_value_count =
-			    va_arg(var_args, notification_count_pos_type_e);
+			    (notification_count_pos_type_e)va_arg(var_args, int);
 
 			/* Value */
 			snprintf(buf_key, sizeof(buf_key), "%dvalue%d", type,
@@ -417,7 +419,7 @@ EXPORT_API int notification_set_text(notification_h noti,
 		}
 
 		num_args++;
-		var_type = va_arg(var_args, notification_variable_type_e);
+		var_type = (notification_variable_type_e)va_arg(var_args, int);
 	}
 	va_end(var_args);
 
@@ -2066,3 +2068,5 @@ EXPORT_API int notification_get_extension_image_size(notification_h noti, int *h
 
 	return NOTIFICATION_ERROR_NONE;
 }
+
+}  // extern "C"

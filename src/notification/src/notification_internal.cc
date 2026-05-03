@@ -42,6 +42,8 @@
 
 #include <notification_tidl.h>
 
+extern "C" {
+
 #define REGULAR_UID_MIN 5000
 
 #define NOTIFICATION_CTOR __attribute__((constructor))
@@ -540,7 +542,8 @@ EXPORT_API int notification_translate_localized_text(notification_h noti)
 
 	noti->is_translation = false;
 
-	for (; type <= NOTIFICATION_TEXT_TYPE_MAX; type++) {
+	for (; type <= NOTIFICATION_TEXT_TYPE_MAX;
+			type = (notification_text_type_e)(type + 1)) {
 		ret = notification_get_text(noti, type, &ret_text);
 		if (ret == NOTIFICATION_ERROR_NONE && ret_text) {
 			if (noti->b_text == NULL) {
@@ -2827,3 +2830,5 @@ out:
 
 	return ret;
 }
+
+}  // extern "C"

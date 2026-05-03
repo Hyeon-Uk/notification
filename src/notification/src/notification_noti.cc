@@ -37,6 +37,8 @@
 #include <notification_setting_service.h>
 #include "notification_db_query.h"
 
+extern "C" {
+
 #define NOTI_BURST_DELETE_UNIT 10
 #define ERR_BUFFER_SIZE		1024
 #define NOTI_LIMIT 100
@@ -2564,3 +2566,5 @@ out:
 
 	return ret;
 }
+
+}  // extern "C"

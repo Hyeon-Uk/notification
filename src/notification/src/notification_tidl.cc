@@ -29,6 +29,8 @@
 
 #include <notification_tidl.h>
 
+extern "C" {
+
 /*
  * for TIDL
  */
@@ -1734,3 +1736,5 @@ int notification_tidl_del_deffered_task(
 	WARN("del deffered task");
 	return NOTIFICATION_ERROR_NONE;
 }
+
+}  // extern "C"

@@ -42,6 +42,7 @@
 
 #include <notification_tidl_proxy.h>
 
+extern "C" {
 
 static const char *__get_str_value(char *value)
 {
@@ -906,9 +907,13 @@ EXPORT_API int make_noti_from_notification(notification_h *noti, void *notihandl
 		free(priv_sound_path);
 	}
 
-	ret = rpc_port_proxy_notification_get_vibration_type(handle, &_noti->vibration_type);
-	if (ret != RPC_PORT_ERROR_NONE)
-		WARN("rpc_port_proxy_notification_get_vibration_type : %d", ret);
+	{
+		int _vibration_type = 0;
+		ret = rpc_port_proxy_notification_get_vibration_type(handle, &_vibration_type);
+		if (ret != RPC_PORT_ERROR_NONE)
+			WARN("rpc_port_proxy_notification_get_vibration_type : %d", ret);
+		_noti->vibration_type = (notification_vibration_type_e)_vibration_type;
+	}
 
 	char *vibration_path;
 	ret = rpc_port_proxy_notification_get_vibration_path(handle, &vibration_path);
@@ -1423,3 +1428,5 @@ EXPORT_API int make_noti_setting_from_setting(
 
 	return NOTIFICATION_ERROR_NONE;
 }
+
+}  // extern "C"
