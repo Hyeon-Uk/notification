@@ -531,165 +531,134 @@ int notification_get_dnd_and_allow_to_notify(const char *app_id,
 
 EXPORT_API int notification_system_setting_load_dnd_allow_exception(dnd_allow_exception_h *dnd_allow_exception, int *count, uid_t uid)
 {
-	int ret = NOTIFICATION_ERROR_NONE;
-	int sql_ret;
-	int row_count = 0;
-	int column_count = 0;
-	int col_index = 0;
-	int i;
-	char *query = NULL;
-	char **query_result = NULL;
-	sqlite3 *db = NULL;
-	dnd_allow_exception_h dnd_allow_exception_data = NULL;
+	using notification::raii::Sqlite3DbPtr;
+	using notification::raii::Sqlite3CharPtr;
+	using notification::raii::Sqlite3TablePtr;
 
 	if (dnd_allow_exception == NULL) {
 		ERR("Invalid paramter"); /* LCOV_EXCL_LINE */
-		return  NOTIFICATION_ERROR_INVALID_PARAMETER;
+		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 	}
 
-	db = notification_db_open();
+	Sqlite3DbPtr db(notification_db_open());
 	if (!db)
 		return get_last_result();
 
-	query = sqlite3_mprintf("SELECT type, value FROM %s WHERE uid = %d",
-			NOTIFICATION_DND_ALLOW_EXCEPTION, uid);
-	if (query == NULL) {
+	Sqlite3CharPtr query(sqlite3_mprintf(
+			"SELECT type, value FROM %s WHERE uid = %d",
+			NOTIFICATION_DND_ALLOW_EXCEPTION, uid));
+	if (!query) {
 		ERR("Failed to alloc memory");
-		ret = NOTIFICATION_ERROR_OUT_OF_MEMORY;
-		goto out;
+		return NOTIFICATION_ERROR_OUT_OF_MEMORY;
 	}
 
-	sql_ret = sqlite3_get_table(db, query, &query_result, &row_count, &column_count, NULL);
+	int row_count = 0;
+	int column_count = 0;
+	char **raw_query_result = NULL;
+	int sql_ret = sqlite3_get_table(db.get(), query.get(),
+			&raw_query_result, &row_count, &column_count, NULL);
+	Sqlite3TablePtr query_result(raw_query_result);
 	if (sql_ret != SQLITE_OK && sql_ret != -1) {
-		ERR("Failed to get DB table [%d][%s]", sql_ret, query); /* LCOV_EXCL_LINE */
-		ret = NOTIFICATION_ERROR_FROM_DB;
-		goto out;
+		ERR("Failed to get DB table [%d][%s]", sql_ret, query.get());
+		return NOTIFICATION_ERROR_FROM_DB;
 	}
 
 	if (!row_count) {
 		DBG("No setting found"); /* LCOV_EXCL_LINE */
-		goto out;
-	} else {
-		dnd_allow_exception_data = (dnd_allow_exception_h)malloc(sizeof(struct notification_system_setting_dnd_allow_exception) * row_count);
-		if (dnd_allow_exception_data == NULL) {
-			ERR("Failed to alloc memory");
-			ret =  NOTIFICATION_ERROR_OUT_OF_MEMORY;
-			goto out;
-		}
+		return NOTIFICATION_ERROR_NONE;
+	}
 
-		col_index = column_count;
+	dnd_allow_exception_h dnd_allow_exception_data =
+			(dnd_allow_exception_h)malloc(
+				sizeof(struct notification_system_setting_dnd_allow_exception)
+				* row_count);
+	if (dnd_allow_exception_data == NULL) {
+		ERR("Failed to alloc memory");
+		return NOTIFICATION_ERROR_OUT_OF_MEMORY;
+	}
 
-		for (i = 0; i < row_count; i++) {
-			_get_table_field_data_int(query_result, (int *)&(dnd_allow_exception_data[i].type), col_index++);
-			_get_table_field_data_int(query_result, (int *)&(dnd_allow_exception_data[i].value), col_index++);
-		}
+	int col_index = column_count;
+	for (int i = 0; i < row_count; i++) {
+		_get_table_field_data_int(query_result.get(), (int *)&(dnd_allow_exception_data[i].type), col_index++);
+		_get_table_field_data_int(query_result.get(), (int *)&(dnd_allow_exception_data[i].value), col_index++);
 	}
 
 	*dnd_allow_exception = dnd_allow_exception_data;
 	*count = row_count;
-
-out:
-	if (query_result)
-		sqlite3_free_table(query_result);
-
-	if (query)
-		sqlite3_free(query);
-
-	if (db)
-		notification_db_close(&db);
-
-	return ret;
+	return NOTIFICATION_ERROR_NONE;
 }
 
 EXPORT_API
 int notification_system_setting_update_dnd_allow_exception(int type, int value, uid_t uid)
 {
-	sqlite3 *db = NULL;
-	char *query = NULL;
-	int ret = NOTIFICATION_ERROR_NONE;
-	int num_changes = 0;
+	using notification::raii::Sqlite3DbPtr;
+	using notification::raii::Sqlite3CharPtr;
 
-	db = notification_db_open();
+	Sqlite3DbPtr db(notification_db_open());
 	if (!db)
 		return get_last_result();
 
-	query = sqlite3_mprintf("INSERT OR REPLACE INTO %s (uid, type, value) "
-				"VALUES(%d, %d, %d) ",
-				NOTIFICATION_DND_ALLOW_EXCEPTION,
-				uid, type, value);
-	if (query == NULL) {
+	Sqlite3CharPtr query(sqlite3_mprintf(
+			"INSERT OR REPLACE INTO %s (uid, type, value) "
+			"VALUES(%d, %d, %d) ",
+			NOTIFICATION_DND_ALLOW_EXCEPTION,
+			uid, type, value));
+	if (!query) {
 		ERR("Failed to alloc memory");
-		ret = NOTIFICATION_ERROR_OUT_OF_MEMORY;
-		goto out;
+		return NOTIFICATION_ERROR_OUT_OF_MEMORY;
 	}
 
-	ret = notification_db_exec(db, query, &num_changes);
+	int num_changes = 0;
+	int ret = notification_db_exec(db.get(), query.get(), &num_changes);
 	if (ret != NOTIFICATION_ERROR_NONE)
-		goto out;
+		return ret;
 
 	if (num_changes == 0)
 		WARN("No changes on DB");
 
-out:
-	if (query)
-		sqlite3_free(query);
-
-	if (db)
-		notification_db_close(&db);
-
-	return ret;
+	return NOTIFICATION_ERROR_NONE;
 }
 
 EXPORT_API
 int noti_system_setting_get_do_not_disturb(int *do_not_disturb, uid_t uid)
 {
-	int ret = NOTIFICATION_ERROR_NONE;
-	int row_count = 0;
-	int col_count = 0;
-	int col_index = 0;
-	char *query = NULL;
-	char **query_result = NULL;
-	sqlite3 *db = NULL;
+	using notification::raii::Sqlite3DbPtr;
+	using notification::raii::Sqlite3CharPtr;
+	using notification::raii::Sqlite3TablePtr;
 
-	db = notification_db_open();
+	Sqlite3DbPtr db(notification_db_open());
 	if (!db)
 		return get_last_result();
 
-	query = sqlite3_mprintf("SELECT do_not_disturb FROM %s WHERE uid = %d",
-				NOTIFICATION_SYSTEM_SETTING_DB_TABLE, uid);
-	if (query == NULL) {
+	Sqlite3CharPtr query(sqlite3_mprintf(
+			"SELECT do_not_disturb FROM %s WHERE uid = %d",
+			NOTIFICATION_SYSTEM_SETTING_DB_TABLE, uid));
+	if (!query) {
 		ERR("Failed to alloc memory");
-		ret = NOTIFICATION_ERROR_OUT_OF_MEMORY;
-		goto out;
+		return NOTIFICATION_ERROR_OUT_OF_MEMORY;
 	}
 
-	ret = sqlite3_get_table(db, query, &query_result, &row_count, &col_count, NULL);
-	if (ret != SQLITE_OK && ret != -1) {
-		ERR("Failed to get DB table [%d][%s]", ret, query);
-		ret = NOTIFICATION_ERROR_FROM_DB;
-		goto out;
+	int row_count = 0;
+	int col_count = 0;
+	char **raw_query_result = NULL;
+	int sql_ret = sqlite3_get_table(db.get(), query.get(),
+			&raw_query_result, &row_count, &col_count, NULL);
+	Sqlite3TablePtr query_result(raw_query_result);
+	if (sql_ret != SQLITE_OK && sql_ret != -1) {
+		ERR("Failed to get DB table [%d][%s]", sql_ret, query.get());
+		return NOTIFICATION_ERROR_FROM_DB;
 	}
 
-	col_index = col_count;
 	if (row_count == 0) {
 		ERR("No system setting found");
-		ret = NOTIFICATION_ERROR_INVALID_PARAMETER;
-	} else {
-		if (_get_table_field_data_int(query_result, (int *)do_not_disturb, col_index++) == false)
-			ret = NOTIFICATION_ERROR_FROM_DB;
+		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 	}
 
-out:
-	if (query_result)
-		sqlite3_free_table(query_result);
+	int col_index = col_count;
+	if (_get_table_field_data_int(query_result.get(), (int *)do_not_disturb, col_index++) == false)
+		return NOTIFICATION_ERROR_FROM_DB;
 
-	if (query)
-		sqlite3_free(query);
-
-	if (db)
-		notification_db_close(&db);
-
-	return ret;
+	return NOTIFICATION_ERROR_NONE;
 }
 /* LCOV_EXCL_STOP */
 
@@ -697,39 +666,30 @@ out:
 EXPORT_API
 int notification_setting_db_update_app_disabled(const char *app_id, bool value, uid_t uid)
 {
-	sqlite3 *db = NULL;
-	char *query = NULL;
-	int ret = NOTIFICATION_ERROR_NONE;
-	int num_changes = 0;
+	using notification::raii::Sqlite3DbPtr;
+	using notification::raii::Sqlite3CharPtr;
 
 	if (app_id == NULL)
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 
-	db = notification_db_open();
+	Sqlite3DbPtr db(notification_db_open());
 	if (!db)
 		return get_last_result();
 
-	query = sqlite3_mprintf("UPDATE %s SET app_disabled= %d " \
-				"WHERE app_id = %Q AND uid = %d",
-				NOTIFICATION_SETTING_DB_TABLE, value,
-				app_id, uid);
-	if (query == NULL) {
+	Sqlite3CharPtr query(sqlite3_mprintf(
+			"UPDATE %s SET app_disabled= %d "
+			"WHERE app_id = %Q AND uid = %d",
+			NOTIFICATION_SETTING_DB_TABLE, value,
+			app_id, uid));
+	if (!query) {
 		ERR("Failed to alloc memory"); /* LCOV_EXCL_LINE */
-		ret = NOTIFICATION_ERROR_OUT_OF_MEMORY;
-		goto out;
+		return NOTIFICATION_ERROR_OUT_OF_MEMORY;
 	}
 
-	ret = notification_db_exec(db, query, &num_changes);
+	int num_changes = 0;
+	int ret = notification_db_exec(db.get(), query.get(), &num_changes);
 	if (ret == NOTIFICATION_ERROR_NONE && num_changes <= 0)
 		ret = NOTIFICATION_ERROR_NOT_EXIST_ID;
-
-out:
-	if (query)
-		sqlite3_free(query);
-
-	if (db)
-		notification_db_close(&db);
-
 	return ret;
 }
 /* LCOV_EXCL_STOP */
@@ -738,39 +698,30 @@ out:
 EXPORT_API
 int notification_setting_db_update_pkg_disabled(const char *pkg_id, bool value, uid_t uid)
 {
-	sqlite3 *db = NULL;
-	char *query = NULL;
-	int ret = NOTIFICATION_ERROR_NONE;
-	int num_changes = 0;
+	using notification::raii::Sqlite3DbPtr;
+	using notification::raii::Sqlite3CharPtr;
 
 	if (pkg_id == NULL)
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 
-	db = notification_db_open();
+	Sqlite3DbPtr db(notification_db_open());
 	if (!db)
 		return get_last_result();
 
-	query = sqlite3_mprintf("UPDATE %s SET app_disabled= %d " \
-				"WHERE package_name = %Q AND uid = %d",
-				NOTIFICATION_SETTING_DB_TABLE, value,
-				pkg_id, uid);
-	if (query == NULL) {
+	Sqlite3CharPtr query(sqlite3_mprintf(
+			"UPDATE %s SET app_disabled= %d "
+			"WHERE package_name = %Q AND uid = %d",
+			NOTIFICATION_SETTING_DB_TABLE, value,
+			pkg_id, uid));
+	if (!query) {
 		ERR("Failed to alloc memory"); /* LCOV_EXCL_LINE */
-		ret = NOTIFICATION_ERROR_OUT_OF_MEMORY;
-		goto out;
+		return NOTIFICATION_ERROR_OUT_OF_MEMORY;
 	}
 
-	ret = notification_db_exec(db, query, &num_changes);
+	int num_changes = 0;
+	int ret = notification_db_exec(db.get(), query.get(), &num_changes);
 	if (ret == NOTIFICATION_ERROR_NONE && num_changes <= 0)
 		ret = NOTIFICATION_ERROR_NOT_EXIST_ID;
-
-out:
-	if (query)
-		sqlite3_free(query);
-
-	if (db)
-		notification_db_close(&db);
-
 	return ret;
 }
 /* LCOV_EXCL_STOP */
