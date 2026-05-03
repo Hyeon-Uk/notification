@@ -37,6 +37,10 @@
 #include <notification_setting_service.h>
 #include "notification_db_query.h"
 
+#include "raii/sqlite3_db.hh"
+#include "raii/sqlite3_stmt.hh"
+#include "raii/sqlite3_free.hh"
+
 extern "C" {
 
 #define NOTI_BURST_DELETE_UNIT 10
@@ -2322,230 +2326,202 @@ err:
 EXPORT_API int notification_noti_get_channel(const char *app_id,
 		const char *channel_name, int *blockable, int *is_blocked)
 {
-	int ret;
-	sqlite3 *db;
-	sqlite3_stmt *stmt = NULL;
-	char *query = NULL;
-	int _blockable = 0;
-	int _is_blocked = 0;
+	using notification::raii::Sqlite3DbPtr;
+	using notification::raii::Sqlite3StmtPtr;
+	using notification::raii::Sqlite3CharPtr;
 
 	WARN("noti get channel");
 
 	if (app_id == NULL || channel_name == NULL || is_blocked == NULL)
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 
-	db = notification_db_open();
+	Sqlite3DbPtr db(notification_db_open());
 	if (!db)
 		return get_last_result();
 
-	query = sqlite3_mprintf("SELECT blockable, is_blocked FROM %s "
+	Sqlite3CharPtr query(sqlite3_mprintf(
+				"SELECT blockable, is_blocked FROM %s "
 				"WHERE app_id = %Q AND channel_name = %Q",
 				NOTIFICATION_CHANNEL_DB_TABLE,
-				app_id, channel_name);
-	if (query == NULL) {
-		ret = NOTIFICATION_ERROR_OUT_OF_MEMORY;
-		goto out;
+				app_id, channel_name));
+	if (!query) {
+		WARN("noti get channel done : %d", NOTIFICATION_ERROR_OUT_OF_MEMORY);
+		return NOTIFICATION_ERROR_OUT_OF_MEMORY;
 	}
 
-	ret = sqlite3_prepare_v2(db, query, strlen(query), &stmt, NULL);
+	sqlite3_stmt *raw_stmt = NULL;
+	int ret = sqlite3_prepare_v2(db.get(), query.get(), strlen(query.get()),
+			&raw_stmt, NULL);
+	Sqlite3StmtPtr stmt(raw_stmt);
 	if (ret != SQLITE_OK) {
 		ERR("Failed to sqlite3_prepare_v2[%d][%s]",
-				ret, sqlite3_errmsg(db));
-		goto out;
+				ret, sqlite3_errmsg(db.get()));
+		WARN("noti get channel done : %d", ret);
+		return ret;
 	}
 
-	ret = sqlite3_step(stmt);
+	int _blockable = 0;
+	int _is_blocked = 0;
+	ret = sqlite3_step(stmt.get());
 	if (ret == SQLITE_ROW) {
-		_blockable = sqlite3_column_int(stmt, 0);
-		_is_blocked = sqlite3_column_int(stmt, 1);
-
+		_blockable = sqlite3_column_int(stmt.get(), 0);
+		_is_blocked = sqlite3_column_int(stmt.get(), 1);
 		ret = NOTIFICATION_ERROR_NONE;
 	} else if (ret == SQLITE_DONE) {
 		WARN("no channel name from db");
 		ret = NOTIFICATION_ERROR_NONE;
 	} else {
-		ERR("failed to get channel [%d][%s]", ret, sqlite3_errmsg(db));
-		ret = NOTIFICATION_ERROR_FROM_DB;
-		goto out;
+		ERR("failed to get channel [%d][%s]", ret,
+				sqlite3_errmsg(db.get()));
+		WARN("noti get channel done : %d", NOTIFICATION_ERROR_FROM_DB);
+		return NOTIFICATION_ERROR_FROM_DB;
 	}
 
 	*blockable = _blockable;
 	*is_blocked = _is_blocked;
-out:
-	if (stmt)
-		sqlite3_finalize(stmt);
-	if (query)
-		sqlite3_free(query);
-	if (db)
-		notification_db_close(&db);
-
 	WARN("noti get channel done : %d", ret);
-
 	return ret;
 }
 
 EXPORT_API int notification_noti_insert_channel(const char *app_id,
 		const char *channel_name, int blockable, int is_blocked)
 {
-	sqlite3 *db = NULL;
-	char *query = NULL;
-	int ret = NOTIFICATION_ERROR_NONE;
+	using notification::raii::Sqlite3DbPtr;
+	using notification::raii::Sqlite3CharPtr;
 
 	WARN("noti add channel");
 
 	if (app_id == NULL || channel_name == NULL)
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 
-	db = notification_db_open();
+	Sqlite3DbPtr db(notification_db_open());
 	if (!db)
 		return get_last_result();
 
-	query = sqlite3_mprintf(
+	Sqlite3CharPtr query(sqlite3_mprintf(
 			"INSERT INTO %s (app_id, channel_name, blockable, is_blocked) "
 			"VALUES (%Q, %Q, %d, %d)", NOTIFICATION_CHANNEL_DB_TABLE,
-			app_id, channel_name, blockable, is_blocked);
-	if (query == NULL) {
-		ret = NOTIFICATION_ERROR_OUT_OF_MEMORY;
-		goto out;
+			app_id, channel_name, blockable, is_blocked));
+	if (!query) {
+		WARN("noti add channel done : %d", NOTIFICATION_ERROR_OUT_OF_MEMORY);
+		return NOTIFICATION_ERROR_OUT_OF_MEMORY;
 	}
 
-	ret = notification_db_exec(db, query, NULL);
+	int ret = notification_db_exec(db.get(), query.get(), NULL);
 	if (ret != NOTIFICATION_ERROR_NONE)
 		ERR("failed to insert channel");
 
-out:
-	if (query)
-		sqlite3_free(query);
-
-	if (db)
-		notification_db_close(&db);
-
 	WARN("noti add channel done : %d", ret);
-
 	return ret;
 }
 
 EXPORT_API int notification_noti_delete_channel(const char *app_id,
 		const char *channel_name)
 {
-	sqlite3 *db = NULL;
-	char *query = NULL;
-	int ret = NOTIFICATION_ERROR_NONE;
+	using notification::raii::Sqlite3DbPtr;
+	using notification::raii::Sqlite3CharPtr;
 
 	WARN("noti delete channel");
 
 	if (app_id == NULL || channel_name == NULL)
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 
-	db = notification_db_open();
+	Sqlite3DbPtr db(notification_db_open());
 	if (!db)
 		return get_last_result();
 
-	query = sqlite3_mprintf(
+	Sqlite3CharPtr query(sqlite3_mprintf(
 			"DELETE FROM %s WHERE app_id = %Q AND channel_name = %Q",
-			NOTIFICATION_CHANNEL_DB_TABLE, app_id, channel_name);
-	if (query == NULL) {
-		ret = NOTIFICATION_ERROR_OUT_OF_MEMORY;
-		goto out;
+			NOTIFICATION_CHANNEL_DB_TABLE, app_id, channel_name));
+	if (!query) {
+		WARN("noti delete channel done : %d", NOTIFICATION_ERROR_OUT_OF_MEMORY);
+		return NOTIFICATION_ERROR_OUT_OF_MEMORY;
 	}
 
-	ret = notification_db_exec(db, query, NULL);
+	int ret = notification_db_exec(db.get(), query.get(), NULL);
 	if (ret != NOTIFICATION_ERROR_NONE)
 		ERR("failed to delete channel");
 
-out:
-	if (query)
-		sqlite3_free(query);
-
-	if (db)
-		notification_db_close(&db);
-
 	WARN("noti delete channel done : %d", ret);
-
 	return ret;
 }
 
 EXPORT_API int notification_noti_update_channel(const char *app_id,
 		const char *channel_name, int blockable, int is_blocked)
 {
-	sqlite3 *db = NULL;
-	char *query = NULL;
-	int ret = NOTIFICATION_ERROR_NONE;
+	using notification::raii::Sqlite3DbPtr;
+	using notification::raii::Sqlite3CharPtr;
 
 	WARN("noti update channel");
 
 	if (app_id == NULL || channel_name == NULL)
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 
-	db = notification_db_open();
+	Sqlite3DbPtr db(notification_db_open());
 	if (!db)
 		return get_last_result();
 
-	query = sqlite3_mprintf("UPDATE %s SET blockable = %d, is_blocked = %d "
+	Sqlite3CharPtr query(sqlite3_mprintf(
+				"UPDATE %s SET blockable = %d, is_blocked = %d "
 				"WHERE app_id = %Q AND channel_name = %Q",
 				NOTIFICATION_CHANNEL_DB_TABLE,
-				blockable, is_blocked, app_id, channel_name);
-	if (query == NULL) {
-		ret = NOTIFICATION_ERROR_OUT_OF_MEMORY;
-		goto out;
+				blockable, is_blocked, app_id, channel_name));
+	if (!query) {
+		WARN("noti update channel done : %d", NOTIFICATION_ERROR_OUT_OF_MEMORY);
+		return NOTIFICATION_ERROR_OUT_OF_MEMORY;
 	}
 
-	ret = notification_db_exec(db, query, NULL);
+	int ret = notification_db_exec(db.get(), query.get(), NULL);
 	if (ret != NOTIFICATION_ERROR_NONE)
 		ERR("failed to update channel");
 
-out:
-	if (query)
-		sqlite3_free(query);
-
-	if (db)
-		notification_db_close(&db);
-
 	WARN("noti update channel done : %d", ret);
-
 	return ret;
 }
 
 EXPORT_API int notification_noti_get_channel_list(const char *app_id,
 		GList **channel_list)
 {
-	int ret;
-	sqlite3 *db;
-	sqlite3_stmt *stmt = NULL;
-	char *query = NULL;
-	int is_blocked = 0;
-	int blockable = 0;
-	char *channel_name = NULL;
-	notification_channel_h channel = NULL;
+	using notification::raii::Sqlite3DbPtr;
+	using notification::raii::Sqlite3StmtPtr;
+	using notification::raii::Sqlite3CharPtr;
 
 	WARN("noti get channel list");
 
 	if (app_id == NULL || channel_list == NULL)
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 
-	db = notification_db_open();
+	Sqlite3DbPtr db(notification_db_open());
 	if (!db)
 		return get_last_result();
 
-	query = sqlite3_mprintf("SELECT channel_name, blockable, is_blocked FROM %s "
-				"WHERE app_id = %Q", NOTIFICATION_CHANNEL_DB_TABLE, app_id);
-	if (query == NULL) {
-		ret = NOTIFICATION_ERROR_OUT_OF_MEMORY;
-		goto out;
+	Sqlite3CharPtr query(sqlite3_mprintf(
+				"SELECT channel_name, blockable, is_blocked FROM %s "
+				"WHERE app_id = %Q",
+				NOTIFICATION_CHANNEL_DB_TABLE, app_id));
+	if (!query) {
+		WARN("noti get channel list done : %d",
+				NOTIFICATION_ERROR_OUT_OF_MEMORY);
+		return NOTIFICATION_ERROR_OUT_OF_MEMORY;
 	}
 
-	ret = sqlite3_prepare_v2(db, query, strlen(query), &stmt, NULL);
+	sqlite3_stmt *raw_stmt = NULL;
+	int ret = sqlite3_prepare_v2(db.get(), query.get(), strlen(query.get()),
+			&raw_stmt, NULL);
+	Sqlite3StmtPtr stmt(raw_stmt);
 	if (ret != SQLITE_OK) {
 		ERR("Failed to sqlite3_prepare_v2[%d][%s]",
-				ret, sqlite3_errmsg(db));
-		goto out;
+				ret, sqlite3_errmsg(db.get()));
+		WARN("noti get channel list done : %d", ret);
+		return ret;
 	}
 
-	while (sqlite3_step(stmt) == SQLITE_ROW) {
-		channel_name = notification_db_column_text(stmt, 0);
-		blockable = sqlite3_column_int(stmt, 1);
-		is_blocked = sqlite3_column_int(stmt, 2);
+	while (sqlite3_step(stmt.get()) == SQLITE_ROW) {
+		char *channel_name = notification_db_column_text(stmt.get(), 0);
+		int blockable = sqlite3_column_int(stmt.get(), 1);
+		int is_blocked = sqlite3_column_int(stmt.get(), 2);
 
+		notification_channel_h channel = NULL;
 		notification_channel_create_with_info(app_id, channel_name,
 				blockable, is_blocked, &channel);
 
@@ -2554,16 +2530,10 @@ EXPORT_API int notification_noti_get_channel_list(const char *app_id,
 		WARN("noti get channel list : %s", channel_name);
 	}
 
-out:
-	if (stmt)
-		sqlite3_finalize(stmt);
-	if (query)
-		sqlite3_free(query);
-	if (db)
-		notification_db_close(&db);
-
+	/* Pre-existing quirk preserved: success return is SQLITE_OK from
+	 * sqlite3_prepare_v2 (== NOTIFICATION_ERROR_NONE == 0).  The .c
+	 * version did the same. */
 	WARN("noti get channel list done : %d", ret);
-
 	return ret;
 }
 
