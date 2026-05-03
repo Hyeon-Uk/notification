@@ -33,6 +33,8 @@
 #include <notification_setting_service.h>
 #include "notification_db_query.h"
 
+extern "C" {
+
 /* LCOV_EXCL_START */
 static int _get_table_field_data_int(char **table, int *buf, int index)
 {
@@ -313,7 +315,7 @@ int noti_system_setting_load_system_setting(notification_system_setting_h *syste
 		result_system_setting->dnd_start_min = 0;
 		result_system_setting->dnd_end_hour = 0;
 		result_system_setting->dnd_end_min = 0;
-		result_system_setting->lock_screen_content_level = 0;
+		result_system_setting->lock_screen_content_level = (lock_screen_content_level_e)0;
 		result_system_setting->dnd_allow_exceptions = NULL;
 	} else {
 		col_index = column_count;
@@ -881,3 +883,5 @@ out:
 }
 /* LCOV_EXCL_STOP */
 
+
+}  // extern "C"
