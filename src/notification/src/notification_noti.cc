@@ -40,6 +40,7 @@
 #include "raii/sqlite3_db.hh"
 #include "raii/sqlite3_stmt.hh"
 #include "raii/sqlite3_free.hh"
+#include "raii/notification_handles.hh"
 
 extern "C" {
 
@@ -851,49 +852,41 @@ out:
 
 static bool _is_allowed_to_notify(notification_h noti)
 {
-	notification_setting_h setting = NULL;
-	bool allow_to_notify = true;
-	bool app_disabled = false;
-	bool ret = true;
-	int err;
+	using notification::raii::NotificationSettingPtr;
 
-	err = noti_setting_service_get_setting_by_app_id(noti->caller_app_id,
-							&setting, noti->uid);
+	notification_setting_h raw_setting = NULL;
+	int err = noti_setting_service_get_setting_by_app_id(
+				noti->caller_app_id, &raw_setting, noti->uid);
 	if (err != NOTIFICATION_ERROR_NONE) {
-		err = __get_setting_from_app_control(noti, &setting);
+		err = __get_setting_from_app_control(noti, &raw_setting);
 		if (err != NOTIFICATION_ERROR_NONE)
-			return ret;
+			return true;
 	}
+	NotificationSettingPtr setting(raw_setting);
 
-	err = notification_setting_get_allow_to_notify(setting, &allow_to_notify);
+	bool allow_to_notify = true;
+	err = notification_setting_get_allow_to_notify(setting.get(),
+				&allow_to_notify);
 	if (err != NOTIFICATION_ERROR_NONE) {
 		ERR("Failed to get allow_to_notify [%x]", err);
-		goto out;
+		return true;
 	}
 
-	err = notification_setting_get_app_disabled(setting, &app_disabled);
+	bool app_disabled = false;
+	err = notification_setting_get_app_disabled(setting.get(),
+				&app_disabled);
 	if (err != NOTIFICATION_ERROR_NONE) {
 		ERR("Failed to get app_disabled [%x]", err);
-		goto out;
+		return true;
 	}
 
-	if (!allow_to_notify || app_disabled)
-		ret = false;
-
-out:
-	if (setting)
-		notification_setting_free_notification(setting);
-
-	return ret;
+	return allow_to_notify && !app_disabled;
 }
 
 static int _handle_do_not_disturb_option(notification_h noti)
 {
-	int err = NOTIFICATION_ERROR_NONE;
-	bool do_not_disturb = false;
-	bool do_not_disturb_exception = false;
-	notification_setting_h setting = NULL;
-	notification_system_setting_h system_setting = NULL;
+	using notification::raii::NotificationSettingPtr;
+	using notification::raii::NotificationSystemSettingPtr;
 
 	if (noti == NULL) {
 		ERR("Invalid notification handle");
@@ -901,89 +894,90 @@ static int _handle_do_not_disturb_option(notification_h noti)
 	}
 
 	/* Get system setting */
-	err = noti_system_setting_load_system_setting(&system_setting, noti->uid);
+	notification_system_setting_h raw_system_setting = NULL;
+	int err = noti_system_setting_load_system_setting(&raw_system_setting,
+				noti->uid);
+	NotificationSystemSettingPtr system_setting(raw_system_setting);
 	if (err != NOTIFICATION_ERROR_NONE) {
 		ERR("Failed to load system setting [%d]", err);
-		goto out;
+		return err;
 	}
 
-	err = notification_system_setting_get_do_not_disturb(system_setting,
-							&do_not_disturb);
+	bool do_not_disturb = false;
+	err = notification_system_setting_get_do_not_disturb(system_setting.get(),
+				&do_not_disturb);
 	if (err != NOTIFICATION_ERROR_NONE) {
 		ERR("Failed to get do_not_disturb [%d]", err);
-		goto out;
+		return err;
 	}
 
 	DBG("do_not_disturb [%d]", do_not_disturb);
 
-	if (do_not_disturb) {
-		/* Check exception option of the caller app_id */
-		err = noti_setting_service_get_setting_by_app_id(noti->caller_app_id, &setting, noti->uid);
-		if (err != NOTIFICATION_ERROR_NONE) {
-			ERR("Failed to get setting by app_id [%d]", err);
-			goto out;
-		}
+	if (!do_not_disturb)
+		return NOTIFICATION_ERROR_NONE;
 
-		err = notification_setting_get_do_not_disturb_except(setting, &do_not_disturb_exception);
-		if (err != NOTIFICATION_ERROR_NONE) {
-			ERR("Failed to get do_not_disturb_exception [%d]", err);
-			goto out;
-		}
-
-		if (do_not_disturb_exception == false) {
-			/* do_not_disturb is ON and do_not_disturb_exception is OFF */
-			/* Then add this notification only on quick panel and indicator */
-			noti->display_applist = noti->display_applist &
-						(NOTIFICATION_DISPLAY_APP_NOTIFICATION_TRAY |
-						NOTIFICATION_DISPLAY_APP_INDICATOR);
-			/* and reset all sound and vibration and led options */
-			noti->sound_type = NOTIFICATION_SOUND_TYPE_NONE;
-			SAFE_FREE(noti->sound_path);
-			SAFE_FREE(noti->priv_sound_path);
-			noti->vibration_type = NOTIFICATION_VIBRATION_TYPE_NONE;
-			SAFE_FREE(noti->vibration_path);
-			SAFE_FREE(noti->priv_vibration_path);
-			noti->led_operation = NOTIFICATION_LED_OP_OFF;
-			noti->led_argb = 0;
-			noti->led_on_ms = 0;
-			noti->led_off_ms = 0;
-		}
+	/* Check exception option of the caller app_id */
+	notification_setting_h raw_setting = NULL;
+	err = noti_setting_service_get_setting_by_app_id(noti->caller_app_id,
+				&raw_setting, noti->uid);
+	NotificationSettingPtr setting(raw_setting);
+	if (err != NOTIFICATION_ERROR_NONE) {
+		ERR("Failed to get setting by app_id [%d]", err);
+		return err;
 	}
 
-out:
-	if (system_setting)
-		notification_system_setting_free_system_setting(system_setting);
+	bool do_not_disturb_exception = false;
+	err = notification_setting_get_do_not_disturb_except(setting.get(),
+				&do_not_disturb_exception);
+	if (err != NOTIFICATION_ERROR_NONE) {
+		ERR("Failed to get do_not_disturb_exception [%d]", err);
+		return err;
+	}
 
-	if (setting)
-		notification_setting_free_notification(setting);
+	if (do_not_disturb_exception == false) {
+		/* do_not_disturb is ON and do_not_disturb_exception is OFF */
+		/* Then add this notification only on quick panel and indicator */
+		noti->display_applist = noti->display_applist &
+				(NOTIFICATION_DISPLAY_APP_NOTIFICATION_TRAY |
+				 NOTIFICATION_DISPLAY_APP_INDICATOR);
+		/* and reset all sound and vibration and led options */
+		noti->sound_type = NOTIFICATION_SOUND_TYPE_NONE;
+		SAFE_FREE(noti->sound_path);
+		SAFE_FREE(noti->priv_sound_path);
+		noti->vibration_type = NOTIFICATION_VIBRATION_TYPE_NONE;
+		SAFE_FREE(noti->vibration_path);
+		SAFE_FREE(noti->priv_vibration_path);
+		noti->led_operation = NOTIFICATION_LED_OP_OFF;
+		noti->led_argb = 0;
+		noti->led_on_ms = 0;
+		noti->led_off_ms = 0;
+	}
 
-	return err;
+	return NOTIFICATION_ERROR_NONE;
 }
 
 static bool _is_pop_up_notification(const char *app_id, uid_t uid)
 {
-	int err;
-	bool ret = true;
-	notification_setting_h setting = NULL;
+	using notification::raii::NotificationSettingPtr;
 
-	err = noti_setting_service_get_setting_by_app_id(app_id, &setting, uid);
+	bool ret = true;
+	notification_setting_h raw_setting = NULL;
+	int err = noti_setting_service_get_setting_by_app_id(app_id,
+				&raw_setting, uid);
+	NotificationSettingPtr setting(raw_setting);
 	if (err != NOTIFICATION_ERROR_NONE) {
 		WARN("Failed get the setting for [%s] [%x]", app_id, err);
-		goto out;
+		return ret;
 	}
 
-	err = notification_setting_get_pop_up_notification(setting, &ret);
+	err = notification_setting_get_pop_up_notification(setting.get(), &ret);
 	if (err != NOTIFICATION_ERROR_NONE) {
 		ERR("Failed to get pop_up_notification [%d]", err);
-		goto out;
+		return ret;
 	}
 
 	if (ret != true)
 		DBG("[%s] is not allowed Pop-up notification", app_id);
-
-out:
-	if (setting)
-		notification_setting_free_notification(setting);
 
 	return ret;
 }
@@ -1738,69 +1732,59 @@ err:
 
 EXPORT_API int notification_noti_get_all_count(notification_type_e type, int *count, uid_t uid)
 {
-	int ret = NOTIFICATION_ERROR_NONE;
-	int sql_ret;
-	sqlite3 *db = NULL;
-	sqlite3_stmt *stmt = NULL;
-	char *sql_buf = NULL;
+	using notification::raii::Sqlite3DbPtr;
+	using notification::raii::Sqlite3StmtPtr;
+	using notification::raii::Sqlite3CharPtr;
 
 	if (count == NULL) {
 		ERR("Invalid parameter - count is null");
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 	}
 
-	db = notification_db_open();
-	if (db == NULL) {
+	Sqlite3DbPtr db(notification_db_open());
+	if (!db) {
 		/* LCOV_EXCL_START */
-		ret = get_last_result();
+		int ret = get_last_result();
 		ERR("Failed to open db [%d]", ret);
 		return ret;
 		/* LCOV_EXCL_STOP */
 	}
 
-	if (type != NOTIFICATION_TYPE_NONE)
-		sql_buf = sqlite3_mprintf("SELECT count(*) FROM %q "
-				"WHERE uid = %d AND type = %d",
-				NOTIFICATION_DB_TABLE, uid, type);
-	else
-		sql_buf = sqlite3_mprintf("SELECT count(*) FROM %q WHERE uid = %d",
-				NOTIFICATION_DB_TABLE, uid);
-
-	if (sql_buf == NULL) {
+	Sqlite3CharPtr sql_buf(
+		(type != NOTIFICATION_TYPE_NONE)
+			? sqlite3_mprintf("SELECT count(*) FROM %q "
+					"WHERE uid = %d AND type = %d",
+					NOTIFICATION_DB_TABLE, uid, type)
+			: sqlite3_mprintf("SELECT count(*) FROM %q "
+					"WHERE uid = %d",
+					NOTIFICATION_DB_TABLE, uid));
+	if (!sql_buf) {
 		/* LCOV_EXCL_START */
-		ret = NOTIFICATION_ERROR_FROM_DB;
 		ERR("OOM - sqlite3_mprintf");
-		goto out;
+		return NOTIFICATION_ERROR_FROM_DB;
 		/* LCOV_EXCL_STOP */
 	}
 
-	sql_ret = sqlite3_prepare_v2(db, sql_buf, -1, &stmt, NULL);
+	sqlite3_stmt *raw_stmt = NULL;
+	int sql_ret = sqlite3_prepare_v2(db.get(), sql_buf.get(), -1,
+			&raw_stmt, NULL);
+	Sqlite3StmtPtr stmt(raw_stmt);
 	if (sql_ret != SQLITE_OK) {
 		/* LCOV_EXCL_START */
-		ret = NOTIFICATION_ERROR_FROM_DB;
 		ERR("SQLITE3 Error - sqlite3_prepare_v2 [%d][%s]",
-				sql_ret, sqlite3_errmsg(db));
-		goto out;
+				sql_ret, sqlite3_errmsg(db.get()));
+		return NOTIFICATION_ERROR_FROM_DB;
 		/* LCOV_EXCL_STOP */
 	}
 
-	sql_ret = sqlite3_step(stmt);
+	sql_ret = sqlite3_step(stmt.get());
 	if (sql_ret == SQLITE_ROW)
-		*count = sqlite3_column_int(stmt, 0);
+		*count = sqlite3_column_int(stmt.get(), 0);
 	else
 		*count = 0;
 
 	INFO("The numbers of all notification is [%d]", *count);
-
-out:
-	if (stmt)
-		sqlite3_finalize(stmt);
-	if (sql_buf)
-		sqlite3_free(sql_buf);
-	if (db)
-		notification_db_close(&db);
-
-	return ret;
+	return NOTIFICATION_ERROR_NONE;
 }
 
 EXPORT_API int notification_noti_get_grouping_list(notification_type_e type,
