@@ -29,6 +29,8 @@
 #include <gio/gio.h>
 #include <gio/gunixfdlist.h>
 
+extern "C" {
+
 #define ERR_BUFFER_SIZE		1024
 
 /*!
@@ -324,7 +326,7 @@ static gboolean _variant_dict_lookup(GHashTable *dict,
 	GVariant *value;
 	va_list ap;
 
-	value = g_hash_table_lookup(dict, (gpointer)&key);
+	value = (GVariant *)g_hash_table_lookup(dict, (gpointer)&key);
 
 	if (value == NULL || !g_variant_check_format_string(value, format_string, FALSE))
 		return FALSE;
@@ -513,3 +515,5 @@ EXPORT_API int notification_ipc_make_noti_from_gvariant(notification_h noti,
 	return NOTIFICATION_ERROR_NONE;
 }
 /* LCOV_EXCL_STOP */
+
+}  // extern "C"

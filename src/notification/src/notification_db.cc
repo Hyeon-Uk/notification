@@ -27,6 +27,8 @@
 #include <notification_db.h>
 #include "notification_db_query.h"
 
+extern "C" {
+
 static bool is_db_corrupted = false;
 
 /* LCOV_EXCL_START */
@@ -457,3 +459,5 @@ out:
 
 	return ret;
 }
+
+}  // extern "C"
