@@ -58,38 +58,31 @@ static int _get_table_field_data_int(char **table, int *buf, int index)
 
 static int _get_table_field_data_string(char **table, char **buf, int ucs2, int index)
 {
-	int ret = false;
-	int sLen = 0;
-	char *pTemp;
-
 	if (table == NULL || buf == NULL || index < 0) {
 		ERR("table[%p], buf[%p], index[%d]", table, buf, index);
 		return false;
 	}
 
-	pTemp = table[index];
-
+	char *pTemp = table[index];
 	if (pTemp == NULL) {
 		*buf = NULL; /* LCOV_EXCL_LINE */
-	} else {
-		sLen = strlen(pTemp);
-		if (sLen) {
-			*buf = (char *)malloc(sLen + 1);
-			if (*buf == NULL) {
-				ERR("Failed to alloc memory"); /* LCOV_EXCL_LINE */
-				goto out;
-			}
-			memset(*buf, 0, sLen + 1);
-			strncpy(*buf, pTemp, sLen + 1);
-		} else {
-			*buf = NULL; /* LCOV_EXCL_LINE */
-		}
+		return true;
 	}
 
-	ret = true;
+	int sLen = strlen(pTemp);
+	if (sLen == 0) {
+		*buf = NULL; /* LCOV_EXCL_LINE */
+		return true;
+	}
 
-out:
-	return ret;
+	*buf = (char *)malloc(sLen + 1);
+	if (*buf == NULL) {
+		ERR("Failed to alloc memory"); /* LCOV_EXCL_LINE */
+		return false;
+	}
+	memset(*buf, 0, sLen + 1);
+	strncpy(*buf, pTemp, sLen + 1);
+	return true;
 }
 
 EXPORT_API

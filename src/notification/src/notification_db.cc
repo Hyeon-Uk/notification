@@ -52,38 +52,39 @@ static int __check_integrity_cb(void *pid, int argc, char **argv, char **notUsed
 /* LCOV_EXCL_STOP */
 
 /* LCOV_EXCL_START */
-static int __recover_corrupted_db(sqlite3 *db)
+static int __recover_corrupted_db(notification::raii::Sqlite3DbPtr &db)
 {
-	int ret = NOTIFICATION_ERROR_NONE;
-	int sql_ret;
-	char *errmsg = NULL;
+	using notification::raii::Sqlite3DbPtr;
+	using notification::raii::Sqlite3CharPtr;
 
 	INFO("DB is corrupted, start to recover corrupted db");
-	if (db)
-		sqlite3_close(db);
+	/* Close the existing handle and reset the unique_ptr so the
+	 * caller's pointer isn't left dangling after the rebind below
+	 * (closes F-3.0-A). */
+	db.reset();
 	unlink(DBPATH);
 
-	sql_ret = sqlite3_open_v2(DBPATH, &db,
+	sqlite3 *raw_db = NULL;
+	int sql_ret = sqlite3_open_v2(DBPATH, &raw_db,
 				SQLITE_OPEN_CREATE | SQLITE_OPEN_READWRITE,
 				NULL);
+	db.reset(raw_db);
 	if (sql_ret != SQLITE_OK) {
 		ERR("Failed to open db[%d]", sql_ret);
 		unlink(DBPATH);
-		ret = NOTIFICATION_ERROR_FROM_DB;
-		goto out;
+		return NOTIFICATION_ERROR_FROM_DB;
 	}
 
-	sql_ret = sqlite3_exec(db, CREATE_NOTIFICATION_TABLE, NULL, NULL, &errmsg);
+	char *raw_errmsg = NULL;
+	sql_ret = sqlite3_exec(db.get(), CREATE_NOTIFICATION_TABLE,
+			NULL, NULL, &raw_errmsg);
+	Sqlite3CharPtr errmsg(raw_errmsg);
 	if (sql_ret != SQLITE_OK) {
-		ERR("Failed to exec query[%d][%s]", sql_ret, errmsg);
-		ret = NOTIFICATION_ERROR_FROM_DB;
+		ERR("Failed to exec query[%d][%s]", sql_ret, errmsg.get());
+		return NOTIFICATION_ERROR_FROM_DB;
 	}
 
-out:
-	if (errmsg)
-		sqlite3_free(errmsg);
-
-	return ret;
+	return NOTIFICATION_ERROR_NONE;
 }
 /* LCOV_EXCL_STOP */
 
@@ -122,19 +123,13 @@ EXPORT_API int notification_db_init(void)
 		ret = NOTIFICATION_ERROR_FROM_DB;
 	}
 
-	/*
-	 * F-3.0-A (pre-existing): __recover_corrupted_db internally
-	 * sqlite3_close(db) before its own sqlite3_open_v2 against a
-	 * local-by-value copy of the pointer.  Caller's handle is then
-	 * dangling, and the destructor below will sqlite3_close it
-	 * again (UB).  Behavior preserved verbatim from the C version
-	 * (line 117-122 of the .c file before migration); to be fixed
-	 * in a follow-up commit by introducing a typed
-	 * __recover_corrupted_db that takes Sqlite3DbPtr& and rebinds
-	 * the unique_ptr.
-	 */
+	/* F-3.0-A fix: __recover_corrupted_db now takes Sqlite3DbPtr&
+	 * and rebinds the unique_ptr after recovery, so the destructor
+	 * below closes the new handle (the recovery one) rather than
+	 * the original-then-dangling pointer.  Pre-existing UB from
+	 * the .c version is closed. */
 	if (sql_ret == SQLITE_CORRUPT || sql_ret == SQLITE_NOTADB || is_db_corrupted)
-		ret = __recover_corrupted_db(db.get());
+		ret = __recover_corrupted_db(db);
 
 	return ret;
 }
@@ -384,88 +379,90 @@ upgrade:
 
 EXPORT_API int notification_upgrade_db(void)
 {
-	sqlite3 *db;
-	int ret = NOTIFICATION_ERROR_NONE;
-	char *errmsg = NULL;
-	char *query = NULL;
+	using notification::raii::Sqlite3DbPtr;
+	using notification::raii::Sqlite3CharPtr;
 
 	WARN("@@ upgrade db");
 
-	ret = sqlite3_open_v2(DBPATH, &db, SQLITE_OPEN_READWRITE, NULL);
+	sqlite3 *raw_db = NULL;
+	int ret = sqlite3_open_v2(DBPATH, &raw_db, SQLITE_OPEN_READWRITE, NULL);
+	Sqlite3DbPtr db(raw_db);
 	if (ret != SQLITE_OK) {
 		ERR("@@ Failed to open db");
 		return NOTIFICATION_ERROR_FROM_DB;
 	}
 
 	// add transaction
-	ret = sqlite3_exec(db, "BEGIN TRANSACTION", NULL, NULL, NULL);
+	ret = sqlite3_exec(db.get(), "BEGIN TRANSACTION", NULL, NULL, NULL);
 	if (ret != SQLITE_OK) {
-		ERR("@@ Failed to begin transaction db[%d][%s]", ret, sqlite3_errmsg(db));
-		notification_db_close(&db);
+		ERR("@@ Failed to begin transaction db[%d][%s]",
+				ret, sqlite3_errmsg(db.get()));
 		return NOTIFICATION_ERROR_FROM_DB;
 	}
 
+	Sqlite3CharPtr query;
+	Sqlite3CharPtr errmsg;
+
 	// 1. check version
-	if (__check_db_version(db) == 0) {
+	if (__check_db_version(db.get()) == 0) {
 		WARN("@@ db is latest version");
 		ret = NOTIFICATION_ERROR_NONE;
 		goto out;
 	}
 
 	// 2. run upgrade query
-	ret = __upgrade_noti_table(db);
+	ret = __upgrade_noti_table(db.get());
 	if (ret != NOTIFICATION_ERROR_NONE) {
 		ERR("@@ Failed to upgrade noti table");
 		goto out;
 	}
 
-	ret = __upgrade_noti_template_table(db);
+	ret = __upgrade_noti_template_table(db.get());
 	if (ret != NOTIFICATION_ERROR_NONE) {
 		ERR("@@ Failed to upgrade noti template table");
 		goto out;
 	}
 
 	// 3. set new version
-	query = sqlite3_mprintf("PRAGMA user_version=%d", DB_VERSION);
-	if (query == NULL) {
+	query.reset(sqlite3_mprintf("PRAGMA user_version=%d", DB_VERSION));
+	if (!query) {
 		ERR("@@ Failed to set verion query");
 		ret = NOTIFICATION_ERROR_OUT_OF_MEMORY;
 		goto out;
 	}
 
-	ret = sqlite3_exec(db, query, NULL, NULL, &errmsg);
-	if (ret != SQLITE_OK) {
-		ERR("@@ Failed to ser user version[%d][%s]", ret, errmsg);
-		ret = NOTIFICATION_ERROR_FROM_DB;
-		goto out;
+	{
+		char *raw_errmsg = NULL;
+		ret = sqlite3_exec(db.get(), query.get(), NULL, NULL, &raw_errmsg);
+		errmsg.reset(raw_errmsg);
+		if (ret != SQLITE_OK) {
+			ERR("@@ Failed to ser user version[%d][%s]", ret, errmsg.get());
+			ret = NOTIFICATION_ERROR_FROM_DB;
+			goto out;
+		}
 	}
 	ret = NOTIFICATION_ERROR_NONE;
 	WARN("@@ upgrade db done");
 
 out:
 	if (ret == NOTIFICATION_ERROR_NONE) {
-		ret = sqlite3_exec(db, "END TRANSACTION", NULL, NULL, NULL);
+		ret = sqlite3_exec(db.get(), "END TRANSACTION", NULL, NULL, NULL);
 		if (ret != SQLITE_OK) {
-			ERR("@@ Failed to end transaction db[%d][%s]", ret, sqlite3_errmsg(db));
+			ERR("@@ Failed to end transaction db[%d][%s]",
+					ret, sqlite3_errmsg(db.get()));
 			ret = NOTIFICATION_ERROR_FROM_DB;
 		}
 	} else {
-		ret = sqlite3_exec(db, "ROLLBACK TRANSACTION", NULL, NULL, NULL);
-		if (ret != SQLITE_OK) {
-			ERR("@@ Failed to rollback transaction db[%d][%s]", ret, sqlite3_errmsg(db));
+		int rb = sqlite3_exec(db.get(), "ROLLBACK TRANSACTION",
+				NULL, NULL, NULL);
+		if (rb != SQLITE_OK) {
+			ERR("@@ Failed to rollback transaction db[%d][%s]",
+					rb, sqlite3_errmsg(db.get()));
 			ret = NOTIFICATION_ERROR_FROM_DB;
 		}
 	}
 
-	if (errmsg)
-		sqlite3_free(errmsg);
-
-	if (query)
-		sqlite3_free(query);
-
-	if (db)
-		notification_db_close(&db);
-
+	/* db, query, errmsg auto-released via Sqlite3*Ptr destructors. */
 	return ret;
 }
 
