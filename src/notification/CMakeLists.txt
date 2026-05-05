@@ -24,8 +24,23 @@ SET_TARGET_PROPERTIES(${TARGET_NOTIFICATION} PROPERTIES VERSION ${FULLVER})
 # unique_ptr aliases.  If any new -fpermissive-only conversions
 # slip back in, the build will fail at this target -- which is
 # the desired contract.
+#
+# Phase 4 / 4.1 adds -ffunction-sections + -fdata-sections so the
+# linker can drop unreferenced functions and data via --gc-sections
+# (set in TARGET_LINK_OPTIONS below).  Scoped to this SHARED library
+# only -- the internal-static archive intentionally retains every
+# symbol so tests/internal can reach the non-EXPORT_API surface.
 TARGET_COMPILE_OPTIONS(${TARGET_NOTIFICATION} PRIVATE
-    -fvisibility=hidden)
+    -fvisibility=hidden
+    -ffunction-sections
+    -fdata-sections)
+
+# Phase 4 / 4.1: dead-section elimination at link time.  Combines
+# with the per-section compile flags above to drop functions and
+# data that no other reachable section references.  EXPORT_API
+# symbols stay anchored via .dynsym so they are never collected.
+TARGET_LINK_OPTIONS(${TARGET_NOTIFICATION} PRIVATE
+    -Wl,--gc-sections)
 
 TARGET_INCLUDE_DIRECTORIES(${TARGET_NOTIFICATION} PUBLIC
   ${CMAKE_CURRENT_SOURCE_DIR}
