@@ -79,4 +79,22 @@ TEST_F(NotificationNotiBulkNullTest,
       notification_noti_insert_list(notis, 3));
 }
 
+TEST_F(NotificationNotiBulkNullTest,
+       insert_list_rejects_null_in_mid_array) {
+  /* Mid-array NULL must be rejected at the same early stage as
+   * front-array NULL.  The naive [nullptr, nullptr, nullptr]
+   * test above exits at index 0, never proving the loop walks
+   * past it.  This case shows index 1 still trips the guard.
+   *
+   * We use a non-null dummy pointer at indices 0 and 2 so the
+   * loop must iterate to index 1 before the guard fires.  The
+   * dummies are only inspected by the dereferencing code that
+   * runs AFTER the NULL check, which we never reach -- so a
+   * sentinel pointer is safe. */
+  notification_h dummy = reinterpret_cast<notification_h>(0xDEADBEEF);
+  notification_h notis[3] = { dummy, nullptr, dummy };
+  EXPECT_EQ(NOTIFICATION_ERROR_INVALID_PARAMETER,
+      notification_noti_insert_list(notis, 3));
+}
+
 }  // namespace
