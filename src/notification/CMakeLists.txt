@@ -44,7 +44,10 @@ TARGET_COMPILE_OPTIONS(${TARGET_NOTIFICATION} PRIVATE
     # dynamic-symbol table.  EXPORT_API explicit-default markings
     # are unaffected.  Reduces template-instantiation duplication
     # leaking into .dynsym (e.g. unique_ptr<>::~unique_ptr<>).
-    -fvisibility-inlines-hidden)
+    # CXX-only via generator expression -- the lone .c TU
+    # (notification_tidl_proxy.c) would error out under
+    # `-Werror` because cc1 rejects this flag for C.
+    $<$<COMPILE_LANGUAGE:CXX>:-fvisibility-inlines-hidden>)
 
 # Phase 4 / 4.1: dead-section elimination at link time.  Combines
 # with the per-section compile flags above to drop functions and
