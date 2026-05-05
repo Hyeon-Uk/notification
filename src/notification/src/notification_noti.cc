@@ -1137,15 +1137,15 @@ EXPORT_API int notification_noti_insert_list(notification_h *notis, int count)
 	/* One transaction wrapping the whole batch -- task 3.3.
 	 * BEGIN IMMEDIATE acquires the write lock up front so we don't
 	 * hit the SQLITE_BUSY upgrade race that bare BEGIN can trigger
-	 * on a contended file-backed db. */
+	 * on a contended file-backed db.  This block is intentionally
+	 * NOT LCOV_EXCL-wrapped: SQLITE_BUSY is reachable in production
+	 * on contended dbs and the failure path should be covered. */
 	sql_ret = sqlite3_exec(db.get(), "BEGIN IMMEDIATE",
 			NULL, NULL, NULL);
 	if (sql_ret != SQLITE_OK) {
-		/* LCOV_EXCL_START */
 		ERR("sqlite3_exec(BEGIN) Failed [%d][%s]", sql_ret,
 				sqlite3_errmsg(db.get()));
 		return NOTIFICATION_ERROR_FROM_DB;
-		/* LCOV_EXCL_STOP */
 	}
 
 	int ret = NOTIFICATION_ERROR_NONE;
