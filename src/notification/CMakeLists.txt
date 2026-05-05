@@ -47,7 +47,23 @@ TARGET_COMPILE_OPTIONS(${TARGET_NOTIFICATION} PRIVATE
     # CXX-only via generator expression -- the lone .c TU
     # (notification_tidl_proxy.c) would error out under
     # `-Werror` because cc1 rejects this flag for C.
-    $<$<COMPILE_LANGUAGE:CXX>:-fvisibility-inlines-hidden>)
+    $<$<COMPILE_LANGUAGE:CXX>:-fvisibility-inlines-hidden>
+    # Phase 4 / 4.1c: drop exception-handling tables on the
+    # production library.  The notification source set is
+    # exception-free (zero throw / try / catch in src/notification/src/);
+    # the only C++ runtime surface we touch is std::unique_ptr from
+    # the raii/*.hh deleters, all of which are noexcept-correct.
+    # OOM in std::string (used in a handful of TUs) becomes
+    # std::terminate() rather than an exception unwind -- matches
+    # how the C-style callers handle malloc failures already.
+    #
+    # Drops .eh_frame (~30 KB), .gcc_except_table (~5 KB), and
+    # .eh_frame_hdr (~6 KB) from the stripped binary -- ~42 KB
+    # total on the 505 KB pre-Phase-4 baseline.  The Tizen distro
+    # rpmrc injects -fexceptions earlier in the command line; the
+    # last-flag-wins rule means our explicit -fno-exceptions takes
+    # effect.
+    -fno-exceptions)
 
 # Phase 4 / 4.1: dead-section elimination at link time.  Combines
 # with the per-section compile flags above to drop functions and
