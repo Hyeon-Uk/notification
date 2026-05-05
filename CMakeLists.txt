@@ -16,6 +16,21 @@ SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${EXTRA_C_FLAGS} -std=c++23")
 SET(CMAKE_CXX_FLAGS_DEBUG "-O0 -g")
 SET(CMAKE_CXX_FLAGS_RELEASE "-O2")
 
+# Phase 4 / 4.6: optional LTO (link-time optimization).  Default
+# OFF so Tizen distros are unaffected; size-sensitive builds can
+# enable with -DENABLE_LTO=ON at CMake configure time.  Applies
+# to all C and C++ TUs and to both shared and static linker
+# invocations.  Pairs naturally with the gc-sections work in
+# 4.1 (per-target compile/link options).
+OPTION(ENABLE_LTO "Enable link-time optimization (-flto)" OFF)
+IF(ENABLE_LTO)
+  SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -flto")
+  SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -flto")
+  SET(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -flto")
+  SET(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -flto")
+  MESSAGE(STATUS "Phase 4 / 4.6: LTO enabled")
+ENDIF(ENABLE_LTO)
+
 SET(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH}
   "${CMAKE_CURRENT_SOURCE_DIR}/cmake/Modules/")
 
