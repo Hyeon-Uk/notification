@@ -1044,14 +1044,160 @@ err:
 
 EXPORT_API int notification_noti_insert_list(notification_h *notis, int count)
 {
-	/* Stub for Phase 3 Half-B step-2 R-TDD red.  Real
-	 * implementation lands in the next commit.  Intentionally
-	 * uniform return so the new test cases fail for the right
-	 * reason (assertion mismatch) rather than the wrong reason
-	 * (link error or accidental partial behavior). */
-	(void)notis;
-	(void)count;
-	return NOTIFICATION_ERROR_INVALID_OPERATION;
+	using notification::raii::Sqlite3DbPtr;
+	using notification::raii::Sqlite3StmtPtr;
+	using notification::raii::Sqlite3CharPtr;
+
+	ERR("@@ notification_noti_insert_list count=[%d]", count);
+
+	/* Cheap input-validation pass.  These mirror the early returns
+	 * of the single-row notification_noti_insert (line ~968) and
+	 * the new EXPORT_API contract:
+	 *   - count < 0  -> INVALID
+	 *   - count == 0 -> NONE (no-op)
+	 *   - notis NULL with count > 0 -> INVALID
+	 *   - any element NULL -> INVALID */
+	if (count < 0)
+		return NOTIFICATION_ERROR_INVALID_PARAMETER;
+	if (count == 0)
+		return NOTIFICATION_ERROR_NONE;
+	if (notis == NULL)
+		return NOTIFICATION_ERROR_INVALID_PARAMETER;
+	for (int i = 0; i < count; ++i) {
+		if (notis[i] == NULL) {
+			ERR("notis[%d] is NULL", i);
+			return NOTIFICATION_ERROR_INVALID_PARAMETER;
+		}
+	}
+
+	/* Per-row pre-SQL pass.  Preserves the side-effect ordering of
+	 * notification_noti_insert (line ~973-993): permission check,
+	 * do-not-disturb handling, pop-up flag adjust, text-input check,
+	 * group_id reset.  Front-loaded so a malformed batch is rejected
+	 * before BEGIN IMMEDIATE acquires the write lock.
+	 *
+	 * Behavior note (vs. single-row): validation here does NOT see
+	 * earlier rows from the same batch (they are still in-flight and
+	 * invisible to the separate db connections that the setting-
+	 * service helpers open).  Callers that depend on intra-batch
+	 * visibility should use notification_noti_insert per row. */
+	for (int i = 0; i < count; ++i) {
+		notification_h n = notis[i];
+
+		if (_is_allowed_to_notify(n) == false) {
+			ERR("[%s] is not allowed to notify", n->caller_app_id);
+			return NOTIFICATION_ERROR_PERMISSION_DENIED;
+		}
+
+		if (_handle_do_not_disturb_option(n) != NOTIFICATION_ERROR_NONE)
+			WARN("Failed to handle do_not_disturb for row [%d]", i);
+
+		if (_is_pop_up_notification((const char *)n->caller_app_id, n->uid) == false) {
+			n->display_applist = (n->display_applist & (~NOTIFICATION_DISPLAY_APP_ACTIVE));
+			DBG("notification display applist - app_id [%s], applist [%d]",
+					n->caller_app_id, n->display_applist);
+		}
+
+		if (_check_text_input(n) != NOTIFICATION_ERROR_NONE)
+			return NOTIFICATION_ERROR_INVALID_PARAMETER;
+
+		n->group_id          = NOTIFICATION_GROUP_ID_NONE;
+		n->internal_group_id = NOTIFICATION_GROUP_ID_NONE;
+	}
+
+	/* Open db once for the whole batch (RAII close on scope exit). */
+	Sqlite3DbPtr db(notification_db_open());
+	if (!db)
+		return get_last_result();
+
+	/* Build the INSERT once. */
+	Sqlite3CharPtr query(sqlite3_mprintf(
+			"INSERT INTO noti_list (%s) VALUES (%s)",
+			NOTI_LIST_DB_ATTRIBUTES_INSERT, NOTI_LIST_INSERT_VALUES));
+	if (query.get() == NULL) {
+		/* LCOV_EXCL_START */
+		ERR("sqlite3_mprintf Failed");
+		return NOTIFICATION_ERROR_OUT_OF_MEMORY;
+		/* LCOV_EXCL_STOP */
+	}
+
+	/* Prepare the statement once for the whole batch -- task 3.2. */
+	sqlite3_stmt *raw_stmt = NULL;
+	int sql_ret = sqlite3_prepare_v2(db.get(), query.get(), -1,
+			&raw_stmt, NULL);
+	Sqlite3StmtPtr stmt(raw_stmt);
+	if (sql_ret != SQLITE_OK) {
+		/* LCOV_EXCL_START */
+		ERR("sqlite3_prepare_v2 Failed [%d][%s]", sql_ret,
+				sqlite3_errmsg(db.get()));
+		return NOTIFICATION_ERROR_FROM_DB;
+		/* LCOV_EXCL_STOP */
+	}
+
+	/* One transaction wrapping the whole batch -- task 3.3.
+	 * BEGIN IMMEDIATE acquires the write lock up front so we don't
+	 * hit the SQLITE_BUSY upgrade race that bare BEGIN can trigger
+	 * on a contended file-backed db. */
+	sql_ret = sqlite3_exec(db.get(), "BEGIN IMMEDIATE",
+			NULL, NULL, NULL);
+	if (sql_ret != SQLITE_OK) {
+		/* LCOV_EXCL_START */
+		ERR("sqlite3_exec(BEGIN) Failed [%d][%s]", sql_ret,
+				sqlite3_errmsg(db.get()));
+		return NOTIFICATION_ERROR_FROM_DB;
+		/* LCOV_EXCL_STOP */
+	}
+
+	int ret = NOTIFICATION_ERROR_NONE;
+	for (int i = 0; i < count; ++i) {
+		sqlite3_reset(stmt.get());
+		sqlite3_clear_bindings(stmt.get());
+
+		ret = _create_insertion_query(db.get(), notis[i],
+				stmt.get(), NULL);
+		if (ret != NOTIFICATION_ERROR_NONE) {
+			ERR("_create_insertion_query failed at row [%d] [%d]",
+					i, ret);
+			break;
+		}
+
+		sql_ret = sqlite3_step(stmt.get());
+		if (sql_ret != SQLITE_OK && sql_ret != SQLITE_DONE) {
+			ERR("sqlite3_step failed at row [%d] [%d][%s]",
+					i, sql_ret, sqlite3_errmsg(db.get()));
+			ret = NOTIFICATION_ERROR_FROM_DB;
+			break;
+		}
+
+		notis[i]->priv_id = (int)sqlite3_last_insert_rowid(db.get());
+	}
+
+	if (ret == NOTIFICATION_ERROR_NONE) {
+		sql_ret = sqlite3_exec(db.get(), "COMMIT",
+				NULL, NULL, NULL);
+		if (sql_ret != SQLITE_OK) {
+			/* LCOV_EXCL_START */
+			ERR("sqlite3_exec(COMMIT) Failed [%d][%s]", sql_ret,
+					sqlite3_errmsg(db.get()));
+			sqlite3_exec(db.get(), "ROLLBACK", NULL, NULL, NULL);
+			ret = NOTIFICATION_ERROR_FROM_DB;
+			/* COMMIT failure means nothing was committed; clear the
+			 * priv_id values we wrote, since they refer to rolled-
+			 * back rows. */
+			for (int i = 0; i < count; ++i)
+				notis[i]->priv_id = NOTIFICATION_PRIV_ID_NONE;
+			/* LCOV_EXCL_STOP */
+		}
+	} else {
+		sqlite3_exec(db.get(), "ROLLBACK", NULL, NULL, NULL);
+		/* Wipe the priv_id values written in the partial loop;
+		 * those rows are rolled back. */
+		for (int i = 0; i < count; ++i)
+			notis[i]->priv_id = NOTIFICATION_PRIV_ID_NONE;
+	}
+
+	ERR("@@ notification_noti_insert_list done ret=[%d]", ret);
+	return ret;
 }
 
 /* LCOV_EXCL_START */
