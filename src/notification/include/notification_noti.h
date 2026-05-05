@@ -46,6 +46,47 @@ int notification_noti_get_tag_type(const char *tagged_str);
 
 int notification_noti_insert(notification_h noti);
 
+/**
+ * @brief Insert @a count notifications atomically as a single
+ *        SQLite transaction, sharing one prepared statement across
+ *        every row.
+ *
+ * Phase 3 Half-B / tasks 3.2 + 3.3.  Equivalent in observable
+ * outcome to a loop over notification_noti_insert(), with two
+ * differences:
+ *
+ *   - PERFORMANCE: opens the db once, prepares the INSERT
+ *     statement once, wraps every per-row sqlite3_step in a
+ *     single BEGIN IMMEDIATE / COMMIT pair.  On a file-backed db
+ *     with synchronous=FULL this collapses N fsyncs to 1.
+ *
+ *   - ATOMICITY:   on any per-row failure, the entire batch is
+ *     rolled back; the caller sees the offending row's error code
+ *     and no row is visible.  notification_noti_insert() commits
+ *     each row as it lands; partial visibility on failure is its
+ *     standing behavior.
+ *
+ * On success every element's @c priv_id is populated in array
+ * order.  On failure no element's @c priv_id is written.  Caller
+ * retains ownership of @a notis and of every element pointer; the
+ * function neither retains nor releases them.
+ *
+ * Single-thread caller contract, same as
+ * notification_noti_insert.
+ *
+ * @param notis   Array of notification handles.  Must not be NULL;
+ *                each element must not be NULL.
+ * @param count   Number of elements in @a notis.  count == 0 is a
+ *                no-op success; count < 0 is invalid.
+ *
+ * @return  NOTIFICATION_ERROR_NONE on success;
+ *          NOTIFICATION_ERROR_INVALID_PARAMETER if @a notis is
+ *          NULL, @a count is negative, or any element is NULL;
+ *          the offending row's error on per-row failure
+ *          (PERMISSION_DENIED, FROM_DB, OUT_OF_MEMORY).
+ */
+int notification_noti_insert_list(notification_h *notis, int count);
+
 int notification_noti_update(notification_h noti);
 
 int notification_noti_delete_all(notification_type_e type, const char *app_id,

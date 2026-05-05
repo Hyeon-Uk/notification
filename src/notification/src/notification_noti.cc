@@ -1042,6 +1042,18 @@ err:
 	return ret;
 }
 
+EXPORT_API int notification_noti_insert_list(notification_h *notis, int count)
+{
+	/* Stub for Phase 3 Half-B step-2 R-TDD red.  Real
+	 * implementation lands in the next commit.  Intentionally
+	 * uniform return so the new test cases fail for the right
+	 * reason (assertion mismatch) rather than the wrong reason
+	 * (link error or accidental partial behavior). */
+	(void)notis;
+	(void)count;
+	return NOTIFICATION_ERROR_INVALID_OPERATION;
+}
+
 /* LCOV_EXCL_START */
 EXPORT_API int notification_noti_get_by_priv_id(notification_h noti, int priv_id)
 {
