@@ -33,7 +33,18 @@ SET_TARGET_PROPERTIES(${TARGET_NOTIFICATION} PROPERTIES VERSION ${FULLVER})
 TARGET_COMPILE_OPTIONS(${TARGET_NOTIFICATION} PRIVATE
     -fvisibility=hidden
     -ffunction-sections
-    -fdata-sections)
+    -fdata-sections
+    # Phase 4 / 4.1b: merge identical string and numeric constants
+    # across TUs.  Allowed by C++ (and safe in our codebase --
+    # we do not do pointer-identity comparisons on string literals).
+    # Typically nets a few KB by deduplicating ERR/WARN/DBG format
+    # strings that appear in many .cc files.
+    -fmerge-all-constants
+    # Phase 4 / 4.1b: hide inline function definitions from the
+    # dynamic-symbol table.  EXPORT_API explicit-default markings
+    # are unaffected.  Reduces template-instantiation duplication
+    # leaking into .dynsym (e.g. unique_ptr<>::~unique_ptr<>).
+    -fvisibility-inlines-hidden)
 
 # Phase 4 / 4.1: dead-section elimination at link time.  Combines
 # with the per-section compile flags above to drop functions and
