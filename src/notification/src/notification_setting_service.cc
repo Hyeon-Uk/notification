@@ -86,7 +86,7 @@ out:
 	return ret;
 }
 
-EXPORT_API
+extern "C" EXPORT_API
 int noti_setting_service_get_setting_by_app_id(const char *app_id, notification_setting_h *setting, uid_t uid)
 {
 	sqlite3 *db = NULL;
@@ -169,7 +169,7 @@ out:
 	return ret;
 }
 
-EXPORT_API
+extern "C" EXPORT_API
 int noti_setting_get_setting_array(notification_setting_h *setting_array, int *count, uid_t uid)
 {
 	sqlite3 *db = NULL;
@@ -255,7 +255,7 @@ out:
 }
 
 
-EXPORT_API
+extern "C" EXPORT_API
 int noti_system_setting_load_system_setting(notification_system_setting_h *system_setting, uid_t uid)
 {
 	sqlite3 *db = NULL;
@@ -313,7 +313,7 @@ int noti_system_setting_load_system_setting(notification_system_setting_h *syste
 		result_system_setting->dnd_start_min = 0;
 		result_system_setting->dnd_end_hour = 0;
 		result_system_setting->dnd_end_min = 0;
-		result_system_setting->lock_screen_content_level = 0;
+		result_system_setting->lock_screen_content_level = (lock_screen_content_level_e)0;
 		result_system_setting->dnd_allow_exceptions = NULL;
 	} else {
 		col_index = column_count;
@@ -344,7 +344,7 @@ out:
 	return ret;
 }
 
-EXPORT_API
+extern "C" EXPORT_API
 int notification_setting_db_update(const char *package_name, const char *app_id,
 				int allow_to_notify, int do_not_disturb_except,
 				int visibility_class, int pop_up_notification,
@@ -388,7 +388,7 @@ out:
 	return ret;
 }
 
-EXPORT_API
+extern "C" EXPORT_API
 int notification_setting_db_update_system_setting(int do_not_disturb, int visibility_class,
 		int dnd_schedule_enabled, int dnd_schedule_day,
 		int dnd_start_hour, int dnd_start_min,
@@ -436,7 +436,7 @@ out:
 /* LCOV_EXCL_STOP */
 
 /* LCOV_EXCL_START */
-EXPORT_API
+extern "C" EXPORT_API
 int notification_setting_db_update_do_not_disturb(int do_not_disturb, uid_t uid)
 {
 	sqlite3 *db = NULL;
@@ -471,7 +471,7 @@ out:
 /* LCOV_EXCL_STOP */
 
 /* LCOV_EXCL_START */
-EXPORT_API
+extern "C" EXPORT_API
 int notification_system_setting_get_dnd_schedule_enabled_uid(uid_t **uids, int *count)
 {
 	int ret = NOTIFICATION_ERROR_NONE;
@@ -538,7 +538,7 @@ out:
 /* LCOV_EXCL_STOP */
 
 /* LCOV_EXCL_START */
-EXPORT_API
+extern "C" EXPORT_API
 int notification_get_dnd_and_allow_to_notify(const char *app_id,
 					int *do_not_disturb,
 					int *do_not_disturb_except,
@@ -635,7 +635,7 @@ out:
 	return ret;
 }
 
-EXPORT_API int notification_system_setting_load_dnd_allow_exception(dnd_allow_exception_h *dnd_allow_exception, int *count, uid_t uid)
+extern "C" EXPORT_API int notification_system_setting_load_dnd_allow_exception(dnd_allow_exception_h *dnd_allow_exception, int *count, uid_t uid)
 {
 	int ret = NOTIFICATION_ERROR_NONE;
 	int sql_ret;
@@ -707,7 +707,7 @@ out:
 	return ret;
 }
 
-EXPORT_API
+extern "C" EXPORT_API
 int notification_system_setting_update_dnd_allow_exception(int type, int value, uid_t uid)
 {
 	sqlite3 *db = NULL;
@@ -746,7 +746,7 @@ out:
 	return ret;
 }
 
-EXPORT_API
+extern "C" EXPORT_API
 int noti_system_setting_get_do_not_disturb(int *do_not_disturb, uid_t uid)
 {
 	int ret = NOTIFICATION_ERROR_NONE;
@@ -800,7 +800,7 @@ out:
 /* LCOV_EXCL_STOP */
 
 /* LCOV_EXCL_START */
-EXPORT_API
+extern "C" EXPORT_API
 int notification_setting_db_update_app_disabled(const char *app_id, bool value, uid_t uid)
 {
 	sqlite3 *db = NULL;
@@ -841,7 +841,7 @@ out:
 /* LCOV_EXCL_STOP */
 
 /* LCOV_EXCL_START */
-EXPORT_API
+extern "C" EXPORT_API
 int notification_setting_db_update_pkg_disabled(const char *pkg_id, bool value, uid_t uid)
 {
 	sqlite3 *db = NULL;
