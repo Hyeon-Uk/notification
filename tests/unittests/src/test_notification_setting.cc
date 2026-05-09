@@ -46,7 +46,7 @@ class NotificationSettingTest : public TestFixture {
   }
 };
 
-TEST_F(NotificationSettingTest, notification_setting_test) {
+TEST_F(NotificationSettingTest, happy_path_combined) {
   int ret;
 
   notification_setting_h setting;
@@ -74,3 +74,47 @@ TEST_F(NotificationSettingTest, notification_setting_test) {
   ret = notification_setting_free_notification(setting);
   ASSERT_EQ(ret, NOTIFICATION_ERROR_NONE);
 }
+
+// =====================================================================
+// Lock-in for notification_setting.h (task 02g).
+// 7 exported symbols. Existing happy_path_combined covers the
+// get_setting / get_visibility_class / set_visibility_class /
+// update_setting (NULL case) / free_notification flow. Below:
+// the other null-arg cases plus refresh / system-init lock-in.
+// =====================================================================
+
+TEST_F(NotificationSettingTest, get_setting_null) {
+  // R-FINDINGS: this function does NOT validate the NULL
+  // out-pointer; current behavior returns garbage from an
+  // uninitialized stack int. Lock in: "any non-NONE value"
+  // confirms the call was not silently treated as success.
+  // F-task02g-get-setting-no-null-check: future fix task should
+  // add a NULL guard.
+  int ret = notification_setting_get_setting(nullptr);
+  EXPECT_NE(ret, NOTIFICATION_ERROR_NONE);
+}
+
+TEST_F(NotificationSettingTest, get_visibility_class_null_setting) {
+  int v = 0;
+  EXPECT_EQ(notification_setting_get_visibility_class(nullptr, &v),
+            NOTIFICATION_ERROR_INVALID_PARAMETER);
+}
+
+TEST_F(NotificationSettingTest, set_visibility_class_null_setting) {
+  EXPECT_EQ(notification_setting_set_visibility_class(nullptr, 1),
+            NOTIFICATION_ERROR_INVALID_PARAMETER);
+}
+
+TEST_F(NotificationSettingTest, free_notification_null) {
+  EXPECT_EQ(notification_setting_free_notification(nullptr),
+            NOTIFICATION_ERROR_INVALID_PARAMETER);
+}
+
+// F-task02g-refresh-and-init-debt:
+// notification_setting_refresh_setting_table /
+// notification_system_setting_init_system_setting_table both
+// touch the DB through paths that expect a richer SqliteMock
+// than this fixture provides (NotificationSettingTest doesn't
+// include SqliteMock). Lock-in deferred to task 19's integration
+// suite (real sqlite). Null-arg coverage n/a — both take only
+// a uid_t.
