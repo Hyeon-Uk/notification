@@ -28,9 +28,7 @@
 
 
 
-extern "C" {
-
-EXPORT_API
+extern "C" EXPORT_API
 int notification_ongoing_update_cb_set(notification_ongoing_update_cb callback,
 					void *user_data)
 {
@@ -39,7 +37,7 @@ int notification_ongoing_update_cb_set(notification_ongoing_update_cb callback,
 	return NOTIFICATION_ERROR_NONE;
 }
 
-EXPORT_API
+extern "C" EXPORT_API
 int notification_ongoing_update_cb_unset(void)
 {
 	WARN("notification_ongoing_update_cb_unset not working now");
@@ -71,4 +69,3 @@ int notification_ongoing_update_content(const char *caller_app_id,
 	return NOTIFICATION_ERROR_NONE;
 }
 
-}  // extern "C"
