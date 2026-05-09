@@ -97,7 +97,7 @@ class NotificationTest : public TestFixture {
   }
 };
 
-TEST_F(NotificationTest, notification_test) {
+TEST_F(NotificationTest, happy_path_combined) {
   EXPECT_CALL(GetMock<AulMock>(), aul_app_get_appid_bypid(_, _, _))
       .WillRepeatedly(Invoke(__fake_aul_app_get_appid_bypid));
 
@@ -338,4 +338,286 @@ TEST_F(NotificationTest, notification_test) {
 
   // ret = notification_delete_all(NOTIFICATION_TYPE_NOTI);
   // ASSERT_EQ(ret, NOTIFICATION_ERROR_NONE);
+}
+
+// =====================================================================
+// Lock-in tests for notification.h public API.
+//
+// Per R-LOCK-IN-BASELINE / R-API-SCENARIO-COVERAGE for task 02a, every
+// one of the 53 exported symbols declared in notification.h gets at
+// least one TEST_F asserting its current behavior on NULL / invalid /
+// repeat-call inputs. The happy paths are covered above by
+// `happy_path_combined`. Symbols that require a live DPM round-trip
+// (post / update / delete / load_by_tag / save_as_template / etc.)
+// are covered for null-handle err-codes only here; full IPC paths are
+// deferred to task 19's integration suite per the planner's § API
+// surface (DEBT entries).
+//
+// See refactoring-plans/05_logs/02a-locks-notification-h.md.
+// =====================================================================
+
+namespace {
+constexpr int kInvalid = NOTIFICATION_ERROR_INVALID_PARAMETER;
+}  // namespace
+
+TEST_F(NotificationTest, create_invalid_type) {
+  notification_h n = notification_create((notification_type_e)999);
+  EXPECT_EQ(n, nullptr);
+  n = notification_create(NOTIFICATION_TYPE_NONE);
+  EXPECT_EQ(n, nullptr);
+}
+
+TEST_F(NotificationTest, clone_null_args) {
+  notification_h dst = nullptr;
+  EXPECT_EQ(notification_clone(nullptr, &dst), kInvalid);
+  EXPECT_EQ(notification_clone(nullptr, nullptr), kInvalid);
+}
+
+TEST_F(NotificationTest, free_null) {
+  EXPECT_EQ(notification_free(nullptr), kInvalid);
+}
+
+TEST_F(NotificationTest, add_button_null) {
+  EXPECT_EQ(notification_add_button(nullptr, NOTIFICATION_BUTTON_1), kInvalid);
+}
+
+TEST_F(NotificationTest, remove_button_null) {
+  EXPECT_EQ(notification_remove_button(nullptr, NOTIFICATION_BUTTON_1), kInvalid);
+}
+
+TEST_F(NotificationTest, set_image_null) {
+  EXPECT_EQ(notification_set_image(nullptr, NOTIFICATION_IMAGE_TYPE_ICON, "p"), kInvalid);
+}
+
+TEST_F(NotificationTest, get_image_null) {
+  char* p = nullptr;
+  EXPECT_EQ(notification_get_image(nullptr, NOTIFICATION_IMAGE_TYPE_ICON, &p), kInvalid);
+  notification_h n = notification_create(NOTIFICATION_TYPE_NOTI);
+  if (n != nullptr) {
+    EXPECT_EQ(notification_get_image(n, NOTIFICATION_IMAGE_TYPE_ICON, nullptr), kInvalid);
+    notification_free(n);
+  }
+}
+
+TEST_F(NotificationTest, set_text_null) {
+  EXPECT_EQ(notification_set_text(nullptr, NOTIFICATION_TEXT_TYPE_TITLE, "x", NULL,
+                                  NOTIFICATION_VARIABLE_TYPE_NONE),
+            kInvalid);
+}
+
+TEST_F(NotificationTest, get_text_null) {
+  char* t = nullptr;
+  EXPECT_EQ(notification_get_text(nullptr, NOTIFICATION_TEXT_TYPE_TITLE, &t), kInvalid);
+}
+
+TEST_F(NotificationTest, set_text_input_null) {
+  EXPECT_EQ(notification_set_text_input(nullptr, 100), kInvalid);
+}
+
+TEST_F(NotificationTest, set_time_null) {
+  EXPECT_EQ(notification_set_time(nullptr, 0), kInvalid);
+}
+
+TEST_F(NotificationTest, get_time_null) {
+  time_t t = 0;
+  EXPECT_EQ(notification_get_time(nullptr, &t), kInvalid);
+}
+
+TEST_F(NotificationTest, get_insert_time_null) {
+  time_t t = 0;
+  EXPECT_EQ(notification_get_insert_time(nullptr, &t), kInvalid);
+}
+
+TEST_F(NotificationTest, set_time_to_text_null) {
+  EXPECT_EQ(notification_set_time_to_text(nullptr, NOTIFICATION_TEXT_TYPE_TITLE, 0), kInvalid);
+}
+
+TEST_F(NotificationTest, get_time_from_text_null) {
+  time_t t = 0;
+  EXPECT_EQ(notification_get_time_from_text(nullptr, NOTIFICATION_TEXT_TYPE_TITLE, &t), kInvalid);
+}
+
+TEST_F(NotificationTest, set_sound_null) {
+  EXPECT_EQ(notification_set_sound(nullptr, NOTIFICATION_SOUND_TYPE_DEFAULT, NULL), kInvalid);
+}
+
+TEST_F(NotificationTest, get_sound_null) {
+  notification_sound_type_e t = NOTIFICATION_SOUND_TYPE_NONE;
+  const char* p = nullptr;
+  EXPECT_EQ(notification_get_sound(nullptr, &t, &p), kInvalid);
+}
+
+TEST_F(NotificationTest, set_vibration_null) {
+  EXPECT_EQ(notification_set_vibration(nullptr, NOTIFICATION_VIBRATION_TYPE_DEFAULT, NULL),
+            kInvalid);
+}
+
+TEST_F(NotificationTest, get_vibration_null) {
+  notification_vibration_type_e t = NOTIFICATION_VIBRATION_TYPE_NONE;
+  const char* p = nullptr;
+  EXPECT_EQ(notification_get_vibration(nullptr, &t, &p), kInvalid);
+}
+
+TEST_F(NotificationTest, set_led_null) {
+  EXPECT_EQ(notification_set_led(nullptr, NOTIFICATION_LED_OP_OFF, 0), kInvalid);
+}
+
+TEST_F(NotificationTest, get_led_null) {
+  notification_led_op_e o = NOTIFICATION_LED_OP_OFF;
+  int argb = 0;
+  EXPECT_EQ(notification_get_led(nullptr, &o, &argb), kInvalid);
+}
+
+TEST_F(NotificationTest, set_led_time_period_null) {
+  EXPECT_EQ(notification_set_led_time_period(nullptr, 100, 200), kInvalid);
+}
+
+TEST_F(NotificationTest, get_led_time_period_null) {
+  int on = 0, off = 0;
+  EXPECT_EQ(notification_get_led_time_period(nullptr, &on, &off), kInvalid);
+}
+
+TEST_F(NotificationTest, set_launch_option_null) {
+  app_control_h ac = nullptr;
+  app_control_create(&ac);
+  EXPECT_EQ(notification_set_launch_option(
+                nullptr, NOTIFICATION_LAUNCH_OPTION_APP_CONTROL, ac),
+            kInvalid);
+  app_control_destroy(ac);
+}
+
+TEST_F(NotificationTest, get_launch_option_null) {
+  app_control_h ac = nullptr;
+  EXPECT_EQ(notification_get_launch_option(
+                nullptr, NOTIFICATION_LAUNCH_OPTION_APP_CONTROL, (void*)&ac),
+            kInvalid);
+}
+
+TEST_F(NotificationTest, set_event_handler_null) {
+  app_control_h ac = nullptr;
+  app_control_create(&ac);
+  EXPECT_EQ(notification_set_event_handler(
+                nullptr, NOTIFICATION_EVENT_TYPE_CLICK_ON_BUTTON_1, ac),
+            kInvalid);
+  app_control_destroy(ac);
+}
+
+TEST_F(NotificationTest, get_event_handler_null) {
+  app_control_h ac = nullptr;
+  EXPECT_EQ(notification_get_event_handler(
+                nullptr, NOTIFICATION_EVENT_TYPE_CLICK_ON_BUTTON_1, &ac),
+            kInvalid);
+}
+
+TEST_F(NotificationTest, set_property_null) {
+  EXPECT_EQ(notification_set_property(nullptr, 0), kInvalid);
+}
+
+TEST_F(NotificationTest, get_property_null) {
+  int p = 0;
+  EXPECT_EQ(notification_get_property(nullptr, &p), kInvalid);
+}
+
+TEST_F(NotificationTest, set_display_applist_null) {
+  EXPECT_EQ(notification_set_display_applist(nullptr, NOTIFICATION_DISPLAY_APP_ALL), kInvalid);
+}
+
+TEST_F(NotificationTest, get_display_applist_null) {
+  int v = 0;
+  EXPECT_EQ(notification_get_display_applist(nullptr, &v), kInvalid);
+}
+
+TEST_F(NotificationTest, set_size_null) {
+  EXPECT_EQ(notification_set_size(nullptr, 1.0), kInvalid);
+}
+
+TEST_F(NotificationTest, get_size_null) {
+  double s = 0.0;
+  EXPECT_EQ(notification_get_size(nullptr, &s), kInvalid);
+}
+
+TEST_F(NotificationTest, set_progress_null) {
+  EXPECT_EQ(notification_set_progress(nullptr, 0.5), kInvalid);
+}
+
+TEST_F(NotificationTest, get_progress_null) {
+  double p = 0.0;
+  EXPECT_EQ(notification_get_progress(nullptr, &p), kInvalid);
+}
+
+TEST_F(NotificationTest, set_layout_null) {
+  EXPECT_EQ(notification_set_layout(nullptr, NOTIFICATION_LY_NOTI_EVENT_SINGLE), kInvalid);
+}
+
+TEST_F(NotificationTest, get_layout_null) {
+  notification_ly_type_e l;
+  EXPECT_EQ(notification_get_layout(nullptr, &l), kInvalid);
+}
+
+TEST_F(NotificationTest, set_auto_remove_null) {
+  EXPECT_EQ(notification_set_auto_remove(nullptr, true), kInvalid);
+}
+
+TEST_F(NotificationTest, get_auto_remove_null) {
+  bool a = false;
+  EXPECT_EQ(notification_get_auto_remove(nullptr, &a), kInvalid);
+}
+
+TEST_F(NotificationTest, set_extension_image_size_null) {
+  EXPECT_EQ(notification_set_extension_image_size(nullptr, 10), kInvalid);
+}
+
+TEST_F(NotificationTest, get_extension_image_size_null) {
+  int h = 0;
+  EXPECT_EQ(notification_get_extension_image_size(nullptr, &h), kInvalid);
+}
+
+TEST_F(NotificationTest, set_tag_null) {
+  EXPECT_EQ(notification_set_tag(nullptr, "tag"), kInvalid);
+}
+
+TEST_F(NotificationTest, get_tag_null) {
+  const char* t = nullptr;
+  EXPECT_EQ(notification_get_tag(nullptr, &t), kInvalid);
+}
+
+TEST_F(NotificationTest, get_type_null) {
+  notification_type_e t;
+  EXPECT_EQ(notification_get_type(nullptr, &t), kInvalid);
+}
+
+TEST_F(NotificationTest, get_pkgname_null) {
+  char* p = nullptr;
+  EXPECT_EQ(notification_get_pkgname(nullptr, &p), kInvalid);
+}
+
+// IPC-DEBT symbols — null-handle err-code coverage only here.
+// Full IPC round-trip tests deferred to task 19 (integration suite).
+
+TEST_F(NotificationTest, save_as_template_null) {
+  EXPECT_EQ(notification_save_as_template(nullptr, "n"), kInvalid);
+}
+
+TEST_F(NotificationTest, create_from_template_null_name) {
+  EXPECT_EQ(notification_create_from_template(nullptr), nullptr);
+}
+
+TEST_F(NotificationTest, load_by_tag_null) {
+  EXPECT_EQ(notification_load_by_tag(nullptr), nullptr);
+}
+
+TEST_F(NotificationTest, post_null) {
+  EXPECT_EQ(notification_post(nullptr), kInvalid);
+}
+
+TEST_F(NotificationTest, update_null) {
+  EXPECT_EQ(notification_update(nullptr), kInvalid);
+}
+
+TEST_F(NotificationTest, delete_null) {
+  EXPECT_EQ(notification_delete(nullptr), kInvalid);
+}
+
+TEST_F(NotificationTest, get_noti_block_state_null) {
+  EXPECT_EQ(notification_get_noti_block_state(nullptr), kInvalid);
 }
