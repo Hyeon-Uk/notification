@@ -59,7 +59,7 @@ static inline bundle *_create_bundle_from_bundle_raw(bundle_raw *string)
 }
 
 /* LCOV_EXCL_START */
-extern "C" EXPORT_API GVariant *notification_ipc_make_gvariant_from_noti(notification_h noti, bool translate)
+EXPORT_API GVariant *notification_ipc_make_gvariant_from_noti(notification_h noti, bool translate)
 {
 	WARN("make gvariant from noti");
 	int i = 0;
@@ -324,7 +324,7 @@ static gboolean _variant_dict_lookup(GHashTable *dict,
 	GVariant *value;
 	va_list ap;
 
-	value = (GVariant*)g_hash_table_lookup(dict, (gpointer)&key);
+	value = g_hash_table_lookup(dict, (gpointer)&key);
 
 	if (value == NULL || !g_variant_check_format_string(value, format_string, FALSE))
 		return FALSE;
@@ -339,7 +339,7 @@ static gboolean _variant_dict_lookup(GHashTable *dict,
 /*!
  * functions creating notification packet
  */
-extern "C" EXPORT_API int notification_ipc_make_noti_from_gvariant(notification_h noti,
+EXPORT_API int notification_ipc_make_noti_from_gvariant(notification_h noti,
 		GVariant *variant) {
 
 	WARN("make noti from GVariant");

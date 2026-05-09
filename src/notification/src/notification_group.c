@@ -22,7 +22,6 @@
 #include <notification_group.h>
 #include <notification_db.h>
 
-
 /* LCOV_EXCL_START */
 static int _notification_group_check_data_inserted(const char *app_id,
 						   int group_id, sqlite3 *db)
@@ -180,4 +179,3 @@ int notification_group_get_badge(const char *app_id,
 	return NOTIFICATION_ERROR_NONE;
 }
 /* LCOV_EXCL_STOP */
-

@@ -35,7 +35,6 @@
 #define INTERFACE_NAME "org.tizen.system.notification.status_message"
 #define MEMBER_NAME	"status_message"
 
-
 struct _message_cb_data {
 	notification_status_message_cb callback;
 	void *data;
@@ -72,7 +71,7 @@ static void __notification_status_message_dbus_callback(GDBusConnection *connect
 /* LCOV_EXCL_STOP */
 
 /* LCOV_EXCL_START */
-extern "C" EXPORT_API
+EXPORT_API
 int notification_status_monitor_message_cb_set(notification_status_message_cb callback, void *user_data)
 {
 	GError *error = NULL;
@@ -116,7 +115,7 @@ int notification_status_monitor_message_cb_set(notification_status_message_cb ca
 /* LCOV_EXCL_STOP */
 
 /* LCOV_EXCL_START */
-extern "C" EXPORT_API
+EXPORT_API
 int notification_status_monitor_message_cb_unset(void)
 {
 	if (md.message_id) {
@@ -137,7 +136,7 @@ int notification_status_monitor_message_cb_unset(void)
 /* LCOV_EXCL_STOP */
 
 /* LCOV_EXCL_START */
-extern "C" EXPORT_API
+EXPORT_API
 int notification_status_message_post(const char *message)
 {
 	GError *err = NULL;
@@ -190,4 +189,3 @@ end:
 	return ret;
 }
 /* LCOV_EXCL_STOP */
-

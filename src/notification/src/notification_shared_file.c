@@ -620,7 +620,7 @@ static gint __comp_target_app(gconstpointer a, gconstpointer b)
 	return strcmp(sender, target->tidl_sender_name);
 }
 
-extern "C" EXPORT_API void notification_remove_private_sharing_target_id(
+EXPORT_API void notification_remove_private_sharing_target_id(
 				const char *sender, uid_t uid)
 {
 	target_app_info_s *target_info;
@@ -634,12 +634,12 @@ extern "C" EXPORT_API void notification_remove_private_sharing_target_id(
 	if (sharing_req_list == NULL)
 		return;
 
-	uid_info = (uid_info_s*)sharing_req_list->data;
+	uid_info = sharing_req_list->data;
 	target_app = g_list_find_custom(uid_info->target_app_list, sender,
 						__comp_target_app);
 
 	if (target_app != NULL) {
-		target_info = (target_app_info_s*)target_app->data;
+		target_info = target_app->data;
 		if (target_info) {
 			uid_info->target_app_list = g_list_remove(
 					uid_info->target_app_list, target_info);
@@ -653,7 +653,7 @@ extern "C" EXPORT_API void notification_remove_private_sharing_target_id(
 	WARN("notification_remove_private_sharing_target_id done");
 }
 
-extern "C" EXPORT_API void notification_add_private_sharing_target_id(pid_t pid,
+EXPORT_API void notification_add_private_sharing_target_id(pid_t pid,
 					const char *sender, uid_t uid)
 {
 	char *app_id;
@@ -674,7 +674,7 @@ extern "C" EXPORT_API void notification_add_private_sharing_target_id(pid_t pid,
 
 		__uid_list = g_list_append(__uid_list, uid_info);
 	} else {
-		uid_info = (uid_info_s*)sharing_req_list->data;
+		uid_info = sharing_req_list->data;
 	}
 
 	target_app = g_list_find_custom(uid_info->target_app_list, sender,
@@ -760,7 +760,7 @@ char *notification_check_file_path_is_private(const char *pkg_id,
 	return dst_path;
 }
 
-extern "C" EXPORT_API bool notification_validate_private_sharing(
+EXPORT_API bool notification_validate_private_sharing(
 						notification_h updated_noti)
 {
 	char *updated_path = NULL;
@@ -808,7 +808,7 @@ extern "C" EXPORT_API bool notification_validate_private_sharing(
 	return true;
 }
 
-extern "C" EXPORT_API void notification_calibrate_private_sharing(
+EXPORT_API void notification_calibrate_private_sharing(
 			notification_h updated_noti, notification_h source_noti)
 {
 	char *updated_path = NULL;
@@ -1083,7 +1083,7 @@ out:
 /* LCOV_EXCL_STOP */
 
 /* LCOV_EXCL_START */
-extern "C" EXPORT_API int notification_set_private_sharing(notification_h noti,
+EXPORT_API int notification_set_private_sharing(notification_h noti,
 						uid_t uid)
 {
 	int ret = NOTIFICATION_ERROR_NONE;
@@ -1108,7 +1108,7 @@ extern "C" EXPORT_API int notification_set_private_sharing(notification_h noti,
 		uid_info->uid = uid;
 		__uid_list = g_list_append(__uid_list, uid_info);
 	} else {
-		uid_info = (uid_info_s*)tmp->data;
+		uid_info = tmp->data;
 	}
 
 	req_list = g_list_find_custom(uid_info->sharing_req_list,
@@ -1163,7 +1163,7 @@ extern "C" EXPORT_API int notification_set_private_sharing(notification_h noti,
 
 	for (iter = new_file_list; iter != NULL; iter = g_list_next(iter)) {
 		tmp = NULL;
-		file_info = (sharing_file_info_s*)iter->data;
+		file_info = iter->data;
 		if (is_overlapping) {
 			tmp = g_list_find_custom(req_data->shared_file_list,
 				file_info, __comp_file_info);
@@ -1318,7 +1318,7 @@ out:
 			__comp_uid_info_list);
 
 	if (tmp_list != NULL) {
-		uid_info = (uid_info_s*)tmp_list->data;
+		uid_info = tmp_list->data;
 		uid_info->sharing_req_list = g_list_remove(
 				uid_info->sharing_req_list, req_data);
 	}
@@ -1329,7 +1329,7 @@ out:
 	return false;
 }
 
-extern "C" EXPORT_API void notification_remove_private_sharing(
+EXPORT_API void notification_remove_private_sharing(
 		const char *src_app_id, int priv_id, uid_t uid)
 {
 	sharing_req_data_s *req_data;
@@ -1349,7 +1349,7 @@ extern "C" EXPORT_API void notification_remove_private_sharing(
 	if (tmp_list == NULL)
 		return;
 
-	uid_info = (uid_info_s*)tmp_list->data;
+	uid_info = tmp_list->data;
 
 	req_list = g_list_find_custom(uid_info->sharing_req_list, src_app_id,
 			__comp_sharing_req_list);

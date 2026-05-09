@@ -82,7 +82,7 @@ out:
 /* LCOV_EXCL_STOP */
 
 /* LCOV_EXCL_START */
-extern "C" EXPORT_API int notification_db_init(void)
+EXPORT_API int notification_db_init(void)
 {
 	int ret = NOTIFICATION_ERROR_NONE;
 	int sql_ret;
@@ -123,7 +123,7 @@ out:
 }
 /* LCOV_EXCL_STOP */
 
-extern "C" EXPORT_API sqlite3 *notification_db_open()
+EXPORT_API sqlite3 *notification_db_open()
 {
 	int ret;
 	sqlite3 *db;
@@ -151,7 +151,7 @@ extern "C" EXPORT_API sqlite3 *notification_db_open()
 	return db;
 }
 
-extern "C" EXPORT_API int notification_db_close(sqlite3 **db)
+EXPORT_API int notification_db_close(sqlite3 **db)
 {
 	int ret = 0;
 
@@ -171,7 +171,7 @@ extern "C" EXPORT_API int notification_db_close(sqlite3 **db)
 	return NOTIFICATION_ERROR_NONE;
 }
 
-extern "C" EXPORT_API int notification_db_exec(sqlite3 *db, const char *query, int *num_changes)
+EXPORT_API int notification_db_exec(sqlite3 *db, const char *query, int *num_changes)
 {
 	int ret = NOTIFICATION_ERROR_NONE;
 	sqlite3_stmt *stmt = NULL;
@@ -205,7 +205,7 @@ extern "C" EXPORT_API int notification_db_exec(sqlite3 *db, const char *query, i
 	return ret;
 }
 
-extern "C" EXPORT_API char *notification_db_column_text(sqlite3_stmt *stmt, int col)
+EXPORT_API char *notification_db_column_text(sqlite3_stmt *stmt, int col)
 {
 	const unsigned char *col_text = NULL;
 
@@ -216,7 +216,7 @@ extern "C" EXPORT_API char *notification_db_column_text(sqlite3_stmt *stmt, int 
 	return strdup((char *)col_text);
 }
 
-extern "C" EXPORT_API bundle *notification_db_column_bundle(sqlite3_stmt *stmt, int col)
+EXPORT_API bundle *notification_db_column_bundle(sqlite3_stmt *stmt, int col)
 {
 	const unsigned char *col_bundle = NULL;
 
@@ -371,7 +371,7 @@ upgrade:
 	return ret;
 }
 
-extern "C" EXPORT_API int notification_upgrade_db(void)
+EXPORT_API int notification_upgrade_db(void)
 {
 	sqlite3 *db;
 	int ret = NOTIFICATION_ERROR_NONE;

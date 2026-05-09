@@ -64,7 +64,7 @@ static void __notification_mutex_unlock(void)
 }
 
 /* LCOV_EXCL_START */
-extern "C" EXPORT_API int notification_init_default_viewer()
+EXPORT_API int notification_init_default_viewer()
 {
 	const char *viewer;
 	dictionary *dict;
@@ -138,7 +138,7 @@ static bool __pop_delayed_noti_cb(void *user_data)
 		return false;
 	}
 
-	app_control = (app_control_h)g_list_nth_data(_delayed_noti_list, 0);
+	app_control = g_list_nth_data(_delayed_noti_list, 0);
 	ret = app_control_send_launch_request_async(app_control,
 			__app_control_result_cb, NULL, NULL);
 	if (ret != APP_CONTROL_ERROR_NONE) {
@@ -326,13 +326,13 @@ out:
 	return ret;
 }
 
-extern "C" EXPORT_API int notification_launch_default_viewer(int priv_id,
+EXPORT_API int notification_launch_default_viewer(int priv_id,
 		notification_op_type_e status, uid_t uid)
 {
 	return __launch_default_viewer(priv_id, status, uid, true);
 }
 
-extern "C" EXPORT_API int notification_launch_default_viewer_without_candidate_process(
+EXPORT_API int notification_launch_default_viewer_without_candidate_process(
 		int priv_id, notification_op_type_e status, uid_t uid)
 {
 	return __launch_default_viewer(priv_id, status, uid, false);

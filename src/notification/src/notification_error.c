@@ -34,8 +34,7 @@ static const GDBusErrorEntry dbus_error_entries[] = {
 
 #define NOTIFICATION_ERROR_QUARK "notification-error-quark"
 
-
-extern "C" EXPORT_API GQuark notification_error_quark(void)
+EXPORT_API GQuark notification_error_quark(void)
 {
 	static volatile gsize quark_volatile = 0;
 	static const char *domain_name = NULL;
@@ -58,5 +57,4 @@ extern "C" EXPORT_API GQuark notification_error_quark(void)
 			G_N_ELEMENTS(dbus_error_entries));
 	return (GQuark)quark_volatile;
 }
-
 

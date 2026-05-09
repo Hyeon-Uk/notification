@@ -54,7 +54,7 @@ static const char *__get_str_value(char *value)
 /*
  * for TIDL
  */
-extern "C" EXPORT_API int make_empty_notification(void *notihandle)
+EXPORT_API int make_empty_notification(void *notihandle)
 {
 	int ret;
 	bundle *empty_bundle = bundle_create();
@@ -317,7 +317,7 @@ extern "C" EXPORT_API int make_empty_notification(void *notihandle)
 	return NOTIFICATION_ERROR_NONE;
 }
 
-extern "C" EXPORT_API int make_notification_from_noti(void *notihandle,
+EXPORT_API int make_notification_from_noti(void *notihandle,
 		notification_h noti, bool translate)
 {
 	int ret;
@@ -603,7 +603,7 @@ extern "C" EXPORT_API int make_notification_from_noti(void *notihandle,
 	return NOTIFICATION_ERROR_NONE;
 }
 
-extern "C" EXPORT_API int make_noti_from_notification(notification_h *noti, void *notihandle)
+EXPORT_API int make_noti_from_notification(notification_h *noti, void *notihandle)
 {
 	notification_h _noti;
 	int ret;
@@ -906,8 +906,7 @@ extern "C" EXPORT_API int make_noti_from_notification(notification_h *noti, void
 		free(priv_sound_path);
 	}
 
-	ret = rpc_port_proxy_notification_get_vibration_type(handle,
-			(int *)&_noti->vibration_type);
+	ret = rpc_port_proxy_notification_get_vibration_type(handle, &_noti->vibration_type);
 	if (ret != RPC_PORT_ERROR_NONE)
 		WARN("rpc_port_proxy_notification_get_vibration_type : %d", ret);
 
@@ -1161,7 +1160,7 @@ bool _rpc_port_proxy_list_noti_system_setting_dnd_allow_exception_cb (
 	return true;
 }
 
-extern "C" EXPORT_API int make_setting_from_noti_system_setting(
+EXPORT_API int make_setting_from_noti_system_setting(
 		notification_system_setting_h *setting, void *settinghandle)
 {
 	notification_system_setting_h _setting;
@@ -1208,7 +1207,7 @@ extern "C" EXPORT_API int make_setting_from_noti_system_setting(
 	return NOTIFICATION_ERROR_NONE;
 }
 
-extern "C" EXPORT_API int make_dnd_allow_exception_from_exception(void *exception_handle,
+EXPORT_API int make_dnd_allow_exception_from_exception(void *exception_handle,
 		dnd_allow_exception_h dnd_allow_exception)
 {
 	int ret;
@@ -1229,7 +1228,7 @@ extern "C" EXPORT_API int make_dnd_allow_exception_from_exception(void *exceptio
 	return NOTIFICATION_ERROR_NONE;
 }
 
-extern "C" EXPORT_API int make_noti_system_setting_from_setting(void *settinghandle,
+EXPORT_API int make_noti_system_setting_from_setting(void *settinghandle,
 		notification_system_setting_h setting)
 {
 	int ret;
@@ -1284,7 +1283,7 @@ extern "C" EXPORT_API int make_noti_system_setting_from_setting(void *settinghan
 		setting->dnd_allow_exceptions = g_list_first(setting->dnd_allow_exceptions);
 
 		for (GList *iter = setting->dnd_allow_exceptions; iter != NULL; iter = iter->next) {
-			info = (dnd_allow_exception_h)iter->data;
+			info = iter->data;
 
 			ret = rpc_port_proxy_noti_system_setting_dnd_allow_exception_create(&exception_handle);
 			if (ret == RPC_PORT_ERROR_NONE) {
@@ -1310,7 +1309,7 @@ extern "C" EXPORT_API int make_noti_system_setting_from_setting(void *settinghan
 	return NOTIFICATION_ERROR_NONE;
 }
 
-extern "C" EXPORT_API int make_setting_from_noti_setting(
+EXPORT_API int make_setting_from_noti_setting(
 		notification_setting_h setting, void *settinghandle)
 {
 	int ret;
@@ -1376,7 +1375,7 @@ extern "C" EXPORT_API int make_setting_from_noti_setting(
 	setting->do_not_disturb_except = dnd_except;
 	setting->pop_up_notification = pop_up_noti;
 	setting->visibility_class = visibility_class;
-	setting->lock_screen_content_level = (lock_screen_content_level_e)lock_screen_content_level;
+	setting->lock_screen_content_level = lock_screen_content_level;
 	setting->app_disabled = app_disabled;
 
 	WARN("make_setting_from_noti_setting done");
@@ -1384,7 +1383,7 @@ extern "C" EXPORT_API int make_setting_from_noti_setting(
 	return NOTIFICATION_ERROR_NONE;
 }
 
-extern "C" EXPORT_API int make_noti_setting_from_setting(
+EXPORT_API int make_noti_setting_from_setting(
 		void *settinghandle, notification_setting_h setting)
 {
 	int ret;
