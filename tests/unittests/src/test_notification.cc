@@ -340,22 +340,6 @@ TEST_F(NotificationTest, happy_path_combined) {
   // ASSERT_EQ(ret, NOTIFICATION_ERROR_NONE);
 }
 
-// =====================================================================
-// Lock-in tests for notification.h public API.
-//
-// Per R-LOCK-IN-BASELINE / R-API-SCENARIO-COVERAGE for task 02a, every
-// one of the 53 exported symbols declared in notification.h gets at
-// least one TEST_F asserting its current behavior on NULL / invalid /
-// repeat-call inputs. The happy paths are covered above by
-// `happy_path_combined`. Symbols that require a live DPM round-trip
-// (post / update / delete / load_by_tag / save_as_template / etc.)
-// are covered for null-handle err-codes only here; full IPC paths are
-// deferred to task 19's integration suite per the planner's § API
-// surface (DEBT entries).
-//
-// See refactoring-plans/05_logs/02a-locks-notification-h.md.
-// =====================================================================
-
 namespace {
 constexpr int kInvalid = NOTIFICATION_ERROR_INVALID_PARAMETER;
 }  // namespace

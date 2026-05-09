@@ -19,20 +19,11 @@
 #include "notification/include/notification.h"
 #include "notification/include/notification_viewer.h"
 
-// =====================================================================
-// Lock-in tests for notification_viewer.h (task 02l).
-// 3 declared functions: init_default_viewer / launch_default_viewer /
-// launch_default_viewer_without_candidate_process. All require
-// app_control + service activation so happy-path is deferred to
-// task 19; null-arg / err-code lock-in here.
-// =====================================================================
-
 namespace {
 class NotificationViewerTest : public ::testing::Test {};
 }  // namespace
 
 TEST_F(NotificationViewerTest, init_default_viewer_reachable) {
-  // R-FINDINGS: in the test environment iniparser fails to open
   // /usr/share/notification/notification.ini and the function
   // returns NOTIFICATION_ERROR_FROM_DBUS / similar — exact code
   // depends on host. Lock in just that the function is reachable

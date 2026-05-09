@@ -19,13 +19,6 @@
 #include "notification/include/notification.h"
 #include "notification/include/notification_text_domain.h"
 
-// =====================================================================
-// Lock-in tests for notification_text_domain.h (task 02j).
-// 2 exported symbols: notification_set_text_domain /
-// notification_get_text_domain. Null-arg lock-in here; full
-// gettext round-trip deferred to task 19.
-// =====================================================================
-
 namespace {
 class NotificationTextDomainTest : public ::testing::Test {};
 constexpr int kInvalid = NOTIFICATION_ERROR_INVALID_PARAMETER;

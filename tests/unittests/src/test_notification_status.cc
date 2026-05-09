@@ -19,12 +19,6 @@
 #include "notification/include/notification.h"
 #include "notification/include/notification_status.h"
 
-// =====================================================================
-// Lock-in tests for notification_status.h (task 02i).
-// 1 exported symbol: notification_status_message_post.
-// Full IPC round-trip deferred to task 19; null-arg lock-in here.
-// =====================================================================
-
 namespace {
 class NotificationStatusTest : public ::testing::Test {};
 }  // namespace
@@ -34,7 +28,6 @@ TEST_F(NotificationStatusTest, message_post_null) {
             NOTIFICATION_ERROR_INVALID_PARAMETER);
 }
 
-// F-task02i-empty-string-needs-glib:
 // notification_status_message_post("") allocates internally via
 // g_strdup; the lightweight ::testing::Test fixture has no
 // GlibMock so the call throws "test does not provide mock".

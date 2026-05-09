@@ -19,19 +19,11 @@
 #include "notification/include/notification.h"
 #include "notification/include/notification_type.h"
 
-// =====================================================================
-// Lock-in for notification_type.h (task 02k).
-// Header is typedef/enum-only — no exported function symbols.
-// Pin a sample of the public-enum numeric values so any future
-// schema-style change is caught (R-ABI-STABLE).
-// =====================================================================
-
 namespace {
 class NotificationTypeTest : public ::testing::Test {};
 }  // namespace
 
 TEST_F(NotificationTypeTest, notification_type_e_values_pinned) {
-  // R-ABI-STABLE: per src/notification/include/notification_type.h
   // NONE = -1, NOTI = 0, ONGOING follows (= 1).
   EXPECT_EQ(NOTIFICATION_TYPE_NONE,    -1);
   EXPECT_EQ(NOTIFICATION_TYPE_NOTI,     0);

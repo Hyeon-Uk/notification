@@ -114,13 +114,6 @@ TEST_F(NotificationDBTest, happy_path_combined) {
   ASSERT_EQ(ret, NOTIFICATION_ERROR_NONE);
 }
 
-// =====================================================================
-// Lock-in tests for notification_db.h (task 02b).
-// 7 exported symbols: open / close / exec / column_text /
-// column_bundle / init / upgrade_db. Happy path covered above.
-// Below: null / invalid-arg / repeat-call lock-in.
-// =====================================================================
-
 TEST_F(NotificationDBTest, db_close_null) {
   EXPECT_EQ(notification_db_close(nullptr),
             NOTIFICATION_ERROR_INVALID_PARAMETER);
@@ -128,10 +121,8 @@ TEST_F(NotificationDBTest, db_close_null) {
 
 TEST_F(NotificationDBTest, db_close_null_inner) {
   sqlite3* db = nullptr;
-  // R-FINDINGS lock-in: with *db = NULL the implementation
   // returns INVALID_PARAMETER (not NONE as one might expect for
   // a no-op close). Locks the current behavior — see
-  // F-task02b-close-null-inner-returns-invalid below.
   EXPECT_EQ(notification_db_close(&db),
             NOTIFICATION_ERROR_INVALID_PARAMETER);
 }
@@ -169,7 +160,6 @@ TEST_F(NotificationDBTest, db_column_bundle_null_stmt) {
   EXPECT_EQ(b, nullptr);
 }
 
-// F-task02b-init-and-upgrade-debt:
 // notification_db_init / notification_upgrade_db lock-in
 // deferred to task 19 (integration suite, real sqlite). Both
 // take no args, so the only meaningful scenarios are happy path

@@ -64,19 +64,7 @@ TEST_F(NotificationOngoingTest, happy_path_combined) {
   // ASSERT_EQ(ret, NOTIFICATION_ERROR_NONE);
 }
 
-// =====================================================================
-// Lock-in for notification_ongoing.h (task 02e).
-// 5 declared functions; only 2 are EXPORT_API (cb_set, cb_unset).
-// The 3 _update_* helpers are unimplemented stubs returning NONE
-// without doing anything (per src/notification_ongoing.c) — they
-// have no EXPORT_API marker and thus are not in libnotification.so
-// symbol table. Marked n/a in § API surface; F-task02e-stub-fns
-// captures the inconsistency between header declaration and lib
-// export for triage.
-// =====================================================================
-
 TEST_F(NotificationOngoingTest, cb_set_with_null_callback_returns_NONE) {
-  // R-FINDINGS: current implementation accepts NULL callback and
   // returns NONE without registering anything. Lock in this
   // behavior so a refactor that adds NULL-validation is caught.
   EXPECT_EQ(notification_ongoing_update_cb_set(nullptr, nullptr),

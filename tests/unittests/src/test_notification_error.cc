@@ -20,22 +20,6 @@
 #include "notification/include/notification.h"
 #include "notification/include/notification_error.h"
 
-// =====================================================================
-// Lock-in tests for notification_error.h (task 02c).
-//
-// notification_error.h is enum-only — no functions are declared
-// here. The exported symbol notification_error_quark exists in
-// libnotification.so but is not declared in any installed header
-// (it appears to be emitted by GError glue). Locking in: 12 enum-
-// constant numeric values to catch any future enum-shape drift
-// (R-ABI-STABLE).
-//
-// F-task02c-quark-not-declared: notification_error_quark is
-// exported as a global symbol but absent from notification_error.h
-// (and every other installed header). Triage: declare in header
-// (additive — safe) or hide via visibility attribute. Defer.
-// =====================================================================
-
 namespace {
 
 class NotificationErrorTest : public ::testing::Test {};
@@ -56,7 +40,6 @@ TEST_F(NotificationErrorTest, error_quark_returns_nonzero_GQuark) {
 }
 
 TEST_F(NotificationErrorTest, enum_values_pinned) {
-  // R-ABI-STABLE: any change to these numeric values breaks
   // every dependent in the Tizen tree. Locks in the contract
   // exposed via notification_error.h.
   EXPECT_EQ(NOTIFICATION_ERROR_NONE,                TIZEN_ERROR_NONE);

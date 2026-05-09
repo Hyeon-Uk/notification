@@ -20,14 +20,6 @@
 #include "notification/include/notification_internal.h"
 #include "notification/include/notification_type_internal.h"
 
-// =====================================================================
-// Lock-in for notification_type_internal.h (task 03a).
-// Internal typedef/enum-only header. Pin a sample of the
-// internal-enum numeric values so any future drift is caught
-// (R-ABI-STABLE applies to internal headers consumed by other
-// in-tree packages such as data-provider-master).
-// =====================================================================
-
 namespace {
 class NotificationTypeInternalTest : public ::testing::Test {};
 }

@@ -19,14 +19,6 @@
 #include "notification/include/notification.h"
 #include "notification/include/notification_ongoing_flag.h"
 
-// =====================================================================
-// Lock-in tests for notification_ongoing_flag.h (task 02f).
-// 2 exported symbols: notification_set_ongoing_flag /
-// notification_get_ongoing_flag. R-API-SCENARIO-COVERAGE columns:
-// happy (deferred to integ — needs full notification fixture),
-// err-codes / null-zero / repeat covered here.
-// =====================================================================
-
 namespace {
 class NotificationOngoingFlagTest : public ::testing::Test {};
 constexpr int kInvalid = NOTIFICATION_ERROR_INVALID_PARAMETER;

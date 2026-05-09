@@ -19,13 +19,6 @@
 #include "notification/include/notification.h"
 #include "notification/include/notification_status_internal.h"
 
-// =====================================================================
-// Lock-in for notification_status_internal.h (task 03b).
-// 2 declared functions, both exported:
-//   - notification_status_monitor_message_cb_set
-//   - notification_status_monitor_message_cb_unset
-// =====================================================================
-
 namespace {
 class NotificationStatusInternalTest : public ::testing::Test {};
 }
@@ -33,7 +26,6 @@ class NotificationStatusInternalTest : public ::testing::Test {};
 static void __noop_status_cb(const char *, void *) {}
 
 TEST_F(NotificationStatusInternalTest, monitor_set_with_null_cb_returns_NONE_or_INVALID) {
-  // R-FINDINGS lock-in: assert the call is reachable and returns
   // SOME notification_error_e value. Both NONE (NULL accepted)
   // and INVALID_PARAMETER (NULL rejected) are stable contracts;
   // pinning whichever the impl returns today.
@@ -44,7 +36,6 @@ TEST_F(NotificationStatusInternalTest, monitor_set_with_null_cb_returns_NONE_or_
               ret == NOTIFICATION_ERROR_SERVICE_NOT_READY);
 }
 
-// F-task03b-monitor-set-needs-glib:
 // notification_status_monitor_message_cb_set with a valid
 // callback registers a glib watcher (touches g_strdup); the
 // lightweight ::testing::Test fixture has no GlibMock so the
