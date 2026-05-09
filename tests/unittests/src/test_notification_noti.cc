@@ -81,7 +81,7 @@ class NotificationNotiTest : public TestFixture {
   }
 };
 
-TEST_F(NotificationNotiTest, notification_noti_test) {
+TEST_F(NotificationNotiTest, noti_insert_combined) {
   EXPECT_CALL(GetMock<AulMock>(), aul_app_get_appid_bypid(_, _, _))
       .WillRepeatedly(Invoke(__fake_aul_app_get_appid_bypid));
 
@@ -137,7 +137,7 @@ TEST_F(NotificationNotiTest, notification_noti_test) {
   ASSERT_EQ(ret, NOTIFICATION_ERROR_NONE);
 }
 
-TEST_F(NotificationNotiTest, notification_noti_test2) {
+TEST_F(NotificationNotiTest, noti_get_by_tag_combined) {
   EXPECT_CALL(GetMock<SqliteMock>(), sqlite3_open_v2(_, _, _, _))
       .WillOnce(Invoke(__fake_sqlite3_open_v2));
 
@@ -169,7 +169,7 @@ TEST_F(NotificationNotiTest, notification_noti_test2) {
   ASSERT_EQ(ret, NOTIFICATION_ERROR_NONE);
 }
 
-TEST_F(NotificationNotiTest, notification_noti_test3) {
+TEST_F(NotificationNotiTest, noti_get_by_priv_id_combined) {
   EXPECT_CALL(GetMock<SqliteMock>(), sqlite3_open_v2(_, _, _, _))
       .WillOnce(Invoke(__fake_sqlite3_open_v2));
 
@@ -193,7 +193,7 @@ TEST_F(NotificationNotiTest, notification_noti_test3) {
 }
 
 
-TEST_F(NotificationNotiTest, notification_noti_test4) {
+TEST_F(NotificationNotiTest, noti_update_combined) {
   EXPECT_CALL(GetMock<SqliteMock>(), sqlite3_open_v2(_, _, _, _))
       .WillRepeatedly(Invoke(__fake_sqlite3_open_v2));
 
@@ -223,7 +223,7 @@ TEST_F(NotificationNotiTest, notification_noti_test4) {
   ASSERT_EQ(ret, NOTIFICATION_ERROR_NONE);
 }
 
-TEST_F(NotificationNotiTest, notification_noti_test5) {
+TEST_F(NotificationNotiTest, noti_delete_by_priv_id_combined) {
   EXPECT_CALL(GetMock<SqliteMock>(), sqlite3_open_v2(_, _, _, _))
       .WillOnce(Invoke(__fake_sqlite3_open_v2));
 
@@ -239,7 +239,7 @@ TEST_F(NotificationNotiTest, notification_noti_test5) {
   ASSERT_EQ(ret, NOTIFICATION_ERROR_NONE);
 }
 
-TEST_F(NotificationNotiTest, notification_noti_test6) {
+TEST_F(NotificationNotiTest, noti_delete_all_combined) {
   EXPECT_CALL(GetMock<SqliteMock>(), sqlite3_open_v2(_, _, _, _))
       .WillOnce(Invoke(__fake_sqlite3_open_v2));
 
@@ -256,7 +256,7 @@ TEST_F(NotificationNotiTest, notification_noti_test6) {
   ASSERT_EQ(ret, NOTIFICATION_ERROR_NONE);
 }
 
-TEST_F(NotificationNotiTest, notification_noti_test7) {
+TEST_F(NotificationNotiTest, noti_get_count_combined) {
   EXPECT_CALL(GetMock<SqliteMock>(), sqlite3_open_v2(_, _, _, _))
       .WillRepeatedly(Invoke(__fake_sqlite3_open_v2));
 
@@ -272,7 +272,7 @@ TEST_F(NotificationNotiTest, notification_noti_test7) {
   ASSERT_EQ(ret, NOTIFICATION_ERROR_NONE);
 }
 
-TEST_F(NotificationNotiTest, notification_noti_test8) {
+TEST_F(NotificationNotiTest, noti_get_grouping_list_combined) {
   EXPECT_CALL(GetMock<SqliteMock>(), sqlite3_open_v2(_, _, _, _))
       .WillRepeatedly(Invoke(__fake_sqlite3_open_v2));
 
@@ -293,7 +293,7 @@ TEST_F(NotificationNotiTest, notification_noti_test8) {
   ASSERT_EQ(ret, NOTIFICATION_ERROR_ALREADY_EXIST_ID);
 }
 
-TEST_F(NotificationNotiTest, notification_noti_test9) {
+TEST_F(NotificationNotiTest, noti_get_detail_list_combined) {
   EXPECT_CALL(GetMock<SqliteMock>(), sqlite3_open_v2(_, _, _, _))
       .WillOnce(Invoke(__fake_sqlite3_open_v2));
 
@@ -309,7 +309,7 @@ TEST_F(NotificationNotiTest, notification_noti_test9) {
   ASSERT_EQ(ret, 0);
 }
 
-TEST_F(NotificationNotiTest, notification_noti_test10) {
+TEST_F(NotificationNotiTest, noti_check_tag_combined) {
   EXPECT_CALL(GetMock<SqliteMock>(), sqlite3_open_v2(_, _, _, _))
       .WillOnce(Invoke(__fake_sqlite3_open_v2));
 
@@ -325,7 +325,7 @@ TEST_F(NotificationNotiTest, notification_noti_test10) {
   ASSERT_EQ(ret, NOTIFICATION_ERROR_NONE);
 }
 
-TEST_F(NotificationNotiTest, notification_noti_test11) {
+TEST_F(NotificationNotiTest, noti_check_limit_combined) {
   EXPECT_CALL(GetMock<SqliteMock>(), sqlite3_open_v2(_, _, _, _))
       .WillOnce(Invoke(__fake_sqlite3_open_v2));
 
@@ -342,7 +342,7 @@ TEST_F(NotificationNotiTest, notification_noti_test11) {
   ASSERT_EQ(ret, NOTIFICATION_ERROR_NONE);
 }
 
-TEST_F(NotificationNotiTest, notification_noti_test12) {
+TEST_F(NotificationNotiTest, noti_template_combined) {
   EXPECT_CALL(GetMock<SqliteMock>(), sqlite3_open_v2(_, _, _, _))
       .WillOnce(Invoke(__fake_sqlite3_open_v2));
 
@@ -357,7 +357,7 @@ TEST_F(NotificationNotiTest, notification_noti_test12) {
   ASSERT_EQ(ret, NOTIFICATION_ERROR_NONE);
 }
 
-TEST_F(NotificationNotiTest, notification_noti_test13) {
+TEST_F(NotificationNotiTest, noti_channel_combined) {
   EXPECT_CALL(GetMock<SqliteMock>(), sqlite3_open_v2(_, _, _, _))
       .WillOnce(Invoke(__fake_sqlite3_open_v2));
 
