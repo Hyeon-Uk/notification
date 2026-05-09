@@ -22,21 +22,49 @@
 
 namespace {
 class NotificationSettingServiceTest : public ::testing::Test {};
+constexpr int kInvalid = NOTIFICATION_ERROR_INVALID_PARAMETER;
 }  // namespace
 
-TEST_F(NotificationSettingServiceTest, refresh_setting_table_reachable) {
-  EXPECT_NE(reinterpret_cast<void*>(&notification_setting_refresh_setting_table),
-            nullptr);
+TEST_F(NotificationSettingServiceTest, dnd_schedule_get_enabled_N_null_handle) {
+  bool e = false;
+  EXPECT_EQ(notification_system_setting_dnd_schedule_get_enabled(nullptr, &e),
+            kInvalid);
 }
 
-TEST_F(NotificationSettingServiceTest, db_update_system_setting_reachable) {
-  EXPECT_NE(reinterpret_cast<void*>(&notification_setting_db_update_system_setting),
-            nullptr);
+TEST_F(NotificationSettingServiceTest, dnd_schedule_set_enabled_N_null_handle) {
+  EXPECT_EQ(notification_system_setting_dnd_schedule_set_enabled(nullptr, true),
+            kInvalid);
 }
 
-TEST_F(NotificationSettingServiceTest, system_setting_dnd_schedule_reachable) {
-  EXPECT_NE(reinterpret_cast<void*>(&notification_system_setting_dnd_schedule_get_enabled),
-            nullptr);
-  EXPECT_NE(reinterpret_cast<void*>(&notification_system_setting_dnd_schedule_set_enabled),
-            nullptr);
+TEST_F(NotificationSettingServiceTest, dnd_schedule_get_day_N_null_handle) {
+  int d = 0;
+  EXPECT_EQ(notification_system_setting_dnd_schedule_get_day(nullptr, &d),
+            kInvalid);
+}
+
+TEST_F(NotificationSettingServiceTest, dnd_schedule_set_day_N_null_handle) {
+  EXPECT_EQ(notification_system_setting_dnd_schedule_set_day(nullptr, 1),
+            kInvalid);
+}
+
+TEST_F(NotificationSettingServiceTest, dnd_schedule_get_start_time_N_null_handle) {
+  int h = 0, m = 0;
+  EXPECT_EQ(notification_system_setting_dnd_schedule_get_start_time(nullptr, &h, &m),
+            kInvalid);
+}
+
+TEST_F(NotificationSettingServiceTest, dnd_schedule_set_start_time_N_null_handle) {
+  EXPECT_EQ(notification_system_setting_dnd_schedule_set_start_time(nullptr, 22, 0),
+            kInvalid);
+}
+
+TEST_F(NotificationSettingServiceTest, dnd_schedule_get_end_time_N_null_handle) {
+  int h = 0, m = 0;
+  EXPECT_EQ(notification_system_setting_dnd_schedule_get_end_time(nullptr, &h, &m),
+            kInvalid);
+}
+
+TEST_F(NotificationSettingServiceTest, dnd_schedule_set_end_time_N_null_handle) {
+  EXPECT_EQ(notification_system_setting_dnd_schedule_set_end_time(nullptr, 7, 0),
+            kInvalid);
 }
