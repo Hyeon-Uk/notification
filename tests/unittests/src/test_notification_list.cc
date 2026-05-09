@@ -102,7 +102,7 @@ class NotificationListTest : public TestFixture {
   }
 };
 
-TEST_F(NotificationListTest, notification_list_test) {
+TEST_F(NotificationListTest, happy_path_combined) {
   EXPECT_CALL(GetMock<AulMock>(), aul_app_get_appid_bypid(_, _, _))
       .WillRepeatedly(Invoke(__fake_aul_app_get_appid_bypid));
 
@@ -196,7 +196,7 @@ TEST_F(NotificationListTest, notification_list_test) {
   ASSERT_EQ(ret, NOTIFICATION_ERROR_NONE);
 }
 
-TEST_F(NotificationListTest, notification_list_test2) {
+TEST_F(NotificationListTest, get_detail_list_invalid_args) {
   int ret;
 
   notification_list_h get_list_detail = nullptr;
