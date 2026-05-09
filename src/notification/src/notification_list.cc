@@ -53,7 +53,7 @@ notification_list_h _notification_list_create(void)
 	return list;
 }
 
-EXPORT_API notification_list_h notification_list_get_head(notification_list_h list)
+extern "C" EXPORT_API notification_list_h notification_list_get_head(notification_list_h list)
 {
 	notification_list_h cur_list = NULL;
 
@@ -72,7 +72,7 @@ EXPORT_API notification_list_h notification_list_get_head(notification_list_h li
 	return cur_list;
 }
 
-EXPORT_API notification_list_h notification_list_get_tail(notification_list_h list)
+extern "C" EXPORT_API notification_list_h notification_list_get_tail(notification_list_h list)
 {
 	notification_list_h cur_list = NULL;
 
@@ -91,7 +91,7 @@ EXPORT_API notification_list_h notification_list_get_tail(notification_list_h li
 	return cur_list;
 }
 
-EXPORT_API notification_list_h notification_list_get_prev(notification_list_h list)
+extern "C" EXPORT_API notification_list_h notification_list_get_prev(notification_list_h list)
 {
 	notification_list_h cur_list = NULL;
 
@@ -107,7 +107,7 @@ EXPORT_API notification_list_h notification_list_get_prev(notification_list_h li
 	return cur_list->prev;
 }
 
-EXPORT_API notification_list_h notification_list_get_next(notification_list_h list)
+extern "C" EXPORT_API notification_list_h notification_list_get_next(notification_list_h list)
 {
 	notification_list_h cur_list = NULL;
 
@@ -123,7 +123,7 @@ EXPORT_API notification_list_h notification_list_get_next(notification_list_h li
 	return cur_list->next;
 }
 
-EXPORT_API notification_h notification_list_get_data(notification_list_h list)
+extern "C" EXPORT_API notification_h notification_list_get_data(notification_list_h list)
 {
 	notification_list_h cur_list = NULL;
 
@@ -139,7 +139,7 @@ EXPORT_API notification_h notification_list_get_data(notification_list_h list)
 	return cur_list->noti;
 }
 
-EXPORT_API int notification_list_get_count(notification_list_h list)
+extern "C" EXPORT_API int notification_list_get_count(notification_list_h list)
 {
 	int count = 0;
 	notification_list_h cur_list = NULL;
@@ -161,7 +161,7 @@ EXPORT_API int notification_list_get_count(notification_list_h list)
 	return count;
 }
 
-EXPORT_API notification_list_h notification_list_append(notification_list_h list,
+extern "C" EXPORT_API notification_list_h notification_list_append(notification_list_h list,
 		notification_h noti)
 {
 	notification_list_h new_list = NULL;
@@ -207,7 +207,7 @@ EXPORT_API notification_list_h notification_list_append(notification_list_h list
 	return new_list;
 }
 
-EXPORT_API notification_list_h notification_list_remove(notification_list_h list,
+extern "C" EXPORT_API notification_list_h notification_list_remove(notification_list_h list,
 		notification_h noti)
 {
 	notification_list_h cur_list = NULL;
@@ -248,7 +248,7 @@ EXPORT_API notification_list_h notification_list_remove(notification_list_h list
 	return NULL;
 }
 
-EXPORT_API int notification_get_list_for_uid(notification_type_e type,
+extern "C" EXPORT_API int notification_get_list_for_uid(notification_type_e type,
 		int count,
 		notification_list_h *list, uid_t uid)
 {
@@ -268,20 +268,21 @@ EXPORT_API int notification_get_list_for_uid(notification_type_e type,
 	return NOTIFICATION_ERROR_NONE;
 }
 
-EXPORT_API int notification_get_list(notification_type_e type,
+extern "C" EXPORT_API int notification_get_list(notification_type_e type,
 		int count,
 		notification_list_h *list)
 {
 	return notification_get_list_for_uid(type, count, list, aul_getuid());
 }
 
-EXPORT_API int notification_get_list_by_page_for_uid(notification_type_e type,
+extern "C" EXPORT_API int notification_get_list_by_page_for_uid(notification_type_e type,
 		int page_number,
 		int count_per_page,
 		notification_list_h *list,
 		uid_t uid)
 {
 #define COUNT_PER_PAGE_MAX 100
+
 
 	int ret;
 	notification_list_h get_list = NULL;
@@ -314,14 +315,14 @@ EXPORT_API int notification_get_list_by_page_for_uid(notification_type_e type,
 	return ret;
 }
 
-EXPORT_API int notification_get_list_by_page(notification_type_e type,
+extern "C" EXPORT_API int notification_get_list_by_page(notification_type_e type,
 	int page_number, int count_per_page, notification_list_h *list)
 {
 	return notification_get_list_by_page_for_uid(type,
 			page_number, count_per_page, list, aul_getuid());
 }
 
-EXPORT_API int notification_get_detail_list_for_uid(const char *app_id,
+extern "C" EXPORT_API int notification_get_detail_list_for_uid(const char *app_id,
 		int group_id,
 		int priv_id,
 		int count,
@@ -345,7 +346,7 @@ EXPORT_API int notification_get_detail_list_for_uid(const char *app_id,
 	return NOTIFICATION_ERROR_NONE;
 }
 
-EXPORT_API int notification_get_detail_list(const char *app_id,
+extern "C" EXPORT_API int notification_get_detail_list(const char *app_id,
 		int group_id,
 		int priv_id,
 		int count,
@@ -355,7 +356,7 @@ EXPORT_API int notification_get_detail_list(const char *app_id,
 			priv_id, count, list, aul_getuid());
 }
 
-EXPORT_API int notification_free_list(notification_list_h list)
+extern "C" EXPORT_API int notification_free_list(notification_list_h list)
 {
 	notification_list_h cur_list = NULL;
 	notification_h noti = NULL;
@@ -374,4 +375,5 @@ EXPORT_API int notification_free_list(notification_list_h list)
 
 	return NOTIFICATION_ERROR_NONE;
 }
+
 
