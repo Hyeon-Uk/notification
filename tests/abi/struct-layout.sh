@@ -34,11 +34,50 @@ dump_via_pahole() {
 }
 
 dump_via_objdump() {
-    # grep returns 1 when there are no matches — treat that as
-    # "no struct-layout info in this .so", not a fatal error.
+    # When pahole is unavailable, objdump --dwarf=info is the
+    # fallback. Pull only the ABI-meaningful bits — byte_size
+    # and data_member_location — and group them by the
+    # type+member name that owns the value. Skip everything
+    # else (DIE addresses, abbrev indices, file paths, indirect
+    # string offsets) that drifts between builds on the same
+    # source.
     objdump --dwarf=info "$SO_PATH" 2>/dev/null \
-        | { grep -E "DW_TAG_(structure_type|union_type|class_type|typedef|member)|DW_AT_(name|byte_size|data_member_location|type)" || true; } \
-        | sed 's/^[[:space:]]*//'
+        | awk '
+            /DW_TAG_(structure_type|union_type|class_type)/ {
+                in_type = 1; type_name = ""; size = ""; next
+            }
+            /DW_TAG_member/ {
+                if (in_type) { in_member = 1; member_name = ""; member_off = "" }
+                next
+            }
+            /DW_TAG_(typedef|subprogram|formal_parameter|compile_unit|variable|base_type|pointer_type|const_type|enumerator|enumeration_type|array_type|subroutine_type)/ {
+                if (in_type && !in_member && type_name != "" && size != "")
+                    print "type:" type_name " size=" size
+                in_type = 0; in_member = 0; next
+            }
+            in_member && /DW_AT_name[^:]*:[^:]*: *([^ ]+)/ {
+                match($0, /:[^:]*: *([^ ]+) *$/, a)
+                if (a[1] != "") member_name = a[1]
+                next
+            }
+            in_type && !in_member && /DW_AT_name[^:]*:[^:]*: *([^ ]+)/ {
+                match($0, /:[^:]*: *([^ ]+) *$/, a)
+                if (a[1] != "") type_name = a[1]
+                next
+            }
+            in_type && !in_member && /DW_AT_byte_size[^:]*: *([0-9]+)/ {
+                match($0, /: *([0-9]+) *$/, a)
+                size = a[1]; next
+            }
+            in_member && /DW_AT_data_member_location[^:]*: *([0-9]+)/ {
+                match($0, /: *([0-9]+) *$/, a)
+                member_off = a[1]
+                if (type_name != "" && member_name != "")
+                    print "  member:" type_name "::" member_name " offset=" member_off
+                in_member = 0; next
+            }
+        ' \
+        | LC_ALL=C sort -u
 }
 
 dump_via_gcc_aux() {
