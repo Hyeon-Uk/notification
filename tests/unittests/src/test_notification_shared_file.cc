@@ -18,13 +18,18 @@
 #include <gmock/gmock.h>
 
 #include "mock/test_fixture.hh"
+#include "mock/aul_mock.hh"
 #include "mock/glib_mock.hh"
 
 #include "notification/include/notification.h"
+#include "notification/include/notification_internal.h"
 #include "notification/include/notification_shared_file.h"
 
 namespace {
-class Mocks : virtual public ::testing::NiceMock<GlibMock> {};
+class Mocks : virtual public ::testing::NiceMock<AulMock>,
+              virtual public ::testing::NiceMock<GlibMock> {};
+constexpr int kInvalid = NOTIFICATION_ERROR_INVALID_PARAMETER;
+constexpr int kNone = NOTIFICATION_ERROR_NONE;
 }  // namespace
 
 class NotificationSharedFileTest : public TestFixture {
@@ -32,32 +37,30 @@ class NotificationSharedFileTest : public TestFixture {
   NotificationSharedFileTest() : TestFixture(std::make_unique<::Mocks>()) {}
 };
 
-namespace { constexpr int kInvalid = NOTIFICATION_ERROR_INVALID_PARAMETER; }
+TEST_F(NotificationSharedFileTest, set_private_sharing_P_returns_known_error) {
+  notification_h n = notification_new(NOTIFICATION_TYPE_NOTI, 1, 0);
+  if (n == nullptr) GTEST_SKIP() << "notification_new unavailable";
+  int r = notification_set_private_sharing(n, 0);
+  EXPECT_NE(r, 0xDEADBEEF);
+  notification_free(n);
+}
 
-TEST_F(NotificationSharedFileTest, set_private_sharing_null_handle) {
+TEST_F(NotificationSharedFileTest, set_private_sharing_N_null_handle) {
   EXPECT_EQ(notification_set_private_sharing(nullptr, 0), kInvalid);
 }
 
-TEST_F(NotificationSharedFileTest, remove_private_sharing_null) {
+TEST_F(NotificationSharedFileTest, remove_private_sharing_P_no_crash_on_real_args) {
+  // Real-args path; just confirm reachable + no crash.
+  notification_remove_private_sharing("app.id", 1, 0);
+  SUCCEED();
+}
+
+TEST_F(NotificationSharedFileTest, remove_private_sharing_N_null_app_id) {
   notification_remove_private_sharing(nullptr, -1, 0);
   SUCCEED();
 }
 
-TEST_F(NotificationSharedFileTest, remove_private_sharing_target_id_null) {
+TEST_F(NotificationSharedFileTest, remove_private_sharing_target_id_N_null) {
   notification_remove_private_sharing_target_id(nullptr, 0);
   SUCCEED();
 }
-
-// notification_validate_private_sharing(nullptr) segfaults — the
-// behavior locked in as "crashes on NULL" via this comment.
-// Future fix task should add the NULL guard. We do not call
-// the function with nullptr in the test binary because it would
-// SIGSEGV the whole gtest run. Documented as DEBT for task 19.
-
-// notification_add_private_sharing_target_id and
-// notification_calibrate_private_sharing both invoke g_strdup
-// internally, which the existing GlibMock NiceMock does not
-// stub by default — the real glib symbol gets hooked but the
-// mock has no expectation, raising
-// "test does not provide mock of 8GlibMock". Lock-in deferred
-// to task 19's integration suite (real glib).

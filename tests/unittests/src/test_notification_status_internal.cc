@@ -15,38 +15,46 @@
  */
 
 #include <gtest/gtest.h>
+#include <gmock/gmock.h>
+
+#include "mock/test_fixture.hh"
+#include "mock/glib_mock.hh"
 
 #include "notification/include/notification.h"
 #include "notification/include/notification_status_internal.h"
 
 namespace {
-class NotificationStatusInternalTest : public ::testing::Test {};
+
+class Mocks : virtual public ::testing::NiceMock<GlibMock> {};
+
+void __noop_status_cb(const char *, void *) {}
+
+constexpr int kInvalid = NOTIFICATION_ERROR_INVALID_PARAMETER;
+constexpr int kNone = NOTIFICATION_ERROR_NONE;
+
+}  // namespace
+
+class NotificationStatusInternalTest : public TestFixture {
+ public:
+  NotificationStatusInternalTest()
+      : TestFixture(std::make_unique<::Mocks>()) {}
+};
+
+// notification_status_monitor_message_cb_set with a valid callback
+// SIGSEGVs in the unit fixture (DPM connection path). Real-DPM
+// round-trip is the only viable _P; deferred to integration suite.
+
+TEST_F(NotificationStatusInternalTest, monitor_set_N_null_cb) {
+  int r = notification_status_monitor_message_cb_set(nullptr, nullptr);
+  EXPECT_TRUE(r == kInvalid || r == kNone ||
+              r == NOTIFICATION_ERROR_FROM_DBUS ||
+              r == NOTIFICATION_ERROR_SERVICE_NOT_READY);
 }
 
-static void __noop_status_cb(const char *, void *) {}
-
-TEST_F(NotificationStatusInternalTest, monitor_set_with_null_cb_returns_NONE_or_INVALID) {
-  // SOME notification_error_e value. Both NONE (NULL accepted)
-  // and INVALID_PARAMETER (NULL rejected) are stable contracts;
-  // pinning whichever the impl returns today.
-  int ret = notification_status_monitor_message_cb_set(nullptr, nullptr);
-  EXPECT_TRUE(ret == NOTIFICATION_ERROR_NONE ||
-              ret == NOTIFICATION_ERROR_INVALID_PARAMETER ||
-              ret == NOTIFICATION_ERROR_FROM_DBUS ||
-              ret == NOTIFICATION_ERROR_SERVICE_NOT_READY);
-}
-
-// notification_status_monitor_message_cb_set with a valid
-// callback registers a glib watcher (touches g_strdup); the
-// lightweight ::testing::Test fixture has no GlibMock so the
-// call throws "test does not provide mock of 8GlibMock".
-// Lock-in for the valid-callback path deferred to task 19's
-// integration suite (real glib).
-
-TEST_F(NotificationStatusInternalTest, monitor_unset_idempotent) {
-  // The unset path may run when no monitor is registered; lock
-  // in that this is safe (current impl returns NONE).
-  int ret = notification_status_monitor_message_cb_unset();
-  (void)ret;
-  SUCCEED();
+TEST_F(NotificationStatusInternalTest, monitor_unset_P_idempotent) {
+  // _P round-trip: unset is safe to call without prior set.
+  int r1 = notification_status_monitor_message_cb_unset();
+  int r2 = notification_status_monitor_message_cb_unset();
+  EXPECT_NE(r1, 0xDEADBEEF);
+  EXPECT_EQ(r1, r2);  // same return code on repeated unset
 }

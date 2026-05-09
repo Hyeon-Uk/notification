@@ -15,20 +15,32 @@
  */
 
 #include <gtest/gtest.h>
+#include <gmock/gmock.h>
+
+#include "mock/test_fixture.hh"
+#include "mock/glib_mock.hh"
 
 #include "notification/include/notification.h"
 #include "notification/include/notification_status.h"
 
 namespace {
-class NotificationStatusTest : public ::testing::Test {};
+
+class Mocks : virtual public ::testing::NiceMock<GlibMock> {};
+
+constexpr int kInvalid = NOTIFICATION_ERROR_INVALID_PARAMETER;
+
 }  // namespace
 
-TEST_F(NotificationStatusTest, message_post_null) {
-  EXPECT_EQ(notification_status_message_post(nullptr),
-            NOTIFICATION_ERROR_INVALID_PARAMETER);
-}
+class NotificationStatusTest : public TestFixture {
+ public:
+  NotificationStatusTest() : TestFixture(std::make_unique<::Mocks>()) {}
+};
 
-// notification_status_message_post("") allocates internally via
-// g_strdup; the lightweight ::testing::Test fixture has no
-// GlibMock so the call throws "test does not provide mock".
-// Lock-in deferred to task 19's integration suite (real glib).
+// notification_status_message_post with a valid string SIGSEGVs in
+// the unit fixture (DPM connection path). Real-DPM round-trip is
+// the only viable _P; deferred to the integration suite. Unit-test
+// lock-in is _N only.
+
+TEST_F(NotificationStatusTest, message_post_N_null_message) {
+  EXPECT_EQ(notification_status_message_post(nullptr), kInvalid);
+}

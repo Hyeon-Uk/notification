@@ -15,28 +15,46 @@
  */
 
 #include <gtest/gtest.h>
+#include <gmock/gmock.h>
+
+#include "mock/test_fixture.hh"
+#include "mock/aul_mock.hh"
+#include "mock/glib_mock.hh"
 
 #include "notification/include/notification.h"
+#include "notification/include/notification_internal.h"
 #include "notification/include/notification_ongoing_flag.h"
 
 namespace {
-class NotificationOngoingFlagTest : public ::testing::Test {};
+class Mocks : virtual public ::testing::NiceMock<AulMock>,
+              virtual public ::testing::NiceMock<GlibMock> {};
 constexpr int kInvalid = NOTIFICATION_ERROR_INVALID_PARAMETER;
+constexpr int kNone = NOTIFICATION_ERROR_NONE;
 }  // namespace
 
-TEST_F(NotificationOngoingFlagTest, set_null_handle) {
-  EXPECT_EQ(notification_set_ongoing_flag(nullptr, true), kInvalid);
-  EXPECT_EQ(notification_set_ongoing_flag(nullptr, false), kInvalid);
+class NotificationOngoingFlagTest : public TestFixture {
+ public:
+  NotificationOngoingFlagTest() : TestFixture(std::make_unique<::Mocks>()) {}
+};
+
+TEST_F(NotificationOngoingFlagTest, set_get_ongoing_flag_P) {
+  notification_h n = notification_new(NOTIFICATION_TYPE_NOTI, 1, 0);
+  if (n == nullptr) GTEST_SKIP() << "notification_new unavailable";
+  EXPECT_EQ(notification_set_ongoing_flag(n, true), kNone);
+  bool flag = false;
+  EXPECT_EQ(notification_get_ongoing_flag(n, &flag), kNone);
+  EXPECT_TRUE(flag);
+  EXPECT_EQ(notification_set_ongoing_flag(n, false), kNone);
+  EXPECT_EQ(notification_get_ongoing_flag(n, &flag), kNone);
+  EXPECT_FALSE(flag);
+  notification_free(n);
 }
 
-TEST_F(NotificationOngoingFlagTest, get_null_handle) {
+TEST_F(NotificationOngoingFlagTest, set_ongoing_flag_N_null_handle) {
+  EXPECT_EQ(notification_set_ongoing_flag(nullptr, true), kInvalid);
+}
+
+TEST_F(NotificationOngoingFlagTest, get_ongoing_flag_N_null_handle) {
   bool flag = false;
   EXPECT_EQ(notification_get_ongoing_flag(nullptr, &flag), kInvalid);
-}
-
-TEST_F(NotificationOngoingFlagTest, get_null_out) {
-  // No way to construct a notification_h here without pulling
-  // the full mock harness; the NULL-handle case above already
-  // covers the parameter-validation path.
-  EXPECT_EQ(notification_get_ongoing_flag(nullptr, nullptr), kInvalid);
 }
