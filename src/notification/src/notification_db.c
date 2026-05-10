@@ -15,6 +15,7 @@
  */
 
 #include <errno.h>
+#include <stdlib.h>
 #include <unistd.h>
 #include <stdio.h>
 #include <string.h>
@@ -28,6 +29,17 @@
 #include "notification_db_query.h"
 
 static bool is_db_corrupted = false;
+
+/* Test-only seam used by tests/integration/. When the env var
+ * NOTIFICATION_INTEGTEST_DB_PATH is set and non-empty the integ
+ * harness redirects this library's sqlite path into a per-test
+ * tmpdir; otherwise the production-default DBPATH is used. The
+ * env var is never set in production. */
+static const char *_notification_db_resolve_path(void)
+{
+	const char *p = getenv("NOTIFICATION_INTEGTEST_DB_PATH");
+	return (p && *p) ? p : DBPATH;
+}
 
 /* LCOV_EXCL_START */
 static int __check_integrity_cb(void *pid, int argc, char **argv, char **notUsed)
@@ -55,14 +67,14 @@ static int __recover_corrupted_db(sqlite3 *db)
 	INFO("DB is corrupted, start to recover corrupted db");
 	if (db)
 		sqlite3_close(db);
-	unlink(DBPATH);
+	unlink(_notification_db_resolve_path());
 
-	sql_ret = sqlite3_open_v2(DBPATH, &db,
+	sql_ret = sqlite3_open_v2(_notification_db_resolve_path(), &db,
 				SQLITE_OPEN_CREATE | SQLITE_OPEN_READWRITE,
 				NULL);
 	if (sql_ret != SQLITE_OK) {
 		ERR("Failed to open db[%d]", sql_ret);
-		unlink(DBPATH);
+		unlink(_notification_db_resolve_path());
 		ret = NOTIFICATION_ERROR_FROM_DB;
 		goto out;
 	}
@@ -89,7 +101,7 @@ EXPORT_API int notification_db_init(void)
 	sqlite3 *db = NULL;
 	char *errmsg = NULL;
 
-	sql_ret = sqlite3_open_v2(DBPATH, &db,
+	sql_ret = sqlite3_open_v2(_notification_db_resolve_path(), &db,
 			SQLITE_OPEN_CREATE | SQLITE_OPEN_READWRITE, NULL);
 	if (sql_ret != SQLITE_OK) {
 		ERR("Failed to open db[%d]", sql_ret);
@@ -128,7 +140,7 @@ EXPORT_API sqlite3 *notification_db_open()
 	int ret;
 	sqlite3 *db;
 
-	ret = access(DBPATH, R_OK | W_OK);
+	ret = access(_notification_db_resolve_path(), R_OK | W_OK);
 	if (ret != 0) {
 		/* LCOV_EXCL_START */
 		set_last_result(NOTIFICATION_ERROR_FROM_DB);
@@ -136,7 +148,7 @@ EXPORT_API sqlite3 *notification_db_open()
 		/* LCOV_EXCL_STOP */
 	}
 
-	ret = sqlite3_open_v2(DBPATH, &db, SQLITE_OPEN_READWRITE, NULL);
+	ret = sqlite3_open_v2(_notification_db_resolve_path(), &db, SQLITE_OPEN_READWRITE, NULL);
 	if (ret != SQLITE_OK) {
 		/* LCOV_EXCL_START */
 		if (ret == SQLITE_PERM)
@@ -380,7 +392,7 @@ EXPORT_API int notification_upgrade_db(void)
 
 	WARN("@@ upgrade db");
 
-	ret = sqlite3_open_v2(DBPATH, &db, SQLITE_OPEN_READWRITE, NULL);
+	ret = sqlite3_open_v2(_notification_db_resolve_path(), &db, SQLITE_OPEN_READWRITE, NULL);
 	if (ret != SQLITE_OK) {
 		ERR("@@ Failed to open db");
 		return NOTIFICATION_ERROR_FROM_DB;
