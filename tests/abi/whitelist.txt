@@ -1,0 +1,18 @@
+# ABI symbol additions whitelist — symbols added since the
+# 0.12.1 baseline that are intentionally exported. tests/abi/
+# check-abi.sh treats additions not listed here as a failure.
+#
+# Each line: a symbol name (no `T `/`U ` prefix, no leading
+# whitespace). One symbol per line. Lines starting with `#`
+# and blank lines are ignored.
+#
+# Phase 1 cycle 04 (.c -> .cc migration of error/ongoing/status):
+# the three notification_ongoing_update_* helpers are declared
+# in the public header notification_ongoing.h but pre-migration
+# lacked EXPORT_API in their .c source, so they never appeared
+# in the 0.12.1 snapshot. Migration to .cc surfaces this gap;
+# adding EXPORT_API is the documented fix and the additions are
+# whitelisted here.
+notification_ongoing_update_progress
+notification_ongoing_update_size
+notification_ongoing_update_content
