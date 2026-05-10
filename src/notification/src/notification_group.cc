@@ -22,6 +22,8 @@
 #include <notification_group.h>
 #include <notification_db.h>
 
+extern "C" {
+
 /* LCOV_EXCL_START */
 static int _notification_group_check_data_inserted(const char *app_id,
 						   int group_id, sqlite3 *db)
@@ -61,7 +63,7 @@ static int _notification_group_check_data_inserted(const char *app_id,
 /* LCOV_EXCL_STOP */
 
 /* LCOV_EXCL_START */
-int notification_group_set_badge(const char *app_id,
+EXPORT_API int notification_group_set_badge(const char *app_id,
 						  int group_id, int count)
 {
 	sqlite3 *db;
@@ -119,7 +121,7 @@ int notification_group_set_badge(const char *app_id,
 /* LCOV_EXCL_STOP */
 
 /* LCOV_EXCL_START */
-int notification_group_get_badge(const char *app_id,
+EXPORT_API int notification_group_get_badge(const char *app_id,
 						  int group_id, int *count)
 {
 	sqlite3 *db;
@@ -179,3 +181,5 @@ int notification_group_get_badge(const char *app_id,
 	return NOTIFICATION_ERROR_NONE;
 }
 /* LCOV_EXCL_STOP */
+
+}  // extern "C"

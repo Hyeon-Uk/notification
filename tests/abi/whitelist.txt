@@ -16,3 +16,10 @@
 notification_ongoing_update_progress
 notification_ongoing_update_size
 notification_ongoing_update_content
+
+# Phase 1 cycle 05 (.c -> .cc migration of list/group):
+# notification_group_set_badge / _get_badge are declared in
+# notification_group.h but pre-migration .c lacked EXPORT_API;
+# fixed in cycle 05 with EXPORT_API on both, listed here.
+notification_group_set_badge
+notification_group_get_badge
