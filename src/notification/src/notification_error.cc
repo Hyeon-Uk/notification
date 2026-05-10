@@ -18,6 +18,8 @@
 #include <gio/gio.h>
 #include "notification_error.h"
 
+extern "C" {
+
 static const GDBusErrorEntry dbus_error_entries[] = {
 	{NOTIFICATION_ERROR_INVALID_PARAMETER, "org.freedesktop.Notification.Error.INVALID_PARAMETER"},
 	{NOTIFICATION_ERROR_OUT_OF_MEMORY,     "org.freedesktop.Notification.Error.OUT_OF_MEMORY"},
@@ -57,4 +59,6 @@ EXPORT_API GQuark notification_error_quark(void)
 			G_N_ELEMENTS(dbus_error_entries));
 	return (GQuark)quark_volatile;
 }
+
+}  // extern "C"
 
