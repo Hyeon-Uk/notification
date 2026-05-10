@@ -29,6 +29,8 @@
 #include <gio/gio.h>
 #include <gio/gunixfdlist.h>
 
+extern "C" {
+
 #define ERR_BUFFER_SIZE		1024
 
 /*!
@@ -513,3 +515,5 @@ EXPORT_API int notification_ipc_make_noti_from_gvariant(notification_h noti,
 	return NOTIFICATION_ERROR_NONE;
 }
 /* LCOV_EXCL_STOP */
+
+}  // extern "C"
