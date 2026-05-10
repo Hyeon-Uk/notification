@@ -1,0 +1,20 @@
+{
+  "project_agents_dir": "/home/kimhyeonuk/.openclaw/workspace/refactoring/agents",
+  "active_agent_cli": "claude",
+  "cli_overrides": {
+    "claude": {
+      "extra_args": ["--dangerously-skip-permissions", "--print"]
+    }
+  },
+  "agents": {
+    "refiner":   { "cli": "claude", "model": "claude-sonnet-4-6" },
+    "analyzer":  { "cli": "claude", "model": "claude-sonnet-4-6" },
+    "planner":   { "cli": "claude", "model": "claude-sonnet-4-6" },
+    "designer":  { "cli": "claude", "model": "claude-sonnet-4-6" },
+    "developer": { "cli": "claude", "model": "claude-opus-4-6" },
+    "tester":    { "cli": "claude", "model": "claude-sonnet-4-6" },
+    "reviewer":  { "cli": "claude", "model": "claude-sonnet-4-6" },
+    "committer": { "cli": "claude", "model": "claude-sonnet-4-6" },
+    "evaluator": { "cli": "claude", "model": "claude-sonnet-4-6" }
+  }
+}

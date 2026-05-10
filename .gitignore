@@ -1,0 +1,13 @@
+.session
+
+# GBS build logs (large, not useful in version history)
+logs/**/*.log
+logs/*.log
+
+# CMake build artifacts
+build*/
+CMakeCache.txt
+CMakeFiles/
+
+# graphify extraction cache (regeneratable)
+graphify-out/cache/
