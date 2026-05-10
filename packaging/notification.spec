@@ -88,7 +88,24 @@ MAJORVER=`echo %{version} | awk 'BEGIN {FS="."}{print $1}'`
 
 %check
 export LD_LIBRARY_PATH="../../src/notification:../../src/notification-ex"
-ctest -V
+
+# Per-suite exit capture for the pre-release test gate. Each test
+# binary is invoked from inside its own subdir so the relative
+# LD_LIBRARY_PATH above resolves to the freshly built libraries.
+# This replaces the prior bare `ctest -V` so the orchestrator can
+# grep stable UNITTEST_EXIT= / INTEGRATION_EXIT= keys out of the
+# build log without parsing ctest output.
+set +e
+( cd tests/unittests   && ./notification-unittests )
+UNITTEST_EXIT=$?
+echo "UNITTEST_EXIT=${UNITTEST_EXIT}"
+( cd tests/integration && ./notification-integtests )
+INTEGRATION_EXIT=$?
+echo "INTEGRATION_EXIT=${INTEGRATION_EXIT}"
+set -e
+
+[ "${UNITTEST_EXIT}" = "0" ] && [ "${INTEGRATION_EXIT}" = "0" ]
+
 %if 0%{?gcov:1}
 lcov -c --ignore-errors mismatch,graph,unused --no-external -q -d . -o notification.info
 genhtml notification.info -o notification.out
@@ -134,6 +151,34 @@ EOF
 mkdir -p %{buildroot}%{_bindir}/tizen-unittests/%{name}
 install -m 0755 run-unittest.sh %{buildroot}%{_bindir}/tizen-unittests/%{name}/
 sed -i -e 's/<NAME>/notification/g' %{buildroot}%{_bindir}/tizen-unittests/%{name}/run-unittest.sh
+
+cat << EOF > run-integtest.sh
+#!/bin/sh
+setup() {
+    echo "setup start"
+}
+
+test_main() {
+    echo "test_main start"
+    /usr/bin/<NAME>-integtests
+}
+
+teardown() {
+    echo "teardown start"
+}
+
+main() {
+    setup
+    test_main
+    teardown
+}
+
+main "\$*"
+EOF
+
+mkdir -p %{buildroot}%{_bindir}/tizen-integtests/%{name}
+install -m 0755 run-integtest.sh %{buildroot}%{_bindir}/tizen-integtests/%{name}/
+sed -i -e 's/<NAME>/notification/g' %{buildroot}%{_bindir}/tizen-integtests/%{name}/run-integtest.sh
 
 %clean
 rm -rf %{buildroot}
@@ -230,6 +275,23 @@ GTest for notification
 %files -n notification-unittests
 %{_bindir}/notification-unittests
 %{_bindir}/tizen-unittests/%{name}/run-unittest.sh
+
+#################################################
+# notification-integtests
+#################################################
+%package -n notification-integtests
+Summary:    Integration tests for notification (real DB / IPC / mainloop)
+Group:      Development/Libraries
+Requires:   %{name} = %{version}-%{release}
+
+%description -n notification-integtests
+Integration test binary that drives notification against real
+sqlite, glib mainloop, and rpc-port loopback. Used by QA post-install
+sanity and by the pre-release test gate (INTEGRATION_EXIT capture).
+
+%files -n notification-integtests
+%{_bindir}/notification-integtests
+%{_bindir}/tizen-integtests/%{name}/run-integtest.sh
 
 %if 0%{?gcov:1}
 %files gcov
