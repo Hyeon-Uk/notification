@@ -26,6 +26,8 @@
 #include <notification_private.h>
 #include <notification_tidl.h>
 
+extern "C" {
+
 
 struct _notification_list {
 	notification_list_h prev;
@@ -33,7 +35,7 @@ struct _notification_list {
 	notification_h noti;
 };
 
-notification_list_h _notification_list_create(void)
+static notification_list_h _notification_list_create(void)
 {
 	notification_list_h list = NULL;
 
@@ -375,3 +377,5 @@ EXPORT_API int notification_free_list(notification_list_h list)
 	return NOTIFICATION_ERROR_NONE;
 }
 
+
+}  // extern "C"
