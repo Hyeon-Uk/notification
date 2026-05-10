@@ -1,2 +1,3 @@
 ADD_SUBDIRECTORY(unittests)
 ADD_SUBDIRECTORY(integration)
+ADD_SUBDIRECTORY(smoke)

@@ -102,9 +102,14 @@ echo "UNITTEST_EXIT=${UNITTEST_EXIT}"
 ( cd tests/integration && ./notification-integtests )
 INTEGRATION_EXIT=$?
 echo "INTEGRATION_EXIT=${INTEGRATION_EXIT}"
+( cd tests/smoke       && ./notification-smoketests )
+SMOKE_EXIT=$?
+echo "SMOKE_EXIT=${SMOKE_EXIT}"
 set -e
 
-[ "${UNITTEST_EXIT}" = "0" ] && [ "${INTEGRATION_EXIT}" = "0" ]
+[ "${UNITTEST_EXIT}" = "0" ] \
+  && [ "${INTEGRATION_EXIT}" = "0" ] \
+  && [ "${SMOKE_EXIT}" = "0" ]
 
 %if 0%{?gcov:1}
 lcov -c --ignore-errors mismatch,graph,unused --no-external -q -d . -o notification.info
@@ -179,6 +184,34 @@ EOF
 mkdir -p %{buildroot}%{_bindir}/tizen-integtests/%{name}
 install -m 0755 run-integtest.sh %{buildroot}%{_bindir}/tizen-integtests/%{name}/
 sed -i -e 's/<NAME>/notification/g' %{buildroot}%{_bindir}/tizen-integtests/%{name}/run-integtest.sh
+
+cat << EOF > run-smoketest.sh
+#!/bin/sh
+setup() {
+    echo "setup start"
+}
+
+test_main() {
+    echo "test_main start"
+    /usr/bin/<NAME>-smoketests
+}
+
+teardown() {
+    echo "teardown start"
+}
+
+main() {
+    setup
+    test_main
+    teardown
+}
+
+main "\$*"
+EOF
+
+mkdir -p %{buildroot}%{_bindir}/tizen-smoketests/%{name}
+install -m 0755 run-smoketest.sh %{buildroot}%{_bindir}/tizen-smoketests/%{name}/
+sed -i -e 's/<NAME>/notification/g' %{buildroot}%{_bindir}/tizen-smoketests/%{name}/run-smoketest.sh
 
 %clean
 rm -rf %{buildroot}
@@ -292,6 +325,24 @@ sanity and by the pre-release test gate (INTEGRATION_EXIT capture).
 %files -n notification-integtests
 %{_bindir}/notification-integtests
 %{_bindir}/tizen-integtests/%{name}/run-integtest.sh
+
+#################################################
+# notification-smoketests
+#################################################
+%package -n notification-smoketests
+Summary:    Post-install BAT for notification
+Group:      Development/Libraries
+Requires:   %{name} = %{version}-%{release}
+
+%description -n notification-smoketests
+Post-install build acceptance test ("smoke") for the notification
+package. Confirms the freshly installed library can create + set
++ free a notification handle without crashing. Drives the
+SMOKE_EXIT key the orchestrator's pre-release test gate consumes.
+
+%files -n notification-smoketests
+%{_bindir}/notification-smoketests
+%{_bindir}/tizen-smoketests/%{name}/run-smoketest.sh
 
 %if 0%{?gcov:1}
 %files gcov
