@@ -1,0 +1,35 @@
+{
+  "branch": "tizen",
+  "head_at_task_start": "d369e4e",
+  "current_task": "S7BUG (Stage 7 attempt + N7.5-D production bug follow-up)",
+  "stages": {
+    "stage7": {
+      "status": "external-dep-blocked",
+      "tidlc_regenerated": false,
+      "valgrind_baseline": false,
+      "blocker": "tidlc and valgrind absent on host; external Tizen tidl Phase 2 not merged",
+      "log": "logs/stage7_attempt.md"
+    },
+    "n7_5d_followup": {
+      "status": "completed",
+      "bugs_fixed": 2,
+      "fixes": [
+        "notification_noti_get_count: NULL count out-arg guard",
+        "notification_noti_check_tag: NULL noti handle guard + WARN-after-guard ordering fix"
+      ],
+      "test_added": "tests/unittests/src/test_notification_noti_internal_nullsafe.cc",
+      "new_tests": 4,
+      "abi_delta": "additive only (0 removed, 0 changed signatures)",
+      "commit": "a5932a8",
+      "ctest_result": {
+        "ran": 423,
+        "passed": 386,
+        "failed": 0,
+        "skipped_runtime": 75,
+        "disabled": 13
+      },
+      "abi_diff_libnotification": 0,
+      "abi_diff_libnotification_ex": 0
+    }
+  }
+}
