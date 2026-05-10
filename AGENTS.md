@@ -18,8 +18,17 @@ This is the notification Tizen AppFW package undergoing C++ refactoring.
 gbs build -A x86_64 --include-all -B /home/kimhyeonuk/GBS-ROOT-<TAG>
 ```
 
+### Refactoring Scope (MANDATORY)
+
+**IN SCOPE:** `src/notification/src/` and `src/notification/include/` ONLY.
+
+**OUT OF SCOPE:** `src/notification-ex/` — DO NOT analyze, plan, or modify
+any file under `src/notification-ex/`.
+
 ### Current State (2026-05-10)
-- Stage 8 FULLY COMPLETE — all 19 `.c` files migrated to `.cc` (N8-C: `d369e4e`)
-- Post-N8-C bug-fix commits applied: `b2c390e`…`812f07e` (NULL-deref, leak, race, SQL injection)
-- Next work: RAII adoption, memory optimization, storage/binary size reduction, Stage 7.5 coverage gates
-- Tests baseline: 382 PASSED (N8-B.2 era — stale; re-verify before new tasks)
+- Stage 8 FULLY COMPLETE — all `.c` files in `src/notification/src/` migrated
+  to `.cc` (post-Stage-8 bug-fix commits applied through `812f07e`)
+- C-to-C++ migration: DONE. No remaining `.c` migration tasks.
+- Next work: RAII adoption, memory optimization, storage/binary size reduction
+- Tests baseline: re-verify with GBS build before new tasks
+- ABI: 316 dynamic public symbols (must remain stable)
