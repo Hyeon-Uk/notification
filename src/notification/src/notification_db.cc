@@ -28,6 +28,8 @@
 #include <notification_db.h>
 #include "notification_db_query.h"
 
+extern "C" {
+
 static bool is_db_corrupted = false;
 
 /* Test-only seam used by tests/integration/. When the env var
@@ -469,3 +471,5 @@ out:
 
 	return ret;
 }
+
+}  // extern "C"
