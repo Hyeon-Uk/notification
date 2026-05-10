@@ -28,6 +28,8 @@
 #include <notification_debug.h>
 #include <notification_viewer.h>
 
+extern "C" {
+
 #define DEFAULT_VIEWER_CONF_FILE "/usr/share/notification/notification.ini"
 
 #define NOTIFICATION_VIEWER_CTOR __attribute__((constructor))
@@ -338,3 +340,5 @@ EXPORT_API int notification_launch_default_viewer_without_candidate_process(
 	return __launch_default_viewer(priv_id, status, uid, false);
 }
 /* LCOV_EXCL_STOP */
+
+}  // extern "C"
