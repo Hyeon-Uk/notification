@@ -1,1 +1,2 @@
 ADD_SUBDIRECTORY(unittests)
+ADD_SUBDIRECTORY(integration)
