@@ -21,21 +21,21 @@ TEST_F(IntegViewer, P_VIEWER_1_init_default_viewer_returns_bounded) {
   // and locks in a default viewer name. In the gbs sandbox the
   // file may not exist; pin a bounded return.
   int rc = notification_init_default_viewer();
-  EXPECT_GE(rc, NOTIFICATION_ERROR_NONE - 1);
+  EXPECT_LE(rc, NOTIFICATION_ERROR_NONE);
 }
 
 TEST_F(IntegViewer, N_VIEWER_1_launch_default_viewer_no_data_returns_bounded) {
   // Empty DB; calling launch should not crash, must return one of
   // the documented codes.
   int rc = notification_launch_default_viewer(0, NOTIFICATION_OP_INSERT, 0);
-  EXPECT_GE(rc, NOTIFICATION_ERROR_NONE - 1);
+  EXPECT_LE(rc, NOTIFICATION_ERROR_NONE);
 }
 
 TEST_F(IntegViewer,
        N_VIEWER_2_launch_default_viewer_without_candidate_returns_bounded) {
   int rc = notification_launch_default_viewer_without_candidate_process(
       0, NOTIFICATION_OP_INSERT, 0);
-  EXPECT_GE(rc, NOTIFICATION_ERROR_NONE - 1);
+  EXPECT_LE(rc, NOTIFICATION_ERROR_NONE);
 }
 
 TEST_F(IntegViewer, C_VIEWER_1_init_then_launch_chain) {

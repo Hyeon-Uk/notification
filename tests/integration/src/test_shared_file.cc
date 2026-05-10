@@ -33,7 +33,7 @@ TEST_F(IntegSharedFile, P_SF_1_set_private_sharing_returns_bounded) {
   // Pin: rc is one of the documented bounded codes (NONE on happy
   // path; PERMISSION_DENIED / INVALID_OPERATION otherwise). Crash
   // would be a regression.
-  EXPECT_GE(rc, NOTIFICATION_ERROR_NONE - 1);
+  EXPECT_LE(rc, NOTIFICATION_ERROR_NONE);
   notification_free(n);
 }
 

@@ -68,7 +68,7 @@ TEST_F(IntegIpc, C_IPC_1_make_noti_from_gvariant_round_trip_ok) {
   }
   int rc = notification_ipc_make_noti_from_gvariant(out, v);
   // Pin: round-trip returns a documented bounded code, no crash.
-  EXPECT_GE(rc, NOTIFICATION_ERROR_NONE - 1);
+  EXPECT_LE(rc, NOTIFICATION_ERROR_NONE);
 
   g_variant_unref(v);
   notification_free(out);
