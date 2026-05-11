@@ -601,7 +601,7 @@ TEST_F(NotificationTest, PostWithValidNoti) {
       "test", NULL, NOTIFICATION_VARIABLE_TYPE_NONE);
 
   int ret = notification_post(noti);
-  EXPECT_NE(ret, NOTIFICATION_ERROR_INVALID_PARAMETER);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_IO_ERROR);
 
   notification_free(noti);
 }
@@ -611,7 +611,7 @@ TEST_F(NotificationTest, UpdateWithValidNoti) {
   ASSERT_NE(noti, nullptr);
 
   int ret = notification_update(noti);
-  EXPECT_NE(ret, NOTIFICATION_ERROR_INVALID_PARAMETER);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_IO_ERROR);
 
   notification_free(noti);
 }
@@ -621,14 +621,14 @@ TEST_F(NotificationTest, DeleteWithValidNoti) {
   ASSERT_NE(noti, nullptr);
 
   int ret = notification_delete(noti);
-  EXPECT_NE(ret, NOTIFICATION_ERROR_INVALID_PARAMETER);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_IO_ERROR);
 
   notification_free(noti);
 }
 
 TEST_F(NotificationTest, DeleteAllWithValidType) {
   int ret = notification_delete_all(NOTIFICATION_TYPE_NOTI);
-  EXPECT_NE(ret, NOTIFICATION_ERROR_INVALID_PARAMETER);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_IO_ERROR);
 }
 
 TEST_F(NotificationTest, SetSoundNullNoti) {

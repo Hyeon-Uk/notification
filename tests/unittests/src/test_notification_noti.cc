@@ -131,11 +131,12 @@ TEST_F(NotificationNotiTest, InsertUpdateDeleteAll) {
   ret = notification_noti_update(noti);
   EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
 
-  int deleted_num;
-  int* deleted_list;
+  int deleted_num = -1;
+  int* deleted_list = nullptr;
   ret = notification_noti_delete_all(NOTIFICATION_TYPE_NOTI,
       "org.tizen.testappid", &deleted_num, &deleted_list, 5001);
   EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
+  EXPECT_GT(deleted_num, 0);
 
   notification_free(noti);
 }

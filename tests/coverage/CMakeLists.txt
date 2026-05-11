@@ -1,0 +1,6 @@
+IF(COVERAGE)
+  INSTALL(PROGRAMS
+    ${CMAKE_CURRENT_SOURCE_DIR}/verify_coverage.sh
+    DESTINATION bin/coverage
+  )
+ENDIF(COVERAGE)

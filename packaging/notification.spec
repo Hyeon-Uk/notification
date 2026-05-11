@@ -79,6 +79,9 @@ MAJORVER=`echo %{version} | awk 'BEGIN {FS="."}{print $1}'`
 %cmake . \
 	-DCMAKE_INSTALL_PREFIX=%{_prefix} \
 	-DMAJORVER=${MAJORVER} -DFULLVER=%{version} \
+    %if 0%{?gcov:1}
+     -DCOVERAGE=ON \
+    %endif
     %if 0%{?asan} != 1
      -DASAN_ENABLED=FALSE
     %else
@@ -91,8 +94,14 @@ mkdir -p %{TZ_SYS_DB} 2>/dev/null || true
 export LD_LIBRARY_PATH="../../src/notification:../../src/notification-ex"
 ctest -V
 %if 0%{?gcov:1}
-lcov -c --ignore-errors mismatch,graph,unused --no-external -q -d . -o notification.info
-genhtml notification.info -o notification.out
+lcov -c --ignore-errors mismatch,graph,unused,inconsistent --no-external -q -d . -o notification.info
+lcov --remove notification.info '*/notification-ex/*' '*/notification_tidl_proxy.c' '*/notification_tidl.c' '*/notification_internal_tidl.c' '*/tests/*' '*/mock/*' --ignore-errors unused -o notification_api.info -q
+echo "=== API Coverage (excluding auto-generated TIDL proxy) ==="
+lcov --summary notification_api.info 2>&1 | grep -E "(lines|functions)" || true
+echo "=== Full Coverage (all source) ==="
+lcov --remove notification.info '*/notification-ex/*' '*/tests/*' '*/mock/*' --ignore-errors unused -o notification.info -q
+lcov --summary notification.info 2>&1 | grep -E "(lines|functions)" || true
+genhtml notification_api.info -o notification.out -q
 zip -r notification.zip notification.out
 install -m 0644 notification.zip %{buildroot}%{_datadir}/gcov/obj/notification.zip
 %endif
@@ -237,6 +246,9 @@ GTest for notification
 %{_bindir}/smoke_tests/smoke_04_cold_start.sh
 %{_bindir}/smoke_tests/smoke_05_memory.sh
 %{_bindir}/smoke_tests/smoke_06_fd_leak.sh
+%if 0%{?gcov:1}
+%{_bindir}/coverage/verify_coverage.sh
+%endif
 %{_bindir}/tizen-unittests/%{name}/run-unittest.sh
 
 %if 0%{?gcov:1}
