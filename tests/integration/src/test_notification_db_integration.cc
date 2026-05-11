@@ -300,6 +300,7 @@ TEST_F(NotificationDBIntegrationTest, NotiInsertAndDeleteAll) {
   int ret = notification_noti_delete_all(NOTIFICATION_TYPE_NOTI,
       nullptr, &deleted_num, &deleted_list, 5001);
   EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
+  EXPECT_EQ(GetRowCount("noti_list"), 0);
 
   if (deleted_list) free(deleted_list);
 }
