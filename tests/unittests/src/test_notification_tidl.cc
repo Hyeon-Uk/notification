@@ -73,3 +73,18 @@ TEST_F(NotificationTidlTest, notification_load_by_tag_null_tag) {
   notification_h noti = notification_load_by_tag(nullptr);
   EXPECT_EQ(noti, nullptr);
 }
+
+TEST_F(NotificationTidlTest, notification_delete_all_type_none_returns_error) {
+  int ret = notification_delete_all(NOTIFICATION_TYPE_NONE);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_INVALID_PARAMETER);
+}
+
+TEST_F(NotificationTidlTest, notification_save_as_template_both_null) {
+  int ret = notification_save_as_template(nullptr, nullptr);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_INVALID_PARAMETER);
+}
+
+TEST_F(NotificationTidlTest, notification_create_from_template_null_returns_null) {
+  notification_h noti = notification_create_from_template(nullptr);
+  EXPECT_EQ(noti, nullptr);
+}
