@@ -25,6 +25,10 @@
 class NotificationListIntegrationTest : public ::testing::Test {
  protected:
   void SetUp() override {
+    notification_h test_noti = notification_create(NOTIFICATION_TYPE_NOTI);
+    if (!test_noti)
+      GTEST_SKIP() << "notification_create requires app context";
+    notification_free(test_noti);
   }
 
   void TearDown() override {

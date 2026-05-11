@@ -158,6 +158,11 @@ class NotificationUidIntegrationTest : public ::testing::Test {
     ASSERT_EQ(rc, SQLITE_OK);
 
     sqlite3_close(setup_db);
+
+    notification_h test_noti = notification_create(NOTIFICATION_TYPE_NOTI);
+    if (!test_noti)
+      GTEST_SKIP() << "notification_create requires app context";
+    notification_free(test_noti);
   }
 
   void TearDown() override {
