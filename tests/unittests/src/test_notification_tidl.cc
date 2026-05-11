@@ -66,7 +66,7 @@ TEST_F(NotificationTidlTest, notification_delete_null_noti) {
 
 TEST_F(NotificationTidlTest, notification_delete_all_invalid_type) {
   int ret = notification_delete_all((notification_type_e)-1);
-  EXPECT_NE(ret, NOTIFICATION_ERROR_NONE);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_INVALID_PARAMETER);
 }
 
 TEST_F(NotificationTidlTest, notification_load_by_tag_null_tag) {

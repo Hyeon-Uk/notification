@@ -137,6 +137,20 @@ TEST_F(NotificationNotiTest, InsertUpdateDeleteAll) {
       "org.tizen.testappid", &deleted_num, &deleted_list, 5001);
   EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
   EXPECT_GT(deleted_num, 0);
+  if (deleted_num > 0)
+    EXPECT_NE(deleted_list, nullptr);
+  free(deleted_list);
+
+  EXPECT_CALL(GetMock<SqliteMock>(), sqlite3_step(_))
+      .WillOnce(Return(SQLITE_ROW));
+  EXPECT_CALL(GetMock<SqliteMock>(), sqlite3_column_int(_, _))
+      .WillOnce(Return(0));
+
+  int post_delete_count = -1;
+  ret = notification_noti_get_all_count(
+      NOTIFICATION_TYPE_NOTI, &post_delete_count, 5001);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
+  EXPECT_EQ(post_delete_count, 0);
 
   notification_free(noti);
 }

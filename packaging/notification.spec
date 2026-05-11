@@ -98,6 +98,19 @@ lcov -c --ignore-errors mismatch,graph,unused,inconsistent --no-external -q -d .
 lcov --remove notification.info '*/notification-ex/*' '*/notification_tidl_proxy.c' '*/notification_tidl.c' '*/notification_internal_tidl.c' '*/tests/*' '*/mock/*' --ignore-errors unused -o notification_api.info -q
 echo "=== API Coverage (excluding auto-generated TIDL proxy) ==="
 lcov --summary notification_api.info 2>&1 | grep -E "(lines|functions)" || true
+FUNC_COV=$(lcov --summary notification_api.info 2>&1 | grep -oP 'functions\.*:\s*\K[0-9.]+')
+FUNC_COV_INT=${FUNC_COV%%%%.*}
+COVERAGE_THRESHOLD=100
+echo "Function coverage: ${FUNC_COV}%% (threshold: ${COVERAGE_THRESHOLD}%%)"
+if [ -z "$FUNC_COV_INT" ]; then
+  echo "FAIL: Could not parse function coverage from lcov output"
+  exit 1
+fi
+if [ "$FUNC_COV_INT" -lt "$COVERAGE_THRESHOLD" ]; then
+  echo "FAIL: Function coverage ${FUNC_COV}%% < ${COVERAGE_THRESHOLD}%% threshold"
+  lcov --list notification_api.info 2>/dev/null | grep -v "100.0%%" | head -30 || true
+  exit 1
+fi
 echo "=== Full Coverage (all source) ==="
 lcov --remove notification.info '*/notification-ex/*' '*/tests/*' '*/mock/*' --ignore-errors unused -o notification.info -q
 lcov --summary notification.info 2>&1 | grep -E "(lines|functions)" || true

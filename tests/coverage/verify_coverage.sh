@@ -13,10 +13,11 @@ BUILD_DIR="${1:-}"
 THRESHOLD="${2:-100}"
 
 if [ -z "$BUILD_DIR" ]; then
-  BUILD_DIR=$(find /home/kimhyeonuk/GBS-ROOT-*/local/BUILD-ROOTS/scratch.*/home/abuild/rpmbuild/BUILD/notification-* -maxdepth 0 2>/dev/null | sort -r | head -1)
+  GBS_BASE="${GBS_ROOT_DIR:-${HOME}}"
+  BUILD_DIR=$(find "${GBS_BASE}"/GBS-ROOT-*/local/BUILD-ROOTS/scratch.*/home/abuild/rpmbuild/BUILD/notification-* -maxdepth 0 2>/dev/null | sort -r | head -1)
   if [ -z "$BUILD_DIR" ]; then
     echo "ERROR: No GBS build directory found. Build with --define 'gcov 1' first."
-    echo "Usage: gbs build -A x86_64 --include-all --define 'gcov 1' -B /home/kimhyeonuk/GBS-ROOT-COV"
+    echo "Usage: gbs build -A x86_64 --include-all --define 'gcov 1' -B \${HOME}/GBS-ROOT-COV"
     exit 1
   fi
 fi

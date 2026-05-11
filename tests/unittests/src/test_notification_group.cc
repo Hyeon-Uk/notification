@@ -50,9 +50,8 @@ class NotificationGroupTest : public TestFixture {
 };
 
 TEST_F(NotificationGroupTest, notification_get_grouping_list_null_list) {
-  notification_list_h list = nullptr;
   int ret = notification_get_grouping_list(NOTIFICATION_TYPE_NOTI, 1, nullptr);
-  EXPECT_NE(ret, NOTIFICATION_ERROR_NONE);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_INVALID_PARAMETER);
 }
 
 TEST_F(NotificationGroupTest, notification_delete_group_by_priv_id_valid) {
@@ -61,10 +60,11 @@ TEST_F(NotificationGroupTest, notification_delete_group_by_priv_id_valid) {
 
   int ret = notification_delete_group_by_priv_id("org.tizen.testapp",
       NOTIFICATION_TYPE_NOTI, 1);
-  EXPECT_NE(ret, NOTIFICATION_ERROR_INVALID_PARAMETER);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_IO_ERROR);
 }
 
 TEST_F(NotificationGroupTest, notification_get_count_null_count) {
-  int ret = notification_get_count(NOTIFICATION_TYPE_NOTI, "org.tizen.test", 0, 0, nullptr);
-  EXPECT_NE(ret, NOTIFICATION_ERROR_NONE);
+  int ret = notification_get_count(NOTIFICATION_TYPE_NOTI, "org.tizen.test",
+      0, 0, nullptr);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_INVALID_PARAMETER);
 }
