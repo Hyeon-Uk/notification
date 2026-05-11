@@ -28,8 +28,6 @@
 
 namespace {
 
-notification_h noti = nullptr;
-
 typedef struct {
   const char *package;
   char *locale;
@@ -75,16 +73,21 @@ using ::testing::Return;
 class NotificationNotiTest : public TestFixture {
  public:
   NotificationNotiTest() : TestFixture(std::make_unique<::Mocks>()) {}
-  virtual void SetUp() {
+
+  void SetUp() override {
+    EXPECT_CALL(GetMock<AulMock>(), aul_app_get_appid_bypid(_, _, _))
+        .WillRepeatedly(Invoke(__fake_aul_app_get_appid_bypid));
   }
-  virtual void TearDown() {
+
+  void TearDown() override {}
+
+  notification_h CreateTestNoti() {
+    notification_h noti = notification_create(NOTIFICATION_TYPE_NOTI);
+    return noti;
   }
 };
 
-TEST_F(NotificationNotiTest, notification_noti_test) {
-  EXPECT_CALL(GetMock<AulMock>(), aul_app_get_appid_bypid(_, _, _))
-      .WillRepeatedly(Invoke(__fake_aul_app_get_appid_bypid));
-
+TEST_F(NotificationNotiTest, InsertUpdateDeleteAll) {
   EXPECT_CALL(GetMock<SqliteMock>(), sqlite3_open_v2(_, _, _, _))
       .WillRepeatedly(Invoke(__fake_sqlite3_open_v2));
 
@@ -119,25 +122,25 @@ TEST_F(NotificationNotiTest, notification_noti_test) {
   EXPECT_CALL(GetMock<SqliteMock>(), sqlite3_column_int(_, _))
       .WillRepeatedly(Return(1));
 
-  int ret;
+  notification_h noti = CreateTestNoti();
+  ASSERT_NE(noti, nullptr);
 
-  noti = notification_create(NOTIFICATION_TYPE_NOTI);
-  EXPECT_NE(noti, nullptr);
-
-  ret = notification_noti_insert(noti);
-  ASSERT_EQ(ret, NOTIFICATION_ERROR_NONE);
+  int ret = notification_noti_insert(noti);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
 
   ret = notification_noti_update(noti);
-  ASSERT_EQ(ret, NOTIFICATION_ERROR_NONE);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
 
   int deleted_num;
   int* deleted_list;
-  ret = notification_noti_delete_all(NOTIFICATION_TYPE_NOTI, "org.tizen.testappid",
-      &deleted_num, &deleted_list, 5001);
-  ASSERT_EQ(ret, NOTIFICATION_ERROR_NONE);
+  ret = notification_noti_delete_all(NOTIFICATION_TYPE_NOTI,
+      "org.tizen.testappid", &deleted_num, &deleted_list, 5001);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
+
+  notification_free(noti);
 }
 
-TEST_F(NotificationNotiTest, notification_noti_test2) {
+TEST_F(NotificationNotiTest, GetByTag) {
   EXPECT_CALL(GetMock<SqliteMock>(), sqlite3_open_v2(_, _, _, _))
       .WillOnce(Invoke(__fake_sqlite3_open_v2));
 
@@ -162,14 +165,18 @@ TEST_F(NotificationNotiTest, notification_noti_test2) {
   EXPECT_CALL(GetMock<SqliteMock>(), sqlite3_column_text(_, _))
       .WillRepeatedly(Return(nullptr));
 
-  int ret;
-  ret = notification_noti_get_by_tag(noti,
+  notification_h noti = CreateTestNoti();
+  ASSERT_NE(noti, nullptr);
+
+  int ret = notification_noti_get_by_tag(noti,
       const_cast<char*>("org.tizen.testappid"),
       const_cast<char*>("test_tag"), 5001);
-  ASSERT_EQ(ret, NOTIFICATION_ERROR_NONE);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
+
+  notification_free(noti);
 }
 
-TEST_F(NotificationNotiTest, notification_noti_test3) {
+TEST_F(NotificationNotiTest, DeleteByPrivIdGetChanges) {
   EXPECT_CALL(GetMock<SqliteMock>(), sqlite3_open_v2(_, _, _, _))
       .WillOnce(Invoke(__fake_sqlite3_open_v2));
 
@@ -185,15 +192,14 @@ TEST_F(NotificationNotiTest, notification_noti_test3) {
   EXPECT_CALL(GetMock<SqliteMock>(), sqlite3_free(_))
       .WillOnce(Return());
 
-  int ret;
-
   int num_changes;
-  ret = notification_noti_delete_by_priv_id_get_changes("org.tizen.testappid", 1, &num_changes, 5001);
-  ASSERT_EQ(ret, NOTIFICATION_ERROR_NONE);
+  int ret = notification_noti_delete_by_priv_id_get_changes(
+      "org.tizen.testappid", 1, &num_changes, 5001);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
 }
 
 
-TEST_F(NotificationNotiTest, notification_noti_test4) {
+TEST_F(NotificationNotiTest, DeleteByDisplayApplist) {
   EXPECT_CALL(GetMock<SqliteMock>(), sqlite3_open_v2(_, _, _, _))
       .WillRepeatedly(Invoke(__fake_sqlite3_open_v2));
 
@@ -214,16 +220,15 @@ TEST_F(NotificationNotiTest, notification_noti_test4) {
   EXPECT_CALL(GetMock<SqliteMock>(), sqlite3_column_int(_, _))
       .WillRepeatedly(Return(1));
 
-  int ret;
-
   int deleted_num;
   notification_deleted_list_info_s *deleted_list;
-  ret = notification_noti_delete_by_display_applist(NOTIFICATION_DISPLAY_APP_INDICATOR,
+  int ret = notification_noti_delete_by_display_applist(
+      NOTIFICATION_DISPLAY_APP_INDICATOR,
       &deleted_num, &deleted_list, 5001);
-  ASSERT_EQ(ret, NOTIFICATION_ERROR_NONE);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
 }
 
-TEST_F(NotificationNotiTest, notification_noti_test5) {
+TEST_F(NotificationNotiTest, GetAllCount) {
   EXPECT_CALL(GetMock<SqliteMock>(), sqlite3_open_v2(_, _, _, _))
       .WillOnce(Invoke(__fake_sqlite3_open_v2));
 
@@ -233,13 +238,13 @@ TEST_F(NotificationNotiTest, notification_noti_test5) {
   EXPECT_CALL(GetMock<SqliteMock>(), sqlite3_step(_))
       .WillOnce(Return(SQLITE_ROW));
 
-  int ret;
   int count;
-  ret = notification_noti_get_all_count(NOTIFICATION_TYPE_NOTI, &count, 5001);
-  ASSERT_EQ(ret, NOTIFICATION_ERROR_NONE);
+  int ret = notification_noti_get_all_count(
+      NOTIFICATION_TYPE_NOTI, &count, 5001);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
 }
 
-TEST_F(NotificationNotiTest, notification_noti_test6) {
+TEST_F(NotificationNotiTest, GetGroupingList) {
   EXPECT_CALL(GetMock<SqliteMock>(), sqlite3_open_v2(_, _, _, _))
       .WillOnce(Invoke(__fake_sqlite3_open_v2));
 
@@ -249,14 +254,14 @@ TEST_F(NotificationNotiTest, notification_noti_test6) {
   EXPECT_CALL(GetMock<SqliteMock>(), sqlite3_step(_))
       .WillOnce(Return(SQLITE_ROW));
 
-  int ret;
   notification_list_h group_list;
   int list_count;
-  ret = notification_noti_get_grouping_list(NOTIFICATION_TYPE_NOTI, 1,1, &group_list, &list_count, 5001);
-  ASSERT_EQ(ret, NOTIFICATION_ERROR_NONE);
+  int ret = notification_noti_get_grouping_list(
+      NOTIFICATION_TYPE_NOTI, 1, 1, &group_list, &list_count, 5001);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
 }
 
-TEST_F(NotificationNotiTest, notification_noti_test7) {
+TEST_F(NotificationNotiTest, GetDetailList) {
   EXPECT_CALL(GetMock<SqliteMock>(), sqlite3_open_v2(_, _, _, _))
       .WillRepeatedly(Invoke(__fake_sqlite3_open_v2));
 
@@ -266,13 +271,13 @@ TEST_F(NotificationNotiTest, notification_noti_test7) {
   EXPECT_CALL(GetMock<SqliteMock>(), sqlite3_step(_))
       .WillRepeatedly(Return(SQLITE_ROW));
 
-  int ret;
   notification_list_h detail_list;
-  ret = notification_noti_get_detail_list("org.tizen.testappid", 1, 1, 1, &detail_list, 5001);
-  ASSERT_EQ(ret, NOTIFICATION_ERROR_NONE);
+  int ret = notification_noti_get_detail_list(
+      "org.tizen.testappid", 1, 1, 1, &detail_list, 5001);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
 }
 
-TEST_F(NotificationNotiTest, notification_noti_test8) {
+TEST_F(NotificationNotiTest, CheckTagAlreadyExists) {
   EXPECT_CALL(GetMock<SqliteMock>(), sqlite3_open_v2(_, _, _, _))
       .WillRepeatedly(Invoke(__fake_sqlite3_open_v2));
 
@@ -285,15 +290,19 @@ TEST_F(NotificationNotiTest, notification_noti_test8) {
   EXPECT_CALL(GetMock<SqliteMock>(), sqlite3_column_int(_, _))
       .WillRepeatedly(Return(1));
 
-  int ret;
-  ret = notification_set_tag(noti, "test_tag");
-  ASSERT_EQ(ret, NOTIFICATION_ERROR_NONE);
+  notification_h noti = CreateTestNoti();
+  ASSERT_NE(noti, nullptr);
+
+  int ret = notification_set_tag(noti, "test_tag");
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
 
   ret = notification_noti_check_tag(noti);
-  ASSERT_EQ(ret, NOTIFICATION_ERROR_ALREADY_EXIST_ID);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_ALREADY_EXIST_ID);
+
+  notification_free(noti);
 }
 
-TEST_F(NotificationNotiTest, notification_noti_test9) {
+TEST_F(NotificationNotiTest, CheckCountForTemplate) {
   EXPECT_CALL(GetMock<SqliteMock>(), sqlite3_open_v2(_, _, _, _))
       .WillOnce(Invoke(__fake_sqlite3_open_v2));
 
@@ -303,13 +312,17 @@ TEST_F(NotificationNotiTest, notification_noti_test9) {
   EXPECT_CALL(GetMock<SqliteMock>(), sqlite3_step(_))
       .WillOnce(Return(SQLITE_OK));
 
-  int ret;
+  notification_h noti = CreateTestNoti();
+  ASSERT_NE(noti, nullptr);
+
   int count;
-  ret = notification_noti_check_count_for_template(noti, &count);
-  ASSERT_EQ(ret, 0);
+  int ret = notification_noti_check_count_for_template(noti, &count);
+  EXPECT_EQ(ret, 0);
+
+  notification_free(noti);
 }
 
-TEST_F(NotificationNotiTest, notification_noti_test10) {
+TEST_F(NotificationNotiTest, AddTemplate) {
   EXPECT_CALL(GetMock<SqliteMock>(), sqlite3_open_v2(_, _, _, _))
       .WillOnce(Invoke(__fake_sqlite3_open_v2));
 
@@ -319,13 +332,17 @@ TEST_F(NotificationNotiTest, notification_noti_test10) {
   EXPECT_CALL(GetMock<SqliteMock>(), sqlite3_step(_))
       .WillOnce(Return(SQLITE_OK));
 
-  int ret;
-  ret = notification_noti_add_template(noti,
+  notification_h noti = CreateTestNoti();
+  ASSERT_NE(noti, nullptr);
+
+  int ret = notification_noti_add_template(noti,
       const_cast<char*>("test_template"));
-  ASSERT_EQ(ret, NOTIFICATION_ERROR_NONE);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
+
+  notification_free(noti);
 }
 
-TEST_F(NotificationNotiTest, notification_noti_test11) {
+TEST_F(NotificationNotiTest, GetPackageTemplate) {
   EXPECT_CALL(GetMock<SqliteMock>(), sqlite3_open_v2(_, _, _, _))
       .WillOnce(Invoke(__fake_sqlite3_open_v2));
 
@@ -335,14 +352,18 @@ TEST_F(NotificationNotiTest, notification_noti_test11) {
   EXPECT_CALL(GetMock<SqliteMock>(), sqlite3_step(_))
       .WillOnce(Return(SQLITE_ROW));
 
-  int ret;
-  ret = notification_noti_get_package_template(noti,
+  notification_h noti = CreateTestNoti();
+  ASSERT_NE(noti, nullptr);
+
+  int ret = notification_noti_get_package_template(noti,
       const_cast<char*>("org.tizen.testappid"),
       const_cast<char*>("test_template"));
-  ASSERT_EQ(ret, NOTIFICATION_ERROR_NONE);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
+
+  notification_free(noti);
 }
 
-TEST_F(NotificationNotiTest, notification_noti_test12) {
+TEST_F(NotificationNotiTest, DeleteTemplate) {
   EXPECT_CALL(GetMock<SqliteMock>(), sqlite3_open_v2(_, _, _, _))
       .WillOnce(Invoke(__fake_sqlite3_open_v2));
 
@@ -352,12 +373,11 @@ TEST_F(NotificationNotiTest, notification_noti_test12) {
   EXPECT_CALL(GetMock<SqliteMock>(), sqlite3_step(_))
       .WillOnce(Return(SQLITE_OK));
 
-  int ret;
-  ret = notification_noti_delete_template("org.tizen.testpkgid");
-  ASSERT_EQ(ret, NOTIFICATION_ERROR_NONE);
+  int ret = notification_noti_delete_template("org.tizen.testpkgid");
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
 }
 
-TEST_F(NotificationNotiTest, notification_noti_test13) {
+TEST_F(NotificationNotiTest, CheckLimit) {
   EXPECT_CALL(GetMock<SqliteMock>(), sqlite3_open_v2(_, _, _, _))
       .WillOnce(Invoke(__fake_sqlite3_open_v2));
 
@@ -373,8 +393,12 @@ TEST_F(NotificationNotiTest, notification_noti_test13) {
   EXPECT_CALL(GetMock<GlibMock>(), g_list_append(_, _))
       .WillOnce(Return(nullptr));
 
-  int ret;
+  notification_h noti = CreateTestNoti();
+  ASSERT_NE(noti, nullptr);
+
   GList* list;
-  ret = notification_noti_check_limit(noti, 5001, &list);
-  ASSERT_EQ(ret, NOTIFICATION_ERROR_NONE);
+  int ret = notification_noti_check_limit(noti, 5001, &list);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
+
+  notification_free(noti);
 }

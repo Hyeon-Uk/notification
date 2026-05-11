@@ -87,6 +87,7 @@ MAJORVER=`echo %{version} | awk 'BEGIN {FS="."}{print $1}'`
 %__make %{?jobs:-j%jobs}
 
 %check
+mkdir -p %{TZ_SYS_DB} 2>/dev/null || true
 export LD_LIBRARY_PATH="../../src/notification:../../src/notification-ex"
 ctest -V
 %if 0%{?gcov:1}

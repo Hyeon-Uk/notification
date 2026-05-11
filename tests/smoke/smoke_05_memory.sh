@@ -23,10 +23,13 @@ fi
 TMPDIR=$(mktemp -d)
 cat > "${TMPDIR}/memory_test.c" << 'EOF'
 #include <dlfcn.h>
+#include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+
+void sigalrm_handler(int sig) { (void)sig; }
 
 long get_vmrss_kb() {
   FILE* f = fopen("/proc/self/status", "r");
@@ -53,15 +56,30 @@ int main(int argc, char** argv) {
   }
 
   typedef void* (*create_fn)(int);
+  typedef int (*post_fn)(void*);
   typedef int (*free_fn)(void*);
 
   create_fn noti_create = (create_fn)dlsym(handle, "notification_create");
+  post_fn noti_post = (post_fn)dlsym(handle, "notification_post");
   free_fn noti_free = (free_fn)dlsym(handle, "notification_free");
 
-  if (!noti_create || !noti_free) {
-    fprintf(stderr, "FAIL: Cannot find notification_create/notification_free\n");
+  if (!noti_create || !noti_post || !noti_free) {
+    fprintf(stderr, "FAIL: Cannot find symbols\n");
     dlclose(handle);
     return 1;
+  }
+
+  /* Warm up to stabilize RSS before measuring.
+   * notification_post may block on IPC if no daemon is running,
+   * so use alarm() to interrupt it after 1 second. */
+  signal(SIGALRM, sigalrm_handler);
+
+  void* warmup = noti_create(1);
+  if (warmup) {
+    alarm(1);
+    noti_post(warmup);
+    alarm(0);
+    noti_free(warmup);
   }
 
   long rss_before = get_vmrss_kb();
@@ -71,10 +89,14 @@ int main(int argc, char** argv) {
     return 1;
   }
 
-  // Create and free 100 notifications
   for (int i = 0; i < 100; i++) {
-    void* noti = noti_create(1); // NOTIFICATION_TYPE_NOTI = 1
-    if (noti) noti_free(noti);
+    void* noti = noti_create(1);
+    if (noti) {
+      alarm(1);
+      noti_post(noti);
+      alarm(0);
+      noti_free(noti);
+    }
   }
 
   long rss_after = get_vmrss_kb();

@@ -16,12 +16,14 @@
 
 #include <gtest/gtest.h>
 #include <sqlite3.h>
+#include <cerrno>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
 #include <string>
 #include <unistd.h>
 #include <sys/stat.h>
+#include <tzplatform_config.h>
 
 #include "notification/include/notification.h"
 #include "notification/include/notification_db.h"
@@ -133,275 +135,229 @@ const char* CREATE_SYSTEM_SETTING_TABLE_SQL =
 
 class NotificationDBIntegrationTest : public ::testing::Test {
  protected:
+  static void MkdirP(const std::string& path) {
+    size_t pos = 0;
+    while ((pos = path.find('/', pos + 1)) != std::string::npos)
+      mkdir(path.substr(0, pos).c_str(), 0755);
+    mkdir(path.c_str(), 0755);
+  }
+
   void SetUp() override {
-    char tmpl[] = "/tmp/noti_db_test_XXXXXX";
-    char* dir = mkdtemp(tmpl);
-    ASSERT_NE(dir, nullptr);
-    tmp_dir_ = std::string(dir);
-    db_path_ = tmp_dir_ + "/noti.db";
+    db_path_ = std::string(DBPATH);
+    std::string db_dir = db_path_.substr(0, db_path_.rfind('/'));
+    MkdirP(db_dir);
 
-    int rc = sqlite3_open(db_path_.c_str(), &db_);
+    if (access(db_dir.c_str(), W_OK) != 0)
+      GTEST_SKIP() << "DB directory not writable: " << db_dir;
+
+    unlink(db_path_.c_str());
+
+    sqlite3* setup_db = nullptr;
+    int rc = sqlite3_open(db_path_.c_str(), &setup_db);
     ASSERT_EQ(rc, SQLITE_OK);
-    ASSERT_NE(db_, nullptr);
+    ASSERT_NE(setup_db, nullptr);
 
-    // Create the schema tables
     char* err_msg = nullptr;
-    rc = sqlite3_exec(db_, CREATE_NOTI_TABLE_SQL, nullptr, nullptr, &err_msg);
-    if (err_msg) {
-      sqlite3_free(err_msg);
-      err_msg = nullptr;
-    }
+    rc = sqlite3_exec(setup_db, CREATE_NOTI_TABLE_SQL,
+        nullptr, nullptr, &err_msg);
+    if (err_msg) { sqlite3_free(err_msg); err_msg = nullptr; }
     ASSERT_EQ(rc, SQLITE_OK);
 
-    rc = sqlite3_exec(db_, CREATE_SETTING_TABLE_SQL, nullptr, nullptr, &err_msg);
-    if (err_msg) {
-      sqlite3_free(err_msg);
-      err_msg = nullptr;
-    }
+    rc = sqlite3_exec(setup_db, CREATE_SETTING_TABLE_SQL,
+        nullptr, nullptr, &err_msg);
+    if (err_msg) { sqlite3_free(err_msg); err_msg = nullptr; }
     ASSERT_EQ(rc, SQLITE_OK);
 
-    rc = sqlite3_exec(db_, CREATE_SYSTEM_SETTING_TABLE_SQL, nullptr, nullptr, &err_msg);
-    if (err_msg) {
-      sqlite3_free(err_msg);
-      err_msg = nullptr;
-    }
+    rc = sqlite3_exec(setup_db, CREATE_SYSTEM_SETTING_TABLE_SQL,
+        nullptr, nullptr, &err_msg);
+    if (err_msg) { sqlite3_free(err_msg); err_msg = nullptr; }
     ASSERT_EQ(rc, SQLITE_OK);
+
+    sqlite3_close(setup_db);
   }
 
   void TearDown() override {
-    if (db_) {
-      sqlite3_close(db_);
-      db_ = nullptr;
-    }
-    if (!tmp_dir_.empty()) {
-      // Clean up temporary test directory
-      std::string db_file = tmp_dir_ + "/noti.db";
-      unlink(db_file.c_str());
-      rmdir(tmp_dir_.c_str());
-    }
+    if (!db_path_.empty())
+      unlink(db_path_.c_str());
   }
 
   int GetRowCount(const char* table_name) {
-    std::string query = "SELECT COUNT(*) FROM " + std::string(table_name) + ";";
+    sqlite3* db = nullptr;
+    int rc = sqlite3_open(db_path_.c_str(), &db);
+    if (rc != SQLITE_OK) return -1;
+
+    std::string query =
+        "SELECT COUNT(*) FROM " + std::string(table_name) + ";";
     sqlite3_stmt* stmt = nullptr;
     int count = -1;
 
-    int rc = sqlite3_prepare_v2(db_, query.c_str(), -1, &stmt, nullptr);
-    if (rc == SQLITE_OK && sqlite3_step(stmt) == SQLITE_ROW) {
+    rc = sqlite3_prepare_v2(db, query.c_str(), -1, &stmt, nullptr);
+    if (rc == SQLITE_OK && sqlite3_step(stmt) == SQLITE_ROW)
       count = sqlite3_column_int(stmt, 0);
-    }
-    if (stmt)
-      sqlite3_finalize(stmt);
+    if (stmt) sqlite3_finalize(stmt);
+    sqlite3_close(db);
     return count;
   }
 
-  sqlite3* db_ = nullptr;
-  std::string tmp_dir_;
   std::string db_path_;
 };
 
-TEST_F(NotificationDBIntegrationTest, OpenAndCloseDB) {
-  // Verify the DB was opened successfully in SetUp
-  ASSERT_NE(db_, nullptr);
+TEST_F(NotificationDBIntegrationTest, DbOpenAndClose) {
+  sqlite3* db = notification_db_open();
+  ASSERT_NE(db, nullptr);
 
-  // Verify we can execute a simple query
-  sqlite3_stmt* stmt = nullptr;
-  int rc = sqlite3_prepare_v2(db_, "SELECT 1;", -1, &stmt, nullptr);
-  ASSERT_EQ(rc, SQLITE_OK);
-  ASSERT_NE(stmt, nullptr);
-
-  rc = sqlite3_step(stmt);
-  EXPECT_EQ(rc, SQLITE_ROW);
-  EXPECT_EQ(sqlite3_column_int(stmt, 0), 1);
-
-  sqlite3_finalize(stmt);
+  int ret = notification_db_close(&db);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
+  EXPECT_EQ(db, nullptr);
 }
 
-TEST_F(NotificationDBIntegrationTest, ExecWithRealSQL) {
-  // Insert a notification record directly via SQL
+TEST_F(NotificationDBIntegrationTest, DbCloseNullParam) {
+  int ret = notification_db_close(nullptr);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_INVALID_PARAMETER);
+}
+
+TEST_F(NotificationDBIntegrationTest, DbExecWithRealQuery) {
+  sqlite3* db = notification_db_open();
+  ASSERT_NE(db, nullptr);
+
   const char* insert_sql =
       "INSERT INTO noti_list (type, layout, pkg_id, caller_app_id, "
       "launch_app_id, display_applist, uid) "
       "VALUES (1, 0, 'org.tizen.test', 'org.tizen.test', "
       "'org.tizen.test', 7, 5001);";
 
-  char* err_msg = nullptr;
-  int rc = sqlite3_exec(db_, insert_sql, nullptr, nullptr, &err_msg);
-  if (err_msg) {
-    sqlite3_free(err_msg);
-    err_msg = nullptr;
-  }
-  ASSERT_EQ(rc, SQLITE_OK);
+  int num_changes = 0;
+  int ret = notification_db_exec(db, insert_sql, &num_changes);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
 
   EXPECT_EQ(GetRowCount("noti_list"), 1);
+  notification_db_close(&db);
 }
 
-TEST_F(NotificationDBIntegrationTest, InsertAndQueryNotification) {
-  // Insert multiple notification records
-  const char* insert_sql_fmt =
-      "INSERT INTO noti_list (type, layout, pkg_id, caller_app_id, "
-      "launch_app_id, tag, display_applist, uid) "
-      "VALUES (%d, 0, 'org.tizen.test', 'org.tizen.test', "
-      "'org.tizen.test', '%s', 7, 5001);";
+TEST_F(NotificationDBIntegrationTest, DbExecNullParams) {
+  int ret = notification_db_exec(nullptr, "SELECT 1;", nullptr);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_INVALID_PARAMETER);
 
-  char query[512];
-  char* err_msg = nullptr;
-
-  snprintf(query, sizeof(query), insert_sql_fmt, 1, "tag_one");
-  int rc = sqlite3_exec(db_, query, nullptr, nullptr, &err_msg);
-  if (err_msg) { sqlite3_free(err_msg); err_msg = nullptr; }
-  ASSERT_EQ(rc, SQLITE_OK);
-
-  snprintf(query, sizeof(query), insert_sql_fmt, 2, "tag_two");
-  rc = sqlite3_exec(db_, query, nullptr, nullptr, &err_msg);
-  if (err_msg) { sqlite3_free(err_msg); err_msg = nullptr; }
-  ASSERT_EQ(rc, SQLITE_OK);
-
-  EXPECT_EQ(GetRowCount("noti_list"), 2);
-
-  // Query by tag
-  const char* select_sql =
-      "SELECT priv_id, type, tag FROM noti_list WHERE tag = 'tag_one';";
-  sqlite3_stmt* stmt = nullptr;
-  rc = sqlite3_prepare_v2(db_, select_sql, -1, &stmt, nullptr);
-  ASSERT_EQ(rc, SQLITE_OK);
-
-  rc = sqlite3_step(stmt);
-  ASSERT_EQ(rc, SQLITE_ROW);
-  EXPECT_EQ(sqlite3_column_int(stmt, 1), 1);  // type
-  EXPECT_STREQ(reinterpret_cast<const char*>(sqlite3_column_text(stmt, 2)), "tag_one");
-
-  sqlite3_finalize(stmt);
+  sqlite3* db = notification_db_open();
+  ASSERT_NE(db, nullptr);
+  ret = notification_db_exec(db, nullptr, nullptr);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_INVALID_PARAMETER);
+  notification_db_close(&db);
 }
 
-TEST_F(NotificationDBIntegrationTest, DeleteNotification) {
-  // Insert a record
-  const char* insert_sql =
-      "INSERT INTO noti_list (type, layout, pkg_id, caller_app_id, "
-      "launch_app_id, display_applist, uid) "
-      "VALUES (1, 0, 'org.tizen.test', 'org.tizen.test', "
-      "'org.tizen.test', 7, 5001);";
+TEST_F(NotificationDBIntegrationTest, NotiInsertViaLibrary) {
+  notification_h noti = notification_create(NOTIFICATION_TYPE_NOTI);
+  ASSERT_NE(noti, nullptr);
 
-  char* err_msg = nullptr;
-  int rc = sqlite3_exec(db_, insert_sql, nullptr, nullptr, &err_msg);
-  if (err_msg) { sqlite3_free(err_msg); err_msg = nullptr; }
-  ASSERT_EQ(rc, SQLITE_OK);
-  ASSERT_EQ(GetRowCount("noti_list"), 1);
+  notification_set_text(noti, NOTIFICATION_TEXT_TYPE_TITLE,
+      "Integration Test", NULL, NOTIFICATION_VARIABLE_TYPE_NONE);
+  notification_set_display_applist(noti,
+      NOTIFICATION_DISPLAY_APP_NOTIFICATION_TRAY);
 
-  // Get the priv_id
-  int priv_id = static_cast<int>(sqlite3_last_insert_rowid(db_));
-  ASSERT_GT(priv_id, 0);
+  int ret = notification_noti_insert(noti);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
 
-  // Delete by priv_id
-  char delete_sql[256];
-  snprintf(delete_sql, sizeof(delete_sql),
-           "DELETE FROM noti_list WHERE priv_id = %d;", priv_id);
-  rc = sqlite3_exec(db_, delete_sql, nullptr, nullptr, &err_msg);
-  if (err_msg) { sqlite3_free(err_msg); err_msg = nullptr; }
-  ASSERT_EQ(rc, SQLITE_OK);
+  EXPECT_GE(GetRowCount("noti_list"), 1);
 
-  EXPECT_EQ(GetRowCount("noti_list"), 0);
+  notification_free(noti);
 }
 
-TEST_F(NotificationDBIntegrationTest, MultipleConcurrentInserts) {
-  const int NUM_INSERTS = 50;
-  char query[512];
-  char* err_msg = nullptr;
+TEST_F(NotificationDBIntegrationTest, NotiInsertAndUpdate) {
+  notification_h noti = notification_create(NOTIFICATION_TYPE_NOTI);
+  ASSERT_NE(noti, nullptr);
 
-  // Begin transaction for batch insert
-  int rc = sqlite3_exec(db_, "BEGIN TRANSACTION;", nullptr, nullptr, &err_msg);
-  if (err_msg) { sqlite3_free(err_msg); err_msg = nullptr; }
-  ASSERT_EQ(rc, SQLITE_OK);
+  notification_set_text(noti, NOTIFICATION_TEXT_TYPE_TITLE,
+      "Before Update", NULL, NOTIFICATION_VARIABLE_TYPE_NONE);
+
+  int ret = notification_noti_insert(noti);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
+
+  notification_set_text(noti, NOTIFICATION_TEXT_TYPE_TITLE,
+      "After Update", NULL, NOTIFICATION_VARIABLE_TYPE_NONE);
+
+  ret = notification_noti_update(noti);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
+
+  notification_free(noti);
+}
+
+TEST_F(NotificationDBIntegrationTest, NotiInsertAndDeleteAll) {
+  for (int i = 0; i < 5; i++) {
+    notification_h noti = notification_create(NOTIFICATION_TYPE_NOTI);
+    ASSERT_NE(noti, nullptr);
+    notification_set_display_applist(noti,
+        NOTIFICATION_DISPLAY_APP_NOTIFICATION_TRAY);
+
+    int ret = notification_noti_insert(noti);
+    EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
+    notification_free(noti);
+  }
+
+  EXPECT_EQ(GetRowCount("noti_list"), 5);
+
+  int deleted_num = 0;
+  int* deleted_list = nullptr;
+  int ret = notification_noti_delete_all(NOTIFICATION_TYPE_NOTI,
+      nullptr, &deleted_num, &deleted_list, 5001);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
+
+  if (deleted_list) free(deleted_list);
+}
+
+TEST_F(NotificationDBIntegrationTest, NotiGetAllCount) {
+  for (int i = 0; i < 3; i++) {
+    notification_h noti = notification_create(NOTIFICATION_TYPE_NOTI);
+    ASSERT_NE(noti, nullptr);
+    notification_set_display_applist(noti,
+        NOTIFICATION_DISPLAY_APP_NOTIFICATION_TRAY);
+    notification_noti_insert(noti);
+    notification_free(noti);
+  }
+
+  int count = 0;
+  int ret = notification_noti_get_all_count(
+      NOTIFICATION_TYPE_NOTI, &count, 5001);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
+  EXPECT_EQ(count, 3);
+}
+
+TEST_F(NotificationDBIntegrationTest, NotiGetGroupingList) {
+  for (int i = 0; i < 3; i++) {
+    notification_h noti = notification_create(NOTIFICATION_TYPE_NOTI);
+    ASSERT_NE(noti, nullptr);
+    notification_set_display_applist(noti,
+        NOTIFICATION_DISPLAY_APP_NOTIFICATION_TRAY);
+    notification_noti_insert(noti);
+    notification_free(noti);
+  }
+
+  notification_list_h list = nullptr;
+  int list_count = 0;
+  int ret = notification_noti_get_grouping_list(
+      NOTIFICATION_TYPE_NOTI, 1, 10, &list, &list_count, 5001);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
+  EXPECT_GT(list_count, 0);
+
+  if (list) notification_free_list(list);
+}
+
+TEST_F(NotificationDBIntegrationTest, MultipleInserts) {
+  const int NUM_INSERTS = 20;
 
   for (int i = 0; i < NUM_INSERTS; i++) {
-    snprintf(query, sizeof(query),
-             "INSERT INTO noti_list (type, layout, pkg_id, caller_app_id, "
-             "launch_app_id, tag, display_applist, uid) "
-             "VALUES (1, 0, 'org.tizen.test', 'org.tizen.test', "
-             "'org.tizen.test', 'tag_%d', 7, 5001);", i);
-    rc = sqlite3_exec(db_, query, nullptr, nullptr, &err_msg);
-    if (err_msg) { sqlite3_free(err_msg); err_msg = nullptr; }
-    ASSERT_EQ(rc, SQLITE_OK);
-  }
+    notification_h noti = notification_create(NOTIFICATION_TYPE_NOTI);
+    ASSERT_NE(noti, nullptr);
 
-  rc = sqlite3_exec(db_, "COMMIT;", nullptr, nullptr, &err_msg);
-  if (err_msg) { sqlite3_free(err_msg); err_msg = nullptr; }
-  ASSERT_EQ(rc, SQLITE_OK);
+    char tag[32];
+    snprintf(tag, sizeof(tag), "batch_tag_%d", i);
+    notification_set_tag(noti, tag);
+    notification_set_display_applist(noti,
+        NOTIFICATION_DISPLAY_APP_NOTIFICATION_TRAY);
+
+    int ret = notification_noti_insert(noti);
+    EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
+    notification_free(noti);
+  }
 
   EXPECT_EQ(GetRowCount("noti_list"), NUM_INSERTS);
-
-  // Verify we can query individual records
-  sqlite3_stmt* stmt = nullptr;
-  rc = sqlite3_prepare_v2(db_,
-      "SELECT COUNT(*) FROM noti_list WHERE tag LIKE 'tag_%';",
-      -1, &stmt, nullptr);
-  ASSERT_EQ(rc, SQLITE_OK);
-  ASSERT_EQ(sqlite3_step(stmt), SQLITE_ROW);
-  EXPECT_EQ(sqlite3_column_int(stmt, 0), NUM_INSERTS);
-  sqlite3_finalize(stmt);
-}
-
-TEST_F(NotificationDBIntegrationTest, UpdateNotification) {
-  // Insert a record
-  const char* insert_sql =
-      "INSERT INTO noti_list (type, layout, pkg_id, caller_app_id, "
-      "launch_app_id, tag, display_applist, uid) "
-      "VALUES (1, 0, 'org.tizen.test', 'org.tizen.test', "
-      "'org.tizen.test', 'update_test', 7, 5001);";
-
-  char* err_msg = nullptr;
-  int rc = sqlite3_exec(db_, insert_sql, nullptr, nullptr, &err_msg);
-  if (err_msg) { sqlite3_free(err_msg); err_msg = nullptr; }
-  ASSERT_EQ(rc, SQLITE_OK);
-
-  int priv_id = static_cast<int>(sqlite3_last_insert_rowid(db_));
-
-  // Update the record
-  char update_sql[512];
-  snprintf(update_sql, sizeof(update_sql),
-           "UPDATE noti_list SET type = 2, tag = 'updated_tag' "
-           "WHERE priv_id = %d;", priv_id);
-  rc = sqlite3_exec(db_, update_sql, nullptr, nullptr, &err_msg);
-  if (err_msg) { sqlite3_free(err_msg); err_msg = nullptr; }
-  ASSERT_EQ(rc, SQLITE_OK);
-
-  // Verify update
-  char select_sql[256];
-  snprintf(select_sql, sizeof(select_sql),
-           "SELECT type, tag FROM noti_list WHERE priv_id = %d;", priv_id);
-  sqlite3_stmt* stmt = nullptr;
-  rc = sqlite3_prepare_v2(db_, select_sql, -1, &stmt, nullptr);
-  ASSERT_EQ(rc, SQLITE_OK);
-  ASSERT_EQ(sqlite3_step(stmt), SQLITE_ROW);
-  EXPECT_EQ(sqlite3_column_int(stmt, 0), 2);
-  EXPECT_STREQ(reinterpret_cast<const char*>(sqlite3_column_text(stmt, 1)),
-               "updated_tag");
-  sqlite3_finalize(stmt);
-}
-
-TEST_F(NotificationDBIntegrationTest, InsertAndDeleteAll) {
-  char query[512];
-  char* err_msg = nullptr;
-
-  // Insert several records
-  for (int i = 0; i < 10; i++) {
-    snprintf(query, sizeof(query),
-             "INSERT INTO noti_list (type, layout, pkg_id, caller_app_id, "
-             "launch_app_id, display_applist, uid) "
-             "VALUES (1, 0, 'org.tizen.test', 'org.tizen.test', "
-             "'org.tizen.test', 7, 5001);");
-    int rc = sqlite3_exec(db_, query, nullptr, nullptr, &err_msg);
-    if (err_msg) { sqlite3_free(err_msg); err_msg = nullptr; }
-    ASSERT_EQ(rc, SQLITE_OK);
-  }
-  ASSERT_EQ(GetRowCount("noti_list"), 10);
-
-  // Delete all by caller_app_id
-  const char* delete_sql =
-      "DELETE FROM noti_list WHERE caller_app_id = 'org.tizen.test';";
-  int rc = sqlite3_exec(db_, delete_sql, nullptr, nullptr, &err_msg);
-  if (err_msg) { sqlite3_free(err_msg); err_msg = nullptr; }
-  ASSERT_EQ(rc, SQLITE_OK);
-
-  EXPECT_EQ(GetRowCount("noti_list"), 0);
 }

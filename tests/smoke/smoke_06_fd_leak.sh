@@ -23,10 +23,13 @@ fi
 TMPDIR=$(mktemp -d)
 cat > "${TMPDIR}/fd_test.c" << 'EOF'
 #include <dlfcn.h>
+#include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <dirent.h>
 #include <unistd.h>
+
+void sigalrm_handler(int sig) { (void)sig; }
 
 int count_fds() {
   char path[64];
@@ -36,7 +39,7 @@ int count_fds() {
   int count = 0;
   while (readdir(d)) count++;
   closedir(d);
-  return count - 2; // subtract . and ..
+  return count - 2; /* subtract . and .. */
 }
 
 int main(int argc, char** argv) {
@@ -49,23 +52,41 @@ int main(int argc, char** argv) {
   }
 
   typedef void* (*create_fn)(int);
+  typedef int (*post_fn)(void*);
   typedef int (*free_fn)(void*);
 
   create_fn noti_create = (create_fn)dlsym(handle, "notification_create");
+  post_fn noti_post = (post_fn)dlsym(handle, "notification_post");
   free_fn noti_free = (free_fn)dlsym(handle, "notification_free");
 
-  if (!noti_create || !noti_free) {
+  if (!noti_create || !noti_post || !noti_free) {
     fprintf(stderr, "FAIL: Cannot find symbols\n");
     dlclose(handle);
     return 1;
   }
 
+  /* notification_post may block on IPC without a daemon; use alarm to timeout */
+  signal(SIGALRM, sigalrm_handler);
+
+  /* Warm up to let any one-time FD allocations settle */
+  void* warmup = noti_create(1);
+  if (warmup) {
+    alarm(1);
+    noti_post(warmup);
+    alarm(0);
+    noti_free(warmup);
+  }
+
   int fd_before = count_fds();
 
-  // Create and free notifications
   for (int i = 0; i < 10; i++) {
     void* noti = noti_create(1);
-    if (noti) noti_free(noti);
+    if (noti) {
+      alarm(1);
+      noti_post(noti);
+      alarm(0);
+      noti_free(noti);
+    }
   }
 
   int fd_after = count_fds();

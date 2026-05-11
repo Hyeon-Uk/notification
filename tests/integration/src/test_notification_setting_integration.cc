@@ -16,14 +16,17 @@
 
 #include <gtest/gtest.h>
 #include <sqlite3.h>
+#include <cerrno>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
 #include <string>
 #include <unistd.h>
 #include <sys/stat.h>
+#include <tzplatform_config.h>
 
 #include "notification/include/notification.h"
+#include "notification/include/notification_db.h"
 #include "notification/include/notification_setting.h"
 #include "notification/include/notification_setting_internal.h"
 #include "notification/include/notification_setting_service.h"
@@ -68,286 +71,232 @@ const char* CREATE_DND_EXCEPTION_TABLE_SQL =
 
 class NotificationSettingIntegrationTest : public ::testing::Test {
  protected:
-  void SetUp() override {
-    char tmpl[] = "/tmp/noti_setting_test_XXXXXX";
-    char* dir = mkdtemp(tmpl);
-    ASSERT_NE(dir, nullptr);
-    tmp_dir_ = std::string(dir);
-    db_path_ = tmp_dir_ + "/noti_setting.db";
+  static void MkdirP(const std::string& path) {
+    size_t pos = 0;
+    while ((pos = path.find('/', pos + 1)) != std::string::npos)
+      mkdir(path.substr(0, pos).c_str(), 0755);
+    mkdir(path.c_str(), 0755);
+  }
 
-    int rc = sqlite3_open(db_path_.c_str(), &db_);
+  void SetUp() override {
+    db_path_ = std::string(DBPATH);
+    std::string db_dir = db_path_.substr(0, db_path_.rfind('/'));
+    MkdirP(db_dir);
+
+    if (access(db_dir.c_str(), W_OK) != 0)
+      GTEST_SKIP() << "DB directory not writable: " << db_dir;
+
+    unlink(db_path_.c_str());
+
+    sqlite3* setup_db = nullptr;
+    int rc = sqlite3_open(db_path_.c_str(), &setup_db);
     ASSERT_EQ(rc, SQLITE_OK);
-    ASSERT_NE(db_, nullptr);
 
     char* err_msg = nullptr;
-    rc = sqlite3_exec(db_, CREATE_SETTING_TABLE_SQL, nullptr, nullptr, &err_msg);
+    rc = sqlite3_exec(setup_db, CREATE_SETTING_TABLE_SQL,
+        nullptr, nullptr, &err_msg);
     if (err_msg) { sqlite3_free(err_msg); err_msg = nullptr; }
     ASSERT_EQ(rc, SQLITE_OK);
 
-    rc = sqlite3_exec(db_, CREATE_SYSTEM_SETTING_TABLE_SQL, nullptr, nullptr, &err_msg);
+    rc = sqlite3_exec(setup_db, CREATE_SYSTEM_SETTING_TABLE_SQL,
+        nullptr, nullptr, &err_msg);
     if (err_msg) { sqlite3_free(err_msg); err_msg = nullptr; }
     ASSERT_EQ(rc, SQLITE_OK);
 
-    rc = sqlite3_exec(db_, CREATE_DND_EXCEPTION_TABLE_SQL, nullptr, nullptr, &err_msg);
+    rc = sqlite3_exec(setup_db, CREATE_DND_EXCEPTION_TABLE_SQL,
+        nullptr, nullptr, &err_msg);
     if (err_msg) { sqlite3_free(err_msg); err_msg = nullptr; }
     ASSERT_EQ(rc, SQLITE_OK);
+
+    sqlite3_close(setup_db);
   }
 
   void TearDown() override {
-    if (db_) {
-      sqlite3_close(db_);
-      db_ = nullptr;
-    }
-    if (!tmp_dir_.empty()) {
-      // Clean up temporary test directory
-      std::string db_file = tmp_dir_ + "/noti_setting.db";
-      unlink(db_file.c_str());
-      rmdir(tmp_dir_.c_str());
-    }
+    if (!db_path_.empty())
+      unlink(db_path_.c_str());
   }
 
   int GetRowCount(const char* table_name) {
-    std::string query = "SELECT COUNT(*) FROM " + std::string(table_name) + ";";
+    sqlite3* db = nullptr;
+    int rc = sqlite3_open(db_path_.c_str(), &db);
+    if (rc != SQLITE_OK) return -1;
+
+    std::string query =
+        "SELECT COUNT(*) FROM " + std::string(table_name) + ";";
     sqlite3_stmt* stmt = nullptr;
     int count = -1;
 
-    int rc = sqlite3_prepare_v2(db_, query.c_str(), -1, &stmt, nullptr);
-    if (rc == SQLITE_OK && sqlite3_step(stmt) == SQLITE_ROW) {
+    rc = sqlite3_prepare_v2(db, query.c_str(), -1, &stmt, nullptr);
+    if (rc == SQLITE_OK && sqlite3_step(stmt) == SQLITE_ROW)
       count = sqlite3_column_int(stmt, 0);
-    }
-    if (stmt)
-      sqlite3_finalize(stmt);
+    if (stmt) sqlite3_finalize(stmt);
+    sqlite3_close(db);
     return count;
   }
 
-  sqlite3* db_ = nullptr;
-  std::string tmp_dir_;
   std::string db_path_;
 };
 
-TEST_F(NotificationSettingIntegrationTest, CreateSettingAndStore) {
-  const char* insert_sql =
-      "INSERT INTO notification_setting "
-      "(uid, package_name, app_id, allow_to_notify, do_not_disturb_except, "
-      "visibility_class, pop_up_notification, lock_screen_content_level) "
-      "VALUES (5001, 'org.tizen.testpkg', 'org.tizen.testapp', 1, 0, 0, 1, 0);";
-
-  char* err_msg = nullptr;
-  int rc = sqlite3_exec(db_, insert_sql, nullptr, nullptr, &err_msg);
-  if (err_msg) { sqlite3_free(err_msg); err_msg = nullptr; }
-  ASSERT_EQ(rc, SQLITE_OK);
+TEST_F(NotificationSettingIntegrationTest, UpdateSettingViaLibrary) {
+  int ret = notification_setting_db_update(
+      "org.tizen.testpkg", "org.tizen.testapp",
+      1, 0, 0, 1, 0, 5001);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
 
   EXPECT_EQ(GetRowCount("notification_setting"), 1);
 }
 
-TEST_F(NotificationSettingIntegrationTest, CreateAndRetrieveSetting) {
-  const char* insert_sql =
-      "INSERT INTO notification_setting "
-      "(uid, package_name, app_id, allow_to_notify, do_not_disturb_except, "
-      "visibility_class, pop_up_notification, lock_screen_content_level) "
-      "VALUES (5001, 'org.tizen.testpkg', 'org.tizen.testapp', 1, 0, 2, 1, 1);";
+TEST_F(NotificationSettingIntegrationTest, UpdateAndRetrieveSetting) {
+  int ret = notification_setting_db_update(
+      "org.tizen.testpkg", "org.tizen.testapp",
+      1, 0, 2, 1, 1, 5001);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
 
-  char* err_msg = nullptr;
-  int rc = sqlite3_exec(db_, insert_sql, nullptr, nullptr, &err_msg);
-  if (err_msg) { sqlite3_free(err_msg); err_msg = nullptr; }
-  ASSERT_EQ(rc, SQLITE_OK);
+  notification_setting_h setting = nullptr;
+  ret = noti_setting_service_get_setting_by_app_id(
+      "org.tizen.testapp", &setting, 5001);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
 
-  // Retrieve the setting
-  const char* select_sql =
-      "SELECT package_name, app_id, allow_to_notify, visibility_class, "
-      "lock_screen_content_level FROM notification_setting "
-      "WHERE uid = 5001 AND app_id = 'org.tizen.testapp';";
-  sqlite3_stmt* stmt = nullptr;
-  rc = sqlite3_prepare_v2(db_, select_sql, -1, &stmt, nullptr);
-  ASSERT_EQ(rc, SQLITE_OK);
+  if (setting) {
+    bool allow = false;
+    ret = notification_setting_get_allow_to_notify(setting, &allow);
+    EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
+    EXPECT_TRUE(allow);
 
-  rc = sqlite3_step(stmt);
-  ASSERT_EQ(rc, SQLITE_ROW);
+    int vis_class = 0;
+    ret = notification_setting_get_visibility_class(setting, &vis_class);
+    EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
+    EXPECT_EQ(vis_class, 2);
 
-  EXPECT_STREQ(reinterpret_cast<const char*>(sqlite3_column_text(stmt, 0)),
-               "org.tizen.testpkg");
-  EXPECT_STREQ(reinterpret_cast<const char*>(sqlite3_column_text(stmt, 1)),
-               "org.tizen.testapp");
-  EXPECT_EQ(sqlite3_column_int(stmt, 2), 1);  // allow_to_notify
-  EXPECT_EQ(sqlite3_column_int(stmt, 3), 2);  // visibility_class
-  EXPECT_EQ(sqlite3_column_int(stmt, 4), 1);  // lock_screen_content_level
-
-  sqlite3_finalize(stmt);
+    notification_setting_free_notification(setting);
+  }
 }
 
 TEST_F(NotificationSettingIntegrationTest, UpdateSettingValues) {
-  // Insert initial setting
-  const char* insert_sql =
-      "INSERT INTO notification_setting "
-      "(uid, package_name, app_id, allow_to_notify, do_not_disturb_except, "
-      "visibility_class, pop_up_notification, lock_screen_content_level) "
-      "VALUES (5001, 'org.tizen.testpkg', 'org.tizen.testapp', 1, 0, 0, 1, 0);";
+  int ret = notification_setting_db_update(
+      "org.tizen.testpkg", "org.tizen.testapp",
+      1, 0, 0, 1, 0, 5001);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
 
-  char* err_msg = nullptr;
-  int rc = sqlite3_exec(db_, insert_sql, nullptr, nullptr, &err_msg);
-  if (err_msg) { sqlite3_free(err_msg); err_msg = nullptr; }
-  ASSERT_EQ(rc, SQLITE_OK);
+  ret = notification_setting_db_update(
+      "org.tizen.testpkg", "org.tizen.testapp",
+      0, 1, 3, 0, 0, 5001);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
 
-  // Update setting
-  const char* update_sql =
-      "UPDATE notification_setting SET "
-      "allow_to_notify = 0, do_not_disturb_except = 1, "
-      "visibility_class = 3, pop_up_notification = 0 "
-      "WHERE uid = 5001 AND app_id = 'org.tizen.testapp';";
+  notification_setting_h setting = nullptr;
+  ret = noti_setting_service_get_setting_by_app_id(
+      "org.tizen.testapp", &setting, 5001);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
 
-  rc = sqlite3_exec(db_, update_sql, nullptr, nullptr, &err_msg);
-  if (err_msg) { sqlite3_free(err_msg); err_msg = nullptr; }
-  ASSERT_EQ(rc, SQLITE_OK);
+  if (setting) {
+    bool allow = true;
+    ret = notification_setting_get_allow_to_notify(setting, &allow);
+    EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
+    EXPECT_FALSE(allow);
 
-  // Verify update
-  const char* select_sql =
-      "SELECT allow_to_notify, do_not_disturb_except, visibility_class, "
-      "pop_up_notification FROM notification_setting "
-      "WHERE uid = 5001 AND app_id = 'org.tizen.testapp';";
-  sqlite3_stmt* stmt = nullptr;
-  rc = sqlite3_prepare_v2(db_, select_sql, -1, &stmt, nullptr);
-  ASSERT_EQ(rc, SQLITE_OK);
+    bool dnd_except = false;
+    ret = notification_setting_get_do_not_disturb_except(
+        setting, &dnd_except);
+    EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
+    EXPECT_TRUE(dnd_except);
 
-  rc = sqlite3_step(stmt);
-  ASSERT_EQ(rc, SQLITE_ROW);
-
-  EXPECT_EQ(sqlite3_column_int(stmt, 0), 0);  // allow_to_notify
-  EXPECT_EQ(sqlite3_column_int(stmt, 1), 1);  // do_not_disturb_except
-  EXPECT_EQ(sqlite3_column_int(stmt, 2), 3);  // visibility_class
-  EXPECT_EQ(sqlite3_column_int(stmt, 3), 0);  // pop_up_notification
-
-  sqlite3_finalize(stmt);
+    notification_setting_free_notification(setting);
+  }
 }
 
-TEST_F(NotificationSettingIntegrationTest, DeleteSetting) {
-  // Insert a setting
-  const char* insert_sql =
-      "INSERT INTO notification_setting "
-      "(uid, package_name, app_id, allow_to_notify) "
-      "VALUES (5001, 'org.tizen.testpkg', 'org.tizen.testapp', 1);";
+TEST_F(NotificationSettingIntegrationTest, SystemSettingUpdate) {
+  int ret = notification_setting_db_update_system_setting(
+      0, 0, 0, 62, 22, 0, 8, 0, 0, 5001);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
 
-  char* err_msg = nullptr;
-  int rc = sqlite3_exec(db_, insert_sql, nullptr, nullptr, &err_msg);
-  if (err_msg) { sqlite3_free(err_msg); err_msg = nullptr; }
-  ASSERT_EQ(rc, SQLITE_OK);
-  ASSERT_EQ(GetRowCount("notification_setting"), 1);
+  ret = notification_setting_db_update_system_setting(
+      1, 0, 1, 62, 23, 0, 7, 0, 0, 5001);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
 
-  // Delete the setting
-  const char* delete_sql =
-      "DELETE FROM notification_setting "
-      "WHERE uid = 5001 AND app_id = 'org.tizen.testapp';";
-  rc = sqlite3_exec(db_, delete_sql, nullptr, nullptr, &err_msg);
-  if (err_msg) { sqlite3_free(err_msg); err_msg = nullptr; }
-  ASSERT_EQ(rc, SQLITE_OK);
+  notification_system_setting_h sys_setting = nullptr;
+  ret = noti_system_setting_load_system_setting(&sys_setting, 5001);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
 
-  EXPECT_EQ(GetRowCount("notification_setting"), 0);
-}
+  if (sys_setting) {
+    bool dnd = false;
+    ret = notification_system_setting_get_do_not_disturb(
+        sys_setting, &dnd);
+    EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
+    EXPECT_TRUE(dnd);
 
-TEST_F(NotificationSettingIntegrationTest, SystemSettingCreateAndUpdate) {
-  // Insert system setting
-  const char* insert_sql =
-      "INSERT INTO notification_system_setting "
-      "(uid, do_not_disturb, visibility_class, dnd_schedule_enabled, "
-      "dnd_schedule_day, dnd_start_hour, dnd_start_min, "
-      "dnd_end_hour, dnd_end_min, lock_screen_content_level) "
-      "VALUES (5001, 0, 0, 0, 62, 22, 0, 8, 0, 0);";
+    bool sched_enabled = false;
+    ret = notification_system_setting_dnd_schedule_get_enabled(
+        sys_setting, &sched_enabled);
+    EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
+    EXPECT_TRUE(sched_enabled);
 
-  char* err_msg = nullptr;
-  int rc = sqlite3_exec(db_, insert_sql, nullptr, nullptr, &err_msg);
-  if (err_msg) { sqlite3_free(err_msg); err_msg = nullptr; }
-  ASSERT_EQ(rc, SQLITE_OK);
+    int start_hour = 0, start_min = 0;
+    ret = notification_system_setting_dnd_schedule_get_start_time(
+        sys_setting, &start_hour, &start_min);
+    EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
+    EXPECT_EQ(start_hour, 23);
 
-  // Update do_not_disturb
-  const char* update_sql =
-      "UPDATE notification_system_setting SET "
-      "do_not_disturb = 1, dnd_schedule_enabled = 1, "
-      "dnd_start_hour = 23, dnd_end_hour = 7 "
-      "WHERE uid = 5001;";
+    int end_hour = 0, end_min = 0;
+    ret = notification_system_setting_dnd_schedule_get_end_time(
+        sys_setting, &end_hour, &end_min);
+    EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
+    EXPECT_EQ(end_hour, 7);
 
-  rc = sqlite3_exec(db_, update_sql, nullptr, nullptr, &err_msg);
-  if (err_msg) { sqlite3_free(err_msg); err_msg = nullptr; }
-  ASSERT_EQ(rc, SQLITE_OK);
-
-  // Verify
-  const char* select_sql =
-      "SELECT do_not_disturb, dnd_schedule_enabled, dnd_start_hour, "
-      "dnd_end_hour FROM notification_system_setting WHERE uid = 5001;";
-  sqlite3_stmt* stmt = nullptr;
-  rc = sqlite3_prepare_v2(db_, select_sql, -1, &stmt, nullptr);
-  ASSERT_EQ(rc, SQLITE_OK);
-
-  rc = sqlite3_step(stmt);
-  ASSERT_EQ(rc, SQLITE_ROW);
-
-  EXPECT_EQ(sqlite3_column_int(stmt, 0), 1);   // do_not_disturb
-  EXPECT_EQ(sqlite3_column_int(stmt, 1), 1);   // dnd_schedule_enabled
-  EXPECT_EQ(sqlite3_column_int(stmt, 2), 23);  // dnd_start_hour
-  EXPECT_EQ(sqlite3_column_int(stmt, 3), 7);   // dnd_end_hour
-
-  sqlite3_finalize(stmt);
+    notification_system_setting_free_system_setting(sys_setting);
+  }
 }
 
 TEST_F(NotificationSettingIntegrationTest, MultipleAppSettings) {
-  // Insert settings for multiple apps
-  const char* insert_sql_1 =
-      "INSERT INTO notification_setting "
-      "(uid, package_name, app_id, allow_to_notify) "
-      "VALUES (5001, 'org.tizen.pkg1', 'org.tizen.app1', 1);";
-  const char* insert_sql_2 =
-      "INSERT INTO notification_setting "
-      "(uid, package_name, app_id, allow_to_notify) "
-      "VALUES (5001, 'org.tizen.pkg2', 'org.tizen.app2', 0);";
-  const char* insert_sql_3 =
-      "INSERT INTO notification_setting "
-      "(uid, package_name, app_id, allow_to_notify) "
-      "VALUES (5001, 'org.tizen.pkg3', 'org.tizen.app3', 1);";
-
-  char* err_msg = nullptr;
-  int rc;
-
-  rc = sqlite3_exec(db_, insert_sql_1, nullptr, nullptr, &err_msg);
-  if (err_msg) { sqlite3_free(err_msg); err_msg = nullptr; }
-  ASSERT_EQ(rc, SQLITE_OK);
-
-  rc = sqlite3_exec(db_, insert_sql_2, nullptr, nullptr, &err_msg);
-  if (err_msg) { sqlite3_free(err_msg); err_msg = nullptr; }
-  ASSERT_EQ(rc, SQLITE_OK);
-
-  rc = sqlite3_exec(db_, insert_sql_3, nullptr, nullptr, &err_msg);
-  if (err_msg) { sqlite3_free(err_msg); err_msg = nullptr; }
-  ASSERT_EQ(rc, SQLITE_OK);
+  notification_setting_db_update(
+      "org.tizen.pkg1", "org.tizen.app1", 1, 0, 0, 1, 0, 5001);
+  notification_setting_db_update(
+      "org.tizen.pkg2", "org.tizen.app2", 0, 0, 0, 1, 0, 5001);
+  notification_setting_db_update(
+      "org.tizen.pkg3", "org.tizen.app3", 1, 0, 0, 1, 0, 5001);
 
   EXPECT_EQ(GetRowCount("notification_setting"), 3);
 
-  // Query only apps that allow notification
-  const char* select_sql =
-      "SELECT COUNT(*) FROM notification_setting "
-      "WHERE uid = 5001 AND allow_to_notify = 1;";
-  sqlite3_stmt* stmt = nullptr;
-  rc = sqlite3_prepare_v2(db_, select_sql, -1, &stmt, nullptr);
-  ASSERT_EQ(rc, SQLITE_OK);
-  ASSERT_EQ(sqlite3_step(stmt), SQLITE_ROW);
-  EXPECT_EQ(sqlite3_column_int(stmt, 0), 2);
-  sqlite3_finalize(stmt);
+  notification_setting_h setting_array = nullptr;
+  int count = 0;
+  int ret = noti_setting_get_setting_array(
+      &setting_array, &count, 5001);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
+  EXPECT_EQ(count, 3);
+
+  if (setting_array)
+    notification_setting_free_notification(setting_array);
 }
 
-TEST_F(NotificationSettingIntegrationTest, UniqueConstraintEnforced) {
-  // Insert a setting
-  const char* insert_sql =
-      "INSERT INTO notification_setting "
-      "(uid, package_name, app_id, allow_to_notify) "
-      "VALUES (5001, 'org.tizen.testpkg', 'org.tizen.testapp', 1);";
+TEST_F(NotificationSettingIntegrationTest, SettingNullParams) {
+  int ret = notification_setting_get_allow_to_notify(nullptr, nullptr);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_INVALID_PARAMETER);
 
-  char* err_msg = nullptr;
-  int rc = sqlite3_exec(db_, insert_sql, nullptr, nullptr, &err_msg);
-  if (err_msg) { sqlite3_free(err_msg); err_msg = nullptr; }
-  ASSERT_EQ(rc, SQLITE_OK);
+  ret = notification_setting_get_visibility_class(nullptr, nullptr);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_INVALID_PARAMETER);
 
-  // Try to insert a duplicate - should fail due to UNIQUE constraint
-  rc = sqlite3_exec(db_, insert_sql, nullptr, nullptr, &err_msg);
-  if (err_msg) { sqlite3_free(err_msg); err_msg = nullptr; }
-  EXPECT_NE(rc, SQLITE_OK);
+  ret = notification_setting_free_notification(nullptr);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_INVALID_PARAMETER);
+}
 
-  // Should still have only 1 row
-  EXPECT_EQ(GetRowCount("notification_setting"), 1);
+TEST_F(NotificationSettingIntegrationTest, SystemSettingNullParams) {
+  bool val;
+  int ret = notification_system_setting_get_do_not_disturb(
+      nullptr, &val);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_INVALID_PARAMETER);
+
+  ret = notification_system_setting_free_system_setting(nullptr);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_INVALID_PARAMETER);
+}
+
+TEST_F(NotificationSettingIntegrationTest, UpdateDoNotDisturb) {
+  notification_setting_db_update_system_setting(
+      0, 0, 0, 62, 22, 0, 8, 0, 0, 5001);
+
+  int ret = notification_setting_db_update_do_not_disturb(1, 5001);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
+
+  int dnd = 0;
+  ret = noti_system_setting_get_do_not_disturb(&dnd, 5001);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
+  EXPECT_EQ(dnd, 1);
 }
