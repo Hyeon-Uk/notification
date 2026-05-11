@@ -224,12 +224,8 @@ TEST_F(NotificationChannelIntegrationTest, CHANNEL_04_DeleteChannelAndVerifyGone
   int is_blocked = -1;
   ret = notification_noti_get_channel("com.test.app",
       "ch_del", &blockable, &is_blocked);
-  if (ret != NOTIFICATION_ERROR_NONE) {
-    SUCCEED() << "Channel correctly removed from DB";
-  } else {
-    EXPECT_EQ(blockable, 0);
-    EXPECT_EQ(is_blocked, 0);
-  }
+  EXPECT_NE(ret, NOTIFICATION_ERROR_NONE)
+      << "Channel should not be retrievable after deletion";
 }
 
 /* CHANNEL_05: Channel name on notification */

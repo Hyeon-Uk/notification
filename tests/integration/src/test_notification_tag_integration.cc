@@ -216,7 +216,8 @@ TEST_F(NotificationTagIntegrationTest, TAG_02_SameTagUpdateOrInsert) {
   int ret = notification_noti_insert(noti_a);
   EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
 
-  ret = notification_noti_check_tag(noti_a);
+  int tag_ret_a = notification_noti_check_tag(noti_a);
+  EXPECT_EQ(tag_ret_a, NOTIFICATION_ERROR_NONE);
   notification_free(noti_a);
 
   notification_h noti_b = notification_create(NOTIFICATION_TYPE_NOTI);
@@ -228,12 +229,13 @@ TEST_F(NotificationTagIntegrationTest, TAG_02_SameTagUpdateOrInsert) {
   notification_set_display_applist(noti_b,
       NOTIFICATION_DISPLAY_APP_NOTIFICATION_TRAY);
 
-  ret = notification_noti_check_tag(noti_b);
+  int tag_ret_b = notification_noti_check_tag(noti_b);
+  EXPECT_EQ(tag_ret_b, NOTIFICATION_ERROR_NONE);
   ret = notification_noti_insert(noti_b);
   EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
   notification_free(noti_b);
 
-  EXPECT_LE(GetTagCount("dup_tag"), 2);
+  EXPECT_LE(GetTagCount("dup_tag"), 1);
 }
 
 /* TAG_03: Delete then load by tag fails */

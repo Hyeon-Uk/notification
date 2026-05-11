@@ -243,7 +243,7 @@ TEST_F(NotificationErrorRecoveryIntegrationTest,
     RECOVERY_05_DeleteNonExistentPrivId) {
   int ret = notification_noti_delete_by_priv_id(nullptr, 99999);
   EXPECT_TRUE(ret == NOTIFICATION_ERROR_NONE ||
-      ret >= NOTIFICATION_ERROR_NOT_EXIST_ID)
-      << "Expected NOTIFICATION_ERROR_NONE or a valid error code, got: "
-      << ret;
+      ret == NOTIFICATION_ERROR_NOT_EXIST_ID ||
+      ret == NOTIFICATION_ERROR_FROM_DB)
+      << "Expected NONE, NOT_EXIST_ID, or FROM_DB, got: " << ret;
 }

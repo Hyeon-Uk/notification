@@ -310,18 +310,41 @@ TEST_F(NotificationOngoingIntegrationTest, OngoingFlagSetAndGet) {
   int ret = notification_set_ongoing_flag(noti, true);
   EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
 
+  notification_set_display_applist(noti,
+      NOTIFICATION_DISPLAY_APP_NOTIFICATION_TRAY);
+
+  ret = notification_noti_insert(noti);
+  ASSERT_EQ(ret, NOTIFICATION_ERROR_NONE);
+
+  int group_id = 0, priv_id = 0;
+  notification_get_id(noti, &group_id, &priv_id);
+  ASSERT_GT(priv_id, 0);
+
+  notification_h loaded = notification_create(NOTIFICATION_TYPE_NOTI);
+  ASSERT_NE(loaded, nullptr);
+  ret = notification_noti_get_by_priv_id(loaded, priv_id);
+  ASSERT_EQ(ret, NOTIFICATION_ERROR_NONE);
+
   bool ongoing_flag = false;
-  ret = notification_get_ongoing_flag(noti, &ongoing_flag);
+  ret = notification_get_ongoing_flag(loaded, &ongoing_flag);
   EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
   EXPECT_TRUE(ongoing_flag);
+  notification_free(loaded);
 
-  ret = notification_set_ongoing_flag(noti, false);
+  notification_set_ongoing_flag(noti, false);
+  ret = notification_noti_update(noti);
   EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
+
+  loaded = notification_create(NOTIFICATION_TYPE_NOTI);
+  ASSERT_NE(loaded, nullptr);
+  ret = notification_noti_get_by_priv_id(loaded, priv_id);
+  ASSERT_EQ(ret, NOTIFICATION_ERROR_NONE);
 
   ongoing_flag = true;
-  ret = notification_get_ongoing_flag(noti, &ongoing_flag);
+  ret = notification_get_ongoing_flag(loaded, &ongoing_flag);
   EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
   EXPECT_FALSE(ongoing_flag);
+  notification_free(loaded);
 
   notification_free(noti);
 }

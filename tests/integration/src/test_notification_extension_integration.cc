@@ -24,9 +24,11 @@
 #include <sys/stat.h>
 #include <tzplatform_config.h>
 #include <bundle.h>
+#include <app_control.h>
 
 #include "notification/include/notification.h"
 #include "notification/include/notification_internal.h"
+#include "notification/include/notification_type_internal.h"
 #include "notification/include/notification_db.h"
 #include "notification/include/notification_noti.h"
 
@@ -266,5 +268,38 @@ TEST_F(NotificationExtensionIntegrationTest, EXTDATA_03_MultipleExtensionDataKey
   bundle_free(b_a);
   bundle_free(b_b);
   bundle_free(b_c);
+  notification_free(noti);
+}
+
+TEST_F(NotificationExtensionIntegrationTest,
+    EXTDATA_04_ExtensionEventHandlerRoundTrip) {
+  notification_h noti = notification_create(NOTIFICATION_TYPE_NOTI);
+  ASSERT_NE(noti, nullptr);
+
+  app_control_h app_control = nullptr;
+  int ac_ret = app_control_create(&app_control);
+  if (ac_ret != APP_CONTROL_ERROR_NONE || !app_control)
+    GTEST_SKIP() << "app_control_create requires app context";
+
+  app_control_set_app_id(app_control, "com.test.handler");
+
+  int ret = notification_set_extension_event_handler(noti,
+      NOTIFICATION_EVENT_TYPE_HIDDEN_BY_TIMEOUT, app_control);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
+
+  app_control_h retrieved = nullptr;
+  ret = notification_get_extension_event_handler(noti,
+      NOTIFICATION_EVENT_TYPE_HIDDEN_BY_TIMEOUT, &retrieved);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
+  ASSERT_NE(retrieved, nullptr);
+
+  char* app_id = nullptr;
+  app_control_get_app_id(retrieved, &app_id);
+  ASSERT_NE(app_id, nullptr);
+  EXPECT_STREQ(app_id, "com.test.handler");
+
+  free(app_id);
+  app_control_destroy(retrieved);
+  app_control_destroy(app_control);
   notification_free(noti);
 }

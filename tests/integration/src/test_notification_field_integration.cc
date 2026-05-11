@@ -26,6 +26,7 @@
 
 #include "notification/include/notification.h"
 #include "notification/include/notification_internal.h"
+#include "notification/include/notification_type.h"
 #include "notification/include/notification_db.h"
 #include "notification/include/notification_noti.h"
 
@@ -335,6 +336,41 @@ TEST_F(NotificationFieldIntegrationTest,
   EXPECT_EQ(applist,
       NOTIFICATION_DISPLAY_APP_NOTIFICATION_TRAY |
       NOTIFICATION_DISPLAY_APP_LOCK);
+
+  notification_free(loaded);
+  notification_free(noti);
+}
+
+/* FIELD_06: Default button round-trip */
+TEST_F(NotificationFieldIntegrationTest, FIELD_06_DefaultButtonRoundTrip) {
+  notification_h noti = notification_create(NOTIFICATION_TYPE_NOTI);
+  ASSERT_NE(noti, nullptr);
+
+  int ret = notification_add_button(noti, NOTIFICATION_BUTTON_1);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
+
+  ret = notification_set_default_button(noti, NOTIFICATION_BUTTON_1);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
+
+  notification_set_display_applist(noti,
+      NOTIFICATION_DISPLAY_APP_NOTIFICATION_TRAY);
+
+  ret = notification_noti_insert(noti);
+  ASSERT_EQ(ret, NOTIFICATION_ERROR_NONE);
+
+  int group_id = 0, priv_id = 0;
+  notification_get_id(noti, &group_id, &priv_id);
+  ASSERT_GT(priv_id, 0);
+
+  notification_h loaded = notification_create(NOTIFICATION_TYPE_NOTI);
+  ASSERT_NE(loaded, nullptr);
+  ret = notification_noti_get_by_priv_id(loaded, priv_id);
+  ASSERT_EQ(ret, NOTIFICATION_ERROR_NONE);
+
+  notification_button_index_e index;
+  ret = notification_get_default_button(loaded, &index);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
+  EXPECT_EQ(index, NOTIFICATION_BUTTON_1);
 
   notification_free(loaded);
   notification_free(noti);
