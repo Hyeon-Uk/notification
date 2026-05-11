@@ -229,6 +229,13 @@ GTest for notification
 
 %files -n notification-unittests
 %{_bindir}/notification-unittests
+%{_bindir}/notification-integration-tests
+%{_bindir}/smoke_tests/smoke_01_symbol_check.sh
+%{_bindir}/smoke_tests/smoke_02_binary_size.sh
+%{_bindir}/smoke_tests/smoke_03_load.sh
+%{_bindir}/smoke_tests/smoke_04_cold_start.sh
+%{_bindir}/smoke_tests/smoke_05_memory.sh
+%{_bindir}/smoke_tests/smoke_06_fd_leak.sh
 %{_bindir}/tizen-unittests/%{name}/run-unittest.sh
 
 %if 0%{?gcov:1}

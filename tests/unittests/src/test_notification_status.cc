@@ -26,6 +26,13 @@
 
 namespace {
 
+GDBusConnection* __fake_g_bus_get_sync_fail(GBusType type,
+    GCancellable *cancellable, GError **error) {
+  if (error)
+    *error = g_error_new(g_quark_from_string("test"), 1, "mock dbus error");
+  return nullptr;
+}
+
 class Mocks :
     virtual public ::testing::NiceMock<GlibMock> {};
 } // namespace
@@ -74,7 +81,7 @@ TEST_F(NotificationStatusTest, notification_status_message_post_valid) {
 
 TEST_F(NotificationStatusTest, notification_status_message_post_dbus_fail) {
   EXPECT_CALL(GetMock<GlibMock>(), g_bus_get_sync(_, _, _))
-    .WillOnce(Return(nullptr));
+    .WillOnce(Invoke(__fake_g_bus_get_sync_fail));
 
   int ret = notification_status_message_post("test message");
   ASSERT_EQ(ret, NOTIFICATION_ERROR_FROM_DBUS);

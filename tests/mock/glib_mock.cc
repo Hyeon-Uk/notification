@@ -35,6 +35,12 @@ extern "C" gboolean g_file_make_directory(GFile* arg1, GCancellable* arg2,
 }
 
 extern "C" int access(const char* arg1, int arg2) {
+  if (TestFixture::mock_) {
+    auto ptr = dynamic_cast<GlibMock*>(TestFixture::mock_.get());
+    if (ptr)
+      return ptr->access(arg1, arg2);
+  }
+
   if (strstr(arg1, ".notification.db") ||
       strstr(arg1, "notification.ini"))
     return 0;
