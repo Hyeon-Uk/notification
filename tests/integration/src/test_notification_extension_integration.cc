@@ -32,6 +32,8 @@
 #include "notification/include/notification_db.h"
 #include "notification/include/notification_noti.h"
 
+extern "C" void test_set_db_dir(const char* dir);
+
 namespace {
 
 const char* CREATE_NOTI_TABLE_SQL =
@@ -111,22 +113,13 @@ const char* CREATE_NOTI_TABLE_SQL =
 
 class NotificationExtensionIntegrationTest : public ::testing::Test {
  protected:
-  static void MkdirP(const std::string& path) {
-    size_t pos = 0;
-    while ((pos = path.find('/', pos + 1)) != std::string::npos)
-      mkdir(path.substr(0, pos).c_str(), 0755);
-    mkdir(path.c_str(), 0755);
-  }
-
   void SetUp() override {
+    char tmp_dir[] = "/tmp/noti_integ_extension_XXXXXX";
+    if (!mkdtemp(tmp_dir))
+      GTEST_SKIP() << "Failed to create temp dir";
+    tmp_dir_ = tmp_dir;
+    test_set_db_dir(tmp_dir_.c_str());
     db_path_ = std::string(DBPATH);
-    std::string db_dir = db_path_.substr(0, db_path_.rfind('/'));
-    MkdirP(db_dir);
-
-    if (access(db_dir.c_str(), W_OK) != 0)
-      GTEST_SKIP() << "DB directory not writable: " << db_dir;
-
-    unlink(db_path_.c_str());
 
     sqlite3* setup_db = nullptr;
     int rc = sqlite3_open(db_path_.c_str(), &setup_db);
@@ -150,9 +143,12 @@ class NotificationExtensionIntegrationTest : public ::testing::Test {
   void TearDown() override {
     if (!db_path_.empty())
       unlink(db_path_.c_str());
+    if (!tmp_dir_.empty())
+      rmdir(tmp_dir_.c_str());
   }
 
   std::string db_path_;
+  std::string tmp_dir_;
 };
 
 TEST_F(NotificationExtensionIntegrationTest, EXTDATA_01_SetAndGetExtensionData) {
@@ -166,8 +162,23 @@ TEST_F(NotificationExtensionIntegrationTest, EXTDATA_01_SetAndGetExtensionData) 
   int ret = notification_set_extension_data(noti, "ext_key", b);
   EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
 
+  notification_set_display_applist(noti,
+      NOTIFICATION_DISPLAY_APP_NOTIFICATION_TRAY);
+
+  ret = notification_noti_insert(noti);
+  ASSERT_EQ(ret, NOTIFICATION_ERROR_NONE);
+
+  int group_id = 0, priv_id = 0;
+  notification_get_id(noti, &group_id, &priv_id);
+  ASSERT_GT(priv_id, 0);
+
+  notification_h loaded = notification_create(NOTIFICATION_TYPE_NOTI);
+  ASSERT_NE(loaded, nullptr);
+  ret = notification_noti_get_by_priv_id(loaded, priv_id);
+  ASSERT_EQ(ret, NOTIFICATION_ERROR_NONE);
+
   bundle* retrieved = nullptr;
-  ret = notification_get_extension_data(noti, "ext_key", &retrieved);
+  ret = notification_get_extension_data(loaded, "ext_key", &retrieved);
   EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
   ASSERT_NE(retrieved, nullptr);
 
@@ -178,6 +189,7 @@ TEST_F(NotificationExtensionIntegrationTest, EXTDATA_01_SetAndGetExtensionData) 
 
   bundle_free(retrieved);
   bundle_free(b);
+  notification_free(loaded);
   notification_free(noti);
 }
 
@@ -235,8 +247,23 @@ TEST_F(NotificationExtensionIntegrationTest, EXTDATA_03_MultipleExtensionDataKey
   ret = notification_set_extension_data(noti, "key_c", b_c);
   EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
 
+  notification_set_display_applist(noti,
+      NOTIFICATION_DISPLAY_APP_NOTIFICATION_TRAY);
+
+  ret = notification_noti_insert(noti);
+  ASSERT_EQ(ret, NOTIFICATION_ERROR_NONE);
+
+  int group_id = 0, priv_id = 0;
+  notification_get_id(noti, &group_id, &priv_id);
+  ASSERT_GT(priv_id, 0);
+
+  notification_h loaded = notification_create(NOTIFICATION_TYPE_NOTI);
+  ASSERT_NE(loaded, nullptr);
+  ret = notification_noti_get_by_priv_id(loaded, priv_id);
+  ASSERT_EQ(ret, NOTIFICATION_ERROR_NONE);
+
   bundle* got_a = nullptr;
-  ret = notification_get_extension_data(noti, "key_a", &got_a);
+  ret = notification_get_extension_data(loaded, "key_a", &got_a);
   EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
   ASSERT_NE(got_a, nullptr);
   char* val_a = nullptr;
@@ -245,7 +272,7 @@ TEST_F(NotificationExtensionIntegrationTest, EXTDATA_03_MultipleExtensionDataKey
   EXPECT_STREQ(val_a, "value_a");
 
   bundle* got_b = nullptr;
-  ret = notification_get_extension_data(noti, "key_b", &got_b);
+  ret = notification_get_extension_data(loaded, "key_b", &got_b);
   EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
   ASSERT_NE(got_b, nullptr);
   char* val_b = nullptr;
@@ -254,7 +281,7 @@ TEST_F(NotificationExtensionIntegrationTest, EXTDATA_03_MultipleExtensionDataKey
   EXPECT_STREQ(val_b, "value_b");
 
   bundle* got_c = nullptr;
-  ret = notification_get_extension_data(noti, "key_c", &got_c);
+  ret = notification_get_extension_data(loaded, "key_c", &got_c);
   EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
   ASSERT_NE(got_c, nullptr);
   char* val_c = nullptr;
@@ -268,6 +295,7 @@ TEST_F(NotificationExtensionIntegrationTest, EXTDATA_03_MultipleExtensionDataKey
   bundle_free(b_a);
   bundle_free(b_b);
   bundle_free(b_c);
+  notification_free(loaded);
   notification_free(noti);
 }
 

@@ -30,6 +30,8 @@
 #include "notification/include/notification_db.h"
 #include "notification/include/notification_noti.h"
 
+extern "C" void test_set_db_dir(const char* dir);
+
 namespace {
 
 const char* CREATE_NOTI_TABLE_SQL =
@@ -109,22 +111,13 @@ const char* CREATE_NOTI_TABLE_SQL =
 
 class NotificationFieldIntegrationTest : public ::testing::Test {
  protected:
-  static void MkdirP(const std::string& path) {
-    size_t pos = 0;
-    while ((pos = path.find('/', pos + 1)) != std::string::npos)
-      mkdir(path.substr(0, pos).c_str(), 0755);
-    mkdir(path.c_str(), 0755);
-  }
-
   void SetUp() override {
+    char tmp_dir[] = "/tmp/noti_integ_field_XXXXXX";
+    if (!mkdtemp(tmp_dir))
+      GTEST_SKIP() << "Failed to create temp dir";
+    tmp_dir_ = tmp_dir;
+    test_set_db_dir(tmp_dir_.c_str());
     db_path_ = std::string(DBPATH);
-    std::string db_dir = db_path_.substr(0, db_path_.rfind('/'));
-    MkdirP(db_dir);
-
-    if (access(db_dir.c_str(), W_OK) != 0)
-      GTEST_SKIP() << "DB directory not writable: " << db_dir;
-
-    unlink(db_path_.c_str());
 
     sqlite3* setup_db = nullptr;
     int rc = sqlite3_open(db_path_.c_str(), &setup_db);
@@ -148,9 +141,12 @@ class NotificationFieldIntegrationTest : public ::testing::Test {
   void TearDown() override {
     if (!db_path_.empty())
       unlink(db_path_.c_str());
+    if (!tmp_dir_.empty())
+      rmdir(tmp_dir_.c_str());
   }
 
   std::string db_path_;
+  std::string tmp_dir_;
 };
 
 /* FIELD_01: Image field round-trip */

@@ -29,6 +29,8 @@
 #include "notification/include/notification_db.h"
 #include "notification/include/notification_noti.h"
 
+extern "C" void test_set_db_dir(const char* dir);
+
 namespace {
 
 const char* CREATE_NOTI_TABLE_SQL =
@@ -116,22 +118,13 @@ const char* CREATE_CHANNEL_TABLE_SQL =
 
 class NotificationChannelIntegrationTest : public ::testing::Test {
  protected:
-  static void MkdirP(const std::string& path) {
-    size_t pos = 0;
-    while ((pos = path.find('/', pos + 1)) != std::string::npos)
-      mkdir(path.substr(0, pos).c_str(), 0755);
-    mkdir(path.c_str(), 0755);
-  }
-
   void SetUp() override {
+    char tmp_dir[] = "/tmp/noti_integ_channel_XXXXXX";
+    if (!mkdtemp(tmp_dir))
+      GTEST_SKIP() << "Failed to create temp dir";
+    tmp_dir_ = tmp_dir;
+    test_set_db_dir(tmp_dir_.c_str());
     db_path_ = std::string(DBPATH);
-    std::string db_dir = db_path_.substr(0, db_path_.rfind('/'));
-    MkdirP(db_dir);
-
-    if (access(db_dir.c_str(), W_OK) != 0)
-      GTEST_SKIP() << "DB directory not writable: " << db_dir;
-
-    unlink(db_path_.c_str());
 
     sqlite3* setup_db = nullptr;
     int rc = sqlite3_open(db_path_.c_str(), &setup_db);
@@ -155,9 +148,12 @@ class NotificationChannelIntegrationTest : public ::testing::Test {
   void TearDown() override {
     if (!db_path_.empty())
       unlink(db_path_.c_str());
+    if (!tmp_dir_.empty())
+      rmdir(tmp_dir_.c_str());
   }
 
   std::string db_path_;
+  std::string tmp_dir_;
 };
 
 /* CHANNEL_01: Insert and retrieve channel */
@@ -220,12 +216,21 @@ TEST_F(NotificationChannelIntegrationTest, CHANNEL_04_DeleteChannelAndVerifyGone
   ret = notification_noti_delete_channel("com.test.app", "ch_del");
   EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
 
-  int blockable = -1;
-  int is_blocked = -1;
-  ret = notification_noti_get_channel("com.test.app",
-      "ch_del", &blockable, &is_blocked);
-  EXPECT_NE(ret, NOTIFICATION_ERROR_NONE)
+  sqlite3* vdb = nullptr;
+  int vrc = sqlite3_open(db_path_.c_str(), &vdb);
+  ASSERT_EQ(vrc, SQLITE_OK);
+  sqlite3_stmt* vstmt = nullptr;
+  vrc = sqlite3_prepare_v2(vdb,
+      "SELECT COUNT(*) FROM noti_channel "
+      "WHERE app_id='com.test.app' AND channel_name='ch_del';",
+      -1, &vstmt, nullptr);
+  ASSERT_EQ(vrc, SQLITE_OK);
+  ASSERT_EQ(sqlite3_step(vstmt), SQLITE_ROW);
+  int remaining = sqlite3_column_int(vstmt, 0);
+  EXPECT_EQ(remaining, 0)
       << "Channel should not be retrievable after deletion";
+  sqlite3_finalize(vstmt);
+  sqlite3_close(vdb);
 }
 
 /* CHANNEL_05: Channel name on notification */

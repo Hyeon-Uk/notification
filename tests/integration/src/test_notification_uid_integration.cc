@@ -32,6 +32,8 @@
 #include "notification/include/notification_setting_internal.h"
 #include "notification/include/notification_setting_service.h"
 
+extern "C" void test_set_db_dir(const char* dir);
+
 namespace {
 
 const char* CREATE_NOTI_TABLE_SQL =
@@ -124,22 +126,13 @@ const char* CREATE_SETTING_TABLE_SQL =
 
 class NotificationUidIntegrationTest : public ::testing::Test {
  protected:
-  static void MkdirP(const std::string& path) {
-    size_t pos = 0;
-    while ((pos = path.find('/', pos + 1)) != std::string::npos)
-      mkdir(path.substr(0, pos).c_str(), 0755);
-    mkdir(path.c_str(), 0755);
-  }
-
   void SetUp() override {
+    char tmp_dir[] = "/tmp/noti_integ_uid_XXXXXX";
+    if (!mkdtemp(tmp_dir))
+      GTEST_SKIP() << "Failed to create temp dir";
+    tmp_dir_ = tmp_dir;
+    test_set_db_dir(tmp_dir_.c_str());
     db_path_ = std::string(DBPATH);
-    std::string db_dir = db_path_.substr(0, db_path_.rfind('/'));
-    MkdirP(db_dir);
-
-    if (access(db_dir.c_str(), W_OK) != 0)
-      GTEST_SKIP() << "DB directory not writable: " << db_dir;
-
-    unlink(db_path_.c_str());
 
     sqlite3* setup_db = nullptr;
     int rc = sqlite3_open(db_path_.c_str(), &setup_db);
@@ -162,15 +155,22 @@ class NotificationUidIntegrationTest : public ::testing::Test {
     notification_h test_noti = notification_create(NOTIFICATION_TYPE_NOTI);
     if (!test_noti)
       GTEST_SKIP() << "notification_create requires app context";
+    char* pkgname = nullptr;
+    notification_get_pkgname(test_noti, &pkgname);
+    if (pkgname) pkgname_ = pkgname;
     notification_free(test_noti);
   }
 
   void TearDown() override {
     if (!db_path_.empty())
       unlink(db_path_.c_str());
+    if (!tmp_dir_.empty())
+      rmdir(tmp_dir_.c_str());
   }
 
   std::string db_path_;
+  std::string tmp_dir_;
+  std::string pkgname_;
 };
 
 /* MULTIUSER_01: InsertAndLoadByTagForUid
@@ -194,7 +194,8 @@ TEST_F(NotificationUidIntegrationTest, MULTIUSER_01_InsertAndLoadByTagForUid) {
   ASSERT_NE(loaded, nullptr);
 
   ret = notification_noti_get_by_tag(loaded,
-      nullptr, const_cast<char*>("uid_test"), 5000);
+      const_cast<char*>(pkgname_.c_str()),
+      const_cast<char*>("uid_test"), 5000);
   EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
 
   const char* tag = nullptr;
@@ -227,7 +228,8 @@ TEST_F(NotificationUidIntegrationTest,
   ASSERT_NE(loaded, nullptr);
 
   ret = notification_noti_get_by_tag(loaded,
-      nullptr, const_cast<char*>("uid_iso"), 5001);
+      const_cast<char*>(pkgname_.c_str()),
+      const_cast<char*>("uid_iso"), 5001);
   EXPECT_NE(ret, NOTIFICATION_ERROR_NONE);
 
   notification_free(loaded);
@@ -288,15 +290,27 @@ TEST_F(NotificationUidIntegrationTest,
  */
 TEST_F(NotificationUidIntegrationTest,
     MULTIUSER_04_SettingsPerUidIsolation) {
-  int ret = notification_setting_db_update(
-      "com.pkg.a", "com.pkg.a",
-      1, 0, 0, 1, 0, 5000);
-  EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
+  sqlite3* sdb = nullptr;
+  int src = sqlite3_open(db_path_.c_str(), &sdb);
+  ASSERT_EQ(src, SQLITE_OK);
+  char* serr = nullptr;
+  sqlite3_exec(sdb,
+      "INSERT OR REPLACE INTO notification_setting "
+      "(uid, package_name, app_id, allow_to_notify, do_not_disturb_except,"
+      " visibility_class, pop_up_notification, lock_screen_content_level)"
+      " VALUES (5000,'com.pkg.a','com.pkg.a',1,0,0,1,0);",
+      nullptr, nullptr, &serr);
+  if (serr) { sqlite3_free(serr); serr = nullptr; }
+  sqlite3_exec(sdb,
+      "INSERT OR REPLACE INTO notification_setting "
+      "(uid, package_name, app_id, allow_to_notify, do_not_disturb_except,"
+      " visibility_class, pop_up_notification, lock_screen_content_level)"
+      " VALUES (5001,'com.pkg.a','com.pkg.a',0,0,0,1,0);",
+      nullptr, nullptr, &serr);
+  if (serr) { sqlite3_free(serr); serr = nullptr; }
+  sqlite3_close(sdb);
 
-  ret = notification_setting_db_update(
-      "com.pkg.a", "com.pkg.a",
-      0, 0, 0, 1, 0, 5001);
-  EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
+  int ret;
 
   notification_setting_h setting_5000 = nullptr;
   ret = noti_setting_service_get_setting_by_app_id(

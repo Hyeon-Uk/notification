@@ -29,6 +29,8 @@
 #include "notification/include/notification_db.h"
 #include "notification/include/notification_noti.h"
 
+extern "C" void test_set_db_dir(const char* dir);
+
 namespace {
 
 const char* CREATE_NOTI_TABLE_SQL =
@@ -108,22 +110,13 @@ const char* CREATE_NOTI_TABLE_SQL =
 
 class NotificationCountIntegrationTest : public ::testing::Test {
  protected:
-  static void MkdirP(const std::string& path) {
-    size_t pos = 0;
-    while ((pos = path.find('/', pos + 1)) != std::string::npos)
-      mkdir(path.substr(0, pos).c_str(), 0755);
-    mkdir(path.c_str(), 0755);
-  }
-
   void SetUp() override {
+    char tmp_dir[] = "/tmp/noti_integ_count_XXXXXX";
+    if (!mkdtemp(tmp_dir))
+      GTEST_SKIP() << "Failed to create temp dir";
+    tmp_dir_ = tmp_dir;
+    test_set_db_dir(tmp_dir_.c_str());
     db_path_ = std::string(DBPATH);
-    std::string db_dir = db_path_.substr(0, db_path_.rfind('/'));
-    MkdirP(db_dir);
-
-    if (access(db_dir.c_str(), W_OK) != 0)
-      GTEST_SKIP() << "DB directory not writable: " << db_dir;
-
-    unlink(db_path_.c_str());
 
     sqlite3* setup_db = nullptr;
     int rc = sqlite3_open(db_path_.c_str(), &setup_db);
@@ -141,12 +134,17 @@ class NotificationCountIntegrationTest : public ::testing::Test {
     notification_h test_noti = notification_create(NOTIFICATION_TYPE_NOTI);
     if (!test_noti)
       GTEST_SKIP() << "notification_create requires app context";
+    char* pkgname = nullptr;
+    notification_get_pkgname(test_noti, &pkgname);
+    if (pkgname) pkgname_ = pkgname;
     notification_free(test_noti);
   }
 
   void TearDown() override {
     if (!db_path_.empty())
       unlink(db_path_.c_str());
+    if (!tmp_dir_.empty())
+      rmdir(tmp_dir_.c_str());
   }
 
   notification_h InsertNoti(notification_type_e type) {
@@ -154,6 +152,7 @@ class NotificationCountIntegrationTest : public ::testing::Test {
     if (!noti) return nullptr;
     notification_set_display_applist(noti,
         NOTIFICATION_DISPLAY_APP_NOTIFICATION_TRAY);
+    notification_set_uid(noti, 5001);
     int ret = notification_noti_insert(noti);
     if (ret != NOTIFICATION_ERROR_NONE) {
       notification_free(noti);
@@ -163,6 +162,8 @@ class NotificationCountIntegrationTest : public ::testing::Test {
   }
 
   std::string db_path_;
+  std::string tmp_dir_;
+  std::string pkgname_;
 };
 
 /* COUNT_01: InsertAndVerifyCountIncrements
@@ -237,11 +238,11 @@ TEST_F(NotificationCountIntegrationTest, DeleteSomeAndRecount) {
     notification_free(noti);
   }
 
-  int ret = notification_noti_delete_by_priv_id(nullptr, priv_ids[0]);
+  int ret = notification_noti_delete_by_priv_id(pkgname_.c_str(), priv_ids[0]);
   EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
-  ret = notification_noti_delete_by_priv_id(nullptr, priv_ids[3]);
+  ret = notification_noti_delete_by_priv_id(pkgname_.c_str(), priv_ids[3]);
   EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
-  ret = notification_noti_delete_by_priv_id(nullptr, priv_ids[7]);
+  ret = notification_noti_delete_by_priv_id(pkgname_.c_str(), priv_ids[7]);
   EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
 
   int count = 0;
@@ -289,7 +290,7 @@ TEST_F(NotificationCountIntegrationTest, CountByAppIdAndType) {
 
   int count = 0;
   int ret = notification_noti_get_count(NOTIFICATION_TYPE_NOTI,
-      nullptr, NOTIFICATION_GROUP_ID_NONE, NOTIFICATION_PRIV_ID_NONE,
+      pkgname_.c_str(), NOTIFICATION_GROUP_ID_NONE, NOTIFICATION_PRIV_ID_NONE,
       &count, 5001);
   EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
   EXPECT_EQ(count, 4);

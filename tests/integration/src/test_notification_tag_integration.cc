@@ -29,6 +29,8 @@
 #include "notification/include/notification_db.h"
 #include "notification/include/notification_noti.h"
 
+extern "C" void test_set_db_dir(const char* dir);
+
 namespace {
 
 const char* CREATE_NOTI_TABLE_SQL =
@@ -108,22 +110,13 @@ const char* CREATE_NOTI_TABLE_SQL =
 
 class NotificationTagIntegrationTest : public ::testing::Test {
  protected:
-  static void MkdirP(const std::string& path) {
-    size_t pos = 0;
-    while ((pos = path.find('/', pos + 1)) != std::string::npos)
-      mkdir(path.substr(0, pos).c_str(), 0755);
-    mkdir(path.c_str(), 0755);
-  }
-
   void SetUp() override {
+    char tmp_dir[] = "/tmp/noti_integ_tag_XXXXXX";
+    if (!mkdtemp(tmp_dir))
+      GTEST_SKIP() << "Failed to create temp dir";
+    tmp_dir_ = tmp_dir;
+    test_set_db_dir(tmp_dir_.c_str());
     db_path_ = std::string(DBPATH);
-    std::string db_dir = db_path_.substr(0, db_path_.rfind('/'));
-    MkdirP(db_dir);
-
-    if (access(db_dir.c_str(), W_OK) != 0)
-      GTEST_SKIP() << "DB directory not writable: " << db_dir;
-
-    unlink(db_path_.c_str());
 
     sqlite3* setup_db = nullptr;
     int rc = sqlite3_open(db_path_.c_str(), &setup_db);
@@ -141,12 +134,17 @@ class NotificationTagIntegrationTest : public ::testing::Test {
     notification_h test_noti = notification_create(NOTIFICATION_TYPE_NOTI);
     if (!test_noti)
       GTEST_SKIP() << "notification_create requires app context";
+    char* pkgname = nullptr;
+    notification_get_pkgname(test_noti, &pkgname);
+    if (pkgname) pkgname_ = pkgname;
     notification_free(test_noti);
   }
 
   void TearDown() override {
     if (!db_path_.empty())
       unlink(db_path_.c_str());
+    if (!tmp_dir_.empty())
+      rmdir(tmp_dir_.c_str());
   }
 
   int GetTagCount(const char* tag) {
@@ -170,6 +168,8 @@ class NotificationTagIntegrationTest : public ::testing::Test {
   }
 
   std::string db_path_;
+  std::string tmp_dir_;
+  std::string pkgname_;
 };
 
 /* TAG_01: Basic tag post and load */
@@ -182,6 +182,7 @@ TEST_F(NotificationTagIntegrationTest, TAG_01_BasicTagPostAndLoad) {
       "tagged_noti", NULL, NOTIFICATION_VARIABLE_TYPE_NONE);
   notification_set_display_applist(noti,
       NOTIFICATION_DISPLAY_APP_NOTIFICATION_TRAY);
+  notification_set_uid(noti, 5001);
 
   int ret = notification_noti_insert(noti);
   EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
@@ -191,7 +192,8 @@ TEST_F(NotificationTagIntegrationTest, TAG_01_BasicTagPostAndLoad) {
   ASSERT_NE(loaded, nullptr);
 
   ret = notification_noti_get_by_tag(loaded,
-      nullptr, const_cast<char*>("unique_tag"), 5001);
+      const_cast<char*>(pkgname_.c_str()),
+      const_cast<char*>("unique_tag"), 5001);
   EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
 
   char* title = nullptr;
@@ -217,7 +219,7 @@ TEST_F(NotificationTagIntegrationTest, TAG_02_SameTagUpdateOrInsert) {
   EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
 
   int tag_ret_a = notification_noti_check_tag(noti_a);
-  EXPECT_EQ(tag_ret_a, NOTIFICATION_ERROR_NONE);
+  EXPECT_EQ(tag_ret_a, NOTIFICATION_ERROR_ALREADY_EXIST_ID);
   notification_free(noti_a);
 
   notification_h noti_b = notification_create(NOTIFICATION_TYPE_NOTI);
@@ -230,8 +232,8 @@ TEST_F(NotificationTagIntegrationTest, TAG_02_SameTagUpdateOrInsert) {
       NOTIFICATION_DISPLAY_APP_NOTIFICATION_TRAY);
 
   int tag_ret_b = notification_noti_check_tag(noti_b);
-  EXPECT_EQ(tag_ret_b, NOTIFICATION_ERROR_NONE);
-  ret = notification_noti_insert(noti_b);
+  EXPECT_EQ(tag_ret_b, NOTIFICATION_ERROR_ALREADY_EXIST_ID);
+  ret = notification_noti_update(noti_b);
   EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
   notification_free(noti_b);
 
@@ -248,6 +250,7 @@ TEST_F(NotificationTagIntegrationTest, TAG_03_DeleteThenLoadByTagFails) {
       "to_delete", NULL, NOTIFICATION_VARIABLE_TYPE_NONE);
   notification_set_display_applist(noti,
       NOTIFICATION_DISPLAY_APP_NOTIFICATION_TRAY);
+  notification_set_uid(noti, 5001);
 
   int ret = notification_noti_insert(noti);
   EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
@@ -258,14 +261,15 @@ TEST_F(NotificationTagIntegrationTest, TAG_03_DeleteThenLoadByTagFails) {
   EXPECT_GT(priv_id, 0);
   notification_free(noti);
 
-  ret = notification_noti_delete_by_priv_id(nullptr, priv_id);
+  ret = notification_noti_delete_by_priv_id(pkgname_.c_str(), priv_id);
   EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
 
   notification_h loaded = notification_create(NOTIFICATION_TYPE_NOTI);
   ASSERT_NE(loaded, nullptr);
 
   ret = notification_noti_get_by_tag(loaded,
-      nullptr, const_cast<char*>("del_tag"), 5001);
+      const_cast<char*>(pkgname_.c_str()),
+      const_cast<char*>("del_tag"), 5001);
   EXPECT_NE(ret, NOTIFICATION_ERROR_NONE);
 
   notification_free(loaded);
@@ -282,6 +286,7 @@ TEST_F(NotificationTagIntegrationTest, TAG_04_TagWithSpecialCharacters) {
       "spaced_tag", NULL, NOTIFICATION_VARIABLE_TYPE_NONE);
   notification_set_display_applist(noti_spaces,
       NOTIFICATION_DISPLAY_APP_NOTIFICATION_TRAY);
+  notification_set_uid(noti_spaces, 5001);
 
   int ret = notification_noti_insert(noti_spaces);
   EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
@@ -291,7 +296,8 @@ TEST_F(NotificationTagIntegrationTest, TAG_04_TagWithSpecialCharacters) {
   ASSERT_NE(loaded_spaces, nullptr);
 
   ret = notification_noti_get_by_tag(loaded_spaces,
-      nullptr, const_cast<char*>(" spaces here "), 5001);
+      const_cast<char*>(pkgname_.c_str()),
+      const_cast<char*>(" spaces here "), 5001);
   EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
 
   const char* ret_tag = nullptr;
@@ -309,6 +315,7 @@ TEST_F(NotificationTagIntegrationTest, TAG_04_TagWithSpecialCharacters) {
       "unicode_tag", NULL, NOTIFICATION_VARIABLE_TYPE_NONE);
   notification_set_display_applist(noti_unicode,
       NOTIFICATION_DISPLAY_APP_NOTIFICATION_TRAY);
+  notification_set_uid(noti_unicode, 5001);
 
   ret = notification_noti_insert(noti_unicode);
   EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
@@ -318,7 +325,8 @@ TEST_F(NotificationTagIntegrationTest, TAG_04_TagWithSpecialCharacters) {
   ASSERT_NE(loaded_unicode, nullptr);
 
   ret = notification_noti_get_by_tag(loaded_unicode,
-      nullptr, const_cast<char*>("tag_\xed\x95\x9c\xea\xb8\x80"), 5001);
+      const_cast<char*>(pkgname_.c_str()),
+      const_cast<char*>("tag_\xed\x95\x9c\xea\xb8\x80"), 5001);
   EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
 
   const char* ret_tag_unicode = nullptr;
