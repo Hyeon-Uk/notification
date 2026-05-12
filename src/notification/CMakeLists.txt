@@ -16,6 +16,7 @@ SET_TARGET_PROPERTIES(${TARGET_NOTIFICATION} PROPERTIES
 TARGET_COMPILE_OPTIONS(${TARGET_NOTIFICATION} PRIVATE
   -Wall
   -Wno-error=deprecated-declarations
+  -Wno-error=format-security
   -Wl,-zdefs
   -fvisibility=hidden
 )

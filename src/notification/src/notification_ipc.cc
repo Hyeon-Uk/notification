@@ -13,7 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#ifndef _GNU_SOURCE
 #define _GNU_SOURCE
+#endif
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -324,7 +326,8 @@ static gboolean _variant_dict_lookup(GHashTable *dict,
 	GVariant *value;
 	va_list ap;
 
-	value = g_hash_table_lookup(dict, (gpointer)&key);
+	value = static_cast<GVariant*>(
+	    g_hash_table_lookup(dict, (gpointer)&key));
 
 	if (value == NULL || !g_variant_check_format_string(value, format_string, FALSE))
 		return FALSE;

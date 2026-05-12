@@ -29,44 +29,44 @@
 
 #define DBG(fmt , args...) \
 	do { \
-		printf("[D][%s : %d] "fmt"\n", __func__, __LINE__, ##args); \
+		printf("[D][%s : %d] " fmt "\n", __func__, __LINE__, ##args); \
 	} while (0)
 
 #define INFO(fmt , args...) \
 	do { \
-		printf("[I][%s : %d] "fmt"\n", __func__, __LINE__, ##args); \
+		printf("[I][%s : %d] " fmt "\n", __func__, __LINE__, ##args); \
 	} while (0)
 
 #define WARN(fmt , args...) \
 	do { \
-		printf("[W][%s : %d] "fmt"\n", __func__, __LINE__, ##args); \
+		printf("[W][%s : %d] " fmt "\n", __func__, __LINE__, ##args); \
 	} while (0)
 
 #define ERR(fmt , args...) \
 	do { \
-		printf("[E][%s : %d] "fmt"\n", __func__, __LINE__, ##args); \
+		printf("[E][%s : %d] " fmt "\n", __func__, __LINE__, ##args); \
 	} while (0)
 
 #else /* _DLOG_H_ */
 
 #define DBG(fmt , args...) \
 	do { \
-		SECURE_LOGD("[%s : %d] "fmt"\n", __func__, __LINE__, ##args); \
+		SECURE_LOGD("[%s : %d] " fmt "\n", __func__, __LINE__, ##args); \
 	} while (0)
 
 #define INFO(fmt , args...) \
 	do { \
-		SECURE_LOGI("[%s : %d] "fmt"\n", __func__, __LINE__, ##args); \
+		SECURE_LOGI("[%s : %d] " fmt "\n", __func__, __LINE__, ##args); \
 	} while (0)
 
 #define WARN(fmt , args...) \
 	do { \
-		SECURE_LOGW("[%s : %d] "fmt"\n", __func__, __LINE__, ##args); \
+		SECURE_LOGW("[%s : %d] " fmt "\n", __func__, __LINE__, ##args); \
 	} while (0)
 
 #define ERR(fmt , args...) \
 	do { \
-		SECURE_LOGE("[%s : %d] "fmt"\n", __func__, __LINE__, ##args); \
+		SECURE_LOGE("[%s : %d] " fmt "\n", __func__, __LINE__, ##args); \
 	} while (0)
 
 #endif /* _DLOG_H_ */

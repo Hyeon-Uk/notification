@@ -21,6 +21,10 @@
 
 #include <tizen.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 
 /**
  * @file notification_error.h
@@ -57,6 +61,10 @@ typedef enum _notification_error {
  * @}
  */
 
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* __NOTIFICATION_ERROR_H__ */
 

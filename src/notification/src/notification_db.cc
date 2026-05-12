@@ -32,7 +32,7 @@ static bool is_db_corrupted = false;
 /* LCOV_EXCL_START */
 static int __check_integrity_cb(void *pid, int argc, char **argv, char **notUsed)
 {
-	char *check_str = "ok";
+	const char *check_str = "ok";
 
 	if (strncmp(argv[0], check_str, strlen(check_str))) {
 		ERR("db integrity result : %s", argv[0]);
