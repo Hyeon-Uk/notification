@@ -96,6 +96,12 @@ using GlibPtr = std::unique_ptr<T, GFreeDeleter>;
 
 using GCharPtr = GlibPtr<gchar>;
 
+struct FreeDeleter {
+  void operator()(void *p) const { free(p); }
+};
+
+using CCharPtr = std::unique_ptr<char, FreeDeleter>;
+
 struct SqliteFreeDeleter {
   void operator()(char *p) const { sqlite3_free(p); }
 };
