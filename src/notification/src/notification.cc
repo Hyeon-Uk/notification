@@ -472,9 +472,6 @@ EXPORT_API int notification_get_text(notification_h noti,
 	if (noti->b_key != NULL) {
 		b = noti->b_key;
 
-		/* Get text domain and dir */
-		/* _notification_get_text_domain(noti); */
-
 		snprintf(buf_key, sizeof(buf_key), "%d", type);
 		bundle_get_str(b, buf_key, &ret_val);
 

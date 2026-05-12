@@ -1068,9 +1068,6 @@ EXPORT_API notification_h notification_new(notification_type_e type,
 	return notification_create(type);
 }
 
-static void _notification_get_text_domain(notification_h noti)
-{
-}
 /* LCOV_EXCL_STOP */
 
 /* LCOV_EXCL_START */
@@ -1107,9 +1104,6 @@ EXPORT_API int notification_get_execute_option(notification_h noti,
 
 	if (b != NULL) {
 		if (text != NULL) {
-			if (noti->domain == NULL || noti->dir == NULL)
-				_notification_get_text_domain(noti);
-
 			snprintf(buf_key, sizeof(buf_key), "key%d", type);
 
 			bundle_get_str(b, buf_key, &ret_val);
