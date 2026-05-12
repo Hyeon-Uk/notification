@@ -336,3 +336,56 @@ TEST_F(NotificationChannelIntegrationTest, CHANNEL_07_MultipleChannelsForApp) {
       "ch_c", &blockable, &is_blocked);
   EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
 }
+
+/* CHANNEL_08: Get channel list iterates all channels (DB layer) */
+TEST_F(NotificationChannelIntegrationTest, CHANNEL_08_GetChannelListIteratesAll) {
+  int ret = notification_noti_insert_channel("com.test.list", "alpha", 1, 0);
+  ASSERT_EQ(ret, NOTIFICATION_ERROR_NONE);
+  ret = notification_noti_insert_channel("com.test.list", "beta", 0, 1);
+  ASSERT_EQ(ret, NOTIFICATION_ERROR_NONE);
+  ret = notification_noti_insert_channel("com.test.list", "gamma", 1, 1);
+  ASSERT_EQ(ret, NOTIFICATION_ERROR_NONE);
+
+  GList *channel_list = nullptr;
+  ret = notification_noti_get_channel_list("com.test.list", &channel_list);
+  ASSERT_EQ(ret, NOTIFICATION_ERROR_NONE);
+  ASSERT_NE(channel_list, nullptr);
+  EXPECT_EQ(g_list_length(channel_list), 3u);
+
+  int found_alpha = 0, found_beta = 0, found_gamma = 0;
+  for (GList *iter = channel_list; iter; iter = g_list_next(iter)) {
+    notification_channel_h ch =
+        static_cast<notification_channel_h>(iter->data);
+    ASSERT_NE(ch, nullptr);
+    const char *name = nullptr;
+    ret = notification_channel_get_name(ch, &name);
+    EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
+    if (name && strcmp(name, "alpha") == 0) found_alpha++;
+    if (name && strcmp(name, "beta") == 0) found_beta++;
+    if (name && strcmp(name, "gamma") == 0) found_gamma++;
+    notification_channel_free(ch);
+  }
+  g_list_free(channel_list);
+
+  EXPECT_EQ(found_alpha, 1);
+  EXPECT_EQ(found_beta, 1);
+  EXPECT_EQ(found_gamma, 1);
+}
+
+/* CHANNEL_09: Get channel list null params returns error */
+TEST_F(NotificationChannelIntegrationTest, CHANNEL_09_GetChannelListNullParams) {
+  GList *channel_list = nullptr;
+  int ret = notification_noti_get_channel_list(nullptr, &channel_list);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_INVALID_PARAMETER);
+
+  ret = notification_noti_get_channel_list("com.test.app", nullptr);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_INVALID_PARAMETER);
+}
+
+/* CHANNEL_10: Get channel list for app with no channels returns empty list */
+TEST_F(NotificationChannelIntegrationTest, CHANNEL_10_GetChannelListEmpty) {
+  GList *channel_list = nullptr;
+  int ret = notification_noti_get_channel_list("com.test.empty", &channel_list);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
+  EXPECT_EQ(g_list_length(channel_list), 0u);
+}

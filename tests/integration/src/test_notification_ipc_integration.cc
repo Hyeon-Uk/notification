@@ -16,6 +16,7 @@
 
 #include <gtest/gtest.h>
 #include <sqlite3.h>
+#include <bundle.h>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
@@ -387,6 +388,127 @@ TEST_F(NotificationIpcIntegrationTest,
   double size = 0.0;
   notification_get_size(noti2, &size);
   EXPECT_DOUBLE_EQ(size, 4096.0);
+
+  g_variant_unref(inner);
+  g_variant_unref(variant);
+  notification_free(noti2);
+  notification_free(noti);
+}
+
+/* SERIAL_06: Serialize notification with extension data (large bundle) */
+TEST_F(NotificationIpcIntegrationTest,
+    SERIAL_06_SerializeExtensionData) {
+  notification_h noti = notification_create(NOTIFICATION_TYPE_NOTI);
+  ASSERT_NE(noti, nullptr);
+
+  notification_set_text(noti, NOTIFICATION_TEXT_TYPE_TITLE, "ext_test",
+      NULL, NOTIFICATION_VARIABLE_TYPE_NONE);
+
+  bundle *b = bundle_create();
+  ASSERT_NE(b, nullptr);
+  for (int i = 0; i < 20; i++) {
+    char key[32], val[128];
+    snprintf(key, sizeof(key), "ext_key_%d", i);
+    snprintf(val, sizeof(val), "ext_value_%d_with_some_padding_data", i);
+    bundle_add_str(b, key, val);
+  }
+  int ret = notification_set_extension_data(noti, "big_bundle", b);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
+  bundle_free(b);
+
+  notification_set_display_applist(noti,
+      NOTIFICATION_DISPLAY_APP_NOTIFICATION_TRAY);
+
+  GVariant *variant = notification_ipc_make_gvariant_from_noti(noti, false);
+  if (variant == NULL) {
+    notification_free(noti);
+    GTEST_SKIP() << "GVariant serialization not available without daemon";
+  }
+
+  GVariant *inner = UnwrapNotiVariant(variant);
+  notification_h noti2 = notification_create(NOTIFICATION_TYPE_NOTI);
+  ASSERT_NE(noti2, nullptr);
+
+  ret = notification_ipc_make_noti_from_gvariant(noti2, inner);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
+
+  bundle *b2 = nullptr;
+  ret = notification_get_extension_data(noti2, "big_bundle", &b2);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
+  if (b2) {
+    char *val = nullptr;
+    bundle_get_str(b2, "ext_key_0", &val);
+    ASSERT_NE(val, nullptr);
+    EXPECT_STREQ(val, "ext_value_0_with_some_padding_data");
+    bundle_free(b2);
+  }
+
+  g_variant_unref(inner);
+  g_variant_unref(variant);
+  notification_free(noti2);
+  notification_free(noti);
+}
+
+/* SERIAL_07: Serialize all fields round-trip (comprehensive) */
+TEST_F(NotificationIpcIntegrationTest,
+    SERIAL_07_SerializeAllFieldsRoundTrip) {
+  notification_h noti = notification_create(NOTIFICATION_TYPE_NOTI);
+  ASSERT_NE(noti, nullptr);
+
+  notification_set_text(noti, NOTIFICATION_TEXT_TYPE_TITLE, "full_title",
+      NULL, NOTIFICATION_VARIABLE_TYPE_NONE);
+  notification_set_text(noti, NOTIFICATION_TEXT_TYPE_CONTENT, "full_content",
+      NULL, NOTIFICATION_VARIABLE_TYPE_NONE);
+  notification_set_image(noti, NOTIFICATION_IMAGE_TYPE_ICON, "/test/icon.png");
+  notification_set_sound(noti, NOTIFICATION_SOUND_TYPE_USER_DATA,
+      "/test/s.wav");
+  notification_set_vibration(noti, NOTIFICATION_VIBRATION_TYPE_USER_DATA,
+      "/test/v.ivt");
+  notification_set_led(noti, NOTIFICATION_LED_OP_ON_CUSTOM_COLOR, 0xFF0000);
+  notification_set_led_time_period(noti, 100, 400);
+  notification_set_layout(noti, NOTIFICATION_LY_NOTI_EVENT_SINGLE);
+  notification_set_display_applist(noti,
+      NOTIFICATION_DISPLAY_APP_NOTIFICATION_TRAY |
+      NOTIFICATION_DISPLAY_APP_LOCK);
+  notification_set_tag(noti, "full_tag");
+  notification_set_auto_remove(noti, false);
+
+  GVariant *variant = notification_ipc_make_gvariant_from_noti(noti, false);
+  if (variant == NULL) {
+    notification_free(noti);
+    GTEST_SKIP() << "GVariant serialization not available without daemon";
+  }
+
+  GVariant *inner = UnwrapNotiVariant(variant);
+  notification_h noti2 = notification_create(NOTIFICATION_TYPE_NOTI);
+  ASSERT_NE(noti2, nullptr);
+
+  int ret = notification_ipc_make_noti_from_gvariant(noti2, inner);
+  ASSERT_EQ(ret, NOTIFICATION_ERROR_NONE);
+
+  char *title = nullptr;
+  notification_get_text(noti2, NOTIFICATION_TEXT_TYPE_TITLE, &title);
+  ASSERT_NE(title, nullptr);
+  EXPECT_STREQ(title, "full_title");
+
+  char *content = nullptr;
+  notification_get_text(noti2, NOTIFICATION_TEXT_TYPE_CONTENT, &content);
+  ASSERT_NE(content, nullptr);
+  EXPECT_STREQ(content, "full_content");
+
+  char *icon = nullptr;
+  notification_get_image(noti2, NOTIFICATION_IMAGE_TYPE_ICON, &icon);
+  ASSERT_NE(icon, nullptr);
+  EXPECT_STREQ(icon, "/test/icon.png");
+
+  const char *tag = nullptr;
+  notification_get_tag(noti2, &tag);
+  ASSERT_NE(tag, nullptr);
+  EXPECT_STREQ(tag, "full_tag");
+
+  bool auto_remove = true;
+  notification_get_auto_remove(noti2, &auto_remove);
+  EXPECT_FALSE(auto_remove);
 
   g_variant_unref(inner);
   g_variant_unref(variant);
