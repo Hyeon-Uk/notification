@@ -382,6 +382,129 @@ TEST_F(NotificationCountIntegrationTest, CheckLimitOverThresholdReturnsExcess) {
   notification_free(probe);
 }
 
+/* COUNT_09_InsertBeyondLimitTriggersRemoval
+ * Bulk-insert 102 rows directly via SQL (fast path), then call
+ * notification_noti_check_limit via a probe handle. Expect 2 excess
+ * priv_ids returned (102 - 100 = 2), representing the oldest rows.
+ */
+TEST_F(NotificationCountIntegrationTest,
+    COUNT_09_InsertBeyondLimitTriggersRemoval) {
+  /* Create a probe handle to get caller_app_id */
+  notification_h probe = notification_create(NOTIFICATION_TYPE_NOTI);
+  ASSERT_NE(probe, nullptr);
+  notification_set_uid(probe, 5001);
+  notification_set_display_applist(probe,
+      NOTIFICATION_DISPLAY_APP_NOTIFICATION_TRAY);
+
+  int ret = notification_noti_insert(probe);
+  ASSERT_EQ(ret, NOTIFICATION_ERROR_NONE);
+
+  char* caller_app = nullptr;
+  notification_get_pkgname(probe, &caller_app);
+  ASSERT_NE(caller_app, nullptr);
+  std::string caller_app_str(caller_app);
+
+  /* Remove the probe row to start with a clean slate */
+  int g = 0, probe_id = 0;
+  notification_get_id(probe, &g, &probe_id);
+  notification_noti_delete_by_priv_id(caller_app_str.c_str(), probe_id);
+
+  /* Bulk-insert 102 rows directly via SQL for speed */
+  sqlite3* db = nullptr;
+  int rc = sqlite3_open(db_path_.c_str(), &db);
+  ASSERT_EQ(rc, SQLITE_OK);
+
+  for (int i = 0; i < 102; i++) {
+    char* sql = sqlite3_mprintf(
+        "INSERT INTO noti_list "
+        "(type, layout, pkg_id, caller_app_id, display_applist,"
+        " uid, insert_time) "
+        "VALUES (%d, 0, %Q, %Q, %d, %d, %d);",
+        NOTIFICATION_TYPE_NOTI, caller_app_str.c_str(),
+        caller_app_str.c_str(),
+        NOTIFICATION_DISPLAY_APP_NOTIFICATION_TRAY, 5001, i);
+    sqlite3_exec(db, sql, nullptr, nullptr, nullptr);
+    sqlite3_free(sql);
+  }
+  sqlite3_close(db);
+
+  /* Verify DB has 102 rows */
+  int count = 0;
+  ret = notification_noti_get_all_count(NOTIFICATION_TYPE_NOTI,
+      &count, 5001);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
+  EXPECT_EQ(count, 102);
+
+  /* check_limit should return 2 excess IDs (102 - 100 = 2) */
+  GList* excess_list = nullptr;
+  ret = notification_noti_check_limit(probe, 5001, &excess_list);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
+  EXPECT_EQ(g_list_length(excess_list), 2u);
+
+  if (excess_list) g_list_free(excess_list);
+  notification_free(probe);
+}
+
+/* COUNT_10_MultiAppCountIsolation
+ * Insert rows for two distinct caller_app_ids directly via SQL,
+ * then verify notification_noti_get_count isolates counts per app_id
+ * and notification_noti_get_all_count returns the combined total.
+ */
+TEST_F(NotificationCountIntegrationTest,
+    COUNT_10_MultiAppCountIsolation) {
+  const char* app1 = "com.test.countapp1";
+  const char* app2 = "com.test.countapp2";
+
+  /* Insert 3 rows for app1 and 2 rows for app2 via SQL */
+  sqlite3* db = nullptr;
+  int rc = sqlite3_open(db_path_.c_str(), &db);
+  ASSERT_EQ(rc, SQLITE_OK);
+
+  for (int i = 0; i < 3; i++) {
+    char* sql = sqlite3_mprintf(
+        "INSERT INTO noti_list "
+        "(type, layout, pkg_id, caller_app_id, display_applist, uid) "
+        "VALUES (%d, 0, %Q, %Q, %d, %d);",
+        NOTIFICATION_TYPE_NOTI, app1, app1,
+        NOTIFICATION_DISPLAY_APP_NOTIFICATION_TRAY, 5001);
+    sqlite3_exec(db, sql, nullptr, nullptr, nullptr);
+    sqlite3_free(sql);
+  }
+
+  for (int i = 0; i < 2; i++) {
+    char* sql = sqlite3_mprintf(
+        "INSERT INTO noti_list "
+        "(type, layout, pkg_id, caller_app_id, display_applist, uid) "
+        "VALUES (%d, 0, %Q, %Q, %d, %d);",
+        NOTIFICATION_TYPE_NOTI, app2, app2,
+        NOTIFICATION_DISPLAY_APP_NOTIFICATION_TRAY, 5001);
+    sqlite3_exec(db, sql, nullptr, nullptr, nullptr);
+    sqlite3_free(sql);
+  }
+  sqlite3_close(db);
+
+  /* Verify per-app counts via notification_noti_get_count */
+  int count1 = 0;
+  int ret = notification_noti_get_count(NOTIFICATION_TYPE_NOTI, app1,
+      NOTIFICATION_GROUP_ID_NONE, NOTIFICATION_PRIV_ID_NONE,
+      &count1, 5001);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
+  EXPECT_EQ(count1, 3);
+
+  int count2 = 0;
+  ret = notification_noti_get_count(NOTIFICATION_TYPE_NOTI, app2,
+      NOTIFICATION_GROUP_ID_NONE, NOTIFICATION_PRIV_ID_NONE,
+      &count2, 5001);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
+  EXPECT_EQ(count2, 2);
+
+  /* Total via get_all_count must be 5 */
+  int total = 0;
+  ret = notification_noti_get_all_count(NOTIFICATION_TYPE_NOTI, &total, 5001);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
+  EXPECT_EQ(total, 5);
+}
+
 /* COUNT_08 - Delete by display_applist */
 TEST_F(NotificationCountIntegrationTest, DeleteByDisplayApplist) {
   /* Insert 3 notifications with TRAY display */

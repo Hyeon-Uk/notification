@@ -31,6 +31,7 @@
 #include "notification/include/notification_db.h"
 #include "notification/include/notification_noti.h"
 #include "notification/include/notification_ipc.h"
+#include "notification/include/notification_list.h"
 
 extern "C" void test_set_db_dir(const char* dir);
 
@@ -447,6 +448,87 @@ TEST_F(NotificationIpcIntegrationTest,
   g_variant_unref(variant);
   notification_free(noti2);
   notification_free(noti);
+}
+
+/* SERIAL_08: Serialize a list of notifications from DB, round-trip each entry
+ * Insert 5 notifications with distinct titles into the DB, retrieve them via
+ * notification_noti_get_grouping_list, then serialize each to GVariant and
+ * deserialize back, verifying the title field survives the round-trip.
+ */
+TEST_F(NotificationIpcIntegrationTest,
+    SERIAL_08_SerializeListOfNotifications) {
+  const int NUM_NOTIS = 5;
+  const char* titles[NUM_NOTIS] = {
+    "list_title_0", "list_title_1", "list_title_2",
+    "list_title_3", "list_title_4"
+  };
+
+  /* Insert 5 notifications with distinct titles */
+  for (int i = 0; i < NUM_NOTIS; i++) {
+    notification_h noti = notification_create(NOTIFICATION_TYPE_NOTI);
+    ASSERT_NE(noti, nullptr);
+    notification_set_text(noti, NOTIFICATION_TEXT_TYPE_TITLE, titles[i],
+        NULL, NOTIFICATION_VARIABLE_TYPE_NONE);
+    notification_set_display_applist(noti,
+        NOTIFICATION_DISPLAY_APP_NOTIFICATION_TRAY);
+    notification_set_uid(noti, 5001);
+
+    int ret = notification_noti_insert(noti);
+    ASSERT_EQ(ret, NOTIFICATION_ERROR_NONE);
+    notification_free(noti);
+  }
+
+  /* Retrieve the grouping list */
+  notification_list_h list = nullptr;
+  int list_count = 0;
+  int ret = notification_noti_get_grouping_list(NOTIFICATION_TYPE_NOTI,
+      0, 10, &list, &list_count, 5001);
+  ASSERT_EQ(ret, NOTIFICATION_ERROR_NONE);
+  ASSERT_GE(list_count, NUM_NOTIS);
+
+  /* Iterate and verify each notification round-trips through GVariant */
+  int verified = 0;
+  notification_list_h current = notification_list_get_head(list);
+  while (current != nullptr) {
+    notification_h noti = notification_list_get_data(current);
+    ASSERT_NE(noti, nullptr);
+
+    GVariant* variant = notification_ipc_make_gvariant_from_noti(noti, false);
+    if (variant == nullptr) {
+      current = notification_list_get_next(current);
+      continue;
+    }
+
+    notification_h noti2 = notification_create(NOTIFICATION_TYPE_NOTI);
+    ASSERT_NE(noti2, nullptr);
+
+    GVariant* inner = UnwrapNotiVariant(variant);
+    ret = notification_ipc_make_noti_from_gvariant(noti2, inner);
+    EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
+
+    if (ret == NOTIFICATION_ERROR_NONE) {
+      char* orig_title = nullptr;
+      notification_get_text(noti, NOTIFICATION_TEXT_TYPE_TITLE,
+          &orig_title);
+
+      char* rt_title = nullptr;
+      notification_get_text(noti2, NOTIFICATION_TEXT_TYPE_TITLE, &rt_title);
+
+      if (orig_title != nullptr && rt_title != nullptr)
+        EXPECT_STREQ(rt_title, orig_title);
+
+      verified++;
+    }
+
+    g_variant_unref(inner);
+    g_variant_unref(variant);
+    notification_free(noti2);
+    current = notification_list_get_next(current);
+  }
+
+  EXPECT_EQ(verified, NUM_NOTIS);
+
+  if (list) notification_free_list(list);
 }
 
 /* SERIAL_07: Serialize all fields round-trip (comprehensive) */

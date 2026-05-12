@@ -362,6 +362,102 @@ TEST_F(NotificationTemplateIntegrationTest, TEMPLATE_04_CreateFromPackageTemplat
   notification_free(noti);
 }
 
+/* TEMPLATE_06_DuplicateNameReplaces
+ * Save template "dup_tmpl" with title "title_A", then save again with the
+ * same name "dup_tmpl" and title "title_B". Because notification_noti_add_template
+ * uses INSERT OR REPLACE, the second write must replace the first. Verify:
+ *  - The template count for the app stays at 1 (no duplicate row).
+ *  - Loading "dup_tmpl" returns the new title "title_B".
+ */
+TEST_F(NotificationTemplateIntegrationTest,
+    TEMPLATE_06_DuplicateNameReplaces) {
+  /* First save */
+  notification_h noti_a = notification_create(NOTIFICATION_TYPE_NOTI);
+  ASSERT_NE(noti_a, nullptr);
+  notification_set_text(noti_a, NOTIFICATION_TEXT_TYPE_TITLE,
+      "title_A", NULL, NOTIFICATION_VARIABLE_TYPE_NONE);
+  notification_set_display_applist(noti_a,
+      NOTIFICATION_DISPLAY_APP_NOTIFICATION_TRAY);
+
+  int ret = notification_noti_add_template(noti_a,
+      const_cast<char*>("dup_tmpl"));
+  ASSERT_EQ(ret, NOTIFICATION_ERROR_NONE);
+
+  /* Second save with same name but different title */
+  notification_h noti_b = notification_create(NOTIFICATION_TYPE_NOTI);
+  ASSERT_NE(noti_b, nullptr);
+  notification_set_text(noti_b, NOTIFICATION_TEXT_TYPE_TITLE,
+      "title_B", NULL, NOTIFICATION_VARIABLE_TYPE_NONE);
+  notification_set_display_applist(noti_b,
+      NOTIFICATION_DISPLAY_APP_NOTIFICATION_TRAY);
+
+  ret = notification_noti_add_template(noti_b,
+      const_cast<char*>("dup_tmpl"));
+  ASSERT_EQ(ret, NOTIFICATION_ERROR_NONE);
+
+  /* Template count must still be 1 (INSERT OR REPLACE, not INSERT) */
+  int count = 0;
+  ret = notification_noti_check_count_for_template(noti_b, &count);
+  ASSERT_TRUE(ret == NOTIFICATION_ERROR_NONE || ret == SQLITE_ROW);
+  EXPECT_EQ(count, 1);
+
+  /* Loading "dup_tmpl" should return the replaced title "title_B" */
+  notification_h loaded = notification_create(NOTIFICATION_TYPE_NOTI);
+  ASSERT_NE(loaded, nullptr);
+  ret = notification_noti_get_package_template(loaded,
+      const_cast<char*>(pkgname_.c_str()),
+      const_cast<char*>("dup_tmpl"));
+  ASSERT_EQ(ret, NOTIFICATION_ERROR_NONE);
+
+  char* title = nullptr;
+  notification_get_text(loaded, NOTIFICATION_TEXT_TYPE_TITLE, &title);
+  EXPECT_STREQ(title, "title_B");
+
+  notification_free(loaded);
+  notification_free(noti_b);
+  notification_free(noti_a);
+}
+
+/* TEMPLATE_07_MaxTemplateLimitAndCountVerification
+ * Insert 10 distinct templates and verify:
+ *  - Each add succeeds.
+ *  - notification_noti_check_count_for_template reports 10 after all inserts.
+ * This validates the boundary condition that the template infrastructure
+ * correctly tracks counts up to the documented limit of 10.
+ */
+TEST_F(NotificationTemplateIntegrationTest,
+    TEMPLATE_07_MaxTemplateLimitAndCountVerification) {
+  const int TEMPLATE_MAX = 10;
+
+  for (int i = 0; i < TEMPLATE_MAX; i++) {
+    notification_h noti = notification_create(NOTIFICATION_TYPE_NOTI);
+    ASSERT_NE(noti, nullptr);
+    notification_set_display_applist(noti,
+        NOTIFICATION_DISPLAY_APP_NOTIFICATION_TRAY);
+
+    char tmpl_name[32];
+    snprintf(tmpl_name, sizeof(tmpl_name), "max_tmpl_%d", i);
+
+    int ret = notification_noti_add_template(noti,
+        const_cast<char*>(tmpl_name));
+    EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE)
+        << "Template insert " << i << " failed";
+
+    notification_free(noti);
+  }
+
+  /* Verify count via check_count_for_template */
+  notification_h probe = notification_create(NOTIFICATION_TYPE_NOTI);
+  ASSERT_NE(probe, nullptr);
+
+  int count = 0;
+  int ret = notification_noti_check_count_for_template(probe, &count);
+  ASSERT_TRUE(ret == NOTIFICATION_ERROR_NONE || ret == SQLITE_ROW);
+  EXPECT_EQ(count, TEMPLATE_MAX);
+
+  notification_free(probe);
+}
+
 TEST_F(NotificationTemplateIntegrationTest, TEMPLATE_05_DeleteTemplateThenLoadFails) {
   notification_h noti = notification_create(NOTIFICATION_TYPE_NOTI);
   ASSERT_NE(noti, nullptr);

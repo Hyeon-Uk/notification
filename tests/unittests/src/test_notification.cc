@@ -24,6 +24,7 @@
 #include "mock/glib_mock.hh"
 
 #include "notification/include/notification.h"
+#include "notification/include/notification_ongoing_flag.h"
 
 namespace {
 
@@ -1607,4 +1608,507 @@ TEST_F(NotificationTest, GetPkgnameNullNoti) {
   char* pkg;
   int ret = notification_get_pkgname(nullptr, &pkg);
   EXPECT_EQ(ret, NOTIFICATION_ERROR_INVALID_PARAMETER);
+}
+
+/* 1. GetImageNullOutputPointer */
+TEST_F(NotificationTest, GetImageNullOutputPointer) {
+  notification_h noti = notification_create(NOTIFICATION_TYPE_NOTI);
+  ASSERT_NE(noti, nullptr);
+
+  int ret = notification_get_image(noti, NOTIFICATION_IMAGE_TYPE_ICON, NULL);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_INVALID_PARAMETER);
+
+  notification_free(noti);
+}
+
+/* 2. GetTimeNullRetTimePointer */
+TEST_F(NotificationTest, GetTimeNullRetTimePointer) {
+  notification_h noti = notification_create(NOTIFICATION_TYPE_NOTI);
+  ASSERT_NE(noti, nullptr);
+
+  int ret = notification_get_time(noti, NULL);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_INVALID_PARAMETER);
+
+  notification_free(noti);
+}
+
+/* 3. GetTextNullOutputPointer */
+TEST_F(NotificationTest, GetTextNullOutputPointer) {
+  notification_h noti = notification_create(NOTIFICATION_TYPE_NOTI);
+  ASSERT_NE(noti, nullptr);
+
+  int ret = notification_get_text(noti, NOTIFICATION_TEXT_TYPE_TITLE, NULL);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_INVALID_PARAMETER);
+
+  notification_free(noti);
+}
+
+/* 4. GetSoundNullTypeOutput */
+TEST_F(NotificationTest, GetSoundNullTypeOutput) {
+  notification_h noti = notification_create(NOTIFICATION_TYPE_NOTI);
+  ASSERT_NE(noti, nullptr);
+
+  int ret = notification_get_sound(noti, NULL, NULL);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_INVALID_PARAMETER);
+
+  notification_free(noti);
+}
+
+/* 5. GetVibrationNullTypeOutput */
+TEST_F(NotificationTest, GetVibrationNullTypeOutput) {
+  notification_h noti = notification_create(NOTIFICATION_TYPE_NOTI);
+  ASSERT_NE(noti, nullptr);
+
+  int ret = notification_get_vibration(noti, NULL, NULL);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_INVALID_PARAMETER);
+
+  notification_free(noti);
+}
+
+/* 6. GetLedNullOperationOutput */
+TEST_F(NotificationTest, GetLedNullOperationOutput) {
+  notification_h noti = notification_create(NOTIFICATION_TYPE_NOTI);
+  ASSERT_NE(noti, nullptr);
+
+  int ret = notification_get_led(noti, NULL, NULL);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_INVALID_PARAMETER);
+
+  notification_free(noti);
+}
+
+/* 7. GetLedTimePeriodNullOutput — both on_ms and off_ms are optional;
+ *    the function only guards against noti == NULL, so NULL,NULL returns NONE. */
+TEST_F(NotificationTest, GetLedTimePeriodNullOutput) {
+  notification_h noti = notification_create(NOTIFICATION_TYPE_NOTI);
+  ASSERT_NE(noti, nullptr);
+
+  int ret = notification_get_led_time_period(noti, NULL, NULL);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
+
+  notification_free(noti);
+}
+
+/* 8. GetLaunchOptionNullOutput */
+TEST_F(NotificationTest, GetLaunchOptionNullOutput) {
+  notification_h noti = notification_create(NOTIFICATION_TYPE_NOTI);
+  ASSERT_NE(noti, nullptr);
+
+  int ret = notification_get_launch_option(noti,
+      NOTIFICATION_LAUNCH_OPTION_APP_CONTROL, NULL);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_INVALID_PARAMETER);
+
+  notification_free(noti);
+}
+
+/* 9. GetEventHandlerNullOutput */
+TEST_F(NotificationTest, GetEventHandlerNullOutput) {
+  notification_h noti = notification_create(NOTIFICATION_TYPE_NOTI);
+  ASSERT_NE(noti, nullptr);
+
+  int ret = notification_get_event_handler(noti,
+      NOTIFICATION_EVENT_TYPE_CLICK_ON_BUTTON_1, NULL);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_INVALID_PARAMETER);
+
+  notification_free(noti);
+}
+
+/* 10. GetPropertyNullOutput */
+TEST_F(NotificationTest, GetPropertyNullOutput) {
+  notification_h noti = notification_create(NOTIFICATION_TYPE_NOTI);
+  ASSERT_NE(noti, nullptr);
+
+  int ret = notification_get_property(noti, NULL);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_INVALID_PARAMETER);
+
+  notification_free(noti);
+}
+
+/* 11. GetDisplayApplistNullOutput */
+TEST_F(NotificationTest, GetDisplayApplistNullOutput) {
+  notification_h noti = notification_create(NOTIFICATION_TYPE_NOTI);
+  ASSERT_NE(noti, nullptr);
+
+  int ret = notification_get_display_applist(noti, NULL);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_INVALID_PARAMETER);
+
+  notification_free(noti);
+}
+
+/* 12. GetSizeNullOutput */
+TEST_F(NotificationTest, GetSizeNullOutput) {
+  notification_h noti = notification_create(NOTIFICATION_TYPE_NOTI);
+  ASSERT_NE(noti, nullptr);
+
+  int ret = notification_get_size(noti, NULL);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_INVALID_PARAMETER);
+
+  notification_free(noti);
+}
+
+/* 13. GetProgressNullOutput */
+TEST_F(NotificationTest, GetProgressNullOutput) {
+  notification_h noti = notification_create(NOTIFICATION_TYPE_NOTI);
+  ASSERT_NE(noti, nullptr);
+
+  int ret = notification_get_progress(noti, NULL);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_INVALID_PARAMETER);
+
+  notification_free(noti);
+}
+
+/* 14. GetPkgnameNullOutput */
+TEST_F(NotificationTest, GetPkgnameNullOutput) {
+  notification_h noti = notification_create(NOTIFICATION_TYPE_NOTI);
+  ASSERT_NE(noti, nullptr);
+
+  int ret = notification_get_pkgname(noti, NULL);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_INVALID_PARAMETER);
+
+  notification_free(noti);
+}
+
+/* 15. GetLayoutNullOutput */
+TEST_F(NotificationTest, GetLayoutNullOutput) {
+  notification_h noti = notification_create(NOTIFICATION_TYPE_NOTI);
+  ASSERT_NE(noti, nullptr);
+
+  int ret = notification_get_layout(noti, NULL);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_INVALID_PARAMETER);
+
+  notification_free(noti);
+}
+
+/* 16. GetTagNullOutput — notification_get_tag only checks noti == NULL;
+ *     passing NULL tag pointer would dereference it, so we verify the
+ *     function succeeds when tag was never set (returns NULL value). */
+TEST_F(NotificationTest, GetTagNullOutput) {
+  notification_h noti = notification_create(NOTIFICATION_TYPE_NOTI);
+  ASSERT_NE(noti, nullptr);
+
+  const char* tag = reinterpret_cast<const char*>(0xDEAD);
+  int ret = notification_get_tag(noti, &tag);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
+  EXPECT_EQ(tag, nullptr);
+
+  notification_free(noti);
+}
+
+/* 17. GetAutoRemoveNullOutput */
+TEST_F(NotificationTest, GetAutoRemoveNullOutput) {
+  notification_h noti = notification_create(NOTIFICATION_TYPE_NOTI);
+  ASSERT_NE(noti, nullptr);
+
+  int ret = notification_get_auto_remove(noti, NULL);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_INVALID_PARAMETER);
+
+  notification_free(noti);
+}
+
+/* 18. GetExtensionImageSizeNullOutputHeight */
+TEST_F(NotificationTest, GetExtensionImageSizeNullOutputHeight) {
+  notification_h noti = notification_create(NOTIFICATION_TYPE_NOTI);
+  ASSERT_NE(noti, nullptr);
+
+  int ret = notification_get_extension_image_size(noti, NULL);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_INVALID_PARAMETER);
+
+  notification_free(noti);
+}
+
+/* 19. SetImageNullPathClearsExisting */
+TEST_F(NotificationTest, SetImageNullPathClearsExisting) {
+  notification_h noti = notification_create(NOTIFICATION_TYPE_NOTI);
+  ASSERT_NE(noti, nullptr);
+
+  notification_set_image(noti, NOTIFICATION_IMAGE_TYPE_ICON, "/test.png");
+  notification_set_image(noti, NOTIFICATION_IMAGE_TYPE_ICON, NULL);
+
+  char* path = reinterpret_cast<char*>(0xDEAD);
+  notification_get_image(noti, NOTIFICATION_IMAGE_TYPE_ICON, &path);
+  EXPECT_EQ(path, nullptr);
+
+  notification_free(noti);
+}
+
+/* 20. GetImageWhenNoneSet */
+TEST_F(NotificationTest, GetImageWhenNoneSet) {
+  notification_h noti = notification_create(NOTIFICATION_TYPE_NOTI);
+  ASSERT_NE(noti, nullptr);
+
+  char* path = reinterpret_cast<char*>(0xDEAD);
+  int ret = notification_get_image(noti, NOTIFICATION_IMAGE_TYPE_ICON, &path);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
+  /* path may be NULL or point to app_icon_path fallback */
+
+  notification_free(noti);
+}
+
+/* 21. SetTextOverwrite */
+TEST_F(NotificationTest, SetTextOverwrite) {
+  notification_h noti = notification_create(NOTIFICATION_TYPE_NOTI);
+  ASSERT_NE(noti, nullptr);
+
+  notification_set_text(noti, NOTIFICATION_TEXT_TYPE_TITLE,
+      "first", NULL, NOTIFICATION_VARIABLE_TYPE_NONE);
+  int ret = notification_set_text(noti, NOTIFICATION_TEXT_TYPE_TITLE,
+      "second", NULL, NOTIFICATION_VARIABLE_TYPE_NONE);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
+
+  char* text = nullptr;
+  ret = notification_get_text(noti, NOTIFICATION_TEXT_TYPE_TITLE, &text);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
+  EXPECT_STREQ(text, "second");
+
+  notification_free(noti);
+}
+
+/* 22. SetTextNullClears */
+TEST_F(NotificationTest, SetTextNullClears) {
+  notification_h noti = notification_create(NOTIFICATION_TYPE_NOTI);
+  ASSERT_NE(noti, nullptr);
+
+  notification_set_text(noti, NOTIFICATION_TEXT_TYPE_TITLE,
+      "hello", NULL, NOTIFICATION_VARIABLE_TYPE_NONE);
+  int ret = notification_set_text(noti, NOTIFICATION_TEXT_TYPE_TITLE,
+      NULL, NULL, NOTIFICATION_VARIABLE_TYPE_NONE);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
+
+  char* text = nullptr;
+  ret = notification_get_text(noti, NOTIFICATION_TEXT_TYPE_TITLE, &text);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
+  EXPECT_EQ(text, nullptr);
+
+  notification_free(noti);
+}
+
+/* 23. SetTagNullDoesNotCrash — implementation keeps old tag on NULL set */
+TEST_F(NotificationTest, SetTagNullDoesNotCrash) {
+  notification_h noti = notification_create(NOTIFICATION_TYPE_NOTI);
+  ASSERT_NE(noti, nullptr);
+
+  int ret = notification_set_tag(noti, "test");
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
+
+  ret = notification_set_tag(noti, NULL);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
+
+  const char* tag = nullptr;
+  ret = notification_get_tag(noti, &tag);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
+
+  notification_free(noti);
+}
+
+/* 24. CreateInvalidTypeNegative */
+TEST_F(NotificationTest, CreateInvalidTypeNegative) {
+  notification_h noti = notification_create((notification_type_e)-1);
+  EXPECT_EQ(noti, nullptr);
+}
+
+/* 25. CreateInvalidTypeOverMax */
+TEST_F(NotificationTest, CreateInvalidTypeOverMax) {
+  notification_h noti = notification_create((notification_type_e)999);
+  EXPECT_EQ(noti, nullptr);
+}
+
+/* 26. SetOngoingFlagTrue */
+TEST_F(NotificationTest, SetOngoingFlagTrue) {
+  notification_h noti = notification_create(NOTIFICATION_TYPE_NOTI);
+  ASSERT_NE(noti, nullptr);
+
+  int ret = notification_set_ongoing_flag(noti, true);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
+
+  bool flag = false;
+  ret = notification_get_ongoing_flag(noti, &flag);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
+  EXPECT_TRUE(flag);
+
+  notification_free(noti);
+}
+
+/* 27. SetOngoingFlagFalse */
+TEST_F(NotificationTest, SetOngoingFlagFalse) {
+  notification_h noti = notification_create(NOTIFICATION_TYPE_NOTI);
+  ASSERT_NE(noti, nullptr);
+
+  int ret = notification_set_ongoing_flag(noti, false);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
+
+  bool flag = true;
+  ret = notification_get_ongoing_flag(noti, &flag);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
+  EXPECT_FALSE(flag);
+
+  notification_free(noti);
+}
+
+/* 28. SetOngoingFlagNullNoti */
+TEST_F(NotificationTest, SetOngoingFlagNullNoti) {
+  int ret = notification_set_ongoing_flag(NULL, true);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_INVALID_PARAMETER);
+}
+
+/* 29. GetOngoingFlagNullNoti */
+TEST_F(NotificationTest, GetOngoingFlagNullNoti) {
+  bool flag = false;
+  int ret = notification_get_ongoing_flag(NULL, &flag);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_INVALID_PARAMETER);
+}
+
+/* 30. GetOngoingFlagNullOutput */
+TEST_F(NotificationTest, GetOngoingFlagNullOutput) {
+  notification_h noti = notification_create(NOTIFICATION_TYPE_NOTI);
+  ASSERT_NE(noti, nullptr);
+
+  int ret = notification_get_ongoing_flag(noti, NULL);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_INVALID_PARAMETER);
+
+  notification_free(noti);
+}
+
+/* 31. SetTimeToCurrent */
+TEST_F(NotificationTest, SetTimeToCurrent) {
+  notification_h noti = notification_create(NOTIFICATION_TYPE_NOTI);
+  ASSERT_NE(noti, nullptr);
+
+  int ret = notification_set_time(noti, 0);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
+
+  time_t out = 0;
+  ret = notification_get_time(noti, &out);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
+  EXPECT_NE(out, 0);
+
+  notification_free(noti);
+}
+
+/* 32. SetTimeNegative */
+TEST_F(NotificationTest, SetTimeNegative) {
+  notification_h noti = notification_create(NOTIFICATION_TYPE_NOTI);
+  ASSERT_NE(noti, nullptr);
+
+  int ret = notification_set_time(noti, (time_t)-1);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
+
+  notification_free(noti);
+}
+
+/* 33. SetSizeNegative */
+TEST_F(NotificationTest, SetSizeNegative) {
+  notification_h noti = notification_create(NOTIFICATION_TYPE_NOTI);
+  ASSERT_NE(noti, nullptr);
+
+  int ret = notification_set_size(noti, -1.0);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
+
+  double val = 0.0;
+  ret = notification_get_size(noti, &val);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
+  EXPECT_DOUBLE_EQ(val, -1.0);
+
+  notification_free(noti);
+}
+
+/* 34. SetProgressOverOne */
+TEST_F(NotificationTest, SetProgressOverOne) {
+  notification_h noti = notification_create(NOTIFICATION_TYPE_NOTI);
+  ASSERT_NE(noti, nullptr);
+
+  int ret = notification_set_progress(noti, 1.5);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
+
+  double val = 0.0;
+  ret = notification_get_progress(noti, &val);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
+  EXPECT_DOUBLE_EQ(val, 1.5);
+
+  notification_free(noti);
+}
+
+/* 35. SetProgressNegative */
+TEST_F(NotificationTest, SetProgressNegative) {
+  notification_h noti = notification_create(NOTIFICATION_TYPE_NOTI);
+  ASSERT_NE(noti, nullptr);
+
+  int ret = notification_set_progress(noti, -0.1);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
+
+  double val = 0.0;
+  ret = notification_get_progress(noti, &val);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
+  EXPECT_DOUBLE_EQ(val, -0.1);
+
+  notification_free(noti);
+}
+
+/* 36. SetLedTimePeriodZero */
+TEST_F(NotificationTest, SetLedTimePeriodZero) {
+  notification_h noti = notification_create(NOTIFICATION_TYPE_NOTI);
+  ASSERT_NE(noti, nullptr);
+
+  int ret = notification_set_led_time_period(noti, 0, 0);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
+
+  int on_ms = -1, off_ms = -1;
+  ret = notification_get_led_time_period(noti, &on_ms, &off_ms);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
+  EXPECT_EQ(on_ms, 0);
+  EXPECT_EQ(off_ms, 0);
+
+  notification_free(noti);
+}
+
+/* 37. SetTextEmptyString */
+TEST_F(NotificationTest, SetTextEmptyString) {
+  notification_h noti = notification_create(NOTIFICATION_TYPE_NOTI);
+  ASSERT_NE(noti, nullptr);
+
+  int ret = notification_set_text(noti, NOTIFICATION_TEXT_TYPE_TITLE,
+      "", NULL, NOTIFICATION_VARIABLE_TYPE_NONE);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
+
+  char* text = nullptr;
+  ret = notification_get_text(noti, NOTIFICATION_TEXT_TYPE_TITLE, &text);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
+  EXPECT_STREQ(text, "");
+
+  notification_free(noti);
+}
+
+/* 38. SetExtensionImageSizeZero — height=0 is rejected as invalid */
+TEST_F(NotificationTest, SetExtensionImageSizeZero) {
+  notification_h noti = notification_create(NOTIFICATION_TYPE_NOTI);
+  ASSERT_NE(noti, nullptr);
+
+  int ret = notification_set_extension_image_size(noti, 0);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_INVALID_PARAMETER);
+
+  notification_free(noti);
+}
+
+/* 39. AddButtonInvalidIndex */
+TEST_F(NotificationTest, AddButtonInvalidIndex) {
+  notification_h noti = notification_create(NOTIFICATION_TYPE_NOTI);
+  ASSERT_NE(noti, nullptr);
+
+  int ret = notification_add_button(noti, (notification_button_index_e)0);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_INVALID_PARAMETER);
+
+  ret = notification_add_button(noti, (notification_button_index_e)99);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_INVALID_PARAMETER);
+
+  notification_free(noti);
+}
+
+/* 40. RemoveButtonNotAdded — remove_button only checks validity of index
+ *     and noti handle; removing an index that was not added returns NONE. */
+TEST_F(NotificationTest, RemoveButtonNotAdded) {
+  notification_h noti = notification_create(NOTIFICATION_TYPE_NOTI);
+  ASSERT_NE(noti, nullptr);
+
+  int ret = notification_remove_button(noti, NOTIFICATION_BUTTON_1);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
+
+  notification_free(noti);
 }

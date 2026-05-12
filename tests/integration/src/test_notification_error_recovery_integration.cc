@@ -245,3 +245,95 @@ TEST_F(NotificationErrorRecoveryIntegrationTest,
       << "Expected NONE, INVALID_PARAMETER, NOT_EXIST_ID, or FROM_DB, got: "
       << ret;
 }
+
+/* RECOVERY_06_CorruptDBRecovery
+ * Overwrite the notification DB file with garbage bytes, then attempt
+ * to open the DB and perform an operation. The library must either
+ * recover gracefully (return NOTIFICATION_ERROR_NONE with a fresh DB)
+ * or return a proper error code. The process must not crash.
+ */
+TEST_F(NotificationErrorRecoveryIntegrationTest,
+    RECOVERY_06_CorruptDBRecovery) {
+  /* Write garbage into the DB file to corrupt it */
+  {
+    FILE* f = fopen(db_path_.c_str(), "wb");
+    ASSERT_NE(f, nullptr);
+    const char garbage[] = "NOT_A_VALID_SQLITE_DATABASE!!!";
+    fwrite(garbage, 1, sizeof(garbage) - 1, f);
+    fclose(f);
+  }
+
+  /* Attempt to open the corrupted DB -- must not crash */
+  sqlite3* db = notification_db_open();
+  if (db != nullptr) {
+    /* If open succeeded it should be a fresh/repaired DB;
+     * try a simple query to confirm it is usable. */
+    sqlite3_stmt* stmt = nullptr;
+    int rc = sqlite3_prepare_v2(db,
+        "SELECT COUNT(*) FROM sqlite_master;", -1, &stmt, nullptr);
+    /* Either the table list query works or the DB was replaced cleanly */
+    EXPECT_TRUE(rc == SQLITE_OK || rc == SQLITE_NOTADB || rc == SQLITE_CORRUPT);
+    if (stmt) sqlite3_finalize(stmt);
+    notification_db_close(&db);
+  }
+  /* If notification_db_open returned nullptr, the library surfaced an error
+   * rather than crashing -- that is the acceptable recovery behaviour. */
+  SUCCEED();
+}
+
+/* RECOVERY_07_DBWithOldSchemaMissingColumn
+ * Create a DB whose noti_list table is missing the "channel_name" column
+ * (simulating an older schema). Call notification_upgrade_db and then try
+ * to insert a notification. The library must either migrate the schema
+ * (add the missing column) or return a meaningful error without crashing.
+ */
+TEST_F(NotificationErrorRecoveryIntegrationTest,
+    RECOVERY_07_DBWithOldSchemaMissingColumn) {
+  /* Remove the full-schema DB created in SetUp */
+  unlink(db_path_.c_str());
+
+  /* Re-create the DB with a minimal schema that omits channel_name */
+  const char* MINIMAL_TABLE_SQL =
+      "CREATE TABLE IF NOT EXISTS noti_list ("
+      "  type INTEGER NOT NULL,"
+      "  layout INTEGER NOT NULL DEFAULT 0,"
+      "  pkg_id TEXT NOT NULL,"
+      "  caller_app_id TEXT NOT NULL,"
+      "  launch_app_id TEXT,"
+      "  group_id INTEGER DEFAULT 0,"
+      "  internal_group_id INTEGER DEFAULT 0,"
+      "  priv_id INTEGER PRIMARY KEY AUTOINCREMENT,"
+      "  display_applist INTEGER,"
+      "  uid INTEGER);";
+
+  sqlite3* setup_db = nullptr;
+  int rc = sqlite3_open(db_path_.c_str(), &setup_db);
+  ASSERT_EQ(rc, SQLITE_OK);
+
+  char* err_msg = nullptr;
+  rc = sqlite3_exec(setup_db, MINIMAL_TABLE_SQL, nullptr, nullptr, &err_msg);
+  if (err_msg) { sqlite3_free(err_msg); err_msg = nullptr; }
+  ASSERT_EQ(rc, SQLITE_OK);
+  sqlite3_close(setup_db);
+
+  /* Call upgrade_db -- it should add missing columns or be a no-op */
+  int ret = notification_upgrade_db();
+  /* Accept NONE or FROM_DB (upgrade may not handle partial schemas silently) */
+  EXPECT_TRUE(ret == NOTIFICATION_ERROR_NONE ||
+      ret == NOTIFICATION_ERROR_FROM_DB)
+      << "notification_upgrade_db returned unexpected: " << ret;
+
+  /* Attempt to insert a notification; if upgrade succeeded this should work */
+  notification_h noti = notification_create(NOTIFICATION_TYPE_NOTI);
+  if (noti) {
+    notification_set_display_applist(noti,
+        NOTIFICATION_DISPLAY_APP_NOTIFICATION_TRAY);
+    notification_set_uid(noti, 5001);
+    /* We do not assert success here -- a missing column may cause FROM_DB.
+     * The critical requirement is no crash. */
+    notification_noti_insert(noti);
+    notification_free(noti);
+  }
+
+  SUCCEED();
+}

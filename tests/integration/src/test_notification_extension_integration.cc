@@ -300,6 +300,65 @@ TEST_F(NotificationExtensionIntegrationTest, EXTDATA_03_MultipleExtensionDataKey
 }
 
 TEST_F(NotificationExtensionIntegrationTest,
+    EXTDATA_05_PersistAcrossUpdateAndReload) {
+  notification_h noti = notification_create(NOTIFICATION_TYPE_NOTI);
+  ASSERT_NE(noti, nullptr);
+
+  bundle* b = bundle_create();
+  ASSERT_NE(b, nullptr);
+  bundle_add_str(b, "persist_val", "persist_val");
+
+  int ret = notification_set_extension_data(noti, "persist_key", b);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
+  bundle_free(b);
+
+  notification_set_display_applist(noti,
+      NOTIFICATION_DISPLAY_APP_NOTIFICATION_TRAY);
+
+  ret = notification_noti_insert(noti);
+  ASSERT_EQ(ret, NOTIFICATION_ERROR_NONE);
+
+  int group_id = 0, priv_id = 0;
+  notification_get_id(noti, &group_id, &priv_id);
+  ASSERT_GT(priv_id, 0);
+
+  /* Update the title */
+  ret = notification_set_text(noti, NOTIFICATION_TEXT_TYPE_TITLE,
+      "updated_title", NULL, NOTIFICATION_VARIABLE_TYPE_NONE);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
+
+  ret = notification_noti_update(noti);
+  ASSERT_EQ(ret, NOTIFICATION_ERROR_NONE);
+
+  /* Reload from DB by priv_id */
+  notification_h loaded = notification_create(NOTIFICATION_TYPE_NOTI);
+  ASSERT_NE(loaded, nullptr);
+  ret = notification_noti_get_by_priv_id(loaded, priv_id);
+  ASSERT_EQ(ret, NOTIFICATION_ERROR_NONE);
+
+  /* Verify title was updated */
+  char* title = nullptr;
+  notification_get_text(loaded, NOTIFICATION_TEXT_TYPE_TITLE, &title);
+  ASSERT_NE(title, nullptr);
+  EXPECT_STREQ(title, "updated_title");
+
+  /* Verify extension_data persists after update */
+  bundle* retrieved = nullptr;
+  ret = notification_get_extension_data(loaded, "persist_key", &retrieved);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
+  ASSERT_NE(retrieved, nullptr);
+
+  char* val = nullptr;
+  bundle_get_str(retrieved, "persist_val", &val);
+  ASSERT_NE(val, nullptr);
+  EXPECT_STREQ(val, "persist_val");
+
+  bundle_free(retrieved);
+  notification_free(loaded);
+  notification_free(noti);
+}
+
+TEST_F(NotificationExtensionIntegrationTest,
     EXTDATA_04_ExtensionEventHandlerRoundTrip) {
   notification_h noti = notification_create(NOTIFICATION_TYPE_NOTI);
   ASSERT_NE(noti, nullptr);
