@@ -14,6 +14,9 @@
  * limitations under the License.
  */
 
+#include <climits>
+#include <string>
+
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
@@ -2110,5 +2113,305 @@ TEST_F(NotificationTest, RemoveButtonNotAdded) {
   int ret = notification_remove_button(noti, NOTIFICATION_BUTTON_1);
   EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
 
+  notification_free(noti);
+}
+
+/* === Iteration 5 gap-fill: invalid enum types and boundary values === */
+
+/* IMG_SET_N_02 / IMG_SET_E_01 — NOTIFICATION_IMAGE_TYPE_NONE (== -1) is
+ *   rejected by set_image (type <= NONE check). */
+TEST_F(NotificationTest, SetImageInvalidTypeNone) {
+  notification_h noti = notification_create(NOTIFICATION_TYPE_NOTI);
+  ASSERT_NE(noti, nullptr);
+  int ret = notification_set_image(noti, NOTIFICATION_IMAGE_TYPE_NONE,
+      "/tmp/x.png");
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_INVALID_PARAMETER);
+  notification_free(noti);
+}
+
+/* IMG_SET_N_03 — type > NOTIFICATION_IMAGE_TYPE_MAX rejected. */
+TEST_F(NotificationTest, SetImageInvalidTypeOverMax) {
+  notification_h noti = notification_create(NOTIFICATION_TYPE_NOTI);
+  ASSERT_NE(noti, nullptr);
+  int ret = notification_set_image(noti,
+      (notification_image_type_e)9999, "/tmp/x.png");
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_INVALID_PARAMETER);
+  notification_free(noti);
+}
+
+/* IMG_SET_E_02 — INT_MAX type rejected. */
+TEST_F(NotificationTest, SetImageIntMaxType) {
+  notification_h noti = notification_create(NOTIFICATION_TYPE_NOTI);
+  ASSERT_NE(noti, nullptr);
+  int ret = notification_set_image(noti,
+      (notification_image_type_e)INT_MAX, "/tmp/x.png");
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_INVALID_PARAMETER);
+  notification_free(noti);
+}
+
+/* IMG_GET_N_03 — get_image with NONE type rejected. */
+TEST_F(NotificationTest, GetImageInvalidTypeNone) {
+  notification_h noti = notification_create(NOTIFICATION_TYPE_NOTI);
+  ASSERT_NE(noti, nullptr);
+  char *path = nullptr;
+  int ret = notification_get_image(noti, NOTIFICATION_IMAGE_TYPE_NONE, &path);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_INVALID_PARAMETER);
+  notification_free(noti);
+}
+
+/* IMG_GET_N_04 — get_image with type > MAX rejected. */
+TEST_F(NotificationTest, GetImageInvalidTypeOverMax) {
+  notification_h noti = notification_create(NOTIFICATION_TYPE_NOTI);
+  ASSERT_NE(noti, nullptr);
+  char *path = nullptr;
+  int ret = notification_get_image(noti,
+      (notification_image_type_e)9999, &path);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_INVALID_PARAMETER);
+  notification_free(noti);
+}
+
+/* TXT_SET_N_02 — set_text with NOTIFICATION_TEXT_TYPE_NONE rejected. */
+TEST_F(NotificationTest, SetTextInvalidTypeNone) {
+  notification_h noti = notification_create(NOTIFICATION_TYPE_NOTI);
+  ASSERT_NE(noti, nullptr);
+  int ret = notification_set_text(noti, NOTIFICATION_TEXT_TYPE_NONE,
+      "hello", NULL, NOTIFICATION_VARIABLE_TYPE_NONE);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_INVALID_PARAMETER);
+  notification_free(noti);
+}
+
+/* TXT_SET_N_03 — set_text with type > MAX rejected. */
+TEST_F(NotificationTest, SetTextInvalidTypeOverMax) {
+  notification_h noti = notification_create(NOTIFICATION_TYPE_NOTI);
+  ASSERT_NE(noti, nullptr);
+  int ret = notification_set_text(noti,
+      (notification_text_type_e)9999, "hello", NULL,
+      NOTIFICATION_VARIABLE_TYPE_NONE);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_INVALID_PARAMETER);
+  notification_free(noti);
+}
+
+/* TXT_GET_N_03 — get_text with invalid type rejected. */
+TEST_F(NotificationTest, GetTextInvalidType) {
+  notification_h noti = notification_create(NOTIFICATION_TYPE_NOTI);
+  ASSERT_NE(noti, nullptr);
+  char *text = nullptr;
+  int ret = notification_get_text(noti, NOTIFICATION_TEXT_TYPE_NONE, &text);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_INVALID_PARAMETER);
+  ret = notification_get_text(noti,
+      (notification_text_type_e)9999, &text);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_INVALID_PARAMETER);
+  notification_free(noti);
+}
+
+/* SND_SET_N_02 — set_sound with type < NOTIFICATION_SOUND_TYPE_NONE (-1)
+ *   rejected (NONE=-1, so -2 < NONE). */
+TEST_F(NotificationTest, SetSoundInvalidTypeLtNone) {
+  notification_h noti = notification_create(NOTIFICATION_TYPE_NOTI);
+  ASSERT_NE(noti, nullptr);
+  int ret = notification_set_sound(noti,
+      (notification_sound_type_e)-2, NULL);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_INVALID_PARAMETER);
+  notification_free(noti);
+}
+
+/* SND_SET_N_03 — set_sound with type > MAX rejected. */
+TEST_F(NotificationTest, SetSoundInvalidTypeOverMax) {
+  notification_h noti = notification_create(NOTIFICATION_TYPE_NOTI);
+  ASSERT_NE(noti, nullptr);
+  int ret = notification_set_sound(noti,
+      (notification_sound_type_e)9999, NULL);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_INVALID_PARAMETER);
+  notification_free(noti);
+}
+
+/* VIB_SET_N_02 — set_vibration with type < NONE (-1), so -2. */
+TEST_F(NotificationTest, SetVibrationInvalidType) {
+  notification_h noti = notification_create(NOTIFICATION_TYPE_NOTI);
+  ASSERT_NE(noti, nullptr);
+  int ret = notification_set_vibration(noti,
+      (notification_vibration_type_e)-2, NULL);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_INVALID_PARAMETER);
+  ret = notification_set_vibration(noti,
+      (notification_vibration_type_e)9999, NULL);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_INVALID_PARAMETER);
+  notification_free(noti);
+}
+
+/* LY_SET_N_02 — set_layout with type < NOTIFICATION_LY_NONE (0), so -1. */
+TEST_F(NotificationTest, SetLayoutInvalidTypeLtNone) {
+  notification_h noti = notification_create(NOTIFICATION_TYPE_NOTI);
+  ASSERT_NE(noti, nullptr);
+  int ret = notification_set_layout(noti, (notification_ly_type_e)-1);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_INVALID_PARAMETER);
+  notification_free(noti);
+}
+
+/* LY_SET_N_03 — set_layout with type > MAX rejected. */
+TEST_F(NotificationTest, SetLayoutInvalidTypeOverMax) {
+  notification_h noti = notification_create(NOTIFICATION_TYPE_NOTI);
+  ASSERT_NE(noti, nullptr);
+  int ret = notification_set_layout(noti, (notification_ly_type_e)9999);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_INVALID_PARAMETER);
+  notification_free(noti);
+}
+
+/* T2T_SET_N_02 — set_time_to_text with NONE or over-MAX type rejected. */
+TEST_F(NotificationTest, SetTimeToTextInvalidType) {
+  notification_h noti = notification_create(NOTIFICATION_TYPE_NOTI);
+  ASSERT_NE(noti, nullptr);
+  int ret = notification_set_time_to_text(noti,
+      NOTIFICATION_TEXT_TYPE_NONE, time(NULL));
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_INVALID_PARAMETER);
+  ret = notification_set_time_to_text(noti,
+      (notification_text_type_e)9999, time(NULL));
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_INVALID_PARAMETER);
+  notification_free(noti);
+}
+
+/* T2T_GET_N_02 — get_time_from_text with NULL time output rejected. */
+TEST_F(NotificationTest, GetTimeFromTextNullTime) {
+  notification_h noti = notification_create(NOTIFICATION_TYPE_NOTI);
+  ASSERT_NE(noti, nullptr);
+  int ret = notification_get_time_from_text(noti,
+      NOTIFICATION_TEXT_TYPE_TITLE, NULL);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_INVALID_PARAMETER);
+  notification_free(noti);
+}
+
+/* LED_SET_N_02 — set_led with operation < NOTIFICATION_LED_OP_OFF (-1)
+ *   rejected. OFF is -1, so -2 < OFF. */
+TEST_F(NotificationTest, SetLedInvalidOperation) {
+  notification_h noti = notification_create(NOTIFICATION_TYPE_NOTI);
+  ASSERT_NE(noti, nullptr);
+  int ret = notification_set_led(noti, (notification_led_op_e)-2, 0);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_INVALID_PARAMETER);
+  ret = notification_set_led(noti, (notification_led_op_e)9999, 0);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_INVALID_PARAMETER);
+  notification_free(noti);
+}
+
+/* LNCH_SET_N_02 — set_launch_option with NULL option rejected. */
+TEST_F(NotificationTest, SetLaunchOptionNullOption) {
+  notification_h noti = notification_create(NOTIFICATION_TYPE_NOTI);
+  ASSERT_NE(noti, nullptr);
+  int ret = notification_set_launch_option(noti,
+      NOTIFICATION_LAUNCH_OPTION_APP_CONTROL, NULL);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_INVALID_PARAMETER);
+  notification_free(noti);
+}
+
+/* LNCH_SET_N_03 — set_launch_option with type != APP_CONTROL rejected. */
+TEST_F(NotificationTest, SetLaunchOptionInvalidType) {
+  notification_h noti = notification_create(NOTIFICATION_TYPE_NOTI);
+  ASSERT_NE(noti, nullptr);
+  app_control_h ac;
+  app_control_create(&ac);
+  int ret = notification_set_launch_option(noti,
+      (notification_launch_option_type)0, ac);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_INVALID_PARAMETER);
+  ret = notification_set_launch_option(noti,
+      (notification_launch_option_type)99, ac);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_INVALID_PARAMETER);
+  app_control_destroy(ac);
+  notification_free(noti);
+}
+
+/* EVT_SET_N_02 — set_event_handler with event_type < BUTTON_1 (0) rejected.
+ *   BUTTON_1 == 0, so -1 < BUTTON_1. */
+TEST_F(NotificationTest, SetEventHandlerInvalidType) {
+  notification_h noti = notification_create(NOTIFICATION_TYPE_NOTI);
+  ASSERT_NE(noti, nullptr);
+  app_control_h ac;
+  app_control_create(&ac);
+  int ret = notification_set_event_handler(noti,
+      (notification_event_type_e)-1, ac);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_INVALID_PARAMETER);
+  ret = notification_set_event_handler(noti,
+      (notification_event_type_e)9999, ac);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_INVALID_PARAMETER);
+  app_control_destroy(ac);
+  notification_free(noti);
+}
+
+/* EVT_GET_N_03 — get_event_handler with invalid event_type rejected. */
+TEST_F(NotificationTest, GetEventHandlerInvalidType) {
+  notification_h noti = notification_create(NOTIFICATION_TYPE_NOTI);
+  ASSERT_NE(noti, nullptr);
+  app_control_h ac = nullptr;
+  int ret = notification_get_event_handler(noti,
+      (notification_event_type_e)-1, &ac);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_INVALID_PARAMETER);
+  ret = notification_get_event_handler(noti,
+      (notification_event_type_e)9999, &ac);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_INVALID_PARAMETER);
+  notification_free(noti);
+}
+
+/* TIME_SET_E_02 — set_time accepts LONG_MAX (no upper bound check). */
+TEST_F(NotificationTest, SetTimeLongMax) {
+  notification_h noti = notification_create(NOTIFICATION_TYPE_NOTI);
+  ASSERT_NE(noti, nullptr);
+  int ret = notification_set_time(noti, (time_t)LONG_MAX);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
+  time_t out = 0;
+  ret = notification_get_time(noti, &out);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
+  EXPECT_EQ(out, (time_t)LONG_MAX);
+  notification_free(noti);
+}
+
+/* TXT_SET_E_01 — set_text with string > 4096 chars succeeds; text is
+ *   silently truncated by snprintf to 4095 chars. */
+TEST_F(NotificationTest, SetTextLongString) {
+  notification_h noti = notification_create(NOTIFICATION_TYPE_NOTI);
+  ASSERT_NE(noti, nullptr);
+  std::string long_text(5000, 'A');
+  int ret = notification_set_text(noti, NOTIFICATION_TEXT_TYPE_TITLE,
+      long_text.c_str(), NULL, NOTIFICATION_VARIABLE_TYPE_NONE);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
+  char *text = nullptr;
+  ret = notification_get_text(noti, NOTIFICATION_TEXT_TYPE_TITLE, &text);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
+  ASSERT_NE(text, nullptr);
+  EXPECT_EQ(strlen(text), static_cast<size_t>(4095));
+  notification_free(noti);
+}
+
+/* TXT_SET_P_09 — set_text with key=NULL on a type that had a key clears it. */
+TEST_F(NotificationTest, SetTextNullKeyClearsKey) {
+  notification_h noti = notification_create(NOTIFICATION_TYPE_NOTI);
+  ASSERT_NE(noti, nullptr);
+  int ret = notification_set_text(noti, NOTIFICATION_TEXT_TYPE_TITLE,
+      "hello", "IDS_HELLO", NOTIFICATION_VARIABLE_TYPE_NONE);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
+  ret = notification_set_text(noti, NOTIFICATION_TEXT_TYPE_TITLE,
+      "hello", NULL, NOTIFICATION_VARIABLE_TYPE_NONE);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
+  notification_free(noti);
+}
+
+/* DISP_SET_E_01 — set_display_applist accepts 0 (no validation for 0). */
+TEST_F(NotificationTest, SetDisplayApplistZero) {
+  notification_h noti = notification_create(NOTIFICATION_TYPE_NOTI);
+  ASSERT_NE(noti, nullptr);
+  int ret = notification_set_display_applist(noti, 0);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
+  int applist = -1;
+  ret = notification_get_display_applist(noti, &applist);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
+  EXPECT_EQ(applist, 0);
+  notification_free(noti);
+}
+
+/* EXTIMG_SET_E_02 — set_extension_image_size with negative height rejected
+ *   (same guard as height=0: height <= 0). */
+TEST_F(NotificationTest, SetExtensionImageSizeNegative) {
+  notification_h noti = notification_create(NOTIFICATION_TYPE_NOTI);
+  ASSERT_NE(noti, nullptr);
+  int ret = notification_set_extension_image_size(noti, -1);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_INVALID_PARAMETER);
+  ret = notification_set_extension_image_size(noti, -100);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_INVALID_PARAMETER);
   notification_free(noti);
 }
