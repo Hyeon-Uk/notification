@@ -23,6 +23,7 @@
 
 #include "notification/include/notification.h"
 #include "notification/include/notification_internal.h"
+#include "notification/include/notification_text_domain.h"
 
 namespace {
 
@@ -1457,5 +1458,248 @@ TEST_F(NotificationInternalTest, GetId) {
 TEST_F(NotificationInternalTest, GetIdNullNoti) {
   int group_id, priv_id;
   int ret = notification_get_id(nullptr, &group_id, &priv_id);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_INVALID_PARAMETER);
+}
+
+/* Text domain tests */
+
+TEST_F(NotificationInternalTest, notification_set_text_domain_valid) {
+  EXPECT_CALL(GetMock<AulMock>(), aul_app_get_appid_bypid(_, _, _))
+      .WillRepeatedly(Invoke(__fake_aul_app_get_appid_bypid));
+
+  notification_h noti = notification_create(NOTIFICATION_TYPE_NOTI);
+  ASSERT_NE(noti, nullptr);
+
+  int ret = notification_set_text_domain(noti, "test_domain", "/opt/usr/apps");
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
+
+  char *domain = nullptr;
+  char *dir = nullptr;
+  ret = notification_get_text_domain(noti, &domain, &dir);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
+  EXPECT_STREQ(domain, "test_domain");
+  EXPECT_STREQ(dir, "/opt/usr/apps");
+
+  notification_free(noti);
+}
+
+TEST_F(NotificationInternalTest, notification_set_text_domain_null_noti) {
+  int ret = notification_set_text_domain(nullptr, "test_domain", "/opt/usr/apps");
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_INVALID_PARAMETER);
+}
+
+TEST_F(NotificationInternalTest, notification_set_text_domain_null_domain) {
+  EXPECT_CALL(GetMock<AulMock>(), aul_app_get_appid_bypid(_, _, _))
+      .WillRepeatedly(Invoke(__fake_aul_app_get_appid_bypid));
+
+  notification_h noti = notification_create(NOTIFICATION_TYPE_NOTI);
+  ASSERT_NE(noti, nullptr);
+
+  int ret = notification_set_text_domain(noti, nullptr, "/opt/usr/apps");
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_INVALID_PARAMETER);
+
+  notification_free(noti);
+}
+
+TEST_F(NotificationInternalTest, notification_set_text_domain_null_dir) {
+  EXPECT_CALL(GetMock<AulMock>(), aul_app_get_appid_bypid(_, _, _))
+      .WillRepeatedly(Invoke(__fake_aul_app_get_appid_bypid));
+
+  notification_h noti = notification_create(NOTIFICATION_TYPE_NOTI);
+  ASSERT_NE(noti, nullptr);
+
+  int ret = notification_set_text_domain(noti, "test_domain", nullptr);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_INVALID_PARAMETER);
+
+  notification_free(noti);
+}
+
+TEST_F(NotificationInternalTest, notification_get_text_domain_null_noti) {
+  char *domain = nullptr;
+  char *dir = nullptr;
+  int ret = notification_get_text_domain(nullptr, &domain, &dir);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_INVALID_PARAMETER);
+}
+
+TEST_F(NotificationInternalTest, notification_get_text_domain_null_domain) {
+  EXPECT_CALL(GetMock<AulMock>(), aul_app_get_appid_bypid(_, _, _))
+      .WillRepeatedly(Invoke(__fake_aul_app_get_appid_bypid));
+
+  notification_h noti = notification_create(NOTIFICATION_TYPE_NOTI);
+  ASSERT_NE(noti, nullptr);
+
+  char *dir = nullptr;
+  int ret = notification_get_text_domain(noti, nullptr, &dir);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
+
+  notification_free(noti);
+}
+
+TEST_F(NotificationInternalTest, notification_get_text_domain_null_dir) {
+  EXPECT_CALL(GetMock<AulMock>(), aul_app_get_appid_bypid(_, _, _))
+      .WillRepeatedly(Invoke(__fake_aul_app_get_appid_bypid));
+
+  notification_h noti = notification_create(NOTIFICATION_TYPE_NOTI);
+  ASSERT_NE(noti, nullptr);
+
+  char *domain = nullptr;
+  int ret = notification_get_text_domain(noti, &domain, nullptr);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
+
+  notification_free(noti);
+}
+
+/* App ID tests */
+
+TEST_F(NotificationInternalTest, notification_set_app_id_valid) {
+  EXPECT_CALL(GetMock<AulMock>(), aul_app_get_appid_bypid(_, _, _))
+      .WillRepeatedly(Invoke(__fake_aul_app_get_appid_bypid));
+
+  notification_h noti = notification_create(NOTIFICATION_TYPE_NOTI);
+  ASSERT_NE(noti, nullptr);
+
+  int ret = notification_set_app_id(noti, "com.example.app");
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
+
+  notification_free(noti);
+}
+
+TEST_F(NotificationInternalTest, notification_set_app_id_null_noti) {
+  int ret = notification_set_app_id(nullptr, "com.example.app");
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_INVALID_PARAMETER);
+}
+
+TEST_F(NotificationInternalTest, notification_set_app_id_null_app_id) {
+  EXPECT_CALL(GetMock<AulMock>(), aul_app_get_appid_bypid(_, _, _))
+      .WillRepeatedly(Invoke(__fake_aul_app_get_appid_bypid));
+
+  notification_h noti = notification_create(NOTIFICATION_TYPE_NOTI);
+  ASSERT_NE(noti, nullptr);
+
+  int ret = notification_set_app_id(noti, nullptr);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_INVALID_PARAMETER);
+
+  notification_free(noti);
+}
+
+/* Update async null tests */
+
+TEST_F(NotificationInternalTest, notification_update_async_null_noti) {
+  int ret = notification_update_async(nullptr, nullptr, nullptr);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_INVALID_PARAMETER);
+}
+
+TEST_F(NotificationInternalTest, notification_update_async_null_callback) {
+  EXPECT_CALL(GetMock<AulMock>(), aul_app_get_appid_bypid(_, _, _))
+      .WillRepeatedly(Invoke(__fake_aul_app_get_appid_bypid));
+
+  notification_h noti = notification_create(NOTIFICATION_TYPE_NOTI);
+  ASSERT_NE(noti, nullptr);
+
+  int ret = notification_update_async(noti, nullptr, nullptr);
+  EXPECT_NE(ret, NOTIFICATION_ERROR_NONE);
+
+  notification_free(noti);
+}
+
+/* Post with event cb null tests */
+
+TEST_F(NotificationInternalTest, notification_post_with_event_cb_null_noti) {
+  int ret = notification_post_with_event_cb(nullptr, nullptr, nullptr);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_INVALID_PARAMETER);
+}
+
+TEST_F(NotificationInternalTest, notification_post_with_event_cb_null_callback) {
+  EXPECT_CALL(GetMock<AulMock>(), aul_app_get_appid_bypid(_, _, _))
+      .WillRepeatedly(Invoke(__fake_aul_app_get_appid_bypid));
+
+  notification_h noti = notification_create(NOTIFICATION_TYPE_NOTI);
+  ASSERT_NE(noti, nullptr);
+
+  int ret = notification_post_with_event_cb(noti, nullptr, nullptr);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_INVALID_PARAMETER);
+
+  notification_free(noti);
+}
+
+/* Send event null tests */
+
+TEST_F(NotificationInternalTest, notification_send_event_null_noti) {
+  int ret = notification_send_event(nullptr, 0);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_INVALID_PARAMETER);
+}
+
+TEST_F(NotificationInternalTest, notification_send_event_by_priv_id_invalid) {
+  int ret = notification_send_event_by_priv_id(NOTIFICATION_PRIV_ID_NONE, 0);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_INVALID_PARAMETER);
+}
+
+/* Check event receiver null test */
+
+TEST_F(NotificationInternalTest, notification_check_event_receiver_null_noti) {
+  bool available = false;
+  int ret = notification_check_event_receiver_available(nullptr, &available);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_INVALID_PARAMETER);
+}
+
+/* Get all count null tests */
+
+TEST_F(NotificationInternalTest, notification_get_all_count_null_count) {
+  int ret = notification_get_all_count(NOTIFICATION_TYPE_NOTI, nullptr);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_INVALID_PARAMETER);
+}
+
+/* Extension event handler null tests */
+
+TEST_F(NotificationInternalTest, notification_set_extension_event_handler_null_noti) {
+  int ret = notification_set_extension_event_handler(nullptr,
+      NOTIFICATION_EVENT_TYPE_HIDDEN_BY_USER, nullptr);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_INVALID_PARAMETER);
+}
+
+TEST_F(NotificationInternalTest, notification_get_extension_event_handler_null_noti) {
+  app_control_h handler = nullptr;
+  int ret = notification_get_extension_event_handler(nullptr,
+      NOTIFICATION_EVENT_TYPE_HIDDEN_BY_USER, &handler);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_INVALID_PARAMETER);
+}
+
+/* Channel operation null tests */
+
+TEST_F(NotificationInternalTest, notification_channel_add_null) {
+  int ret = notification_channel_add(nullptr);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_INVALID_PARAMETER);
+}
+
+TEST_F(NotificationInternalTest, notification_channel_remove_null) {
+  int ret = notification_channel_remove(nullptr);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_INVALID_PARAMETER);
+}
+
+TEST_F(NotificationInternalTest, notification_channel_update_null) {
+  int ret = notification_channel_update(nullptr);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_INVALID_PARAMETER);
+}
+
+TEST_F(NotificationInternalTest, notification_channel_get_by_name_null_name) {
+  notification_channel_h channel = nullptr;
+  int ret = notification_channel_get_by_name(nullptr, &channel);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_INVALID_PARAMETER);
+}
+
+TEST_F(NotificationInternalTest, notification_channel_get_by_name_null_output) {
+  int ret = notification_channel_get_by_name("test_channel", nullptr);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_INVALID_PARAMETER);
+}
+
+TEST_F(NotificationInternalTest, notification_channel_foreach_null_callback) {
+  int ret = notification_channel_foreach("org.tizen.testappid", nullptr, nullptr);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_INVALID_PARAMETER);
+}
+
+/* DND register null test */
+
+TEST_F(NotificationInternalTest, notification_register_do_not_disturb_app_null_cb) {
+  int ret = notification_register_do_not_disturb_app(nullptr, nullptr);
   EXPECT_EQ(ret, NOTIFICATION_ERROR_INVALID_PARAMETER);
 }

@@ -117,3 +117,4 @@ TEST_F(NotificationSharedFileTest, notification_calibrate_private_sharing_valid)
   notification_free(noti1);
   notification_free(noti2);
 }
+

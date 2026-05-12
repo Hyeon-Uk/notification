@@ -381,3 +381,45 @@ TEST_F(NotificationCountIntegrationTest, CheckLimitOverThresholdReturnsExcess) {
   if (excess_list) g_list_free(excess_list);
   notification_free(probe);
 }
+
+/* COUNT_08 - Delete by display_applist */
+TEST_F(NotificationCountIntegrationTest, DeleteByDisplayApplist) {
+  /* Insert 3 notifications with TRAY display */
+  for (int i = 0; i < 3; i++) {
+    notification_h noti = notification_create(NOTIFICATION_TYPE_NOTI);
+    ASSERT_NE(noti, nullptr);
+    notification_set_display_applist(noti,
+        NOTIFICATION_DISPLAY_APP_NOTIFICATION_TRAY);
+    notification_set_uid(noti, 5001);
+    int ret = notification_noti_insert(noti);
+    EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
+    notification_free(noti);
+  }
+
+  /* Insert 2 notifications with TICKER display */
+  for (int i = 0; i < 2; i++) {
+    notification_h noti = notification_create(NOTIFICATION_TYPE_NOTI);
+    ASSERT_NE(noti, nullptr);
+    notification_set_display_applist(noti,
+        NOTIFICATION_DISPLAY_APP_TICKER);
+    notification_set_uid(noti, 5001);
+    int ret = notification_noti_insert(noti);
+    EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
+    notification_free(noti);
+  }
+
+  /* Delete all TRAY notifications */
+  int deleted_num = 0;
+  notification_deleted_list_info_s *deleted_list = nullptr;
+  int ret = notification_noti_delete_by_display_applist(
+      NOTIFICATION_DISPLAY_APP_NOTIFICATION_TRAY,
+      &deleted_num, &deleted_list, 5001);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
+  if (deleted_list) free(deleted_list);
+
+  /* Count remaining: only TICKER (2) should remain */
+  int count = 0;
+  ret = notification_noti_get_all_count(NOTIFICATION_TYPE_NOTI, &count, 5001);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
+  EXPECT_EQ(count, 2);
+}

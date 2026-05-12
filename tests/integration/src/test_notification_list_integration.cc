@@ -473,3 +473,56 @@ TEST_F(NotificationListGroupingIntegrationTest,
 
   if (list) notification_free_list(list);
 }
+
+/* LIST_02 - Pagination verification: insert 10, get first 5 */
+TEST_F(NotificationListGroupingIntegrationTest, PaginationWithCountLimit) {
+  for (int i = 0; i < 10; i++) {
+    notification_h noti = notification_create(NOTIFICATION_TYPE_NOTI);
+    ASSERT_NE(noti, nullptr);
+    char title[32];
+    snprintf(title, sizeof(title), "page_noti_%d", i);
+    notification_set_text(noti, NOTIFICATION_TEXT_TYPE_TITLE, title,
+        NULL, NOTIFICATION_VARIABLE_TYPE_NONE);
+    notification_set_display_applist(noti,
+        NOTIFICATION_DISPLAY_APP_NOTIFICATION_TRAY);
+    notification_set_uid(noti, 5001);
+    int ret = notification_noti_insert(noti);
+    EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
+    notification_free(noti);
+  }
+
+  notification_list_h list = nullptr;
+  int list_count = 0;
+  int ret = notification_noti_get_grouping_list(NOTIFICATION_TYPE_NOTI,
+      0, 5, &list, &list_count, 5001);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
+
+  int count = notification_list_get_count(list);
+  EXPECT_EQ(count, 5);
+
+  notification_free_list(list);
+}
+
+/* LIST_03 - Detail list: get_detail_list returns success */
+TEST_F(NotificationListGroupingIntegrationTest, DetailListByAppId) {
+  notification_h noti = notification_create(NOTIFICATION_TYPE_NOTI);
+  ASSERT_NE(noti, nullptr);
+  notification_set_display_applist(noti,
+      NOTIFICATION_DISPLAY_APP_NOTIFICATION_TRAY);
+  notification_set_uid(noti, 5001);
+
+  char* pkgname = nullptr;
+  notification_get_pkgname(noti, &pkgname);
+
+  int ret = notification_noti_insert(noti);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
+  notification_free(noti);
+
+  notification_list_h list = nullptr;
+  ret = notification_noti_get_detail_list(pkgname,
+      NOTIFICATION_GROUP_ID_NONE, NOTIFICATION_PRIV_ID_NONE,
+      -1, &list, 5001);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
+
+  if (list) notification_free_list(list);
+}

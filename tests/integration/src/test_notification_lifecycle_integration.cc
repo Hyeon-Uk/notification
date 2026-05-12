@@ -502,3 +502,62 @@ TEST_F(NotificationLifecycleIntegrationTest, FreeHandleDoesNotDeleteFromDB) {
 
   notification_free(loaded);
 }
+
+/* LIFECYCLE_02 - Create-post-load by tag verifies all fields */
+TEST_F(NotificationLifecycleIntegrationTest, CreatePostLoadByTagVerifiesFields) {
+  notification_h noti = notification_create(NOTIFICATION_TYPE_NOTI);
+  ASSERT_NE(noti, nullptr);
+
+  notification_set_tag(noti, "lifecycle02_tag");
+  notification_set_text(noti, NOTIFICATION_TEXT_TYPE_TITLE, "TagTitle",
+      NULL, NOTIFICATION_VARIABLE_TYPE_NONE);
+  notification_set_text(noti, NOTIFICATION_TEXT_TYPE_CONTENT, "TagContent",
+      NULL, NOTIFICATION_VARIABLE_TYPE_NONE);
+  notification_set_image(noti, NOTIFICATION_IMAGE_TYPE_ICON, "/test/icon.png");
+  notification_set_sound(noti, NOTIFICATION_SOUND_TYPE_USER_DATA, "/test/snd.wav");
+  notification_set_vibration(noti, NOTIFICATION_VIBRATION_TYPE_USER_DATA, "/test/vib.ivt");
+  notification_set_led(noti, NOTIFICATION_LED_OP_ON, 0xFF0000FF);
+  notification_set_layout(noti, NOTIFICATION_LY_NOTI_EVENT_SINGLE);
+  notification_set_property(noti, NOTIFICATION_PROP_DISPLAY_ONLY_SIMMODE);
+  notification_set_display_applist(noti,
+      NOTIFICATION_DISPLAY_APP_NOTIFICATION_TRAY);
+  notification_set_auto_remove(noti, false);
+  notification_set_uid(noti, 5001);
+
+  int ret = notification_noti_insert(noti);
+  ASSERT_EQ(ret, NOTIFICATION_ERROR_NONE);
+
+  int group_id = 0, priv_id = 0;
+  notification_get_id(noti, &group_id, &priv_id);
+
+  /* Load by tag */
+  notification_h loaded = notification_create(NOTIFICATION_TYPE_NOTI);
+  ASSERT_NE(loaded, nullptr);
+  ret = notification_noti_get_by_tag(loaded,
+      const_cast<char*>(pkgname_.c_str()),
+      const_cast<char*>("lifecycle02_tag"), 5001);
+  ASSERT_EQ(ret, NOTIFICATION_ERROR_NONE);
+
+  char *title = nullptr;
+  notification_get_text(loaded, NOTIFICATION_TEXT_TYPE_TITLE, &title);
+  EXPECT_STREQ(title, "TagTitle");
+
+  char *content = nullptr;
+  notification_get_text(loaded, NOTIFICATION_TEXT_TYPE_CONTENT, &content);
+  EXPECT_STREQ(content, "TagContent");
+
+  char *icon = nullptr;
+  notification_get_image(loaded, NOTIFICATION_IMAGE_TYPE_ICON, &icon);
+  EXPECT_STREQ(icon, "/test/icon.png");
+
+  notification_ly_type_e layout;
+  notification_get_layout(loaded, &layout);
+  EXPECT_EQ(layout, NOTIFICATION_LY_NOTI_EVENT_SINGLE);
+
+  bool auto_remove = true;
+  notification_get_auto_remove(loaded, &auto_remove);
+  EXPECT_FALSE(auto_remove);
+
+  notification_free(loaded);
+  notification_free(noti);
+}

@@ -57,7 +57,12 @@ static const char *__get_str_value(char *value)
 EXPORT_API int make_empty_notification(void *notihandle)
 {
 	int ret;
-	bundle *empty_bundle = bundle_create();
+	bundle *empty_bundle;
+
+	if (notihandle == NULL)
+		return NOTIFICATION_ERROR_INVALID_PARAMETER;
+
+	empty_bundle = bundle_create();
 
 	WARN("make_empty_notification");
 
@@ -321,7 +326,12 @@ EXPORT_API int make_notification_from_noti(void *notihandle,
 		notification_h noti, bool translate)
 {
 	int ret;
-	bundle *empty_bundle = bundle_create();
+	bundle *empty_bundle;
+
+	if (notihandle == NULL || noti == NULL)
+		return NOTIFICATION_ERROR_INVALID_PARAMETER;
+
+	empty_bundle = bundle_create();
 
 	WARN("make_notification_from_noti");
 
@@ -607,6 +617,9 @@ EXPORT_API int make_noti_from_notification(notification_h *noti, void *notihandl
 {
 	notification_h _noti;
 	int ret;
+
+	if (noti == NULL || notihandle == NULL)
+		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 
 	WARN("make_noti_from_notification");
 
@@ -1164,7 +1177,12 @@ EXPORT_API int make_setting_from_noti_system_setting(
 		notification_system_setting_h *setting, void *settinghandle)
 {
 	notification_system_setting_h _setting;
-	rpc_port_proxy_noti_system_setting_h handle = (rpc_port_proxy_noti_system_setting_h)settinghandle;
+	rpc_port_proxy_noti_system_setting_h handle;
+
+	if (setting == NULL || settinghandle == NULL)
+		return NOTIFICATION_ERROR_INVALID_PARAMETER;
+
+	handle = (rpc_port_proxy_noti_system_setting_h)settinghandle;
 
 	WARN("make_setting_from_noti_system_setting");
 
@@ -1235,7 +1253,12 @@ EXPORT_API int make_noti_system_setting_from_setting(void *settinghandle,
 	dnd_allow_exception_h info = NULL;
 	rpc_port_proxy_list_noti_system_setting_dnd_allow_exception_h list_handle;
 	rpc_port_proxy_noti_system_setting_dnd_allow_exception_h exception_handle;
-	rpc_port_proxy_noti_system_setting_h handle = (rpc_port_proxy_noti_system_setting_h)settinghandle;
+	rpc_port_proxy_noti_system_setting_h handle;
+
+	if (settinghandle == NULL || setting == NULL)
+		return NOTIFICATION_ERROR_INVALID_PARAMETER;
+
+	handle = (rpc_port_proxy_noti_system_setting_h)settinghandle;
 
 	ret = rpc_port_proxy_noti_system_setting_set_do_not_disturb(handle, setting->do_not_disturb);
 	if (ret != RPC_PORT_ERROR_NONE)
@@ -1313,7 +1336,7 @@ EXPORT_API int make_setting_from_noti_setting(
 		notification_setting_h setting, void *settinghandle)
 {
 	int ret;
-	rpc_port_proxy_noti_setting_h handle = (rpc_port_proxy_noti_setting_h)settinghandle;
+	rpc_port_proxy_noti_setting_h handle;
 	char *pkg_name;
 	char *app_id;
 	bool allow_to_notify;
@@ -1322,6 +1345,11 @@ EXPORT_API int make_setting_from_noti_setting(
 	int visibility_class;
 	int lock_screen_content_level;
 	bool app_disabled;
+
+	if (setting == NULL || settinghandle == NULL)
+		return NOTIFICATION_ERROR_INVALID_PARAMETER;
+
+	handle = (rpc_port_proxy_noti_setting_h)settinghandle;
 
 	WARN("make_setting_from_noti_setting");
 
@@ -1387,7 +1415,12 @@ EXPORT_API int make_noti_setting_from_setting(
 		void *settinghandle, notification_setting_h setting)
 {
 	int ret;
-	rpc_port_proxy_noti_setting_h handle = (rpc_port_proxy_noti_setting_h)settinghandle;
+	rpc_port_proxy_noti_setting_h handle;
+
+	if (settinghandle == NULL || setting == NULL)
+		return NOTIFICATION_ERROR_INVALID_PARAMETER;
+
+	handle = (rpc_port_proxy_noti_setting_h)settinghandle;
 
 	ret = rpc_port_proxy_noti_setting_set_package_name(handle, __get_str_value(setting->package_name));
 	if (ret != RPC_PORT_ERROR_NONE)

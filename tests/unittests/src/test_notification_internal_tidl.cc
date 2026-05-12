@@ -44,7 +44,10 @@ using ::testing::Return;
 class NotificationInternalTidlTest : public TestFixture {
  public:
   NotificationInternalTidlTest() : TestFixture(std::make_unique<::Mocks>()) {}
-  virtual void SetUp() {}
+  virtual void SetUp() {
+    EXPECT_CALL(GetMock<AulMock>(), aul_app_get_appid_bypid(_, _, _))
+        .WillRepeatedly(Invoke(__fake_aul_app_get_appid_bypid));
+  }
   virtual void TearDown() {}
 };
 
@@ -66,5 +69,151 @@ TEST_F(NotificationInternalTidlTest, make_dnd_allow_exception_null_exception) {
 
 TEST_F(NotificationInternalTidlTest, make_dnd_allow_exception_both_null) {
   int ret = make_dnd_allow_exception_from_exception(nullptr, nullptr);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_INVALID_PARAMETER);
+}
+
+/* make_empty_notification: null notihandle */
+TEST_F(NotificationInternalTidlTest, make_empty_notification_null) {
+  int ret = make_empty_notification(nullptr);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_INVALID_PARAMETER);
+}
+
+/* make_notification_from_noti: null notihandle */
+TEST_F(NotificationInternalTidlTest, make_notification_from_noti_null_handle) {
+  notification_h noti = notification_create(NOTIFICATION_TYPE_NOTI);
+  ASSERT_NE(noti, nullptr);
+
+  int ret = make_notification_from_noti(nullptr, noti, false);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_INVALID_PARAMETER);
+
+  notification_free(noti);
+}
+
+/* make_notification_from_noti: null noti */
+TEST_F(NotificationInternalTidlTest, make_notification_from_noti_null_noti) {
+  int ret = make_notification_from_noti((void *)0x1234, nullptr, false);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_INVALID_PARAMETER);
+}
+
+/* make_notification_from_noti: both null */
+TEST_F(NotificationInternalTidlTest, make_notification_from_noti_both_null) {
+  int ret = make_notification_from_noti(nullptr, nullptr, false);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_INVALID_PARAMETER);
+}
+
+/* make_noti_from_notification: null noti output */
+TEST_F(NotificationInternalTidlTest, make_noti_from_notification_null_noti) {
+  int ret = make_noti_from_notification(nullptr, (void *)0x1234);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_INVALID_PARAMETER);
+}
+
+/* make_noti_from_notification: null notihandle */
+TEST_F(NotificationInternalTidlTest, make_noti_from_notification_null_handle) {
+  notification_h noti;
+  int ret = make_noti_from_notification(&noti, nullptr);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_INVALID_PARAMETER);
+}
+
+/* make_noti_from_notification: both null */
+TEST_F(NotificationInternalTidlTest, make_noti_from_notification_both_null) {
+  int ret = make_noti_from_notification(nullptr, nullptr);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_INVALID_PARAMETER);
+}
+
+/* make_setting_from_noti_system_setting: null setting output */
+TEST_F(NotificationInternalTidlTest,
+    make_setting_from_noti_system_setting_null_setting) {
+  int ret = make_setting_from_noti_system_setting(nullptr, (void *)0x1234);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_INVALID_PARAMETER);
+}
+
+/* make_setting_from_noti_system_setting: null settinghandle */
+TEST_F(NotificationInternalTidlTest,
+    make_setting_from_noti_system_setting_null_handle) {
+  notification_system_setting_h setting;
+  int ret = make_setting_from_noti_system_setting(&setting, nullptr);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_INVALID_PARAMETER);
+}
+
+/* make_setting_from_noti_system_setting: both null */
+TEST_F(NotificationInternalTidlTest,
+    make_setting_from_noti_system_setting_both_null) {
+  int ret = make_setting_from_noti_system_setting(nullptr, nullptr);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_INVALID_PARAMETER);
+}
+
+/* make_noti_system_setting_from_setting: null settinghandle */
+TEST_F(NotificationInternalTidlTest,
+    make_noti_system_setting_from_setting_null_handle) {
+  notification_system_setting_h setting =
+      (notification_system_setting_h)calloc(1,
+          sizeof(struct notification_system_setting));
+  ASSERT_NE(setting, nullptr);
+
+  int ret = make_noti_system_setting_from_setting(nullptr, setting);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_INVALID_PARAMETER);
+
+  free(setting);
+}
+
+/* make_noti_system_setting_from_setting: null setting */
+TEST_F(NotificationInternalTidlTest,
+    make_noti_system_setting_from_setting_null_setting) {
+  int ret = make_noti_system_setting_from_setting((void *)0x1234, nullptr);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_INVALID_PARAMETER);
+}
+
+/* make_noti_system_setting_from_setting: both null */
+TEST_F(NotificationInternalTidlTest,
+    make_noti_system_setting_from_setting_both_null) {
+  int ret = make_noti_system_setting_from_setting(nullptr, nullptr);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_INVALID_PARAMETER);
+}
+
+/* make_setting_from_noti_setting: null setting */
+TEST_F(NotificationInternalTidlTest,
+    make_setting_from_noti_setting_null_setting) {
+  int ret = make_setting_from_noti_setting(nullptr, (void *)0x1234);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_INVALID_PARAMETER);
+}
+
+/* make_setting_from_noti_setting: null settinghandle */
+TEST_F(NotificationInternalTidlTest,
+    make_setting_from_noti_setting_null_handle) {
+  struct notification_setting ns = {};
+  notification_setting_h setting = &ns;
+
+  int ret = make_setting_from_noti_setting(setting, nullptr);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_INVALID_PARAMETER);
+}
+
+/* make_setting_from_noti_setting: both null */
+TEST_F(NotificationInternalTidlTest,
+    make_setting_from_noti_setting_both_null) {
+  int ret = make_setting_from_noti_setting(nullptr, nullptr);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_INVALID_PARAMETER);
+}
+
+/* make_noti_setting_from_setting: null settinghandle */
+TEST_F(NotificationInternalTidlTest,
+    make_noti_setting_from_setting_null_handle) {
+  struct notification_setting ns = {};
+  notification_setting_h setting = &ns;
+
+  int ret = make_noti_setting_from_setting(nullptr, setting);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_INVALID_PARAMETER);
+}
+
+/* make_noti_setting_from_setting: null setting */
+TEST_F(NotificationInternalTidlTest,
+    make_noti_setting_from_setting_null_setting) {
+  int ret = make_noti_setting_from_setting((void *)0x1234, nullptr);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_INVALID_PARAMETER);
+}
+
+/* make_noti_setting_from_setting: both null */
+TEST_F(NotificationInternalTidlTest,
+    make_noti_setting_from_setting_both_null) {
+  int ret = make_noti_setting_from_setting(nullptr, nullptr);
   EXPECT_EQ(ret, NOTIFICATION_ERROR_INVALID_PARAMETER);
 }

@@ -345,6 +345,64 @@ TEST_F(NotificationSettingIntegrationTest, SystemSettingNullParams) {
   EXPECT_EQ(ret, NOTIFICATION_ERROR_INVALID_PARAMETER);
 }
 
+/* SETTINGS_05 - DND allow exceptions set/update/load */
+TEST_F(NotificationSettingIntegrationTest, DndAllowExceptionsFullCycle) {
+  /* Seed initial system setting so the row exists */
+  int ret = notification_setting_db_update_system_setting(
+      0, 0, 0, 62, 22, 0, 8, 0, 0, 5001);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
+
+  /* Update DND allow exception via service layer (writes to DB) */
+  ret = notification_system_setting_update_dnd_allow_exception(
+      NOTIFICATION_DND_ALLOWED_CALLS, 1, 5001);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
+
+  /* Reload from DB and verify the exception was persisted */
+  dnd_allow_exception_h exceptions = nullptr;
+  int count = 0;
+  ret = notification_system_setting_load_dnd_allow_exception(
+      &exceptions, &count, 5001);
+  ASSERT_EQ(ret, NOTIFICATION_ERROR_NONE);
+  ASSERT_GE(count, 1);
+  ASSERT_NE(exceptions, nullptr);
+
+  /* Find the NOTIFICATION_DND_ALLOWED_CALLS entry */
+  bool found = false;
+  for (int i = 0; i < count; i++) {
+    if (exceptions[i].type == NOTIFICATION_DND_ALLOWED_CALLS) {
+      EXPECT_EQ(exceptions[i].value, 1);
+      found = true;
+      break;
+    }
+  }
+  EXPECT_TRUE(found) << "NOTIFICATION_DND_ALLOWED_CALLS entry not found";
+  free(exceptions);
+
+  /* Update to a different value and reload */
+  ret = notification_system_setting_update_dnd_allow_exception(
+      NOTIFICATION_DND_ALLOWED_CALLS, 0, 5001);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
+
+  exceptions = nullptr;
+  count = 0;
+  ret = notification_system_setting_load_dnd_allow_exception(
+      &exceptions, &count, 5001);
+  ASSERT_EQ(ret, NOTIFICATION_ERROR_NONE);
+  ASSERT_GE(count, 1);
+  ASSERT_NE(exceptions, nullptr);
+
+  found = false;
+  for (int i = 0; i < count; i++) {
+    if (exceptions[i].type == NOTIFICATION_DND_ALLOWED_CALLS) {
+      EXPECT_EQ(exceptions[i].value, 0);
+      found = true;
+      break;
+    }
+  }
+  EXPECT_TRUE(found) << "NOTIFICATION_DND_ALLOWED_CALLS entry not found after update";
+  free(exceptions);
+}
+
 TEST_F(NotificationSettingIntegrationTest, UpdateDoNotDisturb) {
   notification_setting_db_update_system_setting(
       0, 0, 0, 62, 22, 0, 8, 0, 0, 5001);

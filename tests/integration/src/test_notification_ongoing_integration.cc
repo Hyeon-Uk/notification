@@ -386,3 +386,54 @@ TEST_F(NotificationOngoingIntegrationTest, OngoingWithTimeType) {
   notification_free(loaded);
   notification_free(noti);
 }
+
+/* ONGOING_04 - Update content on posted ongoing */
+TEST_F(NotificationOngoingIntegrationTest, UpdateContentMultipleTimes) {
+  notification_h noti = notification_create(NOTIFICATION_TYPE_ONGOING);
+  ASSERT_NE(noti, nullptr);
+
+  notification_set_text(noti, NOTIFICATION_TEXT_TYPE_TITLE, "Download",
+      NULL, NOTIFICATION_VARIABLE_TYPE_NONE);
+  notification_set_display_applist(noti,
+      NOTIFICATION_DISPLAY_APP_NOTIFICATION_TRAY);
+  notification_set_uid(noti, 5001);
+
+  int ret = notification_noti_insert(noti);
+  ASSERT_EQ(ret, NOTIFICATION_ERROR_NONE);
+
+  int group_id = 0, priv_id = 0;
+  notification_get_id(noti, &group_id, &priv_id);
+  ASSERT_GT(priv_id, 0);
+
+  /* Update content to "50% complete" */
+  notification_set_text(noti, NOTIFICATION_TEXT_TYPE_CONTENT,
+      "50% complete", NULL, NOTIFICATION_VARIABLE_TYPE_NONE);
+  ret = notification_noti_update(noti);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
+
+  notification_h loaded = notification_create(NOTIFICATION_TYPE_ONGOING);
+  ASSERT_NE(loaded, nullptr);
+  ret = notification_noti_get_by_priv_id(loaded, priv_id);
+  ASSERT_EQ(ret, NOTIFICATION_ERROR_NONE);
+  char *text = nullptr;
+  notification_get_text(loaded, NOTIFICATION_TEXT_TYPE_CONTENT, &text);
+  EXPECT_STREQ(text, "50% complete");
+  notification_free(loaded);
+
+  /* Update content to "Done!" */
+  notification_set_text(noti, NOTIFICATION_TEXT_TYPE_CONTENT, "Done!",
+      NULL, NOTIFICATION_VARIABLE_TYPE_NONE);
+  ret = notification_noti_update(noti);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
+
+  loaded = notification_create(NOTIFICATION_TYPE_ONGOING);
+  ASSERT_NE(loaded, nullptr);
+  ret = notification_noti_get_by_priv_id(loaded, priv_id);
+  ASSERT_EQ(ret, NOTIFICATION_ERROR_NONE);
+  text = nullptr;
+  notification_get_text(loaded, NOTIFICATION_TEXT_TYPE_CONTENT, &text);
+  EXPECT_STREQ(text, "Done!");
+  notification_free(loaded);
+
+  notification_free(noti);
+}
