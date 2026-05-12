@@ -27,7 +27,10 @@
 
 #include "notification/include/notification.h"
 #include "notification/include/notification_db.h"
+#include "notification/include/notification_internal.h"
 #include "notification/include/notification_noti.h"
+
+extern "C" void test_set_db_dir(const char* dir);
 
 namespace {
 
@@ -143,12 +146,12 @@ class NotificationDBIntegrationTest : public ::testing::Test {
   }
 
   void SetUp() override {
+    char tmp_dir[] = "/tmp/noti_integ_db_XXXXXX";
+    if (!mkdtemp(tmp_dir))
+      GTEST_SKIP() << "Failed to create temp dir";
+    tmp_dir_ = tmp_dir;
+    test_set_db_dir(tmp_dir_.c_str());
     db_path_ = std::string(DBPATH);
-    std::string db_dir = db_path_.substr(0, db_path_.rfind('/'));
-    MkdirP(db_dir);
-
-    if (access(db_dir.c_str(), W_OK) != 0)
-      GTEST_SKIP() << "DB directory not writable: " << db_dir;
 
     unlink(db_path_.c_str());
 
@@ -179,6 +182,8 @@ class NotificationDBIntegrationTest : public ::testing::Test {
   void TearDown() override {
     if (!db_path_.empty())
       unlink(db_path_.c_str());
+    if (!tmp_dir_.empty())
+      rmdir(tmp_dir_.c_str());
   }
 
   int GetRowCount(const char* table_name) {
@@ -199,6 +204,7 @@ class NotificationDBIntegrationTest : public ::testing::Test {
     return count;
   }
 
+  std::string tmp_dir_;
   std::string db_path_;
 };
 
@@ -288,6 +294,7 @@ TEST_F(NotificationDBIntegrationTest, NotiInsertAndDeleteAll) {
     notification_h noti = notification_create(NOTIFICATION_TYPE_NOTI);
     if (!noti)
       GTEST_SKIP() << "notification_create requires app context";
+    notification_set_uid(noti, getuid());
     notification_set_display_applist(noti,
         NOTIFICATION_DISPLAY_APP_NOTIFICATION_TRAY);
 
@@ -301,7 +308,7 @@ TEST_F(NotificationDBIntegrationTest, NotiInsertAndDeleteAll) {
   int deleted_num = 0;
   int* deleted_list = nullptr;
   int ret = notification_noti_delete_all(NOTIFICATION_TYPE_NOTI,
-      nullptr, &deleted_num, &deleted_list, 5001);
+      nullptr, &deleted_num, &deleted_list, getuid());
   EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
   EXPECT_EQ(GetRowCount("noti_list"), 0);
 
@@ -313,6 +320,7 @@ TEST_F(NotificationDBIntegrationTest, NotiGetAllCount) {
     notification_h noti = notification_create(NOTIFICATION_TYPE_NOTI);
     if (!noti)
       GTEST_SKIP() << "notification_create requires app context";
+    notification_set_uid(noti, getuid());
     notification_set_display_applist(noti,
         NOTIFICATION_DISPLAY_APP_NOTIFICATION_TRAY);
     notification_noti_insert(noti);
@@ -321,7 +329,7 @@ TEST_F(NotificationDBIntegrationTest, NotiGetAllCount) {
 
   int count = 0;
   int ret = notification_noti_get_all_count(
-      NOTIFICATION_TYPE_NOTI, &count, 5001);
+      NOTIFICATION_TYPE_NOTI, &count, getuid());
   EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
   EXPECT_EQ(count, 3);
 }
@@ -331,6 +339,7 @@ TEST_F(NotificationDBIntegrationTest, NotiGetGroupingList) {
     notification_h noti = notification_create(NOTIFICATION_TYPE_NOTI);
     if (!noti)
       GTEST_SKIP() << "notification_create requires app context";
+    notification_set_uid(noti, getuid());
     notification_set_display_applist(noti,
         NOTIFICATION_DISPLAY_APP_NOTIFICATION_TRAY);
     notification_noti_insert(noti);
@@ -340,7 +349,7 @@ TEST_F(NotificationDBIntegrationTest, NotiGetGroupingList) {
   notification_list_h list = nullptr;
   int list_count = 0;
   int ret = notification_noti_get_grouping_list(
-      NOTIFICATION_TYPE_NOTI, 1, 10, &list, &list_count, 5001);
+      NOTIFICATION_TYPE_NOTI, 1, 10, &list, &list_count, getuid());
   EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
   EXPECT_GT(list_count, 0);
 
