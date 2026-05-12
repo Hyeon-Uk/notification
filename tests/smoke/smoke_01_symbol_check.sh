@@ -138,7 +138,6 @@ CHANNEL_SYMBOLS=(
 SHARED_FILE_SYMBOLS=(
   notification_set_private_sharing
   notification_remove_private_sharing
-  notification_copy_private_file
   notification_validate_private_sharing
   notification_calibrate_private_sharing
 )
@@ -191,9 +190,6 @@ DEPRECATED_SYMBOLS=(
 
 # TIDL symbols
 TIDL_SYMBOLS=(
-  notification_tidl_request_insert
-  notification_tidl_request_update
-  notification_tidl_monitor_init
 )
 
 # Noti DB symbols
@@ -212,7 +208,7 @@ check_symbols() {
   local missing=0
   for sym in "${syms[@]}"; do
     if ! nm -D "$LIB_PATH" 2>/dev/null | grep -q " T ${sym}$\| T ${sym}@@"; then
-      echo "MISSING [${group_name}]: $sym"
+      echo "MISSING [${group_name}]: $sym" >&2
       missing=$((missing + 1))
     fi
   done
