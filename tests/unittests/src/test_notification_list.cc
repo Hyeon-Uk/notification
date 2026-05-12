@@ -248,3 +248,188 @@ TEST_F(NotificationListTest, GetDetailListNullAppId) {
   int ret = notification_get_detail_list(nullptr, 1, 1, 1, &get_list_detail);
   EXPECT_EQ(ret, NOTIFICATION_ERROR_INVALID_PARAMETER);
 }
+
+TEST_F(NotificationListTest, AppendNullNoti) {
+  notification_list_h result = notification_list_append(nullptr, nullptr);
+  EXPECT_EQ(result, nullptr);
+}
+
+TEST_F(NotificationListTest, FreeListNull) {
+  int ret = notification_free_list(nullptr);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_INVALID_PARAMETER);
+}
+
+TEST_F(NotificationListTest, MultiElementTraversal) {
+  EXPECT_CALL(GetMock<AulMock>(), aul_app_get_appid_bypid(_, _, _))
+      .WillRepeatedly(Invoke(__fake_aul_app_get_appid_bypid));
+
+  notification_list_h list = nullptr;
+  notification_h n1 = notification_create(NOTIFICATION_TYPE_NOTI);
+  notification_h n2 = notification_create(NOTIFICATION_TYPE_NOTI);
+  notification_h n3 = notification_create(NOTIFICATION_TYPE_NOTI);
+  ASSERT_NE(n1, nullptr);
+  ASSERT_NE(n2, nullptr);
+  ASSERT_NE(n3, nullptr);
+
+  list = notification_list_append(list, n1);
+  list = notification_list_append(list, n2);
+  list = notification_list_append(list, n3);
+  ASSERT_NE(list, nullptr);
+  EXPECT_EQ(notification_list_get_count(list), 3);
+
+  notification_list_h head = notification_list_get_head(list);
+  ASSERT_NE(head, nullptr);
+  EXPECT_EQ(notification_list_get_data(head), n1);
+
+  notification_list_h second = notification_list_get_next(head);
+  ASSERT_NE(second, nullptr);
+  EXPECT_EQ(notification_list_get_data(second), n2);
+
+  notification_list_h third = notification_list_get_next(second);
+  ASSERT_NE(third, nullptr);
+  EXPECT_EQ(notification_list_get_data(third), n3);
+
+  EXPECT_EQ(notification_list_get_next(third), nullptr);
+
+  notification_list_h tail = notification_list_get_tail(head);
+  EXPECT_EQ(tail, third);
+
+  EXPECT_EQ(notification_list_get_prev(head), nullptr);
+  EXPECT_EQ(notification_list_get_prev(second), head);
+  EXPECT_EQ(notification_list_get_prev(third), second);
+
+  notification_free_list(head);
+}
+
+TEST_F(NotificationListTest, RemoveMiddleElement) {
+  EXPECT_CALL(GetMock<AulMock>(), aul_app_get_appid_bypid(_, _, _))
+      .WillRepeatedly(Invoke(__fake_aul_app_get_appid_bypid));
+
+  notification_list_h list = nullptr;
+  notification_h n1 = notification_create(NOTIFICATION_TYPE_NOTI);
+  notification_h n2 = notification_create(NOTIFICATION_TYPE_NOTI);
+  notification_h n3 = notification_create(NOTIFICATION_TYPE_NOTI);
+  ASSERT_NE(n1, nullptr);
+  ASSERT_NE(n2, nullptr);
+  ASSERT_NE(n3, nullptr);
+
+  list = notification_list_append(list, n1);
+  list = notification_list_append(list, n2);
+  list = notification_list_append(list, n3);
+
+  list = notification_list_remove(list, n2);
+  EXPECT_EQ(notification_list_get_count(list), 2);
+
+  notification_list_h head = notification_list_get_head(list);
+  EXPECT_EQ(notification_list_get_data(head), n1);
+  notification_list_h next = notification_list_get_next(head);
+  ASSERT_NE(next, nullptr);
+  EXPECT_EQ(notification_list_get_data(next), n3);
+
+  notification_free_list(head);
+  notification_free(n2);
+}
+
+TEST_F(NotificationListTest, RemoveHeadElement) {
+  EXPECT_CALL(GetMock<AulMock>(), aul_app_get_appid_bypid(_, _, _))
+      .WillRepeatedly(Invoke(__fake_aul_app_get_appid_bypid));
+
+  notification_list_h list = nullptr;
+  notification_h n1 = notification_create(NOTIFICATION_TYPE_NOTI);
+  notification_h n2 = notification_create(NOTIFICATION_TYPE_NOTI);
+  ASSERT_NE(n1, nullptr);
+  ASSERT_NE(n2, nullptr);
+
+  list = notification_list_append(list, n1);
+  list = notification_list_append(list, n2);
+
+  notification_list_h head = notification_list_get_head(list);
+  notification_h head_data = notification_list_get_data(head);
+  list = notification_list_remove(list, head_data);
+  EXPECT_EQ(notification_list_get_count(list), 1);
+  EXPECT_EQ(notification_list_get_data(list), n2);
+
+  notification_free_list(list);
+  notification_free(n1);
+}
+
+TEST_F(NotificationListTest, RemoveAllElements) {
+  EXPECT_CALL(GetMock<AulMock>(), aul_app_get_appid_bypid(_, _, _))
+      .WillRepeatedly(Invoke(__fake_aul_app_get_appid_bypid));
+
+  notification_list_h list = nullptr;
+  notification_h n1 = notification_create(NOTIFICATION_TYPE_NOTI);
+  ASSERT_NE(n1, nullptr);
+
+  list = notification_list_append(list, n1);
+  list = notification_list_remove(list, n1);
+  EXPECT_EQ(list, nullptr);
+
+  notification_free(n1);
+}
+
+TEST_F(NotificationListTest, SingleElementHeadTailSame) {
+  EXPECT_CALL(GetMock<AulMock>(), aul_app_get_appid_bypid(_, _, _))
+      .WillRepeatedly(Invoke(__fake_aul_app_get_appid_bypid));
+
+  notification_list_h list = nullptr;
+  notification_h noti = notification_create(NOTIFICATION_TYPE_NOTI);
+  ASSERT_NE(noti, nullptr);
+
+  list = notification_list_append(list, noti);
+  ASSERT_NE(list, nullptr);
+
+  notification_list_h head = notification_list_get_head(list);
+  notification_list_h tail = notification_list_get_tail(list);
+  EXPECT_EQ(head, tail);
+
+  EXPECT_EQ(notification_list_get_prev(head), nullptr);
+  EXPECT_EQ(notification_list_get_next(head), nullptr);
+
+  notification_free_list(list);
+}
+
+TEST_F(NotificationListTest, GetListForUidNullList) {
+  int ret = notification_get_list_for_uid(NOTIFICATION_TYPE_NOTI, 10, nullptr, 5001);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_INVALID_PARAMETER);
+}
+
+TEST_F(NotificationListTest, GetListByPageForUidNullList) {
+  int ret = notification_get_list_by_page_for_uid(NOTIFICATION_TYPE_NOTI, 1, 10, nullptr, 5001);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_INVALID_PARAMETER);
+}
+
+TEST_F(NotificationListTest, GetDetailListForUidNullList) {
+  int ret = notification_get_detail_list_for_uid("app", 1, 1, 10, nullptr, 5001);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_INVALID_PARAMETER);
+}
+
+TEST_F(NotificationListTest, GetDetailListForUidNullAppId) {
+  notification_list_h list = nullptr;
+  int ret = notification_get_detail_list_for_uid(nullptr, 1, 1, 10, &list, 5001);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_INVALID_PARAMETER);
+}
+
+TEST_F(NotificationListTest, GetListByPageInvalidPage) {
+  notification_list_h list = nullptr;
+  int ret = notification_get_list_by_page_for_uid(NOTIFICATION_TYPE_NOTI, 0, 10, &list, 5001);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_INVALID_PARAMETER);
+}
+
+TEST_F(NotificationListTest, FreeListMultiple) {
+  EXPECT_CALL(GetMock<AulMock>(), aul_app_get_appid_bypid(_, _, _))
+      .WillRepeatedly(Invoke(__fake_aul_app_get_appid_bypid));
+
+  notification_list_h list = nullptr;
+  for (int i = 0; i < 5; i++) {
+    notification_h noti = notification_create(NOTIFICATION_TYPE_NOTI);
+    ASSERT_NE(noti, nullptr);
+    list = notification_list_append(list, noti);
+  }
+  ASSERT_NE(list, nullptr);
+  EXPECT_EQ(notification_list_get_count(list), 5);
+
+  notification_list_h head = notification_list_get_head(list);
+  int ret = notification_free_list(head);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
+}

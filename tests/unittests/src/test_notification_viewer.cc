@@ -61,3 +61,27 @@ TEST_F(NotificationViewerTest, notification_launch_default_viewer_without_candid
       NOTIFICATION_OP_INSERT, 5001);
   EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
 }
+
+TEST_F(NotificationViewerTest, notification_launch_default_viewer_update) {
+  int ret = notification_launch_default_viewer(1,
+      NOTIFICATION_OP_UPDATE, 5001);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
+}
+
+TEST_F(NotificationViewerTest, notification_launch_default_viewer_delete) {
+  int ret = notification_launch_default_viewer(1,
+      NOTIFICATION_OP_DELETE, 5001);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
+}
+
+TEST_F(NotificationViewerTest, notification_launch_default_viewer_without_candidate_update) {
+  int ret = notification_launch_default_viewer_without_candidate_process(1,
+      NOTIFICATION_OP_UPDATE, 5001);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
+}
+
+TEST_F(NotificationViewerTest, notification_launch_default_viewer_without_candidate_delete) {
+  int ret = notification_launch_default_viewer_without_candidate_process(1,
+      NOTIFICATION_OP_DELETE, 5001);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
+}

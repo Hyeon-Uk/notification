@@ -800,3 +800,811 @@ TEST_F(NotificationTest, GetEventHandlerNullNoti) {
       NOTIFICATION_EVENT_TYPE_CLICK_ON_BUTTON_1, &app_control);
   EXPECT_EQ(ret, NOTIFICATION_ERROR_INVALID_PARAMETER);
 }
+
+/* IMG_SET_P_02..P_05: Set/get image for multiple image types */
+TEST_F(NotificationTest, SetGetImageThumbnail) {
+  notification_h noti = notification_create(NOTIFICATION_TYPE_NOTI);
+  ASSERT_NE(noti, nullptr);
+
+  const char* path = "/opt/usr/data/thumb.png";
+  int ret = notification_set_image(noti, NOTIFICATION_IMAGE_TYPE_THUMBNAIL, path);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
+
+  char* out = nullptr;
+  ret = notification_get_image(noti, NOTIFICATION_IMAGE_TYPE_THUMBNAIL, &out);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
+  EXPECT_STREQ(out, path);
+
+  notification_free(noti);
+}
+
+TEST_F(NotificationTest, SetGetImageSubIcon) {
+  notification_h noti = notification_create(NOTIFICATION_TYPE_NOTI);
+  ASSERT_NE(noti, nullptr);
+
+  const char* path = "/opt/usr/data/sub.png";
+  int ret = notification_set_image(noti, NOTIFICATION_IMAGE_TYPE_ICON_SUB, path);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
+
+  char* out = nullptr;
+  ret = notification_get_image(noti, NOTIFICATION_IMAGE_TYPE_ICON_SUB, &out);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
+  EXPECT_STREQ(out, path);
+
+  notification_free(noti);
+}
+
+TEST_F(NotificationTest, SetGetImageBackground) {
+  notification_h noti = notification_create(NOTIFICATION_TYPE_NOTI);
+  ASSERT_NE(noti, nullptr);
+
+  const char* path = "/opt/usr/data/bg.png";
+  int ret = notification_set_image(noti, NOTIFICATION_IMAGE_TYPE_BACKGROUND, path);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
+
+  char* out = nullptr;
+  ret = notification_get_image(noti, NOTIFICATION_IMAGE_TYPE_BACKGROUND, &out);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
+  EXPECT_STREQ(out, path);
+
+  notification_free(noti);
+}
+
+TEST_F(NotificationTest, SetGetImageIndicatorIcon) {
+  notification_h noti = notification_create(NOTIFICATION_TYPE_NOTI);
+  ASSERT_NE(noti, nullptr);
+
+  const char* path = "/opt/usr/data/indicator.png";
+  int ret = notification_set_image(noti, NOTIFICATION_IMAGE_TYPE_ICON_FOR_INDICATOR, path);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
+
+  char* out = nullptr;
+  ret = notification_get_image(noti, NOTIFICATION_IMAGE_TYPE_ICON_FOR_INDICATOR, &out);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
+  EXPECT_STREQ(out, path);
+
+  notification_free(noti);
+}
+
+TEST_F(NotificationTest, SetGetImageLockIcon) {
+  notification_h noti = notification_create(NOTIFICATION_TYPE_NOTI);
+  ASSERT_NE(noti, nullptr);
+
+  const char* path = "/opt/usr/data/lock.png";
+  int ret = notification_set_image(noti, NOTIFICATION_IMAGE_TYPE_ICON_FOR_LOCK, path);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
+
+  char* out = nullptr;
+  ret = notification_get_image(noti, NOTIFICATION_IMAGE_TYPE_ICON_FOR_LOCK, &out);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
+  EXPECT_STREQ(out, path);
+
+  notification_free(noti);
+}
+
+TEST_F(NotificationTest, SetGetImageList1) {
+  notification_h noti = notification_create(NOTIFICATION_TYPE_NOTI);
+  ASSERT_NE(noti, nullptr);
+
+  const char* path = "/opt/usr/data/list1.png";
+  int ret = notification_set_image(noti, NOTIFICATION_IMAGE_TYPE_LIST_1, path);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
+
+  char* out = nullptr;
+  ret = notification_get_image(noti, NOTIFICATION_IMAGE_TYPE_LIST_1, &out);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
+  EXPECT_STREQ(out, path);
+
+  notification_free(noti);
+}
+
+TEST_F(NotificationTest, SetGetImageList2Through5) {
+  notification_h noti = notification_create(NOTIFICATION_TYPE_NOTI);
+  ASSERT_NE(noti, nullptr);
+
+  const notification_image_type_e types[] = {
+      NOTIFICATION_IMAGE_TYPE_LIST_2, NOTIFICATION_IMAGE_TYPE_LIST_3,
+      NOTIFICATION_IMAGE_TYPE_LIST_4, NOTIFICATION_IMAGE_TYPE_LIST_5};
+  for (auto t : types) {
+    int ret = notification_set_image(noti, t, "/opt/usr/data/list.png");
+    EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
+
+    char* out = nullptr;
+    ret = notification_get_image(noti, t, &out);
+    EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
+    EXPECT_STREQ(out, "/opt/usr/data/list.png");
+  }
+
+  notification_free(noti);
+}
+
+TEST_F(NotificationTest, SetGetImageButtonTypes) {
+  notification_h noti = notification_create(NOTIFICATION_TYPE_NOTI);
+  ASSERT_NE(noti, nullptr);
+
+  const notification_image_type_e types[] = {
+      NOTIFICATION_IMAGE_TYPE_BUTTON_1, NOTIFICATION_IMAGE_TYPE_BUTTON_2,
+      NOTIFICATION_IMAGE_TYPE_BUTTON_3, NOTIFICATION_IMAGE_TYPE_BUTTON_4,
+      NOTIFICATION_IMAGE_TYPE_BUTTON_5, NOTIFICATION_IMAGE_TYPE_BUTTON_6,
+      NOTIFICATION_IMAGE_TYPE_BUTTON_7, NOTIFICATION_IMAGE_TYPE_BUTTON_8,
+      NOTIFICATION_IMAGE_TYPE_BUTTON_9, NOTIFICATION_IMAGE_TYPE_BUTTON_10};
+  for (auto t : types) {
+    int ret = notification_set_image(noti, t, "/opt/usr/data/btn.png");
+    EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
+
+    char* out = nullptr;
+    ret = notification_get_image(noti, t, &out);
+    EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
+    EXPECT_NE(out, nullptr);
+  }
+
+  notification_free(noti);
+}
+
+TEST_F(NotificationTest, SetGetImageExtension) {
+  notification_h noti = notification_create(NOTIFICATION_TYPE_NOTI);
+  ASSERT_NE(noti, nullptr);
+
+  int ret = notification_set_image(noti, NOTIFICATION_IMAGE_TYPE_EXTENSION,
+      "/opt/usr/data/ext.png");
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
+
+  char* out = nullptr;
+  ret = notification_get_image(noti, NOTIFICATION_IMAGE_TYPE_EXTENSION, &out);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
+  EXPECT_STREQ(out, "/opt/usr/data/ext.png");
+
+  notification_free(noti);
+}
+
+TEST_F(NotificationTest, SetImageOverwrite) {
+  notification_h noti = notification_create(NOTIFICATION_TYPE_NOTI);
+  ASSERT_NE(noti, nullptr);
+
+  notification_set_image(noti, NOTIFICATION_IMAGE_TYPE_ICON, "/first.png");
+  notification_set_image(noti, NOTIFICATION_IMAGE_TYPE_ICON, "/second.png");
+
+  char* out = nullptr;
+  notification_get_image(noti, NOTIFICATION_IMAGE_TYPE_ICON, &out);
+  EXPECT_STREQ(out, "/second.png");
+
+  notification_free(noti);
+}
+
+/* TXT_SET: Various text types */
+TEST_F(NotificationTest, SetGetTextContent) {
+  notification_h noti = notification_create(NOTIFICATION_TYPE_NOTI);
+  ASSERT_NE(noti, nullptr);
+
+  int ret = notification_set_text(noti, NOTIFICATION_TEXT_TYPE_CONTENT,
+      "content text", NULL, NOTIFICATION_VARIABLE_TYPE_NONE);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
+
+  char* text = nullptr;
+  ret = notification_get_text(noti, NOTIFICATION_TEXT_TYPE_CONTENT, &text);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
+  EXPECT_STREQ(text, "content text");
+
+  notification_free(noti);
+}
+
+TEST_F(NotificationTest, SetGetTextInfo1) {
+  notification_h noti = notification_create(NOTIFICATION_TYPE_NOTI);
+  ASSERT_NE(noti, nullptr);
+
+  int ret = notification_set_text(noti, NOTIFICATION_TEXT_TYPE_INFO_1,
+      "info1", NULL, NOTIFICATION_VARIABLE_TYPE_NONE);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
+
+  char* text = nullptr;
+  ret = notification_get_text(noti, NOTIFICATION_TEXT_TYPE_INFO_1, &text);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
+  EXPECT_STREQ(text, "info1");
+
+  notification_free(noti);
+}
+
+TEST_F(NotificationTest, SetGetTextInfoSub1) {
+  notification_h noti = notification_create(NOTIFICATION_TYPE_NOTI);
+  ASSERT_NE(noti, nullptr);
+
+  int ret = notification_set_text(noti, NOTIFICATION_TEXT_TYPE_INFO_SUB_1,
+      "sub info", NULL, NOTIFICATION_VARIABLE_TYPE_NONE);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
+
+  char* text = nullptr;
+  ret = notification_get_text(noti, NOTIFICATION_TEXT_TYPE_INFO_SUB_1, &text);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
+  EXPECT_STREQ(text, "sub info");
+
+  notification_free(noti);
+}
+
+TEST_F(NotificationTest, SetGetTextMultipleTypes) {
+  notification_h noti = notification_create(NOTIFICATION_TYPE_NOTI);
+  ASSERT_NE(noti, nullptr);
+
+  const notification_text_type_e types[] = {
+      NOTIFICATION_TEXT_TYPE_INFO_2, NOTIFICATION_TEXT_TYPE_INFO_SUB_2,
+      NOTIFICATION_TEXT_TYPE_INFO_3, NOTIFICATION_TEXT_TYPE_INFO_SUB_3,
+      NOTIFICATION_TEXT_TYPE_GROUP_TITLE, NOTIFICATION_TEXT_TYPE_GROUP_CONTENT,
+      NOTIFICATION_TEXT_TYPE_BUTTON_1, NOTIFICATION_TEXT_TYPE_BUTTON_2,
+      NOTIFICATION_TEXT_TYPE_BUTTON_3, NOTIFICATION_TEXT_TYPE_BUTTON_4,
+      NOTIFICATION_TEXT_TYPE_BUTTON_5, NOTIFICATION_TEXT_TYPE_BUTTON_6,
+      NOTIFICATION_TEXT_TYPE_BUTTON_7, NOTIFICATION_TEXT_TYPE_BUTTON_8,
+      NOTIFICATION_TEXT_TYPE_BUTTON_9, NOTIFICATION_TEXT_TYPE_BUTTON_10,
+      NOTIFICATION_TEXT_TYPE_CONTENT_EXTENSION};
+
+  for (auto t : types) {
+    int ret = notification_set_text(noti, t, "test", NULL,
+        NOTIFICATION_VARIABLE_TYPE_NONE);
+    EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
+
+    char* text = nullptr;
+    ret = notification_get_text(noti, t, &text);
+    EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
+    EXPECT_NE(text, nullptr);
+  }
+
+  notification_free(noti);
+}
+
+TEST_F(NotificationTest, SetGetTextInputPlaceholder) {
+  notification_h noti = notification_create(NOTIFICATION_TYPE_NOTI);
+  ASSERT_NE(noti, nullptr);
+
+  int ret = notification_set_text(noti, NOTIFICATION_TEXT_TYPE_TEXT_INPUT_PLACEHOLDER,
+      "Type here...", NULL, NOTIFICATION_VARIABLE_TYPE_NONE);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
+
+  char* text = nullptr;
+  ret = notification_get_text(noti, NOTIFICATION_TEXT_TYPE_TEXT_INPUT_PLACEHOLDER, &text);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
+  EXPECT_STREQ(text, "Type here...");
+
+  notification_free(noti);
+}
+
+/* T2T: Time to text for content type */
+TEST_F(NotificationTest, SetGetTimeToTextContent) {
+  notification_h noti = notification_create(NOTIFICATION_TYPE_NOTI);
+  ASSERT_NE(noti, nullptr);
+
+  time_t now = time(NULL);
+  int ret = notification_set_time_to_text(noti,
+      NOTIFICATION_TEXT_TYPE_CONTENT, now);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
+
+  time_t out = 0;
+  ret = notification_get_time_from_text(noti,
+      NOTIFICATION_TEXT_TYPE_CONTENT, &out);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
+  EXPECT_EQ(out, now);
+
+  notification_free(noti);
+}
+
+TEST_F(NotificationTest, SetTimeToTextNullNoti) {
+  int ret = notification_set_time_to_text(nullptr,
+      NOTIFICATION_TEXT_TYPE_TITLE, time(NULL));
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_INVALID_PARAMETER);
+}
+
+TEST_F(NotificationTest, GetTimeFromTextNullNoti) {
+  time_t out;
+  int ret = notification_get_time_from_text(nullptr,
+      NOTIFICATION_TEXT_TYPE_TITLE, &out);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_INVALID_PARAMETER);
+}
+
+/* SND_SET_P_02/P_03: Sound USER_DATA type */
+TEST_F(NotificationTest, SetGetSoundUserData) {
+  notification_h noti = notification_create(NOTIFICATION_TYPE_NOTI);
+  ASSERT_NE(noti, nullptr);
+
+  int ret = notification_set_sound(noti, NOTIFICATION_SOUND_TYPE_USER_DATA,
+      "/opt/usr/data/sound.wav");
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
+
+  notification_sound_type_e type;
+  const char* path = nullptr;
+  ret = notification_get_sound(noti, &type, &path);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
+  EXPECT_EQ(type, NOTIFICATION_SOUND_TYPE_USER_DATA);
+  EXPECT_STREQ(path, "/opt/usr/data/sound.wav");
+
+  notification_free(noti);
+}
+
+TEST_F(NotificationTest, SetGetSoundNone) {
+  notification_h noti = notification_create(NOTIFICATION_TYPE_NOTI);
+  ASSERT_NE(noti, nullptr);
+
+  int ret = notification_set_sound(noti, NOTIFICATION_SOUND_TYPE_NONE, NULL);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
+
+  notification_sound_type_e type;
+  const char* path = nullptr;
+  ret = notification_get_sound(noti, &type, &path);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
+  EXPECT_EQ(type, NOTIFICATION_SOUND_TYPE_NONE);
+
+  notification_free(noti);
+}
+
+/* VIB_SET_P_02: Vibration USER_DATA type */
+TEST_F(NotificationTest, SetGetVibrationUserData) {
+  notification_h noti = notification_create(NOTIFICATION_TYPE_NOTI);
+  ASSERT_NE(noti, nullptr);
+
+  int ret = notification_set_vibration(noti, NOTIFICATION_VIBRATION_TYPE_USER_DATA,
+      "/opt/usr/data/vib.ivt");
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
+
+  notification_vibration_type_e type;
+  const char* path = nullptr;
+  ret = notification_get_vibration(noti, &type, &path);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
+  EXPECT_EQ(type, NOTIFICATION_VIBRATION_TYPE_USER_DATA);
+  EXPECT_STREQ(path, "/opt/usr/data/vib.ivt");
+
+  notification_free(noti);
+}
+
+TEST_F(NotificationTest, SetGetVibrationNone) {
+  notification_h noti = notification_create(NOTIFICATION_TYPE_NOTI);
+  ASSERT_NE(noti, nullptr);
+
+  int ret = notification_set_vibration(noti, NOTIFICATION_VIBRATION_TYPE_NONE, NULL);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
+
+  notification_vibration_type_e type;
+  const char* path = nullptr;
+  ret = notification_get_vibration(noti, &type, &path);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
+  EXPECT_EQ(type, NOTIFICATION_VIBRATION_TYPE_NONE);
+
+  notification_free(noti);
+}
+
+/* LED_SET_P_02: LED with custom color and time period verification */
+TEST_F(NotificationTest, SetGetLedCustomColor) {
+  notification_h noti = notification_create(NOTIFICATION_TYPE_NOTI);
+  ASSERT_NE(noti, nullptr);
+
+  int ret = notification_set_led(noti,
+      NOTIFICATION_LED_OP_ON_CUSTOM_COLOR, 0xFF00FF);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
+
+  notification_led_op_e op;
+  int argb = 0;
+  ret = notification_get_led(noti, &op, &argb);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
+  EXPECT_EQ(op, NOTIFICATION_LED_OP_ON_CUSTOM_COLOR);
+  EXPECT_EQ(argb, 0xFF00FF);
+
+  notification_free(noti);
+}
+
+TEST_F(NotificationTest, SetGetLedOff) {
+  notification_h noti = notification_create(NOTIFICATION_TYPE_NOTI);
+  ASSERT_NE(noti, nullptr);
+
+  int ret = notification_set_led(noti, NOTIFICATION_LED_OP_OFF, 0);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
+
+  notification_led_op_e op;
+  int argb = 0;
+  ret = notification_get_led(noti, &op, &argb);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
+  EXPECT_EQ(op, NOTIFICATION_LED_OP_OFF);
+
+  notification_free(noti);
+}
+
+TEST_F(NotificationTest, SetGetLedTimePeriodValues) {
+  notification_h noti = notification_create(NOTIFICATION_TYPE_NOTI);
+  ASSERT_NE(noti, nullptr);
+
+  int ret = notification_set_led_time_period(noti, 500, 1000);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
+
+  int on_ms = 0, off_ms = 0;
+  ret = notification_get_led_time_period(noti, &on_ms, &off_ms);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
+  EXPECT_EQ(on_ms, 500);
+  EXPECT_EQ(off_ms, 1000);
+
+  notification_free(noti);
+}
+
+TEST_F(NotificationTest, SetLedTimePeriodNullNoti) {
+  int ret = notification_set_led_time_period(nullptr, 100, 200);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_INVALID_PARAMETER);
+}
+
+TEST_F(NotificationTest, GetLedTimePeriodNullNoti) {
+  int on_ms, off_ms;
+  int ret = notification_get_led_time_period(nullptr, &on_ms, &off_ms);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_INVALID_PARAMETER);
+}
+
+/* LY_SET: All layout types */
+TEST_F(NotificationTest, SetGetLayoutAllTypes) {
+  notification_h noti = notification_create(NOTIFICATION_TYPE_NOTI);
+  ASSERT_NE(noti, nullptr);
+
+  const notification_ly_type_e layouts[] = {
+      NOTIFICATION_LY_NONE,
+      NOTIFICATION_LY_NOTI_EVENT_SINGLE,
+      NOTIFICATION_LY_NOTI_EVENT_MULTIPLE,
+      NOTIFICATION_LY_NOTI_THUMBNAIL,
+      NOTIFICATION_LY_ONGOING_EVENT,
+      NOTIFICATION_LY_ONGOING_PROGRESS,
+      NOTIFICATION_LY_EXTENSION};
+
+  for (auto ly : layouts) {
+    int ret = notification_set_layout(noti, ly);
+    EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
+
+    notification_ly_type_e out;
+    ret = notification_get_layout(noti, &out);
+    EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
+    EXPECT_EQ(out, ly);
+  }
+
+  notification_free(noti);
+}
+
+/* EVT: All event handler types */
+TEST_F(NotificationTest, SetGetEventHandlerAllTypes) {
+  notification_h noti = notification_create(NOTIFICATION_TYPE_NOTI);
+  ASSERT_NE(noti, nullptr);
+
+  const notification_event_type_e events[] = {
+      NOTIFICATION_EVENT_TYPE_CLICK_ON_BUTTON_1,
+      NOTIFICATION_EVENT_TYPE_CLICK_ON_BUTTON_2,
+      NOTIFICATION_EVENT_TYPE_CLICK_ON_BUTTON_3,
+      NOTIFICATION_EVENT_TYPE_CLICK_ON_BUTTON_4,
+      NOTIFICATION_EVENT_TYPE_CLICK_ON_BUTTON_5,
+      NOTIFICATION_EVENT_TYPE_CLICK_ON_BUTTON_6,
+      NOTIFICATION_EVENT_TYPE_CLICK_ON_ICON,
+      NOTIFICATION_EVENT_TYPE_CLICK_ON_THUMBNAIL,
+      NOTIFICATION_EVENT_TYPE_CLICK_ON_TEXT_INPUT_BUTTON,
+      NOTIFICATION_EVENT_TYPE_CLICK_ON_BUTTON_7,
+      NOTIFICATION_EVENT_TYPE_CLICK_ON_BUTTON_8,
+      NOTIFICATION_EVENT_TYPE_CLICK_ON_BUTTON_9,
+      NOTIFICATION_EVENT_TYPE_CLICK_ON_BUTTON_10};
+
+  for (auto ev : events) {
+    app_control_h ac;
+    app_control_create(&ac);
+    app_control_set_app_id(ac, "org.tizen.testapp");
+    int ret = notification_set_event_handler(noti, ev, ac);
+    EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
+    app_control_destroy(ac);
+
+    app_control_h out;
+    ret = notification_get_event_handler(noti, ev, &out);
+    EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
+    app_control_destroy(out);
+  }
+
+  notification_free(noti);
+}
+
+/* PROP: Multiple property flags */
+TEST_F(NotificationTest, SetGetPropertyMultipleFlags) {
+  notification_h noti = notification_create(NOTIFICATION_TYPE_NOTI);
+  ASSERT_NE(noti, nullptr);
+
+  int flags = NOTIFICATION_PROP_PERMANENT_DISPLAY |
+              NOTIFICATION_PROP_DISABLE_AUTO_DELETE;
+  int ret = notification_set_property(noti, flags);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
+
+  int out = 0;
+  ret = notification_get_property(noti, &out);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
+  EXPECT_EQ(out, flags);
+
+  notification_free(noti);
+}
+
+/* DISP_SET_P_02: Multiple display targets */
+TEST_F(NotificationTest, SetGetDisplayApplistMultiple) {
+  notification_h noti = notification_create(NOTIFICATION_TYPE_NOTI);
+  ASSERT_NE(noti, nullptr);
+
+  int applist = NOTIFICATION_DISPLAY_APP_NOTIFICATION_TRAY |
+                NOTIFICATION_DISPLAY_APP_INDICATOR |
+                NOTIFICATION_DISPLAY_APP_LOCK;
+  int ret = notification_set_display_applist(noti, applist);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
+
+  int out = 0;
+  ret = notification_get_display_applist(noti, &out);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
+  EXPECT_EQ(out, applist);
+
+  notification_free(noti);
+}
+
+/* PROG_SET_P_02: Progress bounds */
+TEST_F(NotificationTest, SetGetProgressZero) {
+  notification_h noti = notification_create(NOTIFICATION_TYPE_NOTI);
+  ASSERT_NE(noti, nullptr);
+
+  int ret = notification_set_progress(noti, 0.0);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
+
+  double val = -1;
+  ret = notification_get_progress(noti, &val);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
+  EXPECT_DOUBLE_EQ(val, 0.0);
+
+  notification_free(noti);
+}
+
+TEST_F(NotificationTest, SetGetProgressFull) {
+  notification_h noti = notification_create(NOTIFICATION_TYPE_NOTI);
+  ASSERT_NE(noti, nullptr);
+
+  int ret = notification_set_progress(noti, 1.0);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
+
+  double val = 0;
+  ret = notification_get_progress(noti, &val);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
+  EXPECT_DOUBLE_EQ(val, 1.0);
+
+  notification_free(noti);
+}
+
+TEST_F(NotificationTest, SetGetSizeValues) {
+  notification_h noti = notification_create(NOTIFICATION_TYPE_NOTI);
+  ASSERT_NE(noti, nullptr);
+
+  int ret = notification_set_size(noti, 0.0);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
+
+  double val = -1;
+  ret = notification_get_size(noti, &val);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
+  EXPECT_DOUBLE_EQ(val, 0.0);
+
+  ret = notification_set_size(noti, 1024.5);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
+
+  ret = notification_get_size(noti, &val);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
+  EXPECT_DOUBLE_EQ(val, 1024.5);
+
+  notification_free(noti);
+}
+
+/* CLONE_P_01: Clone with full field verification */
+TEST_F(NotificationTest, ClonePreservesAllFields) {
+  notification_h noti = notification_create(NOTIFICATION_TYPE_NOTI);
+  ASSERT_NE(noti, nullptr);
+
+  notification_set_text(noti, NOTIFICATION_TEXT_TYPE_TITLE,
+      "clone_title", NULL, NOTIFICATION_VARIABLE_TYPE_NONE);
+  notification_set_text(noti, NOTIFICATION_TEXT_TYPE_CONTENT,
+      "clone_content", NULL, NOTIFICATION_VARIABLE_TYPE_NONE);
+  notification_set_image(noti, NOTIFICATION_IMAGE_TYPE_ICON,
+      "/opt/usr/data/clone.png");
+  notification_set_sound(noti, NOTIFICATION_SOUND_TYPE_USER_DATA,
+      "/opt/usr/data/clone.wav");
+  notification_set_vibration(noti, NOTIFICATION_VIBRATION_TYPE_DEFAULT, NULL);
+  notification_set_led(noti, NOTIFICATION_LED_OP_ON_CUSTOM_COLOR, 0xABCDEF);
+  notification_set_led_time_period(noti, 300, 600);
+  notification_set_property(noti, NOTIFICATION_PROP_PERMANENT_DISPLAY);
+  notification_set_layout(noti, NOTIFICATION_LY_NOTI_EVENT_MULTIPLE);
+  notification_set_tag(noti, "clone_tag");
+  notification_set_display_applist(noti,
+      NOTIFICATION_DISPLAY_APP_NOTIFICATION_TRAY);
+  notification_set_progress(noti, 0.75);
+  notification_set_size(noti, 512.0);
+  notification_set_auto_remove(noti, false);
+  notification_set_extension_image_size(noti, 50);
+
+  notification_h cloned = nullptr;
+  int ret = notification_clone(noti, &cloned);
+  ASSERT_EQ(ret, NOTIFICATION_ERROR_NONE);
+  ASSERT_NE(cloned, nullptr);
+
+  char* title = nullptr;
+  notification_get_text(cloned, NOTIFICATION_TEXT_TYPE_TITLE, &title);
+  EXPECT_STREQ(title, "clone_title");
+
+  char* content = nullptr;
+  notification_get_text(cloned, NOTIFICATION_TEXT_TYPE_CONTENT, &content);
+  EXPECT_STREQ(content, "clone_content");
+
+  char* icon = nullptr;
+  notification_get_image(cloned, NOTIFICATION_IMAGE_TYPE_ICON, &icon);
+  EXPECT_STREQ(icon, "/opt/usr/data/clone.png");
+
+  notification_sound_type_e snd_type;
+  const char* snd_path = nullptr;
+  notification_get_sound(cloned, &snd_type, &snd_path);
+  EXPECT_EQ(snd_type, NOTIFICATION_SOUND_TYPE_USER_DATA);
+
+  notification_led_op_e led_op;
+  int led_argb = 0;
+  notification_get_led(cloned, &led_op, &led_argb);
+  EXPECT_EQ(led_op, NOTIFICATION_LED_OP_ON_CUSTOM_COLOR);
+  EXPECT_EQ(led_argb, 0xABCDEF);
+
+  int on_ms = 0, off_ms = 0;
+  notification_get_led_time_period(cloned, &on_ms, &off_ms);
+  EXPECT_EQ(on_ms, 300);
+  EXPECT_EQ(off_ms, 600);
+
+  int prop = 0;
+  notification_get_property(cloned, &prop);
+  EXPECT_EQ(prop, NOTIFICATION_PROP_PERMANENT_DISPLAY);
+
+  notification_ly_type_e ly;
+  notification_get_layout(cloned, &ly);
+  EXPECT_EQ(ly, NOTIFICATION_LY_NOTI_EVENT_MULTIPLE);
+
+  const char* tag = nullptr;
+  notification_get_tag(cloned, &tag);
+  EXPECT_STREQ(tag, "clone_tag");
+
+  double prog = 0;
+  notification_get_progress(cloned, &prog);
+  EXPECT_DOUBLE_EQ(prog, 0.75);
+
+  double sz = 0;
+  notification_get_size(cloned, &sz);
+  EXPECT_DOUBLE_EQ(sz, 512.0);
+
+  bool auto_rm = true;
+  notification_get_auto_remove(cloned, &auto_rm);
+  EXPECT_FALSE(auto_rm);
+
+  int ext_sz = 0;
+  notification_get_extension_image_size(cloned, &ext_sz);
+  EXPECT_EQ(ext_sz, 50);
+
+  notification_free(cloned);
+  notification_free(noti);
+}
+
+/* TAG: Set then overwrite */
+TEST_F(NotificationTest, SetTagOverwrite) {
+  notification_h noti = notification_create(NOTIFICATION_TYPE_NOTI);
+  ASSERT_NE(noti, nullptr);
+
+  notification_set_tag(noti, "mytag");
+  int ret = notification_set_tag(noti, "newtag");
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
+
+  const char* tag = nullptr;
+  ret = notification_get_tag(noti, &tag);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
+  EXPECT_STREQ(tag, "newtag");
+
+  notification_free(noti);
+}
+
+/* BTN: All button indices */
+TEST_F(NotificationTest, AddRemoveButtonAllIndices) {
+  notification_h noti = notification_create(NOTIFICATION_TYPE_NOTI);
+  ASSERT_NE(noti, nullptr);
+
+  const notification_button_index_e buttons[] = {
+      NOTIFICATION_BUTTON_1, NOTIFICATION_BUTTON_2, NOTIFICATION_BUTTON_3,
+      NOTIFICATION_BUTTON_4, NOTIFICATION_BUTTON_5, NOTIFICATION_BUTTON_6,
+      NOTIFICATION_BUTTON_7, NOTIFICATION_BUTTON_8, NOTIFICATION_BUTTON_9,
+      NOTIFICATION_BUTTON_10};
+  for (auto btn : buttons) {
+    int ret = notification_add_button(noti, btn);
+    EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
+  }
+  for (auto btn : buttons) {
+    int ret = notification_remove_button(noti, btn);
+    EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
+  }
+
+  notification_free(noti);
+}
+
+/* CREATE: Type ONGOING */
+TEST_F(NotificationTest, CreateOngoing) {
+  notification_h noti = notification_create(NOTIFICATION_TYPE_ONGOING);
+  ASSERT_NE(noti, nullptr);
+
+  notification_type_e type;
+  int ret = notification_get_type(noti, &type);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
+  EXPECT_EQ(type, NOTIFICATION_TYPE_ONGOING);
+
+  notification_free(noti);
+}
+
+/* AutoRemove: false then true */
+TEST_F(NotificationTest, SetAutoRemoveFalseThenTrue) {
+  notification_h noti = notification_create(NOTIFICATION_TYPE_NOTI);
+  ASSERT_NE(noti, nullptr);
+
+  notification_set_auto_remove(noti, false);
+  bool val = true;
+  notification_get_auto_remove(noti, &val);
+  EXPECT_FALSE(val);
+
+  notification_set_auto_remove(noti, true);
+  notification_get_auto_remove(noti, &val);
+  EXPECT_TRUE(val);
+
+  notification_free(noti);
+}
+
+/* GetTimeNullOutput */
+TEST_F(NotificationTest, GetTimeNullOutput) {
+  int ret = notification_get_time(nullptr, nullptr);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_INVALID_PARAMETER);
+}
+
+TEST_F(NotificationTest, GetInsertTimeNullOutput) {
+  int ret = notification_get_insert_time(nullptr, nullptr);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_INVALID_PARAMETER);
+}
+
+/* SetTime DoNotShow */
+TEST_F(NotificationTest, SetTimeDoNotShow) {
+  notification_h noti = notification_create(NOTIFICATION_TYPE_NOTI);
+  ASSERT_NE(noti, nullptr);
+
+  int ret = notification_set_time(noti, NOTIFICATION_DO_NOT_SHOW_TIME_STAMP);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
+
+  time_t out = 0;
+  ret = notification_get_time(noti, &out);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
+  EXPECT_EQ(out, NOTIFICATION_DO_NOT_SHOW_TIME_STAMP);
+
+  notification_free(noti);
+}
+
+/* SetTextInput value */
+TEST_F(NotificationTest, SetTextInputMaxLength) {
+  notification_h noti = notification_create(NOTIFICATION_TYPE_NOTI);
+  ASSERT_NE(noti, nullptr);
+
+  int ret = notification_set_text_input(noti, 500);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
+
+  notification_free(noti);
+}
+
+TEST_F(NotificationTest, SetTextInputNullNoti) {
+  int ret = notification_set_text_input(nullptr, 100);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_INVALID_PARAMETER);
+}
+
+TEST_F(NotificationTest, SetTimeNullNoti) {
+  int ret = notification_set_time(nullptr, 0);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_INVALID_PARAMETER);
+}
+
+TEST_F(NotificationTest, GetTimeNullNoti) {
+  time_t t;
+  int ret = notification_get_time(nullptr, &t);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_INVALID_PARAMETER);
+}
+
+TEST_F(NotificationTest, GetInsertTimeNullNoti) {
+  time_t t;
+  int ret = notification_get_insert_time(nullptr, &t);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_INVALID_PARAMETER);
+}
+
+TEST_F(NotificationTest, GetPkgnameNullNoti) {
+  char* pkg;
+  int ret = notification_get_pkgname(nullptr, &pkg);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_INVALID_PARAMETER);
+}

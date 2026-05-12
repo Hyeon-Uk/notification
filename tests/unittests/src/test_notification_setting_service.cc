@@ -84,3 +84,74 @@ TEST_F(NotificationSettingServiceTest, noti_setting_service_get_setting_by_app_i
   int ret = noti_setting_service_get_setting_by_app_id(nullptr, nullptr, 5001);
   ASSERT_EQ(ret, NOTIFICATION_ERROR_INVALID_PARAMETER);
 }
+
+TEST_F(NotificationSettingServiceTest, noti_setting_get_setting_array_null_array) {
+  int count = 0;
+  int ret = noti_setting_get_setting_array(nullptr, &count, 5001);
+  ASSERT_EQ(ret, NOTIFICATION_ERROR_INVALID_PARAMETER);
+}
+
+TEST_F(NotificationSettingServiceTest, noti_setting_get_setting_array_null_count) {
+  notification_setting_h setting = nullptr;
+  int ret = noti_setting_get_setting_array(&setting, nullptr, 5001);
+  ASSERT_EQ(ret, NOTIFICATION_ERROR_INVALID_PARAMETER);
+}
+
+TEST_F(NotificationSettingServiceTest, noti_setting_get_setting_array_both_null) {
+  int ret = noti_setting_get_setting_array(nullptr, nullptr, 5001);
+  ASSERT_EQ(ret, NOTIFICATION_ERROR_INVALID_PARAMETER);
+}
+
+TEST_F(NotificationSettingServiceTest, noti_system_setting_load_null_setting) {
+  int ret = noti_system_setting_load_system_setting(nullptr, 5001);
+  ASSERT_EQ(ret, NOTIFICATION_ERROR_INVALID_PARAMETER);
+}
+
+TEST_F(NotificationSettingServiceTest, notification_setting_db_update_null_pkg) {
+  int ret = notification_setting_db_update(
+      nullptr, "org.tizen.app", 1, 0, 0, 1, 0, 5001);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_INVALID_PARAMETER);
+}
+
+TEST_F(NotificationSettingServiceTest, notification_setting_db_update_null_app) {
+  int ret = notification_setting_db_update(
+      "org.tizen.pkg", nullptr, 1, 0, 0, 1, 0, 5001);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_INVALID_PARAMETER);
+}
+
+TEST_F(NotificationSettingServiceTest, notification_setting_delete_package_null_pkg) {
+  EXPECT_CALL(GetMock<SqliteMock>(), sqlite3_open_v2(_, _, _, _))
+    .WillRepeatedly(Invoke(__fake_sqlite3_open_v2));
+  EXPECT_CALL(GetMock<SqliteMock>(), sqlite3_close(_))
+    .WillRepeatedly(Return(SQLITE_OK));
+  EXPECT_CALL(GetMock<SqliteMock>(), sqlite3_prepare_v2(_, _, _, _, _))
+    .WillRepeatedly(Return(SQLITE_OK));
+  EXPECT_CALL(GetMock<SqliteMock>(), sqlite3_step(_))
+    .WillRepeatedly(Return(SQLITE_DONE));
+  EXPECT_CALL(GetMock<SqliteMock>(), sqlite3_changes(_))
+    .WillRepeatedly(Return(1));
+
+  int ret = notification_setting_delete_package_for_uid(nullptr, 5001);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
+}
+
+TEST_F(NotificationSettingServiceTest, noti_system_setting_get_do_not_disturb_null_dnd) {
+  int ret = noti_system_setting_get_do_not_disturb(nullptr, 5001);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_INVALID_PARAMETER);
+}
+
+TEST_F(NotificationSettingServiceTest, notification_setting_db_update_do_not_disturb_values) {
+  EXPECT_CALL(GetMock<SqliteMock>(), sqlite3_open_v2(_, _, _, _))
+    .WillRepeatedly(Invoke(__fake_sqlite3_open_v2));
+  EXPECT_CALL(GetMock<SqliteMock>(), sqlite3_close(_))
+    .WillRepeatedly(Return(SQLITE_OK));
+  EXPECT_CALL(GetMock<SqliteMock>(), sqlite3_prepare_v2(_, _, _, _, _))
+    .WillRepeatedly(Return(SQLITE_OK));
+  EXPECT_CALL(GetMock<SqliteMock>(), sqlite3_step(_))
+    .WillRepeatedly(Return(SQLITE_DONE));
+  EXPECT_CALL(GetMock<SqliteMock>(), sqlite3_changes(_))
+    .WillRepeatedly(Return(1));
+
+  int ret = notification_setting_db_update_do_not_disturb(1, 5001);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
+}

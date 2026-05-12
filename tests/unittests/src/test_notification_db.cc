@@ -113,3 +113,60 @@ TEST_F(NotificationDBTest, notification_db_test) {
   ret = notification_db_close(&db);
   ASSERT_EQ(ret, NOTIFICATION_ERROR_NONE);
 }
+
+TEST_F(NotificationDBTest, notification_db_close_null) {
+  int ret = notification_db_close(nullptr);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_INVALID_PARAMETER);
+}
+
+TEST_F(NotificationDBTest, notification_db_close_null_ptr) {
+  sqlite3* db = nullptr;
+  int ret = notification_db_close(&db);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_INVALID_PARAMETER);
+}
+
+TEST_F(NotificationDBTest, notification_db_exec_null_db) {
+  int num_changed = 0;
+  int ret = notification_db_exec(nullptr, "query", &num_changed);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_INVALID_PARAMETER);
+}
+
+TEST_F(NotificationDBTest, notification_db_exec_null_query) {
+  EXPECT_CALL(GetMock<SqliteMock>(), sqlite3_open_v2(_, _, _, _))
+    .WillRepeatedly(Invoke(__fake_sqlite3_open_v2));
+  EXPECT_CALL(GetMock<SqliteMock>(), sqlite3_close(_))
+    .WillOnce(Return(SQLITE_OK));
+
+  sqlite3* db = notification_db_open();
+  ASSERT_NE(db, nullptr);
+
+  int num_changed = 0;
+  int ret = notification_db_exec(db, nullptr, &num_changed);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_INVALID_PARAMETER);
+
+  notification_db_close(&db);
+}
+
+TEST_F(NotificationDBTest, notification_db_column_text_null_stmt) {
+  char* text = notification_db_column_text(nullptr, 0);
+  EXPECT_EQ(text, nullptr);
+}
+
+TEST_F(NotificationDBTest, notification_db_column_bundle_null_stmt) {
+  bundle* b = notification_db_column_bundle(nullptr, 0);
+  EXPECT_EQ(b, nullptr);
+}
+
+TEST_F(NotificationDBTest, notification_db_open_close_cycle) {
+  EXPECT_CALL(GetMock<SqliteMock>(), sqlite3_open_v2(_, _, _, _))
+    .WillRepeatedly(Invoke(__fake_sqlite3_open_v2));
+  EXPECT_CALL(GetMock<SqliteMock>(), sqlite3_close(_))
+    .WillOnce(Return(SQLITE_OK));
+
+  sqlite3* db = notification_db_open();
+  ASSERT_NE(db, nullptr);
+
+  int ret = notification_db_close(&db);
+  ASSERT_EQ(ret, NOTIFICATION_ERROR_NONE);
+  EXPECT_EQ(db, nullptr);
+}

@@ -53,13 +53,27 @@ TEST_F(NotificationOngoingTest, notification_ongoing_test) {
 
   ret = notification_ongoing_update_cb_unset();
   ASSERT_EQ(ret, NOTIFICATION_ERROR_NONE);
+}
 
-  // ret = notification_ongoing_update_progress("org.tizen.caller_appid", 1, 10.0);
-  // ASSERT_EQ(ret, NOTIFICATION_ERROR_NONE);
+TEST_F(NotificationOngoingTest, notification_ongoing_cb_set_with_callback) {
+  int ret = notification_ongoing_update_cb_set(__notification_ongoing_update_cb, nullptr);
+  ASSERT_EQ(ret, NOTIFICATION_ERROR_NONE);
 
-  // ret = notification_ongoing_update_size("org.tizen.caller_appid", 1, 10.0);
-  // ASSERT_EQ(ret, NOTIFICATION_ERROR_NONE);
+  ret = notification_ongoing_update_cb_unset();
+  ASSERT_EQ(ret, NOTIFICATION_ERROR_NONE);
+}
 
-  // ret = notification_ongoing_update_content("org.tizen.caller_appid", 1, "test_content");
-  // ASSERT_EQ(ret, NOTIFICATION_ERROR_NONE);
+TEST_F(NotificationOngoingTest, notification_ongoing_cb_set_unset_cycle) {
+  for (int i = 0; i < 3; i++) {
+    int ret = notification_ongoing_update_cb_set(__notification_ongoing_update_cb, nullptr);
+    ASSERT_EQ(ret, NOTIFICATION_ERROR_NONE);
+
+    ret = notification_ongoing_update_cb_unset();
+    ASSERT_EQ(ret, NOTIFICATION_ERROR_NONE);
+  }
+}
+
+TEST_F(NotificationOngoingTest, notification_ongoing_unset_without_set) {
+  int ret = notification_ongoing_update_cb_unset();
+  ASSERT_EQ(ret, NOTIFICATION_ERROR_NONE);
 }

@@ -917,3 +917,545 @@ TEST_F(NotificationInternalTest, notification_insert_for_uid_null_noti) {
   int ret = notification_insert_for_uid(nullptr, &priv_id, 5001);
   ASSERT_EQ(ret, NOTIFICATION_ERROR_INVALID_PARAMETER);
 }
+
+/* 20. Ongoing value type - all types */
+TEST_F(NotificationInternalTest, notification_set_ongoing_value_type_percent) {
+  EXPECT_CALL(GetMock<AulMock>(), aul_app_get_appid_bypid(_, _, _))
+      .WillRepeatedly(Invoke(__fake_aul_app_get_appid_bypid));
+
+  notification_h noti = notification_create(NOTIFICATION_TYPE_NOTI);
+  ASSERT_NE(noti, nullptr);
+
+  int ret = notification_set_ongoing_value_type(noti, NOTIFICATION_ONGOING_VALUE_TYPE_PERCENT);
+  ASSERT_EQ(ret, NOTIFICATION_ERROR_NONE);
+
+  notification_ongoing_value_type_e type;
+  ret = notification_get_ongoing_value_type(noti, &type);
+  ASSERT_EQ(ret, NOTIFICATION_ERROR_NONE);
+  EXPECT_EQ(type, NOTIFICATION_ONGOING_VALUE_TYPE_PERCENT);
+
+  notification_free(noti);
+}
+
+TEST_F(NotificationInternalTest, notification_get_ongoing_value_type_null_output) {
+  EXPECT_CALL(GetMock<AulMock>(), aul_app_get_appid_bypid(_, _, _))
+      .WillRepeatedly(Invoke(__fake_aul_app_get_appid_bypid));
+
+  notification_h noti = notification_create(NOTIFICATION_TYPE_NOTI);
+  ASSERT_NE(noti, nullptr);
+
+  int ret = notification_get_ongoing_value_type(noti, nullptr);
+  ASSERT_EQ(ret, NOTIFICATION_ERROR_INVALID_PARAMETER);
+
+  notification_free(noti);
+}
+
+/* 21. Ongoing time - edge cases */
+TEST_F(NotificationInternalTest, notification_set_ongoing_time_zero) {
+  EXPECT_CALL(GetMock<AulMock>(), aul_app_get_appid_bypid(_, _, _))
+      .WillRepeatedly(Invoke(__fake_aul_app_get_appid_bypid));
+
+  notification_h noti = notification_create(NOTIFICATION_TYPE_NOTI);
+  ASSERT_NE(noti, nullptr);
+
+  int ret = notification_set_ongoing_time(noti, 0, 0);
+  ASSERT_EQ(ret, NOTIFICATION_ERROR_NONE);
+
+  int current = -1, duration = -1;
+  ret = notification_get_ongoing_time(noti, &current, &duration);
+  ASSERT_EQ(ret, NOTIFICATION_ERROR_NONE);
+  EXPECT_EQ(current, 0);
+  EXPECT_EQ(duration, 0);
+
+  notification_free(noti);
+}
+
+TEST_F(NotificationInternalTest, notification_get_ongoing_time_null_output) {
+  EXPECT_CALL(GetMock<AulMock>(), aul_app_get_appid_bypid(_, _, _))
+      .WillRepeatedly(Invoke(__fake_aul_app_get_appid_bypid));
+
+  notification_h noti = notification_create(NOTIFICATION_TYPE_NOTI);
+  ASSERT_NE(noti, nullptr);
+
+  int ret = notification_get_ongoing_time(noti, nullptr, nullptr);
+  ASSERT_EQ(ret, NOTIFICATION_ERROR_INVALID_PARAMETER);
+
+  notification_free(noti);
+}
+
+/* 22. Hide/delete timeout - values and null outputs */
+TEST_F(NotificationInternalTest, notification_set_hide_timeout_zero) {
+  EXPECT_CALL(GetMock<AulMock>(), aul_app_get_appid_bypid(_, _, _))
+      .WillRepeatedly(Invoke(__fake_aul_app_get_appid_bypid));
+
+  notification_h noti = notification_create(NOTIFICATION_TYPE_NOTI);
+  ASSERT_NE(noti, nullptr);
+
+  int ret = notification_set_hide_timeout(noti, 0);
+  ASSERT_EQ(ret, NOTIFICATION_ERROR_NONE);
+
+  int timeout = -1;
+  ret = notification_get_hide_timeout(noti, &timeout);
+  ASSERT_EQ(ret, NOTIFICATION_ERROR_NONE);
+  EXPECT_EQ(timeout, 0);
+
+  notification_free(noti);
+}
+
+TEST_F(NotificationInternalTest, notification_get_hide_timeout_null_output) {
+  EXPECT_CALL(GetMock<AulMock>(), aul_app_get_appid_bypid(_, _, _))
+      .WillRepeatedly(Invoke(__fake_aul_app_get_appid_bypid));
+
+  notification_h noti = notification_create(NOTIFICATION_TYPE_NOTI);
+  ASSERT_NE(noti, nullptr);
+
+  int ret = notification_get_hide_timeout(noti, nullptr);
+  ASSERT_EQ(ret, NOTIFICATION_ERROR_INVALID_PARAMETER);
+
+  notification_free(noti);
+}
+
+TEST_F(NotificationInternalTest, notification_set_delete_timeout_zero) {
+  EXPECT_CALL(GetMock<AulMock>(), aul_app_get_appid_bypid(_, _, _))
+      .WillRepeatedly(Invoke(__fake_aul_app_get_appid_bypid));
+
+  notification_h noti = notification_create(NOTIFICATION_TYPE_NOTI);
+  ASSERT_NE(noti, nullptr);
+
+  int ret = notification_set_delete_timeout(noti, 0);
+  ASSERT_EQ(ret, NOTIFICATION_ERROR_NONE);
+
+  int timeout = -1;
+  ret = notification_get_delete_timeout(noti, &timeout);
+  ASSERT_EQ(ret, NOTIFICATION_ERROR_NONE);
+  EXPECT_EQ(timeout, 0);
+
+  notification_free(noti);
+}
+
+TEST_F(NotificationInternalTest, notification_get_delete_timeout_null_output) {
+  EXPECT_CALL(GetMock<AulMock>(), aul_app_get_appid_bypid(_, _, _))
+      .WillRepeatedly(Invoke(__fake_aul_app_get_appid_bypid));
+
+  notification_h noti = notification_create(NOTIFICATION_TYPE_NOTI);
+  ASSERT_NE(noti, nullptr);
+
+  int ret = notification_get_delete_timeout(noti, nullptr);
+  ASSERT_EQ(ret, NOTIFICATION_ERROR_INVALID_PARAMETER);
+
+  notification_free(noti);
+}
+
+/* 23. Text input max length - set and get */
+TEST_F(NotificationInternalTest, notification_set_get_text_input_max_length) {
+  EXPECT_CALL(GetMock<AulMock>(), aul_app_get_appid_bypid(_, _, _))
+      .WillRepeatedly(Invoke(__fake_aul_app_get_appid_bypid));
+
+  notification_h noti = notification_create(NOTIFICATION_TYPE_NOTI);
+  ASSERT_NE(noti, nullptr);
+
+  int ret = notification_set_text_input(noti, 200);
+  ASSERT_EQ(ret, NOTIFICATION_ERROR_NONE);
+
+  int max_length = 0;
+  ret = notification_get_text_input_max_length(noti, &max_length);
+  ASSERT_EQ(ret, NOTIFICATION_ERROR_NONE);
+  EXPECT_EQ(max_length, 200);
+
+  notification_free(noti);
+}
+
+/* 25. Extension data - multiple keys */
+TEST_F(NotificationInternalTest, notification_set_extension_data_multiple_keys) {
+  EXPECT_CALL(GetMock<AulMock>(), aul_app_get_appid_bypid(_, _, _))
+      .WillRepeatedly(Invoke(__fake_aul_app_get_appid_bypid));
+
+  notification_h noti = notification_create(NOTIFICATION_TYPE_NOTI);
+  ASSERT_NE(noti, nullptr);
+
+  bundle* b1 = bundle_create();
+  bundle_add_str(b1, "k1", "v1");
+  int ret = notification_set_extension_data(noti, "ext1", b1);
+  ASSERT_EQ(ret, NOTIFICATION_ERROR_NONE);
+  bundle_free(b1);
+
+  bundle* b2 = bundle_create();
+  bundle_add_str(b2, "k2", "v2");
+  ret = notification_set_extension_data(noti, "ext2", b2);
+  ASSERT_EQ(ret, NOTIFICATION_ERROR_NONE);
+  bundle_free(b2);
+
+  bundle* out1 = nullptr;
+  ret = notification_get_extension_data(noti, "ext1", &out1);
+  ASSERT_EQ(ret, NOTIFICATION_ERROR_NONE);
+  ASSERT_NE(out1, nullptr);
+  bundle_free(out1);
+
+  bundle* out2 = nullptr;
+  ret = notification_get_extension_data(noti, "ext2", &out2);
+  ASSERT_EQ(ret, NOTIFICATION_ERROR_NONE);
+  ASSERT_NE(out2, nullptr);
+  bundle_free(out2);
+
+  notification_free(noti);
+}
+
+/* 26. Extension data - null bundle */
+TEST_F(NotificationInternalTest, notification_set_extension_data_null_bundle) {
+  EXPECT_CALL(GetMock<AulMock>(), aul_app_get_appid_bypid(_, _, _))
+      .WillRepeatedly(Invoke(__fake_aul_app_get_appid_bypid));
+
+  notification_h noti = notification_create(NOTIFICATION_TYPE_NOTI);
+  ASSERT_NE(noti, nullptr);
+
+  int ret = notification_set_extension_data(noti, "key", nullptr);
+  ASSERT_EQ(ret, NOTIFICATION_ERROR_INVALID_PARAMETER);
+
+  notification_free(noti);
+}
+
+/* 27. Get extension data - nonexistent key */
+TEST_F(NotificationInternalTest, notification_get_extension_data_nonexistent_key) {
+  EXPECT_CALL(GetMock<AulMock>(), aul_app_get_appid_bypid(_, _, _))
+      .WillRepeatedly(Invoke(__fake_aul_app_get_appid_bypid));
+
+  notification_h noti = notification_create(NOTIFICATION_TYPE_NOTI);
+  ASSERT_NE(noti, nullptr);
+
+  bundle* out = nullptr;
+  int ret = notification_get_extension_data(noti, "nonexistent", &out);
+  EXPECT_NE(ret, NOTIFICATION_ERROR_NONE);
+
+  notification_free(noti);
+}
+
+/* 28. Get extension data null output */
+TEST_F(NotificationInternalTest, notification_get_extension_data_null_output) {
+  EXPECT_CALL(GetMock<AulMock>(), aul_app_get_appid_bypid(_, _, _))
+      .WillRepeatedly(Invoke(__fake_aul_app_get_appid_bypid));
+
+  notification_h noti = notification_create(NOTIFICATION_TYPE_NOTI);
+  ASSERT_NE(noti, nullptr);
+
+  int ret = notification_get_extension_data(noti, "key", nullptr);
+  ASSERT_EQ(ret, NOTIFICATION_ERROR_INVALID_PARAMETER);
+
+  notification_free(noti);
+}
+
+/* 29. App label - overwrite */
+TEST_F(NotificationInternalTest, notification_set_app_label_overwrite) {
+  EXPECT_CALL(GetMock<AulMock>(), aul_app_get_appid_bypid(_, _, _))
+      .WillRepeatedly(Invoke(__fake_aul_app_get_appid_bypid));
+
+  notification_h noti = notification_create(NOTIFICATION_TYPE_NOTI);
+  ASSERT_NE(noti, nullptr);
+
+  notification_set_app_label(noti, const_cast<char*>("First"));
+  notification_set_app_label(noti, const_cast<char*>("Second"));
+
+  char* label = nullptr;
+  notification_get_app_label(noti, &label);
+  EXPECT_STREQ(label, "Second");
+
+  notification_free(noti);
+}
+
+/* 30. Pairing type - toggle false */
+TEST_F(NotificationInternalTest, notification_set_pairing_type_false) {
+  EXPECT_CALL(GetMock<AulMock>(), aul_app_get_appid_bypid(_, _, _))
+      .WillRepeatedly(Invoke(__fake_aul_app_get_appid_bypid));
+
+  notification_h noti = notification_create(NOTIFICATION_TYPE_NOTI);
+  ASSERT_NE(noti, nullptr);
+
+  notification_set_pairing_type(noti, true);
+  notification_set_pairing_type(noti, false);
+
+  bool pairing = true;
+  notification_get_pairing_type(noti, &pairing);
+  EXPECT_FALSE(pairing);
+
+  notification_free(noti);
+}
+
+TEST_F(NotificationInternalTest, notification_get_pairing_type_null_output) {
+  EXPECT_CALL(GetMock<AulMock>(), aul_app_get_appid_bypid(_, _, _))
+      .WillRepeatedly(Invoke(__fake_aul_app_get_appid_bypid));
+
+  notification_h noti = notification_create(NOTIFICATION_TYPE_NOTI);
+  ASSERT_NE(noti, nullptr);
+
+  int ret = notification_get_pairing_type(noti, nullptr);
+  ASSERT_EQ(ret, NOTIFICATION_ERROR_INVALID_PARAMETER);
+
+  notification_free(noti);
+}
+
+/* 31. Channel name - overwrite and null */
+TEST_F(NotificationInternalTest, notification_set_channel_name_overwrite) {
+  EXPECT_CALL(GetMock<AulMock>(), aul_app_get_appid_bypid(_, _, _))
+      .WillRepeatedly(Invoke(__fake_aul_app_get_appid_bypid));
+
+  notification_h noti = notification_create(NOTIFICATION_TYPE_NOTI);
+  ASSERT_NE(noti, nullptr);
+
+  notification_set_channel_name(noti, "ch1");
+  notification_set_channel_name(noti, "ch2");
+
+  const char* name = nullptr;
+  notification_get_channel_name(noti, &name);
+  EXPECT_STREQ(name, "ch2");
+
+  notification_free(noti);
+}
+
+TEST_F(NotificationInternalTest, notification_get_channel_name_null_output) {
+  EXPECT_CALL(GetMock<AulMock>(), aul_app_get_appid_bypid(_, _, _))
+      .WillRepeatedly(Invoke(__fake_aul_app_get_appid_bypid));
+
+  notification_h noti = notification_create(NOTIFICATION_TYPE_NOTI);
+  ASSERT_NE(noti, nullptr);
+
+  int ret = notification_get_channel_name(noti, nullptr);
+  ASSERT_EQ(ret, NOTIFICATION_ERROR_INVALID_PARAMETER);
+
+  notification_free(noti);
+}
+
+/* 32. Check box - toggle states */
+TEST_F(NotificationInternalTest, notification_set_check_box_false_false) {
+  EXPECT_CALL(GetMock<AulMock>(), aul_app_get_appid_bypid(_, _, _))
+      .WillRepeatedly(Invoke(__fake_aul_app_get_appid_bypid));
+
+  notification_h noti = notification_create(NOTIFICATION_TYPE_NOTI);
+  ASSERT_NE(noti, nullptr);
+
+  int ret = notification_set_check_box(noti, false, false);
+  ASSERT_EQ(ret, NOTIFICATION_ERROR_NONE);
+
+  bool flag = true, checked = true;
+  ret = notification_get_check_box(noti, &flag, &checked);
+  ASSERT_EQ(ret, NOTIFICATION_ERROR_NONE);
+  EXPECT_FALSE(flag);
+  EXPECT_FALSE(checked);
+
+  notification_free(noti);
+}
+
+TEST_F(NotificationInternalTest, notification_set_check_box_checked_toggle) {
+  EXPECT_CALL(GetMock<AulMock>(), aul_app_get_appid_bypid(_, _, _))
+      .WillRepeatedly(Invoke(__fake_aul_app_get_appid_bypid));
+
+  notification_h noti = notification_create(NOTIFICATION_TYPE_NOTI);
+  ASSERT_NE(noti, nullptr);
+
+  notification_set_check_box(noti, true, true);
+  notification_set_check_box_checked(noti, false);
+
+  bool checked = true;
+  notification_get_check_box_checked(noti, &checked);
+  EXPECT_FALSE(checked);
+
+  notification_free(noti);
+}
+
+TEST_F(NotificationInternalTest, notification_get_check_box_checked_null_output) {
+  EXPECT_CALL(GetMock<AulMock>(), aul_app_get_appid_bypid(_, _, _))
+      .WillRepeatedly(Invoke(__fake_aul_app_get_appid_bypid));
+
+  notification_h noti = notification_create(NOTIFICATION_TYPE_NOTI);
+  ASSERT_NE(noti, nullptr);
+
+  int ret = notification_get_check_box_checked(noti, nullptr);
+  ASSERT_EQ(ret, NOTIFICATION_ERROR_INVALID_PARAMETER);
+
+  notification_free(noti);
+}
+
+/* 33. Default button - all valid indices */
+TEST_F(NotificationInternalTest, notification_set_default_button_all_indices) {
+  EXPECT_CALL(GetMock<AulMock>(), aul_app_get_appid_bypid(_, _, _))
+      .WillRepeatedly(Invoke(__fake_aul_app_get_appid_bypid));
+
+  notification_h noti = notification_create(NOTIFICATION_TYPE_NOTI);
+  ASSERT_NE(noti, nullptr);
+
+  const notification_button_index_e btns[] = {
+      NOTIFICATION_BUTTON_1, NOTIFICATION_BUTTON_2, NOTIFICATION_BUTTON_3,
+      NOTIFICATION_BUTTON_4, NOTIFICATION_BUTTON_5, NOTIFICATION_BUTTON_6};
+
+  for (auto btn : btns) {
+    int ret = notification_set_default_button(noti, btn);
+    EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
+
+    notification_button_index_e out;
+    ret = notification_get_default_button(noti, &out);
+    EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
+    EXPECT_EQ(out, btn);
+  }
+
+  notification_free(noti);
+}
+
+/* 34. Channel create and free */
+TEST_F(NotificationInternalTest, notification_channel_create_free) {
+  EXPECT_CALL(GetMock<AulMock>(), aul_app_get_appid_bypid(_, _, _))
+      .WillRepeatedly(Invoke(__fake_aul_app_get_appid_bypid));
+
+  notification_channel_h channel = nullptr;
+  int ret = notification_channel_create("test", &channel);
+  ASSERT_EQ(ret, NOTIFICATION_ERROR_NONE);
+  ASSERT_NE(channel, nullptr);
+
+  notification_channel_free(channel);
+}
+
+TEST_F(NotificationInternalTest, notification_channel_create_null_name) {
+  notification_channel_h channel = nullptr;
+  int ret = notification_channel_create(nullptr, &channel);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_INVALID_PARAMETER);
+}
+
+TEST_F(NotificationInternalTest, notification_channel_create_null_handle) {
+  int ret = notification_channel_create("test", nullptr);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_INVALID_PARAMETER);
+}
+
+/* 35. Indirect request - valid noti */
+TEST_F(NotificationInternalTest, notification_set_indirect_request_valid) {
+  EXPECT_CALL(GetMock<AulMock>(), aul_app_get_appid_bypid(_, _, _))
+      .WillRepeatedly(Invoke(__fake_aul_app_get_appid_bypid));
+
+  notification_h noti = notification_create(NOTIFICATION_TYPE_NOTI);
+  ASSERT_NE(noti, nullptr);
+
+  int ret = notification_set_indirect_request(noti, 100, 5001);
+  ASSERT_EQ(ret, NOTIFICATION_ERROR_NONE);
+
+  notification_free(noti);
+}
+
+/* 36. UID set/get round-trip multiple values */
+TEST_F(NotificationInternalTest, notification_set_get_uid_multiple) {
+  EXPECT_CALL(GetMock<AulMock>(), aul_app_get_appid_bypid(_, _, _))
+      .WillRepeatedly(Invoke(__fake_aul_app_get_appid_bypid));
+
+  notification_h noti = notification_create(NOTIFICATION_TYPE_NOTI);
+  ASSERT_NE(noti, nullptr);
+
+  notification_set_uid(noti, 5001);
+  uid_t uid = 0;
+  notification_get_uid(noti, &uid);
+  EXPECT_EQ(uid, 5001);
+
+  notification_set_uid(noti, 5002);
+  notification_get_uid(noti, &uid);
+  EXPECT_EQ(uid, 5002);
+
+  notification_free(noti);
+}
+
+/* 37. Set priv_id valid */
+TEST_F(NotificationInternalTest, notification_set_priv_id_valid) {
+  EXPECT_CALL(GetMock<AulMock>(), aul_app_get_appid_bypid(_, _, _))
+      .WillRepeatedly(Invoke(__fake_aul_app_get_appid_bypid));
+
+  notification_h noti = notification_create(NOTIFICATION_TYPE_NOTI);
+  ASSERT_NE(noti, nullptr);
+
+  int ret = notification_set_priv_id(noti, 42);
+  ASSERT_EQ(ret, NOTIFICATION_ERROR_NONE);
+
+  int group_id = 0, priv_id = 0;
+  ret = notification_get_id(noti, &group_id, &priv_id);
+  ASSERT_EQ(ret, NOTIFICATION_ERROR_NONE);
+  EXPECT_EQ(priv_id, 42);
+
+  notification_free(noti);
+}
+
+/* 40. Unregister detailed changed cb - null callback */
+static void dummy_detailed_cb(void* data, notification_type_e type,
+    notification_op* op_list, int num_op) {}
+
+TEST_F(NotificationInternalTest, notification_unregister_detailed_changed_cb_null) {
+  int ret = notification_unregister_detailed_changed_cb(nullptr, nullptr);
+  ASSERT_EQ(ret, NOTIFICATION_ERROR_INVALID_PARAMETER);
+}
+
+/* 42. Deprecated set/get icon and title with valid noti */
+TEST_F(NotificationInternalTest, notification_set_get_icon_overwrite) {
+  EXPECT_CALL(GetMock<AulMock>(), aul_app_get_appid_bypid(_, _, _))
+      .WillRepeatedly(Invoke(__fake_aul_app_get_appid_bypid));
+
+  notification_h noti = notification_create(NOTIFICATION_TYPE_NOTI);
+  ASSERT_NE(noti, nullptr);
+
+  notification_set_icon(noti, "/first.png");
+  notification_set_icon(noti, "/second.png");
+
+  char* path = nullptr;
+  notification_get_icon(noti, &path);
+  EXPECT_STREQ(path, "/second.png");
+
+  notification_free(noti);
+}
+
+TEST_F(NotificationInternalTest, notification_set_get_title_loc) {
+  EXPECT_CALL(GetMock<AulMock>(), aul_app_get_appid_bypid(_, _, _))
+      .WillRepeatedly(Invoke(__fake_aul_app_get_appid_bypid));
+
+  notification_h noti = notification_create(NOTIFICATION_TYPE_NOTI);
+  ASSERT_NE(noti, nullptr);
+
+  char* loc = nullptr;
+  int ret = notification_set_title(noti, "title", "loc_title");
+  ASSERT_EQ(ret, NOTIFICATION_ERROR_NONE);
+
+  char* title = nullptr;
+  ret = notification_get_title(noti, &title, &loc);
+  ASSERT_EQ(ret, NOTIFICATION_ERROR_NONE);
+  EXPECT_STREQ(title, "title");
+
+  notification_free(noti);
+}
+
+TEST_F(NotificationInternalTest, notification_set_get_content_loc) {
+  EXPECT_CALL(GetMock<AulMock>(), aul_app_get_appid_bypid(_, _, _))
+      .WillRepeatedly(Invoke(__fake_aul_app_get_appid_bypid));
+
+  notification_h noti = notification_create(NOTIFICATION_TYPE_NOTI);
+  ASSERT_NE(noti, nullptr);
+
+  int ret = notification_set_content(noti, "content", "loc_content");
+  ASSERT_EQ(ret, NOTIFICATION_ERROR_NONE);
+
+  char* content = nullptr;
+  char* loc = nullptr;
+  ret = notification_get_content(noti, &content, &loc);
+  ASSERT_EQ(ret, NOTIFICATION_ERROR_NONE);
+  EXPECT_STREQ(content, "content");
+
+  notification_free(noti);
+}
+
+TEST_F(NotificationInternalTest, GetId) {
+  EXPECT_CALL(GetMock<AulMock>(), aul_app_get_appid_bypid(_, _, _))
+      .WillRepeatedly(Invoke(__fake_aul_app_get_appid_bypid));
+
+  notification_h noti = notification_create(NOTIFICATION_TYPE_NOTI);
+  ASSERT_NE(noti, nullptr);
+
+  int group_id = 0, priv_id = 0;
+  int ret = notification_get_id(noti, &group_id, &priv_id);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
+
+  notification_free(noti);
+}
+
+TEST_F(NotificationInternalTest, GetIdNullNoti) {
+  int group_id, priv_id;
+  int ret = notification_get_id(nullptr, &group_id, &priv_id);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_INVALID_PARAMETER);
+}

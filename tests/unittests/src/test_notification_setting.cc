@@ -20,7 +20,6 @@
 #include "mock/test_fixture.hh"
 #include "mock/aul_mock.hh"
 #include "mock/glib_mock.hh"
-#include "mock/sqlite_mock.hh"
 
 #include "notification/include/notification.h"
 #include "notification/include/notification_setting.h"

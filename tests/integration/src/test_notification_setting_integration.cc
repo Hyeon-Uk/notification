@@ -206,20 +206,19 @@ TEST_F(NotificationSettingIntegrationTest, UpdateAndRetrieveSetting) {
   ret = noti_setting_service_get_setting_by_app_id(
       "org.tizen.testapp", &setting, 5001);
   EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
+  ASSERT_NE(setting, nullptr);
 
-  if (setting) {
-    bool allow = true;
-    ret = notification_setting_get_allow_to_notify(setting, &allow);
-    EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
-    EXPECT_FALSE(allow);
+  bool allow = true;
+  ret = notification_setting_get_allow_to_notify(setting, &allow);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
+  EXPECT_FALSE(allow);
 
-    int vis_class = 0;
-    ret = notification_setting_get_visibility_class(setting, &vis_class);
-    EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
-    EXPECT_EQ(vis_class, 2);
+  int vis_class = 0;
+  ret = notification_setting_get_visibility_class(setting, &vis_class);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
+  EXPECT_EQ(vis_class, 2);
 
-    notification_setting_free_notification(setting);
-  }
+  notification_setting_free_notification(setting);
 }
 
 TEST_F(NotificationSettingIntegrationTest, UpdateSettingValues) {
@@ -241,21 +240,20 @@ TEST_F(NotificationSettingIntegrationTest, UpdateSettingValues) {
   ret = noti_setting_service_get_setting_by_app_id(
       "org.tizen.testapp", &setting, 5001);
   EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
+  ASSERT_NE(setting, nullptr);
 
-  if (setting) {
-    bool allow = true;
-    ret = notification_setting_get_allow_to_notify(setting, &allow);
-    EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
-    EXPECT_FALSE(allow);
+  bool allow = true;
+  ret = notification_setting_get_allow_to_notify(setting, &allow);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
+  EXPECT_FALSE(allow);
 
-    bool dnd_except = false;
-    ret = notification_setting_get_do_not_disturb_except(
-        setting, &dnd_except);
-    EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
-    EXPECT_TRUE(dnd_except);
+  bool dnd_except = false;
+  ret = notification_setting_get_do_not_disturb_except(
+      setting, &dnd_except);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
+  EXPECT_TRUE(dnd_except);
 
-    notification_setting_free_notification(setting);
-  }
+  notification_setting_free_notification(setting);
 }
 
 TEST_F(NotificationSettingIntegrationTest, SystemSettingUpdate) {
@@ -270,34 +268,33 @@ TEST_F(NotificationSettingIntegrationTest, SystemSettingUpdate) {
   notification_system_setting_h sys_setting = nullptr;
   ret = noti_system_setting_load_system_setting(&sys_setting, 5001);
   EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
+  ASSERT_NE(sys_setting, nullptr);
 
-  if (sys_setting) {
-    bool dnd = false;
-    ret = notification_system_setting_get_do_not_disturb(
-        sys_setting, &dnd);
-    EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
-    EXPECT_TRUE(dnd);
+  bool dnd = false;
+  ret = notification_system_setting_get_do_not_disturb(
+      sys_setting, &dnd);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
+  EXPECT_TRUE(dnd);
 
-    bool sched_enabled = false;
-    ret = notification_system_setting_dnd_schedule_get_enabled(
-        sys_setting, &sched_enabled);
-    EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
-    EXPECT_TRUE(sched_enabled);
+  bool sched_enabled = false;
+  ret = notification_system_setting_dnd_schedule_get_enabled(
+      sys_setting, &sched_enabled);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
+  EXPECT_TRUE(sched_enabled);
 
-    int start_hour = 0, start_min = 0;
-    ret = notification_system_setting_dnd_schedule_get_start_time(
-        sys_setting, &start_hour, &start_min);
-    EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
-    EXPECT_EQ(start_hour, 23);
+  int start_hour = 0, start_min = 0;
+  ret = notification_system_setting_dnd_schedule_get_start_time(
+      sys_setting, &start_hour, &start_min);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
+  EXPECT_EQ(start_hour, 23);
 
-    int end_hour = 0, end_min = 0;
-    ret = notification_system_setting_dnd_schedule_get_end_time(
-        sys_setting, &end_hour, &end_min);
-    EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
-    EXPECT_EQ(end_hour, 7);
+  int end_hour = 0, end_min = 0;
+  ret = notification_system_setting_dnd_schedule_get_end_time(
+      sys_setting, &end_hour, &end_min);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
+  EXPECT_EQ(end_hour, 7);
 
-    notification_system_setting_free_system_setting(sys_setting);
-  }
+  notification_system_setting_free_system_setting(sys_setting);
 }
 
 TEST_F(NotificationSettingIntegrationTest, MultipleAppSettings) {
@@ -374,36 +371,35 @@ TEST_F(NotificationSettingIntegrationTest, DndScheduleFullCycle) {
   notification_system_setting_h sys_setting = nullptr;
   ret = noti_system_setting_load_system_setting(&sys_setting, 5001);
   EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
+  ASSERT_NE(sys_setting, nullptr);
 
-  if (sys_setting) {
-    bool sched_enabled = true;
-    ret = notification_system_setting_dnd_schedule_get_enabled(
-        sys_setting, &sched_enabled);
-    EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
-    EXPECT_FALSE(sched_enabled);
+  bool sched_enabled = true;
+  ret = notification_system_setting_dnd_schedule_get_enabled(
+      sys_setting, &sched_enabled);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
+  EXPECT_FALSE(sched_enabled);
 
-    int day = 0;
-    ret = notification_system_setting_dnd_schedule_get_day(
-        sys_setting, &day);
-    EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
-    EXPECT_EQ(day, 62);
+  int day = 0;
+  ret = notification_system_setting_dnd_schedule_get_day(
+      sys_setting, &day);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
+  EXPECT_EQ(day, 62);
 
-    int start_hour = 0, start_min = 0;
-    ret = notification_system_setting_dnd_schedule_get_start_time(
-        sys_setting, &start_hour, &start_min);
-    EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
-    EXPECT_EQ(start_hour, 22);
-    EXPECT_EQ(start_min, 0);
+  int start_hour = 0, start_min = 0;
+  ret = notification_system_setting_dnd_schedule_get_start_time(
+      sys_setting, &start_hour, &start_min);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
+  EXPECT_EQ(start_hour, 22);
+  EXPECT_EQ(start_min, 0);
 
-    int end_hour = 0, end_min = 0;
-    ret = notification_system_setting_dnd_schedule_get_end_time(
-        sys_setting, &end_hour, &end_min);
-    EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
-    EXPECT_EQ(end_hour, 8);
-    EXPECT_EQ(end_min, 0);
+  int end_hour = 0, end_min = 0;
+  ret = notification_system_setting_dnd_schedule_get_end_time(
+      sys_setting, &end_hour, &end_min);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
+  EXPECT_EQ(end_hour, 8);
+  EXPECT_EQ(end_min, 0);
 
-    notification_system_setting_free_system_setting(sys_setting);
-  }
+  notification_system_setting_free_system_setting(sys_setting);
 
   /* Update with new schedule values:
    * dnd=1, vis=0, sched_enabled=1, day=127, start=21:30, end=6:45, lock=0
@@ -416,50 +412,50 @@ TEST_F(NotificationSettingIntegrationTest, DndScheduleFullCycle) {
   notification_system_setting_h reloaded = nullptr;
   ret = noti_system_setting_load_system_setting(&reloaded, 5001);
   EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
+  ASSERT_NE(reloaded, nullptr);
 
-  if (reloaded) {
-    bool dnd = false;
-    ret = notification_system_setting_get_do_not_disturb(reloaded, &dnd);
-    EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
-    EXPECT_TRUE(dnd);
+  bool dnd = false;
+  ret = notification_system_setting_get_do_not_disturb(reloaded, &dnd);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
+  EXPECT_TRUE(dnd);
 
-    bool sched_enabled = false;
-    ret = notification_system_setting_dnd_schedule_get_enabled(
-        reloaded, &sched_enabled);
-    EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
-    EXPECT_TRUE(sched_enabled);
+  sched_enabled = false;
+  ret = notification_system_setting_dnd_schedule_get_enabled(
+      reloaded, &sched_enabled);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
+  EXPECT_TRUE(sched_enabled);
 
-    int day = 0;
-    ret = notification_system_setting_dnd_schedule_get_day(
-        reloaded, &day);
-    EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
-    EXPECT_EQ(day, 127);
+  day = 0;
+  ret = notification_system_setting_dnd_schedule_get_day(
+      reloaded, &day);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
+  EXPECT_EQ(day, 127);
 
-    int start_hour = 0, start_min = 0;
-    ret = notification_system_setting_dnd_schedule_get_start_time(
-        reloaded, &start_hour, &start_min);
-    EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
-    EXPECT_EQ(start_hour, 21);
-    EXPECT_EQ(start_min, 30);
+  start_hour = 0;
+  start_min = 0;
+  ret = notification_system_setting_dnd_schedule_get_start_time(
+      reloaded, &start_hour, &start_min);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
+  EXPECT_EQ(start_hour, 21);
+  EXPECT_EQ(start_min, 30);
 
-    int end_hour = 0, end_min = 0;
-    ret = notification_system_setting_dnd_schedule_get_end_time(
-        reloaded, &end_hour, &end_min);
-    EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
-    EXPECT_EQ(end_hour, 6);
-    EXPECT_EQ(end_min, 45);
+  end_hour = 0;
+  end_min = 0;
+  ret = notification_system_setting_dnd_schedule_get_end_time(
+      reloaded, &end_hour, &end_min);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
+  EXPECT_EQ(end_hour, 6);
+  EXPECT_EQ(end_min, 45);
 
-    notification_system_setting_free_system_setting(reloaded);
-  }
+  notification_system_setting_free_system_setting(reloaded);
 }
 
-/* Insert and delete package for uid:
- * Seed a setting row via SQL (since insert_package_for_uid requires
- * pkgmgrinfo), verify it exists, delete via API, verify gone.
+/* Delete package for uid:
+ * Seed a setting row via SQL, verify it exists, delete via API, verify gone.
+ * Note: insert_package_for_uid is BLOCKED (requires pkgmgrinfo unavailable
+ * in GBS chroot), so we test only the delete path here.
  */
-TEST_F(NotificationSettingIntegrationTest, InsertAndDeletePackageForUid) {
-  /* Seed the setting row directly in DB (insert_package_for_uid
-   * depends on pkgmgrinfo which is unavailable in the test env) */
+TEST_F(NotificationSettingIntegrationTest, DeletePackageForUid) {
   SeedSetting("org.tizen.delpkg", "org.tizen.delpkg", 5001);
   EXPECT_EQ(GetRowCount("notification_setting"), 1);
 

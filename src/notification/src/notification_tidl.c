@@ -29,8 +29,6 @@
 
 #include <notification_tidl.h>
 
-#pragma GCC visibility push(default)
-
 /*
  * for TIDL
  */
@@ -1736,5 +1734,3 @@ int notification_tidl_del_deffered_task(
 	WARN("del deffered task");
 	return NOTIFICATION_ERROR_NONE;
 }
-
-#pragma GCC visibility pop
