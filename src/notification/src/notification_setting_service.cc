@@ -326,7 +326,8 @@ int noti_system_setting_load_system_setting(notification_system_setting_h *syste
 		result_system_setting->dnd_start_min = 0;
 		result_system_setting->dnd_end_hour = 0;
 		result_system_setting->dnd_end_min = 0;
-		result_system_setting->lock_screen_content_level = 0;
+		result_system_setting->lock_screen_content_level =
+		    static_cast<lock_screen_content_level_e>(0);
 		result_system_setting->dnd_allow_exceptions = NULL;
 	} else {
 		col_index = column_count;

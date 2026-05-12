@@ -14,7 +14,9 @@
  * limitations under the License.
  */
 
+#ifndef _GNU_SOURCE
 #define _GNU_SOURCE
+#endif
 #include <stdio.h>
 #include <stdlib.h>
 #include <glib.h>
@@ -138,7 +140,8 @@ static bool __pop_delayed_noti_cb(void *user_data)
 		return false;
 	}
 
-	app_control = g_list_nth_data(_delayed_noti_list, 0);
+	app_control = static_cast<app_control_h>(
+	    g_list_nth_data(_delayed_noti_list, 0));
 	ret = app_control_send_launch_request_async(app_control,
 			__app_control_result_cb, NULL, NULL);
 	if (ret != APP_CONTROL_ERROR_NONE) {
