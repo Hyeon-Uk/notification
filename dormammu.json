@@ -6,7 +6,7 @@
       "extra_args": ["--dangerously-skip-permissions"]
     }
   },
-  "process_timeout_seconds": 3600,
+  "process_timeout_seconds": 7200,
   "agents": {
     "refiner":   { "cli": "claude", "model": "claude-sonnet-4-6" },
     "analyzer":  { "cli": "claude", "model": "claude-sonnet-4-6" },
