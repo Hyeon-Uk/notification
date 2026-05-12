@@ -25,6 +25,7 @@
 #include <notification_error.h>
 #include <notification_debug.h>
 #include <notification_db.h>
+#include <notification_raii.h>
 #include "notification_db_query.h"
 
 static bool is_db_corrupted = false;
@@ -86,10 +87,10 @@ EXPORT_API int notification_db_init(void)
 {
 	int ret = NOTIFICATION_ERROR_NONE;
 	int sql_ret;
-	sqlite3 *db = NULL;
+	DbGuard db;
 	char *errmsg = NULL;
 
-	sql_ret = sqlite3_open_v2(DBPATH, &db,
+	sql_ret = sqlite3_open_v2(DBPATH, db.addr(),
 			SQLITE_OPEN_CREATE | SQLITE_OPEN_READWRITE, NULL);
 	if (sql_ret != SQLITE_OK) {
 		ERR("Failed to open db[%d]", sql_ret);
@@ -97,27 +98,27 @@ EXPORT_API int notification_db_init(void)
 		goto out;
 	}
 
-	sql_ret = sqlite3_exec(db, CREATE_NOTIFICATION_TABLE, NULL, NULL, &errmsg);
+	sql_ret = sqlite3_exec(db.get(), CREATE_NOTIFICATION_TABLE,
+			NULL, NULL, &errmsg);
 	if (sql_ret != SQLITE_OK) {
 		ERR("Failed to exec sqlite[%d][%s]", sql_ret, errmsg);
 		ret = NOTIFICATION_ERROR_FROM_DB;
 		goto out;
 	}
 
-	sql_ret = sqlite3_exec(db, "PRAGMA integrity_check",
-			       __check_integrity_cb, NULL, &errmsg);
+	sql_ret = sqlite3_exec(db.get(), "PRAGMA integrity_check",
+			__check_integrity_cb, NULL, &errmsg);
 	if (sql_ret != SQLITE_OK || is_db_corrupted) {
 		ERR("Failed to exec query[%d][%s]", sql_ret, errmsg);
 		ret = NOTIFICATION_ERROR_FROM_DB;
 	}
 
 out:
-	if (sql_ret == SQLITE_CORRUPT || sql_ret == SQLITE_NOTADB || is_db_corrupted)
-		ret = __recover_corrupted_db(db);
+	if (sql_ret == SQLITE_CORRUPT || sql_ret == SQLITE_NOTADB
+			|| is_db_corrupted)
+		ret = __recover_corrupted_db(db.release());
 	if (errmsg)
 		sqlite3_free(errmsg);
-	if (db)
-		sqlite3_close(db);
 
 	return ret;
 }
@@ -173,13 +174,12 @@ EXPORT_API int notification_db_close(sqlite3 **db)
 
 EXPORT_API int notification_db_exec(sqlite3 *db, const char *query, int *num_changes)
 {
-	int ret = NOTIFICATION_ERROR_NONE;
-	sqlite3_stmt *stmt = NULL;
-
 	if (db == NULL || query == NULL)
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 
-	ret = sqlite3_prepare_v2(db, query, strlen(query), &stmt, NULL);
+	StmtGuard stmt;
+	int ret = sqlite3_prepare_v2(db, query, strlen(query),
+			stmt.addr(), NULL);
 	if (ret != SQLITE_OK) {
 		/* LCOV_EXCL_START */
 		ERR("Sqlite3 err[%d][%s]", ret, sqlite3_errmsg(db));
@@ -187,7 +187,7 @@ EXPORT_API int notification_db_exec(sqlite3 *db, const char *query, int *num_cha
 		/* LCOV_EXCL_STOP */
 	}
 
-	ret = sqlite3_step(stmt);
+	ret = sqlite3_step(stmt.get());
 	if (ret == SQLITE_OK || ret == SQLITE_DONE) {
 		if (num_changes != NULL)
 			*num_changes = sqlite3_changes(db);
@@ -199,8 +199,6 @@ EXPORT_API int notification_db_exec(sqlite3 *db, const char *query, int *num_cha
 		ret = NOTIFICATION_ERROR_FROM_DB;
 		/* LCOV_EXCL_STOP */
 	}
-
-	sqlite3_finalize(stmt);
 
 	return ret;
 }
@@ -229,29 +227,26 @@ EXPORT_API bundle *notification_db_column_bundle(sqlite3_stmt *stmt, int col)
 
 /* db upgrade sequece*/
 static int __check_db_version(sqlite3 *db) {
-	int ret;
 	int result;
-	sqlite3_stmt *stmt = NULL;
 
 	WARN("@@ __check_db_version");
 
-	ret = sqlite3_prepare_v2(db, "PRAGMA user_version", -1, &stmt, NULL);
+	StmtGuard stmt;
+	int ret = sqlite3_prepare_v2(db, "PRAGMA user_version", -1,
+			stmt.addr(), NULL);
 	if (ret != SQLITE_OK) {
 		ERR("@@ Failed to sqlite3_prepare_v2[%d][%s]",
 		ret, sqlite3_errmsg(db));
 		return -1;
 	}
 
-	ret = sqlite3_step(stmt);
+	ret = sqlite3_step(stmt.get());
 	if (ret == SQLITE_ROW)
-		result = sqlite3_column_int(stmt, 0);
+		result = sqlite3_column_int(stmt.get(), 0);
 	else
 		result = 0;
 
 	WARN("@@ db version : %d", result);
-
-	if (stmt)
-		sqlite3_finalize(stmt);
 
 	if (result != DB_VERSION) {
 		WARN("@@ db is not latest version");
@@ -373,87 +368,58 @@ upgrade:
 
 EXPORT_API int notification_upgrade_db(void)
 {
-	sqlite3 *db;
-	int ret = NOTIFICATION_ERROR_NONE;
-	char *errmsg = NULL;
-	char *query = NULL;
-
 	WARN("@@ upgrade db");
 
-	ret = sqlite3_open_v2(DBPATH, &db, SQLITE_OPEN_READWRITE, NULL);
-	if (ret != SQLITE_OK) {
+	DbGuard db;
+	int sql_ret = sqlite3_open_v2(DBPATH, db.addr(),
+			SQLITE_OPEN_READWRITE, NULL);
+	if (sql_ret != SQLITE_OK) {
 		ERR("@@ Failed to open db");
 		return NOTIFICATION_ERROR_FROM_DB;
 	}
 
-	// add transaction
-	ret = sqlite3_exec(db, "BEGIN TRANSACTION", NULL, NULL, NULL);
-	if (ret != SQLITE_OK) {
-		ERR("@@ Failed to begin transaction db[%d][%s]", ret, sqlite3_errmsg(db));
-		notification_db_close(&db);
+	DbTransactionGuard txn(db.get());
+
+	if (__check_db_version(db.get()) == 0) {
+		WARN("@@ db is latest version");
+		txn.commit();
+		return NOTIFICATION_ERROR_NONE;
+	}
+
+	int ret = __upgrade_noti_table(db.get());
+	if (ret != NOTIFICATION_ERROR_NONE) {
+		ERR("@@ Failed to upgrade noti table");
+		return ret;
+	}
+
+	ret = __upgrade_noti_template_table(db.get());
+	if (ret != NOTIFICATION_ERROR_NONE) {
+		ERR("@@ Failed to upgrade noti template table");
+		return ret;
+	}
+
+	SqliteCharPtr query(
+			sqlite3_mprintf("PRAGMA user_version=%d", DB_VERSION));
+	if (!query) {
+		ERR("@@ Failed to set verion query");
+		return NOTIFICATION_ERROR_OUT_OF_MEMORY;
+	}
+
+	char *errmsg = NULL;
+	sql_ret = sqlite3_exec(db.get(), query.get(),
+			NULL, NULL, &errmsg);
+	if (sql_ret != SQLITE_OK) {
+		ERR("@@ Failed to ser user version[%d][%s]", sql_ret, errmsg);
+		sqlite3_free(errmsg);
 		return NOTIFICATION_ERROR_FROM_DB;
 	}
 
-	// 1. check version
-	if (__check_db_version(db) == 0) {
-		WARN("@@ db is latest version");
-		ret = NOTIFICATION_ERROR_NONE;
-		goto out;
+	if (!txn.commit()) {
+		ERR("@@ Failed to end transaction db[%d][%s]",
+				sql_ret, sqlite3_errmsg(db.get()));
+		return NOTIFICATION_ERROR_FROM_DB;
 	}
 
-	// 2. run upgrade query
-	ret = __upgrade_noti_table(db);
-	if (ret != NOTIFICATION_ERROR_NONE) {
-		ERR("@@ Failed to upgrade noti table");
-		goto out;
-	}
-
-	ret = __upgrade_noti_template_table(db);
-	if (ret != NOTIFICATION_ERROR_NONE) {
-		ERR("@@ Failed to upgrade noti template table");
-		goto out;
-	}
-
-	// 3. set new version
-	query = sqlite3_mprintf("PRAGMA user_version=%d", DB_VERSION);
-	if (query == NULL) {
-		ERR("@@ Failed to set verion query");
-		ret = NOTIFICATION_ERROR_OUT_OF_MEMORY;
-		goto out;
-	}
-
-	ret = sqlite3_exec(db, query, NULL, NULL, &errmsg);
-	if (ret != SQLITE_OK) {
-		ERR("@@ Failed to ser user version[%d][%s]", ret, errmsg);
-		ret = NOTIFICATION_ERROR_FROM_DB;
-		goto out;
-	}
-	ret = NOTIFICATION_ERROR_NONE;
 	WARN("@@ upgrade db done");
-
-out:
-	if (ret == NOTIFICATION_ERROR_NONE) {
-		ret = sqlite3_exec(db, "END TRANSACTION", NULL, NULL, NULL);
-		if (ret != SQLITE_OK) {
-			ERR("@@ Failed to end transaction db[%d][%s]", ret, sqlite3_errmsg(db));
-			ret = NOTIFICATION_ERROR_FROM_DB;
-		}
-	} else {
-		ret = sqlite3_exec(db, "ROLLBACK TRANSACTION", NULL, NULL, NULL);
-		if (ret != SQLITE_OK) {
-			ERR("@@ Failed to rollback transaction db[%d][%s]", ret, sqlite3_errmsg(db));
-			ret = NOTIFICATION_ERROR_FROM_DB;
-		}
-	}
-
-	if (errmsg)
-		sqlite3_free(errmsg);
-
-	if (query)
-		sqlite3_free(query);
-
-	if (db)
-		notification_db_close(&db);
-
-	return ret;
+	return NOTIFICATION_ERROR_NONE;
 }

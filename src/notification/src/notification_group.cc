@@ -21,34 +21,32 @@
 #include <notification_debug.h>
 #include <notification_group.h>
 #include <notification_db.h>
+#include <notification_raii.h>
 
 /* LCOV_EXCL_START */
 static int _notification_group_check_data_inserted(const char *app_id,
 						   int group_id, sqlite3 *db)
 {
-	sqlite3_stmt *stmt = NULL;
 	char query[NOTIFICATION_QUERY_MAX] = { 0, };
-	int ret;
 	int result;
 
 	snprintf(query, sizeof(query),
 		 "select count(*) from noti_group_data where caller_app_id = '%s' and group_id = %d",
 		 app_id, group_id);
 
-	ret = sqlite3_prepare(db, query, strlen(query), &stmt, NULL);
+	StmtGuard stmt;
+	int ret = sqlite3_prepare(db, query, strlen(query),
+			stmt.addr(), NULL);
 	if (ret != SQLITE_OK) {
 		ERR("Get count DB err(%d) : %s", ret, sqlite3_errmsg(db));
 		return NOTIFICATION_ERROR_FROM_DB;
 	}
 
-	ret = sqlite3_step(stmt);
+	ret = sqlite3_step(stmt.get());
 	if (ret == SQLITE_ROW)
-		result = sqlite3_column_int(stmt, 0);
+		result = sqlite3_column_int(stmt.get(), 0);
 	else
 		result = 0;
-
-
-	sqlite3_finalize(stmt);
 
 	if (result > 0)
 		return NOTIFICATION_ERROR_ALREADY_EXIST_ID;
@@ -64,57 +62,41 @@ static int _notification_group_check_data_inserted(const char *app_id,
 int notification_group_set_badge(const char *app_id,
 						  int group_id, int count)
 {
-	sqlite3 *db;
-	sqlite3_stmt *stmt = NULL;
 	char query[NOTIFICATION_QUERY_MAX] = { 0, };
-	int ret;
-	int result;
 
-	db = notification_db_open();
-	if (!db)
+	sqlite3 *db_raw = notification_db_open();
+	if (!db_raw)
 		return get_last_result();
+	DbGuard db(db_raw);
 
-	ret = _notification_group_check_data_inserted(app_id, group_id, db);
+	int ret = _notification_group_check_data_inserted(
+			app_id, group_id, db.get());
 
 	if (ret == NOTIFICATION_ERROR_NONE) {
-		/* Insert if does not exist */
 		snprintf(query, sizeof(query), "insert into noti_group_data ("
 			 "caller_app_id, group_id, badge, content, loc_content) values ("
 			 "'%s', %d, %d, '', '')", app_id, group_id, count);
-
 	} else {
-		/* Update if exist */
 		snprintf(query, sizeof(query), "update noti_group_data "
 			 "set badge = %d "
 			 "where caller_app_id = '%s' and group_id = %d",
 			 count, app_id, group_id);
 	}
 
-	ret = sqlite3_prepare_v2(db, query, -1, &stmt, NULL);
+	StmtGuard stmt;
+	ret = sqlite3_prepare_v2(db.get(), query, -1,
+			stmt.addr(), NULL);
 	if (ret != SQLITE_OK) {
 		ERR("Failed to insert data app_id[%s] err[%d][%s]",
-				 app_id, ret, sqlite3_errmsg(db));
-		if (stmt)
-			sqlite3_finalize(stmt);
-
-		if (db)
-			notification_db_close(&db);
-
+				 app_id, ret, sqlite3_errmsg(db.get()));
 		return NOTIFICATION_ERROR_FROM_DB;
 	}
 
-	ret = sqlite3_step(stmt);
+	ret = sqlite3_step(stmt.get());
 	if (ret == SQLITE_OK || ret == SQLITE_DONE)
-		result = NOTIFICATION_ERROR_NONE;
-	else
-		result = NOTIFICATION_ERROR_FROM_DB;
+		return NOTIFICATION_ERROR_NONE;
 
-	sqlite3_finalize(stmt);
-
-	if (db)
-		notification_db_close(&db);
-
-	return result;
+	return NOTIFICATION_ERROR_FROM_DB;
 }
 /* LCOV_EXCL_STOP */
 
@@ -122,26 +104,22 @@ int notification_group_set_badge(const char *app_id,
 int notification_group_get_badge(const char *app_id,
 						  int group_id, int *count)
 {
-	sqlite3 *db;
-	sqlite3_stmt *stmt = NULL;
 	char query[NOTIFICATION_QUERY_MAX] = { 0, };
-	int ret;
-	int col = 0;
 
-	db = notification_db_open();
-	if (!db)
+	sqlite3 *db_raw = notification_db_open();
+	if (!db_raw)
 		return get_last_result();
+	DbGuard db(db_raw);
 
 	if (group_id == NOTIFICATION_GROUP_ID_NONE) {
-		ret = _notification_group_check_data_inserted(app_id, group_id, db);
+		int ret = _notification_group_check_data_inserted(
+				app_id, group_id, db.get());
 		if (ret == NOTIFICATION_ERROR_NONE)
-			/* Get all of app_id count if none group id is not exist */
 			snprintf(query, sizeof(query),
 				 "select sum(badge) "
 				 "from noti_group_data "
 				 "where caller_app_id = '%s'", app_id);
 		else
-			/* Get none group id count */
 			snprintf(query, sizeof(query),
 				 "select badge "
 				 "from noti_group_data "
@@ -157,24 +135,18 @@ int notification_group_get_badge(const char *app_id,
 
 	INFO("Get badge : query[%s]", query);
 
-	ret = sqlite3_prepare(db, query, strlen(query), &stmt, NULL);
+	StmtGuard stmt;
+	int ret = sqlite3_prepare(db.get(), query, strlen(query),
+			stmt.addr(), NULL);
 	if (ret != SQLITE_OK) {
 		ERR("Failed to insert data app_id[%s] err[%d][%s]",
-				app_id, ret, sqlite3_errmsg(db));
-		if (db)
-			notification_db_close(&db);
-
+				app_id, ret, sqlite3_errmsg(db.get()));
 		return NOTIFICATION_ERROR_FROM_DB;
 	}
 
-	ret = sqlite3_step(stmt);
+	ret = sqlite3_step(stmt.get());
 	if (ret == SQLITE_ROW)
-		*count = sqlite3_column_int(stmt, col++);
-
-	sqlite3_finalize(stmt);
-
-	if (db)
-		notification_db_close(&db);
+		*count = sqlite3_column_int(stmt.get(), 0);
 
 	return NOTIFICATION_ERROR_NONE;
 }
