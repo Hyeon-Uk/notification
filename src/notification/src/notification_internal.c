@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
+#define _GNU_SOURCE
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -23,6 +23,7 @@
 #include <gio/gio.h>
 
 #include <aul.h>
+#include <cpu-boosting.h>
 #include <tizen.h>
 #include <bundle.h>
 #include <bundle_internal.h>
@@ -46,6 +47,8 @@
 
 #define NOTIFICATION_CTOR __attribute__((constructor))
 #define NOTIFICATION_DTOR __attribute__((destructor))
+
+#define DEST_PROCESS_NAME "esd"
 
 typedef struct _notification_cb_info notification_cb_info_s;
 typedef struct _notification_event_cb_info notification_event_cb_info_s;
@@ -76,6 +79,8 @@ static GRecMutex __rec_mutex;
 static disturb_cb _disturb_callback = NULL;
 static void *_disturb_user_data = NULL;
 
+static bool _set_boosting_;
+
 /* for channel */
 typedef struct _notification_channel {
 	char *app_id;
@@ -104,6 +109,30 @@ static void __notification_mutex_unlock(void)
 	g_rec_mutex_unlock(&__rec_mutex);
 }
 
+void _set_CPU_inheritance() {
+  int ret = resource_set_cpu_inheritance(gettid(), DEST_PROCESS_NAME, -1);
+  if (ret != 0) {
+    ERR("set cpu inheritance fail ret : %d", ret);
+    return;
+  }
+
+  _set_boosting_ = true;
+}
+
+void _clear_CPU_inheritance() {
+  if (!_set_boosting_) return;
+
+  int ret = resource_clear_cpu_inheritance(gettid(), DEST_PROCESS_NAME);
+  if (ret != 0) {
+    ERR("clear cpu inheritance fail ret : %d", ret);
+    return;
+  }
+
+  _set_boosting_ = false;
+}
+
+
+
 /* LCOV_EXCL_START */
 void notification_reset_event_handler_list(void)
 {
@@ -114,12 +143,15 @@ void notification_reset_event_handler_list(void)
 		return;
 
 	iter = g_list_first(__noti_event_cb_list);
+	_set_CPU_inheritance();
 	while (iter) {
 		info = g_list_nth_data(iter, 0);
-		if (info)
+		if (info) {
 			notification_tidl_reset_event_handler(info->priv_id);
+		}
 		iter = g_list_next(iter);
 	}
+	_clear_CPU_inheritance();
 }
 
 static void __free_changed_cb_info(gpointer data)
@@ -254,8 +286,11 @@ void notification_delete_event_handler_cb(int priv_id)
 
 	__notification_mutex_unlock();
 
-	if (__noti_event_cb_list == NULL && _disturb_callback == NULL)
+	if (__noti_event_cb_list == NULL && _disturb_callback == NULL) {
+		_set_CPU_inheritance();
 		notification_tidl_event_monitor_fini();
+		_clear_CPU_inheritance();
+	}
 
 	WARN("done");
 }
@@ -265,19 +300,27 @@ void notification_delete_event_handler_cb(int priv_id)
 EXPORT_API int notification_add_deferred_task(
 		void (*deferred_task_cb)(void *data), void *user_data)
 {
+	int ret;
 	if (deferred_task_cb == NULL)
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 
-	return notification_tidl_add_deffered_task(deferred_task_cb, user_data);
+	_set_CPU_inheritance();
+	ret = notification_tidl_add_deffered_task(deferred_task_cb, user_data);
+	_clear_CPU_inheritance();
+	return ret;
 }
 
 EXPORT_API int notification_del_deferred_task(
 		void (*deferred_task_cb)(void *data))
 {
+	int ret;
 	if (deferred_task_cb == NULL)
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 
-	return notification_tidl_del_deffered_task(deferred_task_cb);
+	_set_CPU_inheritance();
+	ret = notification_tidl_del_deffered_task(deferred_task_cb);
+	_clear_CPU_inheritance();
+	return ret;
 }
 /* LCOV_EXCL_STOP */
 
@@ -314,10 +357,13 @@ EXPORT_API int notification_resister_changed_cb_for_uid(
 		noti_cb_list = g_list_append(noti_cb_list, noti_cb_info_new);
 	}
 
+	_set_CPU_inheritance();
 	if (notification_tidl_monitor_init() != NOTIFICATION_ERROR_NONE) {
+		_clear_CPU_inheritance();
 		notification_unresister_changed_cb_for_uid(callback, uid);
 		return NOTIFICATION_ERROR_IO_ERROR;
 	}
+	_clear_CPU_inheritance();
 
 	return NOTIFICATION_ERROR_NONE;
 }
@@ -380,8 +426,11 @@ EXPORT_API int notification_unresister_changed_cb_for_uid(
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 	}
 
-	if (g_hash_table_size(_noti_cb_hash) == 0)
+	if (g_hash_table_size(_noti_cb_hash) == 0) {
+		_set_CPU_inheritance();
 		notification_tidl_monitor_fini();
+		_clear_CPU_inheritance();
+	}
 
 	return NOTIFICATION_ERROR_NONE;
 }
@@ -752,7 +801,9 @@ EXPORT_API int notification_delete_group_by_group_id(const char *app_id,
 	else
 		caller_app_id = strdup(app_id);
 
+	_set_CPU_inheritance();
 	ret = notification_tidl_request_delete_multiple(type, caller_app_id, aul_getuid());
+	_clear_CPU_inheritance();
 
 	if (caller_app_id)
 		free(caller_app_id);
@@ -774,7 +825,9 @@ int notification_delete_group_by_priv_id_for_uid(const char *app_id,
 	else
 		caller_app_id = strdup(app_id);
 
+	_set_CPU_inheritance();
 	ret = notification_tidl_request_delete_single(caller_app_id, priv_id, uid);
+	_clear_CPU_inheritance();
 
 	if (caller_app_id)
 		free(caller_app_id);
@@ -808,6 +861,7 @@ int notification_get_count_for_uid(notification_type_e type,
 	else
 		caller_app_id = strdup(app_id);
 
+	_set_CPU_inheritance();
 	ret = notification_tidl_request_get_count(
 			type,
 			caller_app_id,
@@ -815,6 +869,7 @@ int notification_get_count_for_uid(notification_type_e type,
 			priv_id,
 			count,
 			uid);
+	_clear_CPU_inheritance();
 
 	if (caller_app_id)
 		free(caller_app_id);
@@ -839,7 +894,9 @@ int notification_clear_for_uid(notification_type_e type, uid_t uid)
 	if (type <= NOTIFICATION_TYPE_NONE || type > NOTIFICATION_TYPE_MAX)
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 
+	_set_CPU_inheritance();
 	ret = notification_tidl_request_delete_multiple(type, NULL, uid);
+	_clear_CPU_inheritance();
 
 	return ret;
 }
@@ -923,7 +980,9 @@ int notification_delete_all_by_type_for_uid(const char *app_id,
 	else
 		caller_app_id = strdup(app_id);
 
+	_set_CPU_inheritance();
 	ret = notification_tidl_request_delete_multiple(type, caller_app_id, uid);
+	_clear_CPU_inheritance();
 
 	if (caller_app_id)
 		free(caller_app_id);
@@ -955,7 +1014,9 @@ int notification_delete_by_priv_id_for_uid(const char *app_id,
 	else
 		caller_app_id = strdup(app_id);
 
+	_set_CPU_inheritance();
 	ret = notification_tidl_request_delete_single(caller_app_id, priv_id, uid);
+	_clear_CPU_inheritance();
 
 	if (caller_app_id)
 		free(caller_app_id);
@@ -1093,7 +1154,9 @@ notification_h notification_load_for_uid(char *app_id,
 	int ret;
 	notification_h noti;
 
+	_set_CPU_inheritance();
 	ret = notification_tidl_request_load_noti_by_priv_id(&noti, app_id, priv_id, uid);
+	_clear_CPU_inheritance();
 	if (ret != NOTIFICATION_ERROR_NONE) {
 		set_last_result(ret);
 		__notification_mutex_unlock();
@@ -1213,7 +1276,9 @@ EXPORT_API int notification_insert_for_uid(notification_h noti,
 	noti->uid = uid;
 	noti->insert_time = time(NULL);
 
+	_set_CPU_inheritance();
 	ret = notification_tidl_request_insert(noti, &id);
+	_clear_CPU_inheritance();
 	if (ret != NOTIFICATION_ERROR_NONE)
 		return ret;
 
@@ -1228,7 +1293,9 @@ EXPORT_API int notification_insert_for_uid(notification_h noti,
 		return ret;
 
 	if (event_flag == true) {
+		_set_CPU_inheritance();
 		ret = notification_tidl_event_monitor_init();
+		_clear_CPU_inheritance();
 		if (ret != NOTIFICATION_ERROR_NONE)
 			return ret;
 	}
@@ -1254,7 +1321,9 @@ EXPORT_API int notification_update_async_for_uid(notification_h noti,
 	/* Update insert time ? */
 	noti->insert_time = time(NULL);
 
+	_set_CPU_inheritance();
 	ret = notification_tidl_request_update(noti);
+	_clear_CPU_inheritance();
 
 	return ret;
 }
@@ -1300,10 +1369,13 @@ EXPORT_API int notification_register_detailed_changed_cb_for_uid(
 		noti_cb_list = g_list_append(noti_cb_list, noti_cb_info_new);
 	}
 
+	_set_CPU_inheritance();
 	if (notification_tidl_monitor_init() != NOTIFICATION_ERROR_NONE) {
+		_clear_CPU_inheritance();
 		notification_unregister_detailed_changed_cb_for_uid(callback, user_data, uid);
 		return NOTIFICATION_ERROR_IO_ERROR;
 	}
+	_clear_CPU_inheritance();
 
 	return NOTIFICATION_ERROR_NONE;
 }
@@ -1367,8 +1439,11 @@ EXPORT_API int notification_unregister_detailed_changed_cb_for_uid(
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 	}
 
-	if (g_hash_table_size(_noti_cb_hash) == 0)
+	if (g_hash_table_size(_noti_cb_hash) == 0) {
+		_set_CPU_inheritance();
 		notification_tidl_monitor_fini();
+		_clear_CPU_inheritance();
+	}
 
 	return NOTIFICATION_ERROR_NONE;
 
@@ -1385,7 +1460,11 @@ EXPORT_API int notification_unregister_detailed_changed_cb(
 /* LCOV_EXCL_START */
 EXPORT_API int notification_is_service_ready(void)
 {
-	return notification_tidl_is_master_ready();
+	int ret;
+	_set_CPU_inheritance();
+	ret = notification_tidl_is_master_ready();
+	_clear_CPU_inheritance();
+	return ret;
 }
 /* LCOV_EXCL_STOP */
 
@@ -1499,7 +1578,9 @@ EXPORT_API int notification_post_for_uid(notification_h noti, uid_t uid)
 	INFO("notification post [%d]", (int)uid);
 
 	file_list = __copy_private_file(noti);
+	_set_CPU_inheritance();
 	ret = notification_tidl_request_insert(noti, &id);
+	_clear_CPU_inheritance();
 	if (ret == NOTIFICATION_ERROR_NONE) {
 		noti->priv_id = id;
 		INFO("Posted notification id[%d]", id);
@@ -1509,7 +1590,9 @@ EXPORT_API int notification_post_for_uid(notification_h noti, uid_t uid)
 			goto out;
 
 		if (event_flag == true) {
+			_set_CPU_inheritance();
 			ret = notification_tidl_event_monitor_init();
+			_clear_CPU_inheritance();
 			if (ret != NOTIFICATION_ERROR_NONE)
 				goto out;
 		}
@@ -1530,7 +1613,9 @@ EXPORT_API int notification_update_for_uid(notification_h noti, uid_t uid)
 
 	if (noti == NULL) {
 		WARN("updated notification noti null, uid : %d", uid);
+		_set_CPU_inheritance();
 		notification_tidl_request_refresh(uid);
+		_clear_CPU_inheritance();
 		__notification_mutex_unlock();
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 	}
@@ -1540,7 +1625,9 @@ EXPORT_API int notification_update_for_uid(notification_h noti, uid_t uid)
 	noti->insert_time = time(NULL);
 	WARN("updated notification id[%d]", noti->priv_id);
 
+	_set_CPU_inheritance();
 	ret = notification_tidl_request_update(noti);
+	_clear_CPU_inheritance();
 
 	return ret;
 }
@@ -1552,7 +1639,9 @@ EXPORT_API int notification_delete_for_uid(notification_h noti, uid_t uid)
 
 	int ret;
 
+	_set_CPU_inheritance();
 	ret = notification_tidl_request_delete_single(noti->caller_app_id, noti->priv_id, uid);
+	_clear_CPU_inheritance();
 
 	return ret;
 }
@@ -1567,7 +1656,9 @@ EXPORT_API int notification_delete_all_for_uid(notification_type_e type, uid_t u
 
 	caller_app_id = notification_get_app_id_by_pid(getpid());
 
+	_set_CPU_inheritance();
 	ret = notification_tidl_request_delete_multiple(type, caller_app_id, uid);
+	_clear_CPU_inheritance();
 
 	if (caller_app_id)
 		free(caller_app_id);
@@ -1596,7 +1687,9 @@ EXPORT_API notification_h notification_load_by_tag_for_uid(const char *tag, uid_
 		return NULL;
 	}
 
+	_set_CPU_inheritance();
 	ret = notification_tidl_request_load_noti_by_tag(&noti, caller_app_id, tag, uid);
+	_clear_CPU_inheritance();
 	free(caller_app_id);
 	set_last_result(ret);
 	if (ret != NOTIFICATION_ERROR_NONE) {
@@ -1620,7 +1713,9 @@ EXPORT_API notification_h notification_create_from_package_template(const char *
 		return NULL;
 	}
 
+	_set_CPU_inheritance();
 	ret = notification_tidl_request_create_from_package_template(&noti, app_id, template_name);
+	_clear_CPU_inheritance();
 	set_last_result(ret);
 	if (ret != NOTIFICATION_ERROR_NONE) {
 		notification_free(noti);
@@ -1775,7 +1870,9 @@ EXPORT_API int notification_post_with_event_cb_for_uid(notification_h noti, even
 	noti->uid = uid;
 
 	file_list = __copy_private_file(noti);
+	_set_CPU_inheritance();
 	ret = notification_tidl_request_insert(noti, &priv_id);
+	_clear_CPU_inheritance();
 	if (ret != NOTIFICATION_ERROR_NONE) {
 		ERR("Failed to post notification id[%d]", priv_id);
 		g_list_foreach(file_list, __remove_private_file, NULL);
@@ -1786,7 +1883,9 @@ EXPORT_API int notification_post_with_event_cb_for_uid(notification_h noti, even
 
 	WARN("Posted notification id[%d]", priv_id);
 
+	_set_CPU_inheritance();
 	ret = notification_tidl_event_monitor_init();
+	_clear_CPU_inheritance();
 	if (ret != NOTIFICATION_ERROR_NONE)
 		goto out;
 
@@ -1852,7 +1951,9 @@ EXPORT_API int notification_send_event(notification_h noti, int event_type)
 	if (ret != NOTIFICATION_ERROR_NONE || event_flag == false)
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 
+	_set_CPU_inheritance();
 	ret = notification_tidl_send_event(noti, event_type, -1);
+	_clear_CPU_inheritance();
 
 	return ret;
 }
@@ -1873,7 +1974,9 @@ EXPORT_API int notification_send_event_by_priv_id(int priv_id, int event_type)
 		(event_type == NOTIFICATION_EVENT_TYPE_CHECK_BOX)))
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 
+	_set_CPU_inheritance();
 	ret = notification_tidl_send_event(NULL, event_type, priv_id);
+	_clear_CPU_inheritance();
 
 	return ret;
 }
@@ -1902,7 +2005,9 @@ EXPORT_API int notification_check_event_receiver_available(notification_h noti, 
 		return ret;
 	}
 
+	_set_CPU_inheritance();
 	ret = notification_tidl_check_event_receiver(priv_id, available);
+	_clear_CPU_inheritance();
 
 	return ret;
 }
@@ -2130,7 +2235,9 @@ EXPORT_API int notification_get_all_count_for_uid(notification_type_e type, int 
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 	}
 
+	_set_CPU_inheritance();
 	ret = notification_tidl_request_get_all_count(type, count, uid);
+	_clear_CPU_inheritance();
 	if (ret != NOTIFICATION_ERROR_NONE) {
 		ERR("Failed to get count [%d]", ret);
 		return ret;
@@ -2247,7 +2354,9 @@ int notification_delete_by_display_applist_for_uid(int display_applist, uid_t ui
 	if (display_applist < NOTIFICATION_DISPLAY_APP_NOTIFICATION_TRAY)
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 
+	_set_CPU_inheritance();
 	ret = notification_tidl_request_delete_by_display_applist(display_applist, uid);
+	_clear_CPU_inheritance();
 
 	return ret;
 }
@@ -2325,13 +2434,17 @@ EXPORT_API int notification_register_do_not_disturb_app(disturb_cb callback, voi
 	if (callback == NULL)
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 
+	_set_CPU_inheritance();
 	ret = notification_tidl_request_register_dnd_app(aul_getuid(), getpid());
+	_clear_CPU_inheritance();
 	if (ret != NOTIFICATION_ERROR_NONE) {
 		ERR("failed to register dnd app");
 		return ret;
 	}
 
+	_set_CPU_inheritance();
 	ret = notification_tidl_event_monitor_init();
+	_clear_CPU_inheritance();
 	if (ret != NOTIFICATION_ERROR_NONE) {
 		ERR("failed to event monitor init");
 		return ret;
@@ -2351,7 +2464,9 @@ EXPORT_API int notification_unregister_do_not_disturb_app(void)
 
 	WARN("unregister dnd app");
 
+	_set_CPU_inheritance();
 	ret = notification_tidl_request_unregister_dnd_app(aul_getuid(), getpid());
+	_clear_CPU_inheritance();
 	if (ret != NOTIFICATION_ERROR_NONE) {
 		ERR("failed to unregister dnd app");
 		return ret;
@@ -2359,8 +2474,11 @@ EXPORT_API int notification_unregister_do_not_disturb_app(void)
 
 	_disturb_callback = NULL;
 
-	if (__noti_event_cb_list == NULL)
+	if (__noti_event_cb_list == NULL) {
+		_set_CPU_inheritance();
 		notification_tidl_event_monitor_fini();
+		_clear_CPU_inheritance();
+	}
 
 	WARN("unregister dnd app done");
 
@@ -2562,9 +2680,11 @@ EXPORT_API int notification_channel_add(notification_channel_h channel)
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 	}
 
+	_set_CPU_inheritance();
 	ret = notification_tidl_request_insert_channel(noti_channel->app_id,
 			noti_channel->channel_name, noti_channel->blockable,
 			noti_channel->is_blocked, aul_getuid());
+	_clear_CPU_inheritance();
 	if (ret != NOTIFICATION_ERROR_NONE) {
 		ERR("failed to insert channel");
 		return ret;
@@ -2588,8 +2708,10 @@ EXPORT_API int notification_channel_remove(notification_channel_h channel)
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 	}
 
+	_set_CPU_inheritance();
 	ret = notification_tidl_request_delete_channel(noti_channel->app_id,
 			noti_channel->channel_name, aul_getuid());
+	_clear_CPU_inheritance();
 	if (ret != NOTIFICATION_ERROR_NONE) {
 		ERR("failed to remove channel");
 		return ret;
@@ -2613,9 +2735,11 @@ EXPORT_API int notification_channel_update(notification_channel_h channel)
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 	}
 
+	_set_CPU_inheritance();
 	ret = notification_tidl_request_update_channel(noti_channel->app_id,
 			noti_channel->channel_name, noti_channel->blockable,
 			noti_channel->is_blocked, aul_getuid());
+	_clear_CPU_inheritance();
 	if (ret != NOTIFICATION_ERROR_NONE) {
 		ERR("failed to update channel");
 		return ret;
@@ -2652,8 +2776,10 @@ EXPORT_API int notification_channel_get_by_name(const char *channel_name,
 		goto out;
 	}
 
+	_set_CPU_inheritance();
 	ret = notification_tidl_request_get_channel(app_id, channel_name,
 			&blockable, &is_blocked, aul_getuid());
+	_clear_CPU_inheritance();
 	if (ret != NOTIFICATION_ERROR_NONE) {
 		ERR("failed to update channel");
 		free(noti_channel);
@@ -2811,9 +2937,11 @@ EXPORT_API int notification_channel_foreach(const char *app_id,
 	}
 	WARN("notification_channel_foreach : %s", (app_id != NULL) ? app_id : _app_id);
 
+	_set_CPU_inheritance();
 	ret = notification_tidl_request_channel_get_list(
 			(app_id != NULL) ? app_id : _app_id,
 			cb, user_data, aul_getuid());
+	_clear_CPU_inheritance();
 	if (ret != NOTIFICATION_ERROR_NONE) {
 		ERR("failed to get is blocked");
 		goto out;
