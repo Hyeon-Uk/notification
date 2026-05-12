@@ -295,3 +295,89 @@ TEST_F(NotificationCountIntegrationTest, CountByAppIdAndType) {
   EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
   EXPECT_EQ(count, 4);
 }
+
+/* COUNT_06: CheckLimitUnderThreshold
+ * Insert a small number (5) of notifications, call
+ * notification_noti_check_limit. When count <= NOTI_LIMIT (100),
+ * the returned list should be empty (no excess).
+ */
+TEST_F(NotificationCountIntegrationTest, CheckLimitUnderThreshold) {
+  notification_h last_noti = nullptr;
+  for (int i = 0; i < 5; i++) {
+    notification_h noti = InsertNoti(NOTIFICATION_TYPE_NOTI);
+    ASSERT_NE(noti, nullptr);
+    if (last_noti) notification_free(last_noti);
+    last_noti = noti;
+  }
+  ASSERT_NE(last_noti, nullptr);
+
+  GList* excess_list = nullptr;
+  int ret = notification_noti_check_limit(last_noti, 5001, &excess_list);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
+  /* Under the limit, no excess IDs should be returned */
+  EXPECT_EQ(g_list_length(excess_list), 0u);
+
+  if (excess_list) g_list_free(excess_list);
+  notification_free(last_noti);
+}
+
+/* COUNT_07: CheckLimitOverThresholdReturnsExcess
+ * Populate DB with 102 rows via SQL (fast), then call
+ * notification_noti_check_limit. Expect 2 excess priv_ids returned
+ * (oldest by insert_time).
+ */
+TEST_F(NotificationCountIntegrationTest, CheckLimitOverThresholdReturnsExcess) {
+  /* We need a valid notification handle to get caller_app_id */
+  notification_h probe = notification_create(NOTIFICATION_TYPE_NOTI);
+  ASSERT_NE(probe, nullptr);
+  notification_set_uid(probe, 5001);
+  notification_set_display_applist(probe,
+      NOTIFICATION_DISPLAY_APP_NOTIFICATION_TRAY);
+  int ret = notification_noti_insert(probe);
+  ASSERT_EQ(ret, NOTIFICATION_ERROR_NONE);
+
+  char* caller_app = nullptr;
+  notification_get_pkgname(probe, &caller_app);
+  ASSERT_NE(caller_app, nullptr);
+  std::string caller_app_str(caller_app);
+
+  /* Remove the probe noti; we will bulk-insert via SQL */
+  int g = 0, probe_id = 0;
+  notification_get_id(probe, &g, &probe_id);
+  notification_noti_delete_by_priv_id(caller_app_str.c_str(), probe_id);
+
+  /* Bulk-insert 102 rows directly via SQL for speed */
+  sqlite3* db = nullptr;
+  int rc = sqlite3_open(db_path_.c_str(), &db);
+  ASSERT_EQ(rc, SQLITE_OK);
+
+  for (int i = 0; i < 102; i++) {
+    char* sql = sqlite3_mprintf(
+        "INSERT INTO noti_list "
+        "(type, layout, pkg_id, caller_app_id, display_applist,"
+        " uid, insert_time) "
+        "VALUES (%d, 0, %Q, %Q, %d, %d, %d);",
+        NOTIFICATION_TYPE_NOTI, caller_app_str.c_str(),
+        caller_app_str.c_str(),
+        NOTIFICATION_DISPLAY_APP_NOTIFICATION_TRAY, 5001, i);
+    sqlite3_exec(db, sql, nullptr, nullptr, nullptr);
+    sqlite3_free(sql);
+  }
+  sqlite3_close(db);
+
+  /* Verify count is 102 */
+  int count = 0;
+  ret = notification_noti_get_all_count(NOTIFICATION_TYPE_NOTI,
+      &count, 5001);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
+  EXPECT_EQ(count, 102);
+
+  /* check_limit should return 2 excess IDs (102 - 100 = 2) */
+  GList* excess_list = nullptr;
+  ret = notification_noti_check_limit(probe, 5001, &excess_list);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
+  EXPECT_EQ(g_list_length(excess_list), 2u);
+
+  if (excess_list) g_list_free(excess_list);
+  notification_free(probe);
+}

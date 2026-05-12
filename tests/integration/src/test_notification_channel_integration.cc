@@ -268,8 +268,50 @@ TEST_F(NotificationChannelIntegrationTest, CHANNEL_05_ChannelNameOnNotification)
   notification_free(loaded);
 }
 
-/* CHANNEL_06: Multiple channels for same app */
-TEST_F(NotificationChannelIntegrationTest, CHANNEL_06_MultipleChannelsForApp) {
+/* CHANNEL_06: Channel clone via notification_clone preserves channel_name */
+TEST_F(NotificationChannelIntegrationTest, CHANNEL_06_ChannelClonePreservesFields) {
+  /* Insert a channel in DB with blockable=1 */
+  int ret = notification_noti_insert_channel("com.test.app",
+      "clone_channel", 1, 0);
+  ASSERT_EQ(ret, NOTIFICATION_ERROR_NONE);
+
+  /* Create a notification with that channel name */
+  notification_h noti = notification_create(NOTIFICATION_TYPE_NOTI);
+  if (!noti)
+    GTEST_SKIP() << "notification_create requires app context";
+
+  ret = notification_set_channel_name(noti, "clone_channel");
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
+  notification_set_display_applist(noti,
+      NOTIFICATION_DISPLAY_APP_NOTIFICATION_TRAY);
+
+  /* Clone the notification */
+  notification_h clone = nullptr;
+  ret = notification_clone(noti, &clone);
+  ASSERT_EQ(ret, NOTIFICATION_ERROR_NONE);
+  ASSERT_NE(clone, nullptr);
+
+  /* Verify channel name is preserved in clone */
+  const char* channel_name = nullptr;
+  ret = notification_get_channel_name(clone, &channel_name);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
+  if (channel_name != nullptr)
+    EXPECT_STREQ(channel_name, "clone_channel");
+
+  /* Verify the original channel DB entry still has blockable=1 */
+  int blockable = -1;
+  int is_blocked = -1;
+  ret = notification_noti_get_channel("com.test.app",
+      "clone_channel", &blockable, &is_blocked);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
+  EXPECT_EQ(blockable, 1);
+
+  notification_free(clone);
+  notification_free(noti);
+}
+
+/* CHANNEL_07: Multiple channels for same app */
+TEST_F(NotificationChannelIntegrationTest, CHANNEL_07_MultipleChannelsForApp) {
   int ret = notification_noti_insert_channel("com.test.app", "ch_a", 0, 0);
   ASSERT_EQ(ret, NOTIFICATION_ERROR_NONE);
 

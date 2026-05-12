@@ -27,6 +27,8 @@
 extern "C" {
 #endif
 
+#pragma GCC visibility push(default)
+
 int notification_tidl_is_master_ready(void);
 int notification_tidl_event_monitor_init(void);
 void notification_tidl_event_monitor_fini(void);
@@ -83,6 +85,8 @@ int notification_tidl_request_channel_get_list(const char *app_id,
 int notification_tidl_add_deffered_task(void (*deferred_task_cb)(void *data),
 		void *user_data);
 int notification_tidl_del_deffered_task(void (*deferred_task_cb)(void *data));
+
+#pragma GCC visibility pop
 
 // int notification_ipc_request_update_async(notification_h noti,
 // 		void (*result_cb)(int priv_id, int result, void *data),

@@ -110,6 +110,15 @@ const char* CREATE_NOTI_TABLE_SQL =
 
 }  // namespace
 
+static GVariant* UnwrapNotiVariant(GVariant* wrapped) {
+  GVariant* inner = nullptr;
+  if (g_variant_is_of_type(wrapped, G_VARIANT_TYPE("(v)")))
+    g_variant_get(wrapped, "(v)", &inner);
+  else
+    inner = g_variant_ref(wrapped);
+  return inner;
+}
+
 class NotificationIpcIntegrationTest : public ::testing::Test {
  protected:
   void SetUp() override {
@@ -147,8 +156,10 @@ class NotificationIpcIntegrationTest : public ::testing::Test {
       GTEST_SKIP() << "GVariant serialization not available";
     }
     notification_h probe_noti = notification_create(NOTIFICATION_TYPE_NOTI);
+    GVariant* probe_inner = UnwrapNotiVariant(probe_v);
     int probe_ret = notification_ipc_make_noti_from_gvariant(
-        probe_noti, probe_v);
+        probe_noti, probe_inner);
+    g_variant_unref(probe_inner);
     g_variant_unref(probe_v);
 
     bool probe_ok = false;
@@ -196,10 +207,11 @@ TEST_F(NotificationIpcIntegrationTest,
     GTEST_SKIP() << "GVariant serialization not available without daemon";
   }
 
+  GVariant *inner = UnwrapNotiVariant(variant);
   notification_h noti2 = notification_create(NOTIFICATION_TYPE_NOTI);
   ASSERT_NE(noti2, nullptr);
 
-  int ret = notification_ipc_make_noti_from_gvariant(noti2, variant);
+  int ret = notification_ipc_make_noti_from_gvariant(noti2, inner);
   EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
 
   char *title = nullptr;
@@ -212,6 +224,7 @@ TEST_F(NotificationIpcIntegrationTest,
   ASSERT_NE(content, nullptr);
   EXPECT_STREQ(content, "serial_content");
 
+  g_variant_unref(inner);
   g_variant_unref(variant);
   notification_free(noti2);
   notification_free(noti);
@@ -232,10 +245,11 @@ TEST_F(NotificationIpcIntegrationTest,
     GTEST_SKIP() << "GVariant serialization not available without daemon";
   }
 
+  GVariant *inner = UnwrapNotiVariant(variant);
   notification_h noti2 = notification_create(NOTIFICATION_TYPE_NOTI);
   ASSERT_NE(noti2, nullptr);
 
-  int ret = notification_ipc_make_noti_from_gvariant(noti2, variant);
+  int ret = notification_ipc_make_noti_from_gvariant(noti2, inner);
   EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
 
   char *title = nullptr;
@@ -249,6 +263,7 @@ TEST_F(NotificationIpcIntegrationTest,
   EXPECT_TRUE(snd_type == NOTIFICATION_SOUND_TYPE_NONE ||
       snd_type == static_cast<notification_sound_type_e>(0));
 
+  g_variant_unref(inner);
   g_variant_unref(variant);
   notification_free(noti2);
   notification_free(noti);
@@ -273,10 +288,11 @@ TEST_F(NotificationIpcIntegrationTest,
     GTEST_SKIP() << "GVariant serialization not available without daemon";
   }
 
+  GVariant *inner = UnwrapNotiVariant(variant);
   notification_h noti2 = notification_create(NOTIFICATION_TYPE_NOTI);
   ASSERT_NE(noti2, nullptr);
 
-  int ret = notification_ipc_make_noti_from_gvariant(noti2, variant);
+  int ret = notification_ipc_make_noti_from_gvariant(noti2, inner);
   EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
 
   notification_sound_type_e snd_type;
@@ -293,6 +309,7 @@ TEST_F(NotificationIpcIntegrationTest,
   ASSERT_NE(vib_path, nullptr);
   EXPECT_STREQ(vib_path, "/test/vib.ivt");
 
+  g_variant_unref(inner);
   g_variant_unref(variant);
   notification_free(noti2);
   notification_free(noti);
@@ -315,10 +332,11 @@ TEST_F(NotificationIpcIntegrationTest,
     GTEST_SKIP() << "GVariant serialization not available without daemon";
   }
 
+  GVariant *inner = UnwrapNotiVariant(variant);
   notification_h noti2 = notification_create(NOTIFICATION_TYPE_NOTI);
   ASSERT_NE(noti2, nullptr);
 
-  int ret = notification_ipc_make_noti_from_gvariant(noti2, variant);
+  int ret = notification_ipc_make_noti_from_gvariant(noti2, inner);
   EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
 
   notification_led_op_e led_op;
@@ -332,6 +350,7 @@ TEST_F(NotificationIpcIntegrationTest,
   EXPECT_EQ(on_ms, 200);
   EXPECT_EQ(off_ms, 800);
 
+  g_variant_unref(inner);
   g_variant_unref(variant);
   notification_free(noti2);
   notification_free(noti);
@@ -354,10 +373,11 @@ TEST_F(NotificationIpcIntegrationTest,
     GTEST_SKIP() << "GVariant serialization not available without daemon";
   }
 
+  GVariant *inner = UnwrapNotiVariant(variant);
   notification_h noti2 = notification_create(NOTIFICATION_TYPE_ONGOING);
   ASSERT_NE(noti2, nullptr);
 
-  int ret = notification_ipc_make_noti_from_gvariant(noti2, variant);
+  int ret = notification_ipc_make_noti_from_gvariant(noti2, inner);
   EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
 
   double progress = 0.0;
@@ -368,6 +388,7 @@ TEST_F(NotificationIpcIntegrationTest,
   notification_get_size(noti2, &size);
   EXPECT_DOUBLE_EQ(size, 4096.0);
 
+  g_variant_unref(inner);
   g_variant_unref(variant);
   notification_free(noti2);
   notification_free(noti);
