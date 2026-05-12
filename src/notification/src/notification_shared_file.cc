@@ -592,7 +592,7 @@ static gint __comp_uid_info_list(gconstpointer a, gconstpointer b)
 	if (!a || !b)
 		return -1;
 
-	if (uid_info->uid == GPOINTER_TO_INT(b))
+	if (uid_info->uid == static_cast<uid_t>(GPOINTER_TO_INT(b)))
 		return 0;
 
 	return -1;
@@ -634,12 +634,12 @@ EXPORT_API void notification_remove_private_sharing_target_id(
 	if (sharing_req_list == NULL)
 		return;
 
-	uid_info = sharing_req_list->data;
+	uid_info = static_cast<uid_info_s*>(sharing_req_list->data);
 	target_app = g_list_find_custom(uid_info->target_app_list, sender,
 						__comp_target_app);
 
 	if (target_app != NULL) {
-		target_info = target_app->data;
+		target_info = static_cast<target_app_info_s*>(target_app->data);
 		if (target_info) {
 			uid_info->target_app_list = g_list_remove(
 					uid_info->target_app_list, target_info);
@@ -674,7 +674,7 @@ EXPORT_API void notification_add_private_sharing_target_id(pid_t pid,
 
 		__uid_list = g_list_append(__uid_list, uid_info);
 	} else {
-		uid_info = sharing_req_list->data;
+		uid_info = static_cast<uid_info_s*>(sharing_req_list->data);
 	}
 
 	target_app = g_list_find_custom(uid_info->target_app_list, sender,
@@ -1108,7 +1108,7 @@ EXPORT_API int notification_set_private_sharing(notification_h noti,
 		uid_info->uid = uid;
 		__uid_list = g_list_append(__uid_list, uid_info);
 	} else {
-		uid_info = tmp->data;
+		uid_info = static_cast<uid_info_s*>(tmp->data);
 	}
 
 	req_list = g_list_find_custom(uid_info->sharing_req_list,
@@ -1163,7 +1163,7 @@ EXPORT_API int notification_set_private_sharing(notification_h noti,
 
 	for (iter = new_file_list; iter != NULL; iter = g_list_next(iter)) {
 		tmp = NULL;
-		file_info = iter->data;
+		file_info = static_cast<sharing_file_info_s*>(iter->data);
 		if (is_overlapping) {
 			tmp = g_list_find_custom(req_data->shared_file_list,
 				file_info, __comp_file_info);
@@ -1318,7 +1318,7 @@ out:
 			__comp_uid_info_list);
 
 	if (tmp_list != NULL) {
-		uid_info = tmp_list->data;
+		uid_info = static_cast<uid_info_s*>(tmp_list->data);
 		uid_info->sharing_req_list = g_list_remove(
 				uid_info->sharing_req_list, req_data);
 	}
@@ -1349,7 +1349,7 @@ EXPORT_API void notification_remove_private_sharing(
 	if (tmp_list == NULL)
 		return;
 
-	uid_info = tmp_list->data;
+	uid_info = static_cast<uid_info_s*>(tmp_list->data);
 
 	req_list = g_list_find_custom(uid_info->sharing_req_list, src_app_id,
 			__comp_sharing_req_list);
