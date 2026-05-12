@@ -43,6 +43,9 @@
 #include <notification_tidl.h>
 #include <notification_raii.h>
 
+#include <string>
+#include <vector>
+
 #define REGULAR_UID_MIN 5000
 
 #define NOTIFICATION_CTOR __attribute__((constructor))
@@ -1351,21 +1354,19 @@ EXPORT_API int notification_get_uid(notification_h noti,
 	return NOTIFICATION_ERROR_NONE;
 }
 
-static GList *__copy_private_file(notification_h noti)
+static std::vector<std::string> __copy_private_file(notification_h noti)
 {
-	bundle *dst_b;
-	bundle *src_b;
+	std::vector<std::string> file_list;
 	char buf_key[32];
 	char *src_path;
 	char *dst_path;
-	int i;
-	GList *file_list = NULL;
 	int ret;
 
 	if (noti->b_priv_image_path && noti->b_image_path) {
-		dst_b = noti->b_priv_image_path;
-		src_b = noti->b_image_path;
-		for (i = NOTIFICATION_IMAGE_TYPE_ICON; i <= NOTIFICATION_IMAGE_TYPE_MAX; i++) {
+		bundle *dst_b = noti->b_priv_image_path;
+		bundle *src_b = noti->b_image_path;
+		for (int i = NOTIFICATION_IMAGE_TYPE_ICON;
+		     i <= NOTIFICATION_IMAGE_TYPE_MAX; i++) {
 			src_path = NULL;
 			dst_path = NULL;
 
@@ -1381,23 +1382,21 @@ static GList *__copy_private_file(notification_h noti)
 
 			ret = notification_copy_private_file(src_path, dst_path);
 			if (ret == NOTIFICATION_ERROR_NONE)
-				file_list = g_list_append(file_list, strdup(dst_path));
+				file_list.push_back(dst_path);
 		}
 	}
 	if (noti->sound_path && noti->priv_sound_path) {
 		ret = notification_copy_private_file(noti->sound_path,
 						     noti->priv_sound_path);
 		if (ret == NOTIFICATION_ERROR_NONE)
-			file_list = g_list_append(file_list,
-						  strdup(noti->priv_sound_path));
+			file_list.push_back(noti->priv_sound_path);
 	}
 
 	if (noti->vibration_path && noti->priv_vibration_path) {
 		ret = notification_copy_private_file(noti->vibration_path,
 						     noti->priv_vibration_path);
 		if (ret == NOTIFICATION_ERROR_NONE)
-			file_list = g_list_append(file_list,
-						  strdup(noti->priv_vibration_path));
+			file_list.push_back(noti->priv_vibration_path);
 	}
 
 	return file_list;
@@ -1405,16 +1404,20 @@ static GList *__copy_private_file(notification_h noti)
 /* LCOV_EXCL_STOP */
 
 /* LCOV_EXCL_START */
-static void __remove_private_file(gpointer data, gpointer user_data)
+static void __remove_private_file(const char *path)
 {
-	GFile *src = NULL;
-	char *path = (char *)data;
-
-	src = g_file_new_for_path(path);
+	GFile *src = g_file_new_for_path(path);
 	if (src) {
 		g_file_delete(src, NULL, NULL);
 		g_object_unref(src);
 	}
+}
+
+static void __remove_private_files(
+    const std::vector<std::string> &file_list)
+{
+	for (const auto &path : file_list)
+		__remove_private_file(path.c_str());
 }
 /* LCOV_EXCL_STOP */
 
@@ -1423,7 +1426,6 @@ EXPORT_API int notification_post_for_uid(notification_h noti, uid_t uid)
 {
 	int ret = 0;
 	int id = 0;
-	GList *file_list;
 	bool event_flag;
 
 	if (noti == NULL)
@@ -1439,7 +1441,7 @@ EXPORT_API int notification_post_for_uid(notification_h noti, uid_t uid)
 
 	INFO("notification post [%d]", (int)uid);
 
-	file_list = __copy_private_file(noti);
+	auto file_list = __copy_private_file(noti);
 	ret = notification_tidl_request_insert(noti, &id);
 	if (ret == NOTIFICATION_ERROR_NONE) {
 		noti->priv_id = id;
@@ -1447,20 +1449,16 @@ EXPORT_API int notification_post_for_uid(notification_h noti, uid_t uid)
 
 		ret = notification_get_event_flag(noti, &event_flag);
 		if (ret != NOTIFICATION_ERROR_NONE)
-			goto out;
+			return ret;
 
 		if (event_flag == true) {
 			ret = notification_tidl_event_monitor_init();
 			if (ret != NOTIFICATION_ERROR_NONE)
-				goto out;
+				return ret;
 		}
 	} else {
-		g_list_foreach(file_list, __remove_private_file, NULL);
+		__remove_private_files(file_list);
 	}
-
-out:
-	if (file_list)
-		g_list_free_full(file_list, free);
 
 	return ret;
 }
@@ -1703,7 +1701,6 @@ EXPORT_API int notification_post_with_event_cb_for_uid(notification_h noti, even
 	int priv_id;
 	notification_event_cb_info_s *info = NULL;
 	GList *find_list;
-	GList *file_list;
 
 	if (noti == NULL || cb == NULL)
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
@@ -1715,12 +1712,12 @@ EXPORT_API int notification_post_with_event_cb_for_uid(notification_h noti, even
 	noti->event_flag = true;
 	noti->uid = uid;
 
-	file_list = __copy_private_file(noti);
+	auto file_list = __copy_private_file(noti);
 	ret = notification_tidl_request_insert(noti, &priv_id);
 	if (ret != NOTIFICATION_ERROR_NONE) {
 		ERR("Failed to post notification id[%d]", priv_id);
-		g_list_foreach(file_list, __remove_private_file, NULL);
-		goto out;
+		__remove_private_files(file_list);
+		return ret;
 	}
 
 	noti->priv_id = priv_id;
@@ -1729,7 +1726,7 @@ EXPORT_API int notification_post_with_event_cb_for_uid(notification_h noti, even
 
 	ret = notification_tidl_event_monitor_init();
 	if (ret != NOTIFICATION_ERROR_NONE)
-		goto out;
+		return ret;
 
 	__notification_mutex_lock();
 
@@ -1746,8 +1743,8 @@ EXPORT_API int notification_post_with_event_cb_for_uid(notification_h noti, even
 		info = (notification_event_cb_info_s *)malloc(sizeof(notification_event_cb_info_s));
 		if (info == NULL) {
 			ERR("Failed to alloc memory");
-			ret = NOTIFICATION_ERROR_OUT_OF_MEMORY;
-			goto out;
+			__notification_mutex_unlock();
+			return NOTIFICATION_ERROR_OUT_OF_MEMORY;
 		}
 		info->priv_id = priv_id;
 		info->cb = cb;
@@ -1755,10 +1752,6 @@ EXPORT_API int notification_post_with_event_cb_for_uid(notification_h noti, even
 		__noti_event_cb_list = g_list_append(__noti_event_cb_list, info);
 		WARN("new event cb appended id[%d]", priv_id);
 	}
-
-out:
-	if (file_list)
-		g_list_free_full(file_list, free);
 
 	__notification_mutex_unlock();
 

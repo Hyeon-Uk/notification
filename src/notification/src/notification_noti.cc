@@ -947,48 +947,34 @@ static int _check_text_input(notification_h noti)
 
 static int _get_noti_count(sqlite3 *db, char *query_where, int *count)
 {
-	int ret;
-	char *query = NULL;
-	sqlite3_stmt *stmt = NULL;
-
 	if (db == NULL || query_where == NULL || count == NULL)
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 
-	query = sqlite3_mprintf("SELECT COUNT(*) FROM noti_list %s", query_where);
-	if (query == NULL) {
+	SqliteCharPtr query(sqlite3_mprintf("SELECT COUNT(*) FROM noti_list %s", query_where));
+	if (!query) {
 		/* LCOV_EXCL_START */
 		ERR("sqlite3_mprintf Failed");
-		ret = NOTIFICATION_ERROR_OUT_OF_MEMORY;
-		goto err;
+		return NOTIFICATION_ERROR_OUT_OF_MEMORY;
 		/* LCOV_EXCL_STOP */
 	}
 
-	ret = sqlite3_prepare_v2(db, query, -1, &stmt, NULL);
+	StmtGuard stmt;
+	int ret = sqlite3_prepare_v2(db, query.get(), -1, stmt.addr(), NULL);
 	if (ret != SQLITE_OK) {
 		/* LCOV_EXCL_START */
 		ERR("sqlite3_prepare_v2 Failed [%d][%s]", ret,
 			sqlite3_errmsg(db));
-		ret = NOTIFICATION_ERROR_FROM_DB;
-		goto err;
+		return NOTIFICATION_ERROR_FROM_DB;
 		/* LCOV_EXCL_STOP */
 	}
 
-	ret = sqlite3_step(stmt);
+	ret = sqlite3_step(stmt.get());
 	if (ret == SQLITE_ROW) {
-		*count = sqlite3_column_int(stmt, 0);
-		ret = NOTIFICATION_ERROR_NONE;
-	} else {
-		ret = NOTIFICATION_ERROR_FROM_DB;
-		goto err;
+		*count = sqlite3_column_int(stmt.get(), 0);
+		return NOTIFICATION_ERROR_NONE;
 	}
 
-err:
-	if (stmt)
-		sqlite3_finalize(stmt);
-	if (query)
-		sqlite3_free(query);
-
-	return ret;
+	return NOTIFICATION_ERROR_FROM_DB;
 }
 
 EXPORT_API int notification_noti_insert(notification_h noti)
@@ -1160,27 +1146,25 @@ EXPORT_API int notification_noti_delete_all(notification_type_e type,
 					const char *app_id, int *deleted_num,
 					int **deleted_list, uid_t uid)
 {
-	sqlite3 *db = NULL;
-	sqlite3_stmt *stmt = NULL;
-	char *query = NULL;
-	char *query_where = NULL;
 	int *tmp = NULL;
 	int ret = NOTIFICATION_ERROR_NONE;
 	int count = 0;
 	int i = 0;
 
-	db = notification_db_open();
-	if (!db)
+	sqlite3 *db_raw = notification_db_open();
+	if (!db_raw)
 		return get_last_result();
+	DbGuard db(db_raw);
 
 	/* create query_where according to appid and type */
+	SqliteCharPtr query_where;
 	if (app_id == NULL || strlen(app_id) == 0) {
 		if (type == NOTIFICATION_TYPE_NONE)
-			query_where = sqlite3_mprintf("WHERE uid = %d", uid);
+			query_where.reset(sqlite3_mprintf("WHERE uid = %d", uid));
 		else
-			query_where = sqlite3_mprintf("WHERE type = %d "
-						"AND uid = %d", type, uid);
-		if (query_where == NULL) {
+			query_where.reset(sqlite3_mprintf("WHERE type = %d "
+						"AND uid = %d", type, uid));
+		if (!query_where) {
 			/* LCOV_EXCL_START */
 			ret = NOTIFICATION_ERROR_OUT_OF_MEMORY;
 			goto err;
@@ -1188,14 +1172,14 @@ EXPORT_API int notification_noti_delete_all(notification_type_e type,
 		}
 	} else {
 		if (type == NOTIFICATION_TYPE_NONE)
-			query_where = sqlite3_mprintf("WHERE caller_app_id = %Q "
-						"AND uid = %d", app_id, uid);
+			query_where.reset(sqlite3_mprintf("WHERE caller_app_id = %Q "
+						"AND uid = %d", app_id, uid));
 		else
-			query_where = sqlite3_mprintf("WHERE caller_app_id = %Q "
+			query_where.reset(sqlite3_mprintf("WHERE caller_app_id = %Q "
 						"AND type = %d AND uid = %d",
-						app_id, type, uid);
+						app_id, type, uid));
 
-		if (query_where == NULL) {
+		if (!query_where) {
 			/* LCOV_EXCL_START */
 			ret = NOTIFICATION_ERROR_OUT_OF_MEMORY;
 			goto err;
@@ -1204,7 +1188,7 @@ EXPORT_API int notification_noti_delete_all(notification_type_e type,
 	}
 
 	/* check count to delete */
-	ret = _get_noti_count(db, query_where, &count);
+	ret = _get_noti_count(db.get(), query_where.get(), &count);
 	if (ret != NOTIFICATION_ERROR_NONE) {
 		ERR("Failed to get count to delete %d", ret);
 		goto err;
@@ -1212,20 +1196,21 @@ EXPORT_API int notification_noti_delete_all(notification_type_e type,
 
 	/* Get priv_id and add to list */
 	if (count > 0 && deleted_list != NULL) {
-		query = sqlite3_mprintf("SELECT priv_id FROM noti_list %s",
-				query_where);
-		if (query == NULL) {
+		SqliteCharPtr select_query(sqlite3_mprintf("SELECT priv_id FROM noti_list %s",
+				query_where.get()));
+		if (!select_query) {
 			/* LCOV_EXCL_START */
 			ret = NOTIFICATION_ERROR_OUT_OF_MEMORY;
 			goto err;
 			/* LCOV_EXCL_STOP */
 		}
 
-		ret = sqlite3_prepare_v2(db, query, strlen(query), &stmt, NULL);
+		StmtGuard stmt;
+		ret = sqlite3_prepare_v2(db.get(), select_query.get(), -1, stmt.addr(), NULL);
 		if (ret != SQLITE_OK) {
 			/* LCOV_EXCL_START */
 			ERR("Failed to sqlite3_prepare_V2 [%d][%s]",
-					ret, sqlite3_errmsg(db));
+					ret, sqlite3_errmsg(db.get()));
 			ret = NOTIFICATION_ERROR_FROM_DB;
 			goto err;
 			/* LCOV_EXCL_STOP */
@@ -1240,27 +1225,26 @@ EXPORT_API int notification_noti_delete_all(notification_type_e type,
 			/* LCOV_EXCL_STOP */
 		}
 
-		while (sqlite3_step(stmt) == SQLITE_ROW) {
-			*(tmp + i) = sqlite3_column_int(stmt, 0);
+		while (sqlite3_step(stmt.get()) == SQLITE_ROW) {
+			*(tmp + i) = sqlite3_column_int(stmt.get(), 0);
 			i++;
 		}
-
-		sqlite3_free(query);
-		query = NULL;
 	}
 
-	/* execute main query */
-	query = sqlite3_mprintf("DELETE FROM noti_list %s", query_where);
-	if (query == NULL) {
-		/* LCOV_EXCL_START */
-		ret = NOTIFICATION_ERROR_OUT_OF_MEMORY;
-		goto err;
-		/* LCOV_EXCL_STOP */
-	}
+	{
+		/* execute main query */
+		SqliteCharPtr query(sqlite3_mprintf("DELETE FROM noti_list %s", query_where.get()));
+		if (!query) {
+			/* LCOV_EXCL_START */
+			ret = NOTIFICATION_ERROR_OUT_OF_MEMORY;
+			goto err;
+			/* LCOV_EXCL_STOP */
+		}
 
-	ret = notification_db_exec(db, query, NULL);
-	if (ret != NOTIFICATION_ERROR_NONE)
-		goto err;
+		ret = notification_db_exec(db.get(), query.get(), NULL);
+		if (ret != NOTIFICATION_ERROR_NONE)
+			goto err;
+	}
 
 	if (deleted_list)
 		*deleted_list = tmp;
@@ -1268,23 +1252,11 @@ EXPORT_API int notification_noti_delete_all(notification_type_e type,
 	if (deleted_num != NULL)
 		*deleted_num = count;
 
+	return ret;
+
 err:
-	if (stmt)
-		sqlite3_finalize(stmt);
-
-	if (query)
-		sqlite3_free(query);
-
-	if (query_where)
-		sqlite3_free(query_where);
-
-	if (db)
-		notification_db_close(&db);
-
-	if (ret != NOTIFICATION_ERROR_NONE) {
-		if (tmp != NULL)
-			free(tmp);
-	}
+	if (tmp != NULL)
+		free(tmp);
 
 	return ret;
 }
@@ -1292,34 +1264,20 @@ err:
 /* LCOV_EXCL_START */
 EXPORT_API int notification_noti_delete_by_priv_id(const char *app_id, int priv_id)
 {
-	sqlite3 *db = NULL;
-	char *query = NULL;
-	int ret = NOTIFICATION_ERROR_NONE;
-
 	if (app_id == NULL)
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 
-	db = notification_db_open();
-	if (!db)
+	sqlite3 *db_raw = notification_db_open();
+	if (!db_raw)
 		return get_last_result();
+	DbGuard db(db_raw);
 
-	query = sqlite3_mprintf("DELETE FROM noti_list WHERE caller_app_id = %Q "
-				"AND priv_id = %d", app_id, priv_id);
-	if (query == NULL) {
-		ret = NOTIFICATION_ERROR_OUT_OF_MEMORY;
-		goto err;
-	}
+	SqliteCharPtr query(sqlite3_mprintf("DELETE FROM noti_list WHERE caller_app_id = %Q "
+				"AND priv_id = %d", app_id, priv_id));
+	if (!query)
+		return NOTIFICATION_ERROR_OUT_OF_MEMORY;
 
-	ret = notification_db_exec(db, query, NULL);
-
-err:
-	if (query)
-		sqlite3_free(query);
-
-	if (db)
-		notification_db_close(&db);
-
-	return ret;
+	return notification_db_exec(db.get(), query.get(), NULL);
 }
 /* LCOV_EXCL_STOP */
 
@@ -1348,11 +1306,7 @@ EXPORT_API int notification_noti_delete_by_display_applist(int display_applist,
 			notification_deleted_list_info_s **deleted_list,
 			uid_t uid)
 {
-	sqlite3 *db = NULL;
-	sqlite3_stmt *stmt = NULL;
 	notification_deleted_list_info_s *info = NULL;
-	char *query = NULL;
-	char *query_where = NULL;
 	int count = 0;
 	int ret;
 	int i = 0;
@@ -1360,14 +1314,15 @@ EXPORT_API int notification_noti_delete_by_display_applist(int display_applist,
 	if (display_applist < NOTIFICATION_DISPLAY_APP_NOTIFICATION_TRAY)
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 
-	db = notification_db_open();
-	if (!db)
+	sqlite3 *db_raw = notification_db_open();
+	if (!db_raw)
 		return get_last_result();
+	DbGuard db(db_raw);
 
-	query_where = sqlite3_mprintf("WHERE (display_applist & %d) = %d "
+	SqliteCharPtr query_where(sqlite3_mprintf("WHERE (display_applist & %d) = %d "
 				"AND uid = %d", display_applist, display_applist,
-				uid);
-	if (query_where == NULL) {
+				uid));
+	if (!query_where) {
 		/* LCOV_EXCL_START */
 		ERR("sqlite3_mprintf Failed");
 		ret = NOTIFICATION_ERROR_OUT_OF_MEMORY;
@@ -1376,7 +1331,7 @@ EXPORT_API int notification_noti_delete_by_display_applist(int display_applist,
 	}
 
 	/* check count to delete */
-	ret = _get_noti_count(db, query_where, &count);
+	ret = _get_noti_count(db.get(), query_where.get(), &count);
 	if (ret != NOTIFICATION_ERROR_NONE) {
 		ERR("Failed to get count to delete %d", ret);
 		goto err;
@@ -1384,20 +1339,21 @@ EXPORT_API int notification_noti_delete_by_display_applist(int display_applist,
 
 	/* get priv_id, app_id to add deleted_list */
 	if (count > 0 && deleted_list != NULL) {
-		query = sqlite3_mprintf("SELECT priv_id, caller_app_id "
-				"FROM noti_list %s", query_where);
-		if (query == NULL) {
+		SqliteCharPtr select_query(sqlite3_mprintf("SELECT priv_id, caller_app_id "
+				"FROM noti_list %s", query_where.get()));
+		if (!select_query) {
 			/* LCOV_EXCL_START */
 			ret = NOTIFICATION_ERROR_OUT_OF_MEMORY;
 			goto err;
 			/* LCOV_EXCL_STOP */
 		}
 
-		ret = sqlite3_prepare_v2(db, query, strlen(query), &stmt, NULL);
+		StmtGuard stmt;
+		ret = sqlite3_prepare_v2(db.get(), select_query.get(), -1, stmt.addr(), NULL);
 		if (ret != SQLITE_OK) {
 			/* LCOV_EXCL_START */
 			ERR("Failed to sqlite3_prepare [%d][%s]", ret,
-							sqlite3_errmsg(db));
+							sqlite3_errmsg(db.get()));
 			ret = NOTIFICATION_ERROR_FROM_DB;
 			goto err;
 			/* LCOV_EXCL_STOP */
@@ -1413,31 +1369,28 @@ EXPORT_API int notification_noti_delete_by_display_applist(int display_applist,
 			/* LCOV_EXCL_STOP */
 		}
 
-		while (sqlite3_step(stmt) == SQLITE_ROW) {
-			(info + i)->priv_id = sqlite3_column_int(stmt, 0);
-			(info + i)->app_id = notification_db_column_text(stmt, 1);
+		while (sqlite3_step(stmt.get()) == SQLITE_ROW) {
+			(info + i)->priv_id = sqlite3_column_int(stmt.get(), 0);
+			(info + i)->app_id = notification_db_column_text(stmt.get(), 1);
 			i++;
 		}
+	}
 
-		if (query) {
-			sqlite3_free(query);
-			query = NULL;
+	{
+		/* execute main query */
+		SqliteCharPtr query(sqlite3_mprintf("DELETE FROM noti_list %s", query_where.get()));
+		if (!query) {
+			/* LCOV_EXCL_START */
+			ERR("sqlite3_mprintf Failed");
+			ret = NOTIFICATION_ERROR_OUT_OF_MEMORY;
+			goto err;
+			/* LCOV_EXCL_STOP */
 		}
-	}
 
-	/* execute main query */
-	query = sqlite3_mprintf("DELETE FROM noti_list %s", query_where);
-	if (query == NULL) {
-		/* LCOV_EXCL_START */
-		ERR("sqlite3_mprintf Failed");
-		ret = NOTIFICATION_ERROR_OUT_OF_MEMORY;
-		goto err;
-		/* LCOV_EXCL_STOP */
+		ret = notification_db_exec(db.get(), query.get(), NULL);
+		if (ret != NOTIFICATION_ERROR_NONE)
+			goto err;
 	}
-
-	ret = notification_db_exec(db, query, NULL);
-	if (ret != NOTIFICATION_ERROR_NONE)
-		goto err;
 
 	if (deleted_num != NULL)
 		*deleted_num = count;
@@ -1445,20 +1398,11 @@ EXPORT_API int notification_noti_delete_by_display_applist(int display_applist,
 	if (deleted_list != NULL)
 		*deleted_list = info;
 
-err:
-	if (stmt)
-		sqlite3_finalize(stmt);
-	if (query_where)
-		sqlite3_free(query_where);
-	if (query)
-		sqlite3_free(query);
-	if (db)
-		notification_db_close(&db);
+	return ret;
 
-	if (ret != NOTIFICATION_ERROR_NONE) {
-		if (info != NULL)
-			__free_deleted_list(info, count);
-	}
+err:
+	if (info != NULL)
+		__free_deleted_list(info, count);
 
 	return ret;
 }
@@ -1470,12 +1414,6 @@ EXPORT_API int notification_noti_get_count(notification_type_e type,
 					int group_id, int priv_id,
 					int *count, uid_t uid)
 {
-	sqlite3 *db = NULL;
-	sqlite3_stmt *stmt = NULL;
-	char *query = NULL;
-	char *query_base = NULL;
-	char *query_where = NULL;
-	char *query_where_more = NULL;
 	int ret = NOTIFICATION_ERROR_NONE;
 	int get_count = 0;
 	int internal_group_id = 0;
@@ -1488,184 +1426,155 @@ EXPORT_API int notification_noti_get_count(notification_type_e type,
 		WARN("vconf_get_int");
 	}
 
-	db = notification_db_open();
-	if (!db)
+	sqlite3 *db_raw = notification_db_open();
+	if (!db_raw)
 		return get_last_result();
+	DbGuard db(db_raw);
 
-	query_base = sqlite3_mprintf("SELECT count(*) FROM noti_list ");
-	if (query_base == NULL) {
-		ret = NOTIFICATION_ERROR_OUT_OF_MEMORY;
-		goto err;
+	SqliteCharPtr query_base(sqlite3_mprintf("SELECT count(*) FROM noti_list "));
+	if (!query_base) {
+		*count = get_count;
+		return NOTIFICATION_ERROR_OUT_OF_MEMORY;
 	}
 
 	internal_group_id =
-		_notification_noti_get_internal_group_id_by_priv_id(app_id, priv_id, db);
+		_notification_noti_get_internal_group_id_by_priv_id(app_id, priv_id, db.get());
 
+	SqliteCharPtr query_where;
 	if (group_id == NOTIFICATION_GROUP_ID_NONE) {
 		if (priv_id == NOTIFICATION_PRIV_ID_NONE)
-			query_where = sqlite3_mprintf("WHERE caller_app_id = %Q "
-					"AND uid = %d ", app_id, uid);
+			query_where.reset(sqlite3_mprintf("WHERE caller_app_id = %Q "
+					"AND uid = %d ", app_id, uid));
 		else
-			query_where = sqlite3_mprintf("WHERE caller_app_id = %Q "
+			query_where.reset(sqlite3_mprintf("WHERE caller_app_id = %Q "
 					"AND internal_group_id = %d AND uid = %d ",
-					app_id, internal_group_id, uid);
+					app_id, internal_group_id, uid));
 	} else {
 		if (priv_id == NOTIFICATION_PRIV_ID_NONE)
-			query_where = sqlite3_mprintf("WHERE caller_app_id = %Q "
+			query_where.reset(sqlite3_mprintf("WHERE caller_app_id = %Q "
 					"AND group_id = %d AND uid = %d ",
-					app_id, group_id, uid);
+					app_id, group_id, uid));
 		else
-			query_where = sqlite3_mprintf("WHERE caller_app_id = %Q "
+			query_where.reset(sqlite3_mprintf("WHERE caller_app_id = %Q "
 					"AND internal_group_id = %d AND uid = %d ",
-					app_id, internal_group_id, uid);
+					app_id, internal_group_id, uid));
 	}
 
-	if (query_where == NULL) {
-		ret = NOTIFICATION_ERROR_OUT_OF_MEMORY;
-		goto err;
+	if (!query_where) {
+		*count = get_count;
+		return NOTIFICATION_ERROR_OUT_OF_MEMORY;
 	}
 
+	SqliteCharPtr query_where_more;
 	if (status == VCONFKEY_TELEPHONY_SIM_INSERTED) {
 		if (type != NOTIFICATION_TYPE_NONE) {
-			query_where_more = sqlite3_mprintf("type = %d ", type);
-			if (query_where_more == NULL) {
-				ret = NOTIFICATION_ERROR_OUT_OF_MEMORY;
-				goto err;
+			query_where_more.reset(sqlite3_mprintf("type = %d ", type));
+			if (!query_where_more) {
+				*count = get_count;
+				return NOTIFICATION_ERROR_OUT_OF_MEMORY;
 			}
 		}
 	} else {
 		if (type != NOTIFICATION_TYPE_NONE)
-			query_where_more = sqlite3_mprintf("type = %d AND "
-					"flag_simmode = 0 ", type);
+			query_where_more.reset(sqlite3_mprintf("type = %d AND "
+					"flag_simmode = 0 ", type));
 		else
-			query_where_more = sqlite3_mprintf("flag_simmode = 0 ");
+			query_where_more.reset(sqlite3_mprintf("flag_simmode = 0 "));
 
-		if (query_where_more == NULL) {
-			ret = NOTIFICATION_ERROR_OUT_OF_MEMORY;
-			goto err;
+		if (!query_where_more) {
+			*count = get_count;
+			return NOTIFICATION_ERROR_OUT_OF_MEMORY;
 		}
 	}
 
+	SqliteCharPtr query;
 	if (query_where_more) {
-		query = sqlite3_mprintf("%s %s AND %s", query_base, query_where,
-				query_where_more);
-		if (query == NULL) {
-			ret = NOTIFICATION_ERROR_OUT_OF_MEMORY;
-			goto err;
+		query.reset(sqlite3_mprintf("%s %s AND %s", query_base.get(), query_where.get(),
+				query_where_more.get()));
+		if (!query) {
+			*count = get_count;
+			return NOTIFICATION_ERROR_OUT_OF_MEMORY;
 		}
 	} else {
-		query = sqlite3_mprintf("%s %s", query_base, query_where);
-		if (query == NULL) {
-			ret = NOTIFICATION_ERROR_OUT_OF_MEMORY;
-			goto err;
+		query.reset(sqlite3_mprintf("%s %s", query_base.get(), query_where.get()));
+		if (!query) {
+			*count = get_count;
+			return NOTIFICATION_ERROR_OUT_OF_MEMORY;
 		}
 	}
 
-	ret = sqlite3_prepare_v2(db, query, -1, &stmt, NULL);
+	StmtGuard stmt;
+	ret = sqlite3_prepare_v2(db.get(), query.get(), -1, stmt.addr(), NULL);
 	if (ret != SQLITE_OK) {
 		ERR("Failed to sqlite3_prepare_v2[%d][%s]",
-				ret, sqlite3_errmsg(db));
+				ret, sqlite3_errmsg(db.get()));
 
-		ret = NOTIFICATION_ERROR_FROM_DB;
-		goto err;
+		*count = get_count;
+		return NOTIFICATION_ERROR_FROM_DB;
 	}
 
-	ret = sqlite3_step(stmt);
+	ret = sqlite3_step(stmt.get());
 	if (ret == SQLITE_ROW)
-		get_count = sqlite3_column_int(stmt, 0);
-
-	ret = NOTIFICATION_ERROR_NONE;
-
-err:
-	if (stmt)
-		sqlite3_finalize(stmt);
-
-	if (query)
-		sqlite3_free(query);
-
-	if (query_base)
-		sqlite3_free(query_base);
-
-	if (query_where)
-		sqlite3_free(query_where);
-
-	if (query_where_more)
-		sqlite3_free(query_where_more);
-
-	if (db)
-		notification_db_close(&db);
+		get_count = sqlite3_column_int(stmt.get(), 0);
 
 	*count = get_count;
 
-	return ret;
+	return NOTIFICATION_ERROR_NONE;
 }
 /* LCOV_EXCL_STOP */
 
 EXPORT_API int notification_noti_get_all_count(notification_type_e type, int *count, uid_t uid)
 {
-	int ret = NOTIFICATION_ERROR_NONE;
-	int sql_ret;
-	sqlite3 *db = NULL;
-	sqlite3_stmt *stmt = NULL;
-	char *sql_buf = NULL;
-
 	if (count == NULL) {
 		ERR("Invalid parameter - count is null");
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 	}
 
-	db = notification_db_open();
-	if (db == NULL) {
+	sqlite3 *db_raw = notification_db_open();
+	if (db_raw == NULL) {
 		/* LCOV_EXCL_START */
-		ret = get_last_result();
+		int ret = get_last_result();
 		ERR("Failed to open db [%d]", ret);
 		return ret;
 		/* LCOV_EXCL_STOP */
 	}
+	DbGuard db(db_raw);
 
+	SqliteCharPtr sql_buf;
 	if (type != NOTIFICATION_TYPE_NONE)
-		sql_buf = sqlite3_mprintf("SELECT count(*) FROM %q "
+		sql_buf.reset(sqlite3_mprintf("SELECT count(*) FROM %q "
 				"WHERE uid = %d AND type = %d",
-				NOTIFICATION_DB_TABLE, uid, type);
+				NOTIFICATION_DB_TABLE, uid, type));
 	else
-		sql_buf = sqlite3_mprintf("SELECT count(*) FROM %q WHERE uid = %d",
-				NOTIFICATION_DB_TABLE, uid);
+		sql_buf.reset(sqlite3_mprintf("SELECT count(*) FROM %q WHERE uid = %d",
+				NOTIFICATION_DB_TABLE, uid));
 
-	if (sql_buf == NULL) {
+	if (!sql_buf) {
 		/* LCOV_EXCL_START */
-		ret = NOTIFICATION_ERROR_FROM_DB;
 		ERR("OOM - sqlite3_mprintf");
-		goto out;
+		return NOTIFICATION_ERROR_FROM_DB;
 		/* LCOV_EXCL_STOP */
 	}
 
-	sql_ret = sqlite3_prepare_v2(db, sql_buf, -1, &stmt, NULL);
+	StmtGuard stmt;
+	int sql_ret = sqlite3_prepare_v2(db.get(), sql_buf.get(), -1, stmt.addr(), NULL);
 	if (sql_ret != SQLITE_OK) {
 		/* LCOV_EXCL_START */
-		ret = NOTIFICATION_ERROR_FROM_DB;
 		ERR("SQLITE3 Error - sqlite3_prepare_v2 [%d][%s]",
-				sql_ret, sqlite3_errmsg(db));
-		goto out;
+				sql_ret, sqlite3_errmsg(db.get()));
+		return NOTIFICATION_ERROR_FROM_DB;
 		/* LCOV_EXCL_STOP */
 	}
 
-	sql_ret = sqlite3_step(stmt);
+	sql_ret = sqlite3_step(stmt.get());
 	if (sql_ret == SQLITE_ROW)
-		*count = sqlite3_column_int(stmt, 0);
+		*count = sqlite3_column_int(stmt.get(), 0);
 	else
 		*count = 0;
 
 	INFO("The numbers of all notification is [%d]", *count);
 
-out:
-	if (stmt)
-		sqlite3_finalize(stmt);
-	if (sql_buf)
-		sqlite3_free(sql_buf);
-	if (db)
-		notification_db_close(&db);
-
-	return ret;
+	return NOTIFICATION_ERROR_NONE;
 }
 
 EXPORT_API int notification_noti_get_grouping_list(notification_type_e type,
@@ -1675,9 +1584,6 @@ EXPORT_API int notification_noti_get_grouping_list(notification_type_e type,
 							int *list_count,
 							uid_t uid)
 {
-	char *query = NULL;
-	char *query_uid = NULL;
-	char *query_where = NULL;
 	int ret = NOTIFICATION_ERROR_NONE;
 	int status;
 	int start_index;
@@ -1689,65 +1595,54 @@ EXPORT_API int notification_noti_get_grouping_list(notification_type_e type,
 		WARN("vconf_get_int");
 	}
 
+	SqliteCharPtr query_where;
 	if (status == VCONFKEY_TELEPHONY_SIM_INSERTED) {
 		if (type != NOTIFICATION_TYPE_NONE) {
-			query_where = sqlite3_mprintf(" AND type = %d ", type);
-			if (query_where == NULL)
+			query_where.reset(sqlite3_mprintf(" AND type = %d ", type));
+			if (!query_where)
 				return NOTIFICATION_ERROR_OUT_OF_MEMORY;
 		}
 	} else {
 		if (type != NOTIFICATION_TYPE_NONE)
-			query_where = sqlite3_mprintf(" AND type = %d AND "
-					"flag_simmode = 0 ", type);
+			query_where.reset(sqlite3_mprintf(" AND type = %d AND "
+					"flag_simmode = 0 ", type));
 		else
-			query_where = sqlite3_mprintf(" AND flag_simmode = 0 ");
+			query_where.reset(sqlite3_mprintf(" AND flag_simmode = 0 "));
 
-		if (query_where == NULL)
+		if (!query_where)
 			return NOTIFICATION_ERROR_OUT_OF_MEMORY;
 	}
 
+	SqliteCharPtr query_uid;
 	if (uid != static_cast<uid_t>(NOTIFICATION_GLOBAL_UID)) {
-		query_uid = sqlite3_mprintf(" AND uid = %d ", uid);
-		if (query_uid == NULL) {
+		query_uid.reset(sqlite3_mprintf(" AND uid = %d ", uid));
+		if (!query_uid) {
 			/* LCOV_EXCL_START */
-			ret = NOTIFICATION_ERROR_OUT_OF_MEMORY;
-			goto err;
+			return NOTIFICATION_ERROR_OUT_OF_MEMORY;
 			/* LCOV_EXCL_STOP */
 		}
 	}
 
+	SqliteCharPtr query;
 	if (count_per_page > 0) {
 		start_index = (page_number - 1) * count_per_page;
-		query = sqlite3_mprintf("noti_list WHERE 1 > 0 %s %s "
+		query.reset(sqlite3_mprintf("noti_list WHERE 1 > 0 %s %s "
 				"ORDER BY rowid DESC, time DESC LIMIT %d,%d",
-				query_where, query_uid, start_index, count_per_page);
+				query_where.get(), query_uid.get(), start_index, count_per_page));
 	} else {
-		query = sqlite3_mprintf("noti_list WHERE 1 > 0 %s %s "
+		query.reset(sqlite3_mprintf("noti_list WHERE 1 > 0 %s %s "
 				"ORDER BY rowid DESC, time DESC",
-				query_where, query_uid);
+				query_where.get(), query_uid.get()));
 		count_per_page = -1;
 	}
 
-	if (query == NULL) {
+	if (!query) {
 		/* LCOV_EXCL_START */
-		ret = NOTIFICATION_ERROR_OUT_OF_MEMORY;
-		goto err;
+		return NOTIFICATION_ERROR_OUT_OF_MEMORY;
 		/* LCOV_EXCL_STOP */
 	}
 
-	ret = _get_notification_list(query, list, list_count, count_per_page);
-
-err:
-	if (query_where)
-		sqlite3_free(query_where);
-
-	if (query_uid)
-		sqlite3_free(query_uid);
-
-	if (query)
-		sqlite3_free(query);
-
-	return ret;
+	return _get_notification_list(query.get(), list, list_count, count_per_page);
 }
 
 EXPORT_API int notification_noti_get_detail_list(const char *app_id,
@@ -1756,12 +1651,9 @@ EXPORT_API int notification_noti_get_detail_list(const char *app_id,
 						notification_list_h *list,
 						uid_t uid)
 {
-	char *query_where = NULL;
-	char *query = NULL;
 	int ret = NOTIFICATION_ERROR_NONE;
 	int internal_group_id = 0;
 	int status = 0;
-	sqlite3 *db = NULL;
 
 	/* Check current sim status */
 	ret = vconf_get_int(VCONFKEY_TELEPHONY_SIM_SLOT, &status);
@@ -1770,72 +1662,56 @@ EXPORT_API int notification_noti_get_detail_list(const char *app_id,
 		WARN("vconf_get_int");
 	}
 
-	db = notification_db_open();
-	if (!db)
+	sqlite3 *db_raw = notification_db_open();
+	if (!db_raw)
 		return get_last_result();
+	DbGuard db(db_raw);
 
+	SqliteCharPtr query_where;
 	if (priv_id == NOTIFICATION_PRIV_ID_NONE &&
 		group_id == NOTIFICATION_GROUP_ID_NONE) {
 		if (status == VCONFKEY_TELEPHONY_SIM_INSERTED)
-			query_where = sqlite3_mprintf("WHERE  caller_app_id = %Q "
-				"AND uid = %d ", app_id, uid);
+			query_where.reset(sqlite3_mprintf("WHERE  caller_app_id = %Q "
+				"AND uid = %d ", app_id, uid));
 		else
-			query_where = sqlite3_mprintf("WHERE  caller_app_id = %Q "
-				"AND flag_simmode = 0 AND uid = %d ", app_id, uid);
+			query_where.reset(sqlite3_mprintf("WHERE  caller_app_id = %Q "
+				"AND flag_simmode = 0 AND uid = %d ", app_id, uid));
 
 	} else {
 		internal_group_id =
 			_notification_noti_get_internal_group_id_by_priv_id(app_id,
-								priv_id, db);
+								priv_id, db.get());
 
 		if (status == VCONFKEY_TELEPHONY_SIM_INSERTED)
-			query_where = sqlite3_mprintf("WHERE  caller_app_id = %Q "
+			query_where.reset(sqlite3_mprintf("WHERE  caller_app_id = %Q "
 				"AND internal_group_id = %d AND uid = %d ",
-				 app_id, internal_group_id, uid);
+				 app_id, internal_group_id, uid));
 		else
-			query_where = sqlite3_mprintf("WHERE  caller_app_id = %Q "
+			query_where.reset(sqlite3_mprintf("WHERE  caller_app_id = %Q "
 				"AND internal_group_id = %d AND flag_simmode = 0 "
 				"AND uid = %d ",
-				 app_id, internal_group_id, uid);
+				 app_id, internal_group_id, uid));
 	}
 
-	if (query_where == NULL) {
+	if (!query_where) {
 		/* LCOV_EXCL_START */
-		ret = NOTIFICATION_ERROR_OUT_OF_MEMORY;
-		goto err;
+		return NOTIFICATION_ERROR_OUT_OF_MEMORY;
 		/* LCOV_EXCL_STOP */
 	}
 
-	query = sqlite3_mprintf("noti_list %s ORDER BY rowid DESC, time DESC",
-			query_where);
-	if (query == NULL) {
+	SqliteCharPtr query(sqlite3_mprintf("noti_list %s ORDER BY rowid DESC, time DESC",
+			query_where.get()));
+	if (!query) {
 		/* LCOV_EXCL_START */
-		ret = NOTIFICATION_ERROR_OUT_OF_MEMORY;
-		goto err;
+		return NOTIFICATION_ERROR_OUT_OF_MEMORY;
 		/* LCOV_EXCL_STOP */
 	}
 
-	ret = _get_notification_list(query, list, NULL, count);
-
-err:
-	if (query_where)
-		sqlite3_free(query_where);
-
-	if (query)
-		sqlite3_free(query);
-
-	if (db)
-		notification_db_close(&db);
-
-	return ret;
+	return _get_notification_list(query.get(), list, NULL, count);
 }
 
 EXPORT_API int notification_noti_check_tag(notification_h noti)
 {
-	sqlite3 *db;
-	sqlite3_stmt *stmt = NULL;
-	char *query = NULL;
-	int ret = NOTIFICATION_ERROR_NONE;
 	int result = 0;
 
 	WARN("@@ check tag : %s", noti->tag);
@@ -1846,120 +1722,91 @@ EXPORT_API int notification_noti_check_tag(notification_h noti)
 	}
 	WARN("@@ continue check tag");
 
-	db = notification_db_open();
-	if (!db)
+	sqlite3 *db_raw = notification_db_open();
+	if (!db_raw)
 		return get_last_result();
+	DbGuard db(db_raw);
 
-	query = sqlite3_mprintf("SELECT priv_id FROM noti_list "
+	SqliteCharPtr query(sqlite3_mprintf("SELECT priv_id FROM noti_list "
 			"WHERE caller_app_id = %Q AND tag = %Q",
 			NOTIFICATION_CHECK_STR(noti->caller_app_id),
-			NOTIFICATION_CHECK_STR(noti->tag));
-	if (query == NULL) {
+			NOTIFICATION_CHECK_STR(noti->tag)));
+	if (!query) {
 		/* LCOV_EXCL_START */
-		ret = NOTIFICATION_ERROR_OUT_OF_MEMORY;
-		goto err;
+		return NOTIFICATION_ERROR_OUT_OF_MEMORY;
 		/* LCOV_EXCL_STOP */
 	}
 
-	ret = sqlite3_prepare_v2(db, query, strlen(query), &stmt, NULL);
+	StmtGuard stmt;
+	int ret = sqlite3_prepare_v2(db.get(), query.get(), -1, stmt.addr(), NULL);
 	if (ret != SQLITE_OK) {
 		/* LCOV_EXCL_START */
 		ERR("Failed to sqlite3_prepare_v2[%d][%s]",
-				ret, sqlite3_errmsg(db));
-		goto err;
+				ret, sqlite3_errmsg(db.get()));
+		return ret;
 		/* LCOV_EXCL_STOP */
 	}
 
-	ret = sqlite3_step(stmt);
+	ret = sqlite3_step(stmt.get());
 	if (ret == SQLITE_ROW)
-		result = sqlite3_column_int(stmt, 0);
+		result = sqlite3_column_int(stmt.get(), 0);
 	else
 		result = 0;
 
 	/* If result > 0, there is priv_id in DB */
 	if (result > 0) {
 		noti->priv_id = result;
-		ret = NOTIFICATION_ERROR_ALREADY_EXIST_ID;
-	} else {
-		ret = NOTIFICATION_ERROR_NOT_EXIST_ID;
+		return NOTIFICATION_ERROR_ALREADY_EXIST_ID;
 	}
 
-err:
-	if (stmt)
-		sqlite3_finalize(stmt);
-
-	if (query)
-		sqlite3_free(query);
-
-	if (db)
-		notification_db_close(&db);
-
-	return ret;
+	return NOTIFICATION_ERROR_NOT_EXIST_ID;
 }
 
 EXPORT_API int notification_noti_check_count_for_template(notification_h noti, int *count)
 {
-	sqlite3 *db;
-	sqlite3_stmt *stmt = NULL;
-	char *query = NULL;
-	int ret = NOTIFICATION_ERROR_NONE;
 	int result = 0;
 
 	if (noti == NULL || count == NULL)
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 
-	db = notification_db_open();
-	if (!db)
+	sqlite3 *db_raw = notification_db_open();
+	if (!db_raw)
 		return get_last_result();
+	DbGuard db(db_raw);
 
-	query = sqlite3_mprintf("SELECT COUNT(caller_app_id) FROM noti_template "
+	SqliteCharPtr query(sqlite3_mprintf("SELECT COUNT(caller_app_id) FROM noti_template "
 				"WHERE caller_app_id = %Q",
-				NOTIFICATION_CHECK_STR(noti->caller_app_id));
-	if (query == NULL) {
+				NOTIFICATION_CHECK_STR(noti->caller_app_id)));
+	if (!query) {
 		/* LCOV_EXCL_START */
-		ret = NOTIFICATION_ERROR_OUT_OF_MEMORY;
-		goto err;
+		return NOTIFICATION_ERROR_OUT_OF_MEMORY;
 		/* LCOV_EXCL_STOP */
 	}
 
-	ret = sqlite3_prepare_v2(db, query, strlen(query), &stmt, NULL);
+	StmtGuard stmt;
+	int ret = sqlite3_prepare_v2(db.get(), query.get(), -1, stmt.addr(), NULL);
 	if (ret != SQLITE_OK) {
 		/* LCOV_EXCL_START */
 		ERR("Failed to sqlite3_prepare_v2[%d][%s]",
-				ret, sqlite3_errmsg(db));
-		ret = NOTIFICATION_ERROR_FROM_DB;
-		goto err;
+				ret, sqlite3_errmsg(db.get()));
+		return NOTIFICATION_ERROR_FROM_DB;
 		/* LCOV_EXCL_STOP */
 	}
 
-	ret = sqlite3_step(stmt);
+	ret = sqlite3_step(stmt.get());
 	if (ret == SQLITE_ROW)
-		result = sqlite3_column_int(stmt, 0);
+		result = sqlite3_column_int(stmt.get(), 0);
 	else
 		result = 0;
 
 	*count = result;
 
-err:
-	if (stmt)
-		sqlite3_finalize(stmt);
-
-	if (query)
-		sqlite3_free(query);
-
-	if (db)
-		notification_db_close(&db);
-
-	return ret;
+	return NOTIFICATION_ERROR_NONE;
 }
 
 EXPORT_API int notification_noti_add_template(notification_h noti, char *template_name)
 {
-	sqlite3 *db = NULL;
-	sqlite3_stmt *stmt = NULL;
-	char *query = NULL;
 	int idx = 1;
-	int ret = NOTIFICATION_ERROR_NONE;
 
 	if (noti == NULL || template_name == NULL) {
 		ERR("NOTIFICATION_ERROR_INVALID_PARAMETER");
@@ -1970,141 +1817,103 @@ EXPORT_API int notification_noti_add_template(notification_h noti, char *templat
 	noti->group_id = NOTIFICATION_GROUP_ID_NONE;
 	noti->internal_group_id = NOTIFICATION_GROUP_ID_NONE;
 
-	db = notification_db_open();
-	if (!db)
+	sqlite3 *db_raw = notification_db_open();
+	if (!db_raw)
 		return get_last_result();
+	DbGuard db(db_raw);
 
-	query = sqlite3_mprintf("INSERT OR REPLACE INTO noti_template "
+	SqliteCharPtr query(sqlite3_mprintf("INSERT OR REPLACE INTO noti_template "
 				"(%s, template_name) VALUES (%s, %Q)",
 				NOTI_LIST_DB_ATTRIBUTES_INSERT,
 				NOTI_LIST_INSERT_VALUES,
-				template_name);
-	if (query == NULL) {
+				template_name));
+	if (!query) {
 		/* LCOV_EXCL_START */
-		ret = NOTIFICATION_ERROR_OUT_OF_MEMORY;
-		goto err;
+		return NOTIFICATION_ERROR_OUT_OF_MEMORY;
 		/* LCOV_EXCL_STOP */
 	}
 
-	ret = sqlite3_prepare_v2(db, query, -1, &stmt, NULL);
+	StmtGuard stmt;
+	int ret = sqlite3_prepare_v2(db.get(), query.get(), -1, stmt.addr(), NULL);
 	if (ret != SQLITE_OK) {
 		/* LCOV_EXCL_START */
 		ERR("Failed to sqlite3_prepare_v2[%d][%s]",
-				ret, sqlite3_errmsg(db));
-		ret = NOTIFICATION_ERROR_FROM_DB;
-		goto err;
+				ret, sqlite3_errmsg(db.get()));
+		return NOTIFICATION_ERROR_FROM_DB;
 		/* LCOV_EXCL_STOP */
 	}
 
-	ret = _create_insertion_query(db, noti, stmt, &idx);
+	ret = _create_insertion_query(db.get(), noti, stmt.get(), &idx);
 	if (ret != NOTIFICATION_ERROR_NONE)
-		goto err;
+		return ret;
 
-	ret = sqlite3_step(stmt);
+	ret = sqlite3_step(stmt.get());
 	if (ret == SQLITE_OK || ret == SQLITE_DONE)
-		ret = NOTIFICATION_ERROR_NONE;
-	else
-		ret = NOTIFICATION_ERROR_FROM_DB;
+		return NOTIFICATION_ERROR_NONE;
 
-err:
-	if (stmt)
-		sqlite3_finalize(stmt);
-
-	if (query)
-		sqlite3_free(query);
-
-	if (db)
-		notification_db_close(&db);
-
-	return ret;
+	return NOTIFICATION_ERROR_FROM_DB;
 }
 
 EXPORT_API int notification_noti_get_package_template(notification_h noti, char *app_id, char *template_name)
 {
-	int ret = NOTIFICATION_ERROR_NONE;
-	char *query_where = NULL;
-
 	if (noti == NULL || app_id == NULL || template_name == NULL) {
 		ERR("NOTIFICATION_ERROR_INVALID_PARAMETER");
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 	}
 
-	query_where = sqlite3_mprintf("noti_template WHERE caller_app_id = %Q "
-			"AND template_name = %Q", app_id, template_name);
-	if (query_where == NULL)
+	SqliteCharPtr query_where(sqlite3_mprintf("noti_template WHERE caller_app_id = %Q "
+			"AND template_name = %Q", app_id, template_name));
+	if (!query_where)
 		return NOTIFICATION_ERROR_OUT_OF_MEMORY;
 
-	ret = _get_notification(query_where, noti);
+	int ret = _get_notification(query_where.get(), noti);
 	if (ret != NOTIFICATION_ERROR_NONE)
 		ERR("Failed to get notification [%d]", ret);
-
-	if (query_where)
-		sqlite3_free(query_where);
 
 	return ret;
 }
 
 EXPORT_API int notification_noti_delete_template(const char *pkg_id)
 {
-	sqlite3 *db = NULL;
-	char *query = NULL;
-	int ret = NOTIFICATION_ERROR_NONE;
-
 	if (pkg_id == NULL)
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 
-	db = notification_db_open();
-	if (!db)
+	sqlite3 *db_raw = notification_db_open();
+	if (!db_raw)
 		return get_last_result();
+	DbGuard db(db_raw);
 
-	query = sqlite3_mprintf("DELETE FROM noti_template WHERE pkg_id = %Q",
-				NOTIFICATION_CHECK_STR(pkg_id));
-	if (query == NULL) {
+	SqliteCharPtr query(sqlite3_mprintf("DELETE FROM noti_template WHERE pkg_id = %Q",
+				NOTIFICATION_CHECK_STR(pkg_id)));
+	if (!query) {
 		/* LCOV_EXCL_START */
-		ret = NOTIFICATION_ERROR_OUT_OF_MEMORY;
-		goto err;
+		return NOTIFICATION_ERROR_OUT_OF_MEMORY;
 		/* LCOV_EXCL_STOP */
 	}
 
-	ret = notification_db_exec(db, query, NULL);
-
-err:
-	if (query)
-		sqlite3_free(query);
-
-	if (db)
-		notification_db_close(&db);
-
-	return ret;
+	return notification_db_exec(db.get(), query.get(), NULL);
 }
 
 /* LCOV_EXCL_START */
 EXPORT_API void notification_noti_init_data(void)
 {
-	int ret;
-	sqlite3 *db = NULL;
-	char *query = NULL;
-
-	db = notification_db_open();
-	if (!db) {
+	sqlite3 *db_raw = notification_db_open();
+	if (!db_raw) {
 		ERR("db open");
 		return;
 	}
+	DbGuard db(db_raw);
 
-	query = sqlite3_mprintf("DELETE FROM noti_list WHERE type = %d OR flags_for_property & %d",
-			NOTIFICATION_TYPE_ONGOING, NOTIFICATION_PROP_VOLATILE_DISPLAY);
+	SqliteCharPtr query(sqlite3_mprintf("DELETE FROM noti_list WHERE type = %d OR flags_for_property & %d",
+			NOTIFICATION_TYPE_ONGOING, NOTIFICATION_PROP_VOLATILE_DISPLAY));
 	if (!query) {
 		ERR("OOM - sql query");
-		notification_db_close(&db);
 		return;
 	}
 
-	ret = notification_db_exec(db, query, NULL);
+	int ret = notification_db_exec(db.get(), query.get(), NULL);
 	if (ret != NOTIFICATION_ERROR_NONE)
 		ERR("notification_db_exec");
-
-	sqlite3_free(query);
-	notification_db_close(&db);
 }
 /* LCOV_EXCL_STOP */
 
@@ -2113,76 +1922,61 @@ EXPORT_API int notification_noti_check_limit(notification_h noti, uid_t uid, GLi
 	int ret;
 	int priv_id;
 	int count = 0;
-	char *query = NULL;
-	char *query_where = NULL;
-	sqlite3 *db = NULL;
-	sqlite3_stmt *stmt = NULL;
 
 	if (noti == NULL)
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 
-	db = notification_db_open();
-	if (!db)
+	sqlite3 *db_raw = notification_db_open();
+	if (!db_raw)
 		return get_last_result();
+	DbGuard db(db_raw);
 
-	query_where = sqlite3_mprintf("WHERE caller_app_id = %Q AND uid = %d ",
-			noti->caller_app_id, uid);
-	if (query_where == NULL) {
+	SqliteCharPtr query_where(sqlite3_mprintf("WHERE caller_app_id = %Q AND uid = %d ",
+			noti->caller_app_id, uid));
+	if (!query_where) {
 		/* LCOV_EXCL_START */
 		ERR("sqlite3_mprintf Failed");
-		ret = NOTIFICATION_ERROR_OUT_OF_MEMORY;
-		goto err;
+		return NOTIFICATION_ERROR_OUT_OF_MEMORY;
 		/* LCOV_EXCL_STOP */
 	}
 
 	/* check count to delete */
-	ret = _get_noti_count(db, query_where, &count);
+	ret = _get_noti_count(db.get(), query_where.get(), &count);
 	if (ret != NOTIFICATION_ERROR_NONE) {
 		ERR("Failed to get count to delete %d", ret);
-		goto err;
+		return ret;
 	}
 
 	/* get priv_id to delete */
 	if (count > NOTI_LIMIT) {
 		count -= NOTI_LIMIT;
 
-		query = sqlite3_mprintf("SELECT priv_id FROM noti_list %s "
+		SqliteCharPtr query(sqlite3_mprintf("SELECT priv_id FROM noti_list %s "
 			"AND type = %d ORDER BY insert_time ASC, priv_id ASC",
-			query_where, NOTIFICATION_TYPE_NOTI);
-		if (query == NULL) {
+			query_where.get(), NOTIFICATION_TYPE_NOTI));
+		if (!query) {
 			/* LCOV_EXCL_START */
 			ERR("sqlite3_mprintf Failed");
-			ret = NOTIFICATION_ERROR_OUT_OF_MEMORY;
-			goto err;
+			return NOTIFICATION_ERROR_OUT_OF_MEMORY;
 			/* LCOV_EXCL_STOP */
 		}
 
-		ret = sqlite3_prepare_v2(db, query, -1, &stmt, NULL);
+		StmtGuard stmt;
+		ret = sqlite3_prepare_v2(db.get(), query.get(), -1, stmt.addr(), NULL);
 		if (ret != SQLITE_OK) {
 			/* LCOV_EXCL_START */
 			ERR("sqlite3_prepare_v2 Failed [%d][%s]", ret,
-				 sqlite3_errmsg(db));
-			ret = NOTIFICATION_ERROR_FROM_DB;
-			goto err;
+				 sqlite3_errmsg(db.get()));
+			return NOTIFICATION_ERROR_FROM_DB;
 			/* LCOV_EXCL_STOP */
 		}
 
-		while (sqlite3_step(stmt) == SQLITE_ROW && count > 0) {
-			priv_id = sqlite3_column_int(stmt, 0);
+		while (sqlite3_step(stmt.get()) == SQLITE_ROW && count > 0) {
+			priv_id = sqlite3_column_int(stmt.get(), 0);
 			*list = g_list_append(*list, GINT_TO_POINTER(priv_id));
 			count--;
 		}
 	}
-
-err:
-	if (stmt)
-		sqlite3_finalize(stmt);
-	if (query)
-		sqlite3_free(query);
-	if (query_where)
-		sqlite3_free(query_where);
-	if (db)
-		notification_db_close(&db);
 
 	return ret;
 }
@@ -2192,9 +1986,6 @@ EXPORT_API int notification_noti_get_channel(const char *app_id,
 		const char *channel_name, int *blockable, int *is_blocked)
 {
 	int ret;
-	sqlite3 *db;
-	sqlite3_stmt *stmt = NULL;
-	char *query = NULL;
 	int _blockable = 0;
 	int _is_blocked = 0;
 
@@ -2203,50 +1994,46 @@ EXPORT_API int notification_noti_get_channel(const char *app_id,
 	if (app_id == NULL || channel_name == NULL || is_blocked == NULL)
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 
-	db = notification_db_open();
-	if (!db)
+	sqlite3 *db_raw = notification_db_open();
+	if (!db_raw)
 		return get_last_result();
+	DbGuard db(db_raw);
 
-	query = sqlite3_mprintf("SELECT blockable, is_blocked FROM %s "
+	SqliteCharPtr query(sqlite3_mprintf("SELECT blockable, is_blocked FROM %s "
 				"WHERE app_id = %Q AND channel_name = %Q",
 				NOTIFICATION_CHANNEL_DB_TABLE,
-				app_id, channel_name);
-	if (query == NULL) {
-		ret = NOTIFICATION_ERROR_OUT_OF_MEMORY;
-		goto out;
+				app_id, channel_name));
+	if (!query) {
+		WARN("noti get channel done : %d", NOTIFICATION_ERROR_OUT_OF_MEMORY);
+		return NOTIFICATION_ERROR_OUT_OF_MEMORY;
 	}
 
-	ret = sqlite3_prepare_v2(db, query, strlen(query), &stmt, NULL);
+	StmtGuard stmt;
+	ret = sqlite3_prepare_v2(db.get(), query.get(), -1, stmt.addr(), NULL);
 	if (ret != SQLITE_OK) {
 		ERR("Failed to sqlite3_prepare_v2[%d][%s]",
-				ret, sqlite3_errmsg(db));
-		goto out;
+				ret, sqlite3_errmsg(db.get()));
+		WARN("noti get channel done : %d", ret);
+		return ret;
 	}
 
-	ret = sqlite3_step(stmt);
+	ret = sqlite3_step(stmt.get());
 	if (ret == SQLITE_ROW) {
-		_blockable = sqlite3_column_int(stmt, 0);
-		_is_blocked = sqlite3_column_int(stmt, 1);
+		_blockable = sqlite3_column_int(stmt.get(), 0);
+		_is_blocked = sqlite3_column_int(stmt.get(), 1);
 
 		ret = NOTIFICATION_ERROR_NONE;
 	} else if (ret == SQLITE_DONE) {
 		WARN("no channel name from db");
 		ret = NOTIFICATION_ERROR_NONE;
 	} else {
-		ERR("failed to get channel [%d][%s]", ret, sqlite3_errmsg(db));
-		ret = NOTIFICATION_ERROR_FROM_DB;
-		goto out;
+		ERR("failed to get channel [%d][%s]", ret, sqlite3_errmsg(db.get()));
+		WARN("noti get channel done : %d", NOTIFICATION_ERROR_FROM_DB);
+		return NOTIFICATION_ERROR_FROM_DB;
 	}
 
 	*blockable = _blockable;
 	*is_blocked = _is_blocked;
-out:
-	if (stmt)
-		sqlite3_finalize(stmt);
-	if (query)
-		sqlite3_free(query);
-	if (db)
-		notification_db_close(&db);
 
 	WARN("noti get channel done : %d", ret);
 
@@ -2256,38 +2043,28 @@ out:
 EXPORT_API int notification_noti_insert_channel(const char *app_id,
 		const char *channel_name, int blockable, int is_blocked)
 {
-	sqlite3 *db = NULL;
-	char *query = NULL;
-	int ret = NOTIFICATION_ERROR_NONE;
-
 	WARN("noti add channel");
 
 	if (app_id == NULL || channel_name == NULL)
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 
-	db = notification_db_open();
-	if (!db)
+	sqlite3 *db_raw = notification_db_open();
+	if (!db_raw)
 		return get_last_result();
+	DbGuard db(db_raw);
 
-	query = sqlite3_mprintf(
+	SqliteCharPtr query(sqlite3_mprintf(
 			"INSERT INTO %s (app_id, channel_name, blockable, is_blocked) "
 			"VALUES (%Q, %Q, %d, %d)", NOTIFICATION_CHANNEL_DB_TABLE,
-			app_id, channel_name, blockable, is_blocked);
-	if (query == NULL) {
-		ret = NOTIFICATION_ERROR_OUT_OF_MEMORY;
-		goto out;
+			app_id, channel_name, blockable, is_blocked));
+	if (!query) {
+		WARN("noti add channel done : %d", NOTIFICATION_ERROR_OUT_OF_MEMORY);
+		return NOTIFICATION_ERROR_OUT_OF_MEMORY;
 	}
 
-	ret = notification_db_exec(db, query, NULL);
+	int ret = notification_db_exec(db.get(), query.get(), NULL);
 	if (ret != NOTIFICATION_ERROR_NONE)
 		ERR("failed to insert channel");
-
-out:
-	if (query)
-		sqlite3_free(query);
-
-	if (db)
-		notification_db_close(&db);
 
 	WARN("noti add channel done : %d", ret);
 
@@ -2297,37 +2074,27 @@ out:
 EXPORT_API int notification_noti_delete_channel(const char *app_id,
 		const char *channel_name)
 {
-	sqlite3 *db = NULL;
-	char *query = NULL;
-	int ret = NOTIFICATION_ERROR_NONE;
-
 	WARN("noti delete channel");
 
 	if (app_id == NULL || channel_name == NULL)
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 
-	db = notification_db_open();
-	if (!db)
+	sqlite3 *db_raw = notification_db_open();
+	if (!db_raw)
 		return get_last_result();
+	DbGuard db(db_raw);
 
-	query = sqlite3_mprintf(
+	SqliteCharPtr query(sqlite3_mprintf(
 			"DELETE FROM %s WHERE app_id = %Q AND channel_name = %Q",
-			NOTIFICATION_CHANNEL_DB_TABLE, app_id, channel_name);
-	if (query == NULL) {
-		ret = NOTIFICATION_ERROR_OUT_OF_MEMORY;
-		goto out;
+			NOTIFICATION_CHANNEL_DB_TABLE, app_id, channel_name));
+	if (!query) {
+		WARN("noti delete channel done : %d", NOTIFICATION_ERROR_OUT_OF_MEMORY);
+		return NOTIFICATION_ERROR_OUT_OF_MEMORY;
 	}
 
-	ret = notification_db_exec(db, query, NULL);
+	int ret = notification_db_exec(db.get(), query.get(), NULL);
 	if (ret != NOTIFICATION_ERROR_NONE)
 		ERR("failed to delete channel");
-
-out:
-	if (query)
-		sqlite3_free(query);
-
-	if (db)
-		notification_db_close(&db);
 
 	WARN("noti delete channel done : %d", ret);
 
@@ -2337,38 +2104,28 @@ out:
 EXPORT_API int notification_noti_update_channel(const char *app_id,
 		const char *channel_name, int blockable, int is_blocked)
 {
-	sqlite3 *db = NULL;
-	char *query = NULL;
-	int ret = NOTIFICATION_ERROR_NONE;
-
 	WARN("noti update channel");
 
 	if (app_id == NULL || channel_name == NULL)
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 
-	db = notification_db_open();
-	if (!db)
+	sqlite3 *db_raw = notification_db_open();
+	if (!db_raw)
 		return get_last_result();
+	DbGuard db(db_raw);
 
-	query = sqlite3_mprintf("UPDATE %s SET blockable = %d, is_blocked = %d "
+	SqliteCharPtr query(sqlite3_mprintf("UPDATE %s SET blockable = %d, is_blocked = %d "
 				"WHERE app_id = %Q AND channel_name = %Q",
 				NOTIFICATION_CHANNEL_DB_TABLE,
-				blockable, is_blocked, app_id, channel_name);
-	if (query == NULL) {
-		ret = NOTIFICATION_ERROR_OUT_OF_MEMORY;
-		goto out;
+				blockable, is_blocked, app_id, channel_name));
+	if (!query) {
+		WARN("noti update channel done : %d", NOTIFICATION_ERROR_OUT_OF_MEMORY);
+		return NOTIFICATION_ERROR_OUT_OF_MEMORY;
 	}
 
-	ret = notification_db_exec(db, query, NULL);
+	int ret = notification_db_exec(db.get(), query.get(), NULL);
 	if (ret != NOTIFICATION_ERROR_NONE)
 		ERR("failed to update channel");
-
-out:
-	if (query)
-		sqlite3_free(query);
-
-	if (db)
-		notification_db_close(&db);
 
 	WARN("noti update channel done : %d", ret);
 
@@ -2379,9 +2136,6 @@ EXPORT_API int notification_noti_get_channel_list(const char *app_id,
 		GList **channel_list)
 {
 	int ret;
-	sqlite3 *db;
-	sqlite3_stmt *stmt = NULL;
-	char *query = NULL;
 	int is_blocked = 0;
 	int blockable = 0;
 	char *channel_name = NULL;
@@ -2392,28 +2146,31 @@ EXPORT_API int notification_noti_get_channel_list(const char *app_id,
 	if (app_id == NULL || channel_list == NULL)
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 
-	db = notification_db_open();
-	if (!db)
+	sqlite3 *db_raw = notification_db_open();
+	if (!db_raw)
 		return get_last_result();
+	DbGuard db(db_raw);
 
-	query = sqlite3_mprintf("SELECT channel_name, blockable, is_blocked FROM %s "
-				"WHERE app_id = %Q", NOTIFICATION_CHANNEL_DB_TABLE, app_id);
-	if (query == NULL) {
-		ret = NOTIFICATION_ERROR_OUT_OF_MEMORY;
-		goto out;
+	SqliteCharPtr query(sqlite3_mprintf("SELECT channel_name, blockable, is_blocked FROM %s "
+				"WHERE app_id = %Q", NOTIFICATION_CHANNEL_DB_TABLE, app_id));
+	if (!query) {
+		WARN("noti get channel list done : %d", NOTIFICATION_ERROR_OUT_OF_MEMORY);
+		return NOTIFICATION_ERROR_OUT_OF_MEMORY;
 	}
 
-	ret = sqlite3_prepare_v2(db, query, strlen(query), &stmt, NULL);
+	StmtGuard stmt;
+	ret = sqlite3_prepare_v2(db.get(), query.get(), -1, stmt.addr(), NULL);
 	if (ret != SQLITE_OK) {
 		ERR("Failed to sqlite3_prepare_v2[%d][%s]",
-				ret, sqlite3_errmsg(db));
-		goto out;
+				ret, sqlite3_errmsg(db.get()));
+		WARN("noti get channel list done : %d", ret);
+		return ret;
 	}
 
-	while (sqlite3_step(stmt) == SQLITE_ROW) {
-		channel_name = notification_db_column_text(stmt, 0);
-		blockable = sqlite3_column_int(stmt, 1);
-		is_blocked = sqlite3_column_int(stmt, 2);
+	while (sqlite3_step(stmt.get()) == SQLITE_ROW) {
+		channel_name = notification_db_column_text(stmt.get(), 0);
+		blockable = sqlite3_column_int(stmt.get(), 1);
+		is_blocked = sqlite3_column_int(stmt.get(), 2);
 
 		notification_channel_create_with_info(app_id, channel_name,
 				blockable, is_blocked, &channel);
@@ -2423,15 +2180,7 @@ EXPORT_API int notification_noti_get_channel_list(const char *app_id,
 		WARN("noti get channel list : %s", channel_name);
 	}
 
-out:
-	if (stmt)
-		sqlite3_finalize(stmt);
-	if (query)
-		sqlite3_free(query);
-	if (db)
-		notification_db_close(&db);
+	WARN("noti get channel list done : %d", NOTIFICATION_ERROR_NONE);
 
-	WARN("noti get channel list done : %d", ret);
-
-	return ret;
+	return NOTIFICATION_ERROR_NONE;
 }

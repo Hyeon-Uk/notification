@@ -31,6 +31,7 @@
 #include <notification_private.h>
 #include <notification_setting.h>
 #include <notification_setting_internal.h>
+#include <notification_raii.h>
 #include <notification_tidl.h>
 #include "notification_db_query.h"
 
@@ -87,18 +88,11 @@ EXPORT_API int notification_setting_get_setting_by_package_name(const char *pack
 /* LCOV_EXCL_START */
 EXPORT_API int notification_setting_get_setting(notification_setting_h *setting)
 {
-	int ret;
-	char *app_id = NULL;
-
-	app_id = notification_get_app_id_by_pid(getpid());
-	if (app_id == NULL)
+	CCharPtr app_id(notification_get_app_id_by_pid(getpid()));
+	if (!app_id)
 		return NOTIFICATION_ERROR_NOT_EXIST_ID;
 
-	ret = notification_setting_get_setting_by_package_name(app_id, setting);
-
-	free(app_id);
-
-	return ret;
+	return notification_setting_get_setting_by_package_name(app_id.get(), setting);
 }
 /* LCOV_EXCL_STOP */
 
@@ -310,58 +304,46 @@ EXPORT_API int notification_setting_free_notification(notification_setting_h set
 static bool _is_package_in_setting_table(sqlite3 *db, const char *package_name,
 			const char *app_id, uid_t uid)
 {
-	sqlite3_stmt *stmt = NULL;
-	char *query = NULL;
 	int sql_ret;
-	bool err = true;
 
-	if (app_id != NULL && strlen(app_id) > 0)
-		query = sqlite3_mprintf("SELECT app_id FROM %s WHERE uid = %d "
-					"AND package_name = %Q AND app_id = %Q",
-					NOTIFICATION_SETTING_DB_TABLE,
-					uid, package_name, app_id);
-	else
-		query = sqlite3_mprintf("SELECT package_name FROM %s "
-					"WHERE uid = %d AND package_name = %Q",
-					NOTIFICATION_SETTING_DB_TABLE,
-					uid, package_name);
+	SqliteCharPtr query(
+		(app_id != NULL && strlen(app_id) > 0)
+		? sqlite3_mprintf("SELECT app_id FROM %s WHERE uid = %d "
+				"AND package_name = %Q AND app_id = %Q",
+				NOTIFICATION_SETTING_DB_TABLE,
+				uid, package_name, app_id)
+		: sqlite3_mprintf("SELECT package_name FROM %s "
+				"WHERE uid = %d AND package_name = %Q",
+				NOTIFICATION_SETTING_DB_TABLE,
+				uid, package_name));
 
-	if (query == NULL) {
+	if (!query) {
 		ERR("fail to alloc query");
 		return false;
 	}
 
-	sql_ret = sqlite3_prepare_v2(db, query, -1, &stmt, NULL);
+	StmtGuard stmt;
+	sql_ret = sqlite3_prepare_v2(db, query.get(), -1, stmt.addr(), NULL);
 	if (sql_ret != SQLITE_OK) {
 		ERR("sqlite3_prepare_v2 failed [%d][%s]", sql_ret,
 				sqlite3_errmsg(db));
-		err = false;
-		goto out;
+		return false;
 	}
 
-	sql_ret = sqlite3_step(stmt);
+	sql_ret = sqlite3_step(stmt.get());
 	if (sql_ret == SQLITE_DONE) {
 		INFO("No matched [%s] from package_name [%s], [%d]",
 				app_id, package_name, sql_ret);
-		err = false;
-		goto out;
+		return false;
 	}
 
 	if (sql_ret != SQLITE_OK && sql_ret != SQLITE_ROW) {
 		ERR("sqlite3_step failed [%d][%s]", sql_ret,
 				sqlite3_errmsg(db));
-		err = false;
-		goto out;
+		return false;
 	}
 
-out:
-	if (stmt)
-		sqlite3_finalize(stmt);
-
-	if (query)
-		sqlite3_free(query);
-
-	return err;
+	return true;
 }
 /* LCOV_EXCL_STOP */
 
@@ -371,9 +353,7 @@ static int _foreach_app_info_callback(const pkgmgrinfo_appinfo_h handle,
 {
 	setting_local_info *info = (setting_local_info *)user_data;
 	sqlite3 *db = info->db;
-	char *query = NULL;
 	int ret;
-	int err = true;
 	char *app_id = NULL;
 	char *package_name = NULL;
 
@@ -381,60 +361,53 @@ static int _foreach_app_info_callback(const pkgmgrinfo_appinfo_h handle,
 	if (ret != PACKAGE_MANAGER_ERROR_NONE) {
 		ERR("Failed to get appid from pkgmgrinfo [%d]",
 				ret);
-		err = false;
-		goto out;
+		return false;
 	}
 
 	ret = pkgmgrinfo_appinfo_get_pkgname(handle, &package_name);
 	if (ret != PACKAGE_MANAGER_ERROR_NONE) {
 		ERR("Failed to get pkgname from pkgmgrinfo[%d]",
 				ret);
-		goto out;
+		return true;
 	}
 
 	if (_is_package_in_setting_table(db, package_name, app_id, info->uid) == true) {
 		INFO("uid %d [%s] is exist", info->uid, app_id);
-		err = false;
-		goto out;
+		return false;
 	}
 
-	query = sqlite3_mprintf("INSERT INTO %s (uid, package_name, app_id) "
+	SqliteCharPtr query(sqlite3_mprintf("INSERT INTO %s (uid, package_name, app_id) "
 				"VALUES (%d, %Q, %Q) ",
 				NOTIFICATION_SETTING_DB_TABLE,
-				info->uid, package_name, app_id);
-	if (query == NULL) {
+				info->uid, package_name, app_id));
+	if (!query) {
 		ERR("fail to alloc query");
-		err = false;
-		goto out;
+		return false;
 	}
 
-	ret = notification_db_exec(db, query, NULL);
+	ret = notification_db_exec(db, query.get(), NULL);
 	if (ret != NOTIFICATION_ERROR_NONE)
-		err = false;
-	else
-		INFO("uid [%d] package_name [%s] appid [%s] is inserted",
-				info->uid, package_name, app_id);
+		return false;
 
-out:
-	if (query)
-		sqlite3_free(query);
+	INFO("uid [%d] package_name [%s] appid [%s] is inserted",
+			info->uid, package_name, app_id);
 
-	return err;
+	return true;
 }
 /* LCOV_EXCL_STOP */
 
 /* LCOV_EXCL_START */
 static int _install_and_update_package(const char *package_name, uid_t uid)
 {
-	sqlite3 *db;
 	int err = NOTIFICATION_ERROR_NONE;
 	int pkgmgr_ret;
 	setting_local_info info;
 	pkgmgrinfo_appinfo_filter_h handle = NULL;
 
-	db = notification_db_open();
-	if (!db)
+	sqlite3 *db_raw = notification_db_open();
+	if (!db_raw)
 		return get_last_result();
+	DbGuard db(db_raw);
 
 	pkgmgr_ret = pkgmgrinfo_appinfo_filter_create(&handle);
 	if (pkgmgr_ret != PMINFO_R_OK) {
@@ -459,7 +432,7 @@ static int _install_and_update_package(const char *package_name, uid_t uid)
 		goto out;
 	}
 
-	info.db = db;
+	info.db = db.get();
 	info.uid = uid;
 	pkgmgr_ret = pkgmgrinfo_appinfo_usr_filter_foreach_appinfo(handle,
 			_foreach_app_info_callback, &info, uid);
@@ -473,9 +446,6 @@ out:
 	if (handle)
 		pkgmgrinfo_appinfo_filter_destroy(handle);
 
-	if (db)
-		notification_db_close(&db);
-
 	return err;
 }
 /* LCOV_EXCL_STOP */
@@ -483,40 +453,30 @@ out:
 /* LCOV_EXCL_START */
 static int _delete_package_from_setting_db(const char *package_name, uid_t uid)
 {
-	sqlite3 *db = NULL;
-	char *query = NULL;
 	int err = NOTIFICATION_ERROR_NONE;
-	bool is_package_in_setting_table = false;
 
-	db = notification_db_open();
-	if (!db)
+	sqlite3 *db_raw = notification_db_open();
+	if (!db_raw)
 		return get_last_result();
+	DbGuard db(db_raw);
 
-	is_package_in_setting_table = _is_package_in_setting_table(db,
+	bool is_package_in_setting_table = _is_package_in_setting_table(db.get(),
 				package_name, NULL, uid);
 	if (is_package_in_setting_table == false) {
 		INFO("[%s] is not exist", package_name);
-		goto out;
+		return err;
 	}
 
-	query = sqlite3_mprintf("DELETE FROM %s WHERE uid = %d "
+	SqliteCharPtr query(sqlite3_mprintf("DELETE FROM %s WHERE uid = %d "
 				"AND package_name = %Q ",
 				NOTIFICATION_SETTING_DB_TABLE, uid,
-				package_name);
-	if (query == NULL) {
+				package_name));
+	if (!query) {
 		ERR("Failed to alloc query");
-		err = NOTIFICATION_ERROR_OUT_OF_MEMORY;
-		goto out;
+		return NOTIFICATION_ERROR_OUT_OF_MEMORY;
 	}
 
-	err = notification_db_exec(db, query, NULL);
-
-out:
-	if (query)
-		sqlite3_free(query);
-
-	if (db)
-		notification_db_close(&db);
+	err = notification_db_exec(db.get(), query.get(), NULL);
 
 	return err;
 }
@@ -526,16 +486,16 @@ out:
 EXPORT_API int notification_setting_refresh_setting_table(uid_t uid)
 {
 	int err = NOTIFICATION_ERROR_NONE;
-	sqlite3 *db = NULL;
 	int pkgmgr_ret;
 	pkgmgrinfo_appinfo_filter_h filter = NULL;
 	setting_local_info info;
 
 	INFO("Refresh setting table [%d]", uid);
 
-	db = notification_db_open();
-	if (!db)
+	sqlite3 *db_raw = notification_db_open();
+	if (!db_raw)
 		return get_last_result();
+	DbGuard db(db_raw);
 
 	pkgmgr_ret = pkgmgrinfo_appinfo_filter_create(&filter);
 	if (pkgmgr_ret != PMINFO_R_OK) {
@@ -552,7 +512,7 @@ EXPORT_API int notification_setting_refresh_setting_table(uid_t uid)
 		goto out;
 	}
 
-	info.db = db;
+	info.db = db.get();
 	info.uid = uid;
 	pkgmgr_ret = pkgmgrinfo_appinfo_usr_filter_foreach_appinfo(filter,
 			_foreach_app_info_callback, &info, uid);
@@ -565,9 +525,6 @@ EXPORT_API int notification_setting_refresh_setting_table(uid_t uid)
 out:
 	if (filter)
 		pkgmgrinfo_appinfo_filter_destroy(filter);
-
-	if (db)
-		notification_db_close(&db);
 
 	return err;
 }
@@ -1016,110 +973,85 @@ EXPORT_API int notification_unregister_system_setting_dnd_changed_cb(dnd_changed
 /* LCOV_EXCL_START */
 static bool _is_uid_in_system_setting_table(sqlite3 *db, uid_t uid)
 {
-	sqlite3_stmt *stmt = NULL;
-	char *query = NULL;
 	int sql_ret;
-	bool err = true;
 
-	query = sqlite3_mprintf("SELECT uid FROM %s WHERE uid = %d",
-				NOTIFICATION_SYSTEM_SETTING_DB_TABLE, uid);
-	if (query == NULL) {
+	SqliteCharPtr query(sqlite3_mprintf("SELECT uid FROM %s WHERE uid = %d",
+				NOTIFICATION_SYSTEM_SETTING_DB_TABLE, uid));
+	if (!query) {
 		ERR("Failed to alloc query");
 		return false;
 	}
 
-	sql_ret = sqlite3_prepare_v2(db, query, -1, &stmt, NULL);
+	StmtGuard stmt;
+	sql_ret = sqlite3_prepare_v2(db, query.get(), -1, stmt.addr(), NULL);
 	if (sql_ret != SQLITE_OK) {
 		ERR("sqlite3_prepare_v2 failed [%d][%s]", sql_ret,
 				sqlite3_errmsg(db));
-		err = false;
-		goto out;
+		return false;
 	}
 
-	sql_ret = sqlite3_step(stmt);
+	sql_ret = sqlite3_step(stmt.get());
 	if (sql_ret == SQLITE_DONE) {
 		INFO("No matched uid[%d] err[%d]", uid, sql_ret);
-		err = false;
-		goto out;
+		return false;
 	}
 
 	if (sql_ret != SQLITE_OK && sql_ret != SQLITE_ROW) {
 		ERR("sqlite3_step failed [%d][%s]",
 				sql_ret, sqlite3_errmsg(db));
-		err = false;
+		return false;
 	}
 
-out:
-	if (stmt)
-		sqlite3_finalize(stmt);
-
-	if (query)
-		sqlite3_free(query);
-
-	return err;
+	return true;
 }
 /* LCOV_EXCL_STOP */
 
 /* LCOV_EXCL_START */
 EXPORT_API int notification_system_setting_init_system_setting_table(uid_t uid)
 {
-	sqlite3 *db = NULL;
-	char *query_system_setting = NULL;
-	char *query_dnd_allow_exception = NULL;
 	int ret = NOTIFICATION_ERROR_NONE;
 
 	INFO("init system setting table [%d]", uid);
 
-	db = notification_db_open();
-	if (db == NULL)
+	sqlite3 *db_raw = notification_db_open();
+	if (db_raw == NULL)
 		return get_last_result();
+	DbGuard db(db_raw);
 
-	if (_is_uid_in_system_setting_table(db, uid) == true) {
+	if (_is_uid_in_system_setting_table(db.get(), uid) == true) {
 		INFO("Setting table is already initialized.");
-		goto out;
+		return ret;
 	}
 
 	/* notification_system_setting */
-	query_system_setting = sqlite3_mprintf("INSERT INTO %s (uid) "
+	SqliteCharPtr query_system_setting(sqlite3_mprintf("INSERT INTO %s (uid) "
 					"VALUES (%d) ",
 					NOTIFICATION_SYSTEM_SETTING_DB_TABLE,
-					uid);
-	if (query_system_setting == NULL) {
+					uid));
+	if (!query_system_setting) {
 		ERR("fail to alloc query");
-		ret = NOTIFICATION_ERROR_OUT_OF_MEMORY;
-		goto out;
+		return NOTIFICATION_ERROR_OUT_OF_MEMORY;
 	}
 
-	ret = notification_db_exec(db, query_system_setting, NULL);
+	ret = notification_db_exec(db.get(), query_system_setting.get(), NULL);
 	if (ret != NOTIFICATION_ERROR_NONE)
-		goto out;
+		return ret;
 
 	/* dnd_allow_exception */
-	query_dnd_allow_exception = sqlite3_mprintf("INSERT INTO %s "
+	SqliteCharPtr query_dnd_allow_exception(sqlite3_mprintf("INSERT INTO %s "
 					"(uid) VALUES (%d) ",
 					NOTIFICATION_DND_ALLOW_EXCEPTION,
-					uid);
-	if (query_dnd_allow_exception == NULL) {
+					uid));
+	if (!query_dnd_allow_exception) {
 		ERR("Failed to alloc query");
-		ret = NOTIFICATION_ERROR_OUT_OF_MEMORY;
-		goto out;
+		return NOTIFICATION_ERROR_OUT_OF_MEMORY;
 	}
 
-	ret = notification_db_exec(db, query_dnd_allow_exception, NULL);
+	ret = notification_db_exec(db.get(), query_dnd_allow_exception.get(), NULL);
 	if (ret != NOTIFICATION_ERROR_NONE)
-		goto out;
+		return ret;
 
 	DBG("Initialization is success.");
-
-out:
-	if (query_system_setting)
-		sqlite3_free(query_system_setting);
-
-	if (query_dnd_allow_exception)
-		sqlite3_free(query_dnd_allow_exception);
-
-	if (db)
-		notification_db_close(&db);
 
 	return ret;
 }

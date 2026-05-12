@@ -68,15 +68,20 @@ class StmtGuard {
 class DbTransactionGuard {
  public:
   explicit DbTransactionGuard(sqlite3 *db) : db_(db) {
-    sqlite3_exec(db_, "BEGIN TRANSACTION", nullptr, nullptr, nullptr);
+    int ret = sqlite3_exec(db_, "BEGIN TRANSACTION",
+                           nullptr, nullptr, nullptr);
+    begun_ = (ret == SQLITE_OK);
   }
   ~DbTransactionGuard() {
-    if (!committed_)
+    if (begun_ && !committed_)
       sqlite3_exec(db_, "ROLLBACK TRANSACTION", nullptr, nullptr, nullptr);
   }
   DbTransactionGuard(const DbTransactionGuard &) = delete;
   DbTransactionGuard &operator=(const DbTransactionGuard &) = delete;
+  bool valid() const { return begun_; }
   bool commit() {
+    if (!begun_)
+      return false;
     int ret = sqlite3_exec(db_, "END TRANSACTION",
                            nullptr, nullptr, nullptr);
     committed_ = (ret == SQLITE_OK);
@@ -84,6 +89,7 @@ class DbTransactionGuard {
   }
  private:
   sqlite3 *db_;
+  bool begun_ = false;
   bool committed_ = false;
 };
 

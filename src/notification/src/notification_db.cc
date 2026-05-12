@@ -74,6 +74,8 @@ static int __recover_corrupted_db(sqlite3 *db)
 		ret = NOTIFICATION_ERROR_FROM_DB;
 	}
 
+	sqlite3_close(db);
+
 out:
 	if (errmsg)
 		sqlite3_free(errmsg);
@@ -379,6 +381,10 @@ EXPORT_API int notification_upgrade_db(void)
 	}
 
 	DbTransactionGuard txn(db.get());
+	if (!txn.valid()) {
+		ERR("@@ Failed to begin transaction");
+		return NOTIFICATION_ERROR_FROM_DB;
+	}
 
 	if (__check_db_version(db.get()) == 0) {
 		WARN("@@ db is latest version");
