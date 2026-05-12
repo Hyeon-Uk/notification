@@ -782,11 +782,10 @@ int notification_tidl_request_delete_multiple(notification_type_e type, char *ap
 	}
 	WARN("tidl init done");
 
-	if (app_id == NULL)
-		app_id = "";
+	const char *tidl_app_id = (app_id != NULL) ? app_id : "";
 
 	ret = rpc_port_proxy_noti_service_invoke_delete_multiple_noti(service_handle,
-			app_id, (int)type, (int)uid, &deleted_num);
+			tidl_app_id, (int)type, (int)uid, &deleted_num);
 	if (ret != RPC_PORT_ERROR_NONE) {
 		WARN("request delete multi noti fail : %d", ret);
 		return ret;

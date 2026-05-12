@@ -36,6 +36,8 @@
 #include <notification_private.h>
 #include <notification_noti.h>
 #include <notification_ongoing.h>
+#include <notification_ongoing_flag.h>
+#include <notification_text_domain.h>
 #include <notification_group.h>
 #include <notification_tidl.h>
 #include <notification_internal.h>
@@ -331,7 +333,7 @@ EXPORT_API int notification_set_text(notification_h noti,
 
 	va_start(var_args, args_type);
 
-	var_type = args_type;
+	var_type = static_cast<notification_variable_type_e>(args_type);
 	num_args = 0;
 
 	while (var_type != NOTIFICATION_VARIABLE_TYPE_NONE) {
@@ -395,7 +397,7 @@ EXPORT_API int notification_set_text(notification_h noti,
 
 		case NOTIFICATION_VARIABLE_TYPE_COUNT:
 			var_value_count =
-			    va_arg(var_args, notification_count_pos_type_e);
+			    static_cast<notification_count_pos_type_e>(va_arg(var_args, int));
 
 			/* Value */
 			snprintf(buf_key, sizeof(buf_key), "%dvalue%d", type,
@@ -417,7 +419,7 @@ EXPORT_API int notification_set_text(notification_h noti,
 		}
 
 		num_args++;
-		var_type = va_arg(var_args, notification_variable_type_e);
+		var_type = static_cast<notification_variable_type_e>(va_arg(var_args, int));
 	}
 	va_end(var_args);
 
@@ -456,7 +458,7 @@ EXPORT_API int notification_get_text(notification_h noti,
 	int ret_variable_int = 0;
 	double ret_variable_double = 0.0;
 	notification_text_type_e text_type = NOTIFICATION_TEXT_TYPE_NONE;
-	notification_variable_type_e ret_var_type = 0;
+	notification_variable_type_e ret_var_type = static_cast<notification_variable_type_e>(0);
 
 	if (noti == NULL || text == NULL)
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
@@ -532,7 +534,7 @@ EXPORT_API int notification_get_text(notification_h noti,
 
 	bundle_get_str(b, buf_key, &ret_val);
 	if (ret_val != NULL)
-		ret_var_type = atoi(ret_val);
+		ret_var_type = static_cast<notification_variable_type_e>(atoi(ret_val));
 
 	if (ret_var_type == NOTIFICATION_VARIABLE_TYPE_COUNT) {
 		/* Get var Value */
@@ -582,7 +584,7 @@ EXPORT_API int notification_get_text(notification_h noti,
 
 				bundle_get_str(b, buf_key, &ret_val);
 				if (ret_val != NULL)
-					ret_var_type = atoi(ret_val);
+					ret_var_type = static_cast<notification_variable_type_e>(atoi(ret_val));
 
 				if (ret_var_type ==
 					NOTIFICATION_VARIABLE_TYPE_COUNT) {
@@ -660,7 +662,7 @@ EXPORT_API int notification_get_text(notification_h noti,
 
 					bundle_get_str(b, buf_key, &ret_val);
 					if (ret_val != NULL)
-						ret_var_type = atoi(ret_val);
+						ret_var_type = static_cast<notification_variable_type_e>(atoi(ret_val));
 
 					if (ret_var_type ==
 						NOTIFICATION_VARIABLE_TYPE_COUNT) {
@@ -736,7 +738,7 @@ EXPORT_API int notification_get_text(notification_h noti,
 
 		bundle_get_str(b, buf_key, &ret_val);
 		if (ret_val != NULL)
-			ret_var_type = atoi(ret_val);
+			ret_var_type = static_cast<notification_variable_type_e>(atoi(ret_val));
 
 		if (ret_var_type == NOTIFICATION_VARIABLE_TYPE_COUNT) {
 			/* Get var Value */
@@ -1080,7 +1082,7 @@ EXPORT_API int notification_set_launch_option(notification_h noti,
 	int err = NOTIFICATION_ERROR_NONE;
 	int ret = 0;
 	bundle *b = NULL;
-	app_control_h app_control = option;
+	app_control_h app_control = static_cast<app_control_h>(option);
 
 	if (noti == NULL || app_control == NULL || type != NOTIFICATION_LAUNCH_OPTION_APP_CONTROL) {
 		err = NOTIFICATION_ERROR_INVALID_PARAMETER;
@@ -1270,7 +1272,7 @@ EXPORT_API int notification_set_display_applist(notification_h noti,
 	if (noti == NULL)
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 
-	if (applist == 0xffffffff) /* 0xffffffff means old NOTIFICATION_DISPLAY_APP_ALL */
+	if (applist == (int)0xffffffff) /* 0xffffffff means old NOTIFICATION_DISPLAY_APP_ALL */
 		applist = NOTIFICATION_DISPLAY_APP_ALL;
 
 	noti->display_applist = applist;
@@ -1402,7 +1404,7 @@ EXPORT_API int notification_delete(notification_h noti)
 
 static int _notification_get_domain_name(const char *app_id, char **name)
 {
-	char *name_token = NULL;
+	const char *name_token = NULL;
 
 	if (app_id == NULL)
 		return -1;
