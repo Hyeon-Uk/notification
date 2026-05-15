@@ -70,6 +70,19 @@ class NotificationDBTest : public TestFixture {
   }
 };
 
+/* notification_db.c null-arg validation paths */
+
+TEST_F(NotificationDBTest, db_close_null_pointer_to_pointer_returns_invalid) {
+  EXPECT_EQ(notification_db_close(nullptr),
+            NOTIFICATION_ERROR_INVALID_PARAMETER);
+}
+
+TEST_F(NotificationDBTest, db_close_null_inner_pointer_returns_invalid) {
+  sqlite3* db = nullptr;
+  EXPECT_EQ(notification_db_close(&db),
+            NOTIFICATION_ERROR_INVALID_PARAMETER);
+}
+
 TEST_F(NotificationDBTest, notification_db_test) {
   EXPECT_CALL(GetMock<SqliteMock>(), sqlite3_open_v2(_, _, _, _))
     .WillRepeatedly(Invoke(__fake_sqlite3_open_v2));
@@ -112,4 +125,27 @@ TEST_F(NotificationDBTest, notification_db_test) {
 
   ret = notification_db_close(&db);
   ASSERT_EQ(ret, NOTIFICATION_ERROR_NONE);
+}
+
+TEST_F(NotificationDBTest, db_open_sqlite_permission_denied) {
+  EXPECT_CALL(GetMock<SqliteMock>(), sqlite3_open_v2(_, _, _, _))
+      .WillOnce(Return(SQLITE_PERM));
+  sqlite3* db = notification_db_open();
+  EXPECT_EQ(db, nullptr);
+}
+
+TEST_F(NotificationDBTest, db_open_sqlite_generic_error) {
+  EXPECT_CALL(GetMock<SqliteMock>(), sqlite3_open_v2(_, _, _, _))
+      .WillOnce(Return(SQLITE_ERROR));
+  sqlite3* db = notification_db_open();
+  EXPECT_EQ(db, nullptr);
+}
+
+TEST_F(NotificationDBTest, db_close_sqlite_error_returns_from_db) {
+  EXPECT_CALL(GetMock<SqliteMock>(), sqlite3_close(_))
+      .WillOnce(Return(SQLITE_ERROR));
+  char db_buf[8] = {0};
+  sqlite3* dummy = reinterpret_cast<sqlite3*>(db_buf);
+  EXPECT_EQ(notification_db_close(&dummy),
+            NOTIFICATION_ERROR_FROM_DB);
 }

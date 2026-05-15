@@ -21,7 +21,7 @@
 
 static tizen_profile_t __profile;
 
-tizen_profile_t _config_get_tizen_profile(void)
+__attribute__((visibility("default"))) tizen_profile_t _config_get_tizen_profile(void)
 {
 	char *profile_name = NULL;
 
