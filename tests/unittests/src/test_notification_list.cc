@@ -203,3 +203,27 @@ TEST_F(NotificationListTest, notification_list_test2) {
   ret = notification_get_detail_list(nullptr, 1, 1, 1, &get_list_detail);
   ASSERT_EQ(ret, NOTIFICATION_ERROR_INVALID_PARAMETER);
 }
+
+TEST_F(NotificationListTest, get_list_by_page_zero_page_returns_invalid) {
+  notification_list_h list = nullptr;
+  EXPECT_EQ(notification_get_list_by_page(NOTIFICATION_TYPE_NOTI,
+                0, 10, &list),
+            NOTIFICATION_ERROR_INVALID_PARAMETER);
+}
+
+TEST_F(NotificationListTest, get_list_by_page_negative_page_returns_invalid) {
+  notification_list_h list = nullptr;
+  EXPECT_EQ(notification_get_list_by_page(NOTIFICATION_TYPE_NOTI,
+                -1, 10, &list),
+            NOTIFICATION_ERROR_INVALID_PARAMETER);
+}
+
+TEST_F(NotificationListTest, get_detail_list_null_list_returns_invalid) {
+  EXPECT_EQ(notification_get_detail_list("appid", 1, 1, 1, nullptr),
+            NOTIFICATION_ERROR_INVALID_PARAMETER);
+}
+
+TEST_F(NotificationListTest, free_list_null_returns_invalid) {
+  EXPECT_EQ(notification_free_list(nullptr),
+            NOTIFICATION_ERROR_INVALID_PARAMETER);
+}
