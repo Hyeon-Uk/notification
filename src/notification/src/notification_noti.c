@@ -36,6 +36,7 @@
 #include <notification_setting_internal.h>
 #include <notification_setting_service.h>
 #include "notification_db_query.h"
+#include "config.h"
 
 #define NOTI_BURST_DELETE_UNIT 10
 #define ERR_BUFFER_SIZE		1024
@@ -1001,6 +1002,32 @@ static int _check_text_input(notification_h noti)
 	return NOTIFICATION_ERROR_NONE;
 }
 
+static int _check_noti_setting(notification_h noti)
+{
+	if (!TIZEN_FEATURE_ENABLE_NOTI_SETTING)
+		return NOTIFICATION_ERROR_NONE;
+
+	if (_is_allowed_to_notify(noti) == false) {
+		ERR("[%s] is not allowed to notify",
+			noti->caller_app_id);
+		return NOTIFICATION_ERROR_PERMISSION_DENIED;
+	}
+
+	if (_handle_do_not_disturb_option(noti) !=
+			NOTIFICATION_ERROR_NONE)
+		WARN("Failed to handle do_not_disturb");
+
+	if (_is_pop_up_notification(
+			(const char *)noti->caller_app_id, noti->uid) == false) {
+		noti->display_applist = (noti->display_applist &
+			(~NOTIFICATION_DISPLAY_APP_ACTIVE));
+		DBG(" display applist - app_id [%s], applist [%d]",
+			noti->caller_app_id, noti->display_applist);
+	}
+
+	return NOTIFICATION_ERROR_NONE;
+}
+
 static int _get_noti_count(sqlite3 *db, char *query_where, int *count)
 {
 	int ret;
@@ -1061,19 +1088,9 @@ EXPORT_API int notification_noti_insert(notification_h noti)
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 	}
 
-	if (_is_allowed_to_notify(noti) == false) {
-		ERR("[%s] is not allowed to notify", noti->caller_app_id);
-		return NOTIFICATION_ERROR_PERMISSION_DENIED;
-	}
-
-	if (_handle_do_not_disturb_option(noti) != NOTIFICATION_ERROR_NONE)
-		WARN("Failed to handle do_not_disturb");
-
-	if (_is_pop_up_notification((const char *)noti->caller_app_id, noti->uid) == false) {
-		noti->display_applist = (noti->display_applist & (~NOTIFICATION_DISPLAY_APP_ACTIVE));
-		DBG("notification display applist - app_id [%s], applist [%d]",
-				noti->caller_app_id, noti->display_applist);
-	}
+	ret = _check_noti_setting(noti);
+	if (ret != NOTIFICATION_ERROR_NONE)
+		return ret;
 
 	if (_check_text_input(noti) != NOTIFICATION_ERROR_NONE)
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
@@ -1202,19 +1219,9 @@ EXPORT_API int notification_noti_update(notification_h noti)
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 	}
 
-	if (_is_allowed_to_notify(noti) == false) {
-		DBG("[%s] is not allowed to notify", noti->caller_app_id);
-		return NOTIFICATION_ERROR_PERMISSION_DENIED;
-	}
-
-	if (_handle_do_not_disturb_option(noti) != NOTIFICATION_ERROR_NONE)
-		WARN("Failed to handle do_not_disturb");
-
-	if (_is_pop_up_notification((const char *)noti->caller_app_id, noti->uid) == false) {
-		noti->display_applist = (noti->display_applist & (~NOTIFICATION_DISPLAY_APP_ACTIVE));
-		DBG("notification display applist - app_id [%s], applist [%d]",
-				noti->caller_app_id, noti->display_applist);
-	}
+	ret = _check_noti_setting(noti);
+	if (ret != NOTIFICATION_ERROR_NONE)
+		return ret;
 
 	db = notification_db_open();
 	if (!db)

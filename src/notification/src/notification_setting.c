@@ -33,6 +33,7 @@
 #include <notification_setting_internal.h>
 #include <notification_tidl.h>
 #include "notification_db_query.h"
+#include "config.h"
 
 #define NOTIFICATION_PRIVILEGE "http://tizen.org/privilege/notification"
 
@@ -532,6 +533,9 @@ EXPORT_API int notification_setting_refresh_setting_table(uid_t uid)
 	setting_local_info info;
 
 	INFO("Refresh setting table [%d]", uid);
+
+	if (TIZEN_FEATURE_ENABLE_NOTI_SETTING)
+		return err;
 
 	db = notification_db_open();
 	if (!db)
