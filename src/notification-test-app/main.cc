@@ -1020,10 +1020,12 @@ static int testapp_test_get_setting_list() {
     tmp = setting_array + i;
     notification_setting_get_package_name(tmp, &package_name);
     notification_setting_get_appid(tmp, &appid);
-    notification_setting_get_allow_to_notify(tmp, &allow_to_notify);
-    notification_setting_get_do_not_disturb_except(tmp, &do_not_disturb_except);
+    /* Following getters were relocated to data-provider-master.
+     * The test app reads default values until reworked against a DPM stub. */
+    allow_to_notify = 0;
+    do_not_disturb_except = 0;
+    pop_up_notification = 0;
     notification_setting_get_visibility_class(tmp, &visibility_class);
-    notification_setting_get_pop_up_notification(tmp, &pop_up_notification);
     notification_setting_get_lock_screen_content(tmp, &level);
     testapp_print(
         "[%d] : package_name[%s], appid [%s], allow_to_notify[%d], "
@@ -1080,9 +1082,10 @@ static int testapp_test_update_system_setting() {
     goto out;
   }
 
-  notification_system_setting_get_do_not_disturb(system_setting,
-                                                 &do_not_disturb);
-  testapp_print("do_not_disturb [%d]\n", do_not_disturb);
+  /* notification_system_setting_get_do_not_disturb moved to data-provider-master. */
+  (void)system_setting;
+  do_not_disturb = 0;
+  testapp_print("do_not_disturb [%d] (stubbed after move)\n", do_not_disturb);
   do_not_disturb = !do_not_disturb;
   notification_system_setting_set_do_not_disturb(system_setting,
                                                  do_not_disturb);
@@ -1094,9 +1097,10 @@ static int testapp_test_update_system_setting() {
   notification_system_setting_set_visibility_class(system_setting,
                                                    visibility_class);
 
-  notification_system_setting_dnd_schedule_get_enabled(system_setting,
-                                                       &dnd_schedule_enabled);
-  testapp_print("dnd_schedule_enabled [%d]\n", dnd_schedule_enabled);
+  /* notification_system_setting_dnd_schedule_get_enabled moved to data-provider-master. */
+  dnd_schedule_enabled = false;
+  testapp_print("dnd_schedule_enabled [%d] (stubbed after move)\n",
+                dnd_schedule_enabled);
   dnd_schedule_enabled = !dnd_schedule_enabled;
   notification_system_setting_dnd_schedule_set_enabled(system_setting,
                                                        dnd_schedule_enabled);
@@ -1125,8 +1129,9 @@ static int testapp_test_update_system_setting() {
   }
 
 out:
-  if (system_setting)
-    notification_system_setting_free_system_setting(system_setting);
+  /* notification_system_setting_free_system_setting moved to data-provider-master;
+   * intentional leak on demo path until the test app is rebuilt against a DPM stub. */
+  (void)system_setting;
 
   return err;
 }

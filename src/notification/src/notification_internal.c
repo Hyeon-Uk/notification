@@ -35,7 +35,6 @@
 #include <notification_list.h>
 #include <notification_debug.h>
 #include <notification_private.h>
-#include <notification_noti.h>
 #include <notification_ongoing.h>
 #include <notification_group.h>
 #include <notification_internal.h>
@@ -763,32 +762,6 @@ EXPORT_API int notification_get_args(notification_h noti,
 /* LCOV_EXCL_STOP */
 
 /* LCOV_EXCL_START */
-int notification_get_grouping_list_for_uid(notification_type_e type, int count,
-		notification_list_h *list, uid_t uid)
-{
-	notification_list_h get_list = NULL;
-	int ret = 0;
-
-	if (list == NULL)
-		return NOTIFICATION_ERROR_INVALID_PARAMETER;
-
-	ret = notification_noti_get_grouping_list(type, 1, count, &get_list, NULL, uid);
-	if (ret != NOTIFICATION_ERROR_NONE)
-		return ret;
-
-	*list = get_list;
-
-	return NOTIFICATION_ERROR_NONE;
-}
-
-EXPORT_API int notification_get_grouping_list(notification_type_e type, int count,
-		notification_list_h *list)
-{
-	return notification_get_grouping_list_for_uid(type, count, list, aul_getuid());
-}
-/* LCOV_EXCL_STOP */
-
-/* LCOV_EXCL_START */
 EXPORT_API int notification_delete_group_by_group_id(const char *app_id,
 		notification_type_e type,
 		int group_id)
@@ -1468,27 +1441,6 @@ EXPORT_API int notification_is_service_ready(void)
 }
 /* LCOV_EXCL_STOP */
 
-/* LCOV_EXCL_START */
-EXPORT_API int notification_set_uid(notification_h noti,
-		uid_t uid)
-{
-	if (noti == NULL)
-		return NOTIFICATION_ERROR_INVALID_PARAMETER;
-
-	noti->uid = uid;
-	return NOTIFICATION_ERROR_NONE;
-}
-
-EXPORT_API int notification_get_uid(notification_h noti,
-		uid_t *uid)
-{
-	if (noti == NULL || uid == NULL)
-		return NOTIFICATION_ERROR_INVALID_PARAMETER;
-
-	*uid = noti->uid;
-	return NOTIFICATION_ERROR_NONE;
-}
-
 static GList *__copy_private_file(notification_h noti)
 {
 	bundle *dst_b;
@@ -1981,16 +1933,6 @@ EXPORT_API int notification_send_event_by_priv_id(int priv_id, int event_type)
 	return ret;
 }
 
-EXPORT_API int notification_get_event_flag(notification_h noti, bool *flag)
-{
-	if (noti == NULL || flag == NULL)
-		return NOTIFICATION_ERROR_INVALID_PARAMETER;
-
-	*flag = noti->event_flag;
-
-	return NOTIFICATION_ERROR_NONE;
-}
-
 EXPORT_API int notification_check_event_receiver_available(notification_h noti, bool *available)
 {
 	int ret;
@@ -2063,32 +2005,6 @@ EXPORT_API int notification_get_extention_data(notification_h noti, const char *
 {
 	return notification_get_extension_data(noti, key, value);
 }
-
-EXPORT_API int notification_get_extension_data(notification_h noti, const char *key, bundle **value)
-{
-	char *ret_str;
-	bundle *args;
-	int ret;
-
-	if (noti == NULL || key == NULL || value == NULL)
-		return NOTIFICATION_ERROR_INVALID_PARAMETER;
-
-	if (noti->args == NULL)
-		return NOTIFICATION_ERROR_INVALID_PARAMETER;
-
-	args = noti->args;
-
-	ret = bundle_get_str(args, key, &ret_str);
-	if (ret != BUNDLE_ERROR_NONE)
-		return NOTIFICATION_ERROR_INVALID_PARAMETER;
-
-	*value = _create_bundle_from_bundle_raw((bundle_raw *)ret_str);
-	if (*value == NULL)
-		return NOTIFICATION_ERROR_IO_ERROR;
-
-	return NOTIFICATION_ERROR_NONE;
-}
-/* LCOV_EXCL_STOP */
 
 #define KEY_LEN 40
 #define EXTENSION_EVENT_KEY "_NOTIFICATION_EXTENSION_EVENT_"
@@ -2531,31 +2447,6 @@ EXPORT_API int notification_set_pairing_type(notification_h noti, bool pairing)
 	return NOTIFICATION_ERROR_NONE;
 }
 
-EXPORT_API int notification_get_pairing_type(notification_h noti, bool *pairing)
-{
-	int ret;
-	char *value = NULL;
-
-	WARN("get pairing");
-
-	if (noti == NULL || noti->args == NULL || pairing == NULL)
-		return NOTIFICATION_ERROR_INVALID_PARAMETER;
-
-	ret = bundle_get_str(noti->args, PAIRING_TYPE_KEY, &value);
-	if (ret != BUNDLE_ERROR_NONE || value == NULL)
-		return NOTIFICATION_ERROR_INVALID_PARAMETER;
-
-	if (strcmp("true", value) == 0)
-		*pairing = true;
-	else
-		*pairing = false;
-
-	WARN("get pairing done");
-
-	return NOTIFICATION_ERROR_NONE;
-}
-/* LCOV_EXCL_STOP */
-
 /* for channel */
 EXPORT_API int notification_set_channel_name(notification_h noti,
 		const char *channel_name)
@@ -2569,21 +2460,6 @@ EXPORT_API int notification_set_channel_name(notification_h noti,
 		free(noti->channel_name);
 
 	noti->channel_name = strdup(channel_name);
-
-	WARN("notification_set_channel_name done");
-
-	return NOTIFICATION_ERROR_NONE;
-}
-
-EXPORT_API int notification_get_channel_name(notification_h noti,
-		const char **channel_name)
-{
-	if (noti == NULL || channel_name == NULL) {
-		ERR("Invalid parameter");
-		return NOTIFICATION_ERROR_INVALID_PARAMETER;
-	}
-
-	*channel_name = noti->channel_name;
 
 	WARN("notification_set_channel_name done");
 
@@ -2645,26 +2521,6 @@ EXPORT_API int notification_channel_create(const char *channel_name,
 	WARN("notification_channel_create done [%s]", noti_channel->app_id);
 
 	return NOTIFICATION_ERROR_NONE;
-}
-
-EXPORT_API void notification_channel_free(notification_channel_h channel)
-{
-	notification_channel_s *noti_channel = channel;
-
-	if (noti_channel == NULL) {
-		ERR("Invalid parameter");
-		return;
-	}
-
-	if (noti_channel->app_id)
-		free(noti_channel->app_id);
-
-	if (noti_channel->channel_name)
-		free(noti_channel->channel_name);
-
-	free(noti_channel);
-
-	WARN("notification_channel_free done");
 }
 
 EXPORT_API int notification_channel_add(notification_channel_h channel)
@@ -2818,23 +2674,6 @@ EXPORT_API int notification_channel_set_blockable(
 	return NOTIFICATION_ERROR_NONE;
 }
 
-EXPORT_API int notification_channel_get_blockable(
-		notification_channel_h channel, bool *blockable)
-{
-	notification_channel_s *noti_channel = channel;
-
-	if (noti_channel == NULL) {
-		ERR("Invalid parameter");
-		return NOTIFICATION_ERROR_INVALID_PARAMETER;
-	}
-
-	*blockable = noti_channel->blockable;
-
-	WARN("notification_channel_get_blockable done");
-
-	return NOTIFICATION_ERROR_NONE;
-}
-
 EXPORT_API int notification_channel_set_block(
 		notification_channel_h channel, bool block)
 {
@@ -2848,40 +2687,6 @@ EXPORT_API int notification_channel_set_block(
 	noti_channel->is_blocked = block;
 
 	WARN("notification_channel_set_block done");
-
-	return NOTIFICATION_ERROR_NONE;
-}
-
-EXPORT_API int notification_channel_get_block(
-		notification_channel_h channel, bool *block)
-{
-	notification_channel_s *noti_channel = channel;
-
-	if (noti_channel == NULL) {
-		ERR("Invalid parameter");
-		return NOTIFICATION_ERROR_INVALID_PARAMETER;
-	}
-
-	*block = noti_channel->is_blocked;
-
-	WARN("notification_channel_get_block done");
-
-	return NOTIFICATION_ERROR_NONE;
-}
-
-EXPORT_API int notification_channel_get_name(notification_channel_h channel,
-		const char **channel_name)
-{
-	notification_channel_s *noti_channel = channel;
-
-	if (noti_channel == NULL || channel_name == NULL) {
-		ERR("Invalid parameter");
-		return NOTIFICATION_ERROR_INVALID_PARAMETER;
-	}
-
-	*channel_name = noti_channel->channel_name;
-
-	WARN("notification_channel_get_name done");
 
 	return NOTIFICATION_ERROR_NONE;
 }
@@ -2955,3 +2760,63 @@ out:
 
 	return ret;
 }
+
+EXPORT_API void notification_channel_free(notification_channel_h channel)
+{
+	notification_channel_s *noti_channel = channel;
+
+	if (noti_channel == NULL) {
+		ERR("Invalid parameter");
+		return;
+	}
+
+	if (noti_channel->app_id)
+		free(noti_channel->app_id);
+
+	if (noti_channel->channel_name)
+		free(noti_channel->channel_name);
+
+	free(noti_channel);
+
+	WARN("notification_channel_free done");
+}
+
+
+EXPORT_API int notification_get_event_flag(notification_h noti, bool *flag)
+{
+	if (noti == NULL || flag == NULL)
+		return NOTIFICATION_ERROR_INVALID_PARAMETER;
+
+	*flag = noti->event_flag;
+
+	return NOTIFICATION_ERROR_NONE;
+}
+
+
+EXPORT_API int notification_get_extension_data(notification_h noti, const char *key, bundle **value)
+{
+	char *ret_str;
+	bundle *args;
+	int ret;
+
+	if (noti == NULL || key == NULL || value == NULL)
+		return NOTIFICATION_ERROR_INVALID_PARAMETER;
+
+	if (noti->args == NULL)
+		return NOTIFICATION_ERROR_INVALID_PARAMETER;
+
+	args = noti->args;
+
+	ret = bundle_get_str(args, key, &ret_str);
+	if (ret != BUNDLE_ERROR_NONE)
+		return NOTIFICATION_ERROR_INVALID_PARAMETER;
+
+	*value = _create_bundle_from_bundle_raw((bundle_raw *)ret_str);
+	if (*value == NULL)
+		return NOTIFICATION_ERROR_IO_ERROR;
+
+	return NOTIFICATION_ERROR_NONE;
+}
+/* LCOV_EXCL_STOP */
+
+

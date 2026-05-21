@@ -272,41 +272,6 @@ int notification_setting_get_appid(notification_setting_h setting, char **app_id
 
 /**
  * @internal
- * @brief Gets value which whether allow notification from individual applications.
- * @since_tizen @if wearable 2.3.1 @elseif mobile 2.3 @endif
- * @param[in] setting The notification setting handle
- * @param[out] value The value which whether allow to notification
- * @return #NOTIFICATION_ERROR_NONE on success,
- *         otherwise any other value on failure
- * @retval #NOTIFICATION_ERROR_NONE			Success
- * @retval #NOTIFICATION_ERROR_INVALID_PARAMETER	Invalid parameter
- * @par sample code:
- * @code
-#include <notification_setting_internal.h>
-...
-{
-	int noti_err = 0;
-	bool value;
-	notification_setting_h setting = NULL;
-
-	...
-
-	noti_err = notification_setting_get_allow_to_notify(setting, &value);
-	if (noti_err != NOTIFICATION_ERROR_NONE) {
-		return;
-	}
-
-	notification_setting_free_notification(setting);
-
-	return 0;
-
-}
- * @endcode
- */
-int notification_setting_get_allow_to_notify(notification_setting_h setting, bool *value);
-
-/**
- * @internal
  * @brief Sets value which whether allow notification from individual applications.
  * @details After notification_setting_update_setting() call, the allow_to_notify is updated.
  * @since_tizen @if wearable 2.3.1 @elseif mobile 2.3 @endif
@@ -345,41 +310,6 @@ int notification_setting_set_allow_to_notify(notification_setting_h setting, boo
 
 /**
  * @internal
- * @brief Gets value which whether do not disturb notification from notification setting handle.
- * @since_tizen @if wearable 2.3.1 @elseif mobile 2.3 @endif
- * @param[in] setting The notification setting handle
- * @param[out] value The value which whether do not disturb notification or not
- * @return #NOTIFICATION_ERROR_NONE on success,
- *         otherwise any other value on failure
- * @retval #NOTIFICATION_ERROR_NONE         Success
- * @retval #NOTIFICATION_ERROR_INVALID_PARAMETER Invalid parameter
- * @par sample code:
- * @code
-#include <notification_setting_internal.h>
-...
-{
-	int noti_err = 0;
-	bool value;
-	notification_setting_h setting = NULL;
-
-	...
-
-	noti_err = notification_setting_get_do_not_disturb_except(setting, &value);
-	if (noti_err != NOTIFICATION_ERROR_NONE) {
-		return;
-	}
-
-	notification_setting_free_notification(setting);
-
-	return 0;
-
-}
- * @endcode
- */
-int notification_setting_get_do_not_disturb_except(notification_setting_h setting, bool *value);
-
-/**
- * @internal
  * @brief Sets value which whether do not disturb notification or not.
  * @details After notification_setting_update_setting() call, the do_not_disturb value is updated.
  * @since_tizen @if wearable 2.3.1 @elseif mobile 2.3 @endif
@@ -415,43 +345,6 @@ int notification_setting_get_do_not_disturb_except(notification_setting_h settin
  * @endcode
  */
 int notification_setting_set_do_not_disturb_except(notification_setting_h setting, bool value);
-
-/**
- * @internal
- * @brief Gets value whether Pop up notification is allowed or not.
- * @since_tizen 3.0
- * @param[in] setting The notification setting handle
- * @param[in] value The value
- * @return #NOTIFICATION_ERROR_NONE on success,
- *         otherwise any other value on failure
- * @retval #NOTIFICATION_ERROR_NONE         Success
- * @retval #NOTIFICATION_ERROR_INVALID_PARAMETER Invalid parameter
- * @par sample code:
- * @code
-#include <notification_setting_internal.h>
-...
-{
-	int noti_err = 0;
-	bool value;
-	notification_setting_h setting = NULL;
-
-	...
-
-	value = true;	// or false
-
-	noti_err = notification_setting_get_pop_up_notification(setting, value);
-	if (noti_err != NOTIFICATION_ERROR_NONE) {
-		return;
-	}
-
-	notification_setting_free_notification(setting);
-
-	return 0;
-
-}
- * @endcode
- */
-int notification_setting_get_pop_up_notification(notification_setting_h setting, bool *value);
 
 /**
  * @internal
@@ -568,40 +461,6 @@ int notification_setting_set_lock_screen_content(notification_setting_h setting,
 
 /**
  * @internal
- * @brief Gets The value that determines whether the app is disabled.
- * @since_tizen 3.0
- * @privlevel public
- * @privilege %http://tizen.org/privilege/notification
- * @param[in] setting The notification system setting handle
- * @param[out] value The value that determines whether the app is disabled
- * @return #NOTIFICATION_ERROR_NONE on success,
- *         otherwise any other value on failure
- * @retval #NOTIFICATION_ERROR_NONE         Success
- * @retval #NOTIFICATION_ERROR_INVALID_PARAMETER Invalid parameter
- * @par sample code:
- * @code
-#include <notification_setting_internal.h>
-{
-	int err = 0;
-	bool value = true;
-	notification_system_setting_h setting = NULL;
-
-	err = notification_setting_get_setting(&setting);
-	if (err != NOTIFICATION_ERROR_NONE)
-		return;
-
-	err = notification_setting_get_app_disabled(setting, &value);
-	if (err != NOTIFICATION_ERROR_NONE)
-		return;
-
-	return 0;
-}
- * @endcode
- */
-int notification_setting_get_app_disabled(notification_setting_h setting, bool *value);
-
-/**
- * @internal
  * @brief Gets the notification system setting handle.
  * @since_tizen @if wearable 2.3.1 @elseif mobile 2.3 @endif
  * @privlevel public
@@ -629,8 +488,6 @@ int notification_setting_get_app_disabled(notification_setting_h setting, bool *
 	if (noti_err != NOTIFICATION_ERROR_NONE) {
 		return;
 	}
-
-	notification_system_setting_free_system_setting(setting);
 
 	return 0;
 
@@ -665,8 +522,6 @@ int notification_system_setting_load_system_setting_for_uid(notification_system_
 	if (noti_err != NOTIFICATION_ERROR_NONE) {
 		return;
 	}
-
-	notification_system_setting_free_system_setting(setting);
 
 	return 0;
 
@@ -705,42 +560,6 @@ int notification_system_setting_update_system_setting_for_uid(notification_syste
 }
  * @endcode
  */
-int notification_system_setting_free_system_setting(notification_system_setting_h system_setting);
-
-/**
- * @internal
- * @brief Gets value which whether do not disturb notification from notification system setting handle.
- * @since_tizen @if wearable 2.3.1 @elseif mobile 2.3 @endif
- * @param[in] system_setting The notification system setting handle
- * @param[out] value The value which whether do not disturb notification or not
- * @return #NOTIFICATION_ERROR_NONE on success,
- *         otherwise any other value on failure
- * @retval #NOTIFICATION_ERROR_NONE         Success
- * @retval #NOTIFICATION_ERROR_INVALID_PARAMETER Invalid parameter
- * @par sample code:
- * @code
-#include <notification_setting_internal.h>
-...
-{
-	int noti_err = 0;
-	bool value;
-	notification_system_setting_h setting = NULL;
-
-	...
-
-	noti_err = notification_system_setting_get_do_not_disturb_except(setting, &value);
-	if (noti_err != NOTIFICATION_ERROR_NONE) {
-		return;
-	}
-
-	notification_system_setting_free_system_setting(setting);
-
-	return 0;
-
-}
- * @endcode
- */
-int notification_system_setting_get_do_not_disturb(notification_system_setting_h system_setting, bool *value);
 
 /**
  * @internal
@@ -855,41 +674,6 @@ int notification_system_setting_set_visibility_class(notification_system_setting
 
 /**
  * @internal
- * @brief Gets value which whether 'Do not disturb' mode is enable or not.
- * @since_tizen 3.0
- * @param[in] system_setting The notification system setting handle
- * @param[out] enabled The dnd_schedule_enabled value
- * @return #NOTIFICATION_ERROR_NONE on success,
- *         otherwise any other value on failure
- * @retval #NOTIFICATION_ERROR_NONE         Success
- * @retval #NOTIFICATION_ERROR_INVALID_PARAMETER Invalid parameter
- * @par sample code:
- * @code
-#include <notification_setting_internal.h>
-...
-{
-	int noti_err = 0;
-	bool value;
-	notification_system_setting_h setting = NULL;
-
-	...
-
-	noti_err = notification_system_setting_dnd_schedule_get_enabled(setting, &value);
-	if (noti_err != NOTIFICATION_ERROR_NONE) {
-		return;
-	}
-
-	notification_system_setting_free_system_setting(setting);
-
-	return 0;
-
-}
- * @endcode
- */
-int notification_system_setting_dnd_schedule_get_enabled(notification_system_setting_h system_setting, bool *enabled);
-
-/**
- * @internal
  * @brief Sets value which whether 'Do not disturb' mode is enable or not.
  * @details After notification_system_setting_update_system_setting() call, the 'Do not disturb' mode is not updated.
  * @since_tizen 3.0
@@ -925,42 +709,6 @@ int notification_system_setting_dnd_schedule_get_enabled(notification_system_set
  * @endcode
  */
 int notification_system_setting_dnd_schedule_set_enabled(notification_system_setting_h system_setting, bool enabled);
-
-/**
- * @internal
- * @brief Gets days of the week that 'Do not disturb' mode is enable.
- * @since_tizen 3.0
- * @param[in] system_setting The notification system setting handle
- * @param[out] day The days of the week that enable 'Do not disturb' mode
- * @return #NOTIFICATION_ERROR_NONE on success,
- *         otherwise any other value on failure
- * @retval #NOTIFICATION_ERROR_NONE         Success
- * @retval #NOTIFICATION_ERROR_INVALID_PARAMETER Invalid parameter
- * @see #dnd_schedule_week_flag_e
- * @par sample code:
- * @code
-#include <notification_setting_internal.h>
-...
-{
-	int noti_err = 0;
-	int day;
-	notification_system_setting_h setting = NULL;
-
-	...
-
-	noti_err = notification_system_setting_dnd_schedule_get_day(setting, &day);
-	if (noti_err != NOTIFICATION_ERROR_NONE) {
-		return;
-	}
-
-	notification_system_setting_free_system_setting(setting);
-
-	return 0;
-
-}
- * @endcode
- */
-int notification_system_setting_dnd_schedule_get_day(notification_system_setting_h system_setting, int *day);
 
 /**
  * @internal
@@ -1003,43 +751,6 @@ int notification_system_setting_dnd_schedule_set_day(notification_system_setting
 
 /**
  * @internal
- * @brief Gets time that 'Do not disturb' mode is started.
- * @since_tizen 3.0
- * @param[in] system_setting The notification system setting handle
- * @param[out] hour The hour that 'Do not disturb' mode is started
- * @param[out] min The min that 'Do not disturb' mode is started
- * @return #NOTIFICATION_ERROR_NONE on success,
- *         otherwise any other value on failure
- * @retval #NOTIFICATION_ERROR_NONE         Success
- * @retval #NOTIFICATION_ERROR_INVALID_PARAMETER Invalid parameter
- * @par sample code:
- * @code
-#include <notification_setting_internal.h>
-...
-{
-	int noti_err = 0;
-	int hour;
-	int min;
-	notification_system_setting_h setting = NULL;
-
-	...
-
-	noti_err = notification_system_setting_dnd_schedule_get_start_time(setting, &hour, &min);
-	if (noti_err != NOTIFICATION_ERROR_NONE) {
-		return;
-	}
-
-	notification_system_setting_free_system_setting(setting);
-
-	return 0;
-
-}
- * @endcode
- */
-int notification_system_setting_dnd_schedule_get_start_time(notification_system_setting_h system_setting, int *hour, int *min);
-
-/**
- * @internal
  * @brief Sets time that 'Do not disturb' mode is started.
  * @since_tizen 3.0
  * @param[in] system_setting The notification system setting handle
@@ -1077,43 +788,6 @@ int notification_system_setting_dnd_schedule_get_start_time(notification_system_
  * @endcode
  */
 int notification_system_setting_dnd_schedule_set_start_time(notification_system_setting_h system_setting, int hour, int min);
-
-/**
- * @internal
- * @brief Gets time that 'Do not disturb' mode is ended.
- * @since_tizen 3.0
- * @param[in] system_setting The notification system setting handle
- * @param[out] hour The hour that 'Do not disturb' mode is ended
- * @param[out] min The min that 'Do not disturb' mode is ended
- * @return #NOTIFICATION_ERROR_NONE on success,
- *         otherwise any other value on failure
- * @retval #NOTIFICATION_ERROR_NONE         Success
- * @retval #NOTIFICATION_ERROR_INVALID_PARAMETER Invalid parameter
- * @par sample code:
- * @code
-#include <notification_setting_internal.h>
-...
-{
-	int noti_err = 0;
-	int hour;
-	int min;
-	notification_system_setting_h setting = NULL;
-
-	...
-
-	noti_err = notification_system_setting_dnd_schedule_get_end_time(setting, &hour, &min);
-	if (noti_err != NOTIFICATION_ERROR_NONE) {
-		return;
-	}
-
-	notification_system_setting_free_system_setting(setting);
-
-	return 0;
-
-}
- * @endcode
- */
-int notification_system_setting_dnd_schedule_get_end_time(notification_system_setting_h system_setting, int *hour, int *min);
 
 /**
  * @internal
@@ -1395,58 +1069,6 @@ static void changed_cb(void *user_data, int do_not_disturb)
  */
 int notification_unregister_system_setting_dnd_changed_cb(dnd_changed_cb callback);
 int notification_unregister_system_setting_dnd_changed_cb_for_uid(dnd_changed_cb callback, uid_t uid);
-
-/**
- * @internal
- * @brief Updates the notification setting if the pacakge is installed or updated.
- * @since_tizen 3.0
- * @param[in] package_name
- * @param[in] uid User id
- * @return #NOTIFICATION_ERROR_NONE on success,
- *         otherwise any other value on failure
- * @retval #NOTIFICATION_ERROR_NONE Success
- * @retval #NOTIFICATION_ERROR_INVALID_PARAMETER Invalid parameter
- * @retval #NOTIFICATION_ERROR_FROM_DB Error from DB query
- * @par sample code:
- * @code
-#include <notification_setting.h>
-...
-{
-	int ret;
-
-	ret = notification_setting_insert_package_for_uid(pkg_name, uid);
-	if (ret = NOTIFICATION_ERROR_NONE)
-		return;
-}
- * @endcode
- */
-int notification_setting_insert_package_for_uid(const char *package_name, uid_t uid);
-
-/**
- * @internal
- * @brief Deletes the notification setting if the pacakge is uninstalled.
- * @since_tizen 3.0
- * @param[in] package_name
- * @param[in] uid User id
- * @return #NOTIFICATION_ERROR_NONE on success,
- *         otherwise any other value on failure
- * @retval #NOTIFICATION_ERROR_NONE Success
- * @retval #NOTIFICATION_ERROR_INVALID_PARAMETER Invalid parameter
- * @retval #NOTIFICATION_ERROR_FROM_DB Error from DB query
- * @par sample code:
- * @code
-#include <notification_setting.h>
-...
-{
-	int ret;
-
-	ret = notification_setting_delete_package_for_uid(pkg_name, uid);
-	if (ret = NOTIFICATION_ERROR_NONE)
-		return;
-}
- * @endcode
- */
-int notification_setting_delete_package_for_uid(const char *package_name, uid_t uid);
 
 /**
  * @internal

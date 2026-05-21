@@ -26,7 +26,6 @@
 #include <notification.h>
 #include <notification_db.h>
 #include <notification_list.h>
-#include <notification_noti.h>
 #include <notification_debug.h>
 #include <notification_private.h>
 #include <notification_setting.h>
@@ -141,19 +140,6 @@ EXPORT_API int notification_setting_get_appid(notification_setting_h setting, ch
 }
 /* LCOV_EXCL_STOP */
 
-/* LCOV_EXCL_START */
-EXPORT_API int notification_setting_get_allow_to_notify(notification_setting_h setting, bool *value)
-{
-	if (setting == NULL || value == NULL) {
-		ERR("Invalid parameter");
-		return NOTIFICATION_ERROR_INVALID_PARAMETER;
-	}
-
-	*value = setting->allow_to_notify;
-
-	return NOTIFICATION_ERROR_NONE;
-}
-
 EXPORT_API int notification_setting_set_allow_to_notify(notification_setting_h setting, bool value)
 {
 	if (setting == NULL) {
@@ -162,18 +148,6 @@ EXPORT_API int notification_setting_set_allow_to_notify(notification_setting_h s
 	}
 
 	setting->allow_to_notify = value;
-
-	return NOTIFICATION_ERROR_NONE;
-}
-
-EXPORT_API int notification_setting_get_do_not_disturb_except(notification_setting_h setting, bool *value)
-{
-	if (setting == NULL || value == NULL) {
-		ERR("Invalid parameter");
-		return NOTIFICATION_ERROR_INVALID_PARAMETER;
-	}
-
-	*value = setting->do_not_disturb_except;
 
 	return NOTIFICATION_ERROR_NONE;
 }
@@ -215,18 +189,6 @@ EXPORT_API int notification_setting_set_visibility_class(notification_setting_h 
 	return NOTIFICATION_ERROR_NONE;
 }
 
-/* LCOV_EXCL_START */
-EXPORT_API int notification_setting_get_pop_up_notification(notification_setting_h setting, bool *value)
-{
-	if (setting == NULL || value == NULL) {
-		ERR("Invalid parameter");
-		return NOTIFICATION_ERROR_INVALID_PARAMETER;
-	}
-
-	*value = setting->pop_up_notification;
-	return NOTIFICATION_ERROR_NONE;
-}
-
 EXPORT_API int notification_setting_set_pop_up_notification(notification_setting_h setting, bool value)
 {
 	if (setting == NULL) {
@@ -261,19 +223,6 @@ EXPORT_API int notification_setting_set_lock_screen_content(notification_setting
 
 	return NOTIFICATION_ERROR_NONE;
 }
-
-EXPORT_API int notification_setting_get_app_disabled(notification_setting_h setting, bool *value)
-{
-	if (setting == NULL || value == NULL) {
-		ERR("Invalid parameter");
-		return NOTIFICATION_ERROR_INVALID_PARAMETER;
-	}
-
-	*value = setting->app_disabled;
-
-	return NOTIFICATION_ERROR_NONE;
-}
-/* LCOV_EXCL_STOP */
 
 EXPORT_API int notification_setting_update_setting_for_uid(notification_setting_h setting, uid_t uid)
 {
@@ -425,105 +374,6 @@ out:
 /* LCOV_EXCL_STOP */
 
 /* LCOV_EXCL_START */
-static int _install_and_update_package(const char *package_name, uid_t uid)
-{
-	sqlite3 *db;
-	int err = NOTIFICATION_ERROR_NONE;
-	int pkgmgr_ret;
-	setting_local_info info;
-	pkgmgrinfo_appinfo_filter_h handle = NULL;
-
-	db = notification_db_open();
-	if (!db)
-		return get_last_result();
-
-	pkgmgr_ret = pkgmgrinfo_appinfo_filter_create(&handle);
-	if (pkgmgr_ret != PMINFO_R_OK) {
-		ERR("Failed to create appinfo_filter[%d]", pkgmgr_ret);
-		err = NOTIFICATION_ERROR_FROM_DB;
-		goto out;
-	}
-
-	pkgmgr_ret = pkgmgrinfo_appinfo_filter_add_string(handle,
-			PMINFO_APPINFO_PROP_PRIVILEGE, NOTIFICATION_PRIVILEGE);
-	if (pkgmgr_ret != PMINFO_R_OK) {
-		ERR("Failed to add string to appinfo_filter[%d]", pkgmgr_ret);
-		err = NOTIFICATION_ERROR_FROM_DB;
-		goto out;
-	}
-
-	pkgmgr_ret = pkgmgrinfo_appinfo_filter_add_string(handle,
-			PMINFO_APPINFO_PROP_APP_PACKAGE, package_name);
-	if (pkgmgr_ret != PMINFO_R_OK) {
-		ERR("Failed to add string to appinfo_filter[%d]", pkgmgr_ret);
-		err = NOTIFICATION_ERROR_FROM_DB;
-		goto out;
-	}
-
-	info.db = db;
-	info.uid = uid;
-	pkgmgr_ret = pkgmgrinfo_appinfo_usr_filter_foreach_appinfo(handle,
-			_foreach_app_info_callback, &info, uid);
-	if (pkgmgr_ret != PMINFO_R_OK) {
-		ERR("Failed to iterate appinfo[%d]", pkgmgr_ret);
-		err = NOTIFICATION_ERROR_FROM_DB;
-		goto out;
-	}
-
-out:
-	if (handle)
-		pkgmgrinfo_appinfo_filter_destroy(handle);
-
-	if (db)
-		notification_db_close(&db);
-
-	return err;
-}
-/* LCOV_EXCL_STOP */
-
-/* LCOV_EXCL_START */
-static int _delete_package_from_setting_db(const char *package_name, uid_t uid)
-{
-	sqlite3 *db = NULL;
-	char *query = NULL;
-	int err = NOTIFICATION_ERROR_NONE;
-	bool is_package_in_setting_table = false;
-
-	db = notification_db_open();
-	if (!db)
-		return get_last_result();
-
-	is_package_in_setting_table = _is_package_in_setting_table(db,
-				package_name, NULL, uid);
-	if (is_package_in_setting_table == false) {
-		INFO("[%s] is not exist", package_name);
-		goto out;
-	}
-
-	query = sqlite3_mprintf("DELETE FROM %s WHERE uid = %d "
-				"AND package_name = %Q ",
-				NOTIFICATION_SETTING_DB_TABLE, uid,
-				package_name);
-	if (query == NULL) {
-		ERR("Failed to alloc query");
-		err = NOTIFICATION_ERROR_OUT_OF_MEMORY;
-		goto out;
-	}
-
-	err = notification_db_exec(db, query, NULL);
-
-out:
-	if (query)
-		sqlite3_free(query);
-
-	if (db)
-		notification_db_close(&db);
-
-	return err;
-}
-/* LCOV_EXCL_STOP */
-
-/* LCOV_EXCL_START */
 EXPORT_API int notification_setting_refresh_setting_table(uid_t uid)
 {
 	int err = NOTIFICATION_ERROR_NONE;
@@ -577,17 +427,6 @@ out:
 }
 /* LCOV_EXCL_STOP */
 
-/* LCOV_EXCL_START */
-EXPORT_API int notification_setting_insert_package_for_uid(const char *package_name, uid_t uid)
-{
-	return _install_and_update_package(package_name, uid);
-}
-
-EXPORT_API int notification_setting_delete_package_for_uid(const char *package_name, uid_t uid)
-{
-	return _delete_package_from_setting_db(package_name, uid);
-}
-
 EXPORT_API int notification_system_setting_load_system_setting_for_uid(notification_system_setting_h *system_setting, uid_t uid)
 {
 	if (system_setting == NULL) {
@@ -616,35 +455,6 @@ EXPORT_API int notification_system_setting_update_system_setting_for_uid(notific
 EXPORT_API int notification_system_setting_update_system_setting(notification_system_setting_h system_setting)
 {
 	return notification_system_setting_update_system_setting_for_uid(system_setting, aul_getuid());
-}
-
-EXPORT_API int notification_system_setting_free_system_setting(notification_system_setting_h system_setting)
-{
-	if (system_setting == NULL) {
-		ERR("Invalid parameter");
-		return NOTIFICATION_ERROR_INVALID_PARAMETER;
-	}
-
-	/* add codes to free all properties */
-
-	if (system_setting->dnd_allow_exceptions != NULL)
-		g_list_free_full(system_setting->dnd_allow_exceptions, free);
-
-	SAFE_FREE(system_setting);
-
-	return NOTIFICATION_ERROR_NONE;
-}
-
-EXPORT_API int notification_system_setting_get_do_not_disturb(notification_system_setting_h system_setting, bool *value)
-{
-	if (system_setting == NULL || value == NULL) {
-		ERR("Invalid parameter");
-		return NOTIFICATION_ERROR_INVALID_PARAMETER;
-	}
-
-	*value = system_setting->do_not_disturb;
-
-	return NOTIFICATION_ERROR_NONE;
 }
 
 EXPORT_API int notification_system_setting_set_do_not_disturb(notification_system_setting_h system_setting, bool value)
@@ -683,18 +493,6 @@ EXPORT_API int notification_system_setting_set_visibility_class(notification_sys
 	return NOTIFICATION_ERROR_NONE;
 }
 
-EXPORT_API int notification_system_setting_dnd_schedule_get_enabled(notification_system_setting_h system_setting, bool *enabled)
-{
-	if (system_setting == NULL || enabled == NULL) {
-		ERR("Invalid parameter");
-		return NOTIFICATION_ERROR_INVALID_PARAMETER;
-	}
-
-	*enabled = system_setting->dnd_schedule_enabled;
-
-	return NOTIFICATION_ERROR_NONE;
-}
-
 EXPORT_API int notification_system_setting_dnd_schedule_set_enabled(notification_system_setting_h system_setting, bool enabled)
 {
 	if (system_setting == NULL) {
@@ -703,18 +501,6 @@ EXPORT_API int notification_system_setting_dnd_schedule_set_enabled(notification
 	}
 
 	system_setting->dnd_schedule_enabled = enabled;
-
-	return NOTIFICATION_ERROR_NONE;
-}
-
-EXPORT_API int notification_system_setting_dnd_schedule_get_day(notification_system_setting_h system_setting, int *day)
-{
-	if (system_setting == NULL || day == NULL) {
-		ERR("Invalid parameter");
-		return NOTIFICATION_ERROR_INVALID_PARAMETER;
-	}
-
-	*day = system_setting->dnd_schedule_day;
 
 	return NOTIFICATION_ERROR_NONE;
 }
@@ -731,19 +517,6 @@ EXPORT_API int notification_system_setting_dnd_schedule_set_day(notification_sys
 	return NOTIFICATION_ERROR_NONE;
 }
 
-EXPORT_API int notification_system_setting_dnd_schedule_get_start_time(notification_system_setting_h system_setting, int *hour, int *min)
-{
-	if (system_setting == NULL || hour == NULL || min == NULL) {
-		ERR("Invalid parameter");
-		return NOTIFICATION_ERROR_INVALID_PARAMETER;
-	}
-
-	*hour = system_setting->dnd_start_hour;
-	*min = system_setting->dnd_start_min;
-
-	return NOTIFICATION_ERROR_NONE;
-}
-
 EXPORT_API int notification_system_setting_dnd_schedule_set_start_time(notification_system_setting_h system_setting, int hour, int min)
 {
 	if (system_setting == NULL) {
@@ -753,19 +526,6 @@ EXPORT_API int notification_system_setting_dnd_schedule_set_start_time(notificat
 
 	system_setting->dnd_start_hour = hour;
 	system_setting->dnd_start_min = min;
-
-	return NOTIFICATION_ERROR_NONE;
-}
-
-EXPORT_API int notification_system_setting_dnd_schedule_get_end_time(notification_system_setting_h system_setting, int *hour, int *min)
-{
-	if (system_setting == NULL || hour == NULL || min == NULL) {
-		ERR("Invalid parameter");
-		return NOTIFICATION_ERROR_INVALID_PARAMETER;
-	}
-
-	*hour = system_setting->dnd_end_hour;
-	*min = system_setting->dnd_end_min;
 
 	return NOTIFICATION_ERROR_NONE;
 }

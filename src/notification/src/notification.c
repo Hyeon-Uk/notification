@@ -34,7 +34,6 @@
 #include <notification_list.h>
 #include <notification_debug.h>
 #include <notification_private.h>
-#include <notification_noti.h>
 #include <notification_ongoing.h>
 #include <notification_group.h>
 #include <notification_tidl.h>
@@ -824,6 +823,74 @@ EXPORT_API int notification_get_text_domain(notification_h noti,
 		*dir = noti->dir;
 
 	return NOTIFICATION_ERROR_NONE;
+}
+
+/*
+ * Tag-string helpers. These pure string utilities used to live in
+ * notification_noti.c, which has been migrated to data-provider-master.
+ * The client-side notification_{set,get}_time_*_text APIs below still need
+ * them, so a file-local copy is kept here. data-provider-master keeps its
+ * own copy in notification_noti.c.
+ */
+#define TAG_TIME "TIME"
+#define TAG_TYPE_INVALID -1
+#define TAG_TYPE_TIME 1
+
+static int notification_noti_set_tag(const char *tag, char *value,
+		char *buf, int buf_len)
+{
+	int len_total = 0;
+
+	len_total += (strlen(tag) * 2) + 5 + strlen(value) + 1;
+
+	if (buf_len <= len_total)
+		return NOTIFICATION_ERROR_INVALID_PARAMETER;
+
+	snprintf(buf, buf_len, "<%s>%s</%s>", tag, value, tag);
+
+	return NOTIFICATION_ERROR_NONE;
+}
+
+static char *notification_noti_strip_tag(const char *tagged_str)
+{
+	if (tagged_str == NULL)
+		return NULL;
+
+	int len_total = strlen(tagged_str);
+
+	if (len_total == 0)
+		return NULL;
+
+	char *b_f_e = strstr(tagged_str, ">");
+	char *b_e_s = strstr(tagged_str, "</");
+
+	if (b_f_e == NULL || b_e_s == NULL || (b_e_s - b_f_e - 1) <= 0)
+		return NULL;
+
+	return strndup(b_f_e + 1, b_e_s - b_f_e - 1);
+}
+
+static int notification_noti_get_tag_type(const char *tagged_str)
+{
+	if (tagged_str == NULL)
+		return TAG_TYPE_INVALID;
+
+	if (strlen(tagged_str) == 0)
+		return TAG_TYPE_INVALID;
+
+	char *b_f_s = strstr(tagged_str, "<");
+	char *b_f_e = strstr(tagged_str, ">");
+
+	if (b_f_s == NULL || b_f_e == NULL || (b_f_e - b_f_s - 1) <= 0)
+		return TAG_TYPE_INVALID;
+
+	char *start = b_f_s + 1;
+	int len_tag = b_f_e - b_f_s - 1;
+
+	if (strncmp(start, TAG_TIME, len_tag) == 0)
+		return TAG_TYPE_TIME;
+
+	return TAG_TYPE_INVALID;
 }
 
 EXPORT_API int notification_set_time_to_text(notification_h noti, notification_text_type_e type,

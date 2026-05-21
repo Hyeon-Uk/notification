@@ -177,9 +177,6 @@ fi
 %{_includedir}/notification/notification_setting.h
 %{_includedir}/notification/notification_setting_internal.h
 %{_includedir}/notification/notification_ipc.h
-%{_includedir}/notification/notification_noti.h
-%{_includedir}/notification/notification_setting_service.h
-%{_includedir}/notification/notification_viewer.h
 %{_includedir}/notification/notification_shared_file.h
 %{_includedir}/notification/notification_type_internal.h
 %{_libdir}/pkgconfig/notification.pc

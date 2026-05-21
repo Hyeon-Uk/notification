@@ -227,12 +227,6 @@ int notification_set_args(notification_h noti, bundle *args, bundle *group_args)
 int notification_get_args(notification_h noti, bundle **args, bundle **group_args) NOTIFICATION_DEPRECATED_API;
 
 /**
- * @brief This function is deprecated.
- * @see notification_get_grouping_list()
- */
-int notification_get_grouping_list(notification_type_e type, int count, notification_list_h *list) NOTIFICATION_DEPRECATED_API;
-
-/**
  * @brief This function will be deprecated.
  * @see notification_delete_by_priv_id()
  */
@@ -1179,50 +1173,6 @@ int notification_send_event(notification_h noti, int event_type);
 int notification_send_event_by_priv_id(int priv_id, int event_type);
 
 /**
- * @brief Gets the event flag.
- * @details When you create a notification handle, a default value of event flag is false.
- *          The flag automatically set true when post a notification using notification_post_with_event_cb().
- *          The viewer application for showing the notifications can use this API to check if it needs to call
- *          notification_send_event() to sends event of notification for making the callback of the processes
- *          that have posted notification to be called. Call notification_send_event()
- *          when the notification_get_event_flag() tells that the @event_flag is true.
- * @since_tizen 3.0
- * @param[in] noti The notification handle
- * @param[out] event_flag The event flag
- * @return #NOTIFICATION_ERROR_NONE on success,
- *         otherwise any other value on failure
- * @retval #NOTIFICATION_ERROR_NONE Success
- * @retval #NOTIFICATION_ERROR_INVALID_PARAMETER Invalid parameter
- * @pre Notification handle should be created by notification_create().
- * @par Sample code:
- * @code
-#include <notification.h>
-...
-{
-	notification_h noti = NULL;
-	int noti_err;
-	bool event_flag;
-
-	noti = notification_create(NOTIFICATION_TYPE_NOTI);
-	if (noti == NULL) {
-		return;
-	}
-
-	noti_err  = notification_get_event_flag(noti, &event_flag);
-	if (noti_err != NOTIFICATION_ERROR_NONE) {
-		notification_free(noti);
-		return;
-	}
-
-	...
-
-	notification_free(noti);
-}
- * @endcode
- */
-int notification_get_event_flag(notification_h noti, bool *event_flag);
-
-/**
  * @brief Gets whether sending event is available.
  * @details If the application is terminated, registered callback isn't called
  *          for event sent by other process. So you need to check whether the
@@ -1300,8 +1250,6 @@ notification_h notification_create_from_package_template(const char *app_id,
 					const char *template_name);
 
 void notification_reset_event_handler_list(void);
-int notification_set_uid(notification_h noti, uid_t uid);
-int notification_get_uid(notification_h noti, uid_t *uid);
 int notification_post_for_uid(notification_h noti, uid_t uid);
 int notification_update_for_uid(notification_h noti, uid_t uid);
 int notification_delete_for_uid(notification_h noti, uid_t uid);
@@ -1347,20 +1295,6 @@ int notification_get_text_input_max_length(notification_h noti, int *text_input_
  * @retval #NOTIFICATION_ERROR_INVALID_PARAMETER Invalid parameter
  */
 int notification_set_extension_data(notification_h noti, const char *key, bundle *value);
-
-/**
- * @brief Gets an extension data.
- * @since_tizen 4.0
- * @param[in] noti The notification handle
- * @param[in] key The key
- * @param[out] value The bundle data
- * @return #NOTIFICATION_ERROR_NONE on success,
- *         otherwise any other value on failure
- * @retval #NOTIFICATION_ERROR_NONE Success
- * @retval #NOTIFICATION_ERROR_INVALID_PARAMETER Invalid parameter
- * @retval #NOTIFICATION_ERROR_IO_ERROR IO Error
- */
-int notification_get_extension_data(notification_h noti, const char *key, bundle **value);
 
 /**
  * @brief This function will be deprecated.
@@ -1516,29 +1450,18 @@ typedef void (*disturb_cb)(void *user_data);
 int notification_register_do_not_disturb_app(disturb_cb callback, void *user_data);
 int notification_unregister_do_not_disturb_app(void);
 int notification_set_pairing_type(notification_h noti, bool pairing);
-int notification_get_pairing_type(notification_h noti, bool *pairing);
-
 /* for channel */
 int notification_set_channel_name(notification_h noti, const char *channel_name);
-int notification_get_channel_name(notification_h noti, const char **channel_name);
-
 typedef void *notification_channel_h;
 int notification_channel_create(const char *channel_name,
 		notification_channel_h *channel);
-void notification_channel_free(notification_channel_h channel);
 int notification_channel_add(notification_channel_h channel);
 int notification_channel_update(notification_channel_h channel);
 int notification_channel_remove(notification_channel_h channel);
 int notification_channel_set_blockable(notification_channel_h channel,
 		bool blockable);
-int notification_channel_get_blockable(notification_channel_h channel,
-		bool *blockable);
 int notification_channel_set_block(notification_channel_h channel,
 		bool block);
-int notification_channel_get_block(notification_channel_h channel,
-		bool *block);
-int notification_channel_get_name(notification_channel_h channel,
-		const char **channel_name);
 int notification_channel_get_by_name(const char *channel_name,
 		notification_channel_h *channel);
 int notification_channel_clone(notification_channel_h channel,
@@ -1568,6 +1491,14 @@ int make_dnd_allow_exception_from_exception(void *exception_handle,
 /**
  * @}
  */
+
+/* Re-added: these have internal callers in libnotification (notification_tidl.c,
+ * notification_internal.c). Kept exported from libnotification.so; data-provider-master
+ * still consumes them via -lnotification. */
+void notification_channel_free(notification_channel_h handle);
+int notification_get_event_flag(notification_h noti, bool *event_flag);
+int notification_get_extension_data(notification_h noti, const char *key, bundle **value);
+
 #ifdef __cplusplus
 }
 #endif
