@@ -1,2 +1,3 @@
 ADD_SUBDIRECTORY(unittests)
 ADD_SUBDIRECTORY(integ_tests)
+ADD_SUBDIRECTORY(smoke_tests)
