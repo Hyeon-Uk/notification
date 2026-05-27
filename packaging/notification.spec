@@ -278,6 +278,50 @@ sqlite3 $DB "DELETE FROM notification_setting WHERE app_id = '$APPID';" || :
 /usr/apps/%{integtest_pkgid}/tizen-manifest.xml
 %{_datadir}/packages/%{integtest_pkgid}.xml
 
+#################################################
+# notification-smoketests
+#################################################
+%define smoketest_pkgid org.tizen.notification.smoketest
+
+%package -n notification-smoketests
+Summary:    Smoke GTest scenarios for notification
+Group:      Development/Libraries
+Requires:   %{name}
+
+%description -n notification-smoketests
+Smoke test scenarios for the notification client library and the
+data-provider-master TIDL service. Packaged as a Tizen service-application
+(launch via `app_launcher -s %{smoketest_pkgid}`); results are written
+to /tmp/notification-smoketests.log. Covers post/update/delete lifecycle,
+channel CRUD, per-app + system settings, changed-callback delivery,
+error paths and stress / concurrent scenarios.
+
+%post -n notification-smoketests
+# Same rationale as the integtests %post: raw rpm install bypasses the
+# pkgmgr install broadcast that data-provider-master uses to seed the
+# per-app notification_setting row. Pre-populate it here so the setting
+# scenarios start from a known DB state.
+DB=/opt/dbspace/.notification.db
+APPID=%{smoketest_pkgid}
+APP_UID=$(id -u owner 2>/dev/null || echo 5001)
+sqlite3 $DB "INSERT OR IGNORE INTO notification_setting \
+    (uid, package_name, app_id, allow_to_notify, do_not_disturb_except, \
+     visibility_class, pop_up_notification, lock_screen_content_level, \
+     app_disabled) \
+  VALUES ($APP_UID, '$APPID', '$APPID', 1, 0, 0, 1, 0, 0);" || :
+
+%preun -n notification-smoketests
+DB=/opt/dbspace/.notification.db
+APPID=%{smoketest_pkgid}
+sqlite3 $DB "DELETE FROM notification_setting WHERE app_id = '$APPID';" || :
+
+%files -n notification-smoketests
+%manifest %{name}.manifest
+%defattr(-,root,root,-)
+/usr/apps/%{smoketest_pkgid}/bin/notification-smoketests
+/usr/apps/%{smoketest_pkgid}/tizen-manifest.xml
+%{_datadir}/packages/%{smoketest_pkgid}.xml
+
 %if 0%{?gcov:1}
 %files gcov
 %{_datadir}/gcov/obj/*
