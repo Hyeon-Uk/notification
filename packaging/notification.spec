@@ -230,6 +230,54 @@ GTest for notification
 %{_bindir}/notification-unittests
 %{_bindir}/tizen-unittests/%{name}/run-unittest.sh
 
+#################################################
+# notification-integtests
+#################################################
+%define integtest_pkgid org.tizen.notification.integtest
+
+%package -n notification-integtests
+Summary:    Integration GTest for notification
+Group:      Development/Libraries
+Requires:   %{name}
+
+%description -n notification-integtests
+Integration GTest for notification.
+Tests the TIDL round-trip between the notification client library
+and data-provider-master. Requires a running data-provider-master service.
+Packaged as a Tizen service-application so the daemon's pkgmgrinfo
+lookup of the caller resolves to a real appid (launch via
+`app_launcher -s %{integtest_pkgid}`).
+
+%post -n notification-integtests
+# Real Tizen install (pkgcmd -i app.tpk) triggers a pkgmgr broadcast that
+# data-provider-master's _package_install_cb listens for; the daemon then
+# calls notification_setting_insert_package_for_uid which writes a default
+# row into the notification_setting table. Raw `rpm -ivh` skips that
+# broadcast, so the row is never created and setting_update/get_noti_block_state
+# tests fail with -22. The %post runs as root (Smack label System), which is
+# the only context that can write /opt/dbspace/.notification.db, so we
+# pre-populate the row here.
+DB=/opt/dbspace/.notification.db
+APPID=%{integtest_pkgid}
+APP_UID=$(id -u owner 2>/dev/null || echo 5001)
+sqlite3 $DB "INSERT OR IGNORE INTO notification_setting \
+    (uid, package_name, app_id, allow_to_notify, do_not_disturb_except, \
+     visibility_class, pop_up_notification, lock_screen_content_level, \
+     app_disabled) \
+  VALUES ($APP_UID, '$APPID', '$APPID', 1, 0, 0, 1, 0, 0);" || :
+
+%preun -n notification-integtests
+DB=/opt/dbspace/.notification.db
+APPID=%{integtest_pkgid}
+sqlite3 $DB "DELETE FROM notification_setting WHERE app_id = '$APPID';" || :
+
+%files -n notification-integtests
+%manifest %{name}.manifest
+%defattr(-,root,root,-)
+/usr/apps/%{integtest_pkgid}/bin/notification-integtests
+/usr/apps/%{integtest_pkgid}/tizen-manifest.xml
+%{_datadir}/packages/%{integtest_pkgid}.xml
+
 %if 0%{?gcov:1}
 %files gcov
 %{_datadir}/gcov/obj/*

@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns="http://tizen.org/ns/packages" api-version="9.0" package="org.tizen.notification.integtest" version="1.0.0">
+    <profile name="tizen"/>
+    <service-application appid="org.tizen.notification.integtest"
+                         exec="notification-integtests"
+                         type="capp"
+                         multiple="false"
+                         taskmanage="false"
+                         nodisplay="true">
+        <label>NotificationIntegTest</label>
+    </service-application>
+    <privileges>
+        <privilege>http://tizen.org/privilege/notification</privilege>
+        <privilege>http://tizen.org/privilege/notification.admin</privilege>
+    </privileges>
+</manifest>
