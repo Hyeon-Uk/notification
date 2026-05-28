@@ -1846,7 +1846,6 @@ EXPORT_API int notification_clone(notification_h noti, notification_h *clone)
 
 EXPORT_API int notification_free(notification_h noti)
 {
-	WARN("notification_free");
 
 	int i = 0;
 
@@ -1938,7 +1937,6 @@ EXPORT_API int notification_free(notification_h noti)
 
 	free(noti);
 
-	WARN("notification_free done");
 
 	return NOTIFICATION_ERROR_NONE;
 }

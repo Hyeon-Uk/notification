@@ -210,11 +210,11 @@ char *notification_check_file_path_is_private(const char *pkg_id,
 	// 4. other cases
 
 	if (__is_shared_file(file_path, pkg_id)) {
-		WARN("is shared");
+		/* file path is shared */
 	} else if (__is_res_file(file_path, pkg_id)) {
-		WARN("path res");
+		/* file path is res */
 	} else if (__is_RO_file(file_path)) {
-		WARN("is RO");
+		/* file path is read-only */
 	}
 
 	// if (__is_RO_file(file_path)) {

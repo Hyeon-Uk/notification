@@ -343,7 +343,6 @@ static gboolean _variant_dict_lookup(GHashTable *dict,
 EXPORT_API int notification_ipc_make_noti_from_gvariant(notification_h noti,
 		GVariant *variant) {
 
-	WARN("make noti from GVariant");
 	GHashTable *dict;
 
 	int i;

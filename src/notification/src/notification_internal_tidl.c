@@ -58,8 +58,6 @@ EXPORT_API int make_empty_notification(void *notihandle)
 	int ret;
 	bundle *empty_bundle = bundle_create();
 
-	WARN("make_empty_notification");
-
 	rpc_port_proxy_notification_h handle = (rpc_port_proxy_notification_h)notihandle;
 
 	ret = rpc_port_proxy_notification_set_type(handle, -1);
