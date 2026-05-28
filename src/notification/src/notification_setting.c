@@ -291,8 +291,9 @@ static bool _is_package_in_setting_table(sqlite3 *db, const char *package_name,
 
 	sql_ret = sqlite3_step(stmt);
 	if (sql_ret == SQLITE_DONE) {
-		INFO("No matched [%s] from package_name [%s], [%d]",
-				app_id, package_name, sql_ret);
+		INFO("No matched app_id_len[%zu] from pkg_len[%zu], [%d]",
+				app_id ? strlen(app_id) : 0,
+				package_name ? strlen(package_name) : 0, sql_ret);
 		err = false;
 		goto out;
 	}
@@ -362,8 +363,10 @@ static int _foreach_app_info_callback(const pkgmgrinfo_appinfo_h handle,
 	if (ret != NOTIFICATION_ERROR_NONE)
 		err = false;
 	else
-		INFO("uid [%d] package_name [%s] appid [%s] is inserted",
-				info->uid, package_name, app_id);
+		INFO("uid [%d] pkg_len[%zu] app_id_len[%zu] is inserted",
+				info->uid,
+				package_name ? strlen(package_name) : 0,
+				app_id ? strlen(app_id) : 0);
 
 out:
 	if (query)

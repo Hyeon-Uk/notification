@@ -1505,7 +1505,8 @@ static void _language_key_changed_cb (keynode_t *node, void *user_data)
 
 	ret = pkgmgrinfo_appinfo_get_usr_appinfo(app_id, aul_getuid(), &appinfo);
 	if (ret != PMINFO_R_OK || appinfo == NULL) {
-		WARN("Failed to get appinfo err[%d] app_id[%s]", ret, app_id);
+		WARN("Failed to get appinfo err[%d] app_id_len[%zu]",
+				ret, app_id ? strlen(app_id) : 0);
 		goto out;
 	}
 
@@ -1648,8 +1649,9 @@ static notification_h _notification_create(notification_type_e type)
 			err = pkgmgrinfo_appinfo_get_usr_appinfo(noti->caller_app_id,
 						aul_getuid(), &appinfo);
 			if (err != PMINFO_R_OK || appinfo == NULL) {
-				WARN("Failed to get appinfo err[%d] caller_app_id[%s]",
-						err, noti->caller_app_id);
+				WARN("Failed to get appinfo err[%d] caller_app_id_len[%zu]",
+						err,
+						noti->caller_app_id ? strlen(noti->caller_app_id) : 0);
 				err = 0;
 				goto out;
 			}

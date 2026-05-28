@@ -296,8 +296,8 @@ static void _delete_single_notify(rpc_port_proxy_notification_h notihandle,
 		notification_call_changed_cb_for_uid(noti_op, 1, (uid_t)uid);
 		free(noti_op);
 	}
-	WARN("delete single noti event done, appid [%s], priv id[%d], uid[%d]",
-			app_id, priv_id, uid);
+	WARN("delete single noti event done, appid_len[%zu] priv_id[%d] uid[%d]",
+			app_id ? strlen(app_id) : 0, priv_id, uid);
 
 	free(app_id);
 }
