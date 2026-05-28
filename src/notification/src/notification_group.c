@@ -92,8 +92,8 @@ int notification_group_set_badge(const char *app_id,
 
 	ret = sqlite3_prepare_v2(db, query, -1, &stmt, NULL);
 	if (ret != SQLITE_OK) {
-		ERR("Failed to insert data app_id[%s] err[%d][%s]",
-				 app_id, ret, sqlite3_errmsg(db));
+		ERR("Failed to insert data app_id_len[%zu] err[%d][%s]",
+				 app_id ? strlen(app_id) : 0, ret, sqlite3_errmsg(db));
 		if (stmt)
 			sqlite3_finalize(stmt);
 

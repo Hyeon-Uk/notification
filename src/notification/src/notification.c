@@ -619,12 +619,14 @@ EXPORT_API int notification_get_text(notification_h noti,
 					bindtextdomain(noti->domain, noti->dir);
 					translated_str =
 						dgettext(noti->domain, ret_val);
-					INFO("translated_str[%s]", translated_str);
+					INFO("translated_str_len[%zu]",
+							translated_str ? strlen(translated_str) : 0);
 				} else if (ret_val != NULL) {
 					/* Get system string */
 					translated_str =
 						dgettext("sys_string", ret_val);
-					INFO("translated_str[%s]", translated_str);
+					INFO("translated_str_len[%zu]",
+							translated_str ? strlen(translated_str) : 0);
 				} else {
 					translated_str = NULL;
 				}
@@ -1616,8 +1618,8 @@ static notification_h _notification_create(notification_type_e type)
 			err = package_info_create(_pkg_id, &package_info);
 			if (err != PACKAGE_MANAGER_ERROR_NONE || package_info == NULL) {
 				/* LCOV_EXCL_START */
-				WARN("Failed to create package_info err[%d] pkg_id[%s]",
-						err, _pkg_id);
+				WARN("Failed to create package_info err[%d] pkg_id_len[%zu]",
+						err, _pkg_id ? strlen(_pkg_id) : 0);
 				goto out;
 				/* LCOV_EXCL_STOP */
 			}

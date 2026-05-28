@@ -37,13 +37,15 @@
 static inline char *_dup_string(const char *string)
 {
 	char *ret;
-	char err_buf[ERR_BUFFER_SIZE];
+	char err_buf[ERR_BUFFER_SIZE] = { 0, };
 
 	if (string == NULL || string[0] == '\0')
 		return NULL;
 
 	ret = strdup(string);
 	if (!ret)
+		/* err_buf is zero-initialised so a partial fill by strerror_r
+		 * on ERANGE still produces a NUL-terminated, readable string. */
 		ERR("Failed to strdup[%s]",
 				strerror_r(errno, err_buf, sizeof(err_buf)));
 
@@ -61,7 +63,6 @@ static inline bundle *_create_bundle_from_bundle_raw(bundle_raw *string)
 /* LCOV_EXCL_START */
 EXPORT_API GVariant *notification_ipc_make_gvariant_from_noti(notification_h noti, bool translate)
 {
-	WARN("make gvariant from noti");
 	int i = 0;
 	int b_encode_len = 0;
 	bundle_raw *args = NULL;
