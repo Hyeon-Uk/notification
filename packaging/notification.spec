@@ -143,10 +143,7 @@ rm -rf %{buildroot}
 %post
 /sbin/ldconfig
 
-if [ ! -d %{TZ_SYS_DB} ]
-then
-	mkdir %{TZ_SYS_DB}
-fi
+mkdir -p %{TZ_SYS_DB}
 
 %postun -p /sbin/ldconfig
 
