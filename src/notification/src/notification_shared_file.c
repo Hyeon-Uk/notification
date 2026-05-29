@@ -217,23 +217,6 @@ char *notification_check_file_path_is_private(const char *pkg_id,
 		/* file path is read-only */
 	}
 
-	// if (__is_RO_file(file_path)) {
-	// 	WARN("is RO");
-	// 	dst_path = __get_data_path_by_pkg_id(pkg_id, file_path, uid);
-	// }
-
-	// if (dst_path == NULL && __is_shared_file(file_path, pkg_id)) {
-	// 	WARN("is private");
-	// 	if (__is_res_file(file_path, pkg_id)) {
-	// 		WARN("path res");
-	// 		dst_path = __get_data_path_by_pkg_id(pkg_id, file_path, uid);
-	// 	} else {
-	// 		dst_path = strdup(file_path);
-	// 		if (dst_path == NULL)
-	// 			ERR("Failed to strdup");
-	// 	}
-	// }
-
 	return dst_path;
 }
 
