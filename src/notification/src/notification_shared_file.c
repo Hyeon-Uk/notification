@@ -182,7 +182,7 @@ out:
 	if (dst)
 		g_object_unref(dst);
 
-	WARN("copy private file done : %d", ret);
+	DBG("copy private file done : %d", ret);
 
 	return ret;
 }
