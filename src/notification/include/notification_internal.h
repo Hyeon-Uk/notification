@@ -1135,7 +1135,7 @@ int notification_post_with_event_cb_for_uid(notification_h noti,
 
 /**
  * @brief Sends a event type to an application that posted notification.
- * @details Sends occured event from viewer application to an application.
+ * @details Sends occurred event from viewer application to an application.
  * @since_tizen 3.0
  * @privlevel public
  * @privilege %http://tizen.org/privilege/notification
