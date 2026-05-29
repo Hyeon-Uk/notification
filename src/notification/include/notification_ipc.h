@@ -17,6 +17,12 @@
 #ifndef __NOTIFICATION_IPC_H__
 #define __NOTIFICATION_IPC_H__
 
+/**
+ * @file notification_ipc.h
+ * @brief GVariant marshalling helpers used to ship a notification handle
+ *        across the IPC boundary.
+ */
+
 #include <gio/gio.h>
 #include <sys/types.h>
 
@@ -27,7 +33,22 @@
 extern "C" {
 #endif
 
+/**
+ * @internal
+ * @brief Serializes @p noti to a GVariant suitable for the daemon RPC.
+ * @param[in] noti      Notification handle to encode.
+ * @param[in] translate Apply text-domain translation before encoding.
+ * @return Newly-created GVariant (caller takes the reference).
+ */
 GVariant *notification_ipc_make_gvariant_from_noti(notification_h noti, bool translate);
+
+/**
+ * @internal
+ * @brief Populates @p noti from a GVariant produced by the daemon side.
+ * @param[in,out] noti    Notification handle to fill in-place.
+ * @param[in]     variant GVariant payload from the daemon.
+ * @return NOTIFICATION_ERROR_NONE on success.
+ */
 int notification_ipc_make_noti_from_gvariant(notification_h noti,
 		GVariant *variant);
 
@@ -35,4 +56,3 @@ int notification_ipc_make_noti_from_gvariant(notification_h noti,
 }
 #endif
 #endif /* __NOTIFICATION_IPC_H__ */
-

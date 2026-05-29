@@ -17,6 +17,16 @@
 #ifndef __NOTIFICATION_TEXT_DOMAIN_H__
 #define __NOTIFICATION_TEXT_DOMAIN_H__
 
+/**
+ * @file notification_text_domain.h
+ * @brief Notification text domain APIs (set/get locale domain for translation).
+ */
+
+/**
+ * @addtogroup NOTIFICATION_MODULE
+ * @{
+ */
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -91,5 +101,10 @@ int notification_get_text_domain(notification_h noti,
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */
+
+/**
+ * @}
+ */
+
 #endif /* __NOTIFICATION_TEXT_DOMAIN_H__ */
 
