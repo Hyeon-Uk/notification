@@ -113,7 +113,7 @@
 	"  icon_path TEXT,\n" \
 	"  group_id INTEGER DEFAULT 0,\n" \
 	"  internal_group_id INTEGER DEFAULT 0,\n" \
-	"  priv_id INTERGER NOT NULL,\n" \
+	"  priv_id INTEGER NOT NULL,\n" \
 	"  title TEXT,\n" \
 	"  content TEXT,\n" \
 	"  default_content TEXT,\n" \
@@ -227,7 +227,7 @@
 	"  uid INTEGER,\n" \
 	"  check_box INTEGER DEFAULT 0,\n" \
 	"  check_box_value INTEGER DEFAULT 0,\n" \
-	"  channel_nmae TEXT,\n" \
+	"  channel_name TEXT,\n" \
 	"  template_name TEXT,\n" \
 	"  UNIQUE (caller_app_id, template_name));\n" \
 	"CREATE TABLE IF NOT EXISTS noti_channel (\n" \
