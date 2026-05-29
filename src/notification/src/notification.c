@@ -619,13 +619,13 @@ EXPORT_API int notification_get_text(notification_h noti,
 					bindtextdomain(noti->domain, noti->dir);
 					translated_str =
 						dgettext(noti->domain, ret_val);
-					INFO("translated_str_len[%zu]",
+					DBG("translated_str_len[%zu]",
 							translated_str ? strlen(translated_str) : 0);
 				} else if (ret_val != NULL) {
 					/* Get system string */
 					translated_str =
 						dgettext("sys_string", ret_val);
-					INFO("translated_str_len[%zu]",
+					DBG("translated_str_len[%zu]",
 							translated_str ? strlen(translated_str) : 0);
 				} else {
 					translated_str = NULL;

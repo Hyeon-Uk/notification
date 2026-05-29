@@ -150,7 +150,7 @@ int notification_copy_private_file(const char *src_path,
 
 	if (g_file_query_exists(dst, NULL) == true) {
 		ret = NOTIFICATION_ERROR_ALREADY_EXIST_ID;
-		INFO("dst path existed [%s]", dst_path);
+		DBG("dst path existed [%s]", dst_path);
 		goto out;
 	}
 

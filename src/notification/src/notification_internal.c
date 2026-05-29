@@ -1527,7 +1527,7 @@ EXPORT_API int notification_post_for_uid(notification_h noti, uid_t uid)
 	noti->insert_time = time(NULL);
 	noti->uid = uid;
 
-	INFO("notification post [%d]", (int)uid);
+	DBG("notification post [%d]", (int)uid);
 
 	file_list = __copy_private_file(noti);
 	_set_CPU_inheritance();
@@ -1535,7 +1535,7 @@ EXPORT_API int notification_post_for_uid(notification_h noti, uid_t uid)
 	_clear_CPU_inheritance();
 	if (ret == NOTIFICATION_ERROR_NONE) {
 		noti->priv_id = id;
-		INFO("Posted notification id[%d]", id);
+		DBG("Posted notification id[%d]", id);
 
 		ret = notification_get_event_flag(noti, &event_flag);
 		if (ret != NOTIFICATION_ERROR_NONE)
