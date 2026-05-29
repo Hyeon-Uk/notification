@@ -150,7 +150,7 @@ mkdir -p %{TZ_SYS_DB}
 %files
 %manifest notification.manifest
 %defattr(-,root,root,-)
-%{_libdir}/libnotification.so.*
+%attr(0644,root,root) %{_libdir}/libnotification.so.*
 %license LICENSE
 %attr(755,root,root) %{_sysconfdir}/gumd/useradd.d/11_notification-add.post
 %{_bindir}/notification_init
@@ -177,7 +177,7 @@ mkdir -p %{TZ_SYS_DB}
 %{_includedir}/notification/notification_shared_file.h
 %{_includedir}/notification/notification_type_internal.h
 %{_libdir}/pkgconfig/notification.pc
-%{_libdir}/libnotification.so
+%attr(0644,root,root) %{_libdir}/libnotification.so
 
 #################################################
 # notification-ex
