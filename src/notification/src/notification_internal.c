@@ -205,7 +205,7 @@ static gint __priv_id_compare(gconstpointer a, gconstpointer b)
 		return -1;
 
 	info = (notification_event_cb_info_s *)a;
-	WARN("src id [%d] dst id [%d]", GPOINTER_TO_INT(b), info->priv_id);
+	DBG("src id [%d] dst id [%d]", GPOINTER_TO_INT(b), info->priv_id);
 
 	if (info->priv_id == GPOINTER_TO_INT(b))
 		return 0;
@@ -221,7 +221,7 @@ void notification_call_event_handler_cb(notification_h noti, int event_type)
 	notification_event_cb_info_s *info;
 	notification_event_cb_info_s dup_info;
 
-	WARN("call event[%d]", event_type);
+	DBG("call event[%d]", event_type);
 
 	if (__noti_event_cb_list == NULL)
 		return;
@@ -230,7 +230,7 @@ void notification_call_event_handler_cb(notification_h noti, int event_type)
 	if (ret != NOTIFICATION_ERROR_NONE)
 		return;
 
-	WARN("noti id : [%d]", priv_id);
+	DBG("noti id : [%d]", priv_id);
 
 	__notification_mutex_lock();
 
@@ -247,11 +247,11 @@ void notification_call_event_handler_cb(notification_h noti, int event_type)
 
 	__notification_mutex_unlock();
 
-	WARN("call event callback");
+	DBG("call event callback");
 
 	dup_info.cb(noti, event_type, dup_info.userdata);
 
-	WARN("done");
+	DBG("done");
 }
 /* LCOV_EXCL_STOP */
 
@@ -261,7 +261,7 @@ void notification_delete_event_handler_cb(int priv_id)
 	GList *delete_list;
 	notification_event_cb_info_s *info;
 
-	WARN("delete noti id [%d]", priv_id);
+	DBG("delete noti id [%d]", priv_id);
 
 	if (__noti_event_cb_list == NULL)
 		return;
@@ -291,7 +291,7 @@ void notification_delete_event_handler_cb(int priv_id)
 		_clear_CPU_inheritance();
 	}
 
-	WARN("done");
+	DBG("done");
 }
 /* LCOV_EXCL_STOP */
 
@@ -1564,7 +1564,7 @@ EXPORT_API int notification_update_for_uid(notification_h noti, uid_t uid)
 	int ret;
 
 	if (noti == NULL) {
-		WARN("updated notification noti null, uid : %d", uid);
+		ERR("noti is NULL, refresh only, uid : %d", uid);
 		_set_CPU_inheritance();
 		notification_tidl_request_refresh(uid);
 		_clear_CPU_inheritance();
@@ -1575,7 +1575,7 @@ EXPORT_API int notification_update_for_uid(notification_h noti, uid_t uid)
 	noti->uid = uid;
 	/* Update insert time ? */
 	noti->insert_time = time(NULL);
-	WARN("updated notification id[%d]", noti->priv_id);
+	DBG("updated notification id[%d]", noti->priv_id);
 
 	_set_CPU_inheritance();
 	ret = notification_tidl_request_update(noti);
@@ -1833,7 +1833,7 @@ EXPORT_API int notification_post_with_event_cb_for_uid(notification_h noti, even
 
 	noti->priv_id = priv_id;
 
-	WARN("Posted notification id[%d]", priv_id);
+	DBG("Posted notification id[%d]", priv_id);
 
 	_set_CPU_inheritance();
 	ret = notification_tidl_event_monitor_init();
@@ -2345,7 +2345,7 @@ EXPORT_API int notification_register_do_not_disturb_app(disturb_cb callback, voi
 {
 	int ret;
 
-	WARN("register dnd app");
+	DBG("register dnd app");
 
 	if (callback == NULL)
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
@@ -2369,7 +2369,7 @@ EXPORT_API int notification_register_do_not_disturb_app(disturb_cb callback, voi
 	_disturb_callback = callback;
 	_disturb_user_data = user_data;
 
-	WARN("register dnd app done");
+	DBG("register dnd app done");
 
 	return ret;
 }
@@ -2378,7 +2378,7 @@ EXPORT_API int notification_unregister_do_not_disturb_app(void)
 {
 	int ret;
 
-	WARN("unregister dnd app");
+	DBG("unregister dnd app");
 
 	_set_CPU_inheritance();
 	ret = notification_tidl_request_unregister_dnd_app(aul_getuid(), getpid());
@@ -2396,14 +2396,14 @@ EXPORT_API int notification_unregister_do_not_disturb_app(void)
 		_clear_CPU_inheritance();
 	}
 
-	WARN("unregister dnd app done");
+	DBG("unregister dnd app done");
 
 	return ret;
 }
 
 void notification_call_disturb_cb(void)
 {
-	WARN("call disturb callback");
+	DBG("call disturb callback");
 
 	if (_disturb_callback == NULL) {
 		ERR("no disturb callback");
@@ -2412,7 +2412,7 @@ void notification_call_disturb_cb(void)
 
 	_disturb_callback(_disturb_user_data);
 
-	WARN("done");
+	DBG("done");
 }
 /* LCOV_EXCL_STOP */
 
@@ -2423,7 +2423,7 @@ EXPORT_API int notification_set_pairing_type(notification_h noti, bool pairing)
 {
 	char *del = NULL;
 
-	WARN("set pairing");
+	DBG("set pairing");
 
 	if (noti == NULL)
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
@@ -2442,7 +2442,7 @@ EXPORT_API int notification_set_pairing_type(notification_h noti, bool pairing)
 	else
 		bundle_add_str(noti->args, PAIRING_TYPE_KEY, "false");
 
-	WARN("set pairing done");
+	DBG("set pairing done");
 
 	return NOTIFICATION_ERROR_NONE;
 }
@@ -2461,7 +2461,7 @@ EXPORT_API int notification_set_channel_name(notification_h noti,
 
 	noti->channel_name = strdup(channel_name);
 
-	WARN("notification_set_channel_name done");
+	DBG("notification_set_channel_name done");
 
 	return NOTIFICATION_ERROR_NONE;
 }
@@ -2490,7 +2490,7 @@ int notification_channel_create_with_info(const char *app_id,
 
 	*channel = noti_channel;
 
-	WARN("notification_channel_create_with_info done");
+	DBG("notification_channel_create_with_info done");
 
 	return NOTIFICATION_ERROR_NONE;
 }
@@ -2518,7 +2518,8 @@ EXPORT_API int notification_channel_create(const char *channel_name,
 
 	*channel = noti_channel;
 
-	WARN("notification_channel_create done [%s]", noti_channel->app_id);
+	DBG("notification_channel_create done app_id_len[%zu]",
+			noti_channel->app_id ? strlen(noti_channel->app_id) : 0);
 
 	return NOTIFICATION_ERROR_NONE;
 }
@@ -2528,7 +2529,7 @@ EXPORT_API int notification_channel_add(notification_channel_h channel)
 	int ret;
 	notification_channel_s *noti_channel = channel;
 
-	WARN("notification_channel_add");
+	DBG("notification_channel_add");
 
 	if (noti_channel == NULL || noti_channel->app_id == NULL
 		|| noti_channel->channel_name == NULL) {
@@ -2546,7 +2547,7 @@ EXPORT_API int notification_channel_add(notification_channel_h channel)
 		return ret;
 	}
 
-	WARN("notification_channel_add done");
+	DBG("notification_channel_add done");
 
 	return ret;
 }
@@ -2556,7 +2557,7 @@ EXPORT_API int notification_channel_remove(notification_channel_h channel)
 	int ret;
 	notification_channel_s *noti_channel = channel;
 
-	WARN("notification_channel_remove");
+	DBG("notification_channel_remove");
 
 	if (noti_channel == NULL || noti_channel->app_id == NULL
 		|| noti_channel->channel_name == NULL) {
@@ -2573,7 +2574,7 @@ EXPORT_API int notification_channel_remove(notification_channel_h channel)
 		return ret;
 	}
 
-	WARN("notification_channel_remove done");
+	DBG("notification_channel_remove done");
 
 	return ret;
 }
@@ -2583,7 +2584,7 @@ EXPORT_API int notification_channel_update(notification_channel_h channel)
 	int ret;
 	notification_channel_s *noti_channel = channel;
 
-	WARN("notification_channel_update");
+	DBG("notification_channel_update");
 
 	if (noti_channel == NULL || noti_channel->app_id == NULL
 		|| noti_channel->channel_name == NULL) {
@@ -2601,7 +2602,7 @@ EXPORT_API int notification_channel_update(notification_channel_h channel)
 		return ret;
 	}
 
-	WARN("notification_channel_update done");
+	DBG("notification_channel_update done");
 
 	return NOTIFICATION_ERROR_NONE;
 }
@@ -2615,7 +2616,7 @@ EXPORT_API int notification_channel_get_by_name(const char *channel_name,
 	bool is_blocked;
 	notification_channel_s *noti_channel = NULL;
 
-	WARN("notification_channel_get_by_name");
+	DBG("notification_channel_get_by_name");
 
 	app_id = notification_get_app_id_by_pid(getpid());
 	if (channel_name == NULL || channel == NULL || app_id == NULL) {
@@ -2652,7 +2653,7 @@ out:
 	if (app_id)
 		free(app_id);
 
-	WARN("notification_channel_get_by_name done : %d", ret);
+	DBG("notification_channel_get_by_name done : %d", ret);
 
 	return ret;
 }
@@ -2669,7 +2670,7 @@ EXPORT_API int notification_channel_set_blockable(
 
 	noti_channel->blockable = blockable;
 
-	WARN("notification_channel_set_blockable done");
+	DBG("notification_channel_set_blockable done");
 
 	return NOTIFICATION_ERROR_NONE;
 }
@@ -2686,7 +2687,7 @@ EXPORT_API int notification_channel_set_block(
 
 	noti_channel->is_blocked = block;
 
-	WARN("notification_channel_set_block done");
+	DBG("notification_channel_set_block done");
 
 	return NOTIFICATION_ERROR_NONE;
 }
@@ -2716,7 +2717,7 @@ EXPORT_API int notification_channel_clone(notification_channel_h channel,
 
 	*clone = new_channel;
 
-	WARN("notification_channel_clone done");
+	DBG("notification_channel_clone done");
 
 	return NOTIFICATION_ERROR_NONE;
 }
@@ -2740,7 +2741,9 @@ EXPORT_API int notification_channel_foreach(const char *app_id,
 			goto out;
 		}
 	}
-	WARN("notification_channel_foreach : %s", (app_id != NULL) ? app_id : _app_id);
+	DBG("notification_channel_foreach app_id_len[%zu]",
+			(app_id != NULL) ? strlen(app_id) :
+			(_app_id != NULL ? strlen(_app_id) : 0));
 
 	_set_CPU_inheritance();
 	ret = notification_tidl_request_channel_get_list(
@@ -2756,7 +2759,7 @@ out:
 	if (_app_id)
 		free(_app_id);
 
-	WARN("notification_channel_foreach done : %d", ret);
+	DBG("notification_channel_foreach done : %d", ret);
 
 	return ret;
 }
@@ -2778,7 +2781,7 @@ EXPORT_API void notification_channel_free(notification_channel_h channel)
 
 	free(noti_channel);
 
-	WARN("notification_channel_free done");
+	DBG("notification_channel_free done");
 }
 
 
