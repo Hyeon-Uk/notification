@@ -80,9 +80,9 @@ int notification_tidl_request_channel_get_list(const char *app_id,
 		notification_channel_foreach_cb cb, void *user_data, uid_t uid);
 
 /* not exist. necessary ? */
-int notification_tidl_add_deffered_task(void (*deferred_task_cb)(void *data),
+int notification_tidl_add_deferred_task(void (*deferred_task_cb)(void *data),
 		void *user_data);
-int notification_tidl_del_deffered_task(void (*deferred_task_cb)(void *data));
+int notification_tidl_del_deferred_task(void (*deferred_task_cb)(void *data));
 
 // int notification_ipc_request_update_async(notification_h noti,
 // 		void (*result_cb)(int priv_id, int result, void *data),

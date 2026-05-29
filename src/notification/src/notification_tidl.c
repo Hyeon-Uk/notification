@@ -1708,13 +1708,13 @@ int notification_tidl_request_channel_get_list(const char *app_id,
 }
 
 /* is it used*/
-int notification_tidl_add_deffered_task(
+int notification_tidl_add_deferred_task(
 		void (*deferred_task_cb)(void *data),
 		void *user_data)
 {
 	int ret;
 
-	DBG("add deffered task");
+	DBG("add deferred task");
 
 	ret = _tidl_init();
 	if (ret != NOTIFICATION_ERROR_NONE)	{
@@ -1723,14 +1723,14 @@ int notification_tidl_add_deffered_task(
 	}
 	deferred_task_cb(user_data);
 
-	DBG("add deffered task done");
+	DBG("add deferred task done");
 
 	return NOTIFICATION_ERROR_NONE;
 }
 
-int notification_tidl_del_deffered_task(
+int notification_tidl_del_deferred_task(
 		void (*deferred_task_cb)(void *data))
 {
-	DBG("del deffered task");
+	DBG("del deferred task");
 	return NOTIFICATION_ERROR_NONE;
 }

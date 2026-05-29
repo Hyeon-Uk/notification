@@ -304,7 +304,7 @@ EXPORT_API int notification_add_deferred_task(
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 
 	_set_CPU_inheritance();
-	ret = notification_tidl_add_deffered_task(deferred_task_cb, user_data);
+	ret = notification_tidl_add_deferred_task(deferred_task_cb, user_data);
 	_clear_CPU_inheritance();
 	return ret;
 }
@@ -317,7 +317,7 @@ EXPORT_API int notification_del_deferred_task(
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 
 	_set_CPU_inheritance();
-	ret = notification_tidl_del_deffered_task(deferred_task_cb);
+	ret = notification_tidl_del_deferred_task(deferred_task_cb);
 	_clear_CPU_inheritance();
 	return ret;
 }

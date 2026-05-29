@@ -15,8 +15,8 @@
  */
 
 
-#ifndef __NOTIFICATION_STATUS_DEF_H__
-#define __NOTIFICATION_STATUS_DEF_H__
+#ifndef __NOTIFICATION_STATUS_H__
+#define __NOTIFICATION_STATUS_H__
 
 
 #ifdef __cplusplus
@@ -56,5 +56,5 @@ int notification_status_message_post(const char *message);
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */
-#endif /* __NOTIFICATION_STATUS_DEF_H__ */
+#endif /* __NOTIFICATION_STATUS_H__ */
 
