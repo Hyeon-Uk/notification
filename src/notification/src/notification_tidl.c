@@ -1263,7 +1263,7 @@ static bool _rpc_port_proxy_list_notification_cb(
 	notification_h noti;
 	notification_list_h *list = (notification_list_h*)user_data;
 
-	WARN("notification list foreach");
+	DBG("notification list foreach");
 
 	ret = make_noti_from_notification(&noti, value);
 	if (ret != NOTIFICATION_ERROR_NONE) {
@@ -1281,32 +1281,32 @@ int notification_tidl_request_load_noti_grouping_list(notification_type_e type,
 	int ret;
 	rpc_port_proxy_list_notification_h noti_list;
 
-	WARN("load noti grouping list");
+	DBG("load noti grouping list");
 
 	ret = _tidl_init();
 	if (ret != NOTIFICATION_ERROR_NONE) {
-		WARN("tidl init fail");
+		DBG("tidl init fail");
 		return ret;
 	}
-	WARN("tidl init done");
+	DBG("tidl init done");
 
 	ret = rpc_port_proxy_noti_service_invoke_load_noti_grouping_list(service_handle,
 			(int)type, count, count_per_page, (int)uid, &noti_list);
 	if (ret != RPC_PORT_ERROR_NONE) {
-		WARN("request invoke load noti grouping list : %d", ret);
+		DBG("request invoke load noti grouping list : %d", ret);
 		return ret;
 	}
 
 	ret = rpc_port_proxy_list_notification_foreach(noti_list,
 			_rpc_port_proxy_list_notification_cb, list);
 	if (ret != RPC_PORT_ERROR_NONE) {
-		WARN("failed to get length : %d", ret);
+		DBG("failed to get length : %d", ret);
 		rpc_port_proxy_list_notification_destroy(noti_list);
 		return ret;
 	}
 	rpc_port_proxy_list_notification_destroy(noti_list);
 
-	WARN("load noti grouping list done");
+	DBG("load noti grouping list done");
 
 	return NOTIFICATION_ERROR_NONE;
 }
@@ -1318,32 +1318,32 @@ int notification_tidl_request_load_noti_detail_list(const char *app_id,
 	int ret;
 	rpc_port_proxy_list_notification_h noti_list;
 
-	WARN("load noti detail list : %d", priv_id);
+	DBG("load noti detail list : %d", priv_id);
 
 	ret = _tidl_init();
 	if (ret != NOTIFICATION_ERROR_NONE) {
-		WARN("tidl init fail");
+		DBG("tidl init fail");
 		return ret;
 	}
-	WARN("tidl init done");
+	DBG("tidl init done");
 
 	ret = rpc_port_proxy_noti_service_invoke_load_noti_detail_list(service_handle,
 			app_id, group_id, priv_id, count, (int)uid, &noti_list);
 	if (ret != RPC_PORT_ERROR_NONE) {
-		WARN("request invoke load noti grouping list : %d", ret);
+		DBG("request invoke load noti grouping list : %d", ret);
 		return ret;
 	}
 
 	ret = rpc_port_proxy_list_notification_foreach(noti_list,
 			_rpc_port_proxy_list_notification_cb, list);
 	if (ret != RPC_PORT_ERROR_NONE) {
-		WARN("failed to get length : %d", ret);
+		DBG("failed to get length : %d", ret);
 		rpc_port_proxy_list_notification_destroy(noti_list);
 		return ret;
 	}
 	rpc_port_proxy_list_notification_destroy(noti_list);
 
-	WARN("load noti detail list done");
+	DBG("load noti detail list done");
 
 	return NOTIFICATION_ERROR_NONE;
 }
@@ -1353,22 +1353,22 @@ int notification_tidl_get_noti_block_state(const char *app_id, int *do_not_distu
 {
 	int ret;
 
-	WARN("get block state");
+	DBG("get block state");
 
 	ret = _tidl_init();
 	if (ret != NOTIFICATION_ERROR_NONE) {
-		WARN("tidl init fail");
+		DBG("tidl init fail");
 		return ret;
 	}
-	WARN("tidl init done");
+	DBG("tidl init done");
 
 	ret = rpc_port_proxy_noti_service_invoke_get_noti_block_state(service_handle, app_id, (int)uid,
 			do_not_disturb, do_not_disturb_except, allow_to_notify);
 	if (ret != RPC_PORT_ERROR_NONE) {
-		WARN("request invoke load noti grouping list : %d", ret);
+		DBG("request invoke load noti grouping list : %d", ret);
 		return ret;
 	}
-	WARN("get block state done");
+	DBG("get block state done");
 
 	return NOTIFICATION_ERROR_NONE;
 }
@@ -1377,7 +1377,7 @@ int notification_tidl_request_delete_by_display_applist(int display_applist, uid
 {
 	int ret;
 
-	WARN("delete by display app list");
+	DBG("delete by display app list");
 
 	ret = _tidl_init();
 	if (ret != NOTIFICATION_ERROR_NONE)	{
@@ -1391,7 +1391,7 @@ int notification_tidl_request_delete_by_display_applist(int display_applist, uid
 		ERR("request delete noti by display app list fail : %d", ret);
 		return ret;
 	}
-	WARN("delete by display app list done");
+	DBG("delete by display app list done");
 
 	return NOTIFICATION_ERROR_NONE;
 }
@@ -1402,7 +1402,7 @@ int notification_tidl_request_get_count(notification_type_e type,
 	int ret;
 	int re_count;
 
-	WARN("get count : %s", app_id);
+	DBG("get count : %s", app_id);
 
 	ret = _tidl_init();
 	if (ret != NOTIFICATION_ERROR_NONE)	{
@@ -1418,7 +1418,7 @@ int notification_tidl_request_get_count(notification_type_e type,
 	}
 	*count = re_count;
 
-	WARN("get count done : %d", re_count);
+	DBG("get count done : %d", re_count);
 
 	return NOTIFICATION_ERROR_NONE;
 }
@@ -1428,7 +1428,7 @@ int notification_tidl_check_event_receiver(int priv_id, bool *available)
 	int ret;
 	bool ret_available;
 
-	WARN("check event receiver : %d", priv_id);
+	DBG("check event receiver : %d", priv_id);
 
 	ret = _tidl_init();
 	if (ret != NOTIFICATION_ERROR_NONE)	{
@@ -1443,7 +1443,7 @@ int notification_tidl_check_event_receiver(int priv_id, bool *available)
 	}
 	*available = ret_available;
 
-	WARN("check event receiver done");
+	DBG("check event receiver done");
 
 	return NOTIFICATION_ERROR_NONE;
 }
@@ -1452,7 +1452,7 @@ void notification_tidl_reset_event_handler(int priv_id)
 {
 	int ret;
 
-	WARN("reset event handler : %d", priv_id);
+	DBG("reset event handler : %d", priv_id);
 
 	ret = _tidl_init();
 	if (ret != NOTIFICATION_ERROR_NONE)	{
@@ -1466,14 +1466,14 @@ void notification_tidl_reset_event_handler(int priv_id)
 		ERR("request reset event handler fail : %d", ret);
 		return;
 	}
-	WARN("reset event handler done");
+	DBG("reset event handler done");
 }
 
 int notification_tidl_request_register_dnd_app(uid_t uid, pid_t pid)
 {
 	int ret;
 
-	WARN("request register dnd app");
+	DBG("request register dnd app");
 
 	ret = _tidl_init();
 	if (ret != NOTIFICATION_ERROR_NONE)	{
@@ -1487,7 +1487,7 @@ int notification_tidl_request_register_dnd_app(uid_t uid, pid_t pid)
 		ERR("request register dnd app fail : %d", ret);
 		return ret;
 	}
-	WARN("register dnd app done [%d]", ret);
+	DBG("register dnd app done [%d]", ret);
 
 	return NOTIFICATION_ERROR_NONE;
 }
@@ -1496,7 +1496,7 @@ int notification_tidl_request_unregister_dnd_app(uid_t uid, pid_t pid)
 {
 	int ret;
 
-	WARN("request unregister dnd app");
+	DBG("request unregister dnd app");
 
 	ret = _tidl_init();
 	if (ret != NOTIFICATION_ERROR_NONE)	{
@@ -1509,7 +1509,7 @@ int notification_tidl_request_unregister_dnd_app(uid_t uid, pid_t pid)
 		ERR("request unregister dnd app fail : %d", ret);
 		return ret;
 	}
-	WARN("request unregister dnd app done");
+	DBG("request unregister dnd app done");
 
 	return NOTIFICATION_ERROR_NONE;
 }
@@ -1520,7 +1520,7 @@ int notification_tidl_request_insert_channel(const char *app_id,
 {
 	int ret;
 
-	WARN("request insert channel");
+	DBG("request insert channel");
 
 	ret = _tidl_init();
 	if (ret != NOTIFICATION_ERROR_NONE)	{
@@ -1534,7 +1534,7 @@ int notification_tidl_request_insert_channel(const char *app_id,
 		ERR("service insert channel fail : %d", ret);
 		return ret;
 	}
-	WARN("request insert channel done [%d]", ret);
+	DBG("request insert channel done [%d]", ret);
 
 	return NOTIFICATION_ERROR_NONE;
 }
@@ -1544,7 +1544,7 @@ int notification_tidl_request_delete_channel(const char *app_id,
 {
 	int ret;
 
-	WARN("request delete channel");
+	DBG("request delete channel");
 
 	ret = _tidl_init();
 	if (ret != NOTIFICATION_ERROR_NONE)	{
@@ -1558,7 +1558,7 @@ int notification_tidl_request_delete_channel(const char *app_id,
 		ERR("request delete channel fail : %d", ret);
 		return ret;
 	}
-	WARN("request delete channel done [%d]", ret);
+	DBG("request delete channel done [%d]", ret);
 
 	return NOTIFICATION_ERROR_NONE;
 }
@@ -1568,7 +1568,7 @@ int notification_tidl_request_update_channel(const char *app_id,
 {
 	int ret;
 
-	WARN("request update channel");
+	DBG("request update channel");
 
 	ret = _tidl_init();
 	if (ret != NOTIFICATION_ERROR_NONE)	{
@@ -1582,7 +1582,7 @@ int notification_tidl_request_update_channel(const char *app_id,
 		ERR("request update channel fail : %d", ret);
 		return ret;
 	}
-	WARN("request update channel done [%d]", ret);
+	DBG("request update channel done [%d]", ret);
 
 	return NOTIFICATION_ERROR_NONE;
 }
@@ -1594,7 +1594,7 @@ int notification_tidl_request_get_channel(const char *app_id,
 	bool _blockable;
 	bool _is_blocked;
 
-	WARN("request channel get");
+	DBG("request channel get");
 
 	ret = _tidl_init();
 	if (ret != NOTIFICATION_ERROR_NONE)	{
@@ -1612,7 +1612,7 @@ int notification_tidl_request_get_channel(const char *app_id,
 	*blockable = _blockable;
 	*is_blocked = _is_blocked;
 
-	WARN("request channel get done [%d]", ret);
+	DBG("request channel get done [%d]", ret);
 
 	return NOTIFICATION_ERROR_NONE;
 }
@@ -1635,7 +1635,7 @@ static bool _rpc_port_proxy_list_noti_channel_cb (
 	notification_channel_create_with_info(app_id, channel_name,
 			blockable ? 1 : 0, is_blocked ? 1 : 0, &channel);
 
-	WARN("channel list foreach [%s][%s][%d][%d]", app_id, channel_name, (int)blockable, (int)is_blocked);
+	DBG("channel list foreach [%s][%s][%d][%d]", app_id, channel_name, (int)blockable, (int)is_blocked);
 
 	cb_info->cb(channel ,cb_info->user_data);
 
@@ -1659,7 +1659,7 @@ int notification_tidl_request_channel_get_list(const char *app_id,
 	channel_foreach_cb_info *cb_info = NULL;
 	unsigned int length;
 
-	WARN("request channel list");
+	DBG("request channel list");
 
 	ret = _tidl_init();
 	if (ret != NOTIFICATION_ERROR_NONE)	{
@@ -1680,7 +1680,7 @@ int notification_tidl_request_channel_get_list(const char *app_id,
 		rpc_port_proxy_list_noti_channel_destroy(channel_list);
 		return ret;
 	}
-	WARN("request channel list length [%d]", (int)length);
+	DBG("request channel list length [%d]", (int)length);
 
 	cb_info = (channel_foreach_cb_info *)calloc(1, sizeof(channel_foreach_cb_info));
 	if (cb_info == NULL) {
@@ -1702,7 +1702,7 @@ int notification_tidl_request_channel_get_list(const char *app_id,
 
 	rpc_port_proxy_list_noti_channel_destroy(channel_list);
 
-	WARN("request channel list done [%d]", ret);
+	DBG("request channel list done [%d]", ret);
 
 	return NOTIFICATION_ERROR_NONE;
 }
@@ -1714,7 +1714,7 @@ int notification_tidl_add_deffered_task(
 {
 	int ret;
 
-	WARN("add deffered task");
+	DBG("add deffered task");
 
 	ret = _tidl_init();
 	if (ret != NOTIFICATION_ERROR_NONE)	{
@@ -1723,7 +1723,7 @@ int notification_tidl_add_deffered_task(
 	}
 	deferred_task_cb(user_data);
 
-	WARN("add deffered task done");
+	DBG("add deffered task done");
 
 	return NOTIFICATION_ERROR_NONE;
 }
@@ -1731,6 +1731,6 @@ int notification_tidl_add_deffered_task(
 int notification_tidl_del_deffered_task(
 		void (*deferred_task_cb)(void *data))
 {
-	WARN("del deffered task");
+	DBG("del deffered task");
 	return NOTIFICATION_ERROR_NONE;
 }
