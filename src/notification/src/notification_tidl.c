@@ -913,7 +913,7 @@ int notification_tidl_request_load_noti_by_tag(notification_h *noti,
 
 	rpc_port_proxy_notification_destroy(notihandle);
 
-	WARN("load by tag done : %s", tag);
+	DBG("load by tag done : %s", tag);
 	return NOTIFICATION_ERROR_NONE;
 }
 
@@ -922,24 +922,24 @@ int notification_tidl_request_get_all_count(notification_type_e type, int *count
 	int ret;
 	int noti_count = 0;
 
-	WARN("get all count");
+	DBG("get all count");
 
 	ret = _tidl_init();
 	if (ret != NOTIFICATION_ERROR_NONE) {
-		WARN("tidl init fail");
+		DBG("tidl init fail");
 		return ret;
 	}
-	WARN("tidl init done");
+	DBG("tidl init done");
 
 	ret = rpc_port_proxy_noti_service_invoke_get_all_noti_count(service_handle,
 			(int)type, uid, &noti_count);
 	if (ret != RPC_PORT_ERROR_NONE) {
-		WARN("get all count fail : %d", ret);
+		DBG("get all count fail : %d", ret);
 		return ret;
 	}
 	*count = noti_count;
 
-	WARN("get all count done");
+	DBG("get all count done");
 
 	return NOTIFICATION_ERROR_NONE;
 }
@@ -951,19 +951,19 @@ int notification_tidl_request_load_system_setting(notification_system_setting_h 
 	notification_system_setting_h _setting;
 	rpc_port_proxy_noti_system_setting_h system_setting;
 
-	WARN("load system setting");
+	DBG("load system setting");
 
 	ret = _tidl_init();
 	if (ret != NOTIFICATION_ERROR_NONE) {
-		WARN("tidl init fail");
+		DBG("tidl init fail");
 		return ret;
 	}
-	WARN("tidl init done");
+	DBG("tidl init done");
 
 	// "load_system_setting" + "load_dnd_allow_exception"
 	ret = rpc_port_proxy_noti_service_invoke_load_system_setting(service_handle, (int)uid, &system_setting);
 	if (ret != RPC_PORT_ERROR_NONE) {
-		WARN("load system setting fail : %d", ret);
+		DBG("load system setting fail : %d", ret);
 		return ret;
 	}
 
@@ -974,7 +974,7 @@ int notification_tidl_request_load_system_setting(notification_system_setting_h 
 	if (system_setting)
 		rpc_port_proxy_noti_system_setting_destroy(system_setting);
 
-	WARN("load system setting done");
+	DBG("load system setting done");
 
 	return NOTIFICATION_ERROR_NONE;
 }
@@ -989,24 +989,24 @@ int notification_tidl_request_get_setting_array(
 	notification_setting_h result_setting_array;
 	notification_setting_h temp;
 
-	WARN("load system setting array");
+	DBG("load system setting array");
 
 	ret = _tidl_init();
 	if (ret != NOTIFICATION_ERROR_NONE) {
-		WARN("tidl init fail");
+		DBG("tidl init fail");
 		return ret;
 	}
-	WARN("tidl init done");
+	DBG("tidl init done");
 
 	ret = rpc_port_proxy_noti_service_invoke_get_setting_array(service_handle, (int)uid, &handle_array);
 	if (ret != RPC_PORT_ERROR_NONE) {
-		WARN("invoke setting array fail : %d", ret);
+		DBG("invoke setting array fail : %d", ret);
 		return ret;
 	}
 
 	ret = rpc_port_proxy_array_noti_setting_get(handle_array, &settings, &size);
 	if (ret != RPC_PORT_ERROR_NONE) {
-		WARN("get setting fail : %d", ret);
+		DBG("get setting fail : %d", ret);
 		return ret;
 	}
 
@@ -1027,7 +1027,7 @@ int notification_tidl_request_get_setting_array(
 	if (handle_array)
 		rpc_port_proxy_array_noti_setting_destroy(handle_array);
 
-	WARN("load system setting array done");
+	DBG("load system setting array done");
 
 	return NOTIFICATION_ERROR_NONE;
 }
@@ -1039,19 +1039,19 @@ int notification_tidl_request_get_setting_by_app_id(
 	rpc_port_proxy_noti_setting_h noti_setting;
 	notification_setting_h _setting;
 
-	WARN("get seting by appid : %s", app_id);
+	DBG("get seting by appid : %s", app_id);
 
 	ret = _tidl_init();
 	if (ret != NOTIFICATION_ERROR_NONE) {
-		WARN("tidl init fail");
+		DBG("tidl init fail");
 		return ret;
 	}
-	WARN("tidl init done");
+	DBG("tidl init done");
 
 	ret = rpc_port_proxy_noti_service_invoke_get_setting_by_app_id(service_handle, app_id,
 			(int)uid, &noti_setting);
 	if (ret != RPC_PORT_ERROR_NONE) {
-		WARN("invoke setting array by appid fail : %d", ret);
+		DBG("invoke setting array by appid fail : %d", ret);
 		return ret;
 	}
 
@@ -1068,7 +1068,7 @@ int notification_tidl_request_get_setting_by_app_id(
 	if (noti_setting)
 		rpc_port_proxy_noti_setting_destroy(noti_setting);
 
-	WARN("get seting by appid done");
+	DBG("get seting by appid done");
 
 	return NOTIFICATION_ERROR_NONE;
 }
@@ -1078,18 +1078,18 @@ int notification_tidl_update_setting(notification_setting_h setting, uid_t uid)
 	int ret;
 	rpc_port_proxy_noti_setting_h noti_setting;
 
-	WARN("update setting");
+	DBG("update setting");
 
 	ret = _tidl_init();
 	if (ret != NOTIFICATION_ERROR_NONE) {
-		WARN("tidl init fail");
+		DBG("tidl init fail");
 		return ret;
 	}
-	WARN("tidl init done");
+	DBG("tidl init done");
 
 	ret = rpc_port_proxy_noti_setting_create(&noti_setting);
 	if (ret != RPC_PORT_ERROR_NONE) {
-		WARN("create noti_setting failed : %d", ret);
+		DBG("create noti_setting failed : %d", ret);
 		return ret;
 	}
 
@@ -1098,13 +1098,13 @@ int notification_tidl_update_setting(notification_setting_h setting, uid_t uid)
 	ret = rpc_port_proxy_noti_service_invoke_update_noti_setting(service_handle,
 			noti_setting, (int)uid);
 	if (ret != RPC_PORT_ERROR_NONE) {
-		WARN("request invoke update noti setting failed : %d", ret);
+		DBG("request invoke update noti setting failed : %d", ret);
 		rpc_port_proxy_noti_setting_destroy(noti_setting);
 		return ret;
 	}
 	rpc_port_proxy_noti_setting_destroy(noti_setting);
 
-	WARN("update setting done");
+	DBG("update setting done");
 
 	return NOTIFICATION_ERROR_NONE;
 }
@@ -1115,18 +1115,18 @@ int notification_tidl_update_system_setting(
 	int ret;
 	rpc_port_proxy_noti_system_setting_h sys_setting;
 
-	WARN("update system setting");
+	DBG("update system setting");
 
 	ret = _tidl_init();
 	if (ret != NOTIFICATION_ERROR_NONE) {
-		WARN("tidl init fail");
+		DBG("tidl init fail");
 		return ret;
 	}
-	WARN("tidl init done");
+	DBG("tidl init done");
 
 	ret = rpc_port_proxy_noti_system_setting_create(&sys_setting);
 	if (ret != RPC_PORT_ERROR_NONE) {
-		WARN("create noti_system_setting failed : %d", ret);
+		DBG("create noti_system_setting failed : %d", ret);
 		return ret;
 	}
 
@@ -1135,13 +1135,13 @@ int notification_tidl_update_system_setting(
 	ret = rpc_port_proxy_noti_service_invoke_update_noti_sys_setting(service_handle,
 			sys_setting, (int)uid);
 	if (ret != RPC_PORT_ERROR_NONE) {
-		WARN("request invoke update noti system setting failed : %d", ret);
+		DBG("request invoke update noti system setting failed : %d", ret);
 		rpc_port_proxy_noti_system_setting_destroy(sys_setting);
 		return ret;
 	}
 	rpc_port_proxy_noti_system_setting_destroy(sys_setting);
 
-	WARN("update system setting done");
+	DBG("update system setting done");
 
 	return NOTIFICATION_ERROR_NONE;
 }
@@ -1152,18 +1152,18 @@ int notification_tidl_request_save_as_template(notification_h noti, const char *
 	int ret;
 	rpc_port_proxy_notification_h notihandle;
 
-	WARN("save as template");
+	DBG("save as template");
 
 	ret = _tidl_init();
 	if (ret != NOTIFICATION_ERROR_NONE) {
-		WARN("tidl init fail");
+		DBG("tidl init fail");
 		return ret;
 	}
-	WARN("tidl init done");
+	DBG("tidl init done");
 
 	ret = rpc_port_proxy_notification_create(&notihandle);
 	if (ret != RPC_PORT_ERROR_NONE) {
-		WARN("create noti handle fail");
+		DBG("create noti handle fail");
 		return ret;
 	}
 
@@ -1171,13 +1171,13 @@ int notification_tidl_request_save_as_template(notification_h noti, const char *
 
 	ret = rpc_port_proxy_noti_service_invoke_save_as_template(service_handle, notihandle, template_name);
 	if (ret != RPC_PORT_ERROR_NONE) {
-		WARN("request invoke save as template failed : %d", ret);
+		DBG("request invoke save as template failed : %d", ret);
 		rpc_port_proxy_notification_destroy(notihandle);
 		return ret;
 	}
 	rpc_port_proxy_notification_destroy(notihandle);
 
-	WARN("save as template done ");
+	DBG("save as template done ");
 
 	return NOTIFICATION_ERROR_NONE;
 }
@@ -1188,18 +1188,18 @@ int notification_tidl_request_create_from_template(notification_h *noti, const c
 	rpc_port_proxy_notification_h notihandle;
 	notification_h _noti;
 
-	WARN("create from template");
+	DBG("create from template");
 
 	ret = _tidl_init();
 	if (ret != NOTIFICATION_ERROR_NONE) {
-		WARN("tidl init fail");
+		DBG("tidl init fail");
 		return ret;
 	}
-	WARN("tidl init done");
+	DBG("tidl init done");
 
 	ret = rpc_port_proxy_noti_service_invoke_create_from_template(service_handle, template_name, &notihandle);
 	if (ret != RPC_PORT_ERROR_NONE) {
-		WARN("request invoke save as template failed : %d", ret);
+		DBG("request invoke save as template failed : %d", ret);
 		return ret;
 	}
 
@@ -1213,7 +1213,7 @@ int notification_tidl_request_create_from_template(notification_h *noti, const c
 
 	rpc_port_proxy_notification_destroy(notihandle);
 
-	WARN("create from template done : %d", ret);
+	DBG("create from template done : %d", ret);
 
 	return NOTIFICATION_ERROR_NONE;
 }
@@ -1225,19 +1225,19 @@ int notification_tidl_request_create_from_package_template(notification_h *noti,
 	rpc_port_proxy_notification_h notihandle;
 	notification_h _noti;
 
-	WARN("create from package template");
+	DBG("create from package template");
 
 	ret = _tidl_init();
 	if (ret != NOTIFICATION_ERROR_NONE) {
-		WARN("tidl init fail");
+		DBG("tidl init fail");
 		return ret;
 	}
-	WARN("tidl init done");
+	DBG("tidl init done");
 
 	ret = rpc_port_proxy_noti_service_invoke_create_from_package_template(service_handle,
 			app_id, template_name, &notihandle);
 	if (ret != RPC_PORT_ERROR_NONE) {
-		WARN("request invoke save as template failed : %d", ret);
+		DBG("request invoke save as template failed : %d", ret);
 		return ret;
 	}
 
@@ -1251,7 +1251,7 @@ int notification_tidl_request_create_from_package_template(notification_h *noti,
 
 	rpc_port_proxy_notification_destroy(notihandle);
 
-	WARN("create from package template done");
+	DBG("create from package template done");
 
 	return NOTIFICATION_ERROR_NONE;
 }
