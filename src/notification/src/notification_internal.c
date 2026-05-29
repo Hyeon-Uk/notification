@@ -1851,7 +1851,7 @@ EXPORT_API int notification_post_with_event_cb_for_uid(notification_h noti, even
 		info = g_list_nth_data(find_list, 0);
 		info->cb = cb;
 		info->userdata = userdata;
-		WARN("event cb is existed id[%d]", priv_id);
+		DBG("event cb is existed id[%d]", priv_id);
 	} else {
 		info = (notification_event_cb_info_s *)malloc(sizeof(notification_event_cb_info_s));
 		if (info == NULL) {
@@ -1863,7 +1863,7 @@ EXPORT_API int notification_post_with_event_cb_for_uid(notification_h noti, even
 		info->cb = cb;
 		info->userdata = userdata;
 		__noti_event_cb_list = g_list_append(__noti_event_cb_list, info);
-		WARN("new event cb appended id[%d]", priv_id);
+		DBG("new event cb appended id[%d]", priv_id);
 	}
 
 out:
