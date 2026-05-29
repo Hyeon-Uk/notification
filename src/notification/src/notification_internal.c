@@ -172,7 +172,7 @@ void notification_call_changed_cb_for_uid(notification_op *op_list, int op_num, 
 	if (_noti_cb_hash == NULL)
 		return;
 
-	noti_cb_list = (GList *)g_hash_table_lookup(_noti_cb_hash, GUINT_TO_POINTER(uid));
+	noti_cb_list = (GList *)g_hash_table_lookup(_noti_cb_hash, GUINT_TO_POINTER((guint)uid));
 	if (noti_cb_list == NULL)
 		return;
 
@@ -347,11 +347,11 @@ EXPORT_API int notification_resister_changed_cb_for_uid(
 	noti_cb_info_new->detailed_changed_cb = NULL;
 	noti_cb_info_new->data = user_data;
 
-	noti_cb_list = g_hash_table_lookup(_noti_cb_hash, GUINT_TO_POINTER(uid));
+	noti_cb_list = g_hash_table_lookup(_noti_cb_hash, GUINT_TO_POINTER((guint)uid));
 
 	if (noti_cb_list == NULL) {
 		noti_cb_list = g_list_append(noti_cb_list, noti_cb_info_new);
-		g_hash_table_insert(_noti_cb_hash, GUINT_TO_POINTER(uid), noti_cb_list);
+		g_hash_table_insert(_noti_cb_hash, GUINT_TO_POINTER((guint)uid), noti_cb_list);
 	} else {
 		noti_cb_list = g_list_append(noti_cb_list, noti_cb_info_new);
 	}
@@ -402,7 +402,7 @@ EXPORT_API int notification_unresister_changed_cb_for_uid(
 	if (_noti_cb_hash == NULL)
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 
-	noti_cb_list = (GList *)g_hash_table_lookup(_noti_cb_hash, GUINT_TO_POINTER(uid));
+	noti_cb_list = (GList *)g_hash_table_lookup(_noti_cb_hash, GUINT_TO_POINTER((guint)uid));
 	if (noti_cb_list == NULL)
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 
@@ -415,10 +415,10 @@ EXPORT_API int notification_unresister_changed_cb_for_uid(
 		__free_changed_cb_info(noti_cb_info);
 
 		if (noti_cb_list == NULL) {
-			g_hash_table_steal(_noti_cb_hash, GUINT_TO_POINTER(uid));
+			g_hash_table_steal(_noti_cb_hash, GUINT_TO_POINTER((guint)uid));
 		} else {
 			noti_cb_list = g_list_first(noti_cb_list);
-			g_hash_table_replace(_noti_cb_hash, GUINT_TO_POINTER(uid), noti_cb_list);
+			g_hash_table_replace(_noti_cb_hash, GUINT_TO_POINTER((guint)uid), noti_cb_list);
 		}
 
 	} else {
@@ -1333,11 +1333,11 @@ EXPORT_API int notification_register_detailed_changed_cb_for_uid(
 	noti_cb_info_new->detailed_changed_cb = callback;
 	noti_cb_info_new->data = user_data;
 
-	noti_cb_list = g_hash_table_lookup(_noti_cb_hash, GUINT_TO_POINTER(uid));
+	noti_cb_list = g_hash_table_lookup(_noti_cb_hash, GUINT_TO_POINTER((guint)uid));
 
 	if (noti_cb_list == NULL) {
 		noti_cb_list = g_list_append(noti_cb_list, noti_cb_info_new);
-		g_hash_table_insert(_noti_cb_hash, GUINT_TO_POINTER(uid), noti_cb_list);
+		g_hash_table_insert(_noti_cb_hash, GUINT_TO_POINTER((guint)uid), noti_cb_list);
 	} else {
 		noti_cb_list = g_list_append(noti_cb_list, noti_cb_info_new);
 	}
@@ -1388,7 +1388,7 @@ EXPORT_API int notification_unregister_detailed_changed_cb_for_uid(
 	if (_noti_cb_hash == NULL)
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 
-	noti_cb_list = (GList *)g_hash_table_lookup(_noti_cb_hash, GUINT_TO_POINTER(uid));
+	noti_cb_list = (GList *)g_hash_table_lookup(_noti_cb_hash, GUINT_TO_POINTER((guint)uid));
 
 	if (noti_cb_list == NULL)
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
@@ -1402,10 +1402,10 @@ EXPORT_API int notification_unregister_detailed_changed_cb_for_uid(
 		noti_cb_list = g_list_delete_link(noti_cb_list, delete_cb_list);
 		__free_changed_cb_info(noti_cb_info);
 		if (noti_cb_list == NULL) {
-			g_hash_table_steal(_noti_cb_hash, GUINT_TO_POINTER(uid));
+			g_hash_table_steal(_noti_cb_hash, GUINT_TO_POINTER((guint)uid));
 		} else {
 			noti_cb_list = g_list_first(noti_cb_list);
-			g_hash_table_replace(_noti_cb_hash, GUINT_TO_POINTER(uid), noti_cb_list);
+			g_hash_table_replace(_noti_cb_hash, GUINT_TO_POINTER((guint)uid), noti_cb_list);
 		}
 
 	} else {
