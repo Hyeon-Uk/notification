@@ -16,6 +16,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <new>
 #include <string.h>
 #include <unistd.h>
 #include <fcntl.h>
@@ -609,7 +610,7 @@ EXPORT_API int make_noti_from_notification(notification_h *noti, void *notihandl
 
 	rpc_port_proxy_notification_h handle = (rpc_port_proxy_notification_h)notihandle;
 
-	_noti = (notification_h)calloc(1, sizeof(struct _notification));
+	_noti = new (std::nothrow) _notification();
 	if (_noti == NULL) {
 		ERR("Failed to alloc memory");
 		return NOTIFICATION_ERROR_OUT_OF_MEMORY;

@@ -16,6 +16,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <new>
 #include <string.h>
 #include <unistd.h>
 #include <fcntl.h>
@@ -1548,7 +1549,7 @@ static notification_h _notification_create(notification_type_e type)
 		return NULL;
 	}
 
-	noti = (notification_h)calloc(1, sizeof(struct _notification));
+	noti = new (std::nothrow) _notification();
 	if (noti == NULL) {
 		/* LCOV_EXCL_START */
 		ERR("Failed to alloc memory");
@@ -1721,7 +1722,7 @@ EXPORT_API int notification_clone(notification_h noti, notification_h *clone)
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 	}
 
-	new_noti = (notification_h) calloc(1, sizeof(struct _notification));
+	new_noti = new (std::nothrow) _notification();
 	if (new_noti == NULL) {
 		/* LCOV_EXCL_START */
 		ERR("Failed to alloc memory");
@@ -1937,7 +1938,7 @@ EXPORT_API int notification_free(notification_h noti)
 	if (noti->channel_name)
 		free(noti->channel_name);
 
-	free(noti);
+	delete noti;
 
 
 	return NOTIFICATION_ERROR_NONE;
