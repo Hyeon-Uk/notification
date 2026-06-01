@@ -669,7 +669,7 @@ void notification_call_dnd_changed_cb_for_uid(int do_not_disturb, uid_t uid)
 	noti_dnd_cb_list = g_list_first(noti_dnd_cb_list);
 
 	for (; noti_dnd_cb_list != NULL; noti_dnd_cb_list = noti_dnd_cb_list->next) {
-		dnd_data = noti_dnd_cb_list->data;
+		dnd_data = (noti_dnd_cb_info_s *)noti_dnd_cb_list->data;
 
 		if (dnd_data != NULL && dnd_data->callback != NULL)
 			dnd_data->callback(dnd_data->user_data, do_not_disturb);
@@ -750,7 +750,7 @@ EXPORT_API int notification_unregister_system_setting_dnd_changed_cb_for_uid(dnd
 					(GCompareFunc)_noti_dnd_cb_compare);
 
 	if (noti_dnd_del_list) {
-		dnd_data = g_list_nth_data(noti_dnd_del_list, 0);
+		dnd_data = (noti_dnd_cb_info_s *)g_list_nth_data(noti_dnd_del_list, 0);
 		noti_dnd_cb_list = g_list_delete_link(noti_dnd_cb_list, noti_dnd_del_list);
 		free(dnd_data);
 	} else {
