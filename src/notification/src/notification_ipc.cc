@@ -255,8 +255,8 @@ EXPORT_API GVariant *notification_ipc_make_gvariant_from_noti(notification_h not
 	if (noti->progress_percentage != 0.0)
 		g_variant_builder_add(&builder, "{iv}", NOTIFICATION_DATA_TYPE_PROGRESS_PERCENTAGE, g_variant_new_double(noti->progress_percentage));
 
-	if (noti->app_icon_path != NULL)
-		g_variant_builder_add(&builder, "{iv}", NOTIFICATION_DATA_TYPE_APP_ICON_PATH, g_variant_new_string((const gchar *)noti->app_icon_path));
+	if (!noti->app_icon_path.empty())
+		g_variant_builder_add(&builder, "{iv}", NOTIFICATION_DATA_TYPE_APP_ICON_PATH, g_variant_new_string(noti->app_icon_path.c_str()));
 	if (noti->app_label != NULL)
 		g_variant_builder_add(&builder, "{iv}", NOTIFICATION_DATA_TYPE_APP_LABEL, g_variant_new_string((const gchar *)noti->app_label));
 	if (noti->temp_title != NULL)
@@ -501,7 +501,8 @@ EXPORT_API int notification_ipc_make_noti_from_gvariant(notification_h noti,
 	noti->priv_sound_path = _dup_string(priv_sound_path);
 	noti->vibration_path = _dup_string(vibration_path);
 	noti->priv_vibration_path = _dup_string(priv_vibration_path);
-	noti->app_icon_path = _dup_string(app_icon_path);
+	if (app_icon_path)
+		noti->app_icon_path = app_icon_path;
 	noti->app_label = _dup_string(app_label);
 	noti->temp_title = _dup_string(temp_title);
 	noti->temp_content = _dup_string(temp_content);

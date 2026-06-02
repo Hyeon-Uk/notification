@@ -510,7 +510,7 @@ EXPORT_API int make_notification_from_noti(void *notihandle,
 	if (ret != RPC_PORT_ERROR_NONE)
 		DBG("rpc_port_proxy_notification_set_progress_percentage : %d", ret);
 
-	ret = rpc_port_proxy_notification_set_app_icon_path(handle, __get_str_value(noti->app_icon_path));
+	ret = rpc_port_proxy_notification_set_app_icon_path(handle, noti->app_icon_path.c_str());
 	if (ret != RPC_PORT_ERROR_NONE)
 		DBG("rpc_port_proxy_notification_set_app_icon_path : %d", ret);
 
@@ -983,12 +983,9 @@ EXPORT_API int make_noti_from_notification(notification_h *noti, void *notihandl
 	if (ret != RPC_PORT_ERROR_NONE)
 		DBG("rpc_port_proxy_notification_get_app_icon_path : %d", ret);
 
-	if (strlen(app_icon_path) > 0) {
+	if (strlen(app_icon_path) > 0)
 		_noti->app_icon_path = app_icon_path;
-	} else {
-		_noti->app_icon_path = NULL;
-		free(app_icon_path);
-	}
+	free(app_icon_path);
 
 	char *app_label;
 	ret = rpc_port_proxy_notification_get_app_label(handle, &app_label);

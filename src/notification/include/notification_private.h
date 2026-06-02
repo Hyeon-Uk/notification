@@ -20,6 +20,10 @@
 #include <notification_internal.h>
 
 #ifdef __cplusplus
+#include <string>
+#endif
+
+#ifdef __cplusplus
 extern "C" {
 #endif
 
@@ -88,7 +92,7 @@ struct _notification {
 	double progress_size;	/* size of progress */
 	double progress_percentage;	/* percentage of progress */
 
-	char *app_icon_path;	/* Temporary stored app icon path from AIL */
+	std::string app_icon_path;	/* Temporary stored app icon path from AIL */
 	char *app_label;
 	char *temp_title;
 	char *temp_content;

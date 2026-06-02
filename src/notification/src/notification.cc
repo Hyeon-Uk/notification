@@ -186,8 +186,8 @@ EXPORT_API int notification_get_image(notification_h noti,
 	/* If image path is NULL and type is ICON, icon path set from AIL */
 	/* order : user icon -> launch_app_id icon -> caller_app_id icon -> service app icon */
 	if (*image_path == NULL && type == NOTIFICATION_IMAGE_TYPE_ICON) {
-		if (noti->app_icon_path != NULL)
-			*image_path = noti->app_icon_path;
+		if (!noti->app_icon_path.empty())
+			*image_path = (char *)noti->app_icon_path.c_str();
 		else
 			*image_path = NULL;
 	}
@@ -1919,9 +1919,6 @@ EXPORT_API int notification_free(notification_h noti)
 
 	if (noti->b_format_args)
 		bundle_free(noti->b_format_args);
-
-	if (noti->app_icon_path)
-		free(noti->app_icon_path);
 
 	if (noti->app_label)
 		free(noti->app_label);
