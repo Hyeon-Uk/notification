@@ -115,7 +115,7 @@ struct _notification {
 
 	uid_t uid;
 
-	char *channel_name;			/* channel name to take care show state */
+	std::string channel_name;			/* channel name to take care show state */
 };
 
 typedef enum notification_data_type {

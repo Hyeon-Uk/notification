@@ -586,7 +586,7 @@ EXPORT_API int make_notification_from_noti(void *notihandle,
 	if (ret != RPC_PORT_ERROR_NONE)
 		DBG("rpc_port_proxy_notification_set_check_box_value : %d", ret);
 
-	ret = rpc_port_proxy_notification_set_channel_name(handle, __get_str_value(noti->channel_name));
+	ret = rpc_port_proxy_notification_set_channel_name(handle, noti->channel_name.c_str());
 	if (ret != RPC_PORT_ERROR_NONE)
 		DBG("rpc_port_proxy_notification_set_channel_name : %d", ret);
 
@@ -1059,12 +1059,9 @@ EXPORT_API int make_noti_from_notification(notification_h *noti, void *notihandl
 	if (ret != RPC_PORT_ERROR_NONE)
 		DBG("rpc_port_proxy_notification_get_channel_name : %d", ret);
 
-	if (strlen(channel_name) > 0) {
+	if (strlen(channel_name) > 0)
 		_noti->channel_name = channel_name;
-	} else {
-		_noti->channel_name = NULL;
-		free(channel_name);
-	}
+	free(channel_name);
 
 	int _uid;
 	ret = rpc_port_proxy_notification_get_uid(handle, &_uid);

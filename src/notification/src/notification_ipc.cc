@@ -282,8 +282,8 @@ EXPORT_API GVariant *notification_ipc_make_gvariant_from_noti(notification_h not
 	g_variant_builder_add(&builder, "{iv}", NOTIFICATION_DATA_TYPE_CHECK_BOX_VALUE, g_variant_new_int32(noti->check_box_value));
 	g_variant_builder_add(&builder, "{iv}", NOTIFICATION_DATA_TYPE_UID, g_variant_new_int32(noti->uid));
 
-	if (noti->channel_name != NULL)
-		g_variant_builder_add(&builder, "{iv}", NOTIFICATION_DATA_TYPE_CHANNEL_NAME, g_variant_new_string((const gchar *)noti->channel_name));
+	if (!noti->channel_name.empty())
+		g_variant_builder_add(&builder, "{iv}", NOTIFICATION_DATA_TYPE_CHANNEL_NAME, g_variant_new_string(noti->channel_name.c_str()));
 
 	result_body = g_variant_builder_end(&builder);
 	body = g_variant_new("(v)", result_body);
@@ -500,7 +500,8 @@ EXPORT_API int notification_ipc_make_noti_from_gvariant(notification_h noti,
 	if (temp_content)
 		noti->temp_content = temp_content;
 	noti->tag = _dup_string(tag);
-	noti->channel_name = _dup_string(channel_name);
+	if (channel_name)
+		noti->channel_name = channel_name;
 
 	g_hash_table_unref(dict);
 

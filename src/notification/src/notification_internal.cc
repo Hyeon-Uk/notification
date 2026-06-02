@@ -2444,10 +2444,7 @@ EXPORT_API int notification_set_channel_name(notification_h noti,
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 	}
 
-	if (noti->channel_name)
-		free(noti->channel_name);
-
-	noti->channel_name = strdup(channel_name);
+	noti->channel_name = channel_name ? channel_name : "";
 
 	DBG("notification_set_channel_name done");
 

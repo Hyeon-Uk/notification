@@ -1553,7 +1553,7 @@ static notification_h _notification_create(notification_type_e type)
 
 	noti->check_box = false;
 	noti->check_box_value = false;
-	noti->channel_name = NULL;
+	noti->channel_name.clear();
 
 	if (aul_getuid() < REGULAR_UID_MIN) {
 		noti->pkg_id = noti->caller_app_id;
@@ -1857,9 +1857,6 @@ EXPORT_API int notification_free(notification_h noti)
 
 	if (noti->b_format_args)
 		bundle_free(noti->b_format_args);
-
-	if (noti->channel_name)
-		free(noti->channel_name);
 
 	delete noti;
 
