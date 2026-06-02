@@ -1659,10 +1659,10 @@ static notification_h _notification_create(notification_type_e type)
 				goto out;
 			}
 
-			noti->app_label = strdup(label);
+			noti->app_label = label;
 			_label = strdup(label);
 		} else {
-			noti->app_label = strdup(_label);
+			noti->app_label = _label ? _label : "";
 		}
 	}
 
@@ -1827,8 +1827,7 @@ EXPORT_API int notification_clone(notification_h noti, notification_h *clone)
 	new_noti->is_translation = noti->is_translation;
 	new_noti->extension_image_size = noti->extension_image_size;
 
-	if (noti->app_label != NULL)
-		new_noti->app_label = strdup(noti->app_label);
+	new_noti->app_label = noti->app_label;
 
 	new_noti->uid = noti->uid;
 
@@ -1912,9 +1911,6 @@ EXPORT_API int notification_free(notification_h noti)
 
 	if (noti->b_format_args)
 		bundle_free(noti->b_format_args);
-
-	if (noti->app_label)
-		free(noti->app_label);
 
 	if (noti->tag)
 		free(noti->tag);

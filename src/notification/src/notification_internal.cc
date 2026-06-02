@@ -2172,10 +2172,7 @@ EXPORT_API int notification_set_app_label(notification_h noti, char *label)
 	if (noti == NULL || label == NULL)
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 
-	if (noti->app_label)
-		free(noti->app_label);
-
-	noti->app_label = strdup(label);
+	noti->app_label = label;
 
 	return NOTIFICATION_ERROR_NONE;
 }
@@ -2185,8 +2182,8 @@ EXPORT_API int notification_get_app_label(notification_h noti, char **label)
 	if (noti == NULL || label == NULL)
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 
-	if (noti->app_label)
-		*label = noti->app_label;
+	if (!noti->app_label.empty())
+		*label = (char *)noti->app_label.c_str();
 
 	return NOTIFICATION_ERROR_NONE;
 }

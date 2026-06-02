@@ -93,7 +93,7 @@ struct _notification {
 	double progress_percentage;	/* percentage of progress */
 
 	std::string app_icon_path;	/* Temporary stored app icon path from AIL */
-	char *app_label;
+	std::string app_label;
 	std::string temp_title;
 	std::string temp_content;
 	char *tag;
