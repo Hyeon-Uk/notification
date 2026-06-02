@@ -259,10 +259,10 @@ EXPORT_API GVariant *notification_ipc_make_gvariant_from_noti(notification_h not
 		g_variant_builder_add(&builder, "{iv}", NOTIFICATION_DATA_TYPE_APP_ICON_PATH, g_variant_new_string(noti->app_icon_path.c_str()));
 	if (noti->app_label != NULL)
 		g_variant_builder_add(&builder, "{iv}", NOTIFICATION_DATA_TYPE_APP_LABEL, g_variant_new_string((const gchar *)noti->app_label));
-	if (noti->temp_title != NULL)
-		g_variant_builder_add(&builder, "{iv}", NOTIFICATION_DATA_TYPE_TEMP_TITLE, g_variant_new_string((const gchar *)noti->temp_title));
-	if (noti->temp_content != NULL)
-		g_variant_builder_add(&builder, "{iv}", NOTIFICATION_DATA_TYPE_TEMP_CONTENT, g_variant_new_string((const gchar *)noti->temp_content));
+	if (!noti->temp_title.empty())
+		g_variant_builder_add(&builder, "{iv}", NOTIFICATION_DATA_TYPE_TEMP_TITLE, g_variant_new_string(noti->temp_title.c_str()));
+	if (!noti->temp_content.empty())
+		g_variant_builder_add(&builder, "{iv}", NOTIFICATION_DATA_TYPE_TEMP_CONTENT, g_variant_new_string(noti->temp_content.c_str()));
 	if (noti->tag != NULL)
 		g_variant_builder_add(&builder, "{iv}", NOTIFICATION_DATA_TYPE_TAG, g_variant_new_string((const gchar *)noti->tag));
 
@@ -504,8 +504,10 @@ EXPORT_API int notification_ipc_make_noti_from_gvariant(notification_h noti,
 	if (app_icon_path)
 		noti->app_icon_path = app_icon_path;
 	noti->app_label = _dup_string(app_label);
-	noti->temp_title = _dup_string(temp_title);
-	noti->temp_content = _dup_string(temp_content);
+	if (temp_title)
+		noti->temp_title = temp_title;
+	if (temp_content)
+		noti->temp_content = temp_content;
 	noti->tag = _dup_string(tag);
 	noti->channel_name = _dup_string(channel_name);
 

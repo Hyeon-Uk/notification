@@ -518,11 +518,11 @@ EXPORT_API int make_notification_from_noti(void *notihandle,
 	if (ret != RPC_PORT_ERROR_NONE)
 		DBG("rpc_port_proxy_notification_set_app_label : %d", ret);
 
-	ret = rpc_port_proxy_notification_set_temp_title(handle, __get_str_value(noti->temp_title));
+	ret = rpc_port_proxy_notification_set_temp_title(handle, noti->temp_title.c_str());
 	if (ret != RPC_PORT_ERROR_NONE)
 		DBG("rpc_port_proxy_notification_set_temp_title : %d", ret);
 
-	ret = rpc_port_proxy_notification_set_temp_content(handle, __get_str_value(noti->temp_content));
+	ret = rpc_port_proxy_notification_set_temp_content(handle, noti->temp_content.c_str());
 	if (ret != RPC_PORT_ERROR_NONE)
 		DBG("rpc_port_proxy_notification_set_temp_content : %d", ret);
 
@@ -1004,24 +1004,18 @@ EXPORT_API int make_noti_from_notification(notification_h *noti, void *notihandl
 	if (ret != RPC_PORT_ERROR_NONE)
 		DBG("rpc_port_proxy_notification_get_temp_title : %d", ret);
 
-	if (strlen(temp_title) > 0) {
+	if (strlen(temp_title) > 0)
 		_noti->temp_title = temp_title;
-	} else {
-		_noti->temp_title = NULL;
-		free(temp_title);
-	}
+	free(temp_title);
 
 	char *temp_content;
 	ret = rpc_port_proxy_notification_get_temp_content(handle, &temp_content);
 	if (ret != RPC_PORT_ERROR_NONE)
 		DBG("rpc_port_proxy_notification_get_temp_content : %d", ret);
 
-	if (strlen(temp_content) > 0) {
+	if (strlen(temp_content) > 0)
 		_noti->temp_content = temp_content;
-	} else {
-		_noti->temp_content = NULL;
-		free(temp_content);
-	}
+	free(temp_content);
 
 	char *tag;
 	ret = rpc_port_proxy_notification_get_tag(handle, &tag);

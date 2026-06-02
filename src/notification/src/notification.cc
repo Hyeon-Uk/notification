@@ -768,24 +768,17 @@ EXPORT_API int notification_get_text(notification_h noti,
 	switch (text_type) {
 	case NOTIFICATION_TEXT_TYPE_TITLE:
 	case NOTIFICATION_TEXT_TYPE_GROUP_TITLE:
-		if (noti->temp_title != NULL)
-			free(noti->temp_title);
+		noti->temp_title = result_str ? result_str : "";
 
-		noti->temp_title = strdup(result_str);
-
-		*text = noti->temp_title;
+		*text = (char *)noti->temp_title.c_str();
 		break;
 	case NOTIFICATION_TEXT_TYPE_CONTENT:
 	case NOTIFICATION_TEXT_TYPE_CONTENT_FOR_DISPLAY_OPTION_IS_OFF:
 	case NOTIFICATION_TEXT_TYPE_GROUP_CONTENT:
 	case NOTIFICATION_TEXT_TYPE_GROUP_CONTENT_FOR_DISPLAY_OPTION_IS_OFF:
-		if (noti->temp_content !=
-		    NULL)
-			free(noti->temp_content);
+		noti->temp_content = result_str ? result_str : "";
 
-		noti->temp_content = strdup(result_str);
-
-		*text = noti->temp_content;
+		*text = (char *)noti->temp_content.c_str();
 		break;
 	default:
 		break;
@@ -1922,12 +1915,6 @@ EXPORT_API int notification_free(notification_h noti)
 
 	if (noti->app_label)
 		free(noti->app_label);
-
-	if (noti->temp_title)
-		free(noti->temp_title);
-
-	if (noti->temp_content)
-		free(noti->temp_content);
 
 	if (noti->tag)
 		free(noti->tag);
