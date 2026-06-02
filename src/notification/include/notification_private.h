@@ -96,7 +96,7 @@ struct _notification {
 	std::string app_label;
 	std::string temp_title;
 	std::string temp_content;
-	char *tag;
+	std::string tag;
 	bool ongoing_flag;
 	int ongoing_value_type;
 	int ongoing_current;		/* Ongoing current time */

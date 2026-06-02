@@ -526,7 +526,7 @@ EXPORT_API int make_notification_from_noti(void *notihandle,
 	if (ret != RPC_PORT_ERROR_NONE)
 		DBG("rpc_port_proxy_notification_set_temp_content : %d", ret);
 
-	ret = rpc_port_proxy_notification_set_tag(handle, __get_str_value(noti->tag));
+	ret = rpc_port_proxy_notification_set_tag(handle, noti->tag.c_str());
 	if (ret != RPC_PORT_ERROR_NONE)
 		DBG("rpc_port_proxy_notification_set_tag : %d", ret);
 
@@ -992,12 +992,9 @@ EXPORT_API int make_noti_from_notification(notification_h *noti, void *notihandl
 	if (ret != RPC_PORT_ERROR_NONE)
 		DBG("rpc_port_proxy_notification_get_tag : %d", ret);
 
-	if (strlen(tag) > 0) {
+	if (strlen(tag) > 0)
 		_noti->tag = tag;
-	} else {
-		_noti->tag = NULL;
-		free(tag);
-	}
+	free(tag);
 
 	ret = rpc_port_proxy_notification_get_ongoing_flag(handle, &_noti->ongoing_flag);
 	if (ret != RPC_PORT_ERROR_NONE)

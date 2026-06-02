@@ -1783,8 +1783,8 @@ EXPORT_API int notification_clone(notification_h noti, notification_h *clone)
 	new_noti->progress_size = noti->progress_size;
 	new_noti->progress_percentage = noti->progress_percentage;
 
-	if (noti->tag != NULL)
-		new_noti->tag = strdup(noti->tag);
+	if (!noti->tag.empty())
+		new_noti->tag = noti->tag;
 
 	new_noti->ongoing_flag = noti->ongoing_flag;
 	new_noti->ongoing_value_type = noti->ongoing_value_type;
@@ -1858,9 +1858,6 @@ EXPORT_API int notification_free(notification_h noti)
 	if (noti->b_format_args)
 		bundle_free(noti->b_format_args);
 
-	if (noti->tag)
-		free(noti->tag);
-
 	if (noti->channel_name)
 		free(noti->channel_name);
 
@@ -1875,12 +1872,8 @@ EXPORT_API int notification_set_tag(notification_h noti, const char *tag)
 	if (noti == NULL)
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 
-	if (tag != NULL) {
-		if (noti->tag != NULL)
-			free(noti->tag);
-
-		noti->tag = strdup(tag);
-	}
+	if (tag != NULL)
+		noti->tag = tag;
 
 	return NOTIFICATION_ERROR_NONE;
 }
@@ -1890,7 +1883,7 @@ EXPORT_API int notification_get_tag(notification_h noti, const char **tag)
 	if (noti == NULL)
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 
-	*tag = noti->tag;
+	*tag = noti->tag.empty() ? NULL : noti->tag.c_str();
 	return NOTIFICATION_ERROR_NONE;
 }
 
