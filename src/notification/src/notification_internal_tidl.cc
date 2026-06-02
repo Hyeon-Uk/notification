@@ -348,15 +348,15 @@ EXPORT_API int make_notification_from_noti(void *notihandle,
 	if (ret != RPC_PORT_ERROR_NONE)
 		DBG("rpc_port_proxy_notification_set_priv_id : %d", ret);
 
-	ret = rpc_port_proxy_notification_set_pkg_id(handle, __get_str_value(noti->pkg_id));
+	ret = rpc_port_proxy_notification_set_pkg_id(handle, noti->pkg_id.c_str());
 	if (ret != RPC_PORT_ERROR_NONE)
 		DBG("rpc_port_proxy_notification_set_pkg_id : %d", ret);
 
-	ret = rpc_port_proxy_notification_set_caller_app_id(handle, __get_str_value(noti->caller_app_id));
+	ret = rpc_port_proxy_notification_set_caller_app_id(handle, noti->caller_app_id.c_str());
 	if (ret != RPC_PORT_ERROR_NONE)
 		DBG("rpc_port_proxy_notification_set_caller_app_id : %d", ret);
 
-	ret = rpc_port_proxy_notification_set_launch_app_id(handle, __get_str_value(noti->launch_app_id));
+	ret = rpc_port_proxy_notification_set_launch_app_id(handle, noti->launch_app_id.c_str());
 	if (ret != RPC_PORT_ERROR_NONE)
 		DBG("rpc_port_proxy_notification_set_launch_app_id : %d", ret);
 
@@ -645,36 +645,27 @@ EXPORT_API int make_noti_from_notification(notification_h *noti, void *notihandl
 	if (ret != RPC_PORT_ERROR_NONE)
 		DBG("rpc_port_proxy_notification_get_pkg_id : %d", ret);
 
-	if (strlen(pkg_id) > 0) {
+	if (strlen(pkg_id) > 0)
 		_noti->pkg_id = pkg_id;
-	} else {
-		_noti->pkg_id = NULL;
-		free(pkg_id);
-	}
+	free(pkg_id);
 
 	char *caller_app_id;
 	ret = rpc_port_proxy_notification_get_caller_app_id(handle, &caller_app_id);
 	if (ret != RPC_PORT_ERROR_NONE)
 		DBG("rpc_port_proxy_notification_get_caller_app_id : %d", ret);
 
-	if (strlen(caller_app_id) > 0) {
+	if (strlen(caller_app_id) > 0)
 		_noti->caller_app_id = caller_app_id;
-	} else {
-		_noti->caller_app_id = NULL;
-		free(caller_app_id);
-	}
+	free(caller_app_id);
 
 	char *launch_app_id;
 	ret = rpc_port_proxy_notification_get_launch_app_id(handle, &launch_app_id);
 	if (ret != RPC_PORT_ERROR_NONE)
 		DBG("rpc_port_proxy_notification_get_launch_app_id : %d", ret);
 
-	if (strlen(launch_app_id) > 0) {
+	if (strlen(launch_app_id) > 0)
 		_noti->launch_app_id = launch_app_id;
-	} else{
-		_noti->launch_app_id = NULL;
-		free(launch_app_id);
-	}
+	free(launch_app_id);
 
 	bundle *args;
 	ret = rpc_port_proxy_notification_get_args(handle, &args);

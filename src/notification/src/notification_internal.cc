@@ -461,7 +461,7 @@ EXPORT_API int notification_update_progress(notification_h noti,
 	if (noti == NULL)
 		caller_app_id = notification_get_app_id_by_pid(getpid());
 	else
-		caller_app_id = strdup(noti->caller_app_id);
+		caller_app_id = strdup(noti->caller_app_id.c_str());
 
 	if (progress < 0.0)
 		input_progress = 0.0;
@@ -500,7 +500,7 @@ EXPORT_API int notification_update_size(notification_h noti,
 	if (noti == NULL)
 		caller_app_id = notification_get_app_id_by_pid(getpid());
 	else
-		caller_app_id = strdup(noti->caller_app_id);
+		caller_app_id = strdup(noti->caller_app_id.c_str());
 
 	if (size < 0.0)
 		input_size = 0.0;
@@ -536,7 +536,7 @@ EXPORT_API int notification_update_content(notification_h noti,
 	if (noti == NULL)
 		caller_app_id = notification_get_app_id_by_pid(getpid());
 	else
-		caller_app_id = strdup(noti->caller_app_id);
+		caller_app_id = strdup(noti->caller_app_id.c_str());
 
 	ret = notification_ongoing_update_content(caller_app_id, input_priv_id,
 			content);
@@ -692,10 +692,7 @@ EXPORT_API int notification_set_application(notification_h noti,
 	if (noti == NULL || app_id == NULL)
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 
-	if (noti->launch_app_id)
-		free(noti->launch_app_id);
-
-	noti->launch_app_id = strdup(app_id);
+	noti->launch_app_id = app_id;
 
 	return NOTIFICATION_ERROR_NONE;
 }
@@ -708,10 +705,10 @@ EXPORT_API int notification_get_application(notification_h noti,
 	if (noti == NULL || app_id == NULL)
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 
-	if (noti->launch_app_id)
-		*app_id = noti->launch_app_id;
+	if (!noti->launch_app_id.empty())
+		*app_id = (char *)noti->launch_app_id.c_str();
 	else
-		*app_id = noti->caller_app_id;
+		*app_id = (char *)noti->caller_app_id.c_str();
 
 	return NOTIFICATION_ERROR_NONE;
 }
@@ -926,13 +923,7 @@ EXPORT_API int notification_set_app_id(notification_h noti,
 	if (noti == NULL || app_id == NULL)
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 
-	/* Remove previous caller app_id */
-	if (noti->caller_app_id) {
-		free(noti->caller_app_id);
-		noti->caller_app_id = NULL;
-	}
-
-	noti->caller_app_id = strdup(app_id);
+	noti->caller_app_id = app_id;
 
 	return NOTIFICATION_ERROR_NONE;
 }
@@ -1592,7 +1583,7 @@ EXPORT_API int notification_delete_for_uid(notification_h noti, uid_t uid)
 	int ret;
 
 	_set_CPU_inheritance();
-	ret = notification_tidl_request_delete_single(noti->caller_app_id, noti->priv_id, uid);
+	ret = notification_tidl_request_delete_single((char *)noti->caller_app_id.c_str(), noti->priv_id, uid);
 	_clear_CPU_inheritance();
 
 	return ret;

@@ -48,9 +48,9 @@ struct _notification {
 	int internal_group_id;	/* Internal Group ID */
 	int priv_id;		/* Private ID */
 
-	char *pkg_id;
-	char *caller_app_id;	/* Caller App ID */
-	char *launch_app_id;	/* Launch App ID */
+	std::string pkg_id;
+	std::string caller_app_id;	/* Caller App ID */
+	std::string launch_app_id;	/* Launch App ID */
 	bundle *args;		/* Will be removed. */
 	bundle *group_args;	/* Will be removed. */
 
