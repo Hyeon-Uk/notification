@@ -409,11 +409,11 @@ EXPORT_API int make_notification_from_noti(void *notihandle,
 	rpc_port_proxy_array_bundle_destroy(_event_handler);
 // end
 
-	ret = rpc_port_proxy_notification_set_domain(handle, __get_str_value(noti->domain));
+	ret = rpc_port_proxy_notification_set_domain(handle, noti->domain.c_str());
 	if (ret != RPC_PORT_ERROR_NONE)
 		DBG("rpc_port_proxy_notification_set_domain : %d", ret);
 
-	ret = rpc_port_proxy_notification_set_dir(handle, __get_str_value(noti->dir));
+	ret = rpc_port_proxy_notification_set_dir(handle, noti->dir.c_str());
 	if (ret != RPC_PORT_ERROR_NONE)
 		DBG("rpc_port_proxy_notification_set_dir : %d", ret);
 
@@ -450,11 +450,11 @@ EXPORT_API int make_notification_from_noti(void *notihandle,
 	if (ret != RPC_PORT_ERROR_NONE)
 		DBG("rpc_port_proxy_notification_set_sound_type : %d", ret);
 
-	ret = rpc_port_proxy_notification_set_sound_path(handle, __get_str_value(noti->sound_path));
+	ret = rpc_port_proxy_notification_set_sound_path(handle, noti->sound_path.c_str());
 	if (ret != RPC_PORT_ERROR_NONE)
 		DBG("rpc_port_proxy_notification_set_sound_path : %d", ret);
 
-	ret = rpc_port_proxy_notification_set_priv_sound_path(handle, __get_str_value(noti->priv_sound_path));
+	ret = rpc_port_proxy_notification_set_priv_sound_path(handle, noti->priv_sound_path.c_str());
 	if (ret != RPC_PORT_ERROR_NONE)
 		DBG("rpc_port_proxy_notification_set_priv_sound_path : %d", ret);
 
@@ -462,11 +462,11 @@ EXPORT_API int make_notification_from_noti(void *notihandle,
 	if (ret != RPC_PORT_ERROR_NONE)
 		DBG("rpc_port_proxy_notification_set_vibration_type : %d", ret);
 
-	ret = rpc_port_proxy_notification_set_vibration_path(handle, __get_str_value(noti->vibration_path));
+	ret = rpc_port_proxy_notification_set_vibration_path(handle, noti->vibration_path.c_str());
 	if (ret != RPC_PORT_ERROR_NONE)
 		DBG("rpc_port_proxy_notification_set_vibration_path : %d", ret);
 
-	ret = rpc_port_proxy_notification_set_priv_vibration_path(handle, __get_str_value(noti->priv_vibration_path));
+	ret = rpc_port_proxy_notification_set_priv_vibration_path(handle, noti->priv_vibration_path.c_str());
 	if (ret != RPC_PORT_ERROR_NONE)
 		DBG("rpc_port_proxy_notification_set_priv_vibration_path : %d", ret);
 
@@ -782,24 +782,18 @@ EXPORT_API int make_noti_from_notification(notification_h *noti, void *notihandl
 	if (ret != RPC_PORT_ERROR_NONE)
 		DBG("rpc_port_proxy_notification_get_domain : %d", ret);
 
-	if (strlen(domain) > 0) {
+	if (strlen(domain) > 0)
 		_noti->domain = domain;
-	} else {
-		_noti->domain = NULL;
-		free(domain);
-	}
+	free(domain);
 
 	char *dir;
 	ret = rpc_port_proxy_notification_get_dir(handle, &dir);
 	if (ret != RPC_PORT_ERROR_NONE)
 		DBG("rpc_port_proxy_notification_get_dir : %d", ret);
 
-	if (strlen(dir) > 0) {
+	if (strlen(dir) > 0)
 		_noti->dir = dir;
-	} else {
-		_noti->dir = NULL;
-		free(dir);
-	}
+	free(dir);
 
 	bundle *b_text;
 	ret = rpc_port_proxy_notification_get_text(handle, &b_text);
@@ -876,24 +870,18 @@ EXPORT_API int make_noti_from_notification(notification_h *noti, void *notihandl
 	if (ret != RPC_PORT_ERROR_NONE)
 		DBG("rpc_port_proxy_notification_get_sound_path : %d", ret);
 
-	if (strlen(sound_path) > 0) {
+	if (strlen(sound_path) > 0)
 		_noti->sound_path = sound_path;
-	} else {
-		_noti->sound_path = NULL;
-		free(sound_path);
-	}
+	free(sound_path);
 
 	char *priv_sound_path;
 	ret = rpc_port_proxy_notification_get_priv_sound_path(handle, &priv_sound_path);
 	if (ret != RPC_PORT_ERROR_NONE)
 		DBG("rpc_port_proxy_notification_get_priv_sound_path : %d", ret);
 
-	if (strlen(priv_sound_path) > 0) {
+	if (strlen(priv_sound_path) > 0)
 		_noti->priv_sound_path = priv_sound_path;
-	} else {
-		_noti->priv_sound_path = NULL;
-		free(priv_sound_path);
-	}
+	free(priv_sound_path);
 
 	ret = rpc_port_proxy_notification_get_vibration_type(handle, (int *)&_noti->vibration_type);
 	if (ret != RPC_PORT_ERROR_NONE)
@@ -904,24 +892,18 @@ EXPORT_API int make_noti_from_notification(notification_h *noti, void *notihandl
 	if (ret != RPC_PORT_ERROR_NONE)
 		DBG("rpc_port_proxy_notification_get_vibration_path : %d", ret);
 
-	if (strlen(vibration_path) > 0) {
+	if (strlen(vibration_path) > 0)
 		_noti->vibration_path = vibration_path;
-	} else {
-		_noti->vibration_path = NULL;
-		free(vibration_path);
-	}
+	free(vibration_path);
 
 	char *priv_vibration_path;
 	ret = rpc_port_proxy_notification_get_priv_vibration_path(handle, &priv_vibration_path);
 	if (ret != RPC_PORT_ERROR_NONE)
 		DBG("rpc_port_proxy_notification_get_priv_vibration_path : %d", ret);
 
-	if (strlen(priv_vibration_path) > 0) {
+	if (strlen(priv_vibration_path) > 0)
 		_noti->priv_vibration_path = priv_vibration_path;
-	} else {
-		_noti->priv_vibration_path = NULL;
-		free(priv_vibration_path);
-	}
+	free(priv_vibration_path);
 
 	int _led_operation;
 	ret = rpc_port_proxy_notification_get_led_operation(handle, &_led_operation);

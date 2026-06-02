@@ -161,11 +161,11 @@ EXPORT_API GVariant *notification_ipc_make_gvariant_from_noti(notification_h not
 	if (!noti->launch_app_id.empty())
 		g_variant_builder_add(&builder, "{iv}", NOTIFICATION_DATA_TYPE_LAUNCH_APP_ID, g_variant_new_string(noti->launch_app_id.c_str()));
 
-	if (noti->domain != NULL)
-		g_variant_builder_add(&builder, "{iv}", NOTIFICATION_DATA_TYPE_DOMAIN, g_variant_new_string((const gchar *)noti->domain));
+	if (!noti->domain.empty())
+		g_variant_builder_add(&builder, "{iv}", NOTIFICATION_DATA_TYPE_DOMAIN, g_variant_new_string(noti->domain.c_str()));
 
-	if (noti->dir != NULL)
-		g_variant_builder_add(&builder, "{iv}", NOTIFICATION_DATA_TYPE_DIR, g_variant_new_string((const gchar *)noti->dir));
+	if (!noti->dir.empty())
+		g_variant_builder_add(&builder, "{iv}", NOTIFICATION_DATA_TYPE_DIR, g_variant_new_string(noti->dir.c_str()));
 
 	if (noti->b_text) {
 		bundle_encode(noti->b_text, (bundle_raw **)&b_text, &b_encode_len);
@@ -215,19 +215,19 @@ EXPORT_API GVariant *notification_ipc_make_gvariant_from_noti(notification_h not
 
 	g_variant_builder_add(&builder, "{iv}", NOTIFICATION_DATA_TYPE_SOUND_TYPE, g_variant_new_int32(noti->sound_type));
 
-	if (noti->sound_path)
-		g_variant_builder_add(&builder, "{iv}", NOTIFICATION_DATA_TYPE_SOUND_PATH, g_variant_new_string((const gchar *)noti->sound_path));
+	if (!noti->sound_path.empty())
+		g_variant_builder_add(&builder, "{iv}", NOTIFICATION_DATA_TYPE_SOUND_PATH, g_variant_new_string(noti->sound_path.c_str()));
 
-	if (noti->priv_sound_path)
-		g_variant_builder_add(&builder, "{iv}", NOTIFICATION_DATA_TYPE_PRIV_SOUND_PATH, g_variant_new_string((const gchar *)noti->priv_sound_path));
+	if (!noti->priv_sound_path.empty())
+		g_variant_builder_add(&builder, "{iv}", NOTIFICATION_DATA_TYPE_PRIV_SOUND_PATH, g_variant_new_string(noti->priv_sound_path.c_str()));
 
 	g_variant_builder_add(&builder, "{iv}", NOTIFICATION_DATA_TYPE_VIBRATION_TYPE, g_variant_new_int32(noti->vibration_type));
 
-	if (noti->vibration_path)
-		g_variant_builder_add(&builder, "{iv}", NOTIFICATION_DATA_TYPE_VIBRATION_PATH, g_variant_new_string((const gchar *)noti->vibration_path));
+	if (!noti->vibration_path.empty())
+		g_variant_builder_add(&builder, "{iv}", NOTIFICATION_DATA_TYPE_VIBRATION_PATH, g_variant_new_string(noti->vibration_path.c_str()));
 
-	if (noti->priv_vibration_path)
-		g_variant_builder_add(&builder, "{iv}", NOTIFICATION_DATA_TYPE_PRIV_VIBRATION_PATH, g_variant_new_string((const gchar *)noti->priv_vibration_path));
+	if (!noti->priv_vibration_path.empty())
+		g_variant_builder_add(&builder, "{iv}", NOTIFICATION_DATA_TYPE_PRIV_VIBRATION_PATH, g_variant_new_string(noti->priv_vibration_path.c_str()));
 
 	g_variant_builder_add(&builder, "{iv}", NOTIFICATION_DATA_TYPE_LED_OPERATION, g_variant_new_int32(noti->led_operation));
 
@@ -479,13 +479,8 @@ EXPORT_API int notification_ipc_make_noti_from_gvariant(notification_h noti,
 				b_event_handler[i]);
 	}
 
-	if (noti->domain)
-		free(noti->domain);
-	noti->domain = _dup_string(domain);
-
-	if (noti->dir)
-		free(noti->dir);
-	noti->dir = _dup_string(dir);
+	noti->domain = domain ? domain : "";
+	noti->dir = dir ? dir : "";
 
 	noti->b_text = _create_bundle_from_bundle_raw(b_text);
 	noti->b_key = _create_bundle_from_bundle_raw(b_key);

@@ -479,12 +479,12 @@ EXPORT_API int notification_get_text(notification_h noti,
 		bundle_get_str(b, buf_key, &ret_val);
 
 		if (noti->is_translation == false) {
-			if (ret_val != NULL && noti->domain != NULL
-			    && noti->dir != NULL) {
+			if (ret_val != NULL && !noti->domain.empty()
+			    && !noti->dir.empty()) {
 				/* Get application string */
-				bindtextdomain(noti->domain, noti->dir);
+				bindtextdomain(noti->domain.c_str(), noti->dir.c_str());
 
-				get_str = dgettext(noti->domain, ret_val);
+				get_str = dgettext(noti->domain.c_str(), ret_val);
 				if (get_str == ret_val) /* not found */
 					get_str = NULL;
 			} else if (ret_val != NULL) {
@@ -616,12 +616,12 @@ EXPORT_API int notification_get_text(notification_h noti,
 
 				bundle_get_str(b, buf_key, &ret_val);
 
-				if (ret_val != NULL && noti->domain != NULL
-						&& noti->dir != NULL) {
+				if (ret_val != NULL && !noti->domain.empty()
+						&& !noti->dir.empty()) {
 					/* Get application string */
-					bindtextdomain(noti->domain, noti->dir);
+					bindtextdomain(noti->domain.c_str(), noti->dir.c_str());
 					translated_str =
-						dgettext(noti->domain, ret_val);
+						dgettext(noti->domain.c_str(), ret_val);
 					DBG("translated_str_len[%zu]",
 							translated_str ? strlen(translated_str) : 0);
 				} else if (ret_val != NULL) {
@@ -794,15 +794,8 @@ EXPORT_API int notification_set_text_domain(notification_h noti,
 	if (noti == NULL || domain == NULL || dir == NULL)
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 
-	if (noti->domain)
-		free(noti->domain);
-
-	noti->domain = strdup(domain);
-
-	if (noti->dir)
-		free(noti->dir);
-
-	noti->dir = strdup(dir);
+	noti->domain = domain ? domain : "";
+	noti->dir = dir ? dir : "";
 
 	return NOTIFICATION_ERROR_NONE;
 }
@@ -814,11 +807,11 @@ EXPORT_API int notification_get_text_domain(notification_h noti,
 	if (noti == NULL)
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 
-	if (domain != NULL && noti->domain != NULL)
-		*domain = noti->domain;
+	if (domain != NULL && !noti->domain.empty())
+		*domain = (char *)noti->domain.c_str();
 
-	if (dir != NULL && noti->dir != NULL)
-		*dir = noti->dir;
+	if (dir != NULL && !noti->dir.empty())
+		*dir = (char *)noti->dir.c_str();
 
 	return NOTIFICATION_ERROR_NONE;
 }
@@ -962,28 +955,17 @@ EXPORT_API int notification_set_sound(notification_h noti,
 
 	/* Save sound path if user data type */
 	if (type == NOTIFICATION_SOUND_TYPE_USER_DATA && path != NULL) {
-		if (noti->sound_path != NULL)
-			free(noti->sound_path);
-		noti->sound_path = strdup(path);
-
-		if (noti->priv_sound_path != NULL) {
-			free(noti->priv_sound_path);
-			noti->priv_sound_path = NULL;
-		}
+		noti->sound_path = path;
+		noti->priv_sound_path.clear();
 
 		priv_path = notification_check_file_path_is_private(noti->pkg_id.c_str(), path);
-		if (priv_path)
+		if (priv_path) {
 			noti->priv_sound_path = priv_path;
+			free(priv_path);
+		}
 	} else {
-		if (noti->sound_path != NULL) {
-			free(noti->sound_path);
-			noti->sound_path = NULL;
-		}
-
-		if (noti->priv_sound_path != NULL) {
-			free(noti->priv_sound_path);
-			noti->priv_sound_path = NULL;
-		}
+		noti->sound_path.clear();
+		noti->priv_sound_path.clear();
 
 		if (type == NOTIFICATION_SOUND_TYPE_USER_DATA) {
 			noti->sound_type = NOTIFICATION_SOUND_TYPE_DEFAULT;
@@ -1006,7 +988,7 @@ EXPORT_API int notification_get_sound(notification_h noti,
 	/* Set sound path if user data type */
 	if (noti->sound_type == NOTIFICATION_SOUND_TYPE_USER_DATA
 	    && path != NULL)
-		*path = noti->sound_path;
+		*path = noti->sound_path.c_str();
 
 	return NOTIFICATION_ERROR_NONE;
 }
@@ -1028,28 +1010,17 @@ EXPORT_API int notification_set_vibration(notification_h noti,
 
 	/* Save sound path if user data type */
 	if (type == NOTIFICATION_VIBRATION_TYPE_USER_DATA && path != NULL) {
-		if (noti->vibration_path != NULL) {
-			free(noti->vibration_path);
-			noti->vibration_path = NULL;
-		}
-		noti->vibration_path = strdup(path);
+		noti->vibration_path = path;
+		noti->priv_vibration_path.clear();
 
-		if (noti->priv_vibration_path != NULL) {
-			free(noti->priv_vibration_path);
-			noti->priv_vibration_path = NULL;
-		}
 		priv_path = notification_check_file_path_is_private(noti->pkg_id.c_str(), path);
-		if (priv_path)
+		if (priv_path) {
 			noti->priv_vibration_path = priv_path;
+			free(priv_path);
+		}
 	} else {
-		if (noti->vibration_path != NULL) {
-			free(noti->vibration_path);
-			noti->vibration_path = NULL;
-		}
-		if (noti->priv_vibration_path != NULL) {
-			free(noti->priv_vibration_path);
-			noti->priv_vibration_path = NULL;
-		}
+		noti->vibration_path.clear();
+		noti->priv_vibration_path.clear();
 
 		if (type == NOTIFICATION_VIBRATION_TYPE_USER_DATA) {
 			noti->vibration_type = NOTIFICATION_VIBRATION_TYPE_DEFAULT;
@@ -1071,7 +1042,7 @@ EXPORT_API int notification_get_vibration(notification_h noti,
 	/* Set sound path if user data type */
 	if (noti->vibration_type == NOTIFICATION_VIBRATION_TYPE_USER_DATA
 	    && path != NULL)
-		*path = noti->vibration_path;
+		*path = noti->vibration_path.c_str();
 
 	return NOTIFICATION_ERROR_NONE;
 }
@@ -1762,11 +1733,11 @@ EXPORT_API int notification_clone(notification_h noti, notification_h *clone)
 			new_noti->b_event_handler[i] = bundle_dup(noti->b_event_handler[i]);
 	}
 
-	if (noti->domain != NULL)
-		new_noti->domain = strdup(noti->domain);
+	if (!noti->domain.empty())
+		new_noti->domain = noti->domain;
 
-	if (noti->dir != NULL)
-		new_noti->dir = strdup(noti->dir);
+	if (!noti->dir.empty())
+		new_noti->dir = noti->dir;
 
 	if (noti->b_text != NULL)
 		new_noti->b_text = bundle_dup(noti->b_text);
@@ -1787,19 +1758,19 @@ EXPORT_API int notification_clone(notification_h noti, notification_h *clone)
 
 	new_noti->sound_type = noti->sound_type;
 
-	if (noti->sound_path != NULL)
-		new_noti->sound_path = strdup(noti->sound_path);
+	if (!noti->sound_path.empty())
+		new_noti->sound_path = noti->sound_path;
 
-	if (noti->priv_sound_path != NULL)
-		new_noti->priv_sound_path = strdup(noti->priv_sound_path);
+	if (!noti->priv_sound_path.empty())
+		new_noti->priv_sound_path = noti->priv_sound_path;
 
 	new_noti->vibration_type = noti->vibration_type;
 
-	if (noti->vibration_path != NULL)
-		new_noti->vibration_path = strdup(noti->vibration_path);
+	if (!noti->vibration_path.empty())
+		new_noti->vibration_path = noti->vibration_path;
 
-	if (noti->priv_vibration_path != NULL)
-		new_noti->priv_vibration_path = strdup(noti->priv_vibration_path);
+	if (!noti->priv_vibration_path.empty())
+		new_noti->priv_vibration_path = noti->priv_vibration_path;
 
 	new_noti->led_operation = noti->led_operation;
 	new_noti->led_argb = noti->led_argb;
@@ -1877,23 +1848,6 @@ EXPORT_API int notification_free(notification_h noti)
 	if (noti->b_priv_image_path)
 		bundle_free(noti->b_priv_image_path);
 
-	if (noti->sound_path)
-		free(noti->sound_path);
-
-	if (noti->priv_sound_path)
-		free(noti->priv_sound_path);
-
-	if (noti->vibration_path)
-		free(noti->vibration_path);
-
-	if (noti->priv_vibration_path)
-		free(noti->priv_vibration_path);
-
-	if (noti->domain)
-		free(noti->domain);
-
-	if (noti->dir)
-		free(noti->dir);
 
 	if (noti->b_text)
 		bundle_free(noti->b_text);

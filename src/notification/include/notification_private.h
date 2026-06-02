@@ -61,8 +61,8 @@ struct _notification {
 
 	bundle *b_event_handler[NOTIFICATION_EVENT_TYPE_MAX+1];
 
-	char *domain;		/* Text domain for localization */
-	char *dir;		/* Text dir for localization */
+	std::string domain;		/* Text domain for localization */
+	std::string dir;		/* Text dir for localization */
 
 	bundle *b_text;		/* basic text */
 	bundle *b_key;		/* key for localized text */
@@ -73,11 +73,11 @@ struct _notification {
 	bundle *b_priv_image_path;	/* resource path for image */
 
 	notification_sound_type_e sound_type;
-	char *sound_path;
-	char *priv_sound_path; /* resource path for sound */
+	std::string sound_path;
+	std::string priv_sound_path; /* resource path for sound */
 	notification_vibration_type_e vibration_type;
-	char *vibration_path;
-	char *priv_vibration_path; /* resource path for vibration */
+	std::string vibration_path;
+	std::string priv_vibration_path; /* resource path for vibration */
 	notification_led_op_e led_operation;
 	int led_argb;
 	int led_on_ms;

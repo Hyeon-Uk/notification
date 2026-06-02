@@ -1187,17 +1187,17 @@ EXPORT_API int notification_get_execute_option(notification_h noti,
 
 	if (b != NULL) {
 		if (text != NULL) {
-			if (noti->domain == NULL || noti->dir == NULL)
+			if (noti->domain.empty() || noti->dir.empty())
 				_notification_get_text_domain(noti);
 
 			snprintf(buf_key, sizeof(buf_key), "key%d", type);
 
 			bundle_get_str(b, buf_key, &ret_val);
-			if (ret_val != NULL && noti->domain != NULL
-					&& noti->dir != NULL) {
-				bindtextdomain(noti->domain, noti->dir);
+			if (ret_val != NULL && !noti->domain.empty()
+					&& !noti->dir.empty()) {
+				bindtextdomain(noti->domain.c_str(), noti->dir.c_str());
 
-				get_str = dgettext(noti->domain, ret_val);
+				get_str = dgettext(noti->domain.c_str(), ret_val);
 
 				*text = get_str;
 			} else if (ret_val != NULL) {
@@ -1465,20 +1465,20 @@ static GList *__copy_private_file(notification_h noti)
 				file_list = g_list_append(file_list, strdup(dst_path));
 		}
 	}
-	if (noti->sound_path && noti->priv_sound_path) {
-		ret = notification_copy_private_file(noti->sound_path,
-						     noti->priv_sound_path);
+	if (!noti->sound_path.empty() && !noti->priv_sound_path.empty()) {
+		ret = notification_copy_private_file(noti->sound_path.c_str(),
+						     noti->priv_sound_path.c_str());
 		if (ret == NOTIFICATION_ERROR_NONE)
 			file_list = g_list_append(file_list,
-						  strdup(noti->priv_sound_path));
+						  strdup(noti->priv_sound_path.c_str()));
 	}
 
-	if (noti->vibration_path && noti->priv_vibration_path) {
-		ret = notification_copy_private_file(noti->vibration_path,
-						     noti->priv_vibration_path);
+	if (!noti->vibration_path.empty() && !noti->priv_vibration_path.empty()) {
+		ret = notification_copy_private_file(noti->vibration_path.c_str(),
+						     noti->priv_vibration_path.c_str());
 		if (ret == NOTIFICATION_ERROR_NONE)
 			file_list = g_list_append(file_list,
-						  strdup(noti->priv_vibration_path));
+						  strdup(noti->priv_vibration_path.c_str()));
 	}
 
 	return file_list;
