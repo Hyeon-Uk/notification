@@ -764,12 +764,15 @@ EXPORT_API int make_noti_from_notification(notification_h *noti, void *notihandl
 					int __count = 0;
 					__count = bundle_get_count(_b_event_handler[i]);
 
-					if (__count > 0)
+					if (__count > 0) {
 						_noti->b_event_handler[i] = _b_event_handler[i];
-					else
+					} else {
+						bundle_free(_b_event_handler[i]);
 						_noti->b_event_handler[i] = NULL;
+					}
 				}
 			}
+			free(_b_event_handler);
 		}
 		rpc_port_proxy_array_bundle_destroy(_event_handler);
 	} else {
