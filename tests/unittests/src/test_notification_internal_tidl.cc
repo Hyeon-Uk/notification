@@ -352,6 +352,19 @@ TEST_F(NotificationInternalTidlTest,
   rpc_port_proxy_noti_system_setting_set_lock_screen_content_level(
       h, DO_NOT_SHOW_NOTIFICATIONS);
 
+  /* A handle produced by the real IPC deserializer always has its
+   * dnd_allow_exceptions list created (see __rpc_port_proxy_noti_system_
+   * setting_from in the generated proxy). A handle built from _create()
+   * alone leaves the list nullptr, a state production never receives, so
+   * give the fixture a realistic (empty) list to match. */
+  rpc_port_proxy_list_noti_system_setting_dnd_allow_exception_h exc_list =
+      nullptr;
+  ASSERT_EQ(rpc_port_proxy_list_noti_system_setting_dnd_allow_exception_create(
+                &exc_list),
+            RPC_PORT_ERROR_NONE);
+  rpc_port_proxy_noti_system_setting_set_dnd_allow_exceptions(h, exc_list);
+  rpc_port_proxy_list_noti_system_setting_dnd_allow_exception_destroy(exc_list);
+
   notification_system_setting_h s = nullptr;
   EXPECT_EQ(make_setting_from_noti_system_setting(&s, h),
             NOTIFICATION_ERROR_NONE);
