@@ -20,6 +20,10 @@
 #include <notification_internal.h>
 
 #ifdef __cplusplus
+#include <string>
+#endif
+
+#ifdef __cplusplus
 extern "C" {
 #endif
 
@@ -44,9 +48,9 @@ struct _notification {
 	int internal_group_id;	/* Internal Group ID */
 	int priv_id;		/* Private ID */
 
-	char *pkg_id;
-	char *caller_app_id;	/* Caller App ID */
-	char *launch_app_id;	/* Launch App ID */
+	std::string pkg_id;
+	std::string caller_app_id;	/* Caller App ID */
+	std::string launch_app_id;	/* Launch App ID */
 	bundle *args;		/* Will be removed. */
 	bundle *group_args;	/* Will be removed. */
 
@@ -57,8 +61,8 @@ struct _notification {
 
 	bundle *b_event_handler[NOTIFICATION_EVENT_TYPE_MAX+1];
 
-	char *domain;		/* Text domain for localization */
-	char *dir;		/* Text dir for localization */
+	std::string domain;		/* Text domain for localization */
+	std::string dir;		/* Text dir for localization */
 
 	bundle *b_text;		/* basic text */
 	bundle *b_key;		/* key for localized text */
@@ -69,11 +73,11 @@ struct _notification {
 	bundle *b_priv_image_path;	/* resource path for image */
 
 	notification_sound_type_e sound_type;
-	char *sound_path;
-	char *priv_sound_path; /* resource path for sound */
+	std::string sound_path;
+	std::string priv_sound_path; /* resource path for sound */
 	notification_vibration_type_e vibration_type;
-	char *vibration_path;
-	char *priv_vibration_path; /* resource path for vibration */
+	std::string vibration_path;
+	std::string priv_vibration_path; /* resource path for vibration */
 	notification_led_op_e led_operation;
 	int led_argb;
 	int led_on_ms;
@@ -88,11 +92,11 @@ struct _notification {
 	double progress_size;	/* size of progress */
 	double progress_percentage;	/* percentage of progress */
 
-	char *app_icon_path;	/* Temporary stored app icon path from AIL */
-	char *app_label;
-	char *temp_title;
-	char *temp_content;
-	char *tag;
+	std::string app_icon_path;	/* Temporary stored app icon path from AIL */
+	std::string app_label;
+	std::string temp_title;
+	std::string temp_content;
+	std::string tag;
 	bool ongoing_flag;
 	int ongoing_value_type;
 	int ongoing_current;		/* Ongoing current time */
@@ -111,7 +115,7 @@ struct _notification {
 
 	uid_t uid;
 
-	char *channel_name;			/* channel name to take care show state */
+	std::string channel_name;			/* channel name to take care show state */
 };
 
 typedef enum notification_data_type {

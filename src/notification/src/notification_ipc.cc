@@ -37,13 +37,15 @@
 static inline char *_dup_string(const char *string)
 {
 	char *ret;
-	char err_buf[ERR_BUFFER_SIZE];
+	char err_buf[ERR_BUFFER_SIZE] = { 0, };
 
 	if (string == NULL || string[0] == '\0')
 		return NULL;
 
 	ret = strdup(string);
 	if (!ret)
+		/* err_buf is zero-initialised so a partial fill by strerror_r
+		 * on ERANGE still produces a NUL-terminated, readable string. */
 		ERR("Failed to strdup[%s]",
 				strerror_r(errno, err_buf, sizeof(err_buf)));
 
@@ -61,7 +63,6 @@ static inline bundle *_create_bundle_from_bundle_raw(bundle_raw *string)
 /* LCOV_EXCL_START */
 EXPORT_API GVariant *notification_ipc_make_gvariant_from_noti(notification_h noti, bool translate)
 {
-	WARN("make gvariant from noti");
 	int i = 0;
 	int b_encode_len = 0;
 	bundle_raw *args = NULL;
@@ -89,8 +90,8 @@ EXPORT_API GVariant *notification_ipc_make_gvariant_from_noti(notification_h not
 	g_variant_builder_add(&builder, "{iv}", NOTIFICATION_DATA_TYPE_GROUP_ID, g_variant_new_int32(noti->group_id));
 	g_variant_builder_add(&builder, "{iv}", NOTIFICATION_DATA_TYPE_INTERNAL_GROUP_ID, g_variant_new_int32(noti->internal_group_id));
 	g_variant_builder_add(&builder, "{iv}", NOTIFICATION_DATA_TYPE_PRIV_ID, g_variant_new_int32(noti->priv_id));
-	g_variant_builder_add(&builder, "{iv}", NOTIFICATION_DATA_TYPE_PKG_ID, g_variant_new_string((const gchar *)noti->pkg_id));
-	g_variant_builder_add(&builder, "{iv}", NOTIFICATION_DATA_TYPE_CALLER_APP_ID, g_variant_new_string((const gchar *)noti->caller_app_id));
+	g_variant_builder_add(&builder, "{iv}", NOTIFICATION_DATA_TYPE_PKG_ID, g_variant_new_string(noti->pkg_id.c_str()));
+	g_variant_builder_add(&builder, "{iv}", NOTIFICATION_DATA_TYPE_CALLER_APP_ID, g_variant_new_string(noti->caller_app_id.c_str()));
 	g_variant_builder_add(&builder, "{iv}", NOTIFICATION_DATA_TYPE_DISPLAY_APPLIST, g_variant_new_int32(noti->display_applist));
 
 	if (noti->args) {
@@ -157,14 +158,14 @@ EXPORT_API GVariant *notification_ipc_make_gvariant_from_noti(notification_h not
 		}
 	}
 
-	if (noti->launch_app_id)
-		g_variant_builder_add(&builder, "{iv}", NOTIFICATION_DATA_TYPE_LAUNCH_APP_ID, g_variant_new_string((const gchar *)noti->launch_app_id));
+	if (!noti->launch_app_id.empty())
+		g_variant_builder_add(&builder, "{iv}", NOTIFICATION_DATA_TYPE_LAUNCH_APP_ID, g_variant_new_string(noti->launch_app_id.c_str()));
 
-	if (noti->domain != NULL)
-		g_variant_builder_add(&builder, "{iv}", NOTIFICATION_DATA_TYPE_DOMAIN, g_variant_new_string((const gchar *)noti->domain));
+	if (!noti->domain.empty())
+		g_variant_builder_add(&builder, "{iv}", NOTIFICATION_DATA_TYPE_DOMAIN, g_variant_new_string(noti->domain.c_str()));
 
-	if (noti->dir != NULL)
-		g_variant_builder_add(&builder, "{iv}", NOTIFICATION_DATA_TYPE_DIR, g_variant_new_string((const gchar *)noti->dir));
+	if (!noti->dir.empty())
+		g_variant_builder_add(&builder, "{iv}", NOTIFICATION_DATA_TYPE_DIR, g_variant_new_string(noti->dir.c_str()));
 
 	if (noti->b_text) {
 		bundle_encode(noti->b_text, (bundle_raw **)&b_text, &b_encode_len);
@@ -214,19 +215,19 @@ EXPORT_API GVariant *notification_ipc_make_gvariant_from_noti(notification_h not
 
 	g_variant_builder_add(&builder, "{iv}", NOTIFICATION_DATA_TYPE_SOUND_TYPE, g_variant_new_int32(noti->sound_type));
 
-	if (noti->sound_path)
-		g_variant_builder_add(&builder, "{iv}", NOTIFICATION_DATA_TYPE_SOUND_PATH, g_variant_new_string((const gchar *)noti->sound_path));
+	if (!noti->sound_path.empty())
+		g_variant_builder_add(&builder, "{iv}", NOTIFICATION_DATA_TYPE_SOUND_PATH, g_variant_new_string(noti->sound_path.c_str()));
 
-	if (noti->priv_sound_path)
-		g_variant_builder_add(&builder, "{iv}", NOTIFICATION_DATA_TYPE_PRIV_SOUND_PATH, g_variant_new_string((const gchar *)noti->priv_sound_path));
+	if (!noti->priv_sound_path.empty())
+		g_variant_builder_add(&builder, "{iv}", NOTIFICATION_DATA_TYPE_PRIV_SOUND_PATH, g_variant_new_string(noti->priv_sound_path.c_str()));
 
 	g_variant_builder_add(&builder, "{iv}", NOTIFICATION_DATA_TYPE_VIBRATION_TYPE, g_variant_new_int32(noti->vibration_type));
 
-	if (noti->vibration_path)
-		g_variant_builder_add(&builder, "{iv}", NOTIFICATION_DATA_TYPE_VIBRATION_PATH, g_variant_new_string((const gchar *)noti->vibration_path));
+	if (!noti->vibration_path.empty())
+		g_variant_builder_add(&builder, "{iv}", NOTIFICATION_DATA_TYPE_VIBRATION_PATH, g_variant_new_string(noti->vibration_path.c_str()));
 
-	if (noti->priv_vibration_path)
-		g_variant_builder_add(&builder, "{iv}", NOTIFICATION_DATA_TYPE_PRIV_VIBRATION_PATH, g_variant_new_string((const gchar *)noti->priv_vibration_path));
+	if (!noti->priv_vibration_path.empty())
+		g_variant_builder_add(&builder, "{iv}", NOTIFICATION_DATA_TYPE_PRIV_VIBRATION_PATH, g_variant_new_string(noti->priv_vibration_path.c_str()));
 
 	g_variant_builder_add(&builder, "{iv}", NOTIFICATION_DATA_TYPE_LED_OPERATION, g_variant_new_int32(noti->led_operation));
 
@@ -254,16 +255,16 @@ EXPORT_API GVariant *notification_ipc_make_gvariant_from_noti(notification_h not
 	if (noti->progress_percentage != 0.0)
 		g_variant_builder_add(&builder, "{iv}", NOTIFICATION_DATA_TYPE_PROGRESS_PERCENTAGE, g_variant_new_double(noti->progress_percentage));
 
-	if (noti->app_icon_path != NULL)
-		g_variant_builder_add(&builder, "{iv}", NOTIFICATION_DATA_TYPE_APP_ICON_PATH, g_variant_new_string((const gchar *)noti->app_icon_path));
-	if (noti->app_label != NULL)
-		g_variant_builder_add(&builder, "{iv}", NOTIFICATION_DATA_TYPE_APP_LABEL, g_variant_new_string((const gchar *)noti->app_label));
-	if (noti->temp_title != NULL)
-		g_variant_builder_add(&builder, "{iv}", NOTIFICATION_DATA_TYPE_TEMP_TITLE, g_variant_new_string((const gchar *)noti->temp_title));
-	if (noti->temp_content != NULL)
-		g_variant_builder_add(&builder, "{iv}", NOTIFICATION_DATA_TYPE_TEMP_CONTENT, g_variant_new_string((const gchar *)noti->temp_content));
-	if (noti->tag != NULL)
-		g_variant_builder_add(&builder, "{iv}", NOTIFICATION_DATA_TYPE_TAG, g_variant_new_string((const gchar *)noti->tag));
+	if (!noti->app_icon_path.empty())
+		g_variant_builder_add(&builder, "{iv}", NOTIFICATION_DATA_TYPE_APP_ICON_PATH, g_variant_new_string(noti->app_icon_path.c_str()));
+	if (!noti->app_label.empty())
+		g_variant_builder_add(&builder, "{iv}", NOTIFICATION_DATA_TYPE_APP_LABEL, g_variant_new_string(noti->app_label.c_str()));
+	if (!noti->temp_title.empty())
+		g_variant_builder_add(&builder, "{iv}", NOTIFICATION_DATA_TYPE_TEMP_TITLE, g_variant_new_string(noti->temp_title.c_str()));
+	if (!noti->temp_content.empty())
+		g_variant_builder_add(&builder, "{iv}", NOTIFICATION_DATA_TYPE_TEMP_CONTENT, g_variant_new_string(noti->temp_content.c_str()));
+	if (!noti->tag.empty())
+		g_variant_builder_add(&builder, "{iv}", NOTIFICATION_DATA_TYPE_TAG, g_variant_new_string(noti->tag.c_str()));
 
 	g_variant_builder_add(&builder, "{iv}", NOTIFICATION_DATA_TYPE_ONGOING_FLAG, g_variant_new_int32(noti->ongoing_flag));
 	g_variant_builder_add(&builder, "{iv}", NOTIFICATION_DATA_TYPE_ONGOING_VALUE_TYPE, g_variant_new_int32(noti->ongoing_value_type));
@@ -281,8 +282,8 @@ EXPORT_API GVariant *notification_ipc_make_gvariant_from_noti(notification_h not
 	g_variant_builder_add(&builder, "{iv}", NOTIFICATION_DATA_TYPE_CHECK_BOX_VALUE, g_variant_new_int32(noti->check_box_value));
 	g_variant_builder_add(&builder, "{iv}", NOTIFICATION_DATA_TYPE_UID, g_variant_new_int32(noti->uid));
 
-	if (noti->channel_name != NULL)
-		g_variant_builder_add(&builder, "{iv}", NOTIFICATION_DATA_TYPE_CHANNEL_NAME, g_variant_new_string((const gchar *)noti->channel_name));
+	if (!noti->channel_name.empty())
+		g_variant_builder_add(&builder, "{iv}", NOTIFICATION_DATA_TYPE_CHANNEL_NAME, g_variant_new_string(noti->channel_name.c_str()));
 
 	result_body = g_variant_builder_end(&builder);
 	body = g_variant_new("(v)", result_body);
@@ -324,7 +325,7 @@ static gboolean _variant_dict_lookup(GHashTable *dict,
 	GVariant *value;
 	va_list ap;
 
-	value = g_hash_table_lookup(dict, (gpointer)&key);
+	value = (GVariant *)g_hash_table_lookup(dict, (gpointer)&key);
 
 	if (value == NULL || !g_variant_check_format_string(value, format_string, FALSE))
 		return FALSE;
@@ -342,7 +343,6 @@ static gboolean _variant_dict_lookup(GHashTable *dict,
 EXPORT_API int notification_ipc_make_noti_from_gvariant(notification_h noti,
 		GVariant *variant) {
 
-	WARN("make noti from GVariant");
 	GHashTable *dict;
 
 	int i;
@@ -460,13 +460,8 @@ EXPORT_API int notification_ipc_make_noti_from_gvariant(notification_h noti,
 	_variant_dict_lookup(dict, NOTIFICATION_DATA_TYPE_UID, "i", &noti->uid);
 	_variant_dict_lookup(dict, NOTIFICATION_DATA_TYPE_CHANNEL_NAME, "&s", &channel_name);
 
-	if (noti->pkg_id)
-		free(noti->pkg_id);
-	noti->pkg_id = _dup_string(pkg_id);
-
-	if (noti->caller_app_id)
-		free(noti->caller_app_id);
-	noti->caller_app_id = _dup_string(caller_app_id);
+	noti->pkg_id = pkg_id ? pkg_id : "";
+	noti->caller_app_id = caller_app_id ? caller_app_id : "";
 
 	noti->launch_app_id = _dup_string(launch_app_id);
 
@@ -484,13 +479,8 @@ EXPORT_API int notification_ipc_make_noti_from_gvariant(notification_h noti,
 				b_event_handler[i]);
 	}
 
-	if (noti->domain)
-		free(noti->domain);
-	noti->domain = _dup_string(domain);
-
-	if (noti->dir)
-		free(noti->dir);
-	noti->dir = _dup_string(dir);
+	noti->domain = domain ? domain : "";
+	noti->dir = dir ? dir : "";
 
 	noti->b_text = _create_bundle_from_bundle_raw(b_text);
 	noti->b_key = _create_bundle_from_bundle_raw(b_key);
@@ -501,12 +491,17 @@ EXPORT_API int notification_ipc_make_noti_from_gvariant(notification_h noti,
 	noti->priv_sound_path = _dup_string(priv_sound_path);
 	noti->vibration_path = _dup_string(vibration_path);
 	noti->priv_vibration_path = _dup_string(priv_vibration_path);
-	noti->app_icon_path = _dup_string(app_icon_path);
-	noti->app_label = _dup_string(app_label);
-	noti->temp_title = _dup_string(temp_title);
-	noti->temp_content = _dup_string(temp_content);
+	if (app_icon_path)
+		noti->app_icon_path = app_icon_path;
+	if (app_label)
+		noti->app_label = app_label;
+	if (temp_title)
+		noti->temp_title = temp_title;
+	if (temp_content)
+		noti->temp_content = temp_content;
 	noti->tag = _dup_string(tag);
-	noti->channel_name = _dup_string(channel_name);
+	if (channel_name)
+		noti->channel_name = channel_name;
 
 	g_hash_table_unref(dict);
 

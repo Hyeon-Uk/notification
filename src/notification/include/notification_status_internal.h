@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-#ifndef __NOTIFICATION_STATUS_INTERNAL_DEF_H__
-#define __NOTIFICATION_STATUS_INTERNAL_DEF_H__
+#ifndef __NOTIFICATION_STATUS_INTERNAL_H__
+#define __NOTIFICATION_STATUS_INTERNAL_H__
 
 #ifdef __cplusplus
 extern "C" {
@@ -72,5 +72,5 @@ int notification_status_monitor_message_cb_unset(void);
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */
-#endif /* __NOTIFICATION_STATUS_INTERNAL_DEF_H__ */
+#endif /* __NOTIFICATION_STATUS_INTERNAL_H__ */
 

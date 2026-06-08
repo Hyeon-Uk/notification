@@ -150,7 +150,7 @@ int notification_copy_private_file(const char *src_path,
 
 	if (g_file_query_exists(dst, NULL) == true) {
 		ret = NOTIFICATION_ERROR_ALREADY_EXIST_ID;
-		INFO("dst path existed [%s]", dst_path);
+		DBG("dst path existed [%s]", dst_path);
 		goto out;
 	}
 
@@ -182,7 +182,7 @@ out:
 	if (dst)
 		g_object_unref(dst);
 
-	WARN("copy private file done : %d", ret);
+	DBG("copy private file done : %d", ret);
 
 	return ret;
 }
@@ -210,29 +210,12 @@ char *notification_check_file_path_is_private(const char *pkg_id,
 	// 4. other cases
 
 	if (__is_shared_file(file_path, pkg_id)) {
-		WARN("is shared");
+		/* file path is shared */
 	} else if (__is_res_file(file_path, pkg_id)) {
-		WARN("path res");
+		/* file path is res */
 	} else if (__is_RO_file(file_path)) {
-		WARN("is RO");
+		/* file path is read-only */
 	}
-
-	// if (__is_RO_file(file_path)) {
-	// 	WARN("is RO");
-	// 	dst_path = __get_data_path_by_pkg_id(pkg_id, file_path, uid);
-	// }
-
-	// if (dst_path == NULL && __is_shared_file(file_path, pkg_id)) {
-	// 	WARN("is private");
-	// 	if (__is_res_file(file_path, pkg_id)) {
-	// 		WARN("path res");
-	// 		dst_path = __get_data_path_by_pkg_id(pkg_id, file_path, uid);
-	// 	} else {
-	// 		dst_path = strdup(file_path);
-	// 		if (dst_path == NULL)
-	// 			ERR("Failed to strdup");
-	// 	}
-	// }
 
 	return dst_path;
 }

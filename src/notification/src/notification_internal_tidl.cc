@@ -16,6 +16,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <new>
 #include <string.h>
 #include <unistd.h>
 #include <fcntl.h>
@@ -58,65 +59,63 @@ EXPORT_API int make_empty_notification(void *notihandle)
 	int ret;
 	bundle *empty_bundle = bundle_create();
 
-	WARN("make_empty_notification");
-
 	rpc_port_proxy_notification_h handle = (rpc_port_proxy_notification_h)notihandle;
 
 	ret = rpc_port_proxy_notification_set_type(handle, -1);
 	if (ret != RPC_PORT_ERROR_NONE)
-		WARN("rpc_port_proxy_notification_set_type : %d", ret);
+		DBG("rpc_port_proxy_notification_set_type : %d", ret);
 
 	ret = rpc_port_proxy_notification_set_layout(handle, -1);
 	if (ret != RPC_PORT_ERROR_NONE)
-		WARN("rpc_port_proxy_notification_set_layout : %d", ret);
+		DBG("rpc_port_proxy_notification_set_layout : %d", ret);
 
 	ret = rpc_port_proxy_notification_set_group_id(handle, -1);
 	if (ret != RPC_PORT_ERROR_NONE)
-		WARN("rpc_port_proxy_notification_set_group_id : %d", ret);
+		DBG("rpc_port_proxy_notification_set_group_id : %d", ret);
 
 	ret = rpc_port_proxy_notification_set_internal_group_id(handle, -1);
 	if (ret != RPC_PORT_ERROR_NONE)
-		WARN("rpc_port_proxy_notification_set_internal_group_id : %d", ret);
+		DBG("rpc_port_proxy_notification_set_internal_group_id : %d", ret);
 
 	ret = rpc_port_proxy_notification_set_priv_id(handle, -1);
 	if (ret != RPC_PORT_ERROR_NONE)
-		WARN("rpc_port_proxy_notification_set_priv_id : %d", ret);
+		DBG("rpc_port_proxy_notification_set_priv_id : %d", ret);
 
 	ret = rpc_port_proxy_notification_set_pkg_id(handle, "");
 	if (ret != RPC_PORT_ERROR_NONE)
-		WARN("rpc_port_proxy_notification_set_pkg_id : %d", ret);
+		DBG("rpc_port_proxy_notification_set_pkg_id : %d", ret);
 
 	ret = rpc_port_proxy_notification_set_caller_app_id(handle, "");
 	if (ret != RPC_PORT_ERROR_NONE)
-		WARN("rpc_port_proxy_notification_set_caller_app_id : %d", ret);
+		DBG("rpc_port_proxy_notification_set_caller_app_id : %d", ret);
 
 	ret = rpc_port_proxy_notification_set_launch_app_id(handle, "");
 	if (ret != RPC_PORT_ERROR_NONE)
-		WARN("rpc_port_proxy_notification_set_launch_app_id : %d", ret);
+		DBG("rpc_port_proxy_notification_set_launch_app_id : %d", ret);
 
 	ret = rpc_port_proxy_notification_set_args(handle, empty_bundle);
 	if (ret != RPC_PORT_ERROR_NONE)
-		WARN("rpc_port_proxy_notification_set_args : %d", ret);
+		DBG("rpc_port_proxy_notification_set_args : %d", ret);
 
 	ret = rpc_port_proxy_notification_set_group_args(handle, empty_bundle);
 	if (ret != RPC_PORT_ERROR_NONE)
-		WARN("rpc_port_proxy_notification_set_group_args : %d", ret);
+		DBG("rpc_port_proxy_notification_set_group_args : %d", ret);
 
 	ret = rpc_port_proxy_notification_set_execute_option(handle, empty_bundle);
 	if (ret != RPC_PORT_ERROR_NONE)
-		WARN("rpc_port_proxy_notification_set_execute_option : %d", ret);
+		DBG("rpc_port_proxy_notification_set_execute_option : %d", ret);
 
 	ret = rpc_port_proxy_notification_set_service_responding(handle, empty_bundle);
 	if (ret != RPC_PORT_ERROR_NONE)
-		WARN("rpc_port_proxy_notification_set_service_responding : %d", ret);
+		DBG("rpc_port_proxy_notification_set_service_responding : %d", ret);
 
 	ret = rpc_port_proxy_notification_set_service_single_launch(handle, empty_bundle);
 	if (ret != RPC_PORT_ERROR_NONE)
-		WARN("rpc_port_proxy_notification_set_service_single_launch : %d", ret);
+		DBG("rpc_port_proxy_notification_set_service_single_launch : %d", ret);
 
 	ret = rpc_port_proxy_notification_set_service_multi_launch(handle, empty_bundle);
 	if (ret != RPC_PORT_ERROR_NONE)
-		WARN("rpc_port_proxy_notification_set_service_multi_launch : %d", ret);
+		DBG("rpc_port_proxy_notification_set_service_multi_launch : %d", ret);
 
 // start
 	rpc_port_proxy_array_bundle_h _event_handler;
@@ -124,194 +123,194 @@ EXPORT_API int make_empty_notification(void *notihandle)
 
 	ret = rpc_port_proxy_notification_set_event_handler(handle, _event_handler);
 	if (ret != RPC_PORT_ERROR_NONE)
-		WARN("rpc_port_proxy_notification_set_event_handler : %d", ret);
+		DBG("rpc_port_proxy_notification_set_event_handler : %d", ret);
 
 	rpc_port_proxy_array_bundle_destroy(_event_handler);
 // end
 
 	ret = rpc_port_proxy_notification_set_domain(handle, "");
 	if (ret != RPC_PORT_ERROR_NONE)
-		WARN("rpc_port_proxy_notification_set_domain : %d", ret);
+		DBG("rpc_port_proxy_notification_set_domain : %d", ret);
 
 	ret = rpc_port_proxy_notification_set_dir(handle, "");
 	if (ret != RPC_PORT_ERROR_NONE)
-		WARN("rpc_port_proxy_notification_set_dir : %d", ret);
+		DBG("rpc_port_proxy_notification_set_dir : %d", ret);
 
 	ret = rpc_port_proxy_notification_set_text(handle, empty_bundle);
 	if (ret != RPC_PORT_ERROR_NONE)
-		WARN("rpc_port_proxy_notification_set_text : %d", ret);
+		DBG("rpc_port_proxy_notification_set_text : %d", ret);
 
 	ret = rpc_port_proxy_notification_set_key(handle, empty_bundle);
 	if (ret != RPC_PORT_ERROR_NONE)
-		WARN("rpc_port_proxy_notification_set_key : %d", ret);
+		DBG("rpc_port_proxy_notification_set_key : %d", ret);
 
 	ret = rpc_port_proxy_notification_set_format_args(handle, empty_bundle);
 	if (ret != RPC_PORT_ERROR_NONE)
-		WARN("rpc_port_proxy_notification_set_format_args : %d", ret);
+		DBG("rpc_port_proxy_notification_set_format_args : %d", ret);
 
 	ret = rpc_port_proxy_notification_set_num_format_args(handle, -1);
 	if (ret != RPC_PORT_ERROR_NONE)
-		WARN("rpc_port_proxy_notification_set_num_format_args : %d", ret);
+		DBG("rpc_port_proxy_notification_set_num_format_args : %d", ret);
 
 	ret = rpc_port_proxy_notification_set_image_path(handle, empty_bundle);
 	if (ret != RPC_PORT_ERROR_NONE)
-		WARN("rpc_port_proxy_notification_set_image_path : %d", ret);
+		DBG("rpc_port_proxy_notification_set_image_path : %d", ret);
 
 	ret = rpc_port_proxy_notification_set_priv_image_path(handle, empty_bundle);
 	if (ret != RPC_PORT_ERROR_NONE)
-		WARN("rpc_port_proxy_notification_set_priv_image_path : %d", ret);
+		DBG("rpc_port_proxy_notification_set_priv_image_path : %d", ret);
 
 	ret = rpc_port_proxy_notification_set_sound_type(handle, -1);
 	if (ret != RPC_PORT_ERROR_NONE)
-		WARN("rpc_port_proxy_notification_set_sound_type : %d", ret);
+		DBG("rpc_port_proxy_notification_set_sound_type : %d", ret);
 
 	ret = rpc_port_proxy_notification_set_sound_path(handle, "");
 	if (ret != RPC_PORT_ERROR_NONE)
-		WARN("rpc_port_proxy_notification_set_sound_path : %d", ret);
+		DBG("rpc_port_proxy_notification_set_sound_path : %d", ret);
 
 	ret = rpc_port_proxy_notification_set_priv_sound_path(handle, "");
 	if (ret != RPC_PORT_ERROR_NONE)
-		WARN("rpc_port_proxy_notification_set_priv_sound_path : %d", ret);
+		DBG("rpc_port_proxy_notification_set_priv_sound_path : %d", ret);
 
 	ret = rpc_port_proxy_notification_set_vibration_type(handle, -1);
 	if (ret != RPC_PORT_ERROR_NONE)
-		WARN("rpc_port_proxy_notification_set_vibration_type : %d", ret);
+		DBG("rpc_port_proxy_notification_set_vibration_type : %d", ret);
 
 	ret = rpc_port_proxy_notification_set_vibration_path(handle, "");
 	if (ret != RPC_PORT_ERROR_NONE)
-		WARN("rpc_port_proxy_notification_set_vibration_path : %d", ret);
+		DBG("rpc_port_proxy_notification_set_vibration_path : %d", ret);
 
 	ret = rpc_port_proxy_notification_set_priv_vibration_path(handle, "");
 	if (ret != RPC_PORT_ERROR_NONE)
-		WARN("rpc_port_proxy_notification_set_priv_vibration_path : %d", ret);
+		DBG("rpc_port_proxy_notification_set_priv_vibration_path : %d", ret);
 
 	ret = rpc_port_proxy_notification_set_led_operation(handle, -1);
 	if (ret != RPC_PORT_ERROR_NONE)
-		WARN("rpc_port_proxy_notification_set_led_operation : %d", ret);
+		DBG("rpc_port_proxy_notification_set_led_operation : %d", ret);
 
 	ret = rpc_port_proxy_notification_set_led_argb(handle, -1);
 	if (ret != RPC_PORT_ERROR_NONE)
-		WARN("rpc_port_proxy_notification_set_led_argb : %d", ret);
+		DBG("rpc_port_proxy_notification_set_led_argb : %d", ret);
 
 	ret = rpc_port_proxy_notification_set_led_on_ms(handle, -1);
 	if (ret != RPC_PORT_ERROR_NONE)
-		WARN("rpc_port_proxy_notification_set_led_on_ms : %d", ret);
+		DBG("rpc_port_proxy_notification_set_led_on_ms : %d", ret);
 
 	ret = rpc_port_proxy_notification_set_led_off_ms(handle, -1);
 	if (ret != RPC_PORT_ERROR_NONE)
-		WARN("rpc_port_proxy_notification_set_led_off_ms : %d", ret);
+		DBG("rpc_port_proxy_notification_set_led_off_ms : %d", ret);
 
 	ret = rpc_port_proxy_notification_set_time(handle, -1);
 	if (ret != RPC_PORT_ERROR_NONE)
-		WARN("rpc_port_proxy_notification_set_time : %d", ret);
+		DBG("rpc_port_proxy_notification_set_time : %d", ret);
 
 	ret = rpc_port_proxy_notification_set_insert_time(handle, -1);
 	if (ret != RPC_PORT_ERROR_NONE)
-		WARN("rpc_port_proxy_notification_set_insert_time : %d", ret);
+		DBG("rpc_port_proxy_notification_set_insert_time : %d", ret);
 
 	ret = rpc_port_proxy_notification_set_flags_for_property(handle, -1);
 	if (ret != RPC_PORT_ERROR_NONE)
-		WARN("rpc_port_proxy_notification_set_flags_for_property : %d", ret);
+		DBG("rpc_port_proxy_notification_set_flags_for_property : %d", ret);
 
 	ret = rpc_port_proxy_notification_set_display_applist(handle, -1);
 	if (ret != RPC_PORT_ERROR_NONE)
-		WARN("rpc_port_proxy_notification_set_display_applist : %d", ret);
+		DBG("rpc_port_proxy_notification_set_display_applist : %d", ret);
 
 	ret = rpc_port_proxy_notification_set_progress_size(handle, 0.0);
 	if (ret != RPC_PORT_ERROR_NONE)
-		WARN("rpc_port_proxy_notification_set_progress_size : %d", ret);
+		DBG("rpc_port_proxy_notification_set_progress_size : %d", ret);
 
 	ret = rpc_port_proxy_notification_set_progress_percentage(handle, 0.0);
 	if (ret != RPC_PORT_ERROR_NONE)
-		WARN("rpc_port_proxy_notification_set_progress_percentage : %d", ret);
+		DBG("rpc_port_proxy_notification_set_progress_percentage : %d", ret);
 
 	ret = rpc_port_proxy_notification_set_app_icon_path(handle, "");
 	if (ret != RPC_PORT_ERROR_NONE)
-		WARN("rpc_port_proxy_notification_set_app_icon_path : %d", ret);
+		DBG("rpc_port_proxy_notification_set_app_icon_path : %d", ret);
 
 	ret = rpc_port_proxy_notification_set_app_label(handle, "");
 	if (ret != RPC_PORT_ERROR_NONE)
-		WARN("rpc_port_proxy_notification_set_app_label : %d", ret);
+		DBG("rpc_port_proxy_notification_set_app_label : %d", ret);
 
 	ret = rpc_port_proxy_notification_set_temp_title(handle, "");
 	if (ret != RPC_PORT_ERROR_NONE)
-		WARN("rpc_port_proxy_notification_set_temp_title : %d", ret);
+		DBG("rpc_port_proxy_notification_set_temp_title : %d", ret);
 
 	ret = rpc_port_proxy_notification_set_temp_content(handle, "");
 	if (ret != RPC_PORT_ERROR_NONE)
-		WARN("rpc_port_proxy_notification_set_temp_content : %d", ret);
+		DBG("rpc_port_proxy_notification_set_temp_content : %d", ret);
 
 	ret = rpc_port_proxy_notification_set_tag(handle, "");
 	if (ret != RPC_PORT_ERROR_NONE)
-		WARN("rpc_port_proxy_notification_set_tag : %d", ret);
+		DBG("rpc_port_proxy_notification_set_tag : %d", ret);
 
 	ret = rpc_port_proxy_notification_set_ongoing_flag(handle, false);
 	if (ret != RPC_PORT_ERROR_NONE)
-		WARN("rpc_port_proxy_notification_set_ongoing_flag : %d", ret);
+		DBG("rpc_port_proxy_notification_set_ongoing_flag : %d", ret);
 
 	ret = rpc_port_proxy_notification_set_ongoing_value_type(handle, -1);
 	if (ret != RPC_PORT_ERROR_NONE)
-		WARN("rpc_port_proxy_notification_set_ongoing_value_type : %d", ret);
+		DBG("rpc_port_proxy_notification_set_ongoing_value_type : %d", ret);
 
 	ret = rpc_port_proxy_notification_set_ongoing_current(handle, -1);
 	if (ret != RPC_PORT_ERROR_NONE)
-		WARN("rpc_port_proxy_notification_set_ongoing_current : %d", ret);
+		DBG("rpc_port_proxy_notification_set_ongoing_current : %d", ret);
 
 	ret = rpc_port_proxy_notification_set_ongoing_duration(handle, -1);
 	if (ret != RPC_PORT_ERROR_NONE)
-		WARN("rpc_port_proxy_notification_set_ongoing_duration : %d", ret);
+		DBG("rpc_port_proxy_notification_set_ongoing_duration : %d", ret);
 
 	ret = rpc_port_proxy_notification_set_auto_remove(handle, false);
 	if (ret != RPC_PORT_ERROR_NONE)
-		WARN("rpc_port_proxy_notification_set_auto_remove : %d", ret);
+		DBG("rpc_port_proxy_notification_set_auto_remove : %d", ret);
 
 	ret = rpc_port_proxy_notification_set_default_button_index(handle, -1);
 	if (ret != RPC_PORT_ERROR_NONE)
-		WARN("rpc_port_proxy_notification_set_default_button_index : %d", ret);
+		DBG("rpc_port_proxy_notification_set_default_button_index : %d", ret);
 
 	ret = rpc_port_proxy_notification_set_hide_timeout(handle, -1);
 	if (ret != RPC_PORT_ERROR_NONE)
-		WARN("rpc_port_proxy_notification_set_hide_timeout : %d", ret);
+		DBG("rpc_port_proxy_notification_set_hide_timeout : %d", ret);
 
 	ret = rpc_port_proxy_notification_set_delete_timeout(handle, -1);
 	if (ret != RPC_PORT_ERROR_NONE)
-		WARN("rpc_port_proxy_notification_set_delete_timeout : %d", ret);
+		DBG("rpc_port_proxy_notification_set_delete_timeout : %d", ret);
 
 	ret = rpc_port_proxy_notification_set_text_input_max_length(handle, -1);
 	if (ret != RPC_PORT_ERROR_NONE)
-		WARN("rpc_port_proxy_notification_set_text_input_max_length : %d", ret);
+		DBG("rpc_port_proxy_notification_set_text_input_max_length : %d", ret);
 
 	ret = rpc_port_proxy_notification_set_event_flag(handle, false);
 	if (ret != RPC_PORT_ERROR_NONE)
-		WARN("rpc_port_proxy_notification_set_event_flag : %d", ret);
+		DBG("rpc_port_proxy_notification_set_event_flag : %d", ret);
 
 	ret = rpc_port_proxy_notification_set_is_translation(handle, false);
 	if (ret != RPC_PORT_ERROR_NONE)
-		WARN("rpc_port_proxy_notification_set_is_translation : %d", ret);
+		DBG("rpc_port_proxy_notification_set_is_translation : %d", ret);
 
 	ret = rpc_port_proxy_notification_set_extension_image_size(handle, -1);
 	if (ret != RPC_PORT_ERROR_NONE)
-		WARN("rpc_port_proxy_notification_set_extension_image_size : %d", ret);
+		DBG("rpc_port_proxy_notification_set_extension_image_size : %d", ret);
 
 	ret = rpc_port_proxy_notification_set_check_box(handle, false);
 	if (ret != RPC_PORT_ERROR_NONE)
-		WARN("rpc_port_proxy_notification_set_check_box : %d", ret);
+		DBG("rpc_port_proxy_notification_set_check_box : %d", ret);
 
 	ret = rpc_port_proxy_notification_set_check_box_value(handle, false);
 	if (ret != RPC_PORT_ERROR_NONE)
-		WARN("rpc_port_proxy_notification_set_check_box_value : %d", ret);
+		DBG("rpc_port_proxy_notification_set_check_box_value : %d", ret);
 
 	ret = rpc_port_proxy_notification_set_channel_name(handle, "");
 	if (ret != RPC_PORT_ERROR_NONE)
-		WARN("rpc_port_proxy_notification_set_channel_name : %d", ret);
+		DBG("rpc_port_proxy_notification_set_channel_name : %d", ret);
 
 	ret = rpc_port_proxy_notification_set_uid(handle, -1);
 	if (ret != RPC_PORT_ERROR_NONE)
-		WARN("rpc_port_proxy_notification_set_uid : %d", ret);
+		DBG("rpc_port_proxy_notification_set_uid : %d", ret);
 
 	bundle_free(empty_bundle);
 
-	WARN("make_empty_notification done");
+	DBG("make_empty_notification done");
 
 	return NOTIFICATION_ERROR_NONE;
 }
@@ -322,7 +321,7 @@ EXPORT_API int make_notification_from_noti(void *notihandle,
 	int ret;
 	bundle *empty_bundle = bundle_create();
 
-	WARN("make_notification_from_noti");
+	DBG("make_notification_from_noti");
 
 	rpc_port_proxy_notification_h handle = (rpc_port_proxy_notification_h)notihandle;
 
@@ -331,65 +330,65 @@ EXPORT_API int make_notification_from_noti(void *notihandle,
 
 	ret = rpc_port_proxy_notification_set_type(handle, (int)noti->type);
 	if (ret != RPC_PORT_ERROR_NONE)
-		WARN("rpc_port_proxy_notification_set_type : %d", ret);
+		DBG("rpc_port_proxy_notification_set_type : %d", ret);
 
 	ret = rpc_port_proxy_notification_set_layout(handle, (int)noti->layout);
 	if (ret != RPC_PORT_ERROR_NONE)
-		WARN("rpc_port_proxy_notification_set_layout : %d", ret);
+		DBG("rpc_port_proxy_notification_set_layout : %d", ret);
 
 	ret = rpc_port_proxy_notification_set_group_id(handle, noti->group_id);
 	if (ret != RPC_PORT_ERROR_NONE)
-		WARN("rpc_port_proxy_notification_set_group_id : %d", ret);
+		DBG("rpc_port_proxy_notification_set_group_id : %d", ret);
 
 	ret = rpc_port_proxy_notification_set_internal_group_id(handle, noti->internal_group_id);
 	if (ret != RPC_PORT_ERROR_NONE)
-		WARN("rpc_port_proxy_notification_set_internal_group_id : %d", ret);
+		DBG("rpc_port_proxy_notification_set_internal_group_id : %d", ret);
 
 	ret = rpc_port_proxy_notification_set_priv_id(handle, noti->priv_id);
 	if (ret != RPC_PORT_ERROR_NONE)
-		WARN("rpc_port_proxy_notification_set_priv_id : %d", ret);
+		DBG("rpc_port_proxy_notification_set_priv_id : %d", ret);
 
-	ret = rpc_port_proxy_notification_set_pkg_id(handle, __get_str_value(noti->pkg_id));
+	ret = rpc_port_proxy_notification_set_pkg_id(handle, noti->pkg_id.c_str());
 	if (ret != RPC_PORT_ERROR_NONE)
-		WARN("rpc_port_proxy_notification_set_pkg_id : %d", ret);
+		DBG("rpc_port_proxy_notification_set_pkg_id : %d", ret);
 
-	ret = rpc_port_proxy_notification_set_caller_app_id(handle, __get_str_value(noti->caller_app_id));
+	ret = rpc_port_proxy_notification_set_caller_app_id(handle, noti->caller_app_id.c_str());
 	if (ret != RPC_PORT_ERROR_NONE)
-		WARN("rpc_port_proxy_notification_set_caller_app_id : %d", ret);
+		DBG("rpc_port_proxy_notification_set_caller_app_id : %d", ret);
 
-	ret = rpc_port_proxy_notification_set_launch_app_id(handle, __get_str_value(noti->launch_app_id));
+	ret = rpc_port_proxy_notification_set_launch_app_id(handle, noti->launch_app_id.c_str());
 	if (ret != RPC_PORT_ERROR_NONE)
-		WARN("rpc_port_proxy_notification_set_launch_app_id : %d", ret);
+		DBG("rpc_port_proxy_notification_set_launch_app_id : %d", ret);
 
 	ret = rpc_port_proxy_notification_set_args(handle,
 			noti->args ? noti->args : empty_bundle);
 	if (ret != RPC_PORT_ERROR_NONE)
-		WARN("rpc_port_proxy_notification_set_args : %d", ret);
+		DBG("rpc_port_proxy_notification_set_args : %d", ret);
 
 	ret = rpc_port_proxy_notification_set_group_args(handle,
 			noti->group_args ? noti->group_args : empty_bundle);
 	if (ret != RPC_PORT_ERROR_NONE)
-		WARN("rpc_port_proxy_notification_set_group_args : %d", ret);
+		DBG("rpc_port_proxy_notification_set_group_args : %d", ret);
 
 	ret = rpc_port_proxy_notification_set_execute_option(handle,
 			noti->b_execute_option ? noti->b_execute_option : empty_bundle);
 	if (ret != RPC_PORT_ERROR_NONE)
-		WARN("rpc_port_proxy_notification_set_execute_option : %d", ret);
+		DBG("rpc_port_proxy_notification_set_execute_option : %d", ret);
 
 	ret = rpc_port_proxy_notification_set_service_responding(handle,
 			noti->b_service_responding ? noti->b_service_responding : empty_bundle);
 	if (ret != RPC_PORT_ERROR_NONE)
-		WARN("rpc_port_proxy_notification_set_service_responding : %d", ret);
+		DBG("rpc_port_proxy_notification_set_service_responding : %d", ret);
 
 	ret = rpc_port_proxy_notification_set_service_single_launch(handle,
 			noti->b_service_single_launch ? noti->b_service_single_launch : empty_bundle);
 	if (ret != RPC_PORT_ERROR_NONE)
-		WARN("rpc_port_proxy_notification_set_service_single_launch : %d", ret);
+		DBG("rpc_port_proxy_notification_set_service_single_launch : %d", ret);
 
 	ret = rpc_port_proxy_notification_set_service_multi_launch(handle,
 			noti->b_service_multi_launch ? noti->b_service_multi_launch : empty_bundle);
 	if (ret != RPC_PORT_ERROR_NONE)
-		WARN("rpc_port_proxy_notification_set_service_multi_launch : %d", ret);
+		DBG("rpc_port_proxy_notification_set_service_multi_launch : %d", ret);
 
 // start
 	rpc_port_proxy_array_bundle_h _event_handler;
@@ -405,199 +404,199 @@ EXPORT_API int make_notification_from_noti(void *notihandle,
 
 	ret = rpc_port_proxy_notification_set_event_handler(handle, _event_handler);
 	if (ret != RPC_PORT_ERROR_NONE)
-		WARN("rpc_port_proxy_notification_set_event_handler : %d", ret);
+		DBG("rpc_port_proxy_notification_set_event_handler : %d", ret);
 
 	rpc_port_proxy_array_bundle_destroy(_event_handler);
 // end
 
-	ret = rpc_port_proxy_notification_set_domain(handle, __get_str_value(noti->domain));
+	ret = rpc_port_proxy_notification_set_domain(handle, noti->domain.c_str());
 	if (ret != RPC_PORT_ERROR_NONE)
-		WARN("rpc_port_proxy_notification_set_domain : %d", ret);
+		DBG("rpc_port_proxy_notification_set_domain : %d", ret);
 
-	ret = rpc_port_proxy_notification_set_dir(handle, __get_str_value(noti->dir));
+	ret = rpc_port_proxy_notification_set_dir(handle, noti->dir.c_str());
 	if (ret != RPC_PORT_ERROR_NONE)
-		WARN("rpc_port_proxy_notification_set_dir : %d", ret);
+		DBG("rpc_port_proxy_notification_set_dir : %d", ret);
 
 	ret = rpc_port_proxy_notification_set_text(handle,
 			noti->b_text ? noti->b_text : empty_bundle);
 	if (ret != RPC_PORT_ERROR_NONE)
-		WARN("rpc_port_proxy_notification_set_text : %d", ret);
+		DBG("rpc_port_proxy_notification_set_text : %d", ret);
 
 	ret = rpc_port_proxy_notification_set_key(handle,
 			noti->b_key ? noti->b_key : empty_bundle);
 	if (ret != RPC_PORT_ERROR_NONE)
-		WARN("rpc_port_proxy_notification_set_key : %d", ret);
+		DBG("rpc_port_proxy_notification_set_key : %d", ret);
 
 	ret = rpc_port_proxy_notification_set_format_args(handle,
 			noti->b_format_args ? noti->b_format_args : empty_bundle);
 	if (ret != RPC_PORT_ERROR_NONE)
-		WARN("rpc_port_proxy_notification_set_format_args : %d", ret);
+		DBG("rpc_port_proxy_notification_set_format_args : %d", ret);
 
 	ret = rpc_port_proxy_notification_set_num_format_args(handle, noti->num_format_args);
 	if (ret != RPC_PORT_ERROR_NONE)
-		WARN("rpc_port_proxy_notification_set_num_format_args : %d", ret);
+		DBG("rpc_port_proxy_notification_set_num_format_args : %d", ret);
 
 	ret = rpc_port_proxy_notification_set_image_path(handle,
 			noti->b_image_path ? noti->b_image_path : empty_bundle);
 	if (ret != RPC_PORT_ERROR_NONE)
-		WARN("rpc_port_proxy_notification_set_image_path : %d", ret);
+		DBG("rpc_port_proxy_notification_set_image_path : %d", ret);
 
 	ret = rpc_port_proxy_notification_set_priv_image_path(handle,
 			noti->b_priv_image_path ? noti->b_priv_image_path : empty_bundle);
 	if (ret != RPC_PORT_ERROR_NONE)
-		WARN("rpc_port_proxy_notification_set_priv_image_path : %d", ret);
+		DBG("rpc_port_proxy_notification_set_priv_image_path : %d", ret);
 
 	ret = rpc_port_proxy_notification_set_sound_type(handle, (int)noti->sound_type);
 	if (ret != RPC_PORT_ERROR_NONE)
-		WARN("rpc_port_proxy_notification_set_sound_type : %d", ret);
+		DBG("rpc_port_proxy_notification_set_sound_type : %d", ret);
 
-	ret = rpc_port_proxy_notification_set_sound_path(handle, __get_str_value(noti->sound_path));
+	ret = rpc_port_proxy_notification_set_sound_path(handle, noti->sound_path.c_str());
 	if (ret != RPC_PORT_ERROR_NONE)
-		WARN("rpc_port_proxy_notification_set_sound_path : %d", ret);
+		DBG("rpc_port_proxy_notification_set_sound_path : %d", ret);
 
-	ret = rpc_port_proxy_notification_set_priv_sound_path(handle, __get_str_value(noti->priv_sound_path));
+	ret = rpc_port_proxy_notification_set_priv_sound_path(handle, noti->priv_sound_path.c_str());
 	if (ret != RPC_PORT_ERROR_NONE)
-		WARN("rpc_port_proxy_notification_set_priv_sound_path : %d", ret);
+		DBG("rpc_port_proxy_notification_set_priv_sound_path : %d", ret);
 
 	ret = rpc_port_proxy_notification_set_vibration_type(handle, (int)noti->vibration_type);
 	if (ret != RPC_PORT_ERROR_NONE)
-		WARN("rpc_port_proxy_notification_set_vibration_type : %d", ret);
+		DBG("rpc_port_proxy_notification_set_vibration_type : %d", ret);
 
-	ret = rpc_port_proxy_notification_set_vibration_path(handle, __get_str_value(noti->vibration_path));
+	ret = rpc_port_proxy_notification_set_vibration_path(handle, noti->vibration_path.c_str());
 	if (ret != RPC_PORT_ERROR_NONE)
-		WARN("rpc_port_proxy_notification_set_vibration_path : %d", ret);
+		DBG("rpc_port_proxy_notification_set_vibration_path : %d", ret);
 
-	ret = rpc_port_proxy_notification_set_priv_vibration_path(handle, __get_str_value(noti->priv_vibration_path));
+	ret = rpc_port_proxy_notification_set_priv_vibration_path(handle, noti->priv_vibration_path.c_str());
 	if (ret != RPC_PORT_ERROR_NONE)
-		WARN("rpc_port_proxy_notification_set_priv_vibration_path : %d", ret);
+		DBG("rpc_port_proxy_notification_set_priv_vibration_path : %d", ret);
 
 	ret = rpc_port_proxy_notification_set_led_operation(handle, (int)noti->led_operation);
 	if (ret != RPC_PORT_ERROR_NONE)
-		WARN("rpc_port_proxy_notification_set_led_operation : %d", ret);
+		DBG("rpc_port_proxy_notification_set_led_operation : %d", ret);
 
 	ret = rpc_port_proxy_notification_set_led_argb(handle, noti->led_argb);
 	if (ret != RPC_PORT_ERROR_NONE)
-		WARN("rpc_port_proxy_notification_set_led_argb : %d", ret);
+		DBG("rpc_port_proxy_notification_set_led_argb : %d", ret);
 
 	ret = rpc_port_proxy_notification_set_led_on_ms(handle, noti->led_on_ms);
 	if (ret != RPC_PORT_ERROR_NONE)
-		WARN("rpc_port_proxy_notification_set_led_on_ms : %d", ret);
+		DBG("rpc_port_proxy_notification_set_led_on_ms : %d", ret);
 
 	ret = rpc_port_proxy_notification_set_led_off_ms(handle, noti->led_off_ms);
 	if (ret != RPC_PORT_ERROR_NONE)
-		WARN("rpc_port_proxy_notification_set_led_off_ms : %d", ret);
+		DBG("rpc_port_proxy_notification_set_led_off_ms : %d", ret);
 
 	ret = rpc_port_proxy_notification_set_time(handle, (long long)noti->time);
 	if (ret != RPC_PORT_ERROR_NONE)
-		WARN("rpc_port_proxy_notification_set_time : %d", ret);
+		DBG("rpc_port_proxy_notification_set_time : %d", ret);
 
 	ret = rpc_port_proxy_notification_set_insert_time(handle, (long long)noti->insert_time);
 	if (ret != RPC_PORT_ERROR_NONE)
-		WARN("rpc_port_proxy_notification_set_insert_time : %d", ret);
+		DBG("rpc_port_proxy_notification_set_insert_time : %d", ret);
 
 	ret = rpc_port_proxy_notification_set_flags_for_property(handle, noti->flags_for_property);
 	if (ret != RPC_PORT_ERROR_NONE)
-		WARN("rpc_port_proxy_notification_set_flags_for_property : %d", ret);
+		DBG("rpc_port_proxy_notification_set_flags_for_property : %d", ret);
 
 	ret = rpc_port_proxy_notification_set_display_applist(handle, noti->display_applist);
 	if (ret != RPC_PORT_ERROR_NONE)
-		WARN("rpc_port_proxy_notification_set_display_applist : %d", ret);
+		DBG("rpc_port_proxy_notification_set_display_applist : %d", ret);
 
 	ret = rpc_port_proxy_notification_set_progress_size(handle, noti->progress_size);
 	if (ret != RPC_PORT_ERROR_NONE)
-		WARN("rpc_port_proxy_notification_set_progress_size : %d", ret);
+		DBG("rpc_port_proxy_notification_set_progress_size : %d", ret);
 
 	ret = rpc_port_proxy_notification_set_progress_percentage(handle, noti->progress_percentage);
 	if (ret != RPC_PORT_ERROR_NONE)
-		WARN("rpc_port_proxy_notification_set_progress_percentage : %d", ret);
+		DBG("rpc_port_proxy_notification_set_progress_percentage : %d", ret);
 
-	ret = rpc_port_proxy_notification_set_app_icon_path(handle, __get_str_value(noti->app_icon_path));
+	ret = rpc_port_proxy_notification_set_app_icon_path(handle, noti->app_icon_path.c_str());
 	if (ret != RPC_PORT_ERROR_NONE)
-		WARN("rpc_port_proxy_notification_set_app_icon_path : %d", ret);
+		DBG("rpc_port_proxy_notification_set_app_icon_path : %d", ret);
 
-	ret = rpc_port_proxy_notification_set_app_label(handle, __get_str_value(noti->app_label));
+	ret = rpc_port_proxy_notification_set_app_label(handle, noti->app_label.c_str());
 	if (ret != RPC_PORT_ERROR_NONE)
-		WARN("rpc_port_proxy_notification_set_app_label : %d", ret);
+		DBG("rpc_port_proxy_notification_set_app_label : %d", ret);
 
-	ret = rpc_port_proxy_notification_set_temp_title(handle, __get_str_value(noti->temp_title));
+	ret = rpc_port_proxy_notification_set_temp_title(handle, noti->temp_title.c_str());
 	if (ret != RPC_PORT_ERROR_NONE)
-		WARN("rpc_port_proxy_notification_set_temp_title : %d", ret);
+		DBG("rpc_port_proxy_notification_set_temp_title : %d", ret);
 
-	ret = rpc_port_proxy_notification_set_temp_content(handle, __get_str_value(noti->temp_content));
+	ret = rpc_port_proxy_notification_set_temp_content(handle, noti->temp_content.c_str());
 	if (ret != RPC_PORT_ERROR_NONE)
-		WARN("rpc_port_proxy_notification_set_temp_content : %d", ret);
+		DBG("rpc_port_proxy_notification_set_temp_content : %d", ret);
 
-	ret = rpc_port_proxy_notification_set_tag(handle, __get_str_value(noti->tag));
+	ret = rpc_port_proxy_notification_set_tag(handle, noti->tag.c_str());
 	if (ret != RPC_PORT_ERROR_NONE)
-		WARN("rpc_port_proxy_notification_set_tag : %d", ret);
+		DBG("rpc_port_proxy_notification_set_tag : %d", ret);
 
 	ret = rpc_port_proxy_notification_set_ongoing_flag(handle, noti->ongoing_flag);
 	if (ret != RPC_PORT_ERROR_NONE)
-		WARN("rpc_port_proxy_notification_set_ongoing_flag : %d", ret);
+		DBG("rpc_port_proxy_notification_set_ongoing_flag : %d", ret);
 
 	ret = rpc_port_proxy_notification_set_ongoing_value_type(handle, noti->ongoing_value_type);
 	if (ret != RPC_PORT_ERROR_NONE)
-		WARN("rpc_port_proxy_notification_set_ongoing_value_type : %d", ret);
+		DBG("rpc_port_proxy_notification_set_ongoing_value_type : %d", ret);
 
 	ret = rpc_port_proxy_notification_set_ongoing_current(handle, noti->ongoing_current);
 	if (ret != RPC_PORT_ERROR_NONE)
-		WARN("rpc_port_proxy_notification_set_ongoing_current : %d", ret);
+		DBG("rpc_port_proxy_notification_set_ongoing_current : %d", ret);
 
 	ret = rpc_port_proxy_notification_set_ongoing_duration(handle, noti->ongoing_duration);
 	if (ret != RPC_PORT_ERROR_NONE)
-		WARN("rpc_port_proxy_notification_set_ongoing_duration : %d", ret);
+		DBG("rpc_port_proxy_notification_set_ongoing_duration : %d", ret);
 
 	ret = rpc_port_proxy_notification_set_auto_remove(handle, noti->auto_remove);
 	if (ret != RPC_PORT_ERROR_NONE)
-		WARN("rpc_port_proxy_notification_set_auto_remove : %d", ret);
+		DBG("rpc_port_proxy_notification_set_auto_remove : %d", ret);
 
 	ret = rpc_port_proxy_notification_set_default_button_index(handle, (int)noti->default_button_index);
 	if (ret != RPC_PORT_ERROR_NONE)
-		WARN("rpc_port_proxy_notification_set_default_button_index : %d", ret);
+		DBG("rpc_port_proxy_notification_set_default_button_index : %d", ret);
 
 	ret = rpc_port_proxy_notification_set_hide_timeout(handle, noti->hide_timeout);
 	if (ret != RPC_PORT_ERROR_NONE)
-		WARN("rpc_port_proxy_notification_set_hide_timeout : %d", ret);
+		DBG("rpc_port_proxy_notification_set_hide_timeout : %d", ret);
 
 	ret = rpc_port_proxy_notification_set_delete_timeout(handle, noti->delete_timeout);
 	if (ret != RPC_PORT_ERROR_NONE)
-		WARN("rpc_port_proxy_notification_set_delete_timeout : %d", ret);
+		DBG("rpc_port_proxy_notification_set_delete_timeout : %d", ret);
 
 	ret = rpc_port_proxy_notification_set_text_input_max_length(handle, noti->text_input_max_length);
 	if (ret != RPC_PORT_ERROR_NONE)
-		WARN("rpc_port_proxy_notification_set_text_input_max_length : %d", ret);
+		DBG("rpc_port_proxy_notification_set_text_input_max_length : %d", ret);
 
 	ret = rpc_port_proxy_notification_set_event_flag(handle, noti->event_flag);
 	if (ret != RPC_PORT_ERROR_NONE)
-		WARN("rpc_port_proxy_notification_set_event_flag : %d", ret);
+		DBG("rpc_port_proxy_notification_set_event_flag : %d", ret);
 
 	ret = rpc_port_proxy_notification_set_is_translation(handle, noti->is_translation);
 	if (ret != RPC_PORT_ERROR_NONE)
-		WARN("rpc_port_proxy_notification_set_is_translation : %d", ret);
+		DBG("rpc_port_proxy_notification_set_is_translation : %d", ret);
 
 	ret = rpc_port_proxy_notification_set_extension_image_size(handle, noti->extension_image_size);
 	if (ret != RPC_PORT_ERROR_NONE)
-		WARN("rpc_port_proxy_notification_set_extension_image_size : %d", ret);
+		DBG("rpc_port_proxy_notification_set_extension_image_size : %d", ret);
 
 	ret = rpc_port_proxy_notification_set_check_box(handle, noti->check_box);
 	if (ret != RPC_PORT_ERROR_NONE)
-		WARN("rpc_port_proxy_notification_set_check_box : %d", ret);
+		DBG("rpc_port_proxy_notification_set_check_box : %d", ret);
 
 	ret = rpc_port_proxy_notification_set_check_box_value(handle, noti->check_box_value);
 	if (ret != RPC_PORT_ERROR_NONE)
-		WARN("rpc_port_proxy_notification_set_check_box_value : %d", ret);
+		DBG("rpc_port_proxy_notification_set_check_box_value : %d", ret);
 
-	ret = rpc_port_proxy_notification_set_channel_name(handle, __get_str_value(noti->channel_name));
+	ret = rpc_port_proxy_notification_set_channel_name(handle, noti->channel_name.c_str());
 	if (ret != RPC_PORT_ERROR_NONE)
-		WARN("rpc_port_proxy_notification_set_channel_name : %d", ret);
+		DBG("rpc_port_proxy_notification_set_channel_name : %d", ret);
 
 	ret = rpc_port_proxy_notification_set_uid(handle, (int)noti->uid);
 	if (ret != RPC_PORT_ERROR_NONE)
-		WARN("rpc_port_proxy_notification_set_uid : %d", ret);
+		DBG("rpc_port_proxy_notification_set_uid : %d", ret);
 
 	bundle_free(empty_bundle);
 
-	WARN("make_notification_from_noti done");
+	DBG("make_notification_from_noti done");
 
 	return NOTIFICATION_ERROR_NONE;
 }
@@ -607,11 +606,11 @@ EXPORT_API int make_noti_from_notification(notification_h *noti, void *notihandl
 	notification_h _noti;
 	int ret;
 
-	WARN("make_noti_from_notification");
+	DBG("make_noti_from_notification");
 
 	rpc_port_proxy_notification_h handle = (rpc_port_proxy_notification_h)notihandle;
 
-	_noti = (notification_h)calloc(1, sizeof(struct _notification));
+	_noti = new (std::nothrow) _notification();
 	if (_noti == NULL) {
 		ERR("Failed to alloc memory");
 		return NOTIFICATION_ERROR_OUT_OF_MEMORY;
@@ -621,66 +620,57 @@ EXPORT_API int make_noti_from_notification(notification_h *noti, void *notihandl
 	ret = rpc_port_proxy_notification_get_type(handle, &_type);
 	_noti->type = (notification_type_e)_type;
 	if (ret != RPC_PORT_ERROR_NONE)
-		WARN("rpc_port_proxy_notification_get_type : %d", ret);
+		DBG("rpc_port_proxy_notification_get_type : %d", ret);
 
 	int _layout;
 	ret = rpc_port_proxy_notification_get_layout(handle, &_layout);
 	_noti->layout = (notification_ly_type_e)_layout;
 	if (ret != RPC_PORT_ERROR_NONE)
-		WARN("rpc_port_proxy_notification_get_layout : %d", ret);
+		DBG("rpc_port_proxy_notification_get_layout : %d", ret);
 
 	ret = rpc_port_proxy_notification_get_group_id(handle, &_noti->group_id);
 	if (ret != RPC_PORT_ERROR_NONE)
-		WARN("rpc_port_proxy_notification_get_group_id : %d", ret);
+		DBG("rpc_port_proxy_notification_get_group_id : %d", ret);
 
 	ret = rpc_port_proxy_notification_get_internal_group_id(handle, &_noti->internal_group_id);
 	if (ret != RPC_PORT_ERROR_NONE)
-		WARN("rpc_port_proxy_notification_get_internal_group_id : %d", ret);
+		DBG("rpc_port_proxy_notification_get_internal_group_id : %d", ret);
 
 	ret = rpc_port_proxy_notification_get_priv_id(handle, &_noti->priv_id);
 	if (ret != RPC_PORT_ERROR_NONE)
-		WARN("rpc_port_proxy_notification_get_priv_id : %d", ret);
+		DBG("rpc_port_proxy_notification_get_priv_id : %d", ret);
 
 	char *pkg_id;
 	ret = rpc_port_proxy_notification_get_pkg_id(handle, &pkg_id);
 	if (ret != RPC_PORT_ERROR_NONE)
-		WARN("rpc_port_proxy_notification_get_pkg_id : %d", ret);
+		DBG("rpc_port_proxy_notification_get_pkg_id : %d", ret);
 
-	if (strlen(pkg_id) > 0) {
+	if (strlen(pkg_id) > 0)
 		_noti->pkg_id = pkg_id;
-	} else {
-		_noti->pkg_id = NULL;
-		free(pkg_id);
-	}
+	free(pkg_id);
 
 	char *caller_app_id;
 	ret = rpc_port_proxy_notification_get_caller_app_id(handle, &caller_app_id);
 	if (ret != RPC_PORT_ERROR_NONE)
-		WARN("rpc_port_proxy_notification_get_caller_app_id : %d", ret);
+		DBG("rpc_port_proxy_notification_get_caller_app_id : %d", ret);
 
-	if (strlen(caller_app_id) > 0) {
+	if (strlen(caller_app_id) > 0)
 		_noti->caller_app_id = caller_app_id;
-	} else {
-		_noti->caller_app_id = NULL;
-		free(caller_app_id);
-	}
+	free(caller_app_id);
 
 	char *launch_app_id;
 	ret = rpc_port_proxy_notification_get_launch_app_id(handle, &launch_app_id);
 	if (ret != RPC_PORT_ERROR_NONE)
-		WARN("rpc_port_proxy_notification_get_launch_app_id : %d", ret);
+		DBG("rpc_port_proxy_notification_get_launch_app_id : %d", ret);
 
-	if (strlen(launch_app_id) > 0) {
+	if (strlen(launch_app_id) > 0)
 		_noti->launch_app_id = launch_app_id;
-	} else{
-		_noti->launch_app_id = NULL;
-		free(launch_app_id);
-	}
+	free(launch_app_id);
 
 	bundle *args;
 	ret = rpc_port_proxy_notification_get_args(handle, &args);
 	if (ret != RPC_PORT_ERROR_NONE)
-		WARN("rpc_port_proxy_notification_get_args : %d", ret);
+		DBG("rpc_port_proxy_notification_get_args : %d", ret);
 
 	if (bundle_get_count(args) > 0) {
 		_noti->args = args;
@@ -692,7 +682,7 @@ EXPORT_API int make_noti_from_notification(notification_h *noti, void *notihandl
 	bundle *group_args;
 	ret = rpc_port_proxy_notification_get_group_args(handle, &group_args);
 	if (ret != RPC_PORT_ERROR_NONE)
-		WARN("rpc_port_proxy_notification_get_group_args : %d", ret);
+		DBG("rpc_port_proxy_notification_get_group_args : %d", ret);
 
 	if (bundle_get_count(group_args) > 0) {
 		_noti->group_args = group_args;
@@ -704,7 +694,7 @@ EXPORT_API int make_noti_from_notification(notification_h *noti, void *notihandl
 	bundle *b_execute_option;
 	ret = rpc_port_proxy_notification_get_execute_option(handle, &b_execute_option);
 	if (ret != RPC_PORT_ERROR_NONE)
-		WARN("rpc_port_proxy_notification_get_execute_option : %d", ret);
+		DBG("rpc_port_proxy_notification_get_execute_option : %d", ret);
 
 	if (bundle_get_count(b_execute_option) > 0) {
 		_noti->b_execute_option = b_execute_option;
@@ -716,7 +706,7 @@ EXPORT_API int make_noti_from_notification(notification_h *noti, void *notihandl
 	bundle *b_service_responding;
 	ret = rpc_port_proxy_notification_get_service_responding(handle, &b_service_responding);
 	if (ret != RPC_PORT_ERROR_NONE)
-		WARN("rpc_port_proxy_notification_get_service_responding : %d", ret);
+		DBG("rpc_port_proxy_notification_get_service_responding : %d", ret);
 
 	if (bundle_get_count(b_service_responding) > 0) {
 		_noti->b_service_responding = b_service_responding;
@@ -728,7 +718,7 @@ EXPORT_API int make_noti_from_notification(notification_h *noti, void *notihandl
 	bundle *b_service_single_launch;
 	ret = rpc_port_proxy_notification_get_service_single_launch(handle, &b_service_single_launch);
 	if (ret != RPC_PORT_ERROR_NONE)
-		WARN("rpc_port_proxy_notification_get_service_single_launch : %d", ret);
+		DBG("rpc_port_proxy_notification_get_service_single_launch : %d", ret);
 
 	if (bundle_get_count(b_service_single_launch) > 0) {
 		_noti->b_service_single_launch = b_service_single_launch;
@@ -740,7 +730,7 @@ EXPORT_API int make_noti_from_notification(notification_h *noti, void *notihandl
 	bundle *b_service_multi_launch;
 	ret = rpc_port_proxy_notification_get_service_multi_launch(handle, &b_service_multi_launch);
 	if (ret != RPC_PORT_ERROR_NONE)
-		WARN("rpc_port_proxy_notification_get_service_multi_launch : %d", ret);
+		DBG("rpc_port_proxy_notification_get_service_multi_launch : %d", ret);
 
 	if (bundle_get_count(b_service_multi_launch) > 0) {
 		_noti->b_service_multi_launch = b_service_multi_launch;
@@ -753,68 +743,65 @@ EXPORT_API int make_noti_from_notification(notification_h *noti, void *notihandl
 	rpc_port_proxy_array_bundle_h _event_handler;
 	ret = rpc_port_proxy_notification_get_event_handler(handle, &_event_handler);
 	if (ret != RPC_PORT_ERROR_NONE)
-		WARN("rpc_port_proxy_notification_get_event_handler : %d", ret);
+		DBG("rpc_port_proxy_notification_get_event_handler : %d", ret);
 
-	WARN("make_noti_from_notification event handler");
+	DBG("make_noti_from_notification event handler");
 
 	int bundle_size;
 	bundle **_b_event_handler;
 
 	if (_event_handler) {
 		ret = rpc_port_proxy_array_bundle_get(_event_handler, &_b_event_handler, &bundle_size);
-		WARN("make_noti_from_notification size : %d", bundle_size);
+		DBG("make_noti_from_notification size : %d", bundle_size);
 
 		if (ret != RPC_PORT_ERROR_NONE) {
-			WARN("rpc_port_proxy_array_bundle_get failed : %d", ret);
+			DBG("rpc_port_proxy_array_bundle_get failed : %d", ret);
 		} else {
 			for (int i = 0; i < bundle_size; i++) {
 				if (_b_event_handler[i] == NULL) {
-					WARN("make_noti_from_notification event handler : %d null", i);
+					DBG("make_noti_from_notification event handler : %d null", i);
 				} else {
 					int __count = 0;
 					__count = bundle_get_count(_b_event_handler[i]);
 
-					if (__count > 0)
+					if (__count > 0) {
 						_noti->b_event_handler[i] = _b_event_handler[i];
-					else
+					} else {
+						bundle_free(_b_event_handler[i]);
 						_noti->b_event_handler[i] = NULL;
+					}
 				}
 			}
+			free(_b_event_handler);
 		}
 		rpc_port_proxy_array_bundle_destroy(_event_handler);
 	} else {
-		WARN("make_noti_from_notification event handler null");
+		DBG("make_noti_from_notification event handler null");
 	}
 // end
 
 	char *domain;
 	ret = rpc_port_proxy_notification_get_domain(handle, &domain);
 	if (ret != RPC_PORT_ERROR_NONE)
-		WARN("rpc_port_proxy_notification_get_domain : %d", ret);
+		DBG("rpc_port_proxy_notification_get_domain : %d", ret);
 
-	if (strlen(domain) > 0) {
+	if (strlen(domain) > 0)
 		_noti->domain = domain;
-	} else {
-		_noti->domain = NULL;
-		free(domain);
-	}
+	free(domain);
 
 	char *dir;
 	ret = rpc_port_proxy_notification_get_dir(handle, &dir);
 	if (ret != RPC_PORT_ERROR_NONE)
-		WARN("rpc_port_proxy_notification_get_dir : %d", ret);
+		DBG("rpc_port_proxy_notification_get_dir : %d", ret);
 
-	if (strlen(dir) > 0) {
+	if (strlen(dir) > 0)
 		_noti->dir = dir;
-	} else {
-		_noti->dir = NULL;
-		free(dir);
-	}
+	free(dir);
 
 	bundle *b_text;
 	ret = rpc_port_proxy_notification_get_text(handle, &b_text);
 	if (ret != RPC_PORT_ERROR_NONE)
-		WARN("rpc_port_proxy_notification_get_text : %d", ret);
+		DBG("rpc_port_proxy_notification_get_text : %d", ret);
 
 	if (bundle_get_count(b_text) > 0) {
 		_noti->b_text = b_text;
@@ -826,7 +813,7 @@ EXPORT_API int make_noti_from_notification(notification_h *noti, void *notihandl
 	bundle *b_key;
 	ret = rpc_port_proxy_notification_get_key(handle, &b_key);
 	if (ret != RPC_PORT_ERROR_NONE)
-		WARN("rpc_port_proxy_notification_get_key : %d", ret);
+		DBG("rpc_port_proxy_notification_get_key : %d", ret);
 
 	if (bundle_get_count(b_key) > 0) {
 		_noti->b_key = b_key;
@@ -838,7 +825,7 @@ EXPORT_API int make_noti_from_notification(notification_h *noti, void *notihandl
 	bundle *b_format_args;
 	ret = rpc_port_proxy_notification_get_format_args(handle, &b_format_args);
 	if (ret != RPC_PORT_ERROR_NONE)
-		WARN("rpc_port_proxy_notification_get_format_args : %d", ret);
+		DBG("rpc_port_proxy_notification_get_format_args : %d", ret);
 
 	if (bundle_get_count(b_format_args) > 0) {
 		_noti->b_format_args = b_format_args;
@@ -849,12 +836,12 @@ EXPORT_API int make_noti_from_notification(notification_h *noti, void *notihandl
 
 	ret = rpc_port_proxy_notification_get_num_format_args(handle, &_noti->num_format_args);
 	if (ret != RPC_PORT_ERROR_NONE)
-		WARN("rpc_port_proxy_notification_get_num_format_args : %d", ret);
+		DBG("rpc_port_proxy_notification_get_num_format_args : %d", ret);
 
 	bundle *b_image_path;
 	ret = rpc_port_proxy_notification_get_image_path(handle, &b_image_path);
 	if (ret != RPC_PORT_ERROR_NONE)
-		WARN("rpc_port_proxy_notification_get_image_path : %d", ret);
+		DBG("rpc_port_proxy_notification_get_image_path : %d", ret);
 
 	if (bundle_get_count(b_image_path) > 0) {
 		_noti->b_image_path = b_image_path;
@@ -866,7 +853,7 @@ EXPORT_API int make_noti_from_notification(notification_h *noti, void *notihandl
 	bundle *b_priv_image_path;
 	ret = rpc_port_proxy_notification_get_priv_image_path(handle, &b_priv_image_path);
 	if (ret != RPC_PORT_ERROR_NONE)
-		WARN("rpc_port_proxy_notification_get_priv_image_path : %d", ret);
+		DBG("rpc_port_proxy_notification_get_priv_image_path : %d", ret);
 
 	if (bundle_get_count(b_priv_image_path) > 0) {
 		_noti->b_priv_image_path = b_priv_image_path;
@@ -879,245 +866,215 @@ EXPORT_API int make_noti_from_notification(notification_h *noti, void *notihandl
 	ret = rpc_port_proxy_notification_get_sound_type(handle, &_sound_type);
 	_noti->sound_type = (notification_sound_type_e)_sound_type;
 	if (ret != RPC_PORT_ERROR_NONE)
-		WARN("rpc_port_proxy_notification_get_sound_type : %d", ret);
+		DBG("rpc_port_proxy_notification_get_sound_type : %d", ret);
 
 	char *sound_path;
 	ret = rpc_port_proxy_notification_get_sound_path(handle, &sound_path);
 	if (ret != RPC_PORT_ERROR_NONE)
-		WARN("rpc_port_proxy_notification_get_sound_path : %d", ret);
+		DBG("rpc_port_proxy_notification_get_sound_path : %d", ret);
 
-	if (strlen(sound_path) > 0) {
+	if (strlen(sound_path) > 0)
 		_noti->sound_path = sound_path;
-	} else {
-		_noti->sound_path = NULL;
-		free(sound_path);
-	}
+	free(sound_path);
 
 	char *priv_sound_path;
 	ret = rpc_port_proxy_notification_get_priv_sound_path(handle, &priv_sound_path);
 	if (ret != RPC_PORT_ERROR_NONE)
-		WARN("rpc_port_proxy_notification_get_priv_sound_path : %d", ret);
+		DBG("rpc_port_proxy_notification_get_priv_sound_path : %d", ret);
 
-	if (strlen(priv_sound_path) > 0) {
+	if (strlen(priv_sound_path) > 0)
 		_noti->priv_sound_path = priv_sound_path;
-	} else {
-		_noti->priv_sound_path = NULL;
-		free(priv_sound_path);
-	}
+	free(priv_sound_path);
 
-	ret = rpc_port_proxy_notification_get_vibration_type(handle, &_noti->vibration_type);
+	ret = rpc_port_proxy_notification_get_vibration_type(handle, (int *)&_noti->vibration_type);
 	if (ret != RPC_PORT_ERROR_NONE)
-		WARN("rpc_port_proxy_notification_get_vibration_type : %d", ret);
+		DBG("rpc_port_proxy_notification_get_vibration_type : %d", ret);
 
 	char *vibration_path;
 	ret = rpc_port_proxy_notification_get_vibration_path(handle, &vibration_path);
 	if (ret != RPC_PORT_ERROR_NONE)
-		WARN("rpc_port_proxy_notification_get_vibration_path : %d", ret);
+		DBG("rpc_port_proxy_notification_get_vibration_path : %d", ret);
 
-	if (strlen(vibration_path) > 0) {
+	if (strlen(vibration_path) > 0)
 		_noti->vibration_path = vibration_path;
-	} else {
-		_noti->vibration_path = NULL;
-		free(vibration_path);
-	}
+	free(vibration_path);
 
 	char *priv_vibration_path;
 	ret = rpc_port_proxy_notification_get_priv_vibration_path(handle, &priv_vibration_path);
 	if (ret != RPC_PORT_ERROR_NONE)
-		WARN("rpc_port_proxy_notification_get_priv_vibration_path : %d", ret);
+		DBG("rpc_port_proxy_notification_get_priv_vibration_path : %d", ret);
 
-	if (strlen(priv_vibration_path) > 0) {
+	if (strlen(priv_vibration_path) > 0)
 		_noti->priv_vibration_path = priv_vibration_path;
-	} else {
-		_noti->priv_vibration_path = NULL;
-		free(priv_vibration_path);
-	}
+	free(priv_vibration_path);
 
 	int _led_operation;
 	ret = rpc_port_proxy_notification_get_led_operation(handle, &_led_operation);
 	_noti->led_operation = (notification_led_op_e)_led_operation;
 	if (ret != RPC_PORT_ERROR_NONE)
-		WARN("rpc_port_proxy_notification_get_led_operation : %d", ret);
+		DBG("rpc_port_proxy_notification_get_led_operation : %d", ret);
 
 	ret = rpc_port_proxy_notification_get_led_argb(handle, &_noti->led_argb);
 	if (ret != RPC_PORT_ERROR_NONE)
-		WARN("rpc_port_proxy_notification_get_LedArgb : %d", ret);
+		DBG("rpc_port_proxy_notification_get_LedArgb : %d", ret);
 
 	ret = rpc_port_proxy_notification_get_led_on_ms(handle, &_noti->led_on_ms);
 	if (ret != RPC_PORT_ERROR_NONE)
-		WARN("rpc_port_proxy_notification_get_led_on_ms : %d", ret);
+		DBG("rpc_port_proxy_notification_get_led_on_ms : %d", ret);
 
 	ret = rpc_port_proxy_notification_get_led_off_ms(handle, &_noti->led_off_ms);
 	if (ret != RPC_PORT_ERROR_NONE)
-		WARN("rpc_port_proxy_notification_get_led_off_ms : %d", ret);
+		DBG("rpc_port_proxy_notification_get_led_off_ms : %d", ret);
 
 	long long _time;
 	ret = rpc_port_proxy_notification_get_time(handle, &_time);
 	_noti->time = (time_t)_time;
 	if (ret != RPC_PORT_ERROR_NONE)
-		WARN("rpc_port_proxy_notification_get_time : %d", ret);
+		DBG("rpc_port_proxy_notification_get_time : %d", ret);
 
 	long long _insert_time;
 	ret = rpc_port_proxy_notification_get_insert_time(handle, &_insert_time);
 	_noti->insert_time = (time_t)_insert_time;
 	if (ret != RPC_PORT_ERROR_NONE)
-		WARN("rpc_port_proxy_notification_get_insert_time : %d", ret);
+		DBG("rpc_port_proxy_notification_get_insert_time : %d", ret);
 
 	ret = rpc_port_proxy_notification_get_flags_for_property(handle, &_noti->flags_for_property);
 	if (ret != RPC_PORT_ERROR_NONE)
-		WARN("rpc_port_proxy_notification_get_flags_for_property : %d", ret);
+		DBG("rpc_port_proxy_notification_get_flags_for_property : %d", ret);
 
 	ret = rpc_port_proxy_notification_get_display_applist(handle, &_noti->display_applist);
 	if (ret != RPC_PORT_ERROR_NONE)
-		WARN("rpc_port_proxy_notification_get_display_applist : %d", ret);
+		DBG("rpc_port_proxy_notification_get_display_applist : %d", ret);
 
 	ret = rpc_port_proxy_notification_get_progress_size(handle, &_noti->progress_size);
 	if (ret != RPC_PORT_ERROR_NONE)
-		WARN("rpc_port_proxy_notification_get_progress_size : %d", ret);
+		DBG("rpc_port_proxy_notification_get_progress_size : %d", ret);
 
 	ret = rpc_port_proxy_notification_get_progress_percentage(handle, &_noti->progress_percentage);
 	if (ret != RPC_PORT_ERROR_NONE)
-		WARN("rpc_port_proxy_notification_get_progress_percentage : %d", ret);
+		DBG("rpc_port_proxy_notification_get_progress_percentage : %d", ret);
 
 	char *app_icon_path;
 	ret = rpc_port_proxy_notification_get_app_icon_path(handle, &app_icon_path);
 	if (ret != RPC_PORT_ERROR_NONE)
-		WARN("rpc_port_proxy_notification_get_app_icon_path : %d", ret);
+		DBG("rpc_port_proxy_notification_get_app_icon_path : %d", ret);
 
-	if (strlen(app_icon_path) > 0) {
+	if (strlen(app_icon_path) > 0)
 		_noti->app_icon_path = app_icon_path;
-	} else {
-		_noti->app_icon_path = NULL;
-		free(app_icon_path);
-	}
+	free(app_icon_path);
 
 	char *app_label;
 	ret = rpc_port_proxy_notification_get_app_label(handle, &app_label);
 	if (ret != RPC_PORT_ERROR_NONE)
-		WARN("rpc_port_proxy_notification_get_app_label : %d", ret);
+		DBG("rpc_port_proxy_notification_get_app_label : %d", ret);
 
-	if (strlen(app_label) > 0) {
+	if (strlen(app_label) > 0)
 		_noti->app_label = app_label;
-	} else {
-		_noti->app_label = NULL;
-		free(app_label);
-	}
+	free(app_label);
 
 	char *temp_title;
 	ret = rpc_port_proxy_notification_get_temp_title(handle, &temp_title);
 	if (ret != RPC_PORT_ERROR_NONE)
-		WARN("rpc_port_proxy_notification_get_temp_title : %d", ret);
+		DBG("rpc_port_proxy_notification_get_temp_title : %d", ret);
 
-	if (strlen(temp_title) > 0) {
+	if (strlen(temp_title) > 0)
 		_noti->temp_title = temp_title;
-	} else {
-		_noti->temp_title = NULL;
-		free(temp_title);
-	}
+	free(temp_title);
 
 	char *temp_content;
 	ret = rpc_port_proxy_notification_get_temp_content(handle, &temp_content);
 	if (ret != RPC_PORT_ERROR_NONE)
-		WARN("rpc_port_proxy_notification_get_temp_content : %d", ret);
+		DBG("rpc_port_proxy_notification_get_temp_content : %d", ret);
 
-	if (strlen(temp_content) > 0) {
+	if (strlen(temp_content) > 0)
 		_noti->temp_content = temp_content;
-	} else {
-		_noti->temp_content = NULL;
-		free(temp_content);
-	}
+	free(temp_content);
 
 	char *tag;
 	ret = rpc_port_proxy_notification_get_tag(handle, &tag);
 	if (ret != RPC_PORT_ERROR_NONE)
-		WARN("rpc_port_proxy_notification_get_tag : %d", ret);
+		DBG("rpc_port_proxy_notification_get_tag : %d", ret);
 
-	if (strlen(tag) > 0) {
+	if (strlen(tag) > 0)
 		_noti->tag = tag;
-	} else {
-		_noti->tag = NULL;
-		free(tag);
-	}
+	free(tag);
 
 	ret = rpc_port_proxy_notification_get_ongoing_flag(handle, &_noti->ongoing_flag);
 	if (ret != RPC_PORT_ERROR_NONE)
-		WARN("rpc_port_proxy_notification_get_ongoing_flag : %d", ret);
+		DBG("rpc_port_proxy_notification_get_ongoing_flag : %d", ret);
 
 	ret = rpc_port_proxy_notification_get_ongoing_value_type(handle, &_noti->ongoing_value_type);
 	if (ret != RPC_PORT_ERROR_NONE)
-		WARN("rpc_port_proxy_notification_get_ongoing_value_type : %d", ret);
+		DBG("rpc_port_proxy_notification_get_ongoing_value_type : %d", ret);
 
 	ret = rpc_port_proxy_notification_get_ongoing_current(handle, &_noti->ongoing_current);
 	if (ret != RPC_PORT_ERROR_NONE)
-		WARN("rpc_port_proxy_notification_get_ongoing_current : %d", ret);
+		DBG("rpc_port_proxy_notification_get_ongoing_current : %d", ret);
 
 	ret = rpc_port_proxy_notification_get_ongoing_duration(handle, &_noti->ongoing_duration);
 	if (ret != RPC_PORT_ERROR_NONE)
-		WARN("rpc_port_proxy_notification_get_ongoing_duration : %d", ret);
+		DBG("rpc_port_proxy_notification_get_ongoing_duration : %d", ret);
 
 	ret = rpc_port_proxy_notification_get_auto_remove(handle, &_noti->auto_remove);
 	if (ret != RPC_PORT_ERROR_NONE)
-		WARN("rpc_port_proxy_notification_get_auto_remove : %d", ret);
+		DBG("rpc_port_proxy_notification_get_auto_remove : %d", ret);
 
 	int _index;
 	ret = rpc_port_proxy_notification_get_default_button_index(handle, &_index);
 	_noti->default_button_index = (notification_button_index_e)_index;
 	if (ret != RPC_PORT_ERROR_NONE)
-		WARN("rpc_port_proxy_notification_get_default_button_index : %d", ret);
+		DBG("rpc_port_proxy_notification_get_default_button_index : %d", ret);
 
 	ret = rpc_port_proxy_notification_get_hide_timeout(handle, &_noti->hide_timeout);
 	if (ret != RPC_PORT_ERROR_NONE)
-		WARN("rpc_port_proxy_notification_get_hide_timeout : %d", ret);
+		DBG("rpc_port_proxy_notification_get_hide_timeout : %d", ret);
 
 	ret = rpc_port_proxy_notification_get_delete_timeout(handle, &_noti->delete_timeout);
 	if (ret != RPC_PORT_ERROR_NONE)
-		WARN("rpc_port_proxy_notification_get_delete_timeout : %d", ret);
+		DBG("rpc_port_proxy_notification_get_delete_timeout : %d", ret);
 
 	ret = rpc_port_proxy_notification_get_text_input_max_length(handle, &_noti->text_input_max_length);
 	if (ret != RPC_PORT_ERROR_NONE)
-		WARN("rpc_port_proxy_notification_get_text_input_max_length : %d", ret);
+		DBG("rpc_port_proxy_notification_get_text_input_max_length : %d", ret);
 
 	ret = rpc_port_proxy_notification_get_event_flag(handle, &_noti->event_flag);
 	if (ret != RPC_PORT_ERROR_NONE)
-		WARN("rpc_port_proxy_notification_get_event_flag : %d", ret);
+		DBG("rpc_port_proxy_notification_get_event_flag : %d", ret);
 
 	ret = rpc_port_proxy_notification_get_is_translation(handle, &_noti->is_translation);
 	if (ret != RPC_PORT_ERROR_NONE)
-		WARN("rpc_port_proxy_notification_get_is_translation : %d", ret);
+		DBG("rpc_port_proxy_notification_get_is_translation : %d", ret);
 
 	ret = rpc_port_proxy_notification_get_extension_image_size(handle, &_noti->extension_image_size);
 	if (ret != RPC_PORT_ERROR_NONE)
-		WARN("rpc_port_proxy_notification_get_extension_image_size : %d", ret);
+		DBG("rpc_port_proxy_notification_get_extension_image_size : %d", ret);
 
 	ret = rpc_port_proxy_notification_get_check_box(handle, &_noti->check_box);
 	if (ret != RPC_PORT_ERROR_NONE)
-		WARN("rpc_port_proxy_notification_get_check_box : %d", ret);
+		DBG("rpc_port_proxy_notification_get_check_box : %d", ret);
 
 	ret = rpc_port_proxy_notification_get_check_box_value(handle, &_noti->check_box_value);
 	if (ret != RPC_PORT_ERROR_NONE)
-		WARN("rpc_port_proxy_notification_get_check_box_value : %d", ret);
+		DBG("rpc_port_proxy_notification_get_check_box_value : %d", ret);
 
 	char *channel_name;
 	ret = rpc_port_proxy_notification_get_channel_name(handle, &channel_name);
 	if (ret != RPC_PORT_ERROR_NONE)
-		WARN("rpc_port_proxy_notification_get_channel_name : %d", ret);
+		DBG("rpc_port_proxy_notification_get_channel_name : %d", ret);
 
-	if (strlen(channel_name) > 0) {
+	if (strlen(channel_name) > 0)
 		_noti->channel_name = channel_name;
-	} else {
-		_noti->channel_name = NULL;
-		free(channel_name);
-	}
+	free(channel_name);
 
 	int _uid;
 	ret = rpc_port_proxy_notification_get_uid(handle, &_uid);
 	_noti->uid = (uid_t)_uid;
 	if (ret != RPC_PORT_ERROR_NONE)
-		WARN("rpc_port_proxy_notification_get_uid : %d", ret);
+		DBG("rpc_port_proxy_notification_get_uid : %d", ret);
 
 	*noti = _noti;
 
-	WARN("make_noti_from_notification done : %d", _uid);
+	DBG("make_noti_from_notification done : %d", _uid);
 
 	return NOTIFICATION_ERROR_NONE;
 }
@@ -1165,7 +1122,7 @@ EXPORT_API int make_setting_from_noti_system_setting(
 	notification_system_setting_h _setting;
 	rpc_port_proxy_noti_system_setting_h handle = (rpc_port_proxy_noti_system_setting_h)settinghandle;
 
-	WARN("make_setting_from_noti_system_setting");
+	DBG("make_setting_from_noti_system_setting");
 
 	_setting = (notification_system_setting_h)calloc(1, sizeof(struct notification_system_setting));
 	if (_setting == NULL) {
@@ -1201,7 +1158,7 @@ EXPORT_API int make_setting_from_noti_system_setting(
 
 	*setting = _setting;
 
-	WARN("make_setting_from_noti_system_setting done");
+	DBG("make_setting_from_noti_system_setting done");
 
 	return NOTIFICATION_ERROR_NONE;
 }
@@ -1282,7 +1239,7 @@ EXPORT_API int make_noti_system_setting_from_setting(void *settinghandle,
 		setting->dnd_allow_exceptions = g_list_first(setting->dnd_allow_exceptions);
 
 		for (GList *iter = setting->dnd_allow_exceptions; iter != NULL; iter = iter->next) {
-			info = iter->data;
+			info = (dnd_allow_exception_h)iter->data;
 
 			ret = rpc_port_proxy_noti_system_setting_dnd_allow_exception_create(&exception_handle);
 			if (ret == RPC_PORT_ERROR_NONE) {
@@ -1322,7 +1279,7 @@ EXPORT_API int make_setting_from_noti_setting(
 	int lock_screen_content_level;
 	bool app_disabled;
 
-	WARN("make_setting_from_noti_setting");
+	DBG("make_setting_from_noti_setting");
 
 	ret = rpc_port_proxy_noti_setting_get_package_name(handle, &pkg_name);
 	if (ret != RPC_PORT_ERROR_NONE)
@@ -1374,10 +1331,10 @@ EXPORT_API int make_setting_from_noti_setting(
 	setting->do_not_disturb_except = dnd_except;
 	setting->pop_up_notification = pop_up_noti;
 	setting->visibility_class = visibility_class;
-	setting->lock_screen_content_level = lock_screen_content_level;
+	setting->lock_screen_content_level = (lock_screen_content_level_e)lock_screen_content_level;
 	setting->app_disabled = app_disabled;
 
-	WARN("make_setting_from_noti_setting done");
+	DBG("make_setting_from_noti_setting done");
 
 	return NOTIFICATION_ERROR_NONE;
 }

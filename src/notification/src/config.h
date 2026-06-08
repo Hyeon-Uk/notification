@@ -17,6 +17,10 @@
 #ifndef __CONFIG_H__
 #define __CONFIG_H__
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 typedef enum {
 	TIZEN_PROFILE_UNKNOWN = 0,
 	TIZEN_PROFILE_MOBILE = 0x1,
@@ -30,5 +34,9 @@ tizen_profile_t _config_get_tizen_profile(void);
 
 #define TIZEN_FEATURE_ENABLE_NOTI_SETTING                               \
 	(!(_config_get_tizen_profile() & (TIZEN_PROFILE_TV)))
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* __CONFIG_H__ */

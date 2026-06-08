@@ -17,6 +17,11 @@
 #ifndef __NOTIFICATION_DB_H__
 #define __NOTIFICATION_DB_H__
 
+/**
+ * @file notification_db.h
+ * @brief SQLite helpers for the notification database (.notification.db).
+ */
+
 #include <bundle.h>
 #include <sqlite3.h>
 #include <tzplatform_config.h>
