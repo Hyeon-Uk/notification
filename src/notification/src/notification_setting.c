@@ -1068,7 +1068,10 @@ EXPORT_API int notification_system_setting_init_system_setting_table(uid_t uid)
 	sqlite3 *db = NULL;
 	char *query_system_setting = NULL;
 	char *query_dnd_allow_exception = NULL;
+	char *errmsg = NULL;
 	int ret = NOTIFICATION_ERROR_NONE;
+	int sql_ret;
+	bool in_transaction = false;
 
 	INFO("init system setting table [%d]", uid);
 
@@ -1080,6 +1083,14 @@ EXPORT_API int notification_system_setting_init_system_setting_table(uid_t uid)
 		INFO("Setting table is already initialized.");
 		goto out;
 	}
+
+	sql_ret = sqlite3_exec(db, "BEGIN TRANSACTION", NULL, NULL, &errmsg);
+	if (sql_ret != SQLITE_OK) {
+		ERR("Failed to begin transaction [%d][%s]", sql_ret, errmsg);
+		ret = NOTIFICATION_ERROR_FROM_DB;
+		goto out;
+	}
+	in_transaction = true;
 
 	/* notification_system_setting */
 	query_system_setting = sqlite3_mprintf("INSERT INTO %s (uid) "
@@ -1114,11 +1125,30 @@ EXPORT_API int notification_system_setting_init_system_setting_table(uid_t uid)
 	DBG("Initialization is success.");
 
 out:
+	if (in_transaction) {
+		if (ret == NOTIFICATION_ERROR_NONE) {
+			sql_ret = sqlite3_exec(db, "END TRANSACTION", NULL, NULL, &errmsg);
+			if (sql_ret != SQLITE_OK) {
+				ERR("Failed to end transaction [%d][%s]", sql_ret, errmsg);
+				ret = NOTIFICATION_ERROR_FROM_DB;
+			}
+		} else {
+			sql_ret = sqlite3_exec(db, "ROLLBACK TRANSACTION", NULL, NULL, &errmsg);
+			if (sql_ret != SQLITE_OK) {
+				ERR("Failed to rollback transaction [%d][%s]", sql_ret, errmsg);
+				ret = NOTIFICATION_ERROR_FROM_DB;
+			}
+		}
+	}
+
 	if (query_system_setting)
 		sqlite3_free(query_system_setting);
 
 	if (query_dnd_allow_exception)
 		sqlite3_free(query_dnd_allow_exception);
+
+	if (errmsg)
+		sqlite3_free(errmsg);
 
 	if (db)
 		notification_db_close(&db);
