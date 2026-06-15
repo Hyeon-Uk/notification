@@ -227,3 +227,97 @@ TEST_F(NotificationListTest, free_list_null_returns_invalid) {
   EXPECT_EQ(notification_free_list(nullptr),
             NOTIFICATION_ERROR_INVALID_PARAMETER);
 }
+
+/* ------------------------------------------------------------------ */
+/* notification_list_remove — middle element                           */
+/* ------------------------------------------------------------------ */
+
+TEST_F(NotificationListTest, remove_middle_element) {
+  EXPECT_CALL(GetMock<AulMock>(), aul_app_get_appid_bypid(_, _, _))
+      .WillRepeatedly(Invoke(__fake_aul_app_get_appid_bypid));
+
+  notification_h a = notification_create(NOTIFICATION_TYPE_NOTI);
+  notification_h b = notification_create(NOTIFICATION_TYPE_NOTI);
+  notification_h c = notification_create(NOTIFICATION_TYPE_NOTI);
+  ASSERT_NE(a, nullptr);
+  ASSERT_NE(b, nullptr);
+  ASSERT_NE(c, nullptr);
+
+  notification_list_h list = nullptr;
+  list = notification_list_append(list, a);
+  list = notification_list_get_head(list);
+  notification_list_h tmp = notification_list_append(list, b);
+  (void)tmp;
+  tmp = notification_list_append(list, c);
+  (void)tmp;
+
+  /* Rebuild the head pointer. */
+  list = notification_list_get_head(list);
+  ASSERT_EQ(notification_list_get_count(list), 3);
+
+  /* Remove the middle element B. */
+  list = notification_list_remove(list, b);
+  ASSERT_NE(list, nullptr);
+  EXPECT_EQ(notification_list_get_count(list), 2);
+
+  /* The head should be A and the next should be C. */
+  notification_list_h head = notification_list_get_head(list);
+  ASSERT_NE(head, nullptr);
+  EXPECT_EQ(notification_list_get_data(head), a);
+
+  notification_list_h next = notification_list_get_next(head);
+  ASSERT_NE(next, nullptr);
+  EXPECT_EQ(notification_list_get_data(next), c);
+
+  /* B is now a dangling pointer — free it separately. */
+  notification_free(b);
+  notification_free_list(list);
+}
+
+/* ------------------------------------------------------------------ */
+/* notification_list_remove — head element                             */
+/* ------------------------------------------------------------------ */
+
+TEST_F(NotificationListTest, remove_head_element) {
+  EXPECT_CALL(GetMock<AulMock>(), aul_app_get_appid_bypid(_, _, _))
+      .WillRepeatedly(Invoke(__fake_aul_app_get_appid_bypid));
+
+  notification_h a = notification_create(NOTIFICATION_TYPE_NOTI);
+  notification_h b = notification_create(NOTIFICATION_TYPE_NOTI);
+  notification_h c = notification_create(NOTIFICATION_TYPE_NOTI);
+  ASSERT_NE(a, nullptr);
+  ASSERT_NE(b, nullptr);
+  ASSERT_NE(c, nullptr);
+
+  notification_list_h list = nullptr;
+  list = notification_list_append(list, a);
+  list = notification_list_get_head(list);
+  notification_list_append(list, b);
+  notification_list_append(list, c);
+  list = notification_list_get_head(list);
+  ASSERT_EQ(notification_list_get_count(list), 3);
+
+  /* Remove head element A. */
+  list = notification_list_remove(list, a);
+  ASSERT_NE(list, nullptr);
+  EXPECT_EQ(notification_list_get_count(list), 2);
+
+  /* New head must be B and it must have no previous pointer. */
+  notification_list_h head = notification_list_get_head(list);
+  ASSERT_NE(head, nullptr);
+  EXPECT_EQ(notification_list_get_data(head), b);
+  EXPECT_EQ(notification_list_get_prev(head), nullptr);
+
+  notification_free(a);
+  notification_free_list(list);
+}
+
+/* ------------------------------------------------------------------ */
+/* notification_list_append — NULL noti argument                       */
+/* ------------------------------------------------------------------ */
+
+TEST_F(NotificationListTest, append_null_noti) {
+  notification_list_h result = notification_list_append(nullptr, nullptr);
+  EXPECT_EQ(result, nullptr);
+  EXPECT_EQ(get_last_result(), NOTIFICATION_ERROR_INVALID_PARAMETER);
+}

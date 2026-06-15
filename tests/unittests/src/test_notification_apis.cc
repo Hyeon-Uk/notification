@@ -3736,3 +3736,233 @@ TEST_F(NotificationApiTest, create_from_template_invokes_tidl) {
   notification_h n = notification_create_from_template("some.template");
   if (n) notification_free(n);
 }
+
+/* ============================================================== */
+/* notification_set_text — bundle_del paths (L298/343/358/374/   */
+/* 390/407): set same slot twice so existing entries are deleted   */
+/* ============================================================== */
+
+TEST_F(NotificationApiTest, set_text_key_overwrite_deletes_old_bundle_entry) {
+  /* [C1] Calling set_text with a key, then again with a different key
+   * for the same text type triggers the bundle_del path (L298) that
+   * removes the old key-bundle entry before writing the new one. */
+  ASSERT_EQ(notification_set_text(noti_, NOTIFICATION_TEXT_TYPE_TITLE,
+                "title", "key1", NOTIFICATION_VARIABLE_TYPE_NONE),
+            NOTIFICATION_ERROR_NONE);
+  /* Second call with different key — b_key already has an entry → del+add */
+  EXPECT_EQ(notification_set_text(noti_, NOTIFICATION_TEXT_TYPE_TITLE,
+                "title2", "key2", NOTIFICATION_VARIABLE_TYPE_NONE),
+            NOTIFICATION_ERROR_NONE);
+
+  /* Verify the latest value is stored. */
+  char* t = nullptr;
+  EXPECT_EQ(notification_get_text(noti_, NOTIFICATION_TEXT_TYPE_TITLE, &t),
+            NOTIFICATION_ERROR_NONE);
+  EXPECT_NE(t, nullptr);
+}
+
+TEST_F(NotificationApiTest,
+       set_text_format_int_overwrite_deletes_old_bundle_entry) {
+  /* [C2] Two consecutive calls with NOTIFICATION_VARIABLE_TYPE_INT for the
+   * same type slot trigger bundle_del at L343 (type key) and L358 (value
+   * key). */
+  ASSERT_EQ(notification_set_text(noti_, NOTIFICATION_TEXT_TYPE_CONTENT,
+                "val %d", nullptr,
+                NOTIFICATION_VARIABLE_TYPE_INT, 1,
+                NOTIFICATION_VARIABLE_TYPE_NONE),
+            NOTIFICATION_ERROR_NONE);
+  /* Second call: b_format_args already populated → del before re-add. */
+  EXPECT_EQ(notification_set_text(noti_, NOTIFICATION_TEXT_TYPE_CONTENT,
+                "val %d", nullptr,
+                NOTIFICATION_VARIABLE_TYPE_INT, 2,
+                NOTIFICATION_VARIABLE_TYPE_NONE),
+            NOTIFICATION_ERROR_NONE);
+}
+
+TEST_F(NotificationApiTest,
+       set_text_format_double_overwrite_deletes_old_bundle_entry) {
+  /* [C3] Double variable type exercises bundle_del at L374. */
+  ASSERT_EQ(notification_set_text(noti_, NOTIFICATION_TEXT_TYPE_CONTENT,
+                "%.1f", nullptr,
+                NOTIFICATION_VARIABLE_TYPE_DOUBLE, 1.0,
+                NOTIFICATION_VARIABLE_TYPE_NONE),
+            NOTIFICATION_ERROR_NONE);
+  EXPECT_EQ(notification_set_text(noti_, NOTIFICATION_TEXT_TYPE_CONTENT,
+                "%.1f", nullptr,
+                NOTIFICATION_VARIABLE_TYPE_DOUBLE, 2.0,
+                NOTIFICATION_VARIABLE_TYPE_NONE),
+            NOTIFICATION_ERROR_NONE);
+}
+
+TEST_F(NotificationApiTest,
+       set_text_format_string_overwrite_deletes_old_bundle_entry) {
+  /* [C4] String variable type exercises bundle_del at L390. */
+  ASSERT_EQ(notification_set_text(noti_, NOTIFICATION_TEXT_TYPE_CONTENT,
+                "%s", nullptr,
+                NOTIFICATION_VARIABLE_TYPE_STRING, "first",
+                NOTIFICATION_VARIABLE_TYPE_NONE),
+            NOTIFICATION_ERROR_NONE);
+  EXPECT_EQ(notification_set_text(noti_, NOTIFICATION_TEXT_TYPE_CONTENT,
+                "%s", nullptr,
+                NOTIFICATION_VARIABLE_TYPE_STRING, "second",
+                NOTIFICATION_VARIABLE_TYPE_NONE),
+            NOTIFICATION_ERROR_NONE);
+}
+
+TEST_F(NotificationApiTest,
+       set_text_format_count_overwrite_deletes_old_bundle_entry) {
+  /* [C5] Count variable type exercises bundle_del at L407. */
+  ASSERT_EQ(notification_set_text(noti_, NOTIFICATION_TEXT_TYPE_CONTENT,
+                "%d", nullptr,
+                NOTIFICATION_VARIABLE_TYPE_COUNT,
+                NOTIFICATION_COUNT_POS_IN,
+                NOTIFICATION_VARIABLE_TYPE_NONE),
+            NOTIFICATION_ERROR_NONE);
+  EXPECT_EQ(notification_set_text(noti_, NOTIFICATION_TEXT_TYPE_CONTENT,
+                "%d", nullptr,
+                NOTIFICATION_VARIABLE_TYPE_COUNT,
+                NOTIFICATION_COUNT_POS_RIGHT,
+                NOTIFICATION_VARIABLE_TYPE_NONE),
+            NOTIFICATION_ERROR_NONE);
+}
+
+/* ============================================================== */
+/* notification_clone — fully populated noti exercises all the    */
+/* conditional bundle_dup / strdup branches (L1700-1779)          */
+/* ============================================================== */
+
+TEST_F(NotificationApiTest, clone_fully_populated_noti_copies_all_fields) {
+  /* [P2] Build a notification with as many optional fields set as
+   * possible, then clone it.  Every conditional in notification_clone
+   * that wraps a bundle_dup or strdup will be taken. */
+  ASSERT_EQ(notification_set_text(noti_, NOTIFICATION_TEXT_TYPE_TITLE,
+                "Hello", nullptr, NOTIFICATION_VARIABLE_TYPE_NONE),
+            NOTIFICATION_ERROR_NONE);
+  ASSERT_EQ(notification_set_image(noti_, NOTIFICATION_IMAGE_TYPE_ICON,
+                "/i.png"),
+            NOTIFICATION_ERROR_NONE);
+  ASSERT_EQ(notification_set_sound(noti_, NOTIFICATION_SOUND_TYPE_USER_DATA,
+                "/s.ogg"),
+            NOTIFICATION_ERROR_NONE);
+  ASSERT_EQ(notification_set_vibration(noti_,
+                NOTIFICATION_VIBRATION_TYPE_USER_DATA, "/v.wav"),
+            NOTIFICATION_ERROR_NONE);
+  ASSERT_EQ(notification_set_tag(noti_, "mytag"), NOTIFICATION_ERROR_NONE);
+
+  /* Set an execute option to populate b_service_single_launch. */
+  app_control_h ac = nullptr;
+  ASSERT_EQ(app_control_create(&ac), APP_CONTROL_ERROR_NONE);
+  notification_set_launch_option(noti_,
+      NOTIFICATION_LAUNCH_OPTION_APP_CONTROL, ac);
+  app_control_destroy(ac);
+
+  /* Set an event handler to populate b_event_handler[0]. */
+  app_control_h ev_ac = nullptr;
+  ASSERT_EQ(app_control_create(&ev_ac), APP_CONTROL_ERROR_NONE);
+  notification_set_event_handler(noti_,
+      NOTIFICATION_EVENT_TYPE_CLICK_ON_BUTTON_1, ev_ac);
+  app_control_destroy(ev_ac);
+
+  /* Set app_label to exercise that strdup branch. */
+  noti_->app_label = strdup("Test App");
+
+  notification_h clone = nullptr;
+  ASSERT_EQ(notification_clone(noti_, &clone), NOTIFICATION_ERROR_NONE);
+  ASSERT_NE(clone, nullptr);
+
+  /* Spot-check: tag and type must be copied. */
+  const char* tag = nullptr;
+  EXPECT_EQ(notification_get_tag(clone, &tag), NOTIFICATION_ERROR_NONE);
+  EXPECT_STREQ(tag, "mytag");
+  EXPECT_EQ(clone->type, noti_->type);
+
+  notification_free(clone);
+}
+
+/* ============================================================== */
+/* notification_free — app_icon_path and temp_content freed (L1896/1905) */
+/* ============================================================== */
+
+TEST_F(NotificationApiTest, free_releases_app_icon_path_and_temp_content) {
+  /* [E1] notification_free must free app_icon_path (L1896) and
+   * temp_content (L1905) when they are set. */
+  notification_h n = notification_create(NOTIFICATION_TYPE_NOTI);
+  ASSERT_NE(n, nullptr);
+  n->app_icon_path = strdup("/app/icon.png");
+  n->temp_content = strdup("cached content");
+  /* Must not crash or leak — valgrind/ASAN would catch dangling writes. */
+  EXPECT_EQ(notification_free(n), NOTIFICATION_ERROR_NONE);
+}
+
+/* ============================================================== */
+/* notification_ipc_make_gvariant_from_noti — populated optional  */
+/* fields exercise the bundle-encode branches (L83-310)            */
+/* ============================================================== */
+
+TEST_F(NotificationApiTest,
+       ipc_make_gvariant_from_noti_with_text_and_image_fields) {
+  /* [P2] A noti with b_text, b_image_path and sound_path set causes
+   * notification_ipc_make_gvariant_from_noti to enter the optional-field
+   * encoding branches that are dead when the noti is empty. */
+  ASSERT_EQ(notification_set_text(noti_, NOTIFICATION_TEXT_TYPE_TITLE,
+                "Title", nullptr, NOTIFICATION_VARIABLE_TYPE_NONE),
+            NOTIFICATION_ERROR_NONE);
+  ASSERT_EQ(notification_set_image(noti_, NOTIFICATION_IMAGE_TYPE_ICON,
+                "/icon.png"),
+            NOTIFICATION_ERROR_NONE);
+  ASSERT_EQ(notification_set_sound(noti_, NOTIFICATION_SOUND_TYPE_USER_DATA,
+                "/sound.ogg"),
+            NOTIFICATION_ERROR_NONE);
+  ASSERT_EQ(notification_set_vibration(noti_,
+                NOTIFICATION_VIBRATION_TYPE_USER_DATA, "/vib.wav"),
+            NOTIFICATION_ERROR_NONE);
+  ASSERT_EQ(notification_set_tag(noti_, "tag1"), NOTIFICATION_ERROR_NONE);
+
+  GVariant* v = notification_ipc_make_gvariant_from_noti(noti_, false);
+  EXPECT_NE(v, nullptr);
+  if (v) g_variant_unref(v);
+}
+
+TEST_F(NotificationApiTest,
+       ipc_make_gvariant_from_noti_with_launch_and_event_handlers) {
+  /* [P3] Populate b_service_single_launch (via set_launch_option) and
+   * b_event_handler[0] (via set_event_handler) to hit the corresponding
+   * optional-field encoding branches. */
+  app_control_h ac = nullptr;
+  ASSERT_EQ(app_control_create(&ac), APP_CONTROL_ERROR_NONE);
+  ASSERT_EQ(app_control_set_app_id(ac, "com.test"), APP_CONTROL_ERROR_NONE);
+  notification_set_launch_option(noti_,
+      NOTIFICATION_LAUNCH_OPTION_APP_CONTROL, ac);
+  app_control_destroy(ac);
+
+  app_control_h ev = nullptr;
+  ASSERT_EQ(app_control_create(&ev), APP_CONTROL_ERROR_NONE);
+  notification_set_event_handler(noti_,
+      NOTIFICATION_EVENT_TYPE_CLICK_ON_BUTTON_1, ev);
+  app_control_destroy(ev);
+
+  /* Also set launch_app_id to exercise that branch. */
+  noti_->launch_app_id = strdup("com.test.launch");
+
+  GVariant* v = notification_ipc_make_gvariant_from_noti(noti_, false);
+  EXPECT_NE(v, nullptr);
+  if (v) g_variant_unref(v);
+
+  free(noti_->launch_app_id);
+  noti_->launch_app_id = nullptr;
+}
+
+TEST_F(NotificationApiTest,
+       ipc_make_gvariant_from_noti_with_format_args) {
+  /* [P4] A noti whose b_format_args and b_key bundles are populated
+   * triggers the format-args and key encoding branches. */
+  ASSERT_EQ(notification_set_text(noti_, NOTIFICATION_TEXT_TYPE_CONTENT,
+                "%d items", "item_key",
+                NOTIFICATION_VARIABLE_TYPE_INT, 5,
+                NOTIFICATION_VARIABLE_TYPE_NONE),
+            NOTIFICATION_ERROR_NONE);
+
+  GVariant* v = notification_ipc_make_gvariant_from_noti(noti_, false);
+  EXPECT_NE(v, nullptr);
+  if (v) g_variant_unref(v);
+}

@@ -2532,3 +2532,153 @@ TEST_F(NotificationInternalTest, del_deferred_task_invokes_tidl_body) {
       .WillByDefault(::testing::Return(RPC_PORT_ERROR_IO_ERROR));
   notification_del_deferred_task(__dummy_deferred_cb);
 }
+
+/* ------------------------------------------------------------- */
+/* notification_resister_changed_cb_for_uid                       */
+/* — monitor_init failure path → IO_ERROR                         */
+/* ------------------------------------------------------------- */
+
+TEST_F(NotificationInternalTest,
+       resister_changed_cb_for_uid_monitor_init_failure) {
+  ON_CALL(GetMock<NotiServiceProxyMock>(),
+          rpc_port_proxy_noti_service_connect_sync(_))
+      .WillByDefault(Return(RPC_PORT_ERROR_IO_ERROR));
+
+  static notification_changed_cb cb = [](void*, notification_type_e) {};
+  EXPECT_EQ(notification_resister_changed_cb_for_uid(cb, nullptr, 5001),
+            NOTIFICATION_ERROR_IO_ERROR);
+}
+
+/* ------------------------------------------------------------- */
+/* notification_unresister_changed_cb_for_uid                     */
+/* — hash not initialized → INVALID_PARAMETER                     */
+/* ------------------------------------------------------------- */
+
+TEST_F(NotificationInternalTest,
+       unresister_changed_cb_for_uid_no_hash) {
+  /* No callback has been registered under uid 9999, so the internal
+   * hash either doesn't exist or doesn't contain this uid.          */
+  static notification_changed_cb cb = [](void*, notification_type_e) {};
+  int ret = notification_unresister_changed_cb_for_uid(cb, 9999);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_INVALID_PARAMETER);
+}
+
+/* ------------------------------------------------------------- */
+/* notification_register_detailed_changed_cb_for_uid              */
+/* — monitor_init failure path → IO_ERROR                         */
+/* ------------------------------------------------------------- */
+
+TEST_F(NotificationInternalTest,
+       register_detailed_changed_cb_for_uid_monitor_init_failure) {
+  ON_CALL(GetMock<NotiServiceProxyMock>(),
+          rpc_port_proxy_noti_service_connect_sync(_))
+      .WillByDefault(Return(RPC_PORT_ERROR_IO_ERROR));
+
+  static notification_detailed_changed_cb cb =
+      [](void*, notification_type_e, notification_op*, int) {};
+  EXPECT_EQ(notification_register_detailed_changed_cb_for_uid(
+                cb, nullptr, 5001),
+            NOTIFICATION_ERROR_IO_ERROR);
+}
+
+/* ------------------------------------------------------------- */
+/* notification_get_noti_block_state — null state arg             */
+/* ------------------------------------------------------------- */
+
+TEST_F(NotificationInternalTest, get_noti_block_state_null_state) {
+  EXPECT_EQ(notification_get_noti_block_state(nullptr),
+            NOTIFICATION_ERROR_INVALID_PARAMETER);
+}
+
+/* ------------------------------------------------------------- */
+/* notification_set_text — bundle_del path (overwrite)            */
+/* ------------------------------------------------------------- */
+
+TEST_F(NotificationInternalTest, set_text_overwrite_existing) {
+  /* First set establishes the bundle entry. */
+  ASSERT_EQ(notification_set_text(noti_, NOTIFICATION_TEXT_TYPE_TITLE,
+                "first", nullptr, NOTIFICATION_VARIABLE_TYPE_NONE),
+            NOTIFICATION_ERROR_NONE);
+  /* Second set on the same type must delete the old bundle entry and
+   * re-insert — verifying the bundle_del (overwrite) code path.     */
+  ASSERT_EQ(notification_set_text(noti_, NOTIFICATION_TEXT_TYPE_TITLE,
+                "second", nullptr, NOTIFICATION_VARIABLE_TYPE_NONE),
+            NOTIFICATION_ERROR_NONE);
+
+  char* text = nullptr;
+  EXPECT_EQ(notification_get_text(noti_, NOTIFICATION_TEXT_TYPE_TITLE, &text),
+            NOTIFICATION_ERROR_NONE);
+  ASSERT_NE(text, nullptr);
+  EXPECT_STREQ(text, "second");
+}
+
+/* ------------------------------------------------------------- */
+/* notification_clone — launch_app_id is cloned                   */
+/* ------------------------------------------------------------- */
+
+TEST_F(NotificationInternalTest, clone_noti_with_launch_app_id) {
+  /* Set a launch app id on the original. */
+  ASSERT_EQ(notification_set_application(noti_, "com.example.launch"),
+            NOTIFICATION_ERROR_NONE);
+
+  notification_h clone = nullptr;
+  ASSERT_EQ(notification_clone(noti_, &clone), NOTIFICATION_ERROR_NONE);
+  ASSERT_NE(clone, nullptr);
+
+  char* app_id = nullptr;
+  EXPECT_EQ(notification_get_application(clone, &app_id),
+            NOTIFICATION_ERROR_NONE);
+  ASSERT_NE(app_id, nullptr);
+  EXPECT_STREQ(app_id, "com.example.launch");
+
+  notification_free(clone);
+}
+
+/* ------------------------------------------------------------- */
+/* notification_delete_by_priv_id — null app_id path (L934-944)  */
+/* ------------------------------------------------------------- */
+
+TEST_F(NotificationInternalTest,
+       delete_by_priv_id_null_app_id_enters_tidl_path) {
+  /* [P2-null-app_id] When app_id is NULL the function calls
+   * notification_get_app_id_by_pid (AUL) to get the caller id, then
+   * calls TIDL.  With TIDL connect mocked to fail we still execute L934-
+   * 944 (the app_id == NULL branch). */
+  ON_CALL(GetMock<NotiServiceProxyMock>(),
+          rpc_port_proxy_noti_service_connect_sync(_))
+      .WillByDefault(Return(RPC_PORT_ERROR_IO_ERROR));
+  /* AUL lookup uses the already-installed WillRepeatedly from SetUp. */
+  int ret = notification_delete_by_priv_id(nullptr,
+                                           NOTIFICATION_TYPE_NOTI, 1);
+  /* Any non-crash result is acceptable; the key is that L934 is reached. */
+  (void)ret;
+}
+
+TEST_F(NotificationInternalTest,
+       delete_by_priv_id_with_app_id_enters_tidl_path) {
+  /* [P1-with-app_id] When app_id is provided the function strdup-s it and
+   * calls TIDL.  The strdup branch (L937) and TIDL call (L940) execute. */
+  ON_CALL(GetMock<NotiServiceProxyMock>(),
+          rpc_port_proxy_noti_service_connect_sync(_))
+      .WillByDefault(Return(RPC_PORT_ERROR_IO_ERROR));
+  int ret = notification_delete_by_priv_id("org.tizen.testapp",
+                                           NOTIFICATION_TYPE_NOTI, 1);
+  (void)ret;
+}
+
+/* ------------------------------------------------------------- */
+/* notification_delete_all_by_type — null app_id uses AUL (L903) */
+/* ------------------------------------------------------------- */
+
+TEST_F(NotificationInternalTest,
+       delete_all_by_type_null_app_id_uses_aul_path) {
+  /* [N2-null-app_id] When app_id == NULL the internal
+   * notification_delete_all_by_type_for_uid calls
+   * notification_get_app_id_by_pid which uses AUL.  With TIDL connect
+   * mocked to fail we still exercise L903. */
+  ON_CALL(GetMock<NotiServiceProxyMock>(),
+          rpc_port_proxy_noti_service_connect_sync(_))
+      .WillByDefault(Return(RPC_PORT_ERROR_IO_ERROR));
+  int ret = notification_delete_all_by_type(nullptr, NOTIFICATION_TYPE_NOTI);
+  (void)ret;
+}

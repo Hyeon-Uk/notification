@@ -850,3 +850,150 @@ TEST_F(NotificationSettingApiTidlFailTest,
   notification_setting_h out = nullptr;
   notification_setting_get_setting(&out);
 }
+
+/* ============================================================== */
+/* notification_system_setting_get_dnd_allow_exceptions           */
+/* — type found and type not found                                 */
+/* ============================================================== */
+
+TEST_F(NotificationSettingApiTest, get_dnd_allow_exceptions_existing_type) {
+  notification_system_setting_h s = make_sys_setting();
+
+  /* Build GList manually to avoid the mocked g_list_append. */
+  auto* exc = static_cast<struct notification_system_setting_dnd_allow_exception*>(
+      malloc(sizeof(struct notification_system_setting_dnd_allow_exception)));
+  ASSERT_NE(exc, nullptr);
+  exc->type = NOTIFICATION_DND_ALLOWED_CALLS;
+  exc->value = 7;
+  auto* node = static_cast<GList*>(malloc(sizeof(GList)));
+  ASSERT_NE(node, nullptr);
+  node->data = exc;
+  node->next = nullptr;
+  node->prev = nullptr;
+  s->dnd_allow_exceptions = node;
+
+  int value = 0;
+  EXPECT_EQ(notification_system_setting_get_dnd_allow_exceptions(s,
+                NOTIFICATION_DND_ALLOWED_CALLS, &value),
+            NOTIFICATION_ERROR_NONE);
+  EXPECT_EQ(value, 7);
+
+  free(exc);
+  free(node);
+  free(s);
+}
+
+TEST_F(NotificationSettingApiTest, get_dnd_allow_exceptions_nonexistent_type) {
+  notification_system_setting_h s = make_sys_setting();
+  /* dnd_allow_exceptions list is empty — type not found → INVALID_PARAMETER */
+  int value = 0;
+  EXPECT_EQ(notification_system_setting_get_dnd_allow_exceptions(s,
+                NOTIFICATION_DND_ALLOWED_CALLS, &value),
+            NOTIFICATION_ERROR_INVALID_PARAMETER);
+  free(s);
+}
+
+/* ============================================================== */
+/* notification_system_setting_set_dnd_allow_exceptions           */
+/* — new entry and update of existing entry                        */
+/* ============================================================== */
+
+TEST_F(NotificationSettingApiTest, set_dnd_allow_exceptions_new_entry) {
+  notification_system_setting_h s = make_sys_setting();
+
+  /* Covers the 'else' branch (new malloc'd entry) in set_dnd_allow_exceptions.
+   * g_list_append is mocked and returns NULL, so dnd_allow_exceptions stays
+   * NULL, but the function still returns NONE after creating the entry. */
+  EXPECT_EQ(notification_system_setting_set_dnd_allow_exceptions(s,
+                NOTIFICATION_DND_ALLOWED_CALLS, 3),
+            NOTIFICATION_ERROR_NONE);
+
+  free(s);
+}
+
+TEST_F(NotificationSettingApiTest, set_dnd_allow_exceptions_update_existing) {
+  notification_system_setting_h s = make_sys_setting();
+
+  /* Build GList manually with an existing entry (type=CALLS, value=5). */
+  auto* exc = static_cast<struct notification_system_setting_dnd_allow_exception*>(
+      malloc(sizeof(struct notification_system_setting_dnd_allow_exception)));
+  ASSERT_NE(exc, nullptr);
+  exc->type = NOTIFICATION_DND_ALLOWED_CALLS;
+  exc->value = 5;
+  auto* node = static_cast<GList*>(malloc(sizeof(GList)));
+  ASSERT_NE(node, nullptr);
+  node->data = exc;
+  node->next = nullptr;
+  node->prev = nullptr;
+  s->dnd_allow_exceptions = node;
+
+  /* Second set on the same type must update in-place (covers L603-605). */
+  EXPECT_EQ(notification_system_setting_set_dnd_allow_exceptions(s,
+                NOTIFICATION_DND_ALLOWED_CALLS, 9),
+            NOTIFICATION_ERROR_NONE);
+  EXPECT_EQ(exc->value, 9);
+
+  free(exc);
+  free(node);
+  free(s);
+}
+
+/* ============================================================== */
+/* notification_register_system_setting_dnd_changed_cb_for_uid    */
+/* — monitor_init failure → IO_ERROR                              */
+/* ============================================================== */
+
+TEST_F(NotificationSettingApiTest,
+       register_dnd_changed_cb_monitor_init_failure) {
+  ON_CALL(GetMock<NotiServiceProxyMock>(),
+          rpc_port_proxy_noti_service_connect_sync(_))
+      .WillByDefault(Return(RPC_PORT_ERROR_IO_ERROR));
+
+  static dnd_changed_cb cb = [](void*, int) {};
+  EXPECT_EQ(notification_register_system_setting_dnd_changed_cb_for_uid(
+                cb, nullptr, 5001),
+            NOTIFICATION_ERROR_IO_ERROR);
+}
+
+/* ============================================================== */
+/* notification_unregister_system_setting_dnd_changed_cb_for_uid  */
+/* — hash not initialized → INVALID_PARAMETER                     */
+/* — uid not found in hash → INVALID_PARAMETER                    */
+/* ============================================================== */
+
+TEST_F(NotificationSettingApiTest,
+       unregister_dnd_changed_cb_no_hash) {
+  /* The global hash is NULL when no callback has been registered.
+   * Make sure we use a callback that was never registered.          */
+  static dnd_changed_cb cb = [](void*, int) {};
+  /* _noti_dnd_cb_hash may be NULL or may not contain this uid. Either
+   * way the function must return INVALID_PARAMETER. */
+  int ret = notification_unregister_system_setting_dnd_changed_cb_for_uid(
+      cb, 9999 /* uid unlikely in any hash */);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_INVALID_PARAMETER);
+}
+
+TEST_F(NotificationSettingApiTest,
+       unregister_dnd_changed_cb_different_uid) {
+  ON_CALL(GetMock<NotiServiceProxyMock>(),
+          rpc_port_proxy_noti_service_connect_sync(_))
+      .WillByDefault(Return(RPC_PORT_ERROR_NONE));
+
+  static dnd_changed_cb cb = [](void*, int) {};
+  /* Register under uid 5001. */
+  int reg = notification_register_system_setting_dnd_changed_cb_for_uid(
+      cb, nullptr, 5001);
+  /* If monitor_init itself fails we can't proceed with the uid test. */
+  if (reg != NOTIFICATION_ERROR_NONE) {
+    GTEST_SKIP() << "monitor init unavailable; skipping uid-mismatch test";
+    return;
+  }
+
+  /* Unregister under a DIFFERENT uid — the entry is not there. */
+  EXPECT_EQ(notification_unregister_system_setting_dnd_changed_cb_for_uid(
+                cb, 9999),
+            NOTIFICATION_ERROR_INVALID_PARAMETER);
+
+  /* Clean up: unregister the actual uid so state is not leaked. */
+  notification_unregister_system_setting_dnd_changed_cb_for_uid(cb, 5001);
+}

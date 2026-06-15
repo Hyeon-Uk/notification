@@ -149,3 +149,105 @@ TEST_F(NotificationDBTest, db_close_sqlite_error_returns_from_db) {
   EXPECT_EQ(notification_db_close(&dummy),
             NOTIFICATION_ERROR_FROM_DB);
 }
+
+/* ============================================================== */
+/* notification_db_exec — sqlite3_prepare_v2 failure path (L82)  */
+/* ============================================================== */
+
+TEST_F(NotificationDBTest, db_exec_prepare_fail_returns_from_db) {
+  /* [N1] sqlite3_open_v2 succeeds, then sqlite3_prepare_v2 returns
+   * SQLITE_ERROR → notification_db_exec must return
+   * NOTIFICATION_ERROR_FROM_DB.
+   * We use the fake open so db is a real-looking pointer, avoiding
+   * a crash when sqlite3_errmsg(db) is called inside the ERR macro. */
+  EXPECT_CALL(GetMock<SqliteMock>(), sqlite3_open_v2(_, _, _, _))
+      .WillOnce(Invoke(__fake_sqlite3_open_v2));
+  EXPECT_CALL(GetMock<SqliteMock>(), sqlite3_prepare_v2(_, _, _, _, _))
+      .WillOnce(Return(SQLITE_ERROR));
+
+  sqlite3* db = notification_db_open();
+  ASSERT_NE(db, nullptr);
+
+  int num_changed = 0;
+  EXPECT_EQ(notification_db_exec(db, "SELECT 1", &num_changed),
+            NOTIFICATION_ERROR_FROM_DB);
+
+  /* Clean up the fake db (it is a heap allocation from __fake_sqlite3_open_v2). */
+  EXPECT_CALL(GetMock<SqliteMock>(), sqlite3_close(_))
+      .WillOnce(Return(SQLITE_OK));
+  notification_db_close(&db);
+}
+
+/* ============================================================== */
+/* notification_db_exec — sqlite3_step error path (L93)           */
+/* ============================================================== */
+
+TEST_F(NotificationDBTest, db_exec_step_error_returns_from_db) {
+  /* [N2] sqlite3_prepare_v2 succeeds but sqlite3_step returns an error
+   * code other than SQLITE_OK/SQLITE_DONE →
+   * notification_db_exec must return NOTIFICATION_ERROR_FROM_DB. */
+  EXPECT_CALL(GetMock<SqliteMock>(), sqlite3_open_v2(_, _, _, _))
+      .WillOnce(Invoke(__fake_sqlite3_open_v2));
+  EXPECT_CALL(GetMock<SqliteMock>(), sqlite3_prepare_v2(_, _, _, _, _))
+      .WillOnce(Return(SQLITE_OK));
+  EXPECT_CALL(GetMock<SqliteMock>(), sqlite3_step(_))
+      .WillOnce(Return(SQLITE_BUSY));
+  EXPECT_CALL(GetMock<SqliteMock>(), sqlite3_finalize(_))
+      .WillOnce(Return(SQLITE_OK));
+
+  sqlite3* db = notification_db_open();
+  ASSERT_NE(db, nullptr);
+
+  int num_changed = 0;
+  EXPECT_EQ(notification_db_exec(db, "SELECT 1", &num_changed),
+            NOTIFICATION_ERROR_FROM_DB);
+
+  EXPECT_CALL(GetMock<SqliteMock>(), sqlite3_close(_))
+      .WillOnce(Return(SQLITE_OK));
+  notification_db_close(&db);
+}
+
+/* ============================================================== */
+/* notification_db_exec — SQLITE_DONE path with null num_changes  */
+/* ============================================================== */
+
+/* ============================================================== */
+/* notification_db_open — access() denied path (L37-38)          */
+/* ============================================================== */
+
+TEST_F(NotificationDBTest, db_open_access_denied_returns_null) {
+  /* [N3] When access(database, R_OK) returns -1 (permission denied or
+   * file not found), notification_db_open must return NULL without
+   * calling sqlite3_open_v2. */
+  EXPECT_CALL(GetMock<GlibMock>(), access(_, _))
+      .WillOnce(Return(-1));
+  EXPECT_CALL(GetMock<SqliteMock>(), sqlite3_open_v2(_, _, _, _))
+      .Times(0);
+
+  EXPECT_EQ(notification_db_open(), nullptr);
+}
+
+TEST_F(NotificationDBTest, db_exec_step_done_null_num_changes) {
+  /* [E1] sqlite3_step returns SQLITE_DONE and num_changes is NULL →
+   * sqlite3_changes must NOT be called; return NONE. */
+  EXPECT_CALL(GetMock<SqliteMock>(), sqlite3_open_v2(_, _, _, _))
+      .WillOnce(Invoke(__fake_sqlite3_open_v2));
+  EXPECT_CALL(GetMock<SqliteMock>(), sqlite3_prepare_v2(_, _, _, _, _))
+      .WillOnce(Return(SQLITE_OK));
+  EXPECT_CALL(GetMock<SqliteMock>(), sqlite3_step(_))
+      .WillOnce(Return(SQLITE_DONE));
+  EXPECT_CALL(GetMock<SqliteMock>(), sqlite3_changes(_))
+      .Times(0);
+  EXPECT_CALL(GetMock<SqliteMock>(), sqlite3_finalize(_))
+      .WillOnce(Return(SQLITE_OK));
+
+  sqlite3* db = notification_db_open();
+  ASSERT_NE(db, nullptr);
+
+  EXPECT_EQ(notification_db_exec(db, "DELETE FROM x", nullptr),
+            NOTIFICATION_ERROR_NONE);
+
+  EXPECT_CALL(GetMock<SqliteMock>(), sqlite3_close(_))
+      .WillOnce(Return(SQLITE_OK));
+  notification_db_close(&db);
+}
