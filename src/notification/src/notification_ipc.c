@@ -57,8 +57,6 @@ static inline bundle *_create_bundle_from_bundle_raw(bundle_raw *string)
 
 	return bundle_decode(string, strlen((char *)string));
 }
-
-/* LCOV_EXCL_START */
 EXPORT_API GVariant *notification_ipc_make_gvariant_from_noti(notification_h noti, bool translate)
 {
 	WARN("make gvariant from noti");
@@ -305,10 +303,8 @@ static gboolean _variant_to_int_dict(GHashTable **dict, GVariant *variant)
 	while (g_variant_iter_next(&iter, "{iv}", &key, &value)) {
 		hash_key = (int *)calloc(sizeof(int), 1);
 		if (hash_key == NULL) {
-			/* LCOV_EXCL_START */
 			g_hash_table_unref(*dict);
 			return FALSE;
-			/* LCOV_EXCL_STOP */
 		}
 		*hash_key = key;
 		g_hash_table_insert(*dict, (gpointer)hash_key, value);
@@ -512,4 +508,3 @@ EXPORT_API int notification_ipc_make_noti_from_gvariant(notification_h noti,
 
 	return NOTIFICATION_ERROR_NONE;
 }
-/* LCOV_EXCL_STOP */

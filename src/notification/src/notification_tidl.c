@@ -116,13 +116,10 @@ static void _delete_event(rpc_port_proxy_notification_h notihandle)
 
 	notification_delete_event_handler_cb(priv_id);
 }
-
-/* LCOV_EXCL_START */
 static void _disturb_app()
 {
 	notification_call_disturb_cb();
 }
-/* LCOV_EXCL_STOP */
 
 // event callback
 static void _rpc_port_proxy_noti_service_event_received_cb (void *user_data,
@@ -152,10 +149,8 @@ static notification_op *_tidl_create_op(notification_op_type_e type,
 
 	op_list = (notification_op *)malloc(sizeof(notification_op) * num_op);
 	if (op_list == NULL) {
-		/* LCOV_EXCL_START */
 		ERR("Failed to alloc memory");
 		return NULL;
-		/* LCOV_EXCL_STOP */
 	}
 
 	memset(op_list, 0x0, sizeof(notification_op) * num_op);

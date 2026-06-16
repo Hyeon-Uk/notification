@@ -49,8 +49,6 @@ struct _noti_dnd_cb_info {
 };
 
 static GHashTable *_noti_dnd_cb_hash = NULL;
-
-/* LCOV_EXCL_START */
 EXPORT_API int notification_setting_get_setting_array_for_uid(notification_setting_h *setting_array, int *count, uid_t uid)
 {
 	if (setting_array == NULL || count == NULL) {
@@ -75,16 +73,10 @@ EXPORT_API int notification_setting_get_setting_by_appid_for_uid(const char *app
 
 	return notification_tidl_request_get_setting_by_app_id(app_id, setting, uid);
 }
-/* LCOV_EXCL_STOP */
-
-/* LCOV_EXCL_START */
 EXPORT_API int notification_setting_get_setting_by_package_name(const char *package_name, notification_setting_h *setting)
 {
 	return notification_setting_get_setting_by_appid_for_uid(package_name, setting, aul_getuid());
 }
-/* LCOV_EXCL_STOP */
-
-/* LCOV_EXCL_START */
 EXPORT_API int notification_setting_get_setting(notification_setting_h *setting)
 {
 	int ret;
@@ -100,9 +92,6 @@ EXPORT_API int notification_setting_get_setting(notification_setting_h *setting)
 
 	return ret;
 }
-/* LCOV_EXCL_STOP */
-
-/* LCOV_EXCL_START */
 EXPORT_API int notification_setting_get_package_name(notification_setting_h setting, char **value)
 {
 	if (setting == NULL || value == NULL) {
@@ -119,9 +108,6 @@ EXPORT_API int notification_setting_get_package_name(notification_setting_h sett
 
 	return NOTIFICATION_ERROR_NONE;
 }
-/* LCOV_EXCL_STOP */
-
-/* LCOV_EXCL_START */
 EXPORT_API int notification_setting_get_appid(notification_setting_h setting, char **app_id)
 {
 	if (setting == NULL || app_id == NULL) {
@@ -138,7 +124,6 @@ EXPORT_API int notification_setting_get_appid(notification_setting_h setting, ch
 
 	return NOTIFICATION_ERROR_NONE;
 }
-/* LCOV_EXCL_STOP */
 
 EXPORT_API int notification_setting_set_allow_to_notify(notification_setting_h setting, bool value)
 {
@@ -163,7 +148,6 @@ EXPORT_API int notification_setting_set_do_not_disturb_except(notification_setti
 
 	return NOTIFICATION_ERROR_NONE;
 }
-/* LCOV_EXCL_STOP */
 
 EXPORT_API int notification_setting_get_visibility_class(notification_setting_h setting, int *value)
 {
@@ -255,8 +239,6 @@ EXPORT_API int notification_setting_free_notification(notification_setting_h set
 
 	return NOTIFICATION_ERROR_NONE;
 }
-
-/* LCOV_EXCL_START */
 static bool _is_package_in_setting_table(sqlite3 *db, const char *package_name,
 			const char *app_id, uid_t uid)
 {
@@ -313,9 +295,6 @@ out:
 
 	return err;
 }
-/* LCOV_EXCL_STOP */
-
-/* LCOV_EXCL_START */
 static int _foreach_app_info_callback(const pkgmgrinfo_appinfo_h handle,
 				void *user_data)
 {
@@ -371,9 +350,6 @@ out:
 
 	return err;
 }
-/* LCOV_EXCL_STOP */
-
-/* LCOV_EXCL_START */
 EXPORT_API int notification_setting_refresh_setting_table(uid_t uid)
 {
 	int err = NOTIFICATION_ERROR_NONE;
@@ -425,7 +401,6 @@ out:
 
 	return err;
 }
-/* LCOV_EXCL_STOP */
 
 EXPORT_API int notification_system_setting_load_system_setting_for_uid(notification_system_setting_h *system_setting, uid_t uid)
 {
@@ -646,9 +621,6 @@ static gint _noti_dnd_cb_compare(gconstpointer a, gconstpointer b)
 
 	return 1;
 }
-/* LCOV_EXCL_STOP */
-
-/* LCOV_EXCL_START */
 void notification_call_dnd_changed_cb_for_uid(int do_not_disturb, uid_t uid)
 {
 	GList *noti_dnd_cb_list = NULL;
@@ -672,9 +644,6 @@ void notification_call_dnd_changed_cb_for_uid(int do_not_disturb, uid_t uid)
 			dnd_data->callback(dnd_data->user_data, do_not_disturb);
 	}
 }
-/* LCOV_EXCL_STOP */
-
-/* LCOV_EXCL_START */
 EXPORT_API int notification_register_system_setting_dnd_changed_cb_for_uid(dnd_changed_cb callback, void *user_data, uid_t uid)
 {
 	GList *noti_dnd_list = NULL;
@@ -718,9 +687,6 @@ EXPORT_API int notification_register_system_setting_dnd_changed_cb_for_uid(dnd_c
 
 	return NOTIFICATION_ERROR_NONE;
 }
-/* LCOV_EXCL_STOP */
-
-/* LCOV_EXCL_START */
 EXPORT_API int notification_register_system_setting_dnd_changed_cb(dnd_changed_cb callback, void *user_data)
 {
 	return notification_register_system_setting_dnd_changed_cb_for_uid(callback, user_data, aul_getuid());
@@ -766,16 +732,10 @@ EXPORT_API int notification_unregister_system_setting_dnd_changed_cb_for_uid(dnd
 
 	return NOTIFICATION_ERROR_NONE;
 }
-/* LCOV_EXCL_STOP */
-
-/* LCOV_EXCL_START */
 EXPORT_API int notification_unregister_system_setting_dnd_changed_cb(dnd_changed_cb callback)
 {
 	return notification_unregister_system_setting_dnd_changed_cb_for_uid(callback, aul_getuid());
 }
-/* LCOV_EXCL_STOP */
-
-/* LCOV_EXCL_START */
 static bool _is_uid_in_system_setting_table(sqlite3 *db, uid_t uid)
 {
 	sqlite3_stmt *stmt = NULL;
@@ -820,9 +780,6 @@ out:
 
 	return err;
 }
-/* LCOV_EXCL_STOP */
-
-/* LCOV_EXCL_START */
 EXPORT_API int notification_system_setting_init_system_setting_table(uid_t uid)
 {
 	sqlite3 *db = NULL;
@@ -885,4 +842,3 @@ out:
 
 	return ret;
 }
-/* LCOV_EXCL_STOP */

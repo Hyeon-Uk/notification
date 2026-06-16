@@ -1195,23 +1195,17 @@ EXPORT_API int notification_get_launch_option(notification_h noti,
 			if (ret == APP_CONTROL_ERROR_NONE) {
 				*app_control = app_control_new;
 			} else {
-				/* LCOV_EXCL_START */
 				app_control_destroy(app_control_new);
 				ERR("Failed to import app control from bundle[%d]", ret);
 				return NOTIFICATION_ERROR_IO_ERROR;
-				/* LCOV_EXCL_STOP */
 			}
 		} else {
-			/* LCOV_EXCL_START */
 			ERR("Failed to create app control[%d]", ret);
 			return NOTIFICATION_ERROR_IO_ERROR;
-			/* LCOV_EXCL_STOP */
 		}
 	} else {
-		/* LCOV_EXCL_START */
 		ERR("Failed to get execute option[%d]", ret);
 		return ret;
-		/* LCOV_EXCL_STOP */
 	}
 
 	return NOTIFICATION_ERROR_NONE;
@@ -1264,42 +1258,34 @@ EXPORT_API int notification_get_event_handler(notification_h noti, notification_
 
 	if (event_type < NOTIFICATION_EVENT_TYPE_CLICK_ON_BUTTON_1
 		|| event_type > NOTIFICATION_EVENT_TYPE_MAX) {
-		/* LCOV_EXCL_START */
 		ERR("Invalid event type");
 		err = NOTIFICATION_ERROR_INVALID_PARAMETER;
 		goto out;
-		/* LCOV_EXCL_STOP */
 	}
 
 	b = noti->b_event_handler[event_type];
 	if (b == NULL) {
-		/* LCOV_EXCL_START */
 		ERR("No event handler");
 		err = NOTIFICATION_ERROR_NOT_EXIST_ID;
 		goto out;
-		/* LCOV_EXCL_STOP */
 	}
 
 	err = app_control_create(&app_control_new);
 	if (err != APP_CONTROL_ERROR_NONE || app_control_new == NULL) {
-		/* LCOV_EXCL_START */
 		ERR("Failed to create app_control[%d]", err);
 		err = NOTIFICATION_ERROR_IO_ERROR;
 		goto out;
-		/* LCOV_EXCL_STOP */
 	}
 
 	err = app_control_import_from_bundle(app_control_new, b);
 	if (err == APP_CONTROL_ERROR_NONE) {
 		*event_handler = app_control_new;
 	} else {
-		/* LCOV_EXCL_START */
 		app_control_destroy(app_control_new);
 		app_control_new = NULL;
 		ERR("Failed to import app control from bundle[%d]", err);
 		err = NOTIFICATION_ERROR_IO_ERROR;
 		goto out;
-		/* LCOV_EXCL_STOP */
 	}
 
 out:
@@ -1545,11 +1531,9 @@ static notification_h _notification_create(notification_type_e type)
 
 	noti = (notification_h)calloc(1, sizeof(struct _notification));
 	if (noti == NULL) {
-		/* LCOV_EXCL_START */
 		ERR("Failed to alloc memory");
 		set_last_result(NOTIFICATION_ERROR_OUT_OF_MEMORY);
 		return NULL;
-		/* LCOV_EXCL_STOP */
 	}
 
 	noti->type = type;
@@ -1615,20 +1599,16 @@ static notification_h _notification_create(notification_type_e type)
 		if (_locale_directory == NULL) {
 			err = package_info_create(_pkg_id, &package_info);
 			if (err != PACKAGE_MANAGER_ERROR_NONE || package_info == NULL) {
-				/* LCOV_EXCL_START */
 				WARN("Failed to create package_info err[%d] pkg_id[%s]",
 						err, _pkg_id);
 				goto out;
-				/* LCOV_EXCL_STOP */
 			}
 
 			err = package_info_get_root_path(package_info, &app_root_path);
 			if (err != PACKAGE_MANAGER_ERROR_NONE || app_root_path == NULL) {
-				/* LCOV_EXCL_START */
 				WARN("Failed to get root path err[%d] path[%p]",
 						err, app_root_path);
 				goto out;
-				/* LCOV_EXCL_STOP */
 			}
 
 			snprintf(locale_directory, PATH_MAX, "%s/res/locale", app_root_path);
@@ -1717,10 +1697,8 @@ EXPORT_API int notification_clone(notification_h noti, notification_h *clone)
 
 	new_noti = (notification_h) calloc(1, sizeof(struct _notification));
 	if (new_noti == NULL) {
-		/* LCOV_EXCL_START */
 		ERR("Failed to alloc memory");
 		return NOTIFICATION_ERROR_OUT_OF_MEMORY;
-		/* LCOV_EXCL_STOP */
 	}
 
 	new_noti->type = noti->type;
@@ -1962,14 +1940,11 @@ EXPORT_API int notification_get_tag(notification_h noti, const char **tag)
 	*tag = noti->tag;
 	return NOTIFICATION_ERROR_NONE;
 }
-
-/* LCOV_EXCL_START */
 void notification_call_posted_toast_cb(const char *message)
 {
 	if (posted_toast_message_cb != NULL)
 		posted_toast_message_cb((void *)message);
 }
-/* LCOV_EXCL_STOP */
 
 EXPORT_API int notification_set_ongoing_flag(notification_h noti, bool ongoing_flag)
 {

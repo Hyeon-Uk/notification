@@ -34,22 +34,18 @@ EXPORT_API sqlite3 *notification_db_open()
 
 	ret = access(DBPATH, R_OK | W_OK);
 	if (ret != 0) {
-		/* LCOV_EXCL_START */
 		set_last_result(NOTIFICATION_ERROR_FROM_DB);
 		return NULL;
-		/* LCOV_EXCL_STOP */
 	}
 
 	ret = sqlite3_open_v2(DBPATH, &db, SQLITE_OPEN_READWRITE, NULL);
 	if (ret != SQLITE_OK) {
-		/* LCOV_EXCL_START */
 		if (ret == SQLITE_PERM)
 			set_last_result(NOTIFICATION_ERROR_PERMISSION_DENIED);
 		else
 			set_last_result(NOTIFICATION_ERROR_FROM_DB);
 
 		return NULL;
-		/* LCOV_EXCL_STOP */
 	}
 
 	return db;
@@ -64,10 +60,8 @@ EXPORT_API int notification_db_close(sqlite3 **db)
 
 	ret = sqlite3_close(*db);
 	if (ret != SQLITE_OK) {
-		/* LCOV_EXCL_START */
 		ERR("Failed to close db[%d]", ret);
 		return NOTIFICATION_ERROR_FROM_DB;
-		/* LCOV_EXCL_STOP */
 	}
 
 	*db = NULL;
@@ -85,10 +79,8 @@ EXPORT_API int notification_db_exec(sqlite3 *db, const char *query, int *num_cha
 
 	ret = sqlite3_prepare_v2(db, query, strlen(query), &stmt, NULL);
 	if (ret != SQLITE_OK) {
-		/* LCOV_EXCL_START */
 		ERR("Sqlite3 err[%d][%s]", ret, sqlite3_errmsg(db));
 		return NOTIFICATION_ERROR_FROM_DB;
-		/* LCOV_EXCL_STOP */
 	}
 
 	ret = sqlite3_step(stmt);
@@ -98,10 +90,8 @@ EXPORT_API int notification_db_exec(sqlite3 *db, const char *query, int *num_cha
 
 		ret = NOTIFICATION_ERROR_NONE;
 	} else {
-		/* LCOV_EXCL_START */
 		ERR("Sqlite err[%d][%s]", ret, sqlite3_errmsg(db));
 		ret = NOTIFICATION_ERROR_FROM_DB;
-		/* LCOV_EXCL_STOP */
 	}
 
 	sqlite3_finalize(stmt);

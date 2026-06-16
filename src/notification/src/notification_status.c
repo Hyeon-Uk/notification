@@ -42,8 +42,6 @@ struct _message_cb_data {
 };
 
 static struct _message_cb_data md;
-
-/* LCOV_EXCL_START */
 static void __notification_status_message_dbus_callback(GDBusConnection *connection,
 					const gchar *sender_name,
 					const gchar *object_path,
@@ -67,9 +65,6 @@ static void __notification_status_message_dbus_callback(GDBusConnection *connect
 
 	md.callback(message, md.data);
 }
-/* LCOV_EXCL_STOP */
-
-/* LCOV_EXCL_START */
 EXPORT_API
 int notification_status_monitor_message_cb_set(notification_status_message_cb callback, void *user_data)
 {
@@ -111,9 +106,6 @@ int notification_status_monitor_message_cb_set(notification_status_message_cb ca
 
 	return NOTIFICATION_ERROR_NONE;
 }
-/* LCOV_EXCL_STOP */
-
-/* LCOV_EXCL_START */
 EXPORT_API
 int notification_status_monitor_message_cb_unset(void)
 {
@@ -132,9 +124,6 @@ int notification_status_monitor_message_cb_unset(void)
 
 	return NOTIFICATION_ERROR_NONE;
 }
-/* LCOV_EXCL_STOP */
-
-/* LCOV_EXCL_START */
 EXPORT_API
 int notification_status_message_post(const char *message)
 {
@@ -180,11 +169,10 @@ int notification_status_message_post(const char *message)
 
 end:
 	if (err)
-		g_error_free(err); /* LCOV_EXCL_LINE */
+		g_error_free(err);
 
 	if (conn)
 		g_object_unref(conn);
 
 	return ret;
 }
-/* LCOV_EXCL_STOP */
