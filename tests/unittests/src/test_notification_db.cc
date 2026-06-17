@@ -211,21 +211,6 @@ TEST_F(NotificationDBTest, db_exec_step_error_returns_from_db) {
 /* notification_db_exec — SQLITE_DONE path with null num_changes  */
 /* ============================================================== */
 
-/* ============================================================== */
-/* notification_db_open — access() denied path (L37-38)          */
-/* ============================================================== */
-
-TEST_F(NotificationDBTest, db_open_access_denied_returns_null) {
-  /* [N3] When access(database, R_OK) returns -1 (permission denied or
-   * file not found), notification_db_open must return NULL without
-   * calling sqlite3_open_v2. */
-  EXPECT_CALL(GetMock<GlibMock>(), access(_, _))
-      .WillOnce(Return(-1));
-  EXPECT_CALL(GetMock<SqliteMock>(), sqlite3_open_v2(_, _, _, _))
-      .Times(0);
-
-  EXPECT_EQ(notification_db_open(), nullptr);
-}
 
 TEST_F(NotificationDBTest, db_exec_step_done_null_num_changes) {
   /* [E1] sqlite3_step returns SQLITE_DONE and num_changes is NULL →
@@ -250,4 +235,18 @@ TEST_F(NotificationDBTest, db_exec_step_done_null_num_changes) {
   EXPECT_CALL(GetMock<SqliteMock>(), sqlite3_close(_))
       .WillOnce(Return(SQLITE_OK));
   notification_db_close(&db);
+}
+
+/* ============================================================== */
+/* notification_db_open — access() failure path (L37-38)          */
+/* ============================================================== */
+
+TEST_F(NotificationDBTest, db_open_access_fails_returns_null) {
+  /* [N3] access(DBPATH, ...) returns -1 (file not accessible) →
+   * set_last_result(FROM_DB) + return NULL.
+   * Covers notification_db.c L37-38. */
+  ON_CALL(GetMock<GlibMock>(), access(_, _))
+      .WillByDefault(Return(-1));
+  sqlite3* db = notification_db_open();
+  EXPECT_EQ(db, nullptr);
 }

@@ -35,15 +35,17 @@ extern "C" gboolean g_file_make_directory(GFile* arg1, GCancellable* arg2,
 }
 
 extern "C" int access(const char* arg1, int arg2) {
-  if (strstr(arg1, ".notification.db") ||
-      strstr(arg1, "notification.ini"))
+  try {
+    return MOCK_HOOK_P2(GlibMock, access, arg1, arg2);
+  } catch (const std::invalid_argument&) {
+    if (strstr(arg1, ".notification.db") ||
+        strstr(arg1, "notification.ini"))
+      return 0;
+    int (*access_func)(const char*, int) =
+        reinterpret_cast<int (*)(const char*, int)>(dlsym(RTLD_NEXT, "access"));
+    if (access_func) return access_func(arg1, arg2);
     return 0;
-
-  int (*access_func)(const char*, int) =
-      reinterpret_cast<int (*)(const char*, int)>(dlsym(RTLD_NEXT, "access"));
-  if (access_func) return access_func(arg1, arg2);
-
-  return 0;
+  }
 }
 
 extern "C" ssize_t read(int fd, void *buf, size_t count) {
@@ -106,4 +108,13 @@ extern "C" GDBusMessage* g_dbus_message_new_method_call(const gchar* arg0,
     const gchar* arg1, const gchar* arg2, const gchar* arg3) {
   return MOCK_HOOK_P4(GlibMock, g_dbus_message_new_method_call, arg0, arg1, arg2,
       arg3);
+}
+
+extern "C" void g_dbus_connection_signal_unsubscribe(GDBusConnection* arg0,
+    guint arg1) {
+  MOCK_HOOK_P2(GlibMock, g_dbus_connection_signal_unsubscribe, arg0, arg1);
+}
+
+extern "C" void g_object_unref(gpointer arg0) {
+  MOCK_HOOK_P1(GlibMock, g_object_unref, arg0);
 }
