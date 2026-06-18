@@ -22,6 +22,7 @@
 
 #include "mock/app_control_mock.hh"
 #include "mock/aul_mock.hh"
+#include "mock/bundle_mock.hh"
 #include "mock/glib_mock.hh"
 #include "mock/noti_service_proxy_mock.hh"
 #include "mock/package_manager_mock.hh"
@@ -56,6 +57,7 @@ int __cov_fake_aul_app_get_appid_bypid(int pid, char* appid, int len) {
 class Mocks :
     virtual public ::testing::NiceMock<AppControlMock>,
     virtual public ::testing::NiceMock<AulMock>,
+    virtual public ::testing::NiceMock<BundleMock>,
     virtual public ::testing::NiceMock<TzplatformConfigMock>,
     virtual public ::testing::NiceMock<GlibMock>,
     virtual public ::testing::NiceMock<NotiServiceProxyMock>,
@@ -77,6 +79,21 @@ class NotificationCoverageGapsTest : public TestFixture {
         .WillByDefault(Invoke(app_control_mock_real_destroy));
     ON_CALL(GetMock<AppControlMock>(), app_control_export_as_bundle(_, _))
         .WillByDefault(Invoke(app_control_mock_real_export_as_bundle));
+
+    ON_CALL(GetMock<BundleMock>(), bundle_encode(_, _, _))
+        .WillByDefault(Invoke([](bundle* b, bundle_raw** r, int* len) -> int {
+          using fn_t = int (*)(bundle*, bundle_raw**, int*);
+          static fn_t real =
+              reinterpret_cast<fn_t>(dlsym(RTLD_NEXT, "bundle_encode"));
+          return real ? real(b, r, len) : BUNDLE_ERROR_INVALID_PARAMETER;
+        }));
+    ON_CALL(GetMock<BundleMock>(), bundle_add_str(_, _, _))
+        .WillByDefault(Invoke([](bundle* b, const char* k, const char* s) -> int {
+          using fn_t = int (*)(bundle*, const char*, const char*);
+          static fn_t real =
+              reinterpret_cast<fn_t>(dlsym(RTLD_NEXT, "bundle_add_str"));
+          return real ? real(b, k, s) : BUNDLE_ERROR_INVALID_PARAMETER;
+        }));
 
     ON_CALL(GetMock<AulMock>(), aul_getuid()).WillByDefault(Return(5001));
     EXPECT_CALL(GetMock<AulMock>(), aul_app_get_appid_bypid(_, _, _))
@@ -1025,6 +1042,53 @@ TEST_F(NotificationCoverageGapsTest,
             NOTIFICATION_ERROR_NONE);
   int ret = notification_unresister_changed_cb_for_uid(cb, 9106);
   EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
+}
+
+/* ================================================================ */
+/* notification_set_extension_event_handler — bundle_encode fail    */
+/* notification_internal.c L1921-L1923                              */
+/* ================================================================ */
+
+TEST_F(NotificationCoverageGapsTest,
+       set_extension_event_handler_bundle_encode_fails_covers_L1921_L1923) {
+  /* [N1] app_control_export_as_bundle succeeds (real impl via SetUp),
+   * bundle_encode mocked to return BUNDLE_ERROR_INVALID_PARAMETER →
+   * L1921-1923 (ERR + ret=IO_ERROR + goto out) covered. */
+  app_control_h handler = nullptr;
+  ASSERT_EQ(app_control_create(&handler), APP_CONTROL_ERROR_NONE);
+
+  EXPECT_CALL(GetMock<BundleMock>(), bundle_encode(_, _, _))
+      .WillOnce(Return(BUNDLE_ERROR_INVALID_PARAMETER));
+
+  int ret = notification_set_extension_event_handler(
+      noti_, NOTIFICATION_EVENT_TYPE_HIDDEN_BY_USER, handler);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_IO_ERROR);
+
+  app_control_destroy(handler);
+}
+
+/* ================================================================ */
+/* notification_set_extension_event_handler — bundle_add_str fail   */
+/* notification_internal.c L1928-L1930                              */
+/* ================================================================ */
+
+TEST_F(NotificationCoverageGapsTest,
+       set_extension_event_handler_bundle_add_str_fails_covers_L1928_L1930) {
+  /* [N2] app_control_export_as_bundle + bundle_encode both succeed
+   * (real impls via SetUp ON_CALL), bundle_add_str mocked to return
+   * BUNDLE_ERROR_INVALID_PARAMETER →
+   * L1928-1930 (ERR + ret=IO_ERROR + goto out) covered. */
+  app_control_h handler = nullptr;
+  ASSERT_EQ(app_control_create(&handler), APP_CONTROL_ERROR_NONE);
+
+  EXPECT_CALL(GetMock<BundleMock>(), bundle_add_str(_, _, _))
+      .WillOnce(Return(BUNDLE_ERROR_INVALID_PARAMETER));
+
+  int ret = notification_set_extension_event_handler(
+      noti_, NOTIFICATION_EVENT_TYPE_HIDDEN_BY_USER, handler);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_IO_ERROR);
+
+  app_control_destroy(handler);
 }
 
 /* ============================================================== */

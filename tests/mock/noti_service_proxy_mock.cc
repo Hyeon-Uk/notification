@@ -396,3 +396,17 @@ extern "C" int rpc_port_proxy_noti_service_invoke_channel_get_list(
       rpc_port_proxy_noti_service_invoke_channel_get_list,
       h, app_id, uid, channel_list);
 }
+
+/* List notification iteration / lifecycle */
+extern "C" int rpc_port_proxy_list_notification_foreach(
+    rpc_port_proxy_list_notification_h h,
+    rpc_port_proxy_list_notification_cb callback, void* user_data) {
+  return MOCK_HOOK_P3(NotiServiceProxyMock,
+      rpc_port_proxy_list_notification_foreach, h, callback, user_data);
+}
+
+extern "C" int rpc_port_proxy_list_notification_destroy(
+    rpc_port_proxy_list_notification_h h) {
+  return MOCK_HOOK_P1(NotiServiceProxyMock,
+      rpc_port_proxy_list_notification_destroy, h);
+}

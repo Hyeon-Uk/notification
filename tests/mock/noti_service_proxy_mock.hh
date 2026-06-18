@@ -175,6 +175,13 @@ class NotiServiceProxyMock : public virtual ModuleMock {
   MOCK_METHOD(int, rpc_port_proxy_noti_service_invoke_channel_get_list,
       (rpc_port_proxy_noti_service_h, const char*, int,
        rpc_port_proxy_list_noti_channel_h*));
+
+  /* List notification iteration / lifecycle */
+  MOCK_METHOD(int, rpc_port_proxy_list_notification_foreach,
+      (rpc_port_proxy_list_notification_h,
+       rpc_port_proxy_list_notification_cb, void*));
+  MOCK_METHOD(int, rpc_port_proxy_list_notification_destroy,
+      (rpc_port_proxy_list_notification_h));
 };
 
 #endif  // UNIT_TESTS_MOCK_NOTI_SERVICE_PROXY_MOCK_H_

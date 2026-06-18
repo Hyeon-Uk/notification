@@ -18,9 +18,11 @@
 #include <gmock/gmock.h>
 
 #include <bundle.h>
+#include <dlfcn.h>
 
 #include "mock/aul_mock.hh"
 #include "mock/glib_mock.hh"
+#include "mock/libc_calloc_mock.hh"
 #include "mock/noti_service_proxy_mock.hh"
 #include "mock/package_manager_mock.hh"
 #include "mock/rpc_port_mock.hh"
@@ -30,6 +32,7 @@
 #include "notification/include/notification.h"
 #include "notification/include/notification_internal.h"
 #include "notification/include/notification_private.h"
+#include "notification/include/notification_text_domain.h"
 
 using ::testing::_;
 using ::testing::Invoke;
@@ -97,6 +100,7 @@ class NotificationInternalTest : public TestFixture {
   NotificationInternalTest() : TestFixture(std::make_unique<::Mocks>()) {}
 
   void SetUp() override {
+    ON_CALL(GetMock<AulMock>(), aul_getuid()).WillByDefault(Return(5001));
     EXPECT_CALL(GetMock<AulMock>(), aul_app_get_appid_bypid(_, _, _))
         .WillRepeatedly(Invoke(__fake_aul_app_get_appid_bypid));
     EXPECT_CALL(GetMock<AulMock>(), aul_app_get_pkgid_bypid(_, _, _))
@@ -2582,6 +2586,57 @@ TEST_F(NotificationInternalTest,
 }
 
 /* ------------------------------------------------------------- */
+/* notification_resister_changed_cb_for_uid                       */
+/* — malloc OOM → OUT_OF_MEMORY  (notification_internal.c L325)  */
+/* ------------------------------------------------------------- */
+
+TEST_F(NotificationInternalTest,
+       resister_changed_cb_for_uid_malloc_oom_covers_L325_L326) {
+  /* Pre-warm: call once with IO_ERROR to ensure _noti_cb_hash is initialized.
+   * The IO_ERROR path still runs through g_hash_table_new at L321 if NULL,
+   * so _noti_cb_hash is non-NULL after this call, even though TIDL fails. */
+  ON_CALL(GetMock<NotiServiceProxyMock>(),
+          rpc_port_proxy_noti_service_connect_sync(_))
+      .WillByDefault(Return(RPC_PORT_ERROR_IO_ERROR));
+  static notification_changed_cb cb = [](void *, notification_type_e) {};
+  notification_resister_changed_cb_for_uid(cb, nullptr, 5001);
+
+  /* Arm: fail the very next malloc call (call_index=0).
+   * With _noti_cb_hash != NULL, the first malloc inside the function is
+   * malloc(sizeof(notification_cb_info_s)) at notification_internal.c:323. */
+  malloc_set_fail_on_call(0);
+  int ret = notification_resister_changed_cb_for_uid(cb, nullptr, 5002);
+  malloc_reset_fail();
+
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_OUT_OF_MEMORY);
+}
+
+/* ------------------------------------------------------------- */
+/* notification_register_detailed_changed_cb_for_uid              */
+/* — malloc OOM → OUT_OF_MEMORY (notification_internal.c L1223)  */
+/* ------------------------------------------------------------- */
+
+TEST_F(NotificationInternalTest,
+       register_detailed_changed_cb_for_uid_malloc_oom_covers_L1223_L1224) {
+  /* Pre-warm: same approach — IO_ERROR path initializes _noti_cb_hash. */
+  ON_CALL(GetMock<NotiServiceProxyMock>(),
+          rpc_port_proxy_noti_service_connect_sync(_))
+      .WillByDefault(Return(RPC_PORT_ERROR_IO_ERROR));
+  static notification_detailed_changed_cb cb =
+      [](void *, notification_type_e, notification_op *, int) {};
+  notification_register_detailed_changed_cb_for_uid(cb, nullptr, 5001);
+
+  /* Arm: fail the very next malloc call.
+   * With _noti_cb_hash != NULL, the first malloc is at L1221. */
+  malloc_set_fail_on_call(0);
+  int ret = notification_register_detailed_changed_cb_for_uid(
+      cb, nullptr, 5002);
+  malloc_reset_fail();
+
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_OUT_OF_MEMORY);
+}
+
+/* ------------------------------------------------------------- */
 /* notification_get_noti_block_state — null state arg             */
 /* ------------------------------------------------------------- */
 
@@ -2681,4 +2736,427 @@ TEST_F(NotificationInternalTest,
       .WillByDefault(Return(RPC_PORT_ERROR_IO_ERROR));
   int ret = notification_delete_all_by_type(nullptr, NOTIFICATION_TYPE_NOTI);
   (void)ret;
+}
+
+/* ------------------------------------------------------------- */
+/* notification_resister_changed_cb / notification_unresister_   */
+/* changed_cb — happy-path register + unregister sequence        */
+/* Goal: exercises _noti_cb_hash creation (R2,R4),               */
+/* _noti_changed_compare (U4), hash_table_steal on empty list    */
+/* (U5), and monitor_fini (U8).                                  */
+/* ------------------------------------------------------------- */
+
+TEST_F(NotificationInternalTest,
+       register_then_unregister_changed_cb_success) {
+  ON_CALL(GetMock<NotiServiceProxyMock>(),
+          rpc_port_proxy_noti_service_connect_sync(_))
+      .WillByDefault(Return(RPC_PORT_ERROR_NONE));
+
+  /* g_list_append is mocked to return nullptr by default (NiceMock).
+   * Delegate to the real glib implementation so the internal cb list
+   * is actually populated and the unregister can find the entry. */
+  using GListAppendFn = GList*(*)(GList*, gpointer);
+  ON_CALL(GetMock<GlibMock>(), g_list_append(_, _))
+      .WillByDefault(Invoke([](GList* list, gpointer data) -> GList* {
+        static GListAppendFn real = reinterpret_cast<GListAppendFn>(
+            dlsym(RTLD_NEXT, "g_list_append"));
+        return real ? real(list, data) : nullptr;
+      }));
+
+  static notification_changed_cb cb = [](void*, notification_type_e) {};
+
+  EXPECT_EQ(notification_resister_changed_cb(cb, nullptr),
+            NOTIFICATION_ERROR_NONE);
+  EXPECT_EQ(notification_unresister_changed_cb(cb),
+            NOTIFICATION_ERROR_NONE);
+
+  /* After unregister the cb must no longer be found; a second
+   * unregister attempt must return INVALID_PARAMETER. */
+  EXPECT_EQ(notification_unresister_changed_cb(cb),
+            NOTIFICATION_ERROR_INVALID_PARAMETER);
+}
+
+/* ------------------------------------------------------------- */
+/* notification_resister_changed_cb — monitor_init failure path  */
+/* Goal: when rpc_port_proxy_noti_service_connect_sync returns    */
+/* IO_ERROR the public API surfaces NOTIFICATION_ERROR_IO_ERROR   */
+/* (R6, lines ~344-348 of notification_internal.c).              */
+/* ------------------------------------------------------------- */
+
+TEST_F(NotificationInternalTest,
+       register_changed_cb_monitor_init_failure_returns_io_error) {
+  ON_CALL(GetMock<NotiServiceProxyMock>(),
+          rpc_port_proxy_noti_service_connect_sync(_))
+      .WillByDefault(Return(RPC_PORT_ERROR_IO_ERROR));
+
+  static notification_changed_cb cb = [](void*, notification_type_e) {};
+  EXPECT_EQ(notification_resister_changed_cb(cb, nullptr),
+            NOTIFICATION_ERROR_IO_ERROR);
+}
+
+/* ------------------------------------------------------------- */
+/* notification_unresister_changed_cb — unknown callback pointer  */
+/* Goal: unregister a callback that was never registered returns  */
+/* INVALID_PARAMETER; exercises _noti_changed_compare returning  */
+/* non-match (U7).                                               */
+/* ------------------------------------------------------------- */
+
+TEST_F(NotificationInternalTest,
+       unregister_changed_cb_unknown_cb_returns_invalid) {
+  ON_CALL(GetMock<NotiServiceProxyMock>(),
+          rpc_port_proxy_noti_service_connect_sync(_))
+      .WillByDefault(Return(RPC_PORT_ERROR_NONE));
+
+  /* Same g_list_append fix as in register_then_unregister_changed_cb_success */
+  using GListAppendFn = GList*(*)(GList*, gpointer);
+  ON_CALL(GetMock<GlibMock>(), g_list_append(_, _))
+      .WillByDefault(Invoke([](GList* list, gpointer data) -> GList* {
+        static GListAppendFn real = reinterpret_cast<GListAppendFn>(
+            dlsym(RTLD_NEXT, "g_list_append"));
+        return real ? real(list, data) : nullptr;
+      }));
+
+  static notification_changed_cb cbA = [](void*, notification_type_e) {};
+  static notification_changed_cb cbB = [](void*, notification_type_e) {};
+
+  /* Register cbA so the internal hash/list exists. */
+  ASSERT_EQ(notification_resister_changed_cb(cbA, nullptr),
+            NOTIFICATION_ERROR_NONE);
+
+  /* Attempt to unregister cbB which was never registered.
+   * _noti_changed_compare returns 1 for every element → list_find_custom
+   * returns NULL → INVALID_PARAMETER (U7). */
+  EXPECT_EQ(notification_unresister_changed_cb(cbB),
+            NOTIFICATION_ERROR_INVALID_PARAMETER);
+
+  /* Cleanup: unregister cbA to leave the state clean. */
+  EXPECT_EQ(notification_unresister_changed_cb(cbA),
+            NOTIFICATION_ERROR_NONE);
+}
+
+/* ------------------------------------------------------------- */
+/* notification_resister_changed_cb_for_uid                       */
+/* — second register for same uid covers L340 (else branch:       */
+/* g_list_append onto an existing list)                           */
+/* ------------------------------------------------------------- */
+
+TEST_F(NotificationInternalTest,
+       resister_changed_cb_for_uid_second_register_appends_to_existing_list) {
+  ON_CALL(GetMock<NotiServiceProxyMock>(),
+          rpc_port_proxy_noti_service_connect_sync(_))
+      .WillByDefault(Return(RPC_PORT_ERROR_NONE));
+
+  using GListAppendFn = GList*(*)(GList*, gpointer);
+  ON_CALL(GetMock<GlibMock>(), g_list_append(_, _))
+      .WillByDefault(Invoke([](GList* list, gpointer data) -> GList* {
+        static GListAppendFn real = reinterpret_cast<GListAppendFn>(
+            dlsym(RTLD_NEXT, "g_list_append"));
+        return real ? real(list, data) : nullptr;
+      }));
+
+  static notification_changed_cb cb1 = [](void*, notification_type_e) {};
+  static notification_changed_cb cb2 = [](void*, notification_type_e) {};
+
+  /* First register creates the uid=7010 list. */
+  ASSERT_EQ(notification_resister_changed_cb_for_uid(cb1, nullptr, 7010),
+            NOTIFICATION_ERROR_NONE);
+  /* Second register hits the else branch (L340): appends to existing list. */
+  EXPECT_EQ(notification_resister_changed_cb_for_uid(cb2, nullptr, 7010),
+            NOTIFICATION_ERROR_NONE);
+
+  /* Clean up to avoid state leakage between tests. */
+  notification_unresister_changed_cb_for_uid(cb1, 7010);
+  notification_unresister_changed_cb_for_uid(cb2, 7010);
+}
+
+/* ------------------------------------------------------------- */
+/* notification_unresister_changed_cb_for_uid                     */
+/* — non-empty list after delete: g_hash_table_replace (L401-402) */
+/* Register cb1+cb2 under uid 7011, unregister cb1 only →         */
+/* cb2 still in list → replace branch runs instead of steal       */
+/* ------------------------------------------------------------- */
+
+TEST_F(NotificationInternalTest,
+       unresister_changed_cb_for_uid_list_non_empty_after_delete_replaces_hash) {
+  ON_CALL(GetMock<NotiServiceProxyMock>(),
+          rpc_port_proxy_noti_service_connect_sync(_))
+      .WillByDefault(Return(RPC_PORT_ERROR_NONE));
+
+  using GListAppendFn = GList*(*)(GList*, gpointer);
+  ON_CALL(GetMock<GlibMock>(), g_list_append(_, _))
+      .WillByDefault(Invoke([](GList* list, gpointer data) -> GList* {
+        static GListAppendFn real = reinterpret_cast<GListAppendFn>(
+            dlsym(RTLD_NEXT, "g_list_append"));
+        return real ? real(list, data) : nullptr;
+      }));
+
+  static notification_changed_cb cb1 = [](void*, notification_type_e) {};
+  static notification_changed_cb cb2 = [](void*, notification_type_e) {};
+
+  ASSERT_EQ(notification_resister_changed_cb_for_uid(cb1, nullptr, 7011),
+            NOTIFICATION_ERROR_NONE);
+  /* Second register hits L340, cb2 is appended to uid=7011 list. */
+  ASSERT_EQ(notification_resister_changed_cb_for_uid(cb2, nullptr, 7011),
+            NOTIFICATION_ERROR_NONE);
+
+  /* Unregister cb1: list still has cb2 → g_hash_table_replace (L401-402). */
+  EXPECT_EQ(notification_unresister_changed_cb_for_uid(cb1, 7011),
+            NOTIFICATION_ERROR_NONE);
+
+  /* Clean up cb2. */
+  notification_unresister_changed_cb_for_uid(cb2, 7011);
+}
+
+/* ============================================================== */
+/* GROUP A — notification_set_execute_option re-call paths        */
+/* ============================================================== */
+
+/* A1: Re-calling with same type and text deletes previous text key */
+TEST_F(NotificationInternalTest,
+       set_execute_option_recalling_same_type_with_text_deletes_previous) {
+  /* First call: sets text1 key in b_execute_option */
+  ASSERT_EQ(notification_set_execute_option(noti_,
+                NOTIFICATION_EXECUTE_TYPE_SINGLE_LAUNCH,
+                "first_text", nullptr, nullptr),
+            NOTIFICATION_ERROR_NONE);
+  /* Second call: hits L955-956 — bundle_del("text1") before re-adding */
+  EXPECT_EQ(notification_set_execute_option(noti_,
+                NOTIFICATION_EXECUTE_TYPE_SINGLE_LAUNCH,
+                "second_text", nullptr, nullptr),
+            NOTIFICATION_ERROR_NONE);
+}
+
+/* A2: Re-calling with same type and key deletes previous key entry */
+TEST_F(NotificationInternalTest,
+       set_execute_option_recalling_same_type_with_key_deletes_previous) {
+  /* First call: sets key0 key in b_execute_option */
+  ASSERT_EQ(notification_set_execute_option(noti_,
+                NOTIFICATION_EXECUTE_TYPE_RESPONDING,
+                nullptr, "key1", nullptr),
+            NOTIFICATION_ERROR_NONE);
+  /* Second call: hits L964-966 — bundle_del("key0") before re-adding */
+  EXPECT_EQ(notification_set_execute_option(noti_,
+                NOTIFICATION_EXECUTE_TYPE_RESPONDING,
+                nullptr, "key2", nullptr),
+            NOTIFICATION_ERROR_NONE);
+}
+
+/* A3: Re-calling RESPONDING with service bundle frees previous (L973-975) */
+TEST_F(NotificationInternalTest,
+       set_execute_option_responding_reinvoked_frees_previous_service_bundle) {
+  bundle *b = bundle_create();
+  ASSERT_NE(b, nullptr);
+  /* First call: b_service_responding is NULL → dup(b) stored */
+  ASSERT_EQ(notification_set_execute_option(noti_,
+                NOTIFICATION_EXECUTE_TYPE_RESPONDING,
+                nullptr, nullptr, b),
+            NOTIFICATION_ERROR_NONE);
+  /* Second call: b_service_responding != NULL → free+NULL (L973-975), then dup again */
+  EXPECT_EQ(notification_set_execute_option(noti_,
+                NOTIFICATION_EXECUTE_TYPE_RESPONDING,
+                nullptr, nullptr, b),
+            NOTIFICATION_ERROR_NONE);
+  bundle_free(b);
+}
+
+/* A4: Re-calling SINGLE_LAUNCH with service bundle frees previous (L983-985) */
+TEST_F(NotificationInternalTest,
+       set_execute_option_single_launch_reinvoked_frees_previous_service_bundle) {
+  bundle *b = bundle_create();
+  ASSERT_NE(b, nullptr);
+  /* First call: b_service_single_launch is NULL → dup(b) stored */
+  ASSERT_EQ(notification_set_execute_option(noti_,
+                NOTIFICATION_EXECUTE_TYPE_SINGLE_LAUNCH,
+                nullptr, nullptr, b),
+            NOTIFICATION_ERROR_NONE);
+  /* Second call: b_service_single_launch != NULL → free+NULL (L983-985), then dup again */
+  EXPECT_EQ(notification_set_execute_option(noti_,
+                NOTIFICATION_EXECUTE_TYPE_SINGLE_LAUNCH,
+                nullptr, nullptr, b),
+            NOTIFICATION_ERROR_NONE);
+  bundle_free(b);
+}
+
+/* A5: Re-calling MULTI_LAUNCH with service bundle frees previous (L993-995) */
+TEST_F(NotificationInternalTest,
+       set_execute_option_multi_launch_reinvoked_frees_previous_service_bundle) {
+  bundle *b = bundle_create();
+  ASSERT_NE(b, nullptr);
+  /* First call: b_service_multi_launch is NULL → dup(b) stored */
+  ASSERT_EQ(notification_set_execute_option(noti_,
+                NOTIFICATION_EXECUTE_TYPE_MULTI_LAUNCH,
+                nullptr, nullptr, b),
+            NOTIFICATION_ERROR_NONE);
+  /* Second call: b_service_multi_launch != NULL → free+NULL (L993-995), then dup again */
+  EXPECT_EQ(notification_set_execute_option(noti_,
+                NOTIFICATION_EXECUTE_TYPE_MULTI_LAUNCH,
+                nullptr, nullptr, b),
+            NOTIFICATION_ERROR_NONE);
+  bundle_free(b);
+}
+
+/* ============================================================== */
+/* GROUP B — notification_get_execute_option dgettext paths       */
+/* ============================================================== */
+
+/* B1: domain set → bindtextdomain + dgettext(domain, key) (L1109-1113) */
+TEST_F(NotificationInternalTest,
+       get_execute_option_with_domain_set_uses_domain_dgettext) {
+  bundle *svc = bundle_create();
+  ASSERT_NE(svc, nullptr);
+  /* Store key under "key1" (SINGLE_LAUNCH=1) in the service bundle */
+  bundle_add_str(svc, "key1", "lockey_val");
+  ASSERT_EQ(notification_set_execute_option(noti_,
+                NOTIFICATION_EXECUTE_TYPE_SINGLE_LAUNCH,
+                nullptr, nullptr, svc),
+            NOTIFICATION_ERROR_NONE);
+  bundle_free(svc);
+
+  /* Set domain+dir so noti->domain and noti->dir are non-NULL */
+  ASSERT_EQ(notification_set_text_domain(noti_, "testdomain", "/usr/share/locale"),
+            NOTIFICATION_ERROR_NONE);
+
+  const char *text = nullptr;
+  bundle *out = nullptr;
+  ASSERT_EQ(notification_get_execute_option(noti_,
+                NOTIFICATION_EXECUTE_TYPE_SINGLE_LAUNCH,
+                &text, &out),
+            NOTIFICATION_ERROR_NONE);
+  /* dgettext returns msgid unchanged when no .mo is installed */
+  EXPECT_STREQ(text, "lockey_val");
+}
+
+/* B2: no domain → dgettext("sys_string", key) (L1115-1117)
+ * _notification_create sets noti->domain via pkgmgr mocks, so we must
+ * clear it before the get call to exercise the sys_string path. */
+TEST_F(NotificationInternalTest,
+       get_execute_option_without_domain_uses_sys_string_dgettext) {
+  bundle *svc = bundle_create();
+  ASSERT_NE(svc, nullptr);
+  /* Store key under "key2" (MULTI_LAUNCH=2) in the service bundle */
+  bundle_add_str(svc, "key2", "sysstr_key");
+  ASSERT_EQ(notification_set_execute_option(noti_,
+                NOTIFICATION_EXECUTE_TYPE_MULTI_LAUNCH,
+                nullptr, nullptr, svc),
+            NOTIFICATION_ERROR_NONE);
+  bundle_free(svc);
+
+  /* Clear domain/dir so the else-if branch (L1114-1117) is taken.
+   * notification_free in TearDown handles free(NULL) safely. */
+  free(noti_->domain);
+  noti_->domain = nullptr;
+  free(noti_->dir);
+  noti_->dir = nullptr;
+
+  const char *text = nullptr;
+  ASSERT_EQ(notification_get_execute_option(noti_,
+                NOTIFICATION_EXECUTE_TYPE_MULTI_LAUNCH,
+                &text, nullptr),
+            NOTIFICATION_ERROR_NONE);
+  /* dgettext("sys_string", ...) returns msgid unchanged when no .mo installed */
+  EXPECT_STREQ(text, "sysstr_key");
+}
+
+/* ============================================================== */
+/* GROUP C — notification_register_detailed_changed_cb_for_uid    */
+/* ============================================================== */
+
+/* C1: second register for same uid hits L1238 (else branch: append to existing list) */
+TEST_F(NotificationInternalTest,
+       register_detailed_changed_cb_for_uid_second_register_appends_to_existing_list) {
+  ON_CALL(GetMock<NotiServiceProxyMock>(),
+          rpc_port_proxy_noti_service_connect_sync(_))
+      .WillByDefault(Return(RPC_PORT_ERROR_NONE));
+
+  using GListAppendFn = GList*(*)(GList*, gpointer);
+  ON_CALL(GetMock<GlibMock>(), g_list_append(_, _))
+      .WillByDefault(Invoke([](GList* list, gpointer data) -> GList* {
+        static GListAppendFn real = reinterpret_cast<GListAppendFn>(
+            dlsym(RTLD_NEXT, "g_list_append"));
+        return real ? real(list, data) : nullptr;
+      }));
+
+  static notification_detailed_changed_cb cb1 =
+      [](void*, notification_type_e, notification_op*, int) {};
+  static notification_detailed_changed_cb cb2 =
+      [](void*, notification_type_e, notification_op*, int) {};
+
+  /* First register: list==NULL → insert new list */
+  ASSERT_EQ(notification_register_detailed_changed_cb_for_uid(cb1, nullptr, 7020),
+            NOTIFICATION_ERROR_NONE);
+  /* Second register: list!=NULL → L1238 append onto existing list */
+  EXPECT_EQ(notification_register_detailed_changed_cb_for_uid(cb2, nullptr, 7020),
+            NOTIFICATION_ERROR_NONE);
+
+  /* Cleanup */
+  notification_unregister_detailed_changed_cb_for_uid(cb1, nullptr, 7020);
+  notification_unregister_detailed_changed_cb_for_uid(cb2, nullptr, 7020);
+}
+
+/* ============================================================== */
+/* GROUP D — notification_unregister_detailed_changed_cb_for_uid  */
+/* ============================================================== */
+
+/* D1: full round-trip covering list management (L1289-1302, L1308-1312) */
+TEST_F(NotificationInternalTest,
+       unregister_detailed_changed_cb_for_uid_full_round_trip_covers_list_management) {
+  ON_CALL(GetMock<NotiServiceProxyMock>(),
+          rpc_port_proxy_noti_service_connect_sync(_))
+      .WillByDefault(Return(RPC_PORT_ERROR_NONE));
+
+  using GListAppendFn = GList*(*)(GList*, gpointer);
+  ON_CALL(GetMock<GlibMock>(), g_list_append(_, _))
+      .WillByDefault(Invoke([](GList* list, gpointer data) -> GList* {
+        static GListAppendFn real = reinterpret_cast<GListAppendFn>(
+            dlsym(RTLD_NEXT, "g_list_append"));
+        return real ? real(list, data) : nullptr;
+      }));
+
+  static notification_detailed_changed_cb cb1 =
+      [](void*, notification_type_e, notification_op*, int) {};
+  static notification_detailed_changed_cb cb2 =
+      [](void*, notification_type_e, notification_op*, int) {};
+
+  ASSERT_EQ(notification_register_detailed_changed_cb_for_uid(cb1, nullptr, 7022),
+            NOTIFICATION_ERROR_NONE);
+  ASSERT_EQ(notification_register_detailed_changed_cb_for_uid(cb2, nullptr, 7022),
+            NOTIFICATION_ERROR_NONE);
+
+  /* Unregister cb1: list still has cb2 → L1299-1302 hash replace */
+  EXPECT_EQ(notification_unregister_detailed_changed_cb_for_uid(cb1, nullptr, 7022),
+            NOTIFICATION_ERROR_NONE);
+  /* Unregister cb2: list empty → L1297-1299 hash steal; hash size==0 → L1308-1312 monitor_fini */
+  EXPECT_EQ(notification_unregister_detailed_changed_cb_for_uid(cb2, nullptr, 7022),
+            NOTIFICATION_ERROR_NONE);
+}
+
+/* D2: unregistering a callback not in the list returns INVALID_PARAMETER (L1304-1305) */
+TEST_F(NotificationInternalTest,
+       unregister_detailed_changed_cb_for_uid_not_registered_returns_invalid) {
+  ON_CALL(GetMock<NotiServiceProxyMock>(),
+          rpc_port_proxy_noti_service_connect_sync(_))
+      .WillByDefault(Return(RPC_PORT_ERROR_NONE));
+
+  using GListAppendFn = GList*(*)(GList*, gpointer);
+  ON_CALL(GetMock<GlibMock>(), g_list_append(_, _))
+      .WillByDefault(Invoke([](GList* list, gpointer data) -> GList* {
+        static GListAppendFn real = reinterpret_cast<GListAppendFn>(
+            dlsym(RTLD_NEXT, "g_list_append"));
+        return real ? real(list, data) : nullptr;
+      }));
+
+  static notification_detailed_changed_cb cb1 =
+      [](void*, notification_type_e, notification_op*, int) {};
+  static notification_detailed_changed_cb cb2 =
+      [](void*, notification_type_e, notification_op*, int) {};
+
+  ASSERT_EQ(notification_register_detailed_changed_cb_for_uid(cb1, nullptr, 7023),
+            NOTIFICATION_ERROR_NONE);
+
+  /* cb2 was never registered → find_custom returns NULL → L1305 INVALID_PARAMETER */
+  EXPECT_EQ(notification_unregister_detailed_changed_cb_for_uid(cb2, nullptr, 7023),
+            NOTIFICATION_ERROR_INVALID_PARAMETER);
+
+  /* Cleanup */
+  notification_unregister_detailed_changed_cb_for_uid(cb1, nullptr, 7023);
 }

@@ -43,3 +43,30 @@ extern "C" int pkgmgrinfo_appinfo_get_pkgid(pkgmgrinfo_appinfo_h handle, char **
 extern "C" int pkgmgrinfo_appinfo_destroy_appinfo(pkgmgrinfo_appinfo_h handle) {
   return MOCK_HOOK_P1(PackageManagerMock, pkgmgrinfo_appinfo_destroy_appinfo, handle);
 }
+
+extern "C" int pkgmgrinfo_appinfo_filter_create(pkgmgrinfo_appinfo_filter_h *handle) {
+  return MOCK_HOOK_P1(PackageManagerMock, pkgmgrinfo_appinfo_filter_create, handle);
+}
+
+extern "C" int pkgmgrinfo_appinfo_filter_add_string(pkgmgrinfo_appinfo_filter_h handle,
+    const char *property, const char *value) {
+  return MOCK_HOOK_P3(PackageManagerMock, pkgmgrinfo_appinfo_filter_add_string, handle, property, value);
+}
+
+extern "C" int pkgmgrinfo_appinfo_usr_filter_foreach_appinfo(pkgmgrinfo_appinfo_filter_h handle,
+    pkgmgrinfo_app_list_cb app_func, void *user_data, uid_t uid) {
+  return MOCK_HOOK_P4(PackageManagerMock, pkgmgrinfo_appinfo_usr_filter_foreach_appinfo, handle, app_func, user_data, uid);
+}
+
+extern "C" int pkgmgrinfo_appinfo_filter_destroy(pkgmgrinfo_appinfo_filter_h handle) {
+  return MOCK_HOOK_P1(PackageManagerMock, pkgmgrinfo_appinfo_filter_destroy, handle);
+}
+
+extern "C" int pkgmgrinfo_appinfo_get_appid(pkgmgrinfo_appinfo_h handle, char **appid) {
+  return MOCK_HOOK_P2(PackageManagerMock, pkgmgrinfo_appinfo_get_appid, handle, appid);
+}
+
+extern "C" int pkgmgrinfo_appinfo_get_pkgname(pkgmgrinfo_appinfo_h handle,
+    char **pkg_name) {
+  return MOCK_HOOK_P2(PackageManagerMock, pkgmgrinfo_appinfo_get_pkgname, handle, pkg_name);
+}

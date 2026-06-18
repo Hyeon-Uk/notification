@@ -35,9 +35,15 @@ class Mocks :
 
 }  // namespace
 
+using ::testing::Return;
+
 class NotificationMiscTest : public TestFixture {
  public:
   NotificationMiscTest() : TestFixture(std::make_unique<::Mocks>()) {}
+
+  void SetUp() override {
+    ON_CALL(GetMock<AulMock>(), aul_getuid()).WillByDefault(Return(5001));
+  }
 };
 
 /* ============================================================== */

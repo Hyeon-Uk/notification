@@ -16,8 +16,39 @@
 
 #include "sqlite_mock.hh"
 
+#include <cstdarg>
+#include <dlfcn.h>
+
 #include "mock_hook.hh"
 #include "test_fixture.hh"
+
+static int g_mprintf_fail_on_call = -1;
+static int g_mprintf_call_count = 0;
+
+void sqlite3_mprintf_set_fail_on(int call_index) {
+  g_mprintf_fail_on_call = call_index;
+  g_mprintf_call_count = 0;
+}
+
+void sqlite3_mprintf_reset_fail() {
+  g_mprintf_fail_on_call = -1;
+  g_mprintf_call_count = 0;
+}
+
+extern "C" char *sqlite3_mprintf(const char *fmt, ...) {
+  int call_n = g_mprintf_call_count++;
+  if (g_mprintf_fail_on_call >= 0 && call_n == g_mprintf_fail_on_call)
+    return nullptr;
+  va_list args;
+  va_start(args, fmt);
+  using vmprintf_t = char *(*)(const char *, va_list);
+  static vmprintf_t real_fn = nullptr;
+  if (!real_fn)
+    real_fn = reinterpret_cast<vmprintf_t>(dlsym(RTLD_NEXT, "sqlite3_vmprintf"));
+  char *result = real_fn ? real_fn(fmt, args) : nullptr;
+  va_end(args);
+  return result;
+}
 
 typedef int(*execcb)(void*, int, char**, char**);
 typedef void(*bindcb)(void*);

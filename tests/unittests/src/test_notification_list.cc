@@ -22,6 +22,7 @@
 #include "mock/test_fixture.hh"
 #include "mock/glib_mock.hh"
 #include "mock/aul_mock.hh"
+#include "mock/libc_calloc_mock.hh"
 #include "mock/package_manager_mock.hh"
 #include "mock/socket_mock.hh"
 
@@ -97,6 +98,7 @@ class NotificationListTest : public TestFixture {
  public:
   NotificationListTest() : TestFixture(std::make_unique<::Mocks>()) {}
   virtual void SetUp() {
+    ON_CALL(GetMock<AulMock>(), aul_getuid()).WillByDefault(Return(5001));
   }
   virtual void TearDown() {
   }
@@ -320,4 +322,145 @@ TEST_F(NotificationListTest, append_null_noti) {
   notification_list_h result = notification_list_append(nullptr, nullptr);
   EXPECT_EQ(result, nullptr);
   EXPECT_EQ(get_last_result(), NOTIFICATION_ERROR_INVALID_PARAMETER);
+}
+
+/* ------------------------------------------------------------------ */
+/* [N20] get_list_for_uid_null_list_invalid                           */
+/* notification_get_list_for_uid with NULL list → INVALID_PARAMETER   */
+/* ------------------------------------------------------------------ */
+
+TEST_F(NotificationListTest, get_list_for_uid_null_list_invalid) {
+  EXPECT_EQ(notification_get_list_for_uid(NOTIFICATION_TYPE_NOTI,
+                -1, nullptr, static_cast<uid_t>(5001)),
+            NOTIFICATION_ERROR_INVALID_PARAMETER);
+}
+
+/* ------------------------------------------------------------------ */
+/* [N22] get_list_by_page_null_list_invalid                           */
+/* notification_get_list_by_page_for_uid with NULL list →             */
+/* INVALID_PARAMETER                                                   */
+/* ------------------------------------------------------------------ */
+
+TEST_F(NotificationListTest, get_list_by_page_null_list_invalid) {
+  EXPECT_EQ(notification_get_list_by_page_for_uid(NOTIFICATION_TYPE_NOTI,
+                1, 10, nullptr, static_cast<uid_t>(5001)),
+            NOTIFICATION_ERROR_INVALID_PARAMETER);
+}
+
+/* ------------------------------------------------------------------ */
+/* [N23] get_list_by_page_zero_page_invalid                           */
+/* page_number == 0 → INVALID_PARAMETER                               */
+/* ------------------------------------------------------------------ */
+
+TEST_F(NotificationListTest, get_list_by_page_zero_page_invalid) {
+  notification_list_h list = nullptr;
+  EXPECT_EQ(notification_get_list_by_page_for_uid(NOTIFICATION_TYPE_NOTI,
+                0, 10, &list, static_cast<uid_t>(5001)),
+            NOTIFICATION_ERROR_INVALID_PARAMETER);
+}
+
+/* ------------------------------------------------------------------ */
+/* [P11] list_append_to_nonempty                                       */
+/* After creating a one-element list and appending a second item,     */
+/* the list must have exactly 2 nodes.                                 */
+/* ------------------------------------------------------------------ */
+
+TEST_F(NotificationListTest, list_append_to_nonempty) {
+  EXPECT_CALL(GetMock<AulMock>(), aul_app_get_appid_bypid(_, _, _))
+      .WillRepeatedly(Invoke(__fake_aul_app_get_appid_bypid));
+
+  notification_h a = notification_create(NOTIFICATION_TYPE_NOTI);
+  notification_h b = notification_create(NOTIFICATION_TYPE_NOTI);
+  ASSERT_NE(a, nullptr);
+  ASSERT_NE(b, nullptr);
+
+  notification_list_h list = nullptr;
+  list = notification_list_append(list, a);
+  ASSERT_NE(list, nullptr);
+
+  list = notification_list_get_head(list);
+  list = notification_list_append(list, b);
+
+  list = notification_list_get_head(list);
+  EXPECT_EQ(notification_list_get_count(list), 2);
+
+  notification_free_list(list);
+}
+
+/* ------------------------------------------------------------------ */
+/* [P12] list_append_first_node                                        */
+/* Calling notification_list_append(NULL, noti) creates the first     */
+/* node and returns a non-NULL handle.                                 */
+/* ------------------------------------------------------------------ */
+
+TEST_F(NotificationListTest, list_append_first_node) {
+  EXPECT_CALL(GetMock<AulMock>(), aul_app_get_appid_bypid(_, _, _))
+      .WillRepeatedly(Invoke(__fake_aul_app_get_appid_bypid));
+
+  notification_h n = notification_create(NOTIFICATION_TYPE_NOTI);
+  ASSERT_NE(n, nullptr);
+
+  notification_list_h list = notification_list_append(nullptr, n);
+  EXPECT_NE(list, nullptr);
+
+  notification_free_list(list);
+}
+
+/* ------------------------------------------------------------------ */
+/* [N1] list_append_null_list_malloc_oom                               */
+/* notification_list_append(NULL, noti) with malloc failing covers     */
+/* the OOM path in _notification_list_create (L190-192).               */
+/* ------------------------------------------------------------------ */
+
+TEST_F(NotificationListTest, list_append_null_list_malloc_oom_covers_L190_L192) {
+  EXPECT_CALL(GetMock<AulMock>(), aul_app_get_appid_bypid(_, _, _))
+      .WillRepeatedly(Invoke(__fake_aul_app_get_appid_bypid));
+
+  notification_h n = notification_create(NOTIFICATION_TYPE_NOTI);
+  ASSERT_NE(n, nullptr);
+
+  /* Arm: fail the very next malloc — which is malloc(sizeof(struct _notification_list))
+   * at notification_list.c:39 inside _notification_list_create.
+   * No other malloc occurs between arming and that call. */
+  malloc_set_fail_on_call(0);
+  notification_list_h list = notification_list_append(nullptr, n);
+  malloc_reset_fail();
+
+  EXPECT_EQ(list, nullptr);
+  EXPECT_EQ(get_last_result(), NOTIFICATION_ERROR_OUT_OF_MEMORY);
+
+  notification_free(n);
+}
+
+/* ------------------------------------------------------------------ */
+/* [N2] list_append_existing_list_malloc_oom                           */
+/* notification_list_append(existing, noti) with malloc failing covers */
+/* the OOM path when growing an existing list (L178-180).              */
+/* ------------------------------------------------------------------ */
+
+TEST_F(NotificationListTest, list_append_existing_list_malloc_oom_covers_L178_L180) {
+  EXPECT_CALL(GetMock<AulMock>(), aul_app_get_appid_bypid(_, _, _))
+      .WillRepeatedly(Invoke(__fake_aul_app_get_appid_bypid));
+
+  notification_h n1 = notification_create(NOTIFICATION_TYPE_NOTI);
+  ASSERT_NE(n1, nullptr);
+  notification_h n2 = notification_create(NOTIFICATION_TYPE_NOTI);
+  ASSERT_NE(n2, nullptr);
+
+  /* Build a one-element list successfully. */
+  notification_list_h list = notification_list_append(nullptr, n1);
+  ASSERT_NE(list, nullptr);
+
+  /* Arm: fail next malloc — which is malloc(sizeof(struct _notification_list))
+   * inside _notification_list_create called from the list!=NULL branch at L176. */
+  malloc_set_fail_on_call(0);
+  notification_list_h result = notification_list_append(list, n2);
+  malloc_reset_fail();
+
+  EXPECT_EQ(result, nullptr);
+  EXPECT_EQ(get_last_result(), NOTIFICATION_ERROR_OUT_OF_MEMORY);
+
+  /* n1 is owned by list; n2 was never added. */
+  notification_free_list(list);
+  notification_free(n2);
 }

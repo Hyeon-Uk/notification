@@ -34,6 +34,12 @@ class PackageManagerMock : public virtual ModuleMock {
   MOCK_METHOD2(pkgmgrinfo_appinfo_get_label, int(pkgmgrinfo_appinfo_h, char**));
   MOCK_METHOD2(pkgmgrinfo_appinfo_get_pkgid, int(pkgmgrinfo_appinfo_h, char**));
   MOCK_METHOD1(pkgmgrinfo_appinfo_destroy_appinfo, int(pkgmgrinfo_appinfo_h));
+  MOCK_METHOD1(pkgmgrinfo_appinfo_filter_create, int(pkgmgrinfo_appinfo_filter_h*));
+  MOCK_METHOD3(pkgmgrinfo_appinfo_filter_add_string, int(pkgmgrinfo_appinfo_filter_h, const char*, const char*));
+  MOCK_METHOD4(pkgmgrinfo_appinfo_usr_filter_foreach_appinfo, int(pkgmgrinfo_appinfo_filter_h, pkgmgrinfo_app_list_cb, void*, uid_t));
+  MOCK_METHOD1(pkgmgrinfo_appinfo_filter_destroy, int(pkgmgrinfo_appinfo_filter_h));
+  MOCK_METHOD2(pkgmgrinfo_appinfo_get_appid, int(pkgmgrinfo_appinfo_h, char**));
+  MOCK_METHOD2(pkgmgrinfo_appinfo_get_pkgname, int(pkgmgrinfo_appinfo_h, char**));
 };
 
 #endif  // UNIT_TESTS_MOCK_PACKAGE_MANAGER_MOCK_H_

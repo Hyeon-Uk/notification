@@ -45,4 +45,8 @@ class SqliteMock : public virtual ModuleMock {
   MOCK_METHOD2(sqlite3_column_double, double(sqlite3_stmt*, int));
 };
 
+// sqlite3_mprintf OOM injection helpers (variadic — not a GMock method)
+void sqlite3_mprintf_set_fail_on(int call_index);  // fail on Nth call (0-indexed); resets counter
+void sqlite3_mprintf_reset_fail();                  // disable; resets counter
+
 #endif  // UNIT_TESTS_MOCK_SQLITE_MOCK_H_

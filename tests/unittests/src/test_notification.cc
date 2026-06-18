@@ -87,11 +87,13 @@ class Mocks :
 
 using ::testing::_;
 using ::testing::Invoke;
+using ::testing::Return;
 
 class NotificationTest : public TestFixture {
  public:
   NotificationTest() : TestFixture(std::make_unique<::Mocks>()) {}
   virtual void SetUp() {
+    ON_CALL(GetMock<AulMock>(), aul_getuid()).WillByDefault(Return(5001));
   }
   virtual void TearDown() {
   }

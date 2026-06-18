@@ -20,6 +20,8 @@
 #include "test_fixture.hh"
 
 extern "C" uid_t aul_getuid() {
+  auto* m = dynamic_cast<AulMock*>(TestFixture::mock_.get());
+  if (m) return m->aul_getuid();
   return 5001;
 }
 

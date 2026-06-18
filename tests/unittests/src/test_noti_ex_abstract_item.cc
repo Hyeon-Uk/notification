@@ -41,6 +41,7 @@ using namespace notification::item;
 
 using ::testing::_;
 using ::testing::Invoke;
+using ::testing::Return;
 
 namespace {
 class TestItem : public AbstractItem {
@@ -98,6 +99,7 @@ class AbstractItemTest : public TestFixture {
   AbstractItemTest() : TestFixture(std::make_unique<::Mocks>()) {}
 
   virtual void SetUp() {
+    ON_CALL(GetMock<AulMock>(), aul_getuid()).WillByDefault(Return(5001));
     FactoryManager::GetInst().RegisterFactory(std::unique_ptr<IItemFactory>(new MyFactory()));
   }
   virtual void TearDown() {

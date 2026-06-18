@@ -64,6 +64,10 @@ notification_setting_h make_setting(const char* package_name,
 class NotificationSettingApiTest : public TestFixture {
  public:
   NotificationSettingApiTest() : TestFixture(std::make_unique<::Mocks>()) {}
+
+  void SetUp() override {
+    ON_CALL(GetMock<AulMock>(), aul_getuid()).WillByDefault(Return(5001));
+  }
 };
 
 /* ============================================================== */
@@ -806,6 +810,7 @@ TEST_F(NotificationSettingApiTest, set_pop_up_notification_roundtrip) {
 class NotificationSettingApiTidlFailTest : public NotificationSettingApiTest {
  public:
   void SetUp() override {
+    ON_CALL(GetMock<AulMock>(), aul_getuid()).WillByDefault(Return(5001));
     ON_CALL(GetMock<NotiServiceProxyMock>(),
             rpc_port_proxy_noti_service_connect_sync(_))
         .WillByDefault(Return(RPC_PORT_ERROR_IO_ERROR));

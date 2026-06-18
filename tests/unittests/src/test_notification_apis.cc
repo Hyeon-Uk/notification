@@ -15,8 +15,11 @@
 #include <time.h>
 #include <string>
 
+#include "mock/app_control_mock.hh"
 #include "mock/aul_mock.hh"
+#include "mock/bundle_mock.hh"
 #include "mock/glib_mock.hh"
+#include "mock/libc_calloc_mock.hh"
 #include "mock/noti_service_proxy_mock.hh"
 #include "mock/package_manager_mock.hh"
 #include "mock/rpc_port_mock.hh"
@@ -32,8 +35,10 @@
 #include "notification/include/notification_ongoing_flag.h"
 
 using ::testing::_;
+using ::testing::DoAll;
 using ::testing::Invoke;
 using ::testing::Return;
+using ::testing::SetArgPointee;
 
 namespace {
 
@@ -83,6 +88,7 @@ int __fake_pkgmgrinfo_appinfo_get_label(pkgmgrinfo_appinfo_h handle, char** labe
 }
 
 class Mocks :
+    virtual public ::testing::NiceMock<AppControlMock>,
     virtual public ::testing::NiceMock<AulMock>,
     virtual public ::testing::NiceMock<TzplatformConfigMock>,
     virtual public ::testing::NiceMock<GlibMock>,
@@ -97,6 +103,17 @@ class NotificationApiTest : public TestFixture {
   NotificationApiTest() : TestFixture(std::make_unique<::Mocks>()) {}
 
   void SetUp() override {
+    ON_CALL(GetMock<AulMock>(), aul_getuid()).WillByDefault(Return(5001));
+    /* AppControlMock: default to the real library so existing tests work. */
+    ON_CALL(GetMock<AppControlMock>(), app_control_create(_))
+        .WillByDefault(Invoke(app_control_mock_real_create));
+    ON_CALL(GetMock<AppControlMock>(), app_control_import_from_bundle(_, _))
+        .WillByDefault(Invoke(app_control_mock_real_import_from_bundle));
+    ON_CALL(GetMock<AppControlMock>(), app_control_destroy(_))
+        .WillByDefault(Invoke(app_control_mock_real_destroy));
+    ON_CALL(GetMock<AppControlMock>(), app_control_export_as_bundle(_, _))
+        .WillByDefault(Invoke(app_control_mock_real_export_as_bundle));
+
     EXPECT_CALL(GetMock<AulMock>(), aul_app_get_appid_bypid(_, _, _))
         .WillRepeatedly(Invoke(__fake_aul_app_get_appid_bypid));
     EXPECT_CALL(GetMock<AulMock>(), aul_app_get_pkgid_bypid(_, _, _))
@@ -3416,6 +3433,23 @@ TEST_F(NotificationApiTest, translate_localized_text_with_title_populates_bundle
   EXPECT_NE(noti_->b_text, nullptr);
 }
 
+/* bundle_create OOM inside notification_translate_localized_text (L569-L570) */
+TEST_F(NotificationApiTest,
+       translate_localized_text_bundle_create_oom_covers_L569_L570) {
+  /* Set text KEY (not text) so b_key is set but b_text stays NULL.
+   * call 0 = bundle_create from notification_set_text (creates b_key) → OK
+   * call 1 = bundle_create from notification_set_text (creates b_format_args) → OK
+   * call 2 = bundle_create from notification_translate_localized_text (creates b_text) → OOM
+   * MUST set fail_on BEFORE notification_set_text — set_fail_on resets the counter to 0. */
+  bundle_create_set_fail_on(2);
+  ASSERT_EQ(notification_set_text(noti_, NOTIFICATION_TEXT_TYPE_TITLE, nullptr,
+                                   "ZZZTESTKEY999", NOTIFICATION_VARIABLE_TYPE_NONE),
+            NOTIFICATION_ERROR_NONE);
+  int ret = notification_translate_localized_text(noti_);
+  bundle_create_reset_fail();
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_OUT_OF_MEMORY);
+}
+
 TEST_F(NotificationApiTest, delete_group_by_group_id_ipc_connect_fail) {
   /* [N1] IPC connect failure propagated; no INVALID_PARAMETER guard before IPC */
   ON_CALL(GetMock<NotiServiceProxyMock>(), rpc_port_proxy_noti_service_connect_sync(_))
@@ -3966,3 +4000,1239 @@ TEST_F(NotificationApiTest,
   EXPECT_NE(v, nullptr);
   if (v) g_variant_unref(v);
 }
+
+/* ============================================================== */
+/* [P4] get_text_plain_no_format_args                              */
+/* Plain text set via set_text with VARIABLE_TYPE_NONE is returned */
+/* verbatim by get_text.                                           */
+/* ============================================================== */
+
+TEST_F(NotificationApiTest, get_text_plain_no_format_args) {
+  ASSERT_EQ(notification_set_text(noti_, NOTIFICATION_TEXT_TYPE_TITLE,
+                "Hello", nullptr, NOTIFICATION_VARIABLE_TYPE_NONE),
+            NOTIFICATION_ERROR_NONE);
+  char* got = nullptr;
+  EXPECT_EQ(notification_get_text(noti_, NOTIFICATION_TEXT_TYPE_TITLE, &got),
+            NOTIFICATION_ERROR_NONE);
+  ASSERT_NE(got, nullptr);
+  EXPECT_STREQ(got, "Hello");
+}
+
+/* ============================================================== */
+/* [P5] get_text_type_not_set_returns_null                        */
+/* A freshly created noti with no text set returns NONE and *text */
+/* points to NULL.                                                */
+/* ============================================================== */
+
+TEST_F(NotificationApiTest, get_text_type_not_set_returns_null) {
+  /* CONTENT was never set on noti_. */
+  char* got = reinterpret_cast<char*>(0x1); /* sentinel */
+  EXPECT_EQ(notification_get_text(noti_, NOTIFICATION_TEXT_TYPE_CONTENT, &got),
+            NOTIFICATION_ERROR_NONE);
+  EXPECT_EQ(got, nullptr);
+}
+
+/* ============================================================== */
+/* [E1] get_text_integer_d_format                                  */
+/* Text "Value: %d" with an INT variable arg must produce          */
+/* "Value: 42".                                                    */
+/* ============================================================== */
+
+TEST_F(NotificationApiTest, get_text_integer_d_format) {
+  ASSERT_EQ(notification_set_text(noti_, NOTIFICATION_TEXT_TYPE_TITLE,
+                "Value: %d", nullptr,
+                NOTIFICATION_VARIABLE_TYPE_INT, 42,
+                NOTIFICATION_VARIABLE_TYPE_NONE),
+            NOTIFICATION_ERROR_NONE);
+  char* got = nullptr;
+  EXPECT_EQ(notification_get_text(noti_, NOTIFICATION_TEXT_TYPE_TITLE, &got),
+            NOTIFICATION_ERROR_NONE);
+  ASSERT_NE(got, nullptr);
+  EXPECT_STREQ(got, "Value: 42");
+}
+
+/* ============================================================== */
+/* [E5] get_text_float_f_format                                    */
+/* Text "%f" with a DOUBLE arg produces "3.14" via "%.2f".        */
+/* ============================================================== */
+
+TEST_F(NotificationApiTest, get_text_float_f_format) {
+  ASSERT_EQ(notification_set_text(noti_, NOTIFICATION_TEXT_TYPE_TITLE,
+                "%f", nullptr,
+                NOTIFICATION_VARIABLE_TYPE_DOUBLE, 3.14,
+                NOTIFICATION_VARIABLE_TYPE_NONE),
+            NOTIFICATION_ERROR_NONE);
+  char* got = nullptr;
+  EXPECT_EQ(notification_get_text(noti_, NOTIFICATION_TEXT_TYPE_TITLE, &got),
+            NOTIFICATION_ERROR_NONE);
+  ASSERT_NE(got, nullptr);
+  EXPECT_STREQ(got, "3.14");
+}
+
+/* ============================================================== */
+/* [E6] get_text_literal_percent                                   */
+/* Text "100%% done" must be returned verbatim as "100%% done".    */
+/* The format engine copies the first '%' via the %% branch, then  */
+/* the second '%' (followed by a space) hits the fallback branch    */
+/* and is also copied unchanged — "%%" is preserved as "%%".       */
+/* ============================================================== */
+
+TEST_F(NotificationApiTest, get_text_literal_percent) {
+  ASSERT_EQ(notification_set_text(noti_, NOTIFICATION_TEXT_TYPE_TITLE,
+                "100%% done", nullptr,
+                NOTIFICATION_VARIABLE_TYPE_INT, 1,
+                NOTIFICATION_VARIABLE_TYPE_NONE),
+            NOTIFICATION_ERROR_NONE);
+  char* got = nullptr;
+  EXPECT_EQ(notification_get_text(noti_, NOTIFICATION_TEXT_TYPE_TITLE, &got),
+            NOTIFICATION_ERROR_NONE);
+  ASSERT_NE(got, nullptr);
+  EXPECT_STREQ(got, "100%% done");
+}
+
+/* ============================================================== */
+/* [N6] get_launch_option_null_noti_invalid                        */
+/* ============================================================== */
+
+TEST_F(NotificationApiTest, get_launch_option_null_noti_invalid) {
+  app_control_h ac = nullptr;
+  EXPECT_EQ(notification_get_launch_option(nullptr,
+                NOTIFICATION_LAUNCH_OPTION_APP_CONTROL, &ac),
+            NOTIFICATION_ERROR_INVALID_PARAMETER);
+}
+
+/* ============================================================== */
+/* [N7] get_launch_option_wrong_type_invalid                       */
+/* Any type other than APP_CONTROL must return INVALID_PARAMETER. */
+/* ============================================================== */
+
+TEST_F(NotificationApiTest, get_launch_option_wrong_type_invalid) {
+  app_control_h ac = nullptr;
+  EXPECT_EQ(notification_get_launch_option(noti_,
+                static_cast<notification_launch_option_type>(99), &ac),
+            NOTIFICATION_ERROR_INVALID_PARAMETER);
+}
+
+/* ============================================================== */
+/* [N8] get_launch_option_no_execute_option                        */
+/* A notification with no launch option set: get_execute_option    */
+/* returns NONE with a NULL bundle; get_launch_option forwards     */
+/* NONE when the bundle is NULL (b==NULL branch in the else path). */
+/* ============================================================== */
+
+TEST_F(NotificationApiTest, get_launch_option_no_execute_option) {
+  app_control_h ac = nullptr;
+  int ret = notification_get_launch_option(noti_,
+                NOTIFICATION_LAUNCH_OPTION_APP_CONTROL, &ac);
+  /* notification_get_execute_option returns NONE with b==NULL when
+   * no execute option was set; notification_get_launch_option then
+   * returns ret (NONE) from its else-branch. */
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
+  EXPECT_EQ(ac, nullptr);
+}
+
+/* ============================================================== */
+/* get_text_string_var_substitution                               */
+/* Goal: %s string-variable substitution (lines 609-636 of        */
+/* notification.c)                                                */
+/* ============================================================== */
+
+TEST_F(NotificationApiTest, get_text_string_var_substitution) {
+  /* Set text with a %s format specifier and a STRING variable arg. */
+  ASSERT_EQ(notification_set_text(noti_, NOTIFICATION_TEXT_TYPE_TITLE,
+                "hi %s", nullptr,
+                NOTIFICATION_VARIABLE_TYPE_STRING, "bob",
+                NOTIFICATION_VARIABLE_TYPE_NONE),
+            NOTIFICATION_ERROR_NONE);
+  char* got = nullptr;
+  EXPECT_EQ(notification_get_text(noti_, NOTIFICATION_TEXT_TYPE_TITLE, &got),
+            NOTIFICATION_ERROR_NONE);
+  ASSERT_NE(got, nullptr);
+  EXPECT_STREQ(got, "hi bob");
+}
+
+/* ============================================================== */
+/* get_text_string_var_with_domain                                */
+/* Goal: %s with text domain set — app-domain dgettext branch     */
+/* (L616-622); no catalog → dgettext returns input verbatim.      */
+/* ============================================================== */
+
+TEST_F(NotificationApiTest, get_text_string_var_with_domain) {
+  /* Set a text domain so the app-domain dgettext branch (L616-622)
+   * is taken.  With no installed catalog the lookup returns the key
+   * unchanged, so the final string must still be "hi bob". */
+  ASSERT_EQ(notification_set_text_domain(noti_, "dom", "/usr/share/locale"),
+            NOTIFICATION_ERROR_NONE);
+  ASSERT_EQ(notification_set_text(noti_, NOTIFICATION_TEXT_TYPE_TITLE,
+                "hi %s", nullptr,
+                NOTIFICATION_VARIABLE_TYPE_STRING, "bob",
+                NOTIFICATION_VARIABLE_TYPE_NONE),
+            NOTIFICATION_ERROR_NONE);
+  char* got = nullptr;
+  EXPECT_EQ(notification_get_text(noti_, NOTIFICATION_TEXT_TYPE_TITLE, &got),
+            NOTIFICATION_ERROR_NONE);
+  ASSERT_NE(got, nullptr);
+  EXPECT_STREQ(got, "hi bob");
+}
+
+/* ============================================================== */
+/* get_text_float_var_substitution                                */
+/* Goal: %f double-variable substitution (lines 637-650 of        */
+/* notification.c); "%.2f" format → "3.14".                       */
+/* ============================================================== */
+
+TEST_F(NotificationApiTest, get_text_float_var_substitution) {
+  ASSERT_EQ(notification_set_text(noti_, NOTIFICATION_TEXT_TYPE_TITLE,
+                "pi=%f", nullptr,
+                NOTIFICATION_VARIABLE_TYPE_DOUBLE, 3.14,
+                NOTIFICATION_VARIABLE_TYPE_NONE),
+            NOTIFICATION_ERROR_NONE);
+  char* got = nullptr;
+  EXPECT_EQ(notification_get_text(noti_, NOTIFICATION_TEXT_TYPE_TITLE, &got),
+            NOTIFICATION_ERROR_NONE);
+  ASSERT_NE(got, nullptr);
+  EXPECT_STREQ(got, "pi=3.14");
+}
+
+/* ============================================================== */
+/* get_text_key_only_fallback                                      */
+/* Goal: b_key set but no b_text; key lookup falls back to        */
+/* ret_val (lines 487-505).  With no catalog dgettext returns     */
+/* the key unchanged → L504 sets get_str=ret_val; num_format_     */
+/* args==0 → returns raw get_str.                                 */
+/* ============================================================== */
+
+TEST_F(NotificationApiTest, get_text_key_only_fallback) {
+  /* Pass text=nullptr, key="IDS_KEY" so only b_key is populated. */
+  ASSERT_EQ(notification_set_text(noti_, NOTIFICATION_TEXT_TYPE_TITLE,
+                nullptr, "IDS_KEY",
+                NOTIFICATION_VARIABLE_TYPE_NONE),
+            NOTIFICATION_ERROR_NONE);
+  char* got = nullptr;
+  EXPECT_EQ(notification_get_text(noti_, NOTIFICATION_TEXT_TYPE_TITLE, &got),
+            NOTIFICATION_ERROR_NONE);
+  /* No catalog → sys_string dgettext returns "IDS_KEY" == ret_val;
+   * L485 sets get_str=NULL; L504 fallback sets get_str=ret_val;
+   * num_format_args==0 → *text = get_str = "IDS_KEY". */
+  ASSERT_NE(got, nullptr);
+  EXPECT_STREQ(got, "IDS_KEY");
+}
+
+/* ============================================================== */
+/* get_text_key_with_domain_fallback                              */
+/* Goal: b_key + domain set — app-domain dgettext path (L479-486) */
+/* No catalog → returns the key verbatim.                         */
+/* ============================================================== */
+
+TEST_F(NotificationApiTest, get_text_key_with_domain_fallback) {
+  ASSERT_EQ(notification_set_text_domain(noti_, "testdom", "/usr/share/locale"),
+            NOTIFICATION_ERROR_NONE);
+  ASSERT_EQ(notification_set_text(noti_, NOTIFICATION_TEXT_TYPE_TITLE,
+                nullptr, "IDS_SOME",
+                NOTIFICATION_VARIABLE_TYPE_NONE),
+            NOTIFICATION_ERROR_NONE);
+  char* got = nullptr;
+  EXPECT_EQ(notification_get_text(noti_, NOTIFICATION_TEXT_TYPE_TITLE, &got),
+            NOTIFICATION_ERROR_NONE);
+  /* No catalog → app-domain dgettext("testdom","IDS_SOME") returns
+   * "IDS_SOME" == ret_val; L485 sets get_str=NULL; L504 fallback
+   * sets get_str=ret_val; num_format_args==0 → returns "IDS_SOME". */
+  ASSERT_NE(got, nullptr);
+  EXPECT_STREQ(got, "IDS_SOME");
+}
+
+/* ============================================================== */
+/* get_text_event_count_type_default_arm                          */
+/* Goal: default arm of the text_type switch (line 785) — a text  */
+/* type that is not TITLE/GROUP_TITLE/CONTENT/CONTENT_FOR_DISPLAY_ */
+/* OPTION_IS_OFF/GROUP_CONTENT/GROUP_CONTENT_FOR_DISPLAY_OPTION_  */
+/* IS_OFF leaves *text unchanged (i.e. nullptr).                   */
+/* NOTIFICATION_TEXT_TYPE_INFO_1 hits the default arm.            */
+/* ============================================================== */
+
+TEST_F(NotificationApiTest, get_text_event_count_type_default_arm) {
+  /* Store text+format_arg for INFO_1 so get_str is non-NULL and the
+   * format loop runs to produce result_str.  The subsequent switch
+   * hits default: and never writes *text, so got stays nullptr. */
+  ASSERT_EQ(notification_set_text(noti_, NOTIFICATION_TEXT_TYPE_INFO_1,
+                "info %d", nullptr,
+                NOTIFICATION_VARIABLE_TYPE_INT, 42,
+                NOTIFICATION_VARIABLE_TYPE_NONE),
+            NOTIFICATION_ERROR_NONE);
+  char* got = nullptr;
+  EXPECT_EQ(notification_get_text(noti_, NOTIFICATION_TEXT_TYPE_INFO_1, &got),
+            NOTIFICATION_ERROR_NONE);
+  /* default: arm does not write *text → got remains nullptr. */
+  EXPECT_EQ(got, nullptr);
+}
+
+/* ============================================================== */
+/* set_image_overwrite_then_clear                                 */
+/* Goal: existing b_image_path bundle gets key deleted when        */
+/* image_path is NULL (L117-121 of notification.c).               */
+/* ============================================================== */
+
+TEST_F(NotificationApiTest, set_image_overwrite_then_clear) {
+  /* First set creates the bundle and stores the key. */
+  ASSERT_EQ(notification_set_image(noti_, NOTIFICATION_IMAGE_TYPE_ICON,
+                "/tmp/icon.png"),
+            NOTIFICATION_ERROR_NONE);
+  /* Second set with NULL: bundle_del removes the key (L117-118),
+   * and since image_path==NULL nothing is re-added (L120-121). */
+  ASSERT_EQ(notification_set_image(noti_, NOTIFICATION_IMAGE_TYPE_ICON,
+                nullptr),
+            NOTIFICATION_ERROR_NONE);
+  char* path = reinterpret_cast<char*>(0x1); /* sentinel */
+  EXPECT_EQ(notification_get_image(noti_, NOTIFICATION_IMAGE_TYPE_ICON, &path),
+            NOTIFICATION_ERROR_NONE);
+  /* Key was deleted → bundle_get_str returns NULL; app_icon_path is
+   * also NULL (never set) → path must be nullptr. */
+  EXPECT_EQ(path, nullptr);
+}
+
+/* ============================================================== */
+/* get_text_content_type_int_substitution                         */
+/* D: NOTIFICATION_TEXT_TYPE_CONTENT with %d → CONTENT switch arm */
+/* ============================================================== */
+
+TEST_F(NotificationApiTest, get_text_content_type_int_substitution) {
+  ASSERT_EQ(notification_set_text(noti_, NOTIFICATION_TEXT_TYPE_CONTENT,
+                "count=%d", nullptr, NOTIFICATION_VARIABLE_TYPE_INT, 7,
+                NOTIFICATION_VARIABLE_TYPE_NONE),
+            NOTIFICATION_ERROR_NONE);
+  char* text = nullptr;
+  ASSERT_EQ(
+      notification_get_text(noti_, NOTIFICATION_TEXT_TYPE_CONTENT, &text),
+      NOTIFICATION_ERROR_NONE);
+  ASSERT_NE(text, nullptr);
+  EXPECT_STREQ(text, "count=7");
+}
+
+/* ============================================================== */
+/* get_text_group_title_type_int_substitution                     */
+/* E1: NOTIFICATION_TEXT_TYPE_GROUP_TITLE with %d                 */
+/* ============================================================== */
+
+TEST_F(NotificationApiTest, get_text_group_title_type_int_substitution) {
+  ASSERT_EQ(notification_set_text(noti_, NOTIFICATION_TEXT_TYPE_GROUP_TITLE,
+                "g=%d", nullptr, NOTIFICATION_VARIABLE_TYPE_INT, 3,
+                NOTIFICATION_VARIABLE_TYPE_NONE),
+            NOTIFICATION_ERROR_NONE);
+  char* text = nullptr;
+  ASSERT_EQ(notification_get_text(noti_, NOTIFICATION_TEXT_TYPE_GROUP_TITLE,
+                &text),
+            NOTIFICATION_ERROR_NONE);
+  ASSERT_NE(text, nullptr);
+  EXPECT_STREQ(text, "g=3");
+}
+
+/* ============================================================== */
+/* get_text_group_content_type_string_substitution                */
+/* E2: NOTIFICATION_TEXT_TYPE_GROUP_CONTENT with %s               */
+/* ============================================================== */
+
+TEST_F(NotificationApiTest, get_text_group_content_type_string_substitution) {
+  ASSERT_EQ(notification_set_text(noti_, NOTIFICATION_TEXT_TYPE_GROUP_CONTENT,
+                "gc=%s", nullptr, NOTIFICATION_VARIABLE_TYPE_STRING,
+                "world", NOTIFICATION_VARIABLE_TYPE_NONE),
+            NOTIFICATION_ERROR_NONE);
+  char* text = nullptr;
+  ASSERT_EQ(notification_get_text(noti_, NOTIFICATION_TEXT_TYPE_GROUP_CONTENT,
+                &text),
+            NOTIFICATION_ERROR_NONE);
+  ASSERT_NE(text, nullptr);
+  /* %s goes through dgettext("sys_string", "world"); when no catalog
+   * entry exists dgettext returns the msgid unchanged → appended to "gc=". */
+  EXPECT_STREQ(text, "gc=world");
+}
+
+/* ============================================================== */
+/* get_text_content_for_display_off_type                          */
+/* F: CONTENT_FOR_DISPLAY_OPTION_IS_OFF → same CONTENT switch arm */
+/* ============================================================== */
+
+TEST_F(NotificationApiTest, get_text_content_for_display_off_type) {
+  ASSERT_EQ(
+      notification_set_text(
+          noti_,
+          NOTIFICATION_TEXT_TYPE_CONTENT_FOR_DISPLAY_OPTION_IS_OFF,
+          "off=%d", nullptr, NOTIFICATION_VARIABLE_TYPE_INT, 1,
+          NOTIFICATION_VARIABLE_TYPE_NONE),
+      NOTIFICATION_ERROR_NONE);
+  char* text = nullptr;
+  ASSERT_EQ(
+      notification_get_text(
+          noti_,
+          NOTIFICATION_TEXT_TYPE_CONTENT_FOR_DISPLAY_OPTION_IS_OFF, &text),
+      NOTIFICATION_ERROR_NONE);
+  ASSERT_NE(text, nullptr);
+  EXPECT_STREQ(text, "off=1");
+}
+
+/* ============================================================== */
+/* get_time_from_text_no_text_set                                 */
+/* G4: no text stored → get_text returns NULL → INVALID_PARAMETER */
+/* ============================================================== */
+
+TEST_F(NotificationApiTest, get_time_from_text_no_text_set) {
+  time_t t = 0;
+  EXPECT_EQ(
+      notification_get_time_from_text(noti_,
+          NOTIFICATION_TEXT_TYPE_TITLE, &t),
+      NOTIFICATION_ERROR_INVALID_PARAMETER);
+}
+
+/* ============================================================== */
+/* get_time_from_text_plain_text_no_tag                           */
+/* G5: plain text without <TIME> tag → TAG_TYPE_INVALID           */
+/* ============================================================== */
+
+TEST_F(NotificationApiTest, get_time_from_text_plain_text_no_tag) {
+  ASSERT_EQ(notification_set_text(noti_, NOTIFICATION_TEXT_TYPE_TITLE,
+                "no time tag here", nullptr, NOTIFICATION_VARIABLE_TYPE_NONE),
+            NOTIFICATION_ERROR_NONE);
+  time_t t = 0;
+  EXPECT_EQ(
+      notification_get_time_from_text(noti_,
+          NOTIFICATION_TEXT_TYPE_TITLE, &t),
+      NOTIFICATION_ERROR_INVALID_PARAMETER);
+}
+
+/* ============================================================== */
+/* get_time_from_text_empty_tag_body                              */
+/* G6: "<TIME></TIME>" — tag type recognized but strip_tag → NULL */
+/* ============================================================== */
+
+TEST_F(NotificationApiTest, get_time_from_text_empty_tag_body) {
+  ASSERT_EQ(notification_set_text(noti_, NOTIFICATION_TEXT_TYPE_TITLE,
+                "<TIME></TIME>", nullptr, NOTIFICATION_VARIABLE_TYPE_NONE),
+            NOTIFICATION_ERROR_NONE);
+  time_t t = 0;
+  EXPECT_EQ(
+      notification_get_time_from_text(noti_,
+          NOTIFICATION_TEXT_TYPE_TITLE, &t),
+      NOTIFICATION_ERROR_INVALID_PARAMETER);
+}
+
+/* ============================================================== */
+/* get_text_numbered_arg_1d_int                                   */
+/* H1: %1$d positional integer (lines 651-686)                    */
+/* ============================================================== */
+
+TEST_F(NotificationApiTest, get_text_numbered_arg_1d_int) {
+  ASSERT_EQ(notification_set_text(noti_, NOTIFICATION_TEXT_TYPE_TITLE,
+                "val=%1$d", nullptr, NOTIFICATION_VARIABLE_TYPE_INT, 42,
+                NOTIFICATION_VARIABLE_TYPE_NONE),
+            NOTIFICATION_ERROR_NONE);
+  char* text = nullptr;
+  ASSERT_EQ(
+      notification_get_text(noti_, NOTIFICATION_TEXT_TYPE_TITLE, &text),
+      NOTIFICATION_ERROR_NONE);
+  ASSERT_NE(text, nullptr);
+  EXPECT_STREQ(text, "val=42");
+}
+
+/* ============================================================== */
+/* get_text_numbered_arg_2s_string                                */
+/* H2: %2$s positional string — indexes second arg directly       */
+/* ============================================================== */
+
+TEST_F(NotificationApiTest, get_text_numbered_arg_2s_string) {
+  ASSERT_EQ(notification_set_text(noti_, NOTIFICATION_TEXT_TYPE_TITLE,
+                "%2$s", nullptr,
+                NOTIFICATION_VARIABLE_TYPE_INT, 1,
+                NOTIFICATION_VARIABLE_TYPE_STRING, "hello",
+                NOTIFICATION_VARIABLE_TYPE_NONE),
+            NOTIFICATION_ERROR_NONE);
+  char* text = nullptr;
+  ASSERT_EQ(
+      notification_get_text(noti_, NOTIFICATION_TEXT_TYPE_TITLE, &text),
+      NOTIFICATION_ERROR_NONE);
+  ASSERT_NE(text, nullptr);
+  /* %Ns path copies raw bundle value without dgettext translation. */
+  EXPECT_STREQ(text, "hello");
+}
+
+/* ============================================================== */
+/* get_text_numbered_arg_1f_float                                 */
+/* H3: %1$f positional double (lines 698-711)                     */
+/* ============================================================== */
+
+TEST_F(NotificationApiTest, get_text_numbered_arg_1f_float) {
+  ASSERT_EQ(notification_set_text(noti_, NOTIFICATION_TEXT_TYPE_TITLE,
+                "%1$f", nullptr, NOTIFICATION_VARIABLE_TYPE_DOUBLE, 3.14,
+                NOTIFICATION_VARIABLE_TYPE_NONE),
+            NOTIFICATION_ERROR_NONE);
+  char* text = nullptr;
+  ASSERT_EQ(
+      notification_get_text(noti_, NOTIFICATION_TEXT_TYPE_TITLE, &text),
+      NOTIFICATION_ERROR_NONE);
+  ASSERT_NE(text, nullptr);
+  /* set_text stores "3.14" (%.2f); get_text reads "3.14" via atof then
+   * re-formats to "3.14". */
+  EXPECT_STREQ(text, "3.14");
+}
+
+/* ============================================================== */
+/* get_text_numbered_arg_unknown_conversion                       */
+/* H4: %1$x — digit + unknown conversion char → else branch       */
+/* (L712-718) copies only '%'; remainder processed as plain chars  */
+/* ============================================================== */
+
+TEST_F(NotificationApiTest, get_text_numbered_arg_unknown_conversion) {
+  ASSERT_EQ(notification_set_text(noti_, NOTIFICATION_TEXT_TYPE_TITLE,
+                "a%1$xb", nullptr, NOTIFICATION_VARIABLE_TYPE_INT, 5,
+                NOTIFICATION_VARIABLE_TYPE_NONE),
+            NOTIFICATION_ERROR_NONE);
+  char* text = nullptr;
+  ASSERT_EQ(
+      notification_get_text(noti_, NOTIFICATION_TEXT_TYPE_TITLE, &text),
+      NOTIFICATION_ERROR_NONE);
+  ASSERT_NE(text, nullptr);
+  EXPECT_STREQ(text, "a%1$xb");
+}
+
+/* ============================================================== */
+/* get_text_title_free_temp_on_second_call                        */
+/* L766-767: free(noti->temp_title) when it is already non-NULL   */
+/* ============================================================== */
+
+TEST_F(NotificationApiTest, get_text_title_free_temp_on_second_call) {
+  /* Format-arg text so the result goes through the result_str path
+   * that writes into noti->temp_title. */
+  ASSERT_EQ(notification_set_text(noti_, NOTIFICATION_TEXT_TYPE_TITLE,
+                "val=%d", nullptr,
+                NOTIFICATION_VARIABLE_TYPE_INT, 1,
+                NOTIFICATION_VARIABLE_TYPE_NONE),
+            NOTIFICATION_ERROR_NONE);
+
+  char* text = nullptr;
+  /* First call: temp_title is NULL → strdup sets it. */
+  ASSERT_EQ(notification_get_text(noti_, NOTIFICATION_TEXT_TYPE_TITLE, &text),
+            NOTIFICATION_ERROR_NONE);
+  ASSERT_NE(text, nullptr);
+  EXPECT_STREQ(text, "val=1");
+
+  /* Second call: temp_title != NULL → free branch (L767) is taken,
+   * then strdup stores fresh value. */
+  text = nullptr;
+  ASSERT_EQ(notification_get_text(noti_, NOTIFICATION_TEXT_TYPE_TITLE, &text),
+            NOTIFICATION_ERROR_NONE);
+  ASSERT_NE(text, nullptr);
+  EXPECT_STREQ(text, "val=1");
+}
+
+/* ============================================================== */
+/* get_text_content_free_temp_on_second_call                      */
+/* L777-779: free(noti->temp_content) when it is already non-NULL */
+/* ============================================================== */
+
+TEST_F(NotificationApiTest, get_text_content_free_temp_on_second_call) {
+  ASSERT_EQ(notification_set_text(noti_, NOTIFICATION_TEXT_TYPE_CONTENT,
+                "n=%d", nullptr,
+                NOTIFICATION_VARIABLE_TYPE_INT, 5,
+                NOTIFICATION_VARIABLE_TYPE_NONE),
+            NOTIFICATION_ERROR_NONE);
+
+  char* text = nullptr;
+  /* First call: temp_content is NULL → strdup sets it. */
+  ASSERT_EQ(
+      notification_get_text(noti_, NOTIFICATION_TEXT_TYPE_CONTENT, &text),
+      NOTIFICATION_ERROR_NONE);
+  ASSERT_NE(text, nullptr);
+  EXPECT_STREQ(text, "n=5");
+
+  /* Second call: temp_content != NULL → free branch (L779) is taken. */
+  text = nullptr;
+  ASSERT_EQ(
+      notification_get_text(noti_, NOTIFICATION_TEXT_TYPE_CONTENT, &text),
+      NOTIFICATION_ERROR_NONE);
+  ASSERT_NE(text, nullptr);
+  EXPECT_STREQ(text, "n=5");
+}
+
+/* ============================================================== */
+/* get_text_key_sys_string_path                                   */
+/* L487-491: b_key set, domain == NULL → sys_string dgettext path */
+/* ============================================================== */
+
+TEST_F(NotificationApiTest, get_text_key_sys_string_path) {
+  /* Clear domain/dir so the "sys_string" dgettext branch is taken
+   * instead of the app-domain branch. */
+  if (noti_->domain) {
+    free(noti_->domain);
+    noti_->domain = nullptr;
+  }
+  if (noti_->dir) {
+    free(noti_->dir);
+    noti_->dir = nullptr;
+  }
+
+  /* Set a key-only text (no plain text string, no format args). */
+  ASSERT_EQ(notification_set_text(noti_, NOTIFICATION_TEXT_TYPE_TITLE,
+                nullptr, "IDS_KEY",
+                NOTIFICATION_VARIABLE_TYPE_NONE),
+            NOTIFICATION_ERROR_NONE);
+
+  char* got = nullptr;
+  /* dgettext("sys_string", "IDS_KEY") returns "IDS_KEY" unchanged
+   * (no catalog) → get_str = NULL; then L504 fallback: get_str = ret_val
+   * ("IDS_KEY") is set and returned. */
+  ASSERT_EQ(
+      notification_get_text(noti_, NOTIFICATION_TEXT_TYPE_TITLE, &got),
+      NOTIFICATION_ERROR_NONE);
+  ASSERT_NE(got, nullptr);
+  EXPECT_STREQ(got, "IDS_KEY");
+}
+
+/* ============================================================== */
+/* get_text_key_no_matching_bundle_entry                          */
+/* L493: get_str = NULL when ret_val == NULL in b_key block        */
+/* ============================================================== */
+
+TEST_F(NotificationApiTest, get_text_key_no_matching_bundle_entry) {
+  /* Clear domain/dir to enter the b_key code path. */
+  if (noti_->domain) {
+    free(noti_->domain);
+    noti_->domain = nullptr;
+  }
+  if (noti_->dir) {
+    free(noti_->dir);
+    noti_->dir = nullptr;
+  }
+
+  /* Set a key for TITLE — this creates b_key with a TITLE entry. */
+  ASSERT_EQ(notification_set_text(noti_, NOTIFICATION_TEXT_TYPE_TITLE,
+                nullptr, "IDS_TITLE",
+                NOTIFICATION_VARIABLE_TYPE_NONE),
+            NOTIFICATION_ERROR_NONE);
+
+  /* Query CONTENT type: b_key exists but has no CONTENT entry →
+   * bundle_get_str returns NULL → else branch L493 (get_str = NULL).
+   * b_text is also NULL → *text = NULL. */
+  char* got = reinterpret_cast<char*>(0x1); /* non-null sentinel */
+  ASSERT_EQ(
+      notification_get_text(noti_, NOTIFICATION_TEXT_TYPE_CONTENT, &got),
+      NOTIFICATION_ERROR_NONE);
+  EXPECT_EQ(got, nullptr);
+}
+
+/* ============================================================== */
+/* set_sound_user_data_free_priv_path_on_second_call              */
+/* L971-973: free(noti->priv_sound_path) when non-NULL (USER_DATA) */
+/* ============================================================== */
+
+TEST_F(NotificationApiTest, set_sound_user_data_free_priv_path_on_second_call) {
+  /* Inject a pre-existing priv_sound_path to trigger the free branch. */
+  noti_->priv_sound_path = strdup("/fake/priv/sound.wav");
+  ASSERT_NE(noti_->priv_sound_path, nullptr);
+
+  /* USER_DATA type with a new path: the free branch (L971-973) runs
+   * before notification_check_file_path_is_private sets the new value.
+   * The file does not exist so priv_sound_path ends up NULL. */
+  EXPECT_EQ(
+      notification_set_sound(noti_, NOTIFICATION_SOUND_TYPE_USER_DATA,
+                             "/other/sound.wav"),
+      NOTIFICATION_ERROR_NONE);
+
+  /* sound_path is updated to the new path. */
+  EXPECT_STREQ(noti_->sound_path, "/other/sound.wav");
+  /* priv_sound_path is freed and reset to NULL (file not private). */
+  EXPECT_EQ(noti_->priv_sound_path, nullptr);
+}
+
+/* ============================================================== */
+/* set_sound_non_user_data_free_both_paths                        */
+/* L985-987: else branch frees both sound_path and priv_sound_path */
+/* ============================================================== */
+
+TEST_F(NotificationApiTest, set_sound_non_user_data_free_both_paths) {
+  /* First set a USER_DATA sound so sound_path is populated. */
+  ASSERT_EQ(
+      notification_set_sound(noti_, NOTIFICATION_SOUND_TYPE_USER_DATA,
+                             "/some/sound.wav"),
+      NOTIFICATION_ERROR_NONE);
+  ASSERT_STREQ(noti_->sound_path, "/some/sound.wav");
+
+  /* Manually inject priv_sound_path to cover the else-branch free. */
+  noti_->priv_sound_path = strdup("/fake/priv.wav");
+  ASSERT_NE(noti_->priv_sound_path, nullptr);
+
+  /* Switch to DEFAULT type: else branch (L980-993) frees both paths. */
+  EXPECT_EQ(
+      notification_set_sound(noti_, NOTIFICATION_SOUND_TYPE_DEFAULT, nullptr),
+      NOTIFICATION_ERROR_NONE);
+
+  EXPECT_EQ(noti_->sound_path, nullptr);
+  EXPECT_EQ(noti_->priv_sound_path, nullptr);
+}
+
+/* ============================================================== */
+/* set_vibration_non_default_free_paths                           */
+/* L1039-1041: USER_DATA branch frees priv_vibration_path when set*/
+/* ============================================================== */
+
+TEST_F(NotificationApiTest, set_vibration_non_default_free_paths) {
+  /* Inject a pre-existing priv_vibration_path to trigger the free. */
+  noti_->priv_vibration_path = strdup("/fake/priv/vib.wav");
+  ASSERT_NE(noti_->priv_vibration_path, nullptr);
+
+  /* USER_DATA type: free branch (L1039-1041) runs, then
+   * notification_check_file_path_is_private returns NULL for a
+   * non-existent file so priv_vibration_path stays NULL. */
+  EXPECT_EQ(
+      notification_set_vibration(noti_, NOTIFICATION_VIBRATION_TYPE_USER_DATA,
+                                 "/other/vib.wav"),
+      NOTIFICATION_ERROR_NONE);
+
+  EXPECT_STREQ(noti_->vibration_path, "/other/vib.wav");
+  EXPECT_EQ(noti_->priv_vibration_path, nullptr);
+}
+
+/* ============================================================== */
+/* set_vibration_non_user_data_free_paths                         */
+/* L1047-1053: else branch frees both vibration_path and priv_path*/
+/* ============================================================== */
+
+TEST_F(NotificationApiTest, set_vibration_non_user_data_free_paths) {
+  /* First set a USER_DATA vibration so vibration_path is populated. */
+  ASSERT_EQ(
+      notification_set_vibration(noti_, NOTIFICATION_VIBRATION_TYPE_USER_DATA,
+                                 "/some/vib.wav"),
+      NOTIFICATION_ERROR_NONE);
+  ASSERT_STREQ(noti_->vibration_path, "/some/vib.wav");
+
+  /* Manually inject priv_vibration_path to cover the else-branch free. */
+  noti_->priv_vibration_path = strdup("/fake/priv/vib.wav");
+  ASSERT_NE(noti_->priv_vibration_path, nullptr);
+
+  /* Switch to NONE type: else branch (L1047-1053) frees both paths. */
+  EXPECT_EQ(
+      notification_set_vibration(noti_, NOTIFICATION_VIBRATION_TYPE_NONE,
+                                 nullptr),
+      NOTIFICATION_ERROR_NONE);
+
+  EXPECT_EQ(noti_->vibration_path, nullptr);
+  EXPECT_EQ(noti_->priv_vibration_path, nullptr);
+}
+
+/* ============================================================== */
+/* notification_ipc_make_gvariant_from_noti — translate=true      */
+/* L82: notification_translate_localized_text branch              */
+/* ============================================================== */
+
+TEST_F(NotificationApiTest, ipc_make_gvariant_from_noti_with_translate_true) {
+  /* Set text so the translate call has something to work with. */
+  ASSERT_EQ(notification_set_text(noti_, NOTIFICATION_TEXT_TYPE_TITLE,
+                "Hello", "IDS_TITLE", NOTIFICATION_VARIABLE_TYPE_NONE),
+            NOTIFICATION_ERROR_NONE);
+  GVariant* v = notification_ipc_make_gvariant_from_noti(noti_, true);
+  EXPECT_NE(v, nullptr);
+  if (v) g_variant_unref(v);
+}
+
+/* ============================================================== */
+/* notification_ipc_make_gvariant_from_noti — args / group_args   */
+/* L95-99: noti->args branch; L103-108: noti->group_args branch   */
+/* ============================================================== */
+
+TEST_F(NotificationApiTest, ipc_make_gvariant_from_noti_with_args_and_group_args) {
+  noti_->args = bundle_create();
+  ASSERT_NE(noti_->args, nullptr);
+  noti_->group_args = bundle_create();
+  ASSERT_NE(noti_->group_args, nullptr);
+  GVariant* v = notification_ipc_make_gvariant_from_noti(noti_, false);
+  EXPECT_NE(v, nullptr);
+  if (v) g_variant_unref(v);
+  /* notification_free in TearDown calls bundle_free on args/group_args. */
+}
+
+/* ============================================================== */
+/* notification_ipc_make_gvariant_from_noti — service bundles     */
+/* L121-126: b_service_responding; L139-144: b_service_multi_launch */
+/* ============================================================== */
+
+TEST_F(NotificationApiTest,
+       ipc_make_gvariant_from_noti_with_service_responding_and_multi_launch) {
+  noti_->b_service_responding = bundle_create();
+  ASSERT_NE(noti_->b_service_responding, nullptr);
+  noti_->b_service_multi_launch = bundle_create();
+  ASSERT_NE(noti_->b_service_multi_launch, nullptr);
+  GVariant* v = notification_ipc_make_gvariant_from_noti(noti_, false);
+  EXPECT_NE(v, nullptr);
+  if (v) g_variant_unref(v);
+}
+
+/* ============================================================== */
+/* notification_ipc_make_gvariant_from_noti — private path fields */
+/* L205-210: b_priv_image_path; L219: priv_sound_path;            */
+/* L227: priv_vibration_path                                      */
+/* ============================================================== */
+
+TEST_F(NotificationApiTest,
+       ipc_make_gvariant_from_noti_with_priv_image_and_path_fields) {
+  noti_->b_priv_image_path = bundle_create();
+  ASSERT_NE(noti_->b_priv_image_path, nullptr);
+  noti_->priv_sound_path = strdup("/priv/s.ogg");
+  ASSERT_NE(noti_->priv_sound_path, nullptr);
+  noti_->priv_vibration_path = strdup("/priv/v.wav");
+  ASSERT_NE(noti_->priv_vibration_path, nullptr);
+  GVariant* v = notification_ipc_make_gvariant_from_noti(noti_, false);
+  EXPECT_NE(v, nullptr);
+  if (v) g_variant_unref(v);
+}
+
+/* ============================================================== */
+/* notification_ipc_make_gvariant_from_noti — LED / time fields   */
+/* L232: led_argb; L235: led_on_ms; L238: led_off_ms;             */
+/* L241: time; L244: insert_time                                  */
+/* ============================================================== */
+
+TEST_F(NotificationApiTest,
+       ipc_make_gvariant_from_noti_with_led_and_time_fields) {
+  noti_->led_argb = 0xFF0000FF;
+  noti_->led_on_ms = 100;
+  noti_->led_off_ms = 200;
+  noti_->time = 1000;
+  noti_->insert_time = 2000;
+  GVariant* v = notification_ipc_make_gvariant_from_noti(noti_, false);
+  EXPECT_NE(v, nullptr);
+  if (v) g_variant_unref(v);
+}
+
+/* ============================================================== */
+/* notification_ipc_make_gvariant_from_noti — misc non-zero fields*/
+/* L247: flags_for_property; L250: progress_size;                 */
+/* L253: progress_percentage; L256: app_icon_path;                */
+/* L260: temp_title; L262: temp_content; L283: channel_name       */
+/* ============================================================== */
+
+TEST_F(NotificationApiTest,
+       ipc_make_gvariant_from_noti_with_misc_nonzero_fields) {
+  noti_->flags_for_property = 1;
+  noti_->progress_size = 0.5f;
+  noti_->progress_percentage = 75.0f;
+  noti_->app_icon_path = strdup("/icon.png");
+  noti_->temp_title = strdup("T");
+  noti_->temp_content = strdup("C");
+  noti_->channel_name = strdup("ch1");
+  GVariant* v = notification_ipc_make_gvariant_from_noti(noti_, false);
+  EXPECT_NE(v, nullptr);
+  if (v) g_variant_unref(v);
+}
+
+/* ============================================================== */
+/* notification_ipc_make_noti_from_gvariant — null parameter checks*/
+/* L374-375: noti == NULL; L379-380: variant == NULL              */
+/* ============================================================== */
+
+TEST_F(NotificationApiTest,
+       ipc_make_noti_from_gvariant_null_noti_returns_invalid) {
+  GVariant* dummy = g_variant_new("i", 0);
+  EXPECT_EQ(notification_ipc_make_noti_from_gvariant(nullptr, dummy),
+            NOTIFICATION_ERROR_INVALID_PARAMETER);
+  g_variant_unref(dummy);
+}
+
+TEST_F(NotificationApiTest,
+       ipc_make_noti_from_gvariant_null_variant_returns_invalid) {
+  EXPECT_EQ(notification_ipc_make_noti_from_gvariant(noti_, nullptr),
+            NOTIFICATION_ERROR_INVALID_PARAMETER);
+}
+
+/* ============================================================== */
+/* notification_ipc_make_noti_from_gvariant — unwrapped a{iv}     */
+/* Unwrap the (v) wrapper → pass inner a{iv} to cover the         */
+/* _variant_to_int_dict while-loop body (L304-305, L309-310)      */
+/* ============================================================== */
+
+TEST_F(NotificationApiTest,
+       ipc_make_noti_from_gvariant_with_unwrapped_dict_variant) {
+  /* make_gvariant_from_noti returns (v) wrapping an a{iv} dict.
+   * _variant_to_int_dict iterates expecting a{iv} directly, so
+   * unwrap one level to exercise the while-loop body. */
+  GVariant* gv = notification_ipc_make_gvariant_from_noti(noti_, false);
+  ASSERT_NE(gv, nullptr);
+
+  GVariant* inner = nullptr;
+  g_variant_get(gv, "(v)", &inner);
+  ASSERT_NE(inner, nullptr);
+
+  notification_h dst = notification_create(NOTIFICATION_TYPE_NOTI);
+  ASSERT_NE(dst, nullptr);
+  int ret = notification_ipc_make_noti_from_gvariant(dst, inner);
+  g_variant_unref(inner);
+  g_variant_unref(gv);
+  notification_free(dst);
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_NONE);
+}
+
+/* ============================================================== */
+/* notification_clone — optional bundle/path fields               */
+/* source lines covered: L1720, L1723, L1729, L1735, L1752,      */
+/*                        L1763, L1771, L1779                     */
+/* ============================================================== */
+
+TEST_F(NotificationApiTest, clone_copies_optional_bundle_and_path_fields) {
+  /* Set optional fields not covered by existing clone tests:
+   * args, group_args, b_service_responding, b_service_multi_launch,
+   * b_key (via set_text with key), b_priv_image_path, priv_sound_path,
+   * priv_vibration_path */
+  noti_->args = bundle_create();
+  noti_->group_args = bundle_create();
+  noti_->b_service_responding = bundle_create();
+  noti_->b_service_multi_launch = bundle_create();
+  /* b_key: set via notification_set_text with a key */
+  ASSERT_EQ(notification_set_text(noti_, NOTIFICATION_TEXT_TYPE_TITLE,
+                nullptr, "IDS_KEY", NOTIFICATION_VARIABLE_TYPE_NONE),
+            NOTIFICATION_ERROR_NONE);
+  noti_->b_priv_image_path = bundle_create();
+  noti_->priv_sound_path = strdup("/priv/s.ogg");
+  noti_->priv_vibration_path = strdup("/priv/v.wav");
+
+  notification_h cloned = nullptr;
+  ASSERT_EQ(notification_clone(noti_, &cloned), NOTIFICATION_ERROR_NONE);
+  ASSERT_NE(cloned, nullptr);
+
+  EXPECT_NE(cloned->args, nullptr);
+  EXPECT_NE(cloned->group_args, nullptr);
+  EXPECT_NE(cloned->b_service_responding, nullptr);
+  EXPECT_NE(cloned->b_service_multi_launch, nullptr);
+  EXPECT_NE(cloned->b_key, nullptr);
+  EXPECT_NE(cloned->b_priv_image_path, nullptr);
+  EXPECT_NE(cloned->priv_sound_path, nullptr);
+  EXPECT_NE(cloned->priv_vibration_path, nullptr);
+
+  notification_free(cloned);
+  /* TearDown frees noti_ fields. */
+}
+
+/* ============================================================== */
+/* notification_get_event_handler — invalid event type            */
+/* source lines covered: L1261-L1263                              */
+/* ============================================================== */
+
+TEST_F(NotificationApiTest, get_event_handler_invalid_event_type_returns_invalid) {
+  app_control_h out = nullptr;
+  /* Pass an out-of-range event type. */
+  EXPECT_EQ(notification_get_event_handler(
+                noti_,
+                static_cast<notification_event_type_e>(9999),
+                &out),
+            NOTIFICATION_ERROR_INVALID_PARAMETER);
+  EXPECT_EQ(out, nullptr);
+}
+
+/* ============================================================== */
+/* notification_get_text — COUNT LEFT position variable           */
+/* source lines covered: L538-L554                                */
+/* ============================================================== */
+
+TEST_F(NotificationApiTest, get_text_count_variable_left_position) {
+  /* Set text "items" with COUNT-LEFT as the variable arg.
+   * Lines 538-554: the code prepends the count (0 when TIDL unavailable). */
+  ASSERT_EQ(notification_set_text(noti_, NOTIFICATION_TEXT_TYPE_TITLE,
+                "items", nullptr,
+                NOTIFICATION_VARIABLE_TYPE_COUNT,
+                NOTIFICATION_COUNT_POS_LEFT,
+                NOTIFICATION_VARIABLE_TYPE_NONE),
+            NOTIFICATION_ERROR_NONE);
+  char* got = nullptr;
+  ASSERT_EQ(notification_get_text(noti_, NOTIFICATION_TEXT_TYPE_TITLE, &got),
+            NOTIFICATION_ERROR_NONE);
+  ASSERT_NE(got, nullptr);
+  /* Count is prepended; exact value depends on TIDL result. */
+}
+
+/* ============================================================== */
+/* notification_get_text — COUNT in %d substitution               */
+/* source lines covered: L589-L590                                */
+/* ============================================================== */
+
+TEST_F(NotificationApiTest, get_text_count_variable_in_percent_d_format) {
+  /* Text "%d items" with COUNT-IN type.
+   * Lines 589-590: notification_get_count is called for %d. */
+  ASSERT_EQ(notification_set_text(noti_, NOTIFICATION_TEXT_TYPE_TITLE,
+                "%d items", nullptr,
+                NOTIFICATION_VARIABLE_TYPE_COUNT,
+                NOTIFICATION_COUNT_POS_IN,
+                NOTIFICATION_VARIABLE_TYPE_NONE),
+            NOTIFICATION_ERROR_NONE);
+  char* got = nullptr;
+  ASSERT_EQ(notification_get_text(noti_, NOTIFICATION_TEXT_TYPE_TITLE, &got),
+            NOTIFICATION_ERROR_NONE);
+  ASSERT_NE(got, nullptr);
+}
+
+/* ============================================================== */
+/* notification_get_text — %s substitution via sys_string path    */
+/* source lines covered: L623-L627                                */
+/* ============================================================== */
+
+TEST_F(NotificationApiTest, get_text_percent_s_substitution_sys_string_path) {
+  /* Clear domain/dir so the sys_string dgettext branch (L623-627) is used. */
+  if (noti_->domain) { free(noti_->domain); noti_->domain = nullptr; }
+  if (noti_->dir) { free(noti_->dir); noti_->dir = nullptr; }
+  ASSERT_EQ(notification_set_text(noti_, NOTIFICATION_TEXT_TYPE_TITLE,
+                "msg=%s", nullptr,
+                NOTIFICATION_VARIABLE_TYPE_STRING, "world",
+                NOTIFICATION_VARIABLE_TYPE_NONE),
+            NOTIFICATION_ERROR_NONE);
+  char* got = nullptr;
+  ASSERT_EQ(notification_get_text(noti_, NOTIFICATION_TEXT_TYPE_TITLE, &got),
+            NOTIFICATION_ERROR_NONE);
+  ASSERT_NE(got, nullptr);
+  /* dgettext("sys_string", "world") returns "world" when no translation exists. */
+  EXPECT_STREQ(got, "msg=world");
+}
+
+/* ============================================================== */
+/* notification_get_text — COUNT RIGHT position variable          */
+/* source lines covered: L742-L758                                */
+/* ============================================================== */
+
+TEST_F(NotificationApiTest, get_text_count_variable_right_position) {
+  /* Set text "items" with COUNT-RIGHT.
+   * Lines 742-758: count is appended after the text. */
+  ASSERT_EQ(notification_set_text(noti_, NOTIFICATION_TEXT_TYPE_TITLE,
+                "items", nullptr,
+                NOTIFICATION_VARIABLE_TYPE_COUNT,
+                NOTIFICATION_COUNT_POS_RIGHT,
+                NOTIFICATION_VARIABLE_TYPE_NONE),
+            NOTIFICATION_ERROR_NONE);
+  char* got = nullptr;
+  ASSERT_EQ(notification_get_text(noti_, NOTIFICATION_TEXT_TYPE_TITLE, &got),
+            NOTIFICATION_ERROR_NONE);
+  ASSERT_NE(got, nullptr);
+}
+
+/* ============================================================== */
+/* notification_get_text — positional %1$d with COUNT variable    */
+/* source lines covered: L651-L684 (positional branch, COUNT type)*/
+/* ============================================================== */
+
+TEST_F(NotificationApiTest, get_text_count_variable_positional_percent1d_format) {
+  /* Format "%1$d items" enters the positional-arg branch (L651) and
+   * the COUNT-variable check at L664-671. */
+  ASSERT_EQ(notification_set_text(noti_, NOTIFICATION_TEXT_TYPE_TITLE,
+                "%1$d items", nullptr,
+                NOTIFICATION_VARIABLE_TYPE_COUNT,
+                NOTIFICATION_COUNT_POS_IN,
+                NOTIFICATION_VARIABLE_TYPE_NONE),
+            NOTIFICATION_ERROR_NONE);
+  char* got = nullptr;
+  ASSERT_EQ(notification_get_text(noti_, NOTIFICATION_TEXT_TYPE_TITLE, &got),
+            NOTIFICATION_ERROR_NONE);
+  ASSERT_NE(got, nullptr);
+}
+
+/* ============================================================== */
+/* notification_get_launch_option — app_control_create fails      */
+/* source lines covered: L1202-L1204                              */
+/* ============================================================== */
+
+TEST_F(NotificationApiTest,
+       get_launch_option_app_control_create_fails_returns_io_error) {
+  /* Populate b_service_single_launch via set_launch_option. */
+  app_control_h ac = nullptr;
+  ASSERT_EQ(app_control_create(&ac), APP_CONTROL_ERROR_NONE);
+  ASSERT_NE(ac, nullptr);
+  ASSERT_EQ(notification_set_launch_option(noti_,
+      NOTIFICATION_LAUNCH_OPTION_APP_CONTROL, ac), NOTIFICATION_ERROR_NONE);
+  app_control_destroy(ac);
+
+  /* Override: create fails → function returns IO_ERROR (L1202-1204). */
+  EXPECT_CALL(GetMock<AppControlMock>(), app_control_create(_))
+      .WillOnce(Return(APP_CONTROL_ERROR_OUT_OF_MEMORY));
+
+  app_control_h result = nullptr;
+  EXPECT_EQ(notification_get_launch_option(noti_,
+      NOTIFICATION_LAUNCH_OPTION_APP_CONTROL, &result),
+      NOTIFICATION_ERROR_IO_ERROR);
+}
+
+/* ============================================================== */
+/* notification_get_launch_option — import_from_bundle fails      */
+/* source lines covered: L1198-L1200                              */
+/* ============================================================== */
+
+static int __fake_app_control_create_fake_handle(app_control_h* h) {
+  *h = reinterpret_cast<app_control_h>(static_cast<uintptr_t>(1));
+  return APP_CONTROL_ERROR_NONE;
+}
+
+TEST_F(NotificationApiTest,
+       get_launch_option_import_bundle_fails_returns_io_error) {
+  app_control_h ac = nullptr;
+  ASSERT_EQ(app_control_create(&ac), APP_CONTROL_ERROR_NONE);
+  ASSERT_NE(ac, nullptr);
+  ASSERT_EQ(notification_set_launch_option(noti_,
+      NOTIFICATION_LAUNCH_OPTION_APP_CONTROL, ac), NOTIFICATION_ERROR_NONE);
+  app_control_destroy(ac);
+
+  /* Override: create succeeds (fake handle), import fails → IO_ERROR (L1198-1200). */
+  EXPECT_CALL(GetMock<AppControlMock>(), app_control_create(_))
+      .WillOnce(Invoke(__fake_app_control_create_fake_handle));
+  EXPECT_CALL(GetMock<AppControlMock>(), app_control_import_from_bundle(_, _))
+      .WillOnce(Return(APP_CONTROL_ERROR_INVALID_PARAMETER));
+  EXPECT_CALL(GetMock<AppControlMock>(), app_control_destroy(_))
+      .WillOnce(Return(APP_CONTROL_ERROR_NONE));
+
+  app_control_h result = nullptr;
+  EXPECT_EQ(notification_get_launch_option(noti_,
+      NOTIFICATION_LAUNCH_OPTION_APP_CONTROL, &result),
+      NOTIFICATION_ERROR_IO_ERROR);
+}
+
+/* ============================================================== */
+/* notification_get_event_handler — app_control_create fails      */
+/* source lines covered: L1274-L1277                              */
+/* ============================================================== */
+
+TEST_F(NotificationApiTest,
+       get_event_handler_app_control_create_fails_returns_io_error) {
+  app_control_h ac = nullptr;
+  ASSERT_EQ(app_control_create(&ac), APP_CONTROL_ERROR_NONE);
+  ASSERT_NE(ac, nullptr);
+  ASSERT_EQ(notification_set_event_handler(noti_,
+      NOTIFICATION_EVENT_TYPE_CLICK_ON_BUTTON_1, ac), NOTIFICATION_ERROR_NONE);
+  app_control_destroy(ac);
+
+  /* Override: create fails → IO_ERROR (L1274-1277). */
+  EXPECT_CALL(GetMock<AppControlMock>(), app_control_create(_))
+      .WillOnce(Return(APP_CONTROL_ERROR_OUT_OF_MEMORY));
+
+  app_control_h result = nullptr;
+  EXPECT_EQ(notification_get_event_handler(noti_,
+      NOTIFICATION_EVENT_TYPE_CLICK_ON_BUTTON_1, &result),
+      NOTIFICATION_ERROR_IO_ERROR);
+}
+
+/* ============================================================== */
+/* notification_get_event_handler — import_from_bundle fails      */
+/* source lines covered: L1284-L1288                              */
+/* ============================================================== */
+
+TEST_F(NotificationApiTest,
+       get_event_handler_import_bundle_fails_returns_io_error) {
+  app_control_h ac = nullptr;
+  ASSERT_EQ(app_control_create(&ac), APP_CONTROL_ERROR_NONE);
+  ASSERT_NE(ac, nullptr);
+  ASSERT_EQ(notification_set_event_handler(noti_,
+      NOTIFICATION_EVENT_TYPE_CLICK_ON_BUTTON_1, ac), NOTIFICATION_ERROR_NONE);
+  app_control_destroy(ac);
+
+  /* Override: create succeeds (fake handle), import fails → IO_ERROR (L1284-1288). */
+  EXPECT_CALL(GetMock<AppControlMock>(), app_control_create(_))
+      .WillOnce(Invoke(__fake_app_control_create_fake_handle));
+  EXPECT_CALL(GetMock<AppControlMock>(), app_control_import_from_bundle(_, _))
+      .WillOnce(Return(APP_CONTROL_ERROR_INVALID_PARAMETER));
+  EXPECT_CALL(GetMock<AppControlMock>(), app_control_destroy(_))
+      .WillOnce(Return(APP_CONTROL_ERROR_NONE));
+
+  app_control_h result = nullptr;
+  EXPECT_EQ(notification_get_event_handler(noti_,
+      NOTIFICATION_EVENT_TYPE_CLICK_ON_BUTTON_1, &result),
+      NOTIFICATION_ERROR_IO_ERROR);
+}
+
+/* ============================================================== */
+/* notification_set_launch_option — app_control_export_as_bundle  */
+/* fails → NOTIFICATION_ERROR_INVALID_PARAMETER                   */
+/* source lines covered: L1159-L1161                              */
+/* ============================================================== */
+
+TEST_F(NotificationApiTest,
+       set_launch_option_export_as_bundle_fails_returns_invalid) {
+  app_control_h ac = nullptr;
+  ASSERT_EQ(app_control_create(&ac), APP_CONTROL_ERROR_NONE);
+  ASSERT_NE(ac, nullptr);
+
+  /* Override: export fails so set_launch_option returns INVALID_PARAMETER. */
+  EXPECT_CALL(GetMock<AppControlMock>(), app_control_export_as_bundle(_, _))
+      .WillOnce(Return(APP_CONTROL_ERROR_INVALID_PARAMETER));
+
+  EXPECT_EQ(notification_set_launch_option(noti_,
+      NOTIFICATION_LAUNCH_OPTION_APP_CONTROL, ac),
+      NOTIFICATION_ERROR_INVALID_PARAMETER);
+
+  app_control_destroy(ac);
+}
+
+/* ============================================================== */
+/* notification_get_noti_block_state — success paths              */
+/* source lines covered: L2068-L2077                              */
+/* ============================================================== */
+
+TEST_F(NotificationApiTest,
+       get_noti_block_state_success_returns_allowed) {
+  /* allow_to_notify=1, dnd=0 → NOTIFICATION_BLOCK_STATE_ALLOWED */
+  EXPECT_CALL(GetMock<NotiServiceProxyMock>(),
+      rpc_port_proxy_noti_service_invoke_get_noti_block_state(_, _, _, _, _, _))
+      .WillOnce(DoAll(
+          SetArgPointee<3>(0),
+          SetArgPointee<4>(0),
+          SetArgPointee<5>(1),
+          Return(RPC_PORT_ERROR_NONE)));
+  notification_block_state_e state = NOTIFICATION_BLOCK_STATE_BLOCKED;
+  ASSERT_EQ(notification_get_noti_block_state(&state), NOTIFICATION_ERROR_NONE);
+  EXPECT_EQ(state, NOTIFICATION_BLOCK_STATE_ALLOWED);
+}
+
+TEST_F(NotificationApiTest,
+       get_noti_block_state_success_returns_do_not_disturb) {
+  /* allow_to_notify=1, dnd=1, dnd_except=0 → DO_NOT_DISTURB */
+  EXPECT_CALL(GetMock<NotiServiceProxyMock>(),
+      rpc_port_proxy_noti_service_invoke_get_noti_block_state(_, _, _, _, _, _))
+      .WillOnce(DoAll(
+          SetArgPointee<3>(1),
+          SetArgPointee<4>(0),
+          SetArgPointee<5>(1),
+          Return(RPC_PORT_ERROR_NONE)));
+  notification_block_state_e state = NOTIFICATION_BLOCK_STATE_ALLOWED;
+  ASSERT_EQ(notification_get_noti_block_state(&state), NOTIFICATION_ERROR_NONE);
+  EXPECT_EQ(state, NOTIFICATION_BLOCK_STATE_DO_NOT_DISTURB);
+}
+
+TEST_F(NotificationApiTest,
+       get_noti_block_state_success_returns_blocked) {
+  /* allow_to_notify=0 → NOTIFICATION_BLOCK_STATE_BLOCKED */
+  EXPECT_CALL(GetMock<NotiServiceProxyMock>(),
+      rpc_port_proxy_noti_service_invoke_get_noti_block_state(_, _, _, _, _, _))
+      .WillOnce(DoAll(
+          SetArgPointee<3>(0),
+          SetArgPointee<4>(0),
+          SetArgPointee<5>(0),
+          Return(RPC_PORT_ERROR_NONE)));
+  notification_block_state_e state = NOTIFICATION_BLOCK_STATE_ALLOWED;
+  ASSERT_EQ(notification_get_noti_block_state(&state), NOTIFICATION_ERROR_NONE);
+  EXPECT_EQ(state, NOTIFICATION_BLOCK_STATE_BLOCKED);
+}
+
+/* ============================================================== */
+/* calloc OOM paths in _notification_create / notification_clone  */
+/* ============================================================== */
+
+/* calloc OOM inside _notification_create → L1534-L1536 */
+TEST_F(NotificationApiTest, notification_create_calloc_oom_covers_L1534_L1536) {
+  /* SetUp already consumed one calloc(1, sizeof(notification_s)) for noti_.
+   * The NEXT calloc of that size is the one inside _notification_create. */
+  calloc_set_fail_on_size(sizeof(struct _notification));
+  notification_h noti = notification_create(NOTIFICATION_TYPE_NOTI);
+  calloc_reset_fail();
+  EXPECT_EQ(noti, nullptr);
+  EXPECT_EQ(get_last_result(), NOTIFICATION_ERROR_OUT_OF_MEMORY);
+}
+
+/* calloc OOM inside notification_clone → L1700-L1701 */
+TEST_F(NotificationApiTest, notification_clone_calloc_oom_covers_L1700_L1701) {
+  notification_h clone = nullptr;
+  /* noti_ is valid from SetUp. The next calloc(1, sizeof(notification_s))
+   * inside notification_clone will fail. */
+  calloc_set_fail_on_size(sizeof(struct _notification));
+  int ret = notification_clone(noti_, &clone);
+  calloc_reset_fail();
+  EXPECT_EQ(ret, NOTIFICATION_ERROR_OUT_OF_MEMORY);
+  EXPECT_EQ(clone, nullptr);
+}
+

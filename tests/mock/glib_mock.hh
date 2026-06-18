@@ -60,6 +60,9 @@ class GlibMock : public virtual ModuleMock {
       GBusNameAppearedCallback, GBusNameVanishedCallback, gpointer, GDestroyNotify));
   MOCK_METHOD4(g_dbus_message_new_method_call,
       GDBusMessage*(const gchar*, const gchar*, const gchar*, const gchar*));
+  MOCK_METHOD2(g_dbus_connection_signal_unsubscribe,
+      void(GDBusConnection*, guint));
+  MOCK_METHOD1(g_object_unref, void(gpointer));
 };
 
 #endif  // UNIT_TESTS_MOCK_GLIB_MOCK_H_
