@@ -1,0 +1,1 @@
+genhtml notification.info -o notification.out
