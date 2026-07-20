@@ -50,6 +50,22 @@ static int _get_table_field_data_int(char **table, int *buf, int index)
 	return false;
 }
 
+static int _get_table_field_data_bool(char **table, bool *buf, int index)
+{
+	if (table == NULL || buf == NULL || index < 0) {
+		ERR("table[%p], buf[%p], index[%d]", table, buf, index);
+		return false;
+	}
+
+	if (table[index] != NULL) {
+		*buf = (atoi(table[index]) != 0);
+		return true;
+	}
+
+	*buf = false;
+	return false;
+}
+
 static int _get_table_field_data_string(char **table, char **buf, int ucs2, int index)
 {
 	int ret = false;
@@ -147,12 +163,12 @@ int noti_setting_service_get_setting_by_app_id(const char *app_id, notification_
 
 	_get_table_field_data_string(query_result, &(result_setting_array[i].package_name), 1, col_index++);
 	_get_table_field_data_string(query_result, &(result_setting_array[i].app_id), 1, col_index++);
-	_get_table_field_data_int(query_result, (int *)&(result_setting_array[i].allow_to_notify), col_index++);
-	_get_table_field_data_int(query_result, (int *)&(result_setting_array[i].do_not_disturb_except), col_index++);
+	_get_table_field_data_bool(query_result, &(result_setting_array[i].allow_to_notify), col_index++);
+	_get_table_field_data_bool(query_result, &(result_setting_array[i].do_not_disturb_except), col_index++);
 	_get_table_field_data_int(query_result, &(result_setting_array[i].visibility_class), col_index++);
-	_get_table_field_data_int(query_result, (int *)&(result_setting_array[i].pop_up_notification), col_index++);
+	_get_table_field_data_bool(query_result, &(result_setting_array[i].pop_up_notification), col_index++);
 	_get_table_field_data_int(query_result, (int *)&(result_setting_array[i].lock_screen_content_level), col_index++);
-	_get_table_field_data_int(query_result, (int *)&(result_setting_array[i].app_disabled), col_index++);
+	_get_table_field_data_bool(query_result, &(result_setting_array[i].app_disabled), col_index++);
 
 	*setting = result_setting_array;
 
@@ -230,12 +246,12 @@ int noti_setting_get_setting_array(notification_setting_h *setting_array, int *c
 	for (i = 0; i < row_count; i++) {
 		_get_table_field_data_string(query_result, &(result_setting_array[i].package_name), 1, col_index++);
 		_get_table_field_data_string(query_result, &(result_setting_array[i].app_id), 1, col_index++);
-		_get_table_field_data_int(query_result, (int *)&(result_setting_array[i].allow_to_notify), col_index++);
-		_get_table_field_data_int(query_result, (int *)&(result_setting_array[i].do_not_disturb_except), col_index++);
+		_get_table_field_data_bool(query_result, &(result_setting_array[i].allow_to_notify), col_index++);
+		_get_table_field_data_bool(query_result, &(result_setting_array[i].do_not_disturb_except), col_index++);
 		_get_table_field_data_int(query_result, (int *)&(result_setting_array[i].visibility_class), col_index++);
-		_get_table_field_data_int(query_result, (int *)&(result_setting_array[i].pop_up_notification), col_index++);
+		_get_table_field_data_bool(query_result, &(result_setting_array[i].pop_up_notification), col_index++);
 		_get_table_field_data_int(query_result, (int *)&(result_setting_array[i].lock_screen_content_level), col_index++);
-		_get_table_field_data_int(query_result, (int *)&(result_setting_array[i].app_disabled), col_index++);
+		_get_table_field_data_bool(query_result, &(result_setting_array[i].app_disabled), col_index++);
 	}
 
 	*setting_array = result_setting_array;
@@ -317,9 +333,9 @@ int noti_system_setting_load_system_setting(notification_system_setting_h *syste
 		result_system_setting->dnd_allow_exceptions = NULL;
 	} else {
 		col_index = column_count;
-		_get_table_field_data_int(query_result, (int *)&(result_system_setting->do_not_disturb), col_index++);
+		_get_table_field_data_bool(query_result, &(result_system_setting->do_not_disturb), col_index++);
 		_get_table_field_data_int(query_result, &(result_system_setting->visibility_class), col_index++);
-		_get_table_field_data_int(query_result, (int *)&(result_system_setting->dnd_schedule_enabled), col_index++);
+		_get_table_field_data_bool(query_result, &(result_system_setting->dnd_schedule_enabled), col_index++);
 		_get_table_field_data_int(query_result, &(result_system_setting->dnd_schedule_day), col_index++);
 		_get_table_field_data_int(query_result, &(result_system_setting->dnd_start_hour), col_index++);
 		_get_table_field_data_int(query_result, &(result_system_setting->dnd_start_min), col_index++);
