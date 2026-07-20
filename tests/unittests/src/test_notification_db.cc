@@ -74,6 +74,9 @@ TEST_F(NotificationDBTest, notification_db_test) {
   EXPECT_CALL(GetMock<SqliteMock>(), sqlite3_open_v2(_, _, _, _))
     .WillRepeatedly(Invoke(__fake_sqlite3_open_v2));
 
+  EXPECT_CALL(GetMock<SqliteMock>(), sqlite3_busy_handler(_, _, _))
+    .WillOnce(Return(SQLITE_OK));
+
   EXPECT_CALL(GetMock<SqliteMock>(), sqlite3_close(_))
     .WillOnce(Return(SQLITE_OK));
 

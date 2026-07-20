@@ -85,3 +85,9 @@ extern "C" int sqlite3_column_int(sqlite3_stmt* stmt, int iCol) {
 extern "C" double sqlite3_column_double(sqlite3_stmt* stmt, int iCol) {
   return MOCK_HOOK_P2(SqliteMock, sqlite3_column_double, stmt, iCol);
 }
+
+typedef int(*busycb)(void*, int);
+
+extern "C" int sqlite3_busy_handler(sqlite3* db, busycb cb, void* arg) {
+  return MOCK_HOOK_P3(SqliteMock, sqlite3_busy_handler, db, cb, arg);
+}

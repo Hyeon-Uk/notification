@@ -29,6 +29,21 @@
 
 static bool is_db_corrupted = false;
 
+static const int BUSY_WAITING_USEC = 50000;
+static const int BUSY_WAITING_MAX = 40;
+
+/* LCOV_EXCL_START */
+static int __busy_handler(void *data, int count)
+{
+	if (count < BUSY_WAITING_MAX) {
+		usleep(BUSY_WAITING_USEC);
+		return 1;
+	}
+	ERR("Database is busy");
+	return 0;
+}
+/* LCOV_EXCL_STOP */
+
 /* LCOV_EXCL_START */
 static int __check_integrity_cb(void *pid, int argc, char **argv, char **notUsed)
 {
@@ -144,6 +159,16 @@ EXPORT_API sqlite3 *notification_db_open()
 		else
 			set_last_result(NOTIFICATION_ERROR_FROM_DB);
 
+		return NULL;
+		/* LCOV_EXCL_STOP */
+	}
+
+	ret = sqlite3_busy_handler(db, __busy_handler, NULL);
+	if (ret != SQLITE_OK) {
+		/* LCOV_EXCL_START */
+		ERR("Failed to set busy handler[%d]", ret);
+		set_last_result(NOTIFICATION_ERROR_FROM_DB);
+		sqlite3_close(db);
 		return NULL;
 		/* LCOV_EXCL_STOP */
 	}
