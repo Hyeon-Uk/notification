@@ -18,6 +18,7 @@
 #include <unistd.h>
 #include <stdio.h>
 #include <string.h>
+#include <limits.h>
 
 #include <sqlite3.h>
 #include <tizen.h>
@@ -97,6 +98,42 @@ out:
 /* LCOV_EXCL_STOP */
 
 /* LCOV_EXCL_START */
+static void __remove_stale_journal(const char *db_path)
+{
+	char journal[PATH_MAX];
+	sqlite3 *db = NULL;
+	int r;
+
+	snprintf(journal, sizeof(journal), "%s-journal", db_path);
+	if (access(journal, F_OK) != 0)
+		return;
+
+	/*
+	 * The init path opened the db read-write (rolling back any valid hot
+	 * journal) and the integrity check passed. If a read-only open is still
+	 * SQLITE_READONLY, the journal is a malformed one SQLite won't roll
+	 * back - remove it. A journal that no longer blocks reads is left alone.
+	 */
+	r = sqlite3_open_v2(db_path, &db, SQLITE_OPEN_READONLY, NULL);
+	if (r == SQLITE_OK)
+		r = sqlite3_exec(db, "SELECT 1 FROM sqlite_master LIMIT 1",
+				NULL, NULL, NULL);
+	sqlite3_close(db);
+
+	if ((r & 0xff) != SQLITE_READONLY)
+		return;
+
+	if (unlink(journal) != 0) {
+		ERR("Failed to remove damaged journal: %s, errno: %d",
+				journal, errno);
+	} else {
+		WARN("Removed damaged journal blocking read-only access: %s",
+				journal);
+	}
+}
+/* LCOV_EXCL_STOP */
+
+/* LCOV_EXCL_START */
 EXPORT_API int notification_db_init(void)
 {
 	int ret = NOTIFICATION_ERROR_NONE;
@@ -133,6 +170,8 @@ out:
 		sqlite3_free(errmsg);
 	if (db)
 		sqlite3_close(db);
+
+	__remove_stale_journal(DBPATH);
 
 	return ret;
 }
