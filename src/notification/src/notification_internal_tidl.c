@@ -775,12 +775,15 @@ EXPORT_API int make_noti_from_notification(notification_h *noti, void *notihandl
 					int __count = 0;
 					__count = bundle_get_count(_b_event_handler[i]);
 
-					if (__count > 0)
+					if (__count > 0) {
 						_noti->b_event_handler[i] = _b_event_handler[i];
-					else
+					} else {
 						_noti->b_event_handler[i] = NULL;
+						bundle_free(_b_event_handler[i]);
+					}
 				}
 			}
+			free(_b_event_handler);
 		}
 		rpc_port_proxy_array_bundle_destroy(_event_handler);
 	} else {
@@ -1199,6 +1202,8 @@ EXPORT_API int make_setting_from_noti_system_setting(
 
 	rpc_port_proxy_list_noti_system_setting_dnd_allow_exception_foreach(dnd_allow_list,
 			_rpc_port_proxy_list_noti_system_setting_dnd_allow_exception_cb, _setting);
+	rpc_port_proxy_list_noti_system_setting_dnd_allow_exception_destroy(
+			dnd_allow_list);
 
 	*setting = _setting;
 
@@ -1304,6 +1309,8 @@ EXPORT_API int make_noti_system_setting_from_setting(void *settinghandle,
 		ret = rpc_port_proxy_noti_system_setting_set_dnd_allow_exceptions(handle, list_handle);
 		if (ret != RPC_PORT_ERROR_NONE)
 			ERR("failed to set dnd allow exception list");
+		rpc_port_proxy_list_noti_system_setting_dnd_allow_exception_destroy(
+				list_handle);
 	}
 
 	return NOTIFICATION_ERROR_NONE;

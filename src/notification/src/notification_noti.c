@@ -2557,6 +2557,9 @@ EXPORT_API int notification_noti_get_channel_list(const char *app_id,
 		if (channel)
 			*channel_list = g_list_append(*channel_list, channel);
 		WARN("noti get channel list : %s", channel_name);
+
+		free(channel_name);
+		channel_name = NULL;
 	}
 
 out:

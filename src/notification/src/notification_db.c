@@ -62,15 +62,14 @@ static int __check_integrity_cb(void *pid, int argc, char **argv, char **notUsed
 /* LCOV_EXCL_STOP */
 
 /* LCOV_EXCL_START */
-static int __recover_corrupted_db(sqlite3 *db)
+static int __recover_corrupted_db(void)
 {
 	int ret = NOTIFICATION_ERROR_NONE;
 	int sql_ret;
+	sqlite3 *db = NULL;
 	char *errmsg = NULL;
 
 	INFO("DB is corrupted, start to recover corrupted db");
-	if (db)
-		sqlite3_close(db);
 	unlink(DBPATH);
 
 	sql_ret = sqlite3_open_v2(DBPATH, &db,
@@ -92,6 +91,9 @@ static int __recover_corrupted_db(sqlite3 *db)
 out:
 	if (errmsg)
 		sqlite3_free(errmsg);
+
+	if (db)
+		sqlite3_close(db);
 
 	return ret;
 }
@@ -164,12 +166,13 @@ EXPORT_API int notification_db_init(void)
 	}
 
 out:
-	if (sql_ret == SQLITE_CORRUPT || sql_ret == SQLITE_NOTADB || is_db_corrupted)
-		ret = __recover_corrupted_db(db);
 	if (errmsg)
 		sqlite3_free(errmsg);
 	if (db)
 		sqlite3_close(db);
+
+	if (sql_ret == SQLITE_CORRUPT || sql_ret == SQLITE_NOTADB || is_db_corrupted)
+		ret = __recover_corrupted_db();
 
 	__remove_stale_journal(DBPATH);
 

@@ -333,6 +333,7 @@ static void _delete_multiple_notify(rpc_port_proxy_notification_h notihandle,
 	} else {
 		WARN("delete multiple op null");
 	}
+	free(id_list);
 	WARN("delete multiple done : %d", cnt);
 }
 
@@ -385,6 +386,7 @@ static void _change_dnd_notify(rpc_port_proxy_notification_h notihandle,
 	// get from extra
 	notification_call_dnd_changed_cb_for_uid(*do_not_disturb, (uid_t)uid);
 
+	free(do_not_disturb);
 	WARN("_change_dnd_notify done");
 }
 
@@ -420,6 +422,8 @@ static void _delete_by_display_applist_notify(rpc_port_proxy_notification_h noti
 	} else {
 		WARN("delete by display applist op null");
 	}
+
+	free(id_list);
 	WARN("delete by display applist done");
 }
 
@@ -825,12 +829,13 @@ int notification_tidl_send_event(notification_h noti, int event_type, int priv_i
 			WARN("create noti handle fail");
 			return ret;
 		}
-		
+
 		make_notification_from_noti(noti_handle, noti, false);
 
 		ret = rpc_port_proxy_noti_service_invoke_send_event(service_handle, noti_handle, event_type);
 		if (ret != RPC_PORT_ERROR_NONE) {
 			WARN("send event fail");
+			rpc_port_proxy_notification_destroy(noti_handle);
 			return ret;
 		}
 
@@ -871,6 +876,7 @@ int notification_tidl_request_load_noti_by_priv_id(notification_h *noti,
 	ret = make_noti_from_notification(&_noti, notihandle);
 	if (ret != NOTIFICATION_ERROR_NONE) {
 		ERR("failed to make noti : %d", ret);
+		rpc_port_proxy_notification_destroy(notihandle);
 		return ret;
 	}
 	*noti = _noti;
@@ -907,6 +913,7 @@ int notification_tidl_request_load_noti_by_tag(notification_h *noti,
 	ret = make_noti_from_notification(&_noti, notihandle);
 	if (ret != NOTIFICATION_ERROR_NONE) {
 		ERR("failed to make noti : %d", ret);
+		rpc_port_proxy_notification_destroy(notihandle);
 		return ret;
 	}
 	*noti = _noti;
@@ -1007,12 +1014,14 @@ int notification_tidl_request_get_setting_array(
 	ret = rpc_port_proxy_array_noti_setting_get(handle_array, &settings, &size);
 	if (ret != RPC_PORT_ERROR_NONE) {
 		WARN("get setting fail : %d", ret);
+		rpc_port_proxy_array_noti_setting_destroy(handle_array);
 		return ret;
 	}
 
 	result_setting_array = (struct notification_setting *)malloc(sizeof(struct notification_setting) * size);
 	if (result_setting_array == NULL) {
 		ERR("malloc failed");
+		rpc_port_proxy_array_noti_setting_destroy(handle_array);
 		return NOTIFICATION_ERROR_OUT_OF_MEMORY;
 	}
 

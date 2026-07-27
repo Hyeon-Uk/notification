@@ -867,7 +867,8 @@ EXPORT_API int notification_system_setting_set_dnd_allow_exceptions(notification
 
 		dnd_allow_exception_data->type = type;
 		dnd_allow_exception_data->value = value;
-		system_setting->dnd_allow_exceptions = g_list_append(list, dnd_allow_exception_data);
+		system_setting->dnd_allow_exceptions = g_list_append(
+				system_setting->dnd_allow_exceptions, dnd_allow_exception_data);
 	}
 
 	return NOTIFICATION_ERROR_NONE;

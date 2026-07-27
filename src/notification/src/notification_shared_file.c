@@ -301,6 +301,8 @@ static void __free_req_info(gpointer data)
 		g_list_free_full(info->shared_file_list, __free_file_info);
 	if (info->target_app_table)
 		g_list_free_full(info->target_app_table, free);
+	if (info->priv_id_list)
+		g_list_free(info->priv_id_list);
 
 	WARN("__free_req_info done");
 
