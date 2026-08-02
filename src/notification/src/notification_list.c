@@ -21,7 +21,6 @@
 
 #include <notification.h>
 #include <notification_list.h>
-#include <notification_noti.h>
 #include <notification_debug.h>
 #include <notification_private.h>
 #include <notification_tidl.h>

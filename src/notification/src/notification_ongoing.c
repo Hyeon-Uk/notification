@@ -21,7 +21,6 @@
 #include <glib.h>
 #include <gio/gio.h>
 
-#include <notification_db.h>
 #include <notification_debug.h>
 #include <notification_ongoing.h>
 #include <notification_private.h>

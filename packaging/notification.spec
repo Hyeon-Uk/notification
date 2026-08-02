@@ -38,10 +38,8 @@ BuildRequires:  zip
 
 BuildRequires: cmake
 Requires(post): /sbin/ldconfig
-Requires(post): %{TZ_SYS_BIN}/sqlite3
 Requires(postun): /sbin/ldconfig
 
-%define upgrade_script_path /usr/share/upgrade/scripts
 
 %description
 Client/Server library for sending notifications.
@@ -155,16 +153,10 @@ fi
 %defattr(-,root,root,-)
 %{_libdir}/libnotification.so.*
 %license LICENSE
-%attr(755,root,root) %{_sysconfdir}/gumd/useradd.d/11_notification-add.post
-%{_bindir}/notification_init
-%attr(0755,root,root) %{upgrade_script_path}/505.notification_upgrade.sh
-%attr(755,root,root) %{_bindir}/notification-test-app
-%attr(0755,root,root) /etc/notification/upgrade.sh
 
 %files devel
 %defattr(-,root,root,-)
 %{_includedir}/notification/notification.h
-%{_includedir}/notification/notification_db.h
 %{_includedir}/notification/notification_internal.h
 %{_includedir}/notification/notification_error.h
 %{_includedir}/notification/notification_type.h
@@ -177,9 +169,6 @@ fi
 %{_includedir}/notification/notification_setting.h
 %{_includedir}/notification/notification_setting_internal.h
 %{_includedir}/notification/notification_ipc.h
-%{_includedir}/notification/notification_noti.h
-%{_includedir}/notification/notification_setting_service.h
-%{_includedir}/notification/notification_viewer.h
 %{_includedir}/notification/notification_shared_file.h
 %{_includedir}/notification/notification_type_internal.h
 %{_libdir}/pkgconfig/notification.pc

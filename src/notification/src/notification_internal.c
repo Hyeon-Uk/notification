@@ -35,11 +35,10 @@
 #include <notification_list.h>
 #include <notification_debug.h>
 #include <notification_private.h>
-#include <notification_noti.h>
+#include <notification_shared_file.h>
 #include <notification_ongoing.h>
 #include <notification_group.h>
 #include <notification_internal.h>
-#include <notification_shared_file.h>
 
 #include <notification_tidl.h>
 
@@ -772,7 +771,8 @@ int notification_get_grouping_list_for_uid(notification_type_e type, int count,
 	if (list == NULL)
 		return NOTIFICATION_ERROR_INVALID_PARAMETER;
 
-	ret = notification_noti_get_grouping_list(type, 1, count, &get_list, NULL, uid);
+	ret = notification_tidl_request_load_noti_grouping_list(type, 1, count,
+			&get_list, uid);
 	if (ret != NOTIFICATION_ERROR_NONE)
 		return ret;
 
@@ -2590,7 +2590,7 @@ EXPORT_API int notification_get_channel_name(notification_h noti,
 	return NOTIFICATION_ERROR_NONE;
 }
 
-int notification_channel_create_with_info(const char *app_id,
+EXPORT_API int notification_channel_create_with_info(const char *app_id,
 		const char *channel_name, int blockable, int is_blocked,
 		notification_channel_h *channel)
 {

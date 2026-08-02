@@ -201,6 +201,17 @@ void notification_call_disturb_cb(void);
 int notification_channel_create_with_info(const char *app_id, const char *channel_name,
 		int blockable, int is_blocked, notification_channel_h *channel);
 
+/* for tag */
+#define TAG_TIME "TIME"
+#define TAG_TYPE_INVALID -1
+#define TAG_TYPE_TIME 1
+
+int notification_noti_set_tag(const char *tag, char *value, char *buf, int buf_len);
+
+char *notification_noti_strip_tag(const char *tagged_str);
+
+int notification_noti_get_tag_type(const char *tagged_str);
+
 #ifdef __cplusplus
 }
 #endif

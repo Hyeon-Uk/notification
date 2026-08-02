@@ -14,168 +14,65 @@
  * limitations under the License.
  */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-
 #include <notification_debug.h>
 #include <notification_group.h>
-#include <notification_db.h>
 
 /* LCOV_EXCL_START */
-static int _notification_group_check_data_inserted(const char *app_id,
-						   int group_id, sqlite3 *db)
+int notification_group_set_title(const char *app_id,
+				 int group_id,
+				 const char *title,
+				 const char *loc_title,
+				 notification_count_display_type_e count_display)
 {
-	sqlite3_stmt *stmt = NULL;
-	char query[NOTIFICATION_QUERY_MAX] = { 0, };
-	int ret;
-	int result;
+	WARN("notification_group_set_title is deprecated and not supported");
 
-	snprintf(query, sizeof(query),
-		 "select count(*) from noti_group_data where caller_app_id = '%s' and group_id = %d",
-		 app_id, group_id);
-
-	ret = sqlite3_prepare(db, query, strlen(query), &stmt, NULL);
-	if (ret != SQLITE_OK) {
-		ERR("Get count DB err(%d) : %s", ret, sqlite3_errmsg(db));
-		return NOTIFICATION_ERROR_FROM_DB;
-	}
-
-	ret = sqlite3_step(stmt);
-	if (ret == SQLITE_ROW)
-		result = sqlite3_column_int(stmt, 0);
-	else
-		result = 0;
-
-
-	sqlite3_finalize(stmt);
-
-	if (result > 0)
-		return NOTIFICATION_ERROR_ALREADY_EXIST_ID;
-
-	INFO("Check Data Inserted appid[%s] group_id[%d] result[%d]",
-			  app_id, group_id, result);
-
-	return NOTIFICATION_ERROR_NONE;
+	return NOTIFICATION_ERROR_INVALID_OPERATION;
 }
-/* LCOV_EXCL_STOP */
 
-/* LCOV_EXCL_START */
-int notification_group_set_badge(const char *app_id,
-						  int group_id, int count)
+int notification_group_get_title(const char *app_id,
+				 int group_id,
+				 char **ret_title,
+				 char **ret_loc_title,
+				 notification_count_display_type_e *count_display)
 {
-	sqlite3 *db;
-	sqlite3_stmt *stmt = NULL;
-	char query[NOTIFICATION_QUERY_MAX] = { 0, };
-	int ret;
-	int result;
+	WARN("notification_group_get_title is deprecated and not supported");
 
-	db = notification_db_open();
-	if (!db)
-		return get_last_result();
-
-	ret = _notification_group_check_data_inserted(app_id, group_id, db);
-
-	if (ret == NOTIFICATION_ERROR_NONE) {
-		/* Insert if does not exist */
-		snprintf(query, sizeof(query), "insert into noti_group_data ("
-			 "caller_app_id, group_id, badge, content, loc_content) values ("
-			 "'%s', %d, %d, '', '')", app_id, group_id, count);
-
-	} else {
-		/* Update if exist */
-		snprintf(query, sizeof(query), "update noti_group_data "
-			 "set badge = %d "
-			 "where caller_app_id = '%s' and group_id = %d",
-			 count, app_id, group_id);
-	}
-
-	ret = sqlite3_prepare_v2(db, query, -1, &stmt, NULL);
-	if (ret != SQLITE_OK) {
-		ERR("Failed to insert data app_id[%s] err[%d][%s]",
-				 app_id, ret, sqlite3_errmsg(db));
-		if (stmt)
-			sqlite3_finalize(stmt);
-
-		if (db)
-			notification_db_close(&db);
-
-		return NOTIFICATION_ERROR_FROM_DB;
-	}
-
-	ret = sqlite3_step(stmt);
-	if (ret == SQLITE_OK || ret == SQLITE_DONE)
-		result = NOTIFICATION_ERROR_NONE;
-	else
-		result = NOTIFICATION_ERROR_FROM_DB;
-
-	sqlite3_finalize(stmt);
-
-	if (db)
-		notification_db_close(&db);
-
-	return result;
+	return NOTIFICATION_ERROR_INVALID_OPERATION;
 }
-/* LCOV_EXCL_STOP */
 
-/* LCOV_EXCL_START */
-int notification_group_get_badge(const char *app_id,
-						  int group_id, int *count)
+int notification_group_set_content(const char *app_id,
+				   int group_id,
+				   const char *content,
+				   const char *loc_content,
+				   notification_count_display_type_e count_display)
 {
-	sqlite3 *db;
-	sqlite3_stmt *stmt = NULL;
-	char query[NOTIFICATION_QUERY_MAX] = { 0, };
-	int ret;
-	int col = 0;
+	WARN("notification_group_set_content is deprecated and not supported");
 
-	db = notification_db_open();
-	if (!db)
-		return get_last_result();
+	return NOTIFICATION_ERROR_INVALID_OPERATION;
+}
 
-	if (group_id == NOTIFICATION_GROUP_ID_NONE) {
-		ret = _notification_group_check_data_inserted(app_id, group_id, db);
-		if (ret == NOTIFICATION_ERROR_NONE)
-			/* Get all of app_id count if none group id is not exist */
-			snprintf(query, sizeof(query),
-				 "select sum(badge) "
-				 "from noti_group_data "
-				 "where caller_app_id = '%s'", app_id);
-		else
-			/* Get none group id count */
-			snprintf(query, sizeof(query),
-				 "select badge "
-				 "from noti_group_data "
-				 "where caller_app_id = '%s' and group_id = %d",
-				 app_id, group_id);
-	} else {
-		snprintf(query, sizeof(query),
-			 "select badge "
-			 "from noti_group_data "
-			 "where caller_app_id = '%s' and group_id = %d",
-			 app_id, group_id);
-	}
+int notification_group_get_content(const char *app_id,
+				   int group_id,
+				   char **ret_content,
+				   char **ret_loc_content,
+				   notification_count_display_type_e *count_display)
+{
+	WARN("notification_group_get_content is deprecated and not supported");
 
-	INFO("Get badge : query[%s]", query);
+	return NOTIFICATION_ERROR_INVALID_OPERATION;
+}
 
-	ret = sqlite3_prepare(db, query, strlen(query), &stmt, NULL);
-	if (ret != SQLITE_OK) {
-		ERR("Failed to insert data app_id[%s] err[%d][%s]",
-				app_id, ret, sqlite3_errmsg(db));
-		if (db)
-			notification_db_close(&db);
+int notification_group_set_badge(const char *app_id, int group_id, int count)
+{
+	WARN("notification_group_set_badge is deprecated and not supported");
 
-		return NOTIFICATION_ERROR_FROM_DB;
-	}
+	return NOTIFICATION_ERROR_INVALID_OPERATION;
+}
 
-	ret = sqlite3_step(stmt);
-	if (ret == SQLITE_ROW)
-		*count = sqlite3_column_int(stmt, col++);
+int notification_group_get_badge(const char *app_id, int group_id, int *count)
+{
+	WARN("notification_group_get_badge is deprecated and not supported");
 
-	sqlite3_finalize(stmt);
-
-	if (db)
-		notification_db_close(&db);
-
-	return NOTIFICATION_ERROR_NONE;
+	return NOTIFICATION_ERROR_INVALID_OPERATION;
 }
 /* LCOV_EXCL_STOP */

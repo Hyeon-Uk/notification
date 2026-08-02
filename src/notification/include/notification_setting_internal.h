@@ -1398,58 +1398,6 @@ int notification_unregister_system_setting_dnd_changed_cb_for_uid(dnd_changed_cb
 
 /**
  * @internal
- * @brief Updates the notification setting if the pacakge is installed or updated.
- * @since_tizen 3.0
- * @param[in] package_name
- * @param[in] uid User id
- * @return #NOTIFICATION_ERROR_NONE on success,
- *         otherwise any other value on failure
- * @retval #NOTIFICATION_ERROR_NONE Success
- * @retval #NOTIFICATION_ERROR_INVALID_PARAMETER Invalid parameter
- * @retval #NOTIFICATION_ERROR_FROM_DB Error from DB query
- * @par sample code:
- * @code
-#include <notification_setting.h>
-...
-{
-	int ret;
-
-	ret = notification_setting_insert_package_for_uid(pkg_name, uid);
-	if (ret = NOTIFICATION_ERROR_NONE)
-		return;
-}
- * @endcode
- */
-int notification_setting_insert_package_for_uid(const char *package_name, uid_t uid);
-
-/**
- * @internal
- * @brief Deletes the notification setting if the pacakge is uninstalled.
- * @since_tizen 3.0
- * @param[in] package_name
- * @param[in] uid User id
- * @return #NOTIFICATION_ERROR_NONE on success,
- *         otherwise any other value on failure
- * @retval #NOTIFICATION_ERROR_NONE Success
- * @retval #NOTIFICATION_ERROR_INVALID_PARAMETER Invalid parameter
- * @retval #NOTIFICATION_ERROR_FROM_DB Error from DB query
- * @par sample code:
- * @code
-#include <notification_setting.h>
-...
-{
-	int ret;
-
-	ret = notification_setting_delete_package_for_uid(pkg_name, uid);
-	if (ret = NOTIFICATION_ERROR_NONE)
-		return;
-}
- * @endcode
- */
-int notification_setting_delete_package_for_uid(const char *package_name, uid_t uid);
-
-/**
- * @internal
  * @brief Updates the notification setting.
  * @since_tizen 3.0
  * @param[in] setting Notification setting handle

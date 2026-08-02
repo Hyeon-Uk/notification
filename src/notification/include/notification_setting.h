@@ -200,58 +200,6 @@ int notification_setting_update_setting(notification_setting_h setting);
  */
 int notification_setting_free_notification(notification_setting_h setting);
 
-/**
- * @internal
- * @brief Refreshs the setting table of current user.
- * @since_tizen 2.4
- * @param[in] uid User id
- * @return #NOTIFICATION_ERROR_NONE on success,
- *         otherwise any other value on failure
- * @retval #NOTIFICATION_ERROR_NONE Success
- * @retval #NOTIFICATION_ERROR_INVALID_PARAMETER Invalid parameter
- * @retval #NOTIFICATION_ERROR_FROM_DB Error from DB query
- * @par sample code:
- * @code
-#include <notification_setting.h>
-...
-{
-	int ret;
-
-	ret = notification_setting_refresh_setting_table(uid);
-	if (ret = NOTIFICATION_ERROR_NONE)
-		return;
-}
- * @endcode
- */
-int notification_setting_refresh_setting_table(uid_t uid);
-
-/**
- * @internal
- * @brief Initializes the system setting table of the current user.
- * @since_tizen 2.4
- * @param[in] uid User id
- * @return #NOTIFICATION_ERROR_NONE on success,
- *         otherwise any other value on failure
- * @retval #NOTIFICATION_ERROR_NONE Success
- * @retval #NOTIFICATION_ERROR_INVALID_PARAMETER Invalid parameter
- * @retval #NOTIFICATION_ERROR_OUT_OF_MEMORY Out of memory
- * @retval #NOTIFICATION_ERROR_NOT_EXIST_ID Already exist private ID
- * @retval #NOTIFICATION_ERROR_IO_ERROR I/O error
- * @par sample code:
- * @code
-#include <notification_setting.h>
-...
-{
-	int ret;
-
-	ret = notification_system_setting_init_system_setting_table(uid);
-	if (ret != NOTIFICATION_ERROR_NONE)
-		return;
-}
- * @endcode
- */
-int notification_system_setting_init_system_setting_table(uid_t uid);
-
 #ifdef __cplusplus
 }
 #endif

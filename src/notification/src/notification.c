@@ -34,12 +34,11 @@
 #include <notification_list.h>
 #include <notification_debug.h>
 #include <notification_private.h>
-#include <notification_noti.h>
+#include <notification_shared_file.h>
 #include <notification_ongoing.h>
 #include <notification_group.h>
 #include <notification_tidl.h>
 #include <notification_internal.h>
-#include <notification_shared_file.h>
 
 static void (*posted_toast_message_cb)(void *data);
 
@@ -51,7 +50,7 @@ static char *_locale_directory = NULL;
 static char *_label = NULL;
 static int _cb_registered = -1;
 
-char *notification_get_app_id_by_pid(int pid)
+EXPORT_API char *notification_get_app_id_by_pid(int pid)
 {
 #define NOTI_APP_ID_LEN 512
 	char app_id[NOTI_APP_ID_LEN + 1] = { 0, };
