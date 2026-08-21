@@ -35,3 +35,11 @@ extern "C" int pkgmgrinfo_appinfo_get_usr_appinfo(const char *appid,
 extern "C" int pkgmgrinfo_appinfo_get_label(pkgmgrinfo_appinfo_h handle, char **label) {
   return MOCK_HOOK_P2(PackageManagerMock, pkgmgrinfo_appinfo_get_label, handle, label);
 }
+
+extern "C" int pkgmgrinfo_appinfo_get_pkgid(pkgmgrinfo_appinfo_h handle, char **pkgid) {
+  return MOCK_HOOK_P2(PackageManagerMock, pkgmgrinfo_appinfo_get_pkgid, handle, pkgid);
+}
+
+extern "C" int pkgmgrinfo_appinfo_destroy_appinfo(pkgmgrinfo_appinfo_h handle) {
+  return MOCK_HOOK_P1(PackageManagerMock, pkgmgrinfo_appinfo_destroy_appinfo, handle);
+}

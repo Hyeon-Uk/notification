@@ -23,6 +23,7 @@
 #include "mock/aul_mock.hh"
 #include "mock/glib_mock.hh"
 #include "mock/sqlite_mock.hh"
+#include "mock/noti_service_proxy_mock.hh"
 
 #include "notification/include/notification.h"
 #include "notification/include/notification_setting.h"
@@ -30,10 +31,21 @@
 
 namespace {
 
+rpc_port_proxy_noti_service_h kFakeSettingServiceHandle =
+    reinterpret_cast<rpc_port_proxy_noti_service_h>(0x1);
+
+int __fake_rpc_port_proxy_noti_service_create(const char*,
+    rpc_port_proxy_noti_service_callback_s*, void*,
+    rpc_port_proxy_noti_service_h* handle) {
+  *handle = kFakeSettingServiceHandle;
+  return RPC_PORT_ERROR_NONE;
+}
+
 class Mocks :
     virtual public ::testing::NiceMock<AulMock>,
     virtual public ::testing::NiceMock<GlibMock>,
-    virtual public ::testing::NiceMock<SqliteMock> {};
+    virtual public ::testing::NiceMock<SqliteMock>,
+    virtual public ::testing::NiceMock<NotiServiceProxyMock> {};
 } // namespace
 
 using ::testing::_;
@@ -45,6 +57,12 @@ class NotificationSettingTest : public TestFixture {
  public:
   NotificationSettingTest() : TestFixture(std::make_unique<::Mocks>()) {}
   virtual void SetUp() {
+    ON_CALL(GetMock<NotiServiceProxyMock>(),
+        rpc_port_proxy_noti_service_create(_, _, _, _))
+        .WillByDefault(Invoke(__fake_rpc_port_proxy_noti_service_create));
+    ON_CALL(GetMock<NotiServiceProxyMock>(),
+        rpc_port_proxy_noti_service_connect_sync(_))
+        .WillByDefault(Return(RPC_PORT_ERROR_NONE));
   }
   virtual void TearDown() {
   }
@@ -116,6 +134,21 @@ TEST_F(NotificationSettingTest, notification_setting_test) {
   ret = notification_setting_update_setting(nullptr);
   ASSERT_EQ(ret, NOTIFICATION_ERROR_INVALID_PARAMETER);
 
+  ret = notification_setting_get_visibility_class(nullptr, &visibility);
+  ASSERT_EQ(ret, NOTIFICATION_ERROR_INVALID_PARAMETER);
+
+  ret = notification_setting_set_visibility_class(nullptr, 3);
+  ASSERT_EQ(ret, NOTIFICATION_ERROR_INVALID_PARAMETER);
+
+  EXPECT_CALL(GetMock<NotiServiceProxyMock>(),
+      rpc_port_proxy_noti_service_invoke_update_noti_setting(_, _, _))
+      .WillOnce(Return(RPC_PORT_ERROR_NONE));
+  ret = notification_setting_update_setting(setting);
+  ASSERT_EQ(ret, NOTIFICATION_ERROR_NONE);
+
   ret = notification_setting_free_notification(setting);
   ASSERT_EQ(ret, NOTIFICATION_ERROR_NONE);
+
+  ret = notification_setting_free_notification(nullptr);
+  ASSERT_EQ(ret, NOTIFICATION_ERROR_INVALID_PARAMETER);
 }

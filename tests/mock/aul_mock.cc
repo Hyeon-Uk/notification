@@ -16,11 +16,17 @@
 
 #include "aul_mock.hh"
 
+#include <stdexcept>
+
 #include "mock_hook.hh"
 #include "test_fixture.hh"
 
 extern "C" uid_t aul_getuid() {
-  return 5001;
+  try {
+    return MOCK_HOOK_P0(AulMock, aul_getuid);
+  } catch (const std::invalid_argument&) {
+    return 5001;
+  }
 }
 
 extern "C" int aul_app_get_appid_bypid(int pid, char* appid, int len) {

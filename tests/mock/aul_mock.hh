@@ -29,6 +29,9 @@
 
 class AulMock : public virtual ModuleMock {
  public:
+  AulMock() {
+    ON_CALL(*this, aul_getuid()).WillByDefault(::testing::Return(5001));
+  }
   virtual ~AulMock() {}
 
   MOCK_METHOD0(aul_getuid, uid_t());
